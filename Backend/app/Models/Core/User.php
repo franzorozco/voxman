@@ -39,5 +39,13 @@ class User extends BaseUser
 	{
 		return $this->hasOne(UserProfile::class);
 	}
-	
+	public function owner()
+	{
+		return $this->hasOne(\App\Models\Actors\Owner::class, 'user_id');
+	}
+
+	public function customer()
+	{
+		return $this->hasOne(\App\Models\Actors\Customer::class, 'user_id');
+	}
 }
