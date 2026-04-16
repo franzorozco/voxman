@@ -1,0 +1,373 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;800&display=swap');
+
+.hero {
+  position: relative;
+  height: 100vh;
+  margin-top: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 64px;
+  font-family: "Bodoni Moda", serif;
+}
+
+.hero p {
+  margin-top: 15px;
+  color: #000000;
+}
+
+.hero-split {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.hero-col {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+}
+
+/* CLIP SHAPES */
+.hero-col:nth-child(2) {
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+}
+
+.hero-col:nth-child(3),
+.hero-col:nth-child(4) {
+  clip-path: polygon(15% 0, 100% 0, 85% 100%, 0% 100%);
+}
+
+.hero-col:nth-child(5) {
+  clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+.hero-col {
+  border-left: 1px solid rgba(255,255,255,0.08);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+
+.hero-tag {
+  display: none; /* 👈 oculto por defecto */
+}
+
+
+/* BOTONES */
+.btn {
+  padding: 12px 24px;
+  margin: 10px;
+}
+
+.primary {
+  background: #c9a227;
+  color: #000;
+}
+
+.secondary {
+  border: 1px solid #fff;
+  color: #fff;
+}
+
+
+
+.hero h1 {
+  font-size: 80px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: #fff;
+
+  text-shadow: 
+    0 5px 20px rgba(0,0,0,0.8),
+    0 0 40px rgba(0,0,0,0.6);
+}
+
+.hero p {
+  margin-top: 20px;
+  font-size: 18px;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 1px;
+}
+
+.hero-buttons {
+  margin-top: 6px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.btn {
+  text-decoration: none;
+}
+
+.primary {
+  background: linear-gradient(135deg, #c9a227, #e6c65c);
+  color: #000;
+  padding: 14px 30px;
+  border-radius: 3px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  border: none;
+
+  box-shadow: 0 8px 25px rgba(201,162,39,0.4);
+  transition: all 0.3s ease;
+}
+
+.primary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px rgba(201,162,39,0.6);
+}
+
+.secondary {
+  border: 1px solid rgba(255,255,255,0.5);
+  padding: 14px 30px;
+  color: #fff;
+  border-radius: 3px;
+  letter-spacing: 1px;
+  backdrop-filter: blur(5px);
+
+  transition: all 0.3s ease;
+}
+
+.secondary:hover {
+  background: #fff;
+  color: #000000;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 700px;
+}
+
+
+
+
+.hero-col {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+
+  opacity: 1;
+  transition: opacity 1s ease, transform 1.5s ease;
+}
+
+@media (max-width: 1024px) {
+
+  .hero-col {
+    clip-path: none;
+    position: absolute;
+    inset: 0;
+
+    opacity: 0;
+    transform: scale(1.05);
+  }
+
+  .hero-col.active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 1;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .hero {
+    margin-top: 70px;
+    height: calc(100dvh - 70px);
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 20px;
+
+    background-image: url("../../assets/global/fondos/fondo_grafito.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  /* 🔥 IMAGEN */
+  .hero-split {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* 🔥 SLIDER */
+  .hero-col {
+    position: absolute;
+    inset: 0;
+
+    clip-path: none !important;
+
+    opacity: 0;
+    transform: scale(1.05);
+    transition: all 1s ease;
+  }
+
+  .hero-col.active {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* 🔥 overlay interno */
+  .hero-split::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1;
+  }
+
+  /* 🔥 contenido centrado real */
+  .hero-content {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+  }
+
+  /* 🔥 TEXTO */
+  .hero h1 {
+    font-family: "Bodoni Moda", serif;
+    font-size: 70px !important;
+    letter-spacing: 6px;
+    font-weight: 600;
+
+    text-align: center;
+    width: 100%;
+    text-transform: uppercase;
+    text-shadow: 
+    0 10px 30px rgba(0,0,0,0.8);
+    transform: translateY(-10px); /* lo sube un poco */
+  }
+
+  /* 🔥 subtítulo más limpio */
+  .hero p {
+    font-size: 10px;
+    letter-spacing: 1px;
+    opacity: 0.6;
+
+  }
+
+  /* 🔥 BOTÓN mejor ubicado */
+  .hero-buttons {
+    position: absolute;
+    bottom: 60px; /* 👈 lo baja tipo portada */
+    
+    width: 90%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .hero-buttons .primary {
+    font-size: 11px;
+    letter-spacing: 4px;
+    padding: 12px 22px;
+
+    border-radius: 2px;
+  }
+
+  .hero-buttons .secondary {
+    display: none;
+  }
+
+  .hero-buttons .primary {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 8px 25px rgba(153, 153, 152, 0.4);
+    color: rgba(255,255,255,0.7);
+
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+
+    padding: 10px 18px;
+
+    backdrop-filter: blur(6px);
+
+    transition: all 0.3s ease;
+  }
+
+  .hero-buttons .primary:hover {
+    border: 1px solid rgba(255,255,255,0.6);
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* hover */
+  .hero-buttons .primary:hover {
+    color: #fff !important;
+  }
+
+  .hero-buttons .primary:hover::after {
+    width: 70%;
+    background: #fff;
+  }
+
+  .hero-tag {
+    display: flex;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 17px;
+    z-index: 3;
+
+    flex-direction: column;
+    align-items: flex-end;
+    font-family: "Bodoni Moda", serif;
+    letter-spacing: 3px;
+  }
+
+
+
+  .hero-tag span:last-child {
+    font-size: 20px;
+    
+  }
+
+  .hero::after {
+    display: none;
+  }
+
+}
+
+@media (max-width: 480px) {
+
+  .hero h1 {
+    font-size: 26px;
+    letter-spacing: 1.5px;
+  }
+
+  .hero p {
+    font-size: 13px;
+  }
+
+}

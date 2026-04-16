@@ -1,0 +1,353 @@
+/* =========================
+   RESET BASE
+========================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #0d0d0d;
+  color: #fff;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+.register-page {
+  min-height: 100vh;
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  background-size: cover;
+  background-position: center;
+}
+
+/* overlay tipo hero */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(0,0,0,0.7),
+    rgba(0,0,0,0.9)
+  );
+}
+
+/* =========================
+   CARD
+========================= */
+.register-card {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  max-width: 380px;
+
+  padding: 40px 30px;
+
+  background: rgba(10,10,10,0.92);
+  border: 1px solid #2a2a2a;
+
+  backdrop-filter: blur(12px);
+
+  text-align: center;
+
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+}
+
+/* =========================
+   TEXTOS
+========================= */
+.register-card h2 {
+  font-size: 30px;
+  letter-spacing: 4px;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  margin: 0 0 30px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #aaa;
+}
+
+/* =========================
+   FORM
+========================= */
+.register-card form {
+  width: 100%;
+}
+
+/* INPUTS */
+.register-card input {
+  width: 100%;
+  display: block;
+
+  padding: 14px 16px;
+  margin-bottom: 14px;
+
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+
+  font-size: 14px;
+
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+/* placeholder */
+.register-card input::placeholder {
+  color: #777;
+}
+
+/* focus */
+.register-card input:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 12px rgba(201,162,39,0.25);
+}
+
+/* =========================
+   BOTONES
+========================= */
+.btn {
+  width: 100%;
+  display: block;
+
+  padding: 14px;
+  margin-top: 10px;
+
+  font-size: 14px;
+  letter-spacing: 1px;
+
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+
+  transition: all 0.25s ease;
+}
+
+/* BOTON PRINCIPAL */
+.primary {
+  background: linear-gradient(135deg, #c9a227, #e6c65c);
+  color: #000;
+  font-weight: 600;
+
+  box-shadow: 0 10px 25px rgba(201,162,39,0.35);
+}
+
+.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 35px rgba(201,162,39,0.55);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 480px) {
+  .register-card {
+    padding: 30px 20px;
+  }
+
+  .register-card h2 {
+    font-size: 24px;
+  }
+}
+
+/* ERRORES */
+.error {
+  display: block;
+  text-align: left;
+  font-size: 12px;
+  color: #ff4d4d;
+  margin-top: -8px;
+  margin-bottom: 10px;
+}
+
+/* SEGURIDAD PASSWORD */
+.strength {
+  display: block;
+  text-align: left;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+/* COLORES */
+.strength.débil {
+  color: #ff4d4d;
+}
+
+.strength.media {
+  color: #ffa500;
+}
+
+.strength.fuerte {
+  color: #00c853;
+}
+/* =========================
+   PASSWORD GROUP
+========================= */
+.password-group {
+  margin-bottom: 10px;
+}
+
+/* BARRA BASE */
+.password-strength-bar {
+  width: 100%;
+  height: 6px;
+  background: #222;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: -8px;
+  margin-bottom: 6px;
+}
+
+/* RELLENO ANIMADO */
+.strength-fill {
+  height: 100%;
+  width: 10%;
+  transition: all 0.4s ease;
+}
+
+/* ESTADOS */
+.strength-fill.débil {
+  width: 30%;
+  background: #ff4d4d;
+}
+
+.strength-fill.media {
+  width: 60%;
+  background: #ffa500;
+}
+
+.strength-fill.fuerte {
+  width: 100%;
+  background: #00c853;
+}
+
+/* TEXTO */
+.strength-text {
+  font-size: 12px;
+  text-align: left;
+  margin-bottom: 10px;
+  transition: 0.3s;
+}
+
+.strength-text.débil {
+  color: #ff4d4d;
+}
+
+.strength-text.media {
+  color: #ffa500;
+}
+
+.strength-text.fuerte {
+  color: #00c853;
+}
+
+/* =========================
+   BOTÓN PRO 🔥
+========================= */
+.register-page button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 15px;
+
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+
+  color: #000;
+
+  background: linear-gradient(135deg, #c9a227, #e6c65c);
+
+  border: none;
+  border-radius: 4px;
+
+  cursor: pointer;
+
+  position: relative;
+  overflow: hidden;
+
+  transition: all 0.3s ease;
+}
+
+/* HOVER */
+.register-page button:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 30px rgba(201,162,39,0.5);
+}
+
+/* CLICK */
+.register-page button:active {
+  transform: scale(0.98);
+}
+
+/* EFECTO BRILLO (🔥 clave) */
+.register-page button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.4),
+    transparent
+  );
+
+  transition: 0.5s;
+}
+
+/* ANIMACIÓN BRILLO */
+.register-page button:hover::before {
+  left: 100%;
+}
+
+.register-page button.loading {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* MENSAJE DE ÉXITO */
+.success-message {
+  font-size: 18px;
+  color: #00c853;
+  text-align: center;
+  padding: 40px 0;
+
+  animation: fadeInScale 0.5s ease;
+}
+
+/* ANIMACIÓN */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+.hint {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-top: -8px;
+  margin-bottom: 10px;
+  text-align: left;
+}
