@@ -11,6 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Models;
+use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -30,72 +33,81 @@ class UserController extends Controller
     }
 
     // 🔹 CREAR
-    public function store(Request $request)
-    {
-        DB::beginTransaction();
+public function store(Request $request)
+{
+    DB::beginTransaction();
 
-        try {
-            $user = User::create([
-                'email' => $request->email,
-                'username' => $request->username,
-                'password' => Hash::make($request->password),
-                'is_active' => $request->is_active ?? true
-            ]);
+    try {
 
-            // Perfil
-            UserProfile::create([
-                'user_id' => $user->id,
-                'first_name' => $request->first_name,
-                'last_name_paternal' => $request->last_name_paternal,
-                'last_name_maternal' => $request->last_name_maternal,
-                'phone' => $request->phone,
-                'birthdate' => $request->birthdate,
-                'gender' => $request->gender
-            ]);
+        $request->validate([
+            'email' => 'required|email|unique:users,email',
+            'username' => 'required|unique:users,username',
+            'password' => 'required|min:6',
+            'roles' => 'array',
+            'roles.*' => 'exists:roles,name',
+            'type' => 'nullable|in:owner,customer',
+            'first_name' => 'required|string|max:100',
 
-            // Roles
-            if ($request->roles) {
-                $user->syncRoles($request->roles);
-            }
+            // 🔥 VALIDACIÓN CUSTOMER
+            'customer.customer_code' => 'required_if:type,customer|string|max:20|unique:customers,customer_code',
+        ]);
 
-            // Tipo
-            if ($request->type === 'owner') {
-                Owner::create(['user_id' => $user->id]);
-            }
+        // USER
+        $user = User::create([
+            'email' => $request->email,
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+            'is_active' => $request->is_active ?? true
+        ]);
 
-            if ($request->type === 'customer') {
-                Customer::create([
-                    'user_id' => $user->id,
-                    'customer_code' => uniqid('CUST-')
-                ]);
-            }
-            
+        // PROFILE
+        UserProfile::create([
+            'user_id' => $user->id,
+            'first_name' => $request->first_name,
+            'last_name_paternal' => $request->last_name_paternal,
+            'last_name_maternal' => $request->last_name_maternal,
+            'phone' => $request->phone,
+            'birthdate' => $request->birthdate,
+            'gender' => $request->gender
+        ]);
 
-            // 🔹 TIPO (owner / customer)
-
-            $type = $request->type;
-
-            Owner::where('user_id', $user->id)->delete();
-            Customer::where('user_id', $user->id)->delete();
-
-            if ($type === 'owner') {
-                Owner::create(['user_id' => $user->id]);
-            } elseif ($type === 'customer') {
-                Customer::create([
-                    'user_id' => $user->id,
-                    'customer_code' => uniqid('CUST-')
-                ]);
-            }
-
-            DB::commit();
-
-            return response()->json($user->load('profile', 'roles'), 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+        // ROLES
+        if ($request->filled('roles')) {
+            $user->syncRoles($request->roles);
         }
+
+        // TYPE
+        if ($request->type === 'owner') {
+
+            Owner::create([
+                'user_id' => $user->id
+            ]);
+
+        } elseif ($request->type === 'customer') {
+
+            Customer::create([
+                'user_id' => $user->id,
+                'customer_code' => $request->customer['customer_code'],
+                'points' => $request->customer['points'] ?? 0,
+                'total_purchases' => $request->customer['total_purchases'] ?? 0,
+            ]);
+        }
+
+        DB::commit();
+
+        return response()->json(
+            $user->load('profile', 'roles', 'owner', 'customer'),
+            201
+        );
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     // 🔹 ACTUALIZAR
 public function update(Request $request, $id)
@@ -132,41 +144,54 @@ public function update(Request $request, $id)
             ]
         );
 
-        // ROLES (IMPORTANTE FIX)
-        if ($request->filled('roles')) {
-            $user->syncRoles($request->roles);
+        // ROLES
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles ?? []);
         }
 
-        // TYPE FIX LIMPIO
-        $type = $request->type;
+    // TYPE LIMPIO
+    if ($request->has('type')) {
 
-        // borrar ambos siempre
-        Owner::where('user_id', $user->id)->delete();
-        Customer::where('user_id', $user->id)->delete();
+        if ($request->type === 'customer') {
 
-        // recrear según type
-        if ($type === 'owner') {
-            Owner::create(['user_id' => $user->id]);
-        }
+            // eliminar owner
+            DB::table('owners')->where('user_id', $user->id)->delete();
 
-        if ($type === 'customer') {
-            Customer::create([
-                'user_id' => $user->id,
-                'customer_code' => uniqid('CUST-')
+            $request->validate([
+                'customer.customer_code' => 'required|string|max:20|unique:customers,customer_code,' . $user->id . ',user_id'
             ]);
+            Customer::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'customer_code' => $request->customer['customer_code'],
+                    'points' => $request->customer['points'] ?? 0,
+                    'total_purchases' => $request->customer['total_purchases'] ?? 0,
+                ]
+            );
+
+        } elseif ($request->type === 'owner') {
+
+            // eliminar customer
+            DB::table('customers')->where('user_id', $user->id)->delete();
+
+            Owner::updateOrCreate(
+                ['user_id' => $user->id],
+                []
+            );
         }
-
-        DB::commit();
-
-        return response()->json(
-            $user->load('profile', 'roles', 'owner', 'customer')
-        );
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json(['error' => $e->getMessage()], 500);
     }
-}
+
+            DB::commit();
+
+            return response()->json(
+                $user->load('profile', 'roles', 'owner', 'customer')
+            );
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
     
     // 🔹 ELIMINAR (SOFT DELETE)
     public function destroy($id)
@@ -175,5 +200,86 @@ public function update(Request $request, $id)
         $user->delete();
 
         return response()->json(['message' => 'Usuario eliminado']);
+    }
+
+
+
+
+
+    public function reportPdf(Request $request)
+    {
+        $query = User::with(['profile', 'roles', 'owner', 'customer']);
+
+        // =========================
+        // 🔎 FILTROS (IGUAL FRONTEND)
+        // =========================
+
+        if ($request->search) {
+            $q = $request->search;
+
+            $query->where(function ($u) use ($q) {
+                $u->where('email', 'like', "%$q%")
+                ->orWhere('username', 'like', "%$q%");
+            });
+        }
+
+        if ($request->status !== 'all') {
+            $query->where('is_active', $request->status === 'active');
+        }
+
+        if ($request->type !== 'all') {
+            if ($request->type === 'owner') {
+                $query->whereHas('owner');
+            }
+
+            if ($request->type === 'customer') {
+                $query->whereHas('customer');
+            }
+        }
+
+        if ($request->role !== 'all') {
+            $query->whereHas('roles', function ($r) use ($request) {
+                $r->where('name', $request->role);
+            });
+        }
+
+        if ($request->minPoints !== null) {
+            $query->whereHas('customer', function ($c) use ($request) {
+                $c->where('points', '>=', $request->minPoints);
+            });
+        }
+
+        if ($request->maxPoints !== null) {
+            $query->whereHas('customer', function ($c) use ($request) {
+                $c->where('points', '<=', $request->maxPoints);
+            });
+        }
+
+        // =========================
+        // 📊 SORT
+        // =========================
+        switch ($request->sort) {
+            case "created_at_asc":
+                $query->orderBy('created_at', 'asc');
+                break;
+
+            case "created_at_desc":
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $users = $query->get();
+        $authUser = auth('sanctum')->user();
+        
+        // =========================
+        // 📄 PDF VIEW
+        // =========================
+        $pdf = Pdf::loadView('reports.users', [
+            'users' => $users,
+            'filters' => $request->all(),
+            'authUser' => $authUser
+        ])->setPaper('A4', 'landscape');
+
+        return $pdf->stream("reporte-usuarios.pdf");
     }
 }

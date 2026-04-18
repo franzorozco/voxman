@@ -18,7 +18,7 @@
   font-weight: 600;
 }
 
-/* 🔹 BOTÓN PRINCIPAL */
+/* 🔹 BOTÓN PRINCIPAL (ORIGINAL RESTAURADO) */
 .btn-primary {
   background: #2563eb;
   color: white;
@@ -37,7 +37,7 @@
 .users-table {
   width: 100%;
   border-collapse: collapse;
-  background: #111; /* 👈 dark */
+  background: #111;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.05);
@@ -81,34 +81,58 @@
   color: #4ade80;
 }
 
-/* 🔹 BOTONES */
+/* 🔹 BOTONES ACCIÓN (ORIGINALES RESTAURADOS) */
+/* 🔹 BOTONES ACCIÓN (EDITAR / ELIMINAR) RESTAURADOS */
+
+/* EDITAR */
 .btn-edit {
-  background: rgba(245,158,11,0.15);
-  border: 1px solid rgba(245,158,11,0.3);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
   padding: 6px 10px;
   margin-right: 5px;
   border-radius: 6px;
   color: #fbbf24;
   cursor: pointer;
+  transition: 0.2s ease;
+  font-size: 13px;
 }
 
 .btn-edit:hover {
-  background: rgba(245,158,11,0.25);
+  background: rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
 }
 
+.btn-edit:active {
+  transform: translateY(0px);
+}
+
+/* ELIMINAR */
 .btn-delete {
-  background: rgba(239,68,68,0.15);
-  border: 1px solid rgba(239,68,68,0.3);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
   padding: 6px 10px;
   border-radius: 6px;
   color: #f87171;
   cursor: pointer;
+  transition: 0.2s ease;
+  font-size: 13px;
 }
 
 .btn-delete:hover {
-  background: rgba(239,68,68,0.25);
+  background: rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
 }
 
+.btn-delete:active {
+  transform: translateY(0px);
+}
+
+/* 🔥 mejora UX: focus accesible */
+.btn-edit:focus,
+.btn-delete:focus {
+  outline: 2px solid rgba(255,255,255,0.2);
+  outline-offset: 2px;
+}
 /* 🔹 MODAL */
 .modal-overlay {
   position: fixed;
@@ -128,7 +152,7 @@
   color: white;
   padding: 25px;
   border-radius: 12px;
-  width: 500px;
+  width: 750px;
   max-height: 90vh;
   overflow-y: auto;
   border: 1px solid rgba(255,255,255,0.08);
@@ -168,4 +192,100 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* 🔥 SECCIONES */
+.form-section {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.form-section h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #60a5fa;
+}
+
+/* 🔥 GRID */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* 🔥 CHECKBOX */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+/* 🔥 ROLES */
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.role-item {
+  background: rgba(255,255,255,0.05);
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.role-item:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* 🔥 FILTROS (nuevo agregado sin romper tu diseño) */
+.filters-panel {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #111;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.filters-panel input,
+.filters-panel select {
+  padding: 8px;
+  border-radius: 6px;
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+}
+
+/* 🔥 GROUPING */
+.group-section {
+  margin-bottom: 20px;
+}
+
+.group-title {
+  font-size: 14px;
+  color: #93c5fd;
+  margin-bottom: 8px;
+}
+
+/* 🔥 RESPONSIVE */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .roles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    width: 95%;
+  }
+
+  .filters-panel {
+    flex-direction: column;
+  }
 }

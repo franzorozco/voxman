@@ -8,6 +8,7 @@ import DashboardLayout from "../pages/dashboard/Dashboard";
 
 import DashboardHome from "../pages/dashboard/pages/home/Home";
 import Users from "../pages/dashboard/pages/users/Users";
+import Roles from "../pages/dashboard/pages/roles/Roles";
 import Products from "../pages/shop/Products";
 
 export default function AppRouter() {
@@ -28,6 +29,7 @@ export default function AppRouter() {
           <Route index element={<DashboardHome />} />
           <Route path="products" element={<Products />} />
           <Route path="users" element={<Users />} />
+          <Route path="roles" element={<Roles />} />
 
         </Route>
 
