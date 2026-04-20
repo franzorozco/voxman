@@ -11,6 +11,15 @@
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
+.nav-header {
+  font-family: 'Poppins', sans-serif; /* o la que uses */
+  color: #fff;
+}
+
+.nav-links a {
+  font-size: 13px !important;
+}
+
 /* CONTENEDOR */
 .nav-container {
   display: flex;

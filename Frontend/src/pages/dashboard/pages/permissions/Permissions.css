@@ -1,19 +1,19 @@
 /* 🔹 CONTENEDOR */
-.roles-container {
+.permissions-container {
   padding: 20px;
   font-family: "Segoe UI", sans-serif;
   color: white;
 }
 
 /* 🔹 HEADER */
-.roles-header {
+.permissions-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.roles-title {
+.permissions-title {
   font-size: 24px;
   font-weight: 600;
 }
@@ -27,6 +27,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: 0.2s;
+  margin: 0 30px 0 0;
 }
 
 .btn-primary:hover {
@@ -34,7 +35,7 @@
 }
 
 /* 🔹 TABLA */
-.roles-table {
+.permissions-table {
   width: 100%;
   border-collapse: collapse;
   background: #111;
@@ -43,7 +44,7 @@
   border: 1px solid rgba(255,255,255,0.05);
 }
 
-.roles-table th {
+.permissions-table th {
   background: #1a1a1a;
   text-align: left;
   padding: 12px;
@@ -52,21 +53,21 @@
   font-size: 13px;
 }
 
-.roles-table td {
+.permissions-table td {
   padding: 12px;
   border-top: 1px solid rgba(255,255,255,0.05);
   font-size: 14px;
   color: rgba(255,255,255,0.85);
 }
 
-.roles-table tr:hover {
+.permissions-table tr:hover {
   background: rgba(255,255,255,0.04);
 }
 
-/* 🔹 BADGE PARA ROLES */
-.badge-role {
-  background: rgba(168,85,247,0.15);
-  color: #c084fc;
+/* 🔹 BADGE PARA PERMISOS */
+.badge-permission {
+  background: rgba(34,197,94,0.15);
+  color: #4ade80;
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 11px;
@@ -101,11 +102,13 @@
   background: rgba(239,68,68,0.25);
 }
 
-/* 🔹 MODAL (MISMO) */
+/* 🔹 MODAL */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(0,0,0,0.7);
 
   display: flex;
@@ -116,9 +119,14 @@
 .modal {
   background: #111;
   color: white;
-  padding: 25px;
+  padding: 20px;
   border-radius: 12px;
-  width: 400px;
+
+  /* 🔥 CLAVE */
+  width: fit-content;
+  min-width: 280px;
+  max-width: 420px;
+  height: fit-content;
   border: 1px solid rgba(255,255,255,0.08);
 }
 
@@ -156,91 +164,19 @@
   gap: 10px;
 }
 
-.permissions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-top: 8px;
-  max-height: 200px;
-  overflow-y: auto;
+.modal form input {
+  width: 100%;
 }
 
-.checkbox-item {
+
+/* 🔥 overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: rgba(255,255,255,0.8);
+  animation: fadeIn 0.2s ease;
 }
 
-/* 🔹 GRID MÁS LIMPIO */
-.permissions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-top: 10px;
-  max-height: 220px;
-  overflow-y: auto;
-  padding-right: 5px;
-}
-
-/* 🔹 CARD DE PERMISO */
-.permission-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #0f0f0f;
-  border: 1px solid rgba(255,255,255,0.05);
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.permission-card:hover {
-  background: rgba(255,255,255,0.05);
-  transform: translateY(-1px);
-}
-
-/* 🔹 ACTIVO */
-.permission-card.active {
-  border-color: #2563eb;
-  background: rgba(37, 99, 235, 0.15);
-}
-
-/* 🔹 TEXTO */
-.permission-name {
-  font-size: 13px;
-  color: rgba(255,255,255,0.85);
-}
-
-/* 🔹 SWITCH BASE */
-.switch {
-  width: 38px;
-  height: 20px;
-  background: #333;
-  border-radius: 999px;
-  position: relative;
-  transition: background 0.25s ease;
-}
-
-/* 🔹 CÍRCULO */
-.switch-circle {
-  width: 16px;
-  height: 16px;
-  background: white;
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.25s ease;
-}
-
-/* 🔹 ESTADO ON */
-.switch.on {
-  background: #2563eb;
-}
-
-.switch.on .switch-circle {
-  transform: translateX(18px);
-}

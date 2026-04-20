@@ -10,9 +10,18 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-    })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
-    })
+->withMiddleware(function (Middleware $middleware): void {
+    $middleware->api(prepend: [
+    ]);
+})
+->withExceptions(function (Exceptions $exceptions): void {
+
+    $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+
+        return response()->json([
+            'message' => 'No autenticado'
+        ], 401);
+    });
+
+})
     ->create();

@@ -51,56 +51,29 @@ export default function Login() {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // 🔴 VALIDACIÓN EXTRA (CLAVE)
-  if (!form.email || !form.password) {
-    alert("Todos los campos son obligatorios");
-    return;
-  }
-
-  if (Object.values(errors).some((e) => e !== "")) {
-    alert("Corrige los errores");
-    return;
-  }
-
   try {
     setLoading(true);
 
-    console.log("ENVIANDO:", form);
-
     const res = await loginUser(form);
 
-    console.log("RESPUESTA:", res);
+    const token = res.data?.token;
+    const user = res.data?.user;
 
-    // 🔴 VALIDACIÓN SEGURA
-    if (!res || !res.data) {
-      throw new Error("Respuesta inválida del servidor");
-    }
+    if (!token) throw new Error("No llegó token del backend");
 
-    // ✅ GUARDAR TOKEN
-    localStorage.setItem("token", res.data.token);
+    // 🔥 GUARDAR EN LOCALSTORAGE (ESTO TE FALTA)
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
 
-    // ✅ GUARDAR USER EN STORE (MEJORADO)
-    login({
-      user: res.data.user,
-      token: res.data.token,
-    });
+    login({ user, token });
 
     setSuccess(true);
 
-    setTimeout(() => {
-      navigate("/");
-    }, 1200);
+    setTimeout(() => navigate("/"), 1200);
 
   } catch (error) {
-    console.log("ERROR COMPLETO:", error);
-    console.log("DATA:", error.response?.data);
-
-    alert(
-      error.response?.data?.message ||
-      JSON.stringify(error.response?.data?.errors) ||
-      "Error al iniciar sesión"
-    );
-
+    console.log(error.response?.data || error.message);
+    alert(error.response?.data?.message || "Error al iniciar sesión");
   } finally {
     setLoading(false);
   }

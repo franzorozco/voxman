@@ -3,10 +3,9 @@
 namespace App\Models\Auth;
 
 use App\Models\Base\Permission as BasePermission;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 class Permission extends BasePermission
 {
-	use SoftDeletes;
 	protected $fillable = [
 		'name',
 		'guard_name'

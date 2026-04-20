@@ -1,0 +1,155 @@
+/* CONTENEDOR GENERAL */
+.vox-nosotros {
+  font-family: 'Poppins', sans-serif;
+  background: #0b0b0f;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* ================= HERO ================= */
+.vox-hero {
+  height: 100vh;
+  background: linear-gradient(135deg, #000, #111);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.vox-hero-overlay h1 {
+  font-size: 4rem;
+  letter-spacing: 4px;
+}
+
+.vox-hero-overlay p {
+  opacity: 0.7;
+  margin-top: 10px;
+}
+
+/* ================= HISTORIA ================= */
+.vox-historia {
+  padding: 100px 10%;
+}
+
+.vox-historia-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+}
+
+.vox-historia-texto h2 {
+  margin-bottom: 20px;
+}
+
+.vox-historia-texto p {
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.vox-historia-visual {
+  background: linear-gradient(135deg, #222, #111);
+  border-radius: 20px;
+  height: 300px;
+}
+
+/* ================= FUNDADORES ================= */
+.vox-fundadores {
+  padding: 80px 10%;
+}
+
+.vox-fundador {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 60px;
+}
+
+.vox-fundador img {
+  width: 200px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.vox-fundador.reverse {
+  flex-direction: row-reverse;
+}
+
+/* ================= MISION VISION ================= */
+.vox-mv {
+  display: flex;
+  gap: 30px;
+  padding: 80px 10%;
+}
+
+.vox-card {
+  flex: 1;
+  padding: 40px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  transition: 0.3s;
+}
+
+.vox-card:hover {
+  transform: translateY(-10px);
+}
+
+/* ================= VALORES ================= */
+.vox-valores {
+  padding: 80px 10%;
+  text-align: center;
+}
+
+.vox-valores-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.vox-valores-grid span {
+  padding: 10px 20px;
+  border-radius: 50px;
+  background: #111;
+  border: 1px solid #222;
+  transition: 0.3s;
+}
+
+.vox-valores-grid span:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* ================= ANIMACIONES ================= */
+.vox-fade {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s ease;
+}
+
+.vox-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .vox-historia-container {
+    grid-template-columns: 1fr;
+  }
+
+  .vox-fundador {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .vox-fundador.reverse {
+    flex-direction: column;
+  }
+
+  .vox-mv {
+    flex-direction: column;
+  }
+}

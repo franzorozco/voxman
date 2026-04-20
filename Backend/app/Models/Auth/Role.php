@@ -2,10 +2,15 @@
 
 namespace App\Models\Auth;
 
-use App\Models\Base\Role as BaseRole;
 
-class Role extends BaseRole
+
+use Spatie\Permission\Models\Role as SpatieRole;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Role extends SpatieRole
 {
+	use SoftDeletes;
+
 	protected $fillable = [
 		'name',
 		'guard_name'

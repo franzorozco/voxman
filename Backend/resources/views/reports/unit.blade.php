@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Reporte de Usuarios</title>
+    <title>Reporte Usuario</title>
 
     <style>
         body {
@@ -65,22 +65,13 @@
             color: #333;
         }
 
-        /* ================= TABLA ================= */
+        /* ================= TABLA SIMPLE ================= */
         table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        th {
-            border: 1px solid #ccc;
-            padding: 6px;
-            font-size: 10px;
-            background: #f2f2f2;
-            text-align: left;
-        }
-
         td {
-            border: 1px solid #ddd;
             padding: 5px;
             font-size: 10px;
         }
@@ -93,7 +84,6 @@
             color: #666;
         }
 
-        /* ================= BADGES SIMPLES ================= */
         .badge {
             font-size: 9px;
             padding: 2px 5px;
@@ -108,10 +98,9 @@
 <!-- ================= HEADER ================= -->
 <div class="header">
 
-    <!-- LOGO (ruta editable) -->
-    <img src="RUTA_DE_TU_LOGO_AQUI/logo.png" alt="Logo">
+    <img src="RUTA_DE_TU_LOGO/logo.png" alt="Logo">
 
-    <h1>REPORTE DE USUARIOS</h1>
+    <h1>REPORTE INDIVIDUAL DE USUARIO</h1>
     <small>Sistema de Gestión Administrativa</small>
 </div>
 
@@ -120,6 +109,7 @@
     <div class="section-title">Información de Auditoría</div>
 
     <table class="audit-table">
+
         <tr>
             <td class="label">ID Reporte:</td>
             <td>RPT-{{ now()->format('YmdHis') }}-{{ $authUser?->id ?? 'SYS' }}</td>
@@ -137,17 +127,17 @@
 
         <tr>
             <td class="label">Rol:</td>
-            <td>{{ optional($authUser->roles)->pluck('name')->join(', ') ?? 'Sin rol' }}</td>
+            <td>{{ $authUser?->roles?->pluck('name')->join(', ') ?? 'Sin rol' }}</td>
         </tr>
 
         <tr>
             <td class="label">Usuario ID:</td>
-            <td>#{{ auth()->id() }}</td>
+            <td>#{{ $authUser?->id ?? '-' }}</td>
         </tr>
 
         <tr>
             <td class="label">Fecha:</td>
-            <td>{{ now()->format('d/m/Y H:i:s') }}</td>
+            <td>{{ $generatedAt ?? now()->format('d/m/Y H:i:s') }}</td>
         </tr>
 
         <tr>
@@ -156,99 +146,78 @@
         </tr>
 
         <tr>
-            <td class="label">Registros:</td>
-            <td>{{ count($users) }}</td>
+            <td class="label">Estado:</td>
+            <td>Generación exitosa</td>
+        </tr>
+
+    </table>
+</div>
+
+<!-- ================= USUARIO ================= -->
+<div class="section">
+    <div class="section-title">Datos del Usuario</div>
+
+    <table>
+        <tr>
+            <td class="label">Email:</td>
+            <td>{{ $user->email }}</td>
+        </tr>
+
+        <tr>
+            <td class="label">Usuario:</td>
+            <td>{{ $user->username }}</td>
+        </tr>
+
+        <tr>
+            <td class="label">Nombre:</td>
+            <td>
+                {{ $user->profile->first_name ?? '' }}
+                {{ $user->profile->last_name_paternal ?? '' }}
+                {{ $user->profile->last_name_maternal ?? '' }}
+            </td>
         </tr>
 
         <tr>
             <td class="label">Estado:</td>
-            <td>Generación exitosa</td>
+            <td>
+                @if($user->is_active)
+                    <span class="badge">Activo</span>
+                @else
+                    <span class="badge">Inactivo</span>
+                @endif
+            </td>
+        </tr>
+
+        <tr>
+            <td class="label">Roles:</td>
+            <td>{{ $user->roles->pluck('name')->join(', ') ?: '-' }}</td>
         </tr>
     </table>
 </div>
 
-<!-- ================= FILTROS ================= -->
+<!-- ================= CLIENTE ================= -->
+@if($user->customer)
 <div class="section">
-    <div class="section-title">Filtros Aplicados</div>
-
-    @if(empty(array_filter($filters)))
-        <p>Sin filtros aplicados (reporte completo)</p>
-    @else
-        <table>
-            @foreach($filters as $key => $value)
-                @if(!empty($value))
-                    <tr>
-                        <td class="label">{{ strtoupper($key) }}</td>
-                        <td>{{ is_array($value) ? implode(', ', $value) : $value }}</td>
-                    </tr>
-                @endif
-            @endforeach
-        </table>
-    @endif
-</div>
-
-<!-- ================= TABLA ================= -->
-<div class="section">
-    <div class="section-title">Listado de Usuarios</div>
+    <div class="section-title">Datos Cliente</div>
 
     <table>
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Usuario</th>
-                <th>Nombre</th>
-                <th>Estado</th>
-                <th>Tipo</th>
-                <th>Roles</th>
-                <th>Código</th>
-                <th>Puntos</th>
-                <th>Compras</th>
-                <th>Fecha</th>
-            </tr>
-        </thead>
+        <tr>
+            <td class="label">Código:</td>
+            <td>{{ $user->customer->customer_code }}</td>
+        </tr>
 
-        <tbody>
-        @foreach($users as $u)
-            <tr>
-                <td>{{ $u->email }}</td>
-                <td>{{ $u->username }}</td>
+        <tr>
+            <td class="label">Puntos:</td>
+            <td>{{ $user->customer->points }}</td>
+        </tr>
 
-                <td>
-                    {{ $u->profile->first_name ?? '' }}
-                    {{ $u->profile->last_name_paternal ?? '' }}
-                    {{ $u->profile->last_name_maternal ?? '' }}
-                </td>
-
-                <td>
-                    @if($u->is_active)
-                        <span class="badge">Activo</span>
-                    @else
-                        <span class="badge">Inactivo</span>
-                    @endif
-                </td>
-
-                <td>
-                    @if($u->owner)
-                        Owner
-                    @elseif($u->customer)
-                        Customer
-                    @else
-                        -
-                    @endif
-                </td>
-
-                <td>{{ $u->roles->pluck('name')->join(', ') ?: '-' }}</td>
-
-                <td>{{ $u->customer->customer_code ?? '-' }}</td>
-                <td>{{ $u->customer->points ?? 0 }}</td>
-                <td>{{ $u->customer->total_purchases ?? 0 }}</td>
-
-                <td>{{ $u->created_at->format('d/m/Y') }}</td>
-            </tr>
-        @endforeach
-        </tbody>
+        <tr>
+            <td class="label">Compras:</td>
+            <td>{{ $user->customer->total_purchases }}</td>
+        </tr>
     </table>
 </div>
+@endif
 
 <!-- ================= FOOTER ================= -->
 <div class="footer">

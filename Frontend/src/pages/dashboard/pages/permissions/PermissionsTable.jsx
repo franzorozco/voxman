@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function RolesTable({ roles, onEdit, onDelete }) {
+export default function PermissionsTable({ permissions, onEdit, onDelete }) {
   const [confirmId, setConfirmId] = useState(null);
 
   const handleDelete = (id) => {
@@ -12,11 +12,9 @@ export default function RolesTable({ roles, onEdit, onDelete }) {
     setConfirmId(null);
   };
 
-  const roleToDelete = roles.find((r) => r.id === confirmId);
-
   return (
     <>
-      <table className="roles-table">
+      <table className="permissions-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -26,19 +24,18 @@ export default function RolesTable({ roles, onEdit, onDelete }) {
         </thead>
 
         <tbody>
-          {roles.map((r) => (
-            <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.name}</td>
-
+          {permissions.map((p) => (
+            <tr key={p.id}>
+              <td>{p.id}</td>
+              <td>{p.name}</td>
               <td>
-                <button className="btn-edit" onClick={() => onEdit(r)}>
+                <button className="btn-edit" onClick={() => onEdit(p)}>
                   Editar
                 </button>
 
                 <button
                   className="btn-delete"
-                  onClick={() => handleDelete(r.id)}
+                  onClick={() => handleDelete(p.id)}
                 >
                   Eliminar
                 </button>
@@ -52,12 +49,8 @@ export default function RolesTable({ roles, onEdit, onDelete }) {
       {confirmId && (
         <div className="modal-overlay">
           <div className="modal-confirm">
-            <h3>¿Eliminar rol?</h3>
-
-            <p>
-              Vas a eliminar:{" "}
-              <b>{roleToDelete?.name}</b>
-            </p>
+            <h3>¿Estás seguro?</h3>
+            <p>Esta acción eliminará el permiso.</p>
 
             <div className="modal-actions">
               <button

@@ -25,6 +25,64 @@ export default function UserForm({ user, onClose, onSubmit }) {
     total_purchases: 0,
   });
 
+  const usernameRegex = /^[a-zA-Z0-9_]+$/; // sin espacios ni símbolos raros
+  const phoneRegex = /^[0-9]+$/;
+
+  const today = new Date().toISOString().split("T")[0];
+  const minDate = "1900-01-01";
+  const [errors, setErrors] = useState({});
+  const [usernameSuggestions, setUsernameSuggestions] = useState([]);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validate = () => {
+  let newErrors = {};
+
+  
+  // EMAIL
+  if (!form.email) newErrors.email = "Email es obligatorio";
+
+  // USERNAME
+  if (!form.username) {
+    newErrors.username = "Username es obligatorio";
+  } else if (!usernameRegex.test(form.username)) {
+    newErrors.username = "Solo letras, números y _ (sin espacios)";
+  }
+
+  // PASSWORD
+  if (!user && !form.password) {
+    newErrors.password = "Password obligatorio";
+  } else if (form.password && form.password.length < 6) {
+    newErrors.password = "Mínimo 6 caracteres";
+  }
+
+  // NOMBRE
+  if (!form.first_name) {
+    newErrors.first_name = "Nombre obligatorio";
+  }
+
+  // TELÉFONO
+  if (form.phone && !phoneRegex.test(form.phone)) {
+    newErrors.phone = "Solo números";
+  }
+
+  // FECHA
+  if (form.birthdate) {
+    if (form.birthdate > today) {
+      newErrors.birthdate = "No puede ser futura";
+    } else if (form.birthdate < minDate) {
+      newErrors.birthdate = "Fecha no válida";
+    }
+  }
+
+  // ROLES (recomendado obligatorio)
+  if (form.roles.length === 0) {
+    newErrors.roles = "Debe asignar al menos un rol";
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
   // 🔹 cargar roles
   useEffect(() => {
     const loadRoles = async () => {
@@ -66,55 +124,104 @@ export default function UserForm({ user, onClose, onSubmit }) {
     }
   }, [user]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+const handleChange = (e) => {
+  const { name, value, type, checked } = e.target;
 
-    setForm({
-      ...form,
-      [name]: type === "checkbox" ? checked : value,
-    });
+  const newValue = type === "checkbox" ? checked : value;
+
+  const updatedForm = {
+    ...form,
+    [name]: newValue,
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  setForm(updatedForm);
 
-    if (!form.email || !form.username || (!user && !form.password)) {
-      alert("Email, username y password son obligatorios");
-      return;
-    }
+  const newErrors = validateField(name, newValue);
+  setErrors((prev) => ({
+    ...prev,
+    [name]: newErrors,
+  }));
+};
 
-    if (!form.first_name) {
-      alert("El nombre es obligatorio");
-      return;
-    }
+const validateField = (name, value) => {
+  switch (name) {
+    case "email":
+      if (!value) return "Email es obligatorio";
+      if (!emailRegex.test(value)) return "Email no válido";
+      return "";
 
-    const payload = {
-      email: form.email,
-      username: form.username,
-      is_active: form.is_active,
+    case "username":
+      if (!value) return "Username es obligatorio";
+      if (!usernameRegex.test(value)) return "Solo letras, números y _";
+      return "";
 
-      first_name: form.first_name,
-      last_name_paternal: form.last_name_paternal,
-      last_name_maternal: form.last_name_maternal,
-      phone: form.phone,
-      birthdate: form.birthdate,
-      gender: form.gender,
+    case "password":
+      if (!user && !value) return "Password obligatorio";
+      if (value && value.length < 6) return "Mínimo 6 caracteres";
+      return "";
+
+    case "first_name":
+      if (!value) return "Nombre obligatorio";
+      return "";
+
+    case "phone":
+      if (value && !phoneRegex.test(value)) return "Solo números";
+      return "";
+
+    default:
+      return "";
+  }
+};
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const isValid = validate();
+
+  if (!isValid) return;
+
+  const payload = {
+    email: form.email,
+    username: form.username,
+    is_active: form.is_active,
+    first_name: form.first_name,
+    last_name_paternal: form.last_name_paternal,
+    last_name_maternal: form.last_name_maternal,
+    phone: form.phone ? `+591${form.phone}` : null,
+    birthdate: form.birthdate,
+    gender: form.gender,
+  };
+
+  if (form.roles.length > 0) payload.roles = form.roles;
+  if (form.password) payload.password = form.password;
+  if (form.type) payload.type = form.type;
+
+  if (form.type === "customer") {
+    payload.customer = {
+      customer_code: form.customer_code,
+      points: form.points,
+      total_purchases: form.total_purchases,
     };
+  }
 
-    if (form.roles.length > 0) payload.roles = form.roles;
-    if (form.password) payload.password = form.password;
-    if (form.type) payload.type = form.type;
+  try {
+    await onSubmit(payload);
+  } catch (error) {
+    const data = error.response?.data;
 
-    if (form.type === "customer") {
-      payload.customer = {
-        customer_code: form.customer_code,
-        points: form.points,
-        total_purchases: form.total_purchases,
-      };
+    console.log("DEBUG USERNAME ERROR:", data);
+
+    if (data?.field === "username") {
+      setErrors((prev) => ({
+        ...prev,
+        username: data.message,
+      }));
+
+      setUsernameSuggestions(data.suggestions || []);
     }
-
-    onSubmit(payload);
-  };
+  }
+};
 
   return (
     <div className="modal-overlay">
@@ -126,19 +233,60 @@ export default function UserForm({ user, onClose, onSubmit }) {
           <h3>Datos de cuenta</h3>
 
           <div className="form-grid">
-            <div className="form-group">
+            <div className="form-group full-width">
               <label>Email *</label>
-              <input name="email" value={form.email} onChange={handleChange} />
+              <input
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                className={errors.email ? "input-error" : ""}
+              />
+              {errors.email && <span className="error">{errors.email}</span>}
             </div>
 
             <div className="form-group">
               <label>Username *</label>
-              <input name="username" value={form.username} onChange={handleChange} />
+              <input
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                className={errors.username ? "input-error" : ""}
+              />
+
+              {errors.username && <span className="error">{errors.username}</span>}
+
+              {usernameSuggestions.length > 0 && (
+                <div className="suggestions">
+                  <small>Sugerencias:</small>
+                  <div className="suggestion-list">
+                    {usernameSuggestions.map((sug, index) => (
+                      <span
+                        key={index}
+                        className="suggestion-item"
+                        onClick={() => {
+                          setForm((prev) => ({ ...prev, username: sug }));
+                          setUsernameSuggestions([]);
+                          setErrors((prev) => ({ ...prev, username: "" }));
+                        }}
+                      >
+                        {sug}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="form-group">
               <label>Password {!user && "*"}</label>
-              <input type="password" name="password" onChange={handleChange} />
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                className={errors.password ? "input-error" : ""}
+              />
+              {errors.password && <span className="error">{errors.password}</span>}
             </div>
 
             <div className="form-group checkbox-group">
@@ -162,7 +310,14 @@ export default function UserForm({ user, onClose, onSubmit }) {
           <div className="form-grid">
             <div className="form-group">
               <label>Nombre *</label>
-              <input name="first_name" value={form.first_name} onChange={handleChange} />
+              <input
+                name="first_name"
+                value={form.first_name}
+                onChange={handleChange}
+                className={errors.first_name ? "input-error" : ""}
+              />
+              
+              {errors.first_name && <span className="error">{errors.first_name}</span>}
             </div>
 
             <div className="form-group">
@@ -177,12 +332,31 @@ export default function UserForm({ user, onClose, onSubmit }) {
 
             <div className="form-group">
               <label>Teléfono</label>
-              <input name="phone" value={form.phone} onChange={handleChange} />
-            </div>
+              <div style={{ display: "flex", gap: "5px" }}>
+                <select disabled value="+591">
+                  <option value="+591">🇧🇴 +591</option>
+                </select>
 
+                <input
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="77777777"
+                />
+              </div>
+              {errors.phone && <span className="error">{errors.phone}</span>}
+            </div>
             <div className="form-group">
               <label>Fecha de nacimiento</label>
-              <input type="date" name="birthdate" value={form.birthdate} onChange={handleChange} />
+              <input
+                type="date"
+                name="birthdate"
+                value={form.birthdate}
+                onChange={handleChange}
+                max={today}
+                min={minDate}
+              />
+              {errors.birthdate && <span className="error">{errors.birthdate}</span>}
             </div>
 
             <div className="form-group">
@@ -263,6 +437,7 @@ export default function UserForm({ user, onClose, onSubmit }) {
                 {role.name}
               </label>
             ))}
+            {errors.roles && <span className="error">{errors.roles}</span>}
           </div>
         </div>
 

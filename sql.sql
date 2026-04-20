@@ -1,5 +1,5 @@
-te entiendo, entonces podrías darme el código para mapear toda mi base de datos por favor, de toda mi base de datos, de todo y los siguientes pasos para generar los modelos y generar los modelos con reliese
- -- =========================================
+
+-- =========================================
 -- EXTENSIONES
 -- =========================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

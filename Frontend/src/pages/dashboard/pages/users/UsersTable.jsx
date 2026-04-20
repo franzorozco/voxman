@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
+import UserViewModal from "./UserViewModal";
 export default function UsersTable({
   users,
   onEdit,
@@ -7,8 +8,25 @@ export default function UsersTable({
   search,
   setSearch,
   filters,
-  setFilters
-}) {
+  setFilters,
+  generateUserPdf,
+  authUser
+}){
+
+  // =========================
+  // 🧠 STATES
+  // =========================
+  const [loading, setLoading] = useState(true);
+  const [confirmId, setConfirmId] = useState(null);
+  const [viewUser, setViewUser] = useState(null);
+  // =========================
+  // ⏳ LOADING CONTROL
+  // =========================
+  useEffect(() => {
+    if (Array.isArray(users)) {
+      setLoading(false);
+    }
+  }, [users]);
 
 
   // =========================
@@ -17,7 +35,6 @@ export default function UsersTable({
   const filteredUsers = useMemo(() => {
     let data = [...users];
 
-    // 🔎 SEARCH GLOBAL
     if (search) {
       const q = search.toLowerCase();
       data = data.filter((u) =>
@@ -28,14 +45,12 @@ export default function UsersTable({
       );
     }
 
-    // 📌 STATUS
     if (filters.status !== "all") {
       data = data.filter((u) =>
         filters.status === "active" ? u.is_active : !u.is_active
       );
     }
 
-    // 📌 TYPE
     if (filters.type !== "all") {
       data = data.filter((u) =>
         filters.type === "owner" ? u.owner :
@@ -43,14 +58,12 @@ export default function UsersTable({
       );
     }
 
-    // 📌 ROLE
     if (filters.role !== "all") {
       data = data.filter((u) =>
         u.roles?.some((r) => r.name === filters.role)
       );
     }
 
-    // 📌 RANGO PUNTOS
     if (filters.minPoints !== "") {
       data = data.filter((u) =>
         (u.customer?.points || 0) >= Number(filters.minPoints)
@@ -63,7 +76,6 @@ export default function UsersTable({
       );
     }
 
-    // 📊 SORT
     switch (filters.sort) {
       case "created_at_asc":
         data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -82,9 +94,6 @@ export default function UsersTable({
     return data;
   }, [users, search, filters]);
 
-  // =========================
-  // 🧠 AGRUPACIÓN
-  // =========================
   const groupedUsers = useMemo(() => {
     if (filters.groupBy === "none") return { all: filteredUsers };
 
@@ -105,21 +114,33 @@ export default function UsersTable({
       return acc;
     }, {});
   }, [filteredUsers, filters.groupBy]);
+  
+  const canDelete = (u) => {
+  const isAdmin = u.roles?.some(r => r.name === "Administrador");
+  const isOwner = !!u.owner;
+  const isSelf = authUser?.id === u.id;
 
+  return !(isAdmin || isOwner || isSelf);
+  };
+
+  const getDeleteReason = (u) => {
+    if (authUser?.id === u.id) return "No puedes eliminar tu propia cuenta";
+    if (u.roles?.some(r => r.name === "Administrador")) return "Es Administrador";
+    if (u.owner) return "Es Owner";
+    return "";
+  };
   return (
     <div className="users-admin">
 
       {/* ================= FILTROS ================= */}
       <div className="filters-panel">
 
-        {/* SEARCH */}
         <input
           placeholder="Buscar usuario..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        {/* STATUS */}
         <select
           onChange={(e) =>
             setFilters({ ...filters, status: e.target.value })
@@ -130,7 +151,6 @@ export default function UsersTable({
           <option value="inactive">Inactivos</option>
         </select>
 
-        {/* TYPE */}
         <select
           onChange={(e) =>
             setFilters({ ...filters, type: e.target.value })
@@ -141,7 +161,6 @@ export default function UsersTable({
           <option value="customer">Customer</option>
         </select>
 
-        {/* SORT */}
         <select
           onChange={(e) =>
             setFilters({ ...filters, sort: e.target.value })
@@ -153,7 +172,6 @@ export default function UsersTable({
           <option value="points_asc">Menos puntos</option>
         </select>
 
-        {/* RANGO PUNTOS */}
         <input
           placeholder="Min puntos"
           type="number"
@@ -170,7 +188,6 @@ export default function UsersTable({
           }
         />
 
-        {/* GROUP BY */}
         <select
           onChange={(e) =>
             setFilters({ ...filters, groupBy: e.target.value })
@@ -184,77 +201,153 @@ export default function UsersTable({
       </div>
 
       {/* ================= TABLA ================= */}
-      {Object.entries(groupedUsers).map(([group, items]) => (
-        <div key={group} className="group-section">
-
-          {filters.groupBy !== "none" && (
-            <h3 className="group-title">{group}</h3>
-          )}
-
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Usuario</th>
-                <th>Nombre</th>
-                <th>Estado</th>
-                <th>Tipo</th>
-                <th>Roles</th>
-                <th>Cliente</th>
-                <th>Creado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {items.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.email}</td>
-                  <td>{u.username}</td>
-
-                  <td>
-                    {u.profile?.first_name} {u.profile?.last_name_paternal}
-                  </td>
-
-                  <td>
-                    {u.is_active ? "Activo" : "Inactivo"}
-                  </td>
-
-                  <td>
-                    {u.owner && "Owner"}
-                    {u.customer && "Customer"}
-                    {!u.owner && !u.customer && "-"}
-                  </td>
-
-                  <td>
-                    {u.roles?.map((r) => r.name).join(", ") || "-"}
-                  </td>
-
-                  <td>
-                    {u.customer
-                      ? `${u.customer.customer_code} (${u.customer.points} pts)`
-                      : "-"}
-                  </td>
-
-                  <td>
-                    {new Date(u.created_at).toLocaleDateString()}
-                  </td>
-
-                  <td>
-                    <button className="btn-edit" onClick={() => onEdit(u)}>
-                      Editar
-                    </button>
-                    <button className="btn-delete" onClick={() => onDelete(u.id)}>
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
+      {filteredUsers.length === 0 ? (
+        <div className="loading-container">
+          <p>No se encontraron usuarios</p>
         </div>
-      ))}
+      ) : (
+        Object.entries(groupedUsers).map(([group, items]) => (
+          <div key={group} className="group-section">
+
+            {filters.groupBy !== "none" && (
+              <h3 className="group-title">{group}</h3>
+            )}
+
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Usuario</th>
+                  <th>Nombre</th>
+                  <th>Estado</th>
+                  <th>Tipo</th>
+                  <th>Roles</th>
+                  <th>Cliente</th>
+                  <th>Creado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {items.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.email}</td>
+                    <td>{u.username}</td>
+
+                    <td>
+                      {u.profile?.first_name} {u.profile?.last_name_paternal}
+                    </td>
+
+                    <td>{u.is_active ? "Activo" : "Inactivo"}</td>
+
+                    <td>
+                      {u.owner && "Owner"}
+                      {u.customer && "Customer"}
+                      {!u.owner && !u.customer && "-"}
+                    </td>
+
+                    <td>{u.roles?.map((r) => r.name).join(", ") || "-"}</td>
+
+                    <td>
+                      {u.customer
+                        ? `${u.customer.customer_code} (${u.customer.points} pts)`
+                        : "-"}
+                    </td>
+
+                    <td>
+                      {new Date(u.created_at).toLocaleDateString()}
+                    </td>
+
+                    <td>
+                      <button
+                        className="btn-view"
+                        onClick={() => setViewUser(u)}
+                      >
+                        Ver
+                      </button>
+
+                      <button className="btn-edit" onClick={() => onEdit(u)}>
+                        Editar
+                      </button>
+
+                      <button
+                        className="btn-report"
+                        onClick={() => generateUserPdf(u.id)}
+                      >
+                        PDF
+                      </button>
+
+                      <button
+                        className={`btn-delete ${!canDelete(u) ? "disabled" : ""}`}
+                        disabled={!canDelete(u)}
+                        title={!canDelete(u) ? getDeleteReason(u) : "Eliminar usuario"}
+                        onClick={() => {
+                          if (!canDelete(u)) return; // 🔒 doble protección
+                          setConfirmId(u.id);
+                        }}
+                      >
+                        {canDelete(u) ? "Eliminar" : "No permitido"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+          </div>
+        ))
+      )}
+
+      {/* ================= MODAL (CORREGIDO) ================= */}
+      {confirmId && (
+        <div className="modal-overlay">
+          <div className="modal-confirm">
+
+            <h3>Eliminar usuario</h3>
+
+            <p>
+              ¿Seguro que deseas eliminar este usuario?
+            </p>
+
+            <div className="modal-actions">
+
+              <button
+                className="btn-cancel"
+                onClick={() => setConfirmId(null)}
+              >
+                Cancelar
+              </button>
+
+              <button
+                className="btn-danger"
+                onClick={() => {
+                  const userToDelete = users.find(u => u.id === confirmId);
+
+                  if (!userToDelete || !canDelete(userToDelete)) {
+                    setConfirmId(null);
+                    return;
+                  }
+
+                  onDelete(confirmId);
+                  setConfirmId(null);
+                }}
+              >
+                Sí, eliminar
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewUser && (
+        <UserViewModal
+          user={viewUser}
+          onClose={() => setViewUser(null)}
+        />
+      )}
+
+
     </div>
   );
 }

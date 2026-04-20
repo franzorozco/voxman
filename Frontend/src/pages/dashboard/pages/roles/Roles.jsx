@@ -7,6 +7,7 @@ import {
 } from "../../../../api/roles";
 
 import "./Roles.css";
+import "../css/stylesCruds.css";
 import RolesTable from "./RolesTable";
 import RoleForm from "./RoleForm";
 

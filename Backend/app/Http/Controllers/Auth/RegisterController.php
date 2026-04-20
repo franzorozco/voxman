@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Core\User;
 use App\Models\Core\UserProfile;
-use App\Models\Actors\Customer;
 
 class RegisterController extends Controller
 {
@@ -30,10 +29,8 @@ class RegisterController extends Controller
                     'phone' => $request->phone,
                 ]);
 
-                Customer::create([
-                    'user_id' => $user->id,
-                    'customer_code' => 'CUST-' . uniqid(),
-                ]);
+                // ✅ AQUÍ asignas el rol correctamente
+                $user->assignRole('Usuario');
 
                 $token = $user->createToken('auth_token')->plainTextToken;
 

@@ -1,0 +1,56 @@
+/* 🔥 modal */
+.modal-confirm {
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  width: 320px;
+  border: 1px solid rgba(255,255,255,0.08);
+  text-align: center;
+  animation: pop 0.2s ease;
+}
+
+.modal-confirm h3 {
+  margin-bottom: 10px;
+}
+
+.modal-confirm p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 15px;
+}
+
+/* 🔥 botones */
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-danger {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* 🔥 animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pop {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

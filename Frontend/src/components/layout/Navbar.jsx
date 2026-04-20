@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useAuthStore } from "../../store/authstore";
+import { useAuthStore } from "../../store/authStore";
 import "./Navbar.css";
 
 export default function Navbar({ logo }) {
@@ -11,7 +11,7 @@ export default function Navbar({ logo }) {
   const [open, setOpen] = useState(false); // dropdown
   const [menuOpen, setMenuOpen] = useState(false); // mobile menu
 
-  const isAdmin = user?.roles?.includes("admin");
+  const isAdmin = user?.roles?.includes("Administrador");
   const menuRef = useRef();
 
   const getInitials = (username) => {
@@ -49,6 +49,7 @@ export default function Navbar({ logo }) {
           <Link to="/">Inicio</Link>
           <Link to="/shop">Tienda</Link>
           <Link to="/collections">Colecciones</Link>
+          <Link to="/nosotros">Nosotros</Link>
         </nav>
 
         {/* ACCIONES DESKTOP */}

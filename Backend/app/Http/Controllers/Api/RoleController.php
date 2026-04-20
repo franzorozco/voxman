@@ -4,21 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\DB;
+use App\Models\Auth\Role;
 
 class RoleController extends Controller
 {
     // 🔹 LISTAR
     public function index()
     {
-        return Role::all();
+        return Role::with('permissions')->get();
     }
 
     // 🔹 VER UNO
     public function show($id)
     {
-        return Role::findOrFail($id);
+        return Role::with('permissions')->findOrFail($id);
     }
 
     // 🔹 CREAR
@@ -30,7 +29,12 @@ class RoleController extends Controller
                 'guard_name' => 'web'
             ]);
 
-            return response()->json($role, 201);
+            // 🔥 asignar permisos
+            if ($request->has('permissions')) {
+                $role->syncPermissions($request->permissions);
+            }
+
+            return response()->json($role->load('permissions'), 201);
 
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -47,7 +51,12 @@ class RoleController extends Controller
                 'name' => $request->name
             ]);
 
-            return response()->json($role);
+            // 🔥 sincroniza (agrega y elimina automáticamente)
+            if ($request->has('permissions')) {
+                $role->syncPermissions($request->permissions);
+            }
+
+            return response()->json($role->load('permissions'));
 
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
