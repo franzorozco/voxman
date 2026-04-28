@@ -9,6 +9,7 @@ export default function UserViewModal({ user, onClose }) {
 
         <div className="user-view-grid">
 
+          {/* ================= BASICO ================= */}
           <div>
             <strong>Email:</strong>
             <p>{user.email}</p>
@@ -38,29 +39,71 @@ export default function UserViewModal({ user, onClose }) {
             <p>{user.is_active ? "Activo" : "Inactivo"}</p>
           </div>
 
+          {/* ================= TIPOS ================= */}
           <div>
             <strong>Tipo:</strong>
             <p>
-              {user.owner && "Owner"}
-              {user.customer && "Customer"}
-              {!user.owner && !user.customer && "-"}
+              {user.owner?.is_active && "Owner "}
+              {user.customer?.is_active && "Customer "}
+              {user.employee?.is_active && "Employee "}
+              {!user.owner?.is_active &&
+               !user.customer?.is_active &&
+               !user.employee?.is_active && "-"}
             </p>
           </div>
 
+          {/* ================= ROLES ================= */}
           <div>
             <strong>Roles:</strong>
             <p>{user.roles?.map(r => r.name).join(", ") || "-"}</p>
           </div>
 
-          <div>
-            <strong>Cliente:</strong>
-            <p>
-              {user.customer
-                ? `${user.customer.customer_code} (${user.customer.points} pts)`
-                : "-"}
-            </p>
-          </div>
+          {/* ================= CUSTOMER ================= */}
+          {user.customer?.is_active && (
+            <>
+              <div>
+                <strong>Código Cliente:</strong>
+                <p>{user.customer.customer_code}</p>
+              </div>
 
+              <div>
+                <strong>Puntos:</strong>
+                <p>{user.customer.points}</p>
+              </div>
+
+              <div>
+                <strong>Total Compras:</strong>
+                <p>{user.customer.total_purchases}</p>
+              </div>
+            </>
+          )}
+
+          {/* ================= EMPLOYEE ================= */}
+          {user.employee?.is_active && (
+            <>
+              <div>
+                <strong>Código Empleado:</strong>
+                <p>{user.employee.employee_code}</p>
+              </div>
+
+              <div>
+                <strong>Rol Laboral:</strong>
+                <p>{user.employee.role}</p>
+              </div>
+
+              <div>
+                <strong>Sueldo Base:</strong>
+                <p>${user.employee.base_salary}</p>
+              </div>
+
+              <div>
+                <strong>Comisión:</strong>
+                <p>{user.employee.commission_percentage}%</p>
+              </div>
+            </>
+          )}
+
+          {/* ================= FECHA ================= */}
           <div>
             <strong>Creado:</strong>
             <p>{new Date(user.created_at).toLocaleString()}</p>

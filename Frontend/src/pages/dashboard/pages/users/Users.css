@@ -808,3 +808,96 @@ form.modal {
     grid-column: span 1;
   }
 }
+
+
+/* =========================
+   🔥 TYPES SELECTOR (PRO)
+========================= */
+
+.types-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* CARD */
+.type-card {
+  position: relative;
+  cursor: pointer;
+
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  border-radius: 12px;
+  padding: 14px;
+
+  transition: all 0.2s ease;
+
+  display: flex;
+  align-items: center;
+}
+
+/* ocultar checkbox */
+.type-card input {
+  display: none;
+}
+
+/* contenido */
+.type-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* título */
+.type-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+/* descripción */
+.type-desc {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* hover */
+.type-card:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-1px);
+}
+
+/* ACTIVO */
+.type-card.active {
+  border: 1px solid #2563eb;
+  background: rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.4);
+}
+
+/* efecto glow */
+.type-card.active:hover {
+  background: rgba(37, 99, 235, 0.2);
+}
+
+/* indicador visual */
+.type-card.active::after {
+  content: "✓";
+  position: absolute;
+  top: 10px;
+  right: 12px;
+
+  font-size: 12px;
+  color: #60a5fa;
+  font-weight: bold;
+}
+
+/* =========================
+   📱 RESPONSIVE
+========================= */
+@media (max-width: 600px) {
+  .types-grid {
+    grid-template-columns: 1fr;
+  }
+}

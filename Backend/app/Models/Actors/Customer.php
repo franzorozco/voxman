@@ -8,6 +8,7 @@ class Customer extends BaseCustomer
 {
 	protected $fillable = [
 		'user_id',
+		'is_active',
 		'customer_code',
 		'points',
 		'total_purchases'

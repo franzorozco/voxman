@@ -4,6 +4,7 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  restoreUser,
 } from "../../../../api/users";
 import api from "../../../../api/client";
 import "./Users.css";
@@ -88,7 +89,7 @@ const handleSubmit = async (data) => {
 
       } catch (err) {
 
-        if (err.response?.status === 409 && err.response.data.soft_deleted) {
+        if (err.response?.status === 409 && err.response.data.type === "restore") {
 
           setSoftDeleteModal({
             open: true,
@@ -107,16 +108,13 @@ const handleSubmit = async (data) => {
     await loadUsers();
 
   } catch (error) {
-    throw error; // 🔥 CLAVE: dejar que UserForm lo reciba
+    throw error;
   }
 };
 
 const handleRestore = async (data) => {
   try {
-    await createUser({
-      ...data,
-      action: "restore"
-    });
+    await restoreUser(softDeleteModal.data.id); // 👈 SOLO RESTORE REAL
 
     setSoftDeleteModal({ open: false, data: null, formData: null });
     setOpen(false);
@@ -133,14 +131,19 @@ const handleRestore = async (data) => {
 };
 
 const handleOverwrite = async (data) => {
-  await createUser({
-    ...data,
-    action: "overwrite"
-  });
+  try {
+    await createUser({
+      ...data,
+      action: "overwrite"
+    });
 
-  setSoftDeleteModal({ open: false, data: null, formData: null });
-  setOpen(false);
-  await loadUsers();
+    setSoftDeleteModal({ open: false, data: null, formData: null });
+    setOpen(false);
+    await loadUsers();
+
+  } catch (error) {
+    console.error("ERROR OVERWRITE:", error.response?.data);
+  }
 };
 
 

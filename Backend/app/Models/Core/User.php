@@ -48,4 +48,9 @@ class User extends BaseUser
 	{
 		return $this->hasOne(\App\Models\Actors\Customer::class, 'user_id');
 	}
+	
+	public function employee()
+	{
+		return $this->hasOne(\App\Models\Actors\Employee::class, 'user_id');
+	}
 }

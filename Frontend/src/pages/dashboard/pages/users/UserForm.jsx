@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getRoles } from "../../../../api/roles";
-
+import { restoreUser } from "../../../../api/users";
 export default function UserForm({ user, onClose, onSubmit }) {
   const [availableRoles, setAvailableRoles] = useState([]);
 
@@ -18,14 +18,19 @@ export default function UserForm({ user, onClose, onSubmit }) {
     gender: "",
 
     roles: [],
-    type: "",
+    types: [],
 
     customer_code: "",
     points: 0,
     total_purchases: 0,
+
+    employee_code: "",
+    employee_role: "seller",
+    base_salary: 0,
+    commission_percentage: 0,
   });
 
-  const usernameRegex = /^[a-zA-Z0-9_]+$/; // sin espacios ni símbolos raros
+  const usernameRegex = /^[a-zA-Z0-9_]+$/;
   const phoneRegex = /^[0-9]+$/;
 
   const today = new Date().toISOString().split("T")[0];
@@ -115,11 +120,22 @@ export default function UserForm({ user, onClose, onSubmit }) {
         gender: user.profile?.gender || "",
 
         roles: user.roles?.map((r) => r.name) || [],
-        type: user.owner ? "owner" : user.customer ? "customer" : "",
+        types: [
+          ...(user.owner?.is_active ? ["owner"] : []),
+          ...(user.customer?.is_active ? ["customer"] : []),
+          ...(user.employee?.is_active ? ["employee"] : []),
+        ],
 
         customer_code: user.customer?.customer_code || "",
         points: user.customer?.points || 0,
         total_purchases: user.customer?.total_purchases || 0,
+
+        employee_code: user.employee?.employee_code || "",
+        employee_role: user.employee?.role || "seller",
+        base_salary: user.employee?.base_salary || 0,
+        commission_percentage: user.employee?.commission_percentage || 0,
+
+
       });
     }
   }, [user]);
@@ -195,9 +211,9 @@ const handleSubmit = async (e) => {
 
   if (form.roles.length > 0) payload.roles = form.roles;
   if (form.password) payload.password = form.password;
-  if (form.type) payload.type = form.type;
+  payload.types = [...form.types]; // copia limpia
 
-  if (form.type === "customer") {
+  if (form.types.includes("customer")) {
     payload.customer = {
       customer_code: form.customer_code,
       points: form.points,
@@ -205,13 +221,29 @@ const handleSubmit = async (e) => {
     };
   }
 
+  if (form.types.includes("employee")) {
+    payload.employee = {
+      employee_code: form.employee_code,
+      role: form.employee_role,
+      base_salary: form.base_salary,
+      commission_percentage: form.commission_percentage,
+    };
+  }
   try {
     await onSubmit(payload);
+
   } catch (error) {
+
+    // 🔥 ESTE ES EL BLOQUE CLAVE
+    if (error.response?.status === 409) {
+      // 👉 NO es error real
+      // 👉 Users.jsx ya maneja el modal
+      return;
+    }
+
     const data = error.response?.data;
 
-    console.log("DEBUG USERNAME ERROR:", data);
-
+    // ❌ ERRORES REALES
     if (data?.field === "username") {
       setErrors((prev) => ({
         ...prev,
@@ -220,6 +252,15 @@ const handleSubmit = async (e) => {
 
       setUsernameSuggestions(data.suggestions || []);
     }
+
+    if (data?.field === "email") {
+      setErrors((prev) => ({
+        ...prev,
+        email: data.message,
+      }));
+    }
+
+    console.error("ERROR REAL:", error);
   }
 };
 
@@ -373,20 +414,75 @@ const handleSubmit = async (e) => {
 
         {/* ================= TIPO ================= */}
         <div className="form-section">
-          <h3>Tipo de usuario</h3>
+          <h3>Tipos de usuario</h3>
 
-          <div className="form-group">
-            <label>Tipo</label>
-            <select name="type" value={form.type} onChange={handleChange}>
-              <option value="">Ninguno</option>
-              <option value="owner">Owner</option>
-              <option value="customer">Customer</option>
-            </select>
+          <div className="types-grid">
+            <label className={`type-card ${form.types.includes("owner") ? "active" : ""}`}>
+              <input
+                type="checkbox"
+                checked={form.types.includes("owner")}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+
+                  setForm((prev) => ({
+                    ...prev,
+                    types: checked
+                      ? [...prev.types, "owner"]
+                      : prev.types.filter((t) => t !== "owner"),
+                  }));
+                }}
+              />
+              <div className="type-content">
+                <span className="type-title">Owner</span>
+                <span className="type-desc">Control total del sistema</span>
+              </div>
+            </label>
+
+            <label className={`type-card ${form.types.includes("customer") ? "active" : ""}`}>
+              <input
+                type="checkbox"
+                checked={form.types.includes("customer")}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+
+                  setForm((prev) => ({
+                    ...prev,
+                    types: checked
+                      ? [...prev.types, "customer"]
+                      : prev.types.filter((t) => t !== "customer"),
+                  }));
+                }}
+              />
+              <div className="type-content">
+                <span className="type-title">Customer</span>
+                <span className="type-desc">Cliente con puntos y compras</span>
+              </div>
+            </label>
+
+            <label className={`type-card ${form.types.includes("employee") ? "active" : ""}`}>
+              <input
+                type="checkbox"
+                checked={form.types.includes("employee")}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+
+                  setForm((prev) => ({
+                    ...prev,
+                    types: checked
+                      ? [...prev.types, "employee"]
+                      : prev.types.filter((t) => t !== "employee"),
+                  }));
+                }}
+              />
+              <div className="type-content">
+                <span className="type-title">Employee</span>
+                <span className="type-desc">Empleado del sistema</span>
+              </div>
+            </label>
           </div>
         </div>
-
         {/* ================= CUSTOMER ================= */}
-        {form.type === "customer" && (
+        {form.types.includes("customer") && (
           <div className="form-section">
             <h3>Información del Cliente</h3>
 
@@ -412,6 +508,60 @@ const handleSubmit = async (e) => {
             </div>
           </div>
         )}
+
+
+        {form.types.includes("employee") && (
+          <div className="form-section">
+            <h3>Información del Empleado</h3>
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Código</label>
+                <input
+                  name="employee_code"
+                  value={form.employee_code}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Rol</label>
+                <select
+                  name="employee_role"
+                  value={form.employee_role}
+                  onChange={handleChange}
+                >
+                  <option value="seller">Vendedor</option>
+                  <option value="delivery">Delivery</option>
+                  <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
+                  <option value="cashier">Cajero</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Salario base</label>
+                <input
+                  type="number"
+                  name="base_salary"
+                  value={form.base_salary}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>% Comisión</label>
+                <input
+                  type="number"
+                  name="commission_percentage"
+                  value={form.commission_percentage}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* ================= ROLES ================= */}
         <div className="form-section">

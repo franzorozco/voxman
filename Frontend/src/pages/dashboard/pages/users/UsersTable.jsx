@@ -51,12 +51,17 @@ export default function UsersTable({
       );
     }
 
-    if (filters.type !== "all") {
-      data = data.filter((u) =>
-        filters.type === "owner" ? u.owner :
-        filters.type === "customer" ? u.customer : true
-      );
-    }
+  if (filters.type !== "all") {
+    data = data.filter((u) =>
+      filters.type === "owner"
+        ? u.owner?.is_active
+        : filters.type === "customer"
+        ? u.customer?.is_active
+        : filters.type === "employee"
+        ? u.employee?.is_active
+        : true
+    );
+  }
 
     if (filters.role !== "all") {
       data = data.filter((u) =>
@@ -101,9 +106,12 @@ export default function UsersTable({
       let key = "otros";
 
       if (filters.groupBy === "type") {
-        key = user.owner ? "Owner" : user.customer ? "Customer" : "Otros";
+        if (user.owner?.is_active) key = "Owner";
+        else if (user.customer?.is_active) key = "Customer";
+        else if (user.employee?.is_active) key = "Employee";
+        else key = "Otros";
       }
-
+            
       if (filters.groupBy === "role") {
         key = user.roles?.[0]?.name || "Sin rol";
       }
@@ -159,6 +167,7 @@ export default function UsersTable({
           <option value="all">Todos tipos</option>
           <option value="owner">Owner</option>
           <option value="customer">Customer</option>
+          <option value="employee">Employee</option>
         </select>
 
         <select
@@ -223,6 +232,7 @@ export default function UsersTable({
                   <th>Tipo</th>
                   <th>Roles</th>
                   <th>Cliente</th>
+                  <th>Empleado</th>
                   <th>Creado</th>
                   <th>Acciones</th>
                 </tr>
@@ -241,16 +251,23 @@ export default function UsersTable({
                     <td>{u.is_active ? "Activo" : "Inactivo"}</td>
 
                     <td>
-                      {u.owner && "Owner"}
-                      {u.customer && "Customer"}
-                      {!u.owner && !u.customer && "-"}
+                      {u.owner?.is_active && "Owner "}
+                      {u.customer?.is_active && "Customer "}
+                      {u.employee?.is_active && "Employee "}
+
+                      {!u.owner?.is_active && !u.customer?.is_active && !u.employee?.is_active && "-"}
                     </td>
 
                     <td>{u.roles?.map((r) => r.name).join(", ") || "-"}</td>
 
                     <td>
-                      {u.customer
-                        ? `${u.customer.customer_code} (${u.customer.points} pts)`
+                      {u.customer?.is_active
+                      ? `${u.customer.customer_code} (${u.customer.points} pts)`
+                      : "-"}
+                    </td>
+                    <td>
+                      {u.employee?.is_active
+                        ? `${u.employee.employee_code || "Sin código"} (${u.employee.role})`
                         : "-"}
                     </td>
 

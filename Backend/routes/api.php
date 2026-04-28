@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->prefix('users')->group(function () {
     Route::put('/{id}', [UserController::class, 'update']);
     Route::delete('/{id}', [UserController::class, 'destroy']);
     Route::get('/{id}/pdf', [UserController::class, 'pdf']);
+    Route::post('/{id}/restore', [UserController::class, 'restore']);
 });
 
 
