@@ -1,16 +1,22 @@
 import { useAuthStore } from "../store/authStore";
 import { Navigate } from "react-router-dom";
 
-export default function ProtectedRoute({ children, role }) {
+export default function ProtectedRoute({ children, roles }) {
+
   const user = useAuthStore((state) => state.user);
 
+  // NO LOGEADO
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  // si se requiere rol y no lo tiene
-  if (role && !user?.roles?.includes(role)) {
-    return <Navigate to="/" />;
+  // VALIDAR ROLES
+  const hasRole = user?.roles?.some((r) =>
+    roles.includes(r)
+  );
+
+  if (!hasRole) {
+    return <Navigate to="/" replace />;
   }
 
   return children;

@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import ProtectedRoute from "./ProtectedRoute";
+
 import Home from "../pages/home/Home";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -17,6 +19,7 @@ export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* HOME */}
         <Route path="/" element={<Home />} />
 
@@ -24,17 +27,26 @@ export default function AppRouter() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/nosotros" element={<Nosotros />} />
-        {/* DASHBOARD */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
+
+        {/* DASHBOARD PROTEGIDO */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute
+              roles={["Owner", "Administrador"]}
+            >
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<DashboardHome />} />
           <Route path="products" element={<Products />} />
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />
           <Route path="permissions" element={<Permissions />} />
         </Route>
+
       </Routes>
     </BrowserRouter>
   );
 }
-
-

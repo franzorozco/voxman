@@ -1,12 +1,92 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
 import "./Dashboard.css";
 import logo from "../../assets/global/logo_black.png";
 
+import {
+  LayoutDashboard,
+  Package,
+  Shapes,
+  Boxes,
+  ShoppingCart,
+  RotateCcw,
+  Truck,
+  BarChart3,
+  Users,
+  History,
+  UserRoundSearch,
+  TicketPercent,
+  BadgePercent,
+  ShoppingBasket,
+  Shield,
+  KeyRound,
+  Settings,
+  FileText,
+
+  House,
+  LogOut,
+  UserCircle2
+
+} from "lucide-react";
+
+
 export default function DashboardLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+
+  const { logout, user } = useAuthStore();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    window.innerWidth <= 900
+  );
+
+  const handleLogout = () => {
+    logout();
+
+    window.location.href = "/login";
+  };
 
   return (
+    <>  
+
+    {/* LOGOUT MODAL */}
+    {showLogoutModal && (
+      <div className="modal-overlay">
+
+        <div className="logout-modal">
+
+          <div className="logout-icon">
+            <LogOut size={38} />
+          </div>
+
+          <h2>Cerrar sesión</h2>
+
+          <p>
+            ¿Estás seguro de que deseas cerrar sesión?
+          </p>
+
+          <div className="logout-actions">
+
+            <button
+              className="cancel-btn"
+              onClick={() => setShowLogoutModal(false)}
+            >
+              Cancelar
+            </button>
+
+            <button
+              className="confirm-btn"
+              onClick={handleLogout}
+            >
+              Sí, cerrar sesión
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    )}
+
     <div className="dashboard">
 
       {/* SIDEBAR */}
@@ -29,120 +109,120 @@ export default function DashboardLayout() {
           <div className="nav-section">
             <p className="section-title">{!collapsed && "PANEL"}</p>
 
-            <a href="/dashboard">
-              <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" />
+            <Link  to="/dashboard">
+              <LayoutDashboard size={18} />
               {!collapsed && "Dashboard"}
-            </a>
+            </Link >
           </div>
 
           {/* TIENDA */}
           <div className="nav-section">
             <p className="section-title">{!collapsed && "TIENDA"}</p>
 
-            <a href="/dashboard/products">
-              <img src="https://cdn-icons-png.flaticon.com/512/3081/3081559.png" />
+            <Link  to="/dashboard/products">
+              <Package size={18} />
               {!collapsed && "Productos"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/categories">
-              <img src="https://cdn-icons-png.flaticon.com/512/3225/3225209.png" />
+            <Link  to="/dashboard/categories">
+              <Shapes size={18} />
               {!collapsed && "Categorías"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/inventory">
-              <img src="https://cdn-icons-png.flaticon.com/512/679/679720.png" />
+            <Link  to="/dashboard/inventory">
+              <Boxes size={18} />
               {!collapsed && "Inventario"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/orders">
-              <img src="https://cdn-icons-png.flaticon.com/512/1170/1170576.png" />
+            <Link  to="/dashboard/orders">
+              <ShoppingCart size={18} />
               {!collapsed && "Órdenes"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/returns">
-              <img src="https://cdn-icons-png.flaticon.com/512/679/679720.png" />
+            <Link  to="/dashboard/returns">
+              <RotateCcw size={18} />
               {!collapsed && "Devoluciones"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/shipping">
-              <img src="https://cdn-icons-png.flaticon.com/512/2331/2331966.png" />
+            <Link  to="/dashboard/shipping">
+              <Truck size={18} />
               {!collapsed && "Envíos"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/sales">
-              <img src="https://cdn-icons-png.flaticon.com/512/1170/1170576.png" />
+            <Link  to="/dashboard/sales">
+              <BarChart3 size={18} />
               {!collapsed && "Ventas"}
-            </a>
+            </Link >
           </div>
 
           {/* CLIENTES */}
           <div className="nav-section">
             <p className="section-title">{!collapsed && "CLIENTES"}</p>
 
-            <a href="/dashboard/clients">
-              <img src="https://cdn-icons-png.flaticon.com/512/1077/1077012.png" />
+            <Link  to="/dashboard/clients">
+              <Users size={18} />
               {!collapsed && "Clientes"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/history">
-              <img src="https://cdn-icons-png.flaticon.com/512/747/747376.png" />
+            <Link  to="/dashboard/history">
+              <History size={18} />
               {!collapsed && "Historial"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/segments">
-              <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" />
+            <Link  to="/dashboard/segments">
+              <UserRoundSearch size={18} />
               {!collapsed && "Segmentos"}
-            </a>
+            </Link >
           </div>
 
           {/* MARKETING */}
           <div className="nav-section">
             <p className="section-title">{!collapsed && "MARKETING"}</p>
 
-            <a href="/dashboard/coupons">
-              <img src="https://cdn-icons-png.flaticon.com/512/3500/3500833.png" />
+            <Link  to="/dashboard/coupons">
+              <TicketPercent size={18} />
               {!collapsed && "Cupones"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/promotions">
-              <img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" />
+            <Link  to="/dashboard/promotions">
+              <BadgePercent size={18} />
               {!collapsed && "Promociones"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/carts">
-              <img src="https://cdn-icons-png.flaticon.com/512/1828/1828911.png" />
+            <Link  to="/dashboard/carts">
+              <ShoppingBasket size={18} />
               {!collapsed && "Carritos"}
-            </a>
+            </Link >
           </div>
 
           {/* SISTEMA */}
           <div className="nav-section">
             <p className="section-title">{!collapsed && "SISTEMA"}</p>
 
-            <a href="/dashboard/users">
-              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" />
+            <Link  to="/dashboard/users">
+              <Users size={18} />
               {!collapsed && "Usuarios"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/roles">
-              <img src="https://cdn-icons-png.flaticon.com/512/2099/2099058.png" />
+            <Link  to="/dashboard/roles">
+              <Shield size={18} />
               {!collapsed && "Roles"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/permissions">
-              <img src="https://cdn-icons-png.flaticon.com/512/3524/3524659.png" />
+            <Link  to="/dashboard/permissions">
+              <KeyRound size={18} />
               {!collapsed && "Permisos"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/settings">
-              <img src="https://cdn-icons-png.flaticon.com/512/3524/3524659.png" />
+            <Link  to="/dashboard/settings">
+              <Settings size={18} />
               {!collapsed && "Configuración"}
-            </a>
+            </Link >
 
-            <a href="/dashboard/logs">
-              <img src="https://cdn-icons-png.flaticon.com/512/565/565491.png" />
+            <Link  to="/dashboard/logs">
+              <FileText size={18} />
               {!collapsed && "Logs"}
-            </a>
+            </Link >
           </div>
 
         </nav>
@@ -157,8 +237,48 @@ export default function DashboardLayout() {
       <main className="main">
 
         <div className="topbar">
-          <small>Panel de administración</small>
-          <small>admin@voxman.com</small>
+
+          {/* LEFT */}
+          <div className="topbar-left">
+            <h3>Panel de Administración</h3>
+          </div>
+
+          {/* RIGHT */}
+          <div className="topbar-right">
+
+            {/* PERFIL */}
+            <div className="topbar-user">
+              <UserCircle2 size={34} />
+
+              <div className="topbar-user-info">
+
+                <span className="user-name">
+                  {user?.username || "SIN SESION"}
+                </span>
+
+                <small className="user-email">
+                  {user?.email || "correo@voxman.com"}
+                </small>
+
+              </div>
+            </div>
+
+            {/* INICIO */}
+            <Link to="/" className="topbar-btn home-btn">
+              <House size={16} />
+              Inicio
+            </Link>
+
+            {/* LOGOUT */}
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="topbar-btn logout-btn"
+            >
+              <LogOut size={16} />
+              Cerrar sesión
+            </button>
+          </div>
+
         </div>
 
         <div className="content">
@@ -168,5 +288,6 @@ export default function DashboardLayout() {
       </main>
 
     </div>
+    </>
   );
 }

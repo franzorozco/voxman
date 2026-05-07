@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 
-
+ 
 class UserController extends Controller
 {
     public function index()
@@ -36,9 +36,6 @@ class UserController extends Controller
 
         try {
 
-            // =========================
-            // 🔍 VALIDACIÓN
-            // =========================
             $request->validate([
                 'email' => ['required','email'],
                 'username' => ['required','regex:/^[a-zA-Z0-9_]+$/','max:50'],
@@ -47,21 +44,12 @@ class UserController extends Controller
                 'types.*' => ['in:owner,customer,employee'],
             ]);
 
-            // =========================
-            // 🔍 BUSCAR EMAIL (incluye eliminados)
-            // =========================
             $existingEmail = User::withTrashed()
                 ->where('email', $request->email)
                 ->first();
 
-            // =========================
-            // 🔥 CASO: EXISTE
-            // =========================
             if ($existingEmail) {
 
-                // =========================
-                // 🔥 RESTORE NORMAL
-                // =========================
                 if ($existingEmail->trashed() && $request->action === 'restore') {
 
                     $existingEmail->restore();
@@ -74,15 +62,10 @@ class UserController extends Controller
                     ], 200);
                 }
 
-                // =========================
-                // 🔥 OVERWRITE REAL (PRO)
-                // =========================
                 if ($existingEmail->trashed() && $request->action === 'overwrite') {
 
-                    // 👉 restaurar
                     $existingEmail->restore();
 
-                    // 👉 actualizar USER
                     $existingEmail->update([
                         'email' => $request->email,
                         'username' => $request->username,
@@ -90,7 +73,6 @@ class UserController extends Controller
                         'is_active' => true
                     ]);
 
-                    // 👉 PROFILE
                     $existingEmail->profile()->updateOrCreate(
                         ['user_id' => $existingEmail->id],
                         [
@@ -103,16 +85,12 @@ class UserController extends Controller
                         ]
                     );
 
-                    // 👉 ROLES
                     if ($request->filled('roles')) {
                         $existingEmail->syncRoles($request->roles);
                     }
 
                     $types = $request->types ?? [];
 
-                    // =========================
-                    // OWNER
-                    // =========================
                     $owner = Owner::withTrashed()
                         ->where('user_id', $existingEmail->id)
                         ->first();

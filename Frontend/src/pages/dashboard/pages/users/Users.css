@@ -901,3 +901,153 @@ form.modal {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================
+   📱 RESPONSIVE USERS TABLE
+========================= */
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+/* scroll bonito */
+.table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 999px;
+}
+
+/* tabla */
+.users-table {
+  min-width: 1200px;
+}
+
+/* =========================
+   TABLET
+========================= */
+@media (max-width: 1024px) {
+
+  .filters-panel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filters-panel input,
+  .filters-panel select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 768px) {
+
+  .users-container {
+    padding: 12px;
+  }
+
+  /* filtros */
+  .filters-panel {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .filters-panel input,
+  .filters-panel select {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  /* tabla */
+  .users-table {
+    min-width: 900px;
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* botones */
+  .btn-view,
+  .btn-edit,
+  .btn-report,
+  .btn-delete {
+    padding: 5px 8px;
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  /* modal */
+  .modal {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .modal form {
+    padding: 15px;
+  }
+
+  .modal h2 {
+    font-size: 18px;
+    padding: 15px;
+  }
+
+  /* acciones modal */
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+}
+
+/* =========================
+   EXTRA SMALL
+========================= */
+@media (max-width: 480px) {
+
+  .users-header {
+    padding: 10px;
+  }
+
+  .users-title {
+    font-size: 18px;
+  }
+
+  .users-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ocultar columnas menos importantes */
+  .users-table th:nth-child(7),
+  .users-table td:nth-child(7),
+  .users-table th:nth-child(8),
+  .users-table td:nth-child(8),
+  .users-table th:nth-child(9),
+  .users-table td:nth-child(9) {
+    display: none;
+  }
+
+}

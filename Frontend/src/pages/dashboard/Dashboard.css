@@ -73,11 +73,11 @@ html, body {
   transition: 0.2s;
 }
 
-.sidebar-nav a img {
+.sidebar-nav a svg {
   width: 18px;
   height: 18px;
-  filter: invert(1);
   opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .sidebar-nav a:hover {
@@ -85,7 +85,7 @@ html, body {
   color: white;
 }
 
-.sidebar-nav a:hover img {
+.sidebar-nav a:hover svg {
   opacity: 1;
 }
 
@@ -164,7 +164,7 @@ html, body {
   font-size: 0;
 }
 
-.sidebar.collapsed .sidebar-nav a img {
+.sidebar.collapsed .sidebar-nav a svg {
   margin: 0;
 }
 
@@ -203,9 +203,317 @@ html, body {
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
+
+  .dashboard {
+    position: relative;
+  }
+
+  /* SIDEBAR MOBILE */
   .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 260px;
+    height: 100vh;
+
+    z-index: 999;
+
+    transition: all 0.3s ease;
+  }
+
+  /* MODO ICONOS */
+  .sidebar.collapsed {
+    width: 70px;
+    padding: 20px 10px;
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed .sidebar-nav a {
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .sidebar.collapsed .sidebar-logo img {
     display: none;
   }
+
+  .sidebar.collapsed .section-title {
+    display: none;
+  }
+
+  .sidebar.collapsed .sidebar-footer {
+    display: none;
+  }
+
+  /* MAIN */
+  .main {
+    width: 100%;
+    margin-left: 70px;
+  }
+
+  /* BOTON */
+  .toggle-btn {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1000;
+  }
+
+  .topbar {
+    padding-left: 60px;
+  }
+
+}
+
+
+
+/* =========================
+   🔥 TOPBAR MODERNO
+========================= */
+
+.topbar {
+  height: 70px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 0 24px;
+
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(10px);
+
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* LEFT */
+.topbar-left h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+/* RIGHT */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* USER */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 12px;
+
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  border-radius: 12px;
+}
+
+.topbar-user svg {
+  color: #60a5fa;
+}
+
+.topbar-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.user-email {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* BUTTONS */
+.topbar-btn {
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 14px;
+
+  border-radius: 10px;
+
+  border: none;
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  transition: 0.2s ease;
+
+  text-decoration: none;
+}
+
+/* HOME */
+.home-btn {
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: #60a5fa;
+}
+
+.home-btn:hover {
+  background: rgba(37, 99, 235, 0.25);
+  transform: translateY(-1px);
+}
+
+/* LOGOUT */
+.logout-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   📱 RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+  .topbar {
+    height: auto;
+    padding: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .topbar-right {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .topbar-user {
+    width: 100%;
+  }
+
+  .topbar-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .topbar-user-info {
+    overflow: hidden;
+  }
+
+  .user-email {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+}
+
+/* =========================
+   🔥 LOGOUT MODAL
+========================= */
+
+.logout-modal {
+  width: 90%;
+  max-width: 420px;
+
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.08);
+
+  border-radius: 18px;
+
+  padding: 30px 25px;
+
+  text-align: center;
+
+  color: white;
+
+  animation: modalFade 0.2s ease;
+}
+
+.logout-icon {
+  width: 70px;
+  height: 70px;
+
+  margin: 0 auto 18px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.logout-modal h2 {
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.logout-modal p {
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.logout-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.logout-actions button {
+  flex: 1;
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+/* cancelar */
+.cancel-btn {
+  background: rgba(255,255,255,0.06);
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* confirmar */
+.confirm-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
 }

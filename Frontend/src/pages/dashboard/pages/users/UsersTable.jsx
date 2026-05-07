@@ -124,17 +124,22 @@ export default function UsersTable({
   }, [filteredUsers, filters.groupBy]);
   
   const canDelete = (u) => {
-  const isAdmin = u.roles?.some(r => r.name === "Administrador");
-  const isOwner = !!u.owner;
-  const isSelf = authUser?.id === u.id;
 
-  return !(isAdmin || isOwner || isSelf);
+    const isAdmin = u.roles?.some(
+      r => r.name === "Administrador"
+    );
+
+    const isOwner = u.owner?.is_active;
+
+    const isSelf = authUser?.id === u.id;
+
+    return !(isAdmin || isOwner || isSelf);
   };
 
   const getDeleteReason = (u) => {
     if (authUser?.id === u.id) return "No puedes eliminar tu propia cuenta";
     if (u.roles?.some(r => r.name === "Administrador")) return "Es Administrador";
-    if (u.owner) return "Es Owner";
+    if (u.owner?.is_active) return "Es Owner";
     return "";
   };
   return (
@@ -222,6 +227,7 @@ export default function UsersTable({
               <h3 className="group-title">{group}</h3>
             )}
 
+            <div className="table-wrapper">
             <table className="users-table">
               <thead>
                 <tr>
@@ -310,7 +316,7 @@ export default function UsersTable({
                 ))}
               </tbody>
             </table>
-
+            </div>
           </div>
         ))
       )}
