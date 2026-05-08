@@ -209,7 +209,6 @@ html, body {
     position: relative;
   }
 
-  /* SIDEBAR MOBILE */
   .sidebar {
     position: fixed;
     top: 0;
@@ -223,7 +222,6 @@ html, body {
     transition: all 0.3s ease;
   }
 
-  /* MODO ICONOS */
   .sidebar.collapsed {
     width: 70px;
     padding: 20px 10px;
@@ -247,13 +245,11 @@ html, body {
     display: none;
   }
 
-  /* MAIN */
   .main {
     width: 100%;
     margin-left: 70px;
   }
 
-  /* BOTON */
   .toggle-btn {
     position: fixed;
     top: 15px;
@@ -267,11 +263,6 @@ html, body {
 
 }
 
-
-
-/* =========================
-   🔥 TOPBAR MODERNO
-========================= */
 
 .topbar {
   height: 70px;
@@ -288,7 +279,6 @@ html, body {
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
-/* LEFT */
 .topbar-left h3 {
   font-size: 18px;
   font-weight: 600;
@@ -296,14 +286,12 @@ html, body {
   margin: 0;
 }
 
-/* RIGHT */
 .topbar-right {
   display: flex;
   align-items: center;
   gap: 14px;
 }
 
-/* USER */
 .topbar-user {
   display: flex;
   align-items: center;
@@ -311,8 +299,6 @@ html, body {
 
   padding: 8px 12px;
 
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
 
   border-radius: 12px;
 }
@@ -384,9 +370,6 @@ html, body {
   transform: translateY(-1px);
 }
 
-/* =========================
-   📱 RESPONSIVE
-========================= */
 
 @media (max-width: 900px) {
 
@@ -429,25 +412,16 @@ html, body {
 
 }
 
-/* =========================
-   🔥 LOGOUT MODAL
-========================= */
 
 .logout-modal {
   width: 90%;
   max-width: 420px;
-
-  background: #111827;
+  background: #000000;
   border: 1px solid rgba(255,255,255,0.08);
-
   border-radius: 18px;
-
   padding: 30px 25px;
-
   text-align: center;
-
   color: white;
-
   animation: modalFade 0.2s ease;
 }
 

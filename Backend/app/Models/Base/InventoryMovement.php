@@ -49,13 +49,13 @@ class InventoryMovement extends Model
 		return $this->belongsTo(ProductVariant::class, 'variant_id');
 	}
 
+	public function employee()
+	{
+		return $this->belongsTo(Employee::class);
+	}
+
 	public function branch()
 	{
 		return $this->belongsTo(Branch::class);
-	}
-
-	public function user()
-	{
-		return $this->belongsTo(User::class);
 	}
 }

@@ -230,23 +230,17 @@ export default function DashboardLayout() {
         <div className="sidebar-footer">
           {!collapsed && `VOXman © ${new Date().getFullYear()}`}
         </div>
-
       </aside>
 
-      {/* MAIN */}
       <main className="main">
-
         <div className="topbar">
 
-          {/* LEFT */}
           <div className="topbar-left">
             <h3>Panel de Administración</h3>
           </div>
 
-          {/* RIGHT */}
           <div className="topbar-right">
 
-            {/* PERFIL */}
             <div className="topbar-user">
               <UserCircle2 size={34} />
 
@@ -262,14 +256,10 @@ export default function DashboardLayout() {
 
               </div>
             </div>
-
-            {/* INICIO */}
             <Link to="/" className="topbar-btn home-btn">
               <House size={16} />
               Inicio
             </Link>
-
-            {/* LOGOUT */}
             <button
               onClick={() => setShowLogoutModal(true)}
               className="topbar-btn logout-btn"

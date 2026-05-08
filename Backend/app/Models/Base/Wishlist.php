@@ -6,33 +6,35 @@
 
 namespace App\Models\Base;
 
-use App\Models\CartItem;
-use App\Models\User;
+use App\Models\Customer;
+use App\Models\WishlistItem;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Class Cart
+ * Class Wishlist
  * 
- * @property uuid $id
- * @property uuid|null $user_id
+ * @property string $id
+ * @property string|null $customer_id
  * @property Carbon|null $created_at
  * 
- * @property User|null $user
- * @property Collection|CartItem[] $cart_items
+ * @property Customer|null $customer
+ * @property Collection|WishlistItem[] $wishlist_items
  *
  * @package App\Models\Base
  */
-class Cart extends Model
+class Wishlist extends Model
 {
-	protected $table = 'carts';
+	use SoftDeletes;
+
+	protected $table = 'wishlists';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'user_id' => 'uuid'
+		'created_at' => 'datetime'
 	];
 
 	public function customer()
@@ -42,6 +44,6 @@ class Cart extends Model
 
 	public function items()
 	{
-		return $this->hasMany(CartItem::class);
+		return $this->hasMany(WishlistItem::class);
 	}
 }

@@ -42,9 +42,29 @@ class Customer extends Model
 		'total_purchases' => 'float'
 	];
 
-	public function user()
+	public function wishlist()
 	{
-		return $this->belongsTo(User::class);
+		return $this->hasOne(Wishlist::class);
+	}
+
+	public function cart()
+	{
+		return $this->hasOne(Cart::class);
+	}
+
+	public function addresses()
+	{
+		return $this->hasMany(Address::class);
+	}
+
+	public function notifications()
+	{
+		return $this->hasMany(Notification::class);
+	}
+
+	public function reviews()
+	{
+		return $this->hasMany(ProductReview::class);
 	}
 
 	public function sales()

@@ -41,6 +41,11 @@ class Category extends Model
 		'parent_id' => 'uuid'
 	];
 
+	public function employee()
+	{
+		return $this->belongsTo(Employee::class);
+	}
+
 	public function category()
 	{
 		return $this->belongsTo(\App\Models\Category::class, 'parent_id');

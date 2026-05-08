@@ -30,4 +30,29 @@ class Employee extends Model
         'last_promotion_date',
         'notes'
     ];
+
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class);
+    }
+
+    public function purchaseReceptions()
+    {
+        return $this->hasMany(PurchaseReception::class);
+    }
+
+    public function cashRegisters()
+    {
+        return $this->hasMany(CashRegister::class);
+    }
+
+    public function inventoryMovements()
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
+
+
+
+
+
 }
