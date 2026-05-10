@@ -295,3 +295,113 @@
     gap: 10px;
   }
 }
+
+
+/* =========================
+   🔥 FILTERS PANEL (ESTILO USERS STYLE)
+========================= */
+
+.filters-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  margin-bottom: 15px;
+  padding: 12px;
+
+  background: #111;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.05);
+
+  backdrop-filter: blur(8px);
+}
+
+/* inputs y selects consistentes */
+.filters-bar input,
+.filters-bar select {
+  padding: 9px 12px;
+  border-radius: 8px;
+
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.1);
+
+  color: white;
+  font-size: 13px;
+
+  outline: none;
+  transition: 0.2s ease;
+}
+
+/* focus igual que users */
+.filters-bar input:focus,
+.filters-bar select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+}
+
+/* hover suave */
+.filters-bar input:hover,
+.filters-bar select:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* =========================
+   🔥 FILTROS EN GRUPO (opcional PRO)
+========================= */
+
+.filters-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* labels opcionales si agregas filtros avanzados */
+.filters-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  margin-right: 4px;
+}
+
+/* =========================
+   🔥 BOTÓN RESET FILTROS (recomendado)
+========================= */
+
+.btn-filter-reset {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+
+  color: #f87171;
+  padding: 8px 12px;
+  border-radius: 8px;
+
+  font-size: 12px;
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.btn-filter-reset:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   🔥 RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .filters-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filters-bar input,
+  .filters-bar select {
+    width: 100%;
+  }
+}
