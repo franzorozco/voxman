@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-
+use Illuminate\Support\Facades\Storage;
 use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductVariant;
@@ -14,14 +14,14 @@ use App\Models\Catalog\VariantAttributeValue;
 use App\Models\Catalog\VariantSize;
 use App\Models\Inventory\Inventory;
 use App\Models\Catalog\VariantMeasurement;
-
+ 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
         $query = Product::query()
-
             ->with([
+                'owner.user.user_profiles',
                 'category',
                 'product_type',
                 'product_images',
@@ -31,6 +31,10 @@ class ProductController extends Controller
             ->whereNull('deleted_at')
             ->where('is_active', true);
 
+        $products = $query->with([
+            'product_variants.inventories',
+        ]);
+        
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
@@ -40,18 +44,15 @@ class ProductController extends Controller
         }
 
         if ($request->filled('search')) {
-
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
-
                 $q->where('name', 'ILIKE', "%{$search}%")
-                  ->orWhere('description', 'ILIKE', "%{$search}%");
+                ->orWhere('description', 'ILIKE', "%{$search}%");
             });
         }
 
         switch ($request->sort) {
-
             case 'price_asc':
                 $query->orderBy('base_price', 'asc');
                 break;
@@ -70,6 +71,16 @@ class ProductController extends Controller
         }
 
         $products = $query->paginate(12);
+        $products->getCollection()->transform(function ($product) {
+
+            $profile = $product->owner?->user?->user_profiles?->first();
+
+            $product->owner_name = $profile
+                ? trim(($profile->first_name ?? '') . ' ' . ($profile->last_name_paternal ?? ''))
+                : null;
+
+            return $product;
+        });
 
         return response()->json($products);
     }
@@ -129,17 +140,17 @@ class ProductController extends Controller
                 'views'           => 0,
             ]);
 
-            if ($request->has('product_images')) {
-
-                foreach ($request->product_images as $image) {
-
-                ProductImage::create([
-
-                    'id'         => Str::uuid(),
-                    'product_id' => $product->id,
-                    'url'        => $image['url'],
-                    'is_main'    => $image['is_main'] ?? false,
-                ]);
+            if ($request->hasFile('product_images')) {
+                foreach ($request->file('product_images') as $file) {
+                    $path = config('storage_paths.product_images');
+                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs($path, $filename, 'public');
+                    ProductImage::create([
+                        'id'         => Str::uuid(),
+                        'product_id' => $product->id,
+                        'url'        => Storage::url($filePath),
+                        'is_main'    => false,
+                    ]);
                 }
             }
 
@@ -257,120 +268,64 @@ class ProductController extends Controller
 
             $product = Product::findOrFail($id);
 
-            /*
-            |--------------------------------------------------------------------------
-            | PRODUCT
-            |--------------------------------------------------------------------------
-            */
-
             $product->update([
-
                 'owner_id'        => $request->owner_id,
                 'category_id'     => $request->category_id,
                 'product_type_id' => $request->product_type_id,
-
                 'name'            => $request->name,
                 'description'     => $request->description,
-
                 'slug'            => Str::slug($request->name),
-
                 'base_price'      => $request->base_price,
-
                 'is_active'       => $request->is_active ?? true,
             ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE OLD RELATIONS
-            |--------------------------------------------------------------------------
-            */
 
             foreach ($product->product_variants as $variant) {
 
                 VariantAttributeValue::where('variant_id', $variant->id)->delete();
-
                 VariantSize::where('variant_id', $variant->id)->delete();
-
                 Inventory::where('variant_id', $variant->id)->delete();
-
                 VariantMeasurement::where('variant_id', $variant->id)->delete();
             }
-
             ProductImage::where('product_id', $product->id)->delete();
-
             ProductVariant::where('product_id', $product->id)->delete();
-
-            /*
-            |--------------------------------------------------------------------------
-            | PRODUCT IMAGES
-            |--------------------------------------------------------------------------
-            */
 
             if ($request->has('product_images')) {
 
                 foreach ($request->product_images as $image) {
-
+                    $filePath = $file->storeAs(config('storage_paths.product_images'), $filename, 'public');
                     ProductImage::create([
-
                         'id'         => Str::uuid(),
                         'product_id' => $product->id,
-
                         'url'        => $image['url'],
                         'is_main'    => $image['is_main'] ?? false,
                     ]);
                 }
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | VARIANTS
-            |--------------------------------------------------------------------------
-            */
-
             if ($request->has('variants')) {
 
                 foreach ($request->variants as $variantData) {
 
                     $variant = ProductVariant::create([
-
                         'id'         => Str::uuid(),
-
                         'product_id' => $product->id,
-
                         'sku'        => $variantData['sku'],
                         'barcode'    => $variantData['barcode'] ?? null,
-
                         'weight'     => $variantData['weight'] ?? 0,
-
                         'price'      => $variantData['price'],
                         'cost'       => $variantData['cost'],
-
                         'is_active'  => true,
                     ]);
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | ATTRIBUTES
-                    |--------------------------------------------------------------------------
-                    */
 
                     if (isset($variantData['attribute_value_ids'])) {
-
                         foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
-
                             VariantAttributeValue::create([
-
                                 'variant_id'         => $variant->id,
                                 'attribute_value_id' => $attributeValueId,
                             ]);
                         }
                     }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | SIZES
-                    |--------------------------------------------------------------------------
-                    */
 
                     if (isset($variantData['sizes'])) {
 
@@ -385,32 +340,18 @@ class ProductController extends Controller
                         }
                     }
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | INVENTORIES
-                    |--------------------------------------------------------------------------
-                    */
-
                     if (isset($variantData['inventories'])) {
-
                         foreach ($variantData['inventories'] as $inventory) {
-
                             Inventory::create([
 
                                 'branch_id' => $inventory['branch_id'],
                                 'variant_id'=> $variant->id,
-
                                 'stock'     => $inventory['stock'],
                                 'min_stock' => $inventory['min_stock'] ?? 0,
                             ]);
                         }
                     }
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | MEASUREMENTS
-                    |--------------------------------------------------------------------------
-                    */
 
                     if (isset($variantData['measurements'])) {
 
@@ -434,19 +375,13 @@ class ProductController extends Controller
             return response()->json([
 
                 'message' => 'Producto actualizado correctamente',
-
                 'product' => Product::with([
-
                     'category',
                     'product_type',
                     'product_images',
-
                     'product_variants.variant_attribute_values.attribute_value.attribute',
-
                     'product_variants.variant_sizes',
-
                     'product_variants.inventories.branch',
-
                     'product_variants.variant_measurements.measurement_type',
 
                 ])->find($product->id)

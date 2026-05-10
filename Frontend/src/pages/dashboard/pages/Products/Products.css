@@ -1,0 +1,297 @@
+/* =========================
+   📦 PRODUCTS CONTAINER
+========================= */
+
+.products-container {
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  color: white;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 20px;
+  padding: 12px 16px;
+
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+
+  backdrop-filter: blur(8px);
+}
+
+.products-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: white;
+}
+
+/* =========================
+   BOTONES
+========================= */
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   TABLA PRODUCTS
+========================= */
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  background: #111;
+  border-radius: 10px;
+
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.products-table th {
+  background: #1a1a1a;
+  text-align: left;
+
+  padding: 12px;
+  font-weight: 600;
+
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+}
+
+.products-table td {
+  padding: 12px;
+
+  border-top: 1px solid rgba(255,255,255,0.05);
+
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+}
+
+.products-table tr:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+/* =========================
+   IMAGEN PRODUCTO
+========================= */
+
+.product-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* =========================
+   BOTONES ACCIÓN
+========================= */
+
+.btn-edit {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+
+  padding: 6px 10px;
+  margin-right: 5px;
+
+  border-radius: 6px;
+  color: #fbbf24;
+
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+
+  padding: 6px 10px;
+  border-radius: 6px;
+
+  color: #f87171;
+  cursor: pointer;
+  font-size: 13px;
+
+  transition: 0.2s ease;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   MODAL (REUTILIZA USERS STYLE)
+========================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+
+  backdrop-filter: blur(6px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 1000;
+}
+
+.modal {
+  background: #0f0f0f;
+  color: white;
+
+  width: 95%;
+  max-width: 1000px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal h2 {
+  padding: 18px 22px;
+  font-size: 18px;
+  font-weight: 600;
+
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+
+  color: #60a5fa;
+}
+
+/* =========================
+   FORM GRID
+========================= */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+
+  padding: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: rgba(255,255,255,0.6);
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px;
+  border-radius: 8px;
+
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.1);
+
+  color: white;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+/* =========================
+   MODAL ACTIONS
+========================= */
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  padding: 15px 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  gap: 10px;
+}
+
+.modal-actions button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-actions .btn-primary {
+  background: #2563eb;
+}
+
+.modal-actions .btn-secondary {
+  background: #1f2937;
+  color: white;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1024px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .products-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

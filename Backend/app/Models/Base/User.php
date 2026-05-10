@@ -10,12 +10,13 @@ use App\Models\Address;
 use App\Models\AuditLog;
 use App\Models\Cart;
 use App\Models\CashRegister;
-use App\Models\Customer;
-use App\Models\InventoryMovement;
-use App\Models\Owner;
-use App\Models\ProductPriceHistory;
-use App\Models\Sale;
-use App\Models\UserProfile;
+use App\Models\Actors\Customer;
+use App\Models\Inventory\InventoryMovement;
+use App\Models\Actors\Owner;
+use App\Models\Catalog\ProductPriceHistory;
+use App\Models\Sales\Sale;
+use App\Models\Core\UserProfile;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -80,6 +81,7 @@ class User extends Authenticatable
 		return $this->hasMany(AuditLog::class);
 	}
 
+	
 	public function user_profiles()
 	{
 		return $this->hasMany(UserProfile::class);
