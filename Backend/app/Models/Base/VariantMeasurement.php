@@ -6,9 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\MeasurementType;
-use App\Models\ProductVariant;
-use App\Models\Size;
+use App\Models\Catalog\MeasurementType;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Catalog\Size;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -31,14 +31,11 @@ use Illuminate\Database\Eloquent\Model;
 class VariantMeasurement extends Model
 {
 	protected $table = 'variant_measurements';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'variant_id' => 'uuid',
-		'size_id' => 'uuid',
-		'measurement_type_id' => 'uuid',
 		'value' => 'float'
 	];
 

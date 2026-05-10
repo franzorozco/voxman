@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\Attribute;
-use App\Models\VariantAttributeValue;
+use App\Models\Catalog\Attribute;
+use App\Models\Catalog\VariantAttributeValue;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,12 +26,11 @@ use Illuminate\Database\Eloquent\Model;
 class AttributeValue extends Model
 {
 	protected $table = 'attribute_values';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'attribute_id' => 'uuid'
 	];
 
 	public function attribute()

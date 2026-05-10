@@ -51,13 +51,10 @@ class Sale extends Model
 {
 	use SoftDeletes;
 	protected $table = 'sales';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'customer_id' => 'uuid',
-		'branch_id' => 'uuid',
-		'user_id' => 'uuid',
 		'sale_type' => 'USER-DEFINED',
 		'status' => 'USER-DEFINED',
 		'subtotal' => 'float',

@@ -49,6 +49,7 @@ class Purchase extends Model
 	use SoftDeletes;
 
 	protected $table = 'purchases';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [

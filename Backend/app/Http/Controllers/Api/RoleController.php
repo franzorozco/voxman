@@ -1,26 +1,24 @@
 <?php
-
+ 
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+
 use App\Models\Auth\Role;
 
 class RoleController extends Controller
 {
-    // 🔹 LISTAR
     public function index()
     {
         return Role::with('permissions')->get();
     }
 
-    // 🔹 VER UNO
     public function show($id)
     {
         return Role::with('permissions')->findOrFail($id);
     }
 
-    // 🔹 CREAR
     public function store(Request $request)
     {
         try {
@@ -29,7 +27,6 @@ class RoleController extends Controller
                 'guard_name' => 'web'
             ]);
 
-            // 🔥 asignar permisos
             if ($request->has('permissions')) {
                 $role->syncPermissions($request->permissions);
             }
@@ -41,7 +38,6 @@ class RoleController extends Controller
         }
     }
 
-    // 🔹 ACTUALIZAR
     public function update(Request $request, $id)
     {
         try {
@@ -51,7 +47,6 @@ class RoleController extends Controller
                 'name' => $request->name
             ]);
 
-            // 🔥 sincroniza (agrega y elimina automáticamente)
             if ($request->has('permissions')) {
                 $role->syncPermissions($request->permissions);
             }
@@ -63,7 +58,6 @@ class RoleController extends Controller
         }
     }
 
-    // 🔹 ELIMINAR
     public function destroy($id)
     {
         try {

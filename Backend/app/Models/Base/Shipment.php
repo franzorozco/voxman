@@ -35,12 +35,10 @@ class Shipment extends Model
 {
 	use SoftDeletes;
 	protected $table = 'shipments';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'sale_id' => 'uuid',
-		'address_id' => 'uuid',
 		'shipped_at' => 'datetime',
 		'delivered_at' => 'datetime'
 	];

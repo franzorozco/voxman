@@ -1,8 +1,20 @@
 import api from "./client";
 
-export const getUsers = () => api.get("/users");
-export const getUser = (id) => api.get(`/users/${id}`);
-export const createUser = (data) => api.post("/users", data);
-export const updateUser = (id, data) => api.put(`/users/${id}`, data);
-export const deleteUser = (id) => api.delete(`/users/${id}`);
-export const restoreUser = (id) => api.post(`/users/${id}/restore`);
+const BASE_URL = "/v1/admin/users";
+
+export const getUsers = () => api.get(BASE_URL);
+
+export const getUser = (id) =>
+  api.get(`${BASE_URL}/${id}`);
+
+export const createUser = (data) =>
+  api.post(BASE_URL, data);
+
+export const updateUser = (id, data) =>
+  api.put(`${BASE_URL}/${id}`, data);
+
+export const deleteUser = (id) =>
+  api.delete(`${BASE_URL}/${id}`);
+
+export const restoreUser = (id) =>
+  api.post(`${BASE_URL}/${id}/restore`);

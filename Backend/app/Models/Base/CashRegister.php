@@ -41,12 +41,10 @@ class CashRegister extends Model
 {
 	use SoftDeletes;
 	protected $table = 'cash_registers';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'branch_id' => 'uuid',
-		'user_id' => 'uuid',
 		'opening_amount' => 'float',
 		'closing_amount' => 'float',
 		'opened_at' => 'datetime',

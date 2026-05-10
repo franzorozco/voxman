@@ -7,6 +7,9 @@ use App\Models\Base\Product as BaseProduct;
 class Product extends BaseProduct
 {
 	protected $fillable = [
+
+        'id',
+
 		'owner_id',
 		'category_id',
 		'product_type_id',

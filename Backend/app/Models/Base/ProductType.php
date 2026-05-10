@@ -31,10 +31,10 @@ class ProductType extends Model
 {
 	use SoftDeletes;
 	protected $table = 'product_types';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid'
 	];
 
 	public function products()

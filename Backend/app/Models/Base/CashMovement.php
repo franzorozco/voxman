@@ -33,14 +33,12 @@ class CashMovement extends Model
 {
 	use SoftDeletes;
 	protected $table = 'cash_movements';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'cash_register_id' => 'uuid',
 		'movement_type' => 'USER-DEFINED',
 		'amount' => 'float',
-		'reference_id' => 'uuid'
 	];
 
 	public function cash_register()

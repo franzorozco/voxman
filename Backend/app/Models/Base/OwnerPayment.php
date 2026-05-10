@@ -34,11 +34,10 @@ class OwnerPayment extends Model
 {
 	use SoftDeletes;
 	protected $table = 'owner_payments';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'owner_id' => 'uuid',
 		'total_amount' => 'float',
 		'payment_date' => 'datetime'
 	];

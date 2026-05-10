@@ -263,35 +263,7 @@ CREATE TABLE variant_attribute_values (
     PRIMARY KEY (variant_id, attribute_value_id)
 );
 
--- Reseñas de productos
-CREATE TABLE product_reviews (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
-    product_id UUID REFERENCES products(id),
-    customer_id UUID REFERENCES customers(id),
-
-    rating INT CHECK (rating BETWEEN 1 AND 5),
-    comment TEXT,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Lista de deseos
-CREATE TABLE wishlists (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    customer_id UUID REFERENCES customers(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Articulos de la lista de deseos
-CREATE TABLE wishlist_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-    wishlist_id UUID REFERENCES wishlists(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES products(id),
-
-    UNIQUE (wishlist_id, product_id)
-);
 
 
 -- SISTEMA DE TALLAS
@@ -435,7 +407,35 @@ CREATE TABLE product_price_history (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Reseñas de productos
+CREATE TABLE product_reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
+    product_id UUID REFERENCES products(id),
+    customer_id UUID REFERENCES customers(id),
+
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Lista de deseos
+CREATE TABLE wishlists (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    customer_id UUID REFERENCES customers(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Articulos de la lista de deseos
+CREATE TABLE wishlist_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    wishlist_id UUID REFERENCES wishlists(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id),
+
+    UNIQUE (wishlist_id, product_id)
+);
 CREATE TYPE sale_type AS ENUM ('store', 'online');
 CREATE TYPE sale_status AS ENUM ('pending', 'paid', 'cancelled', 'refunded');
 

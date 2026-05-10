@@ -6,17 +6,19 @@
 
 namespace App\Models\Base;
 
-use App\Models\CartItem;
-use App\Models\Inventory;
-use App\Models\InventoryMovement;
-use App\Models\Product;
-use App\Models\ProductPriceHistory;
-use App\Models\SaleDetail;
-use App\Models\StockReservation;
-use App\Models\VariantAttributeValue;
-use App\Models\VariantImage;
-use App\Models\VariantMeasurement;
-use App\Models\VariantSize;
+use App\Models\Sales\CartItem;
+use App\Models\Inventory\Inventory;
+use App\Models\Inventory\InventoryMovement;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductPriceHistory;
+use App\Models\Sales\SaleDetail;
+use App\Models\Inventory\StockReservation;
+use App\Models\Catalog\VariantAttributeValue;
+use App\Models\Catalog\VariantImage;
+use App\Models\Catalog\VariantMeasurement;
+use App\Models\Catalog\VariantSize;
+
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -55,16 +57,28 @@ class ProductVariant extends Model
 {
 	use SoftDeletes;
 	protected $table = 'product_variants';
+	protected $keyType = 'string';
+
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'product_id' => 'uuid',
 		'weight' => 'float',
 		'price' => 'float',
 		'cost' => 'float',
 		'is_active' => 'bool'
 	];
+
+	protected static function boot()
+	{
+		parent::boot();
+
+		static::creating(function ($model) {
+
+			if (!$model->id) {
+				$model->id = (string) Str::uuid();
+			}
+		});
+	}
 
 	public function product()
 	{

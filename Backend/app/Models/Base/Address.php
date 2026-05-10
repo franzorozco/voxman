@@ -41,12 +41,10 @@ class Address extends Model
 {
 	use SoftDeletes;
 	protected $table = 'addresses';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'user_id' => 'uuid',
-		'branch_id' => 'uuid'
 	];
 
 	public function customer()

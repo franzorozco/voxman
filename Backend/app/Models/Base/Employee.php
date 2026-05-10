@@ -10,6 +10,7 @@ class Employee extends Model
     use SoftDeletes;
 
     protected $table = 'employees';
+    protected $keyType = 'string';
 
     protected $fillable = [
         'user_id',

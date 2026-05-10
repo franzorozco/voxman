@@ -34,11 +34,10 @@ class Category extends Model
 {
 	use SoftDeletes;
 	protected $table = 'categories';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'parent_id' => 'uuid'
 	];
 
 	public function employee()

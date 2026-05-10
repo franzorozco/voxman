@@ -40,10 +40,10 @@ class Branch extends Model
 {
 	use SoftDeletes;
 	protected $table = 'branches';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid'
 	];
 
 	public function cash_registers()

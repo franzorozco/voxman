@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Model;
 class PurchaseReception extends Model
 {
 	protected $table = 'purchase_receptions';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 

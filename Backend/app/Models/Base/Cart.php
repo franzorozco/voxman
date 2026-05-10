@@ -27,12 +27,11 @@ use Illuminate\Database\Eloquent\Model;
 class Cart extends Model
 {
 	protected $table = 'carts';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'user_id' => 'uuid'
 	];
 
 	public function customer()

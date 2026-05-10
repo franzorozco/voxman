@@ -35,6 +35,7 @@ class Owner extends Model
 {
 	use SoftDeletes;
 	protected $table = 'owners';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [

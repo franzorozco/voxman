@@ -24,12 +24,11 @@ use Illuminate\Database\Eloquent\Model;
 class DiscountProduct extends Model
 {
 	protected $table = 'discount_products';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'discount_id' => 'uuid',
-		'product_id' => 'uuid'
 	];
 
 	public function discount()

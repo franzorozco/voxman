@@ -23,12 +23,12 @@ use Illuminate\Database\Eloquent\Model;
 class ModelHasRole extends Model
 {
 	protected $table = 'model_has_roles';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
 		'role_id' => 'int',
-		'model_id' => 'uuid'
 	];
 
 	public function role()

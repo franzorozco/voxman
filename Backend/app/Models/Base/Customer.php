@@ -35,7 +35,6 @@ class Customer extends Model
 	use SoftDeletes;
 	protected $table = 'customers';
 	public $incrementing = false;
-    protected $keyType = 'string';
 
 	protected $casts = [
 		'points' => 'int',

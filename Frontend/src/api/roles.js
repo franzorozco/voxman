@@ -2,8 +2,19 @@
 
 import api from "./client";
 
-export const getRoles = () => api.get("/roles");
-export const getRole = (id) => api.get(`/roles/${id}`);
-export const createRole = (data) => api.post("/roles", data);
-export const updateRole = (id, data) => api.put(`/roles/${id}`, data);
-export const deleteRole = (id) => api.delete(`/roles/${id}`);
+const BASE_URL = "/v1/admin/roles";
+
+export const getRoles = () =>
+  api.get(BASE_URL);
+
+export const getRole = (id) =>
+  api.get(`${BASE_URL}/${id}`);
+
+export const createRole = (data) =>
+  api.post(BASE_URL, data);
+
+export const updateRole = (id, data) =>
+  api.put(`${BASE_URL}/${id}`, data);
+
+export const deleteRole = (id) =>
+  api.delete(`${BASE_URL}/${id}`);

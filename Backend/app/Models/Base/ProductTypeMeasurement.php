@@ -25,13 +25,11 @@ use Illuminate\Database\Eloquent\Model;
 class ProductTypeMeasurement extends Model
 {
 	protected $table = 'product_type_measurements';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'product_type_id' => 'uuid',
-		'measurement_type_id' => 'uuid'
 	];
 
 	public function product_type()

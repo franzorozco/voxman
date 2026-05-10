@@ -6,12 +6,13 @@
 
 namespace App\Models\Base;
 
-use App\Models\Category;
-use App\Models\Discount;
-use App\Models\Owner;
-use App\Models\ProductImage;
-use App\Models\ProductType;
-use App\Models\ProductVariant;
+use App\Models\Catalog\Category;
+use App\Models\Discount\Discount;
+use App\Models\Actors\Owner;
+use App\Models\Catalog\ProductImage;
+use App\Models\Catalog\ProductType;
+use App\Models\Catalog\ProductVariant;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -47,18 +48,16 @@ class Product extends Model
 {
 	use SoftDeletes;
 	protected $table = 'products';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'owner_id' => 'uuid',
-		'category_id' => 'uuid',
-		'product_type_id' => 'uuid',
+		
 		'base_price' => 'float',
 		'is_active' => 'bool',
 		'views' => 'int'
 	];
-
+	
 	public function owner()
 	{
 		return $this->belongsTo(Owner::class);
@@ -73,7 +72,7 @@ class Product extends Model
 	{
 		return $this->belongsTo(ProductType::class);
 	}
-
+	
 	public function product_variants()
 	{
 		return $this->hasMany(ProductVariant::class);

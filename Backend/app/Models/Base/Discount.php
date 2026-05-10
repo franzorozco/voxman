@@ -36,10 +36,10 @@ class Discount extends Model
 {
 	use SoftDeletes;
 	protected $table = 'discounts';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
 		'value' => 'float',
 		'start_date' => 'datetime',
 		'end_date' => 'datetime',

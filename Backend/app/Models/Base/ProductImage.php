@@ -26,12 +26,11 @@ use Illuminate\Database\Eloquent\Model;
 class ProductImage extends Model
 {
 	protected $table = 'product_images';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'product_id' => 'uuid',
 		'is_main' => 'bool'
 	];
 

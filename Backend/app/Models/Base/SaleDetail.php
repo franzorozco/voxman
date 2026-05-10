@@ -44,13 +44,11 @@ class SaleDetail extends Model
 {
 	use SoftDeletes;
 	protected $table = 'sale_details';
+	protected $keyType = 'string';
 	public $incrementing = false;
+	
 
 	protected $casts = [
-		'id' => 'uuid',
-		'sale_id' => 'uuid',
-		'variant_id' => 'uuid',
-		'owner_id' => 'uuid',
 		'quantity' => 'int',
 		'unit_price' => 'float',
 		'discount' => 'float',

@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\ProductTypeMeasurement;
-use App\Models\VariantMeasurement;
+use App\Models\Catalog\ProductTypeMeasurement;
+use App\Models\Catalog\VariantMeasurement;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,11 +25,11 @@ use Illuminate\Database\Eloquent\Model;
 class MeasurementType extends Model
 {
 	protected $table = 'measurement_types';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid'
 	];
 
 	public function product_type_measurements()

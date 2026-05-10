@@ -30,6 +30,7 @@ class Wishlist extends Model
 	use SoftDeletes;
 
 	protected $table = 'wishlists';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 

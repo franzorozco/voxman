@@ -38,13 +38,10 @@ class Payment extends Model
 {
 	use SoftDeletes;
 	protected $table = 'payments';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'sale_id' => 'uuid',
-		'cash_register_id' => 'uuid',
-		'payment_method_id' => 'uuid',
 		'amount' => 'float',
 		'status' => 'USER-DEFINED'
 	];
