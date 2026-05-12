@@ -390,3 +390,430 @@ INSERT INTO inventories (
 12,
 3
 );
+
+
+
+
+
+
+-- =========================================
+-- 1. ELIMINAR TABLA variant_sizes
+-- =========================================
+
+DROP TABLE IF EXISTS variant_sizes CASCADE;
+
+
+
+-- =========================================
+-- 2. MODIFICAR product_variants
+-- =========================================
+
+ALTER TABLE product_variants
+ADD COLUMN size_id UUID REFERENCES sizes(id),
+ADD COLUMN fit_id UUID REFERENCES fits(id);
+
+
+
+-- =========================================
+-- 3. ELIMINAR UNIQUE ACTUAL DE sku
+-- (porque usarás soft delete)
+-- =========================================
+
+ALTER TABLE product_variants
+DROP CONSTRAINT IF EXISTS product_variants_sku_key;
+
+
+
+-- =========================================
+-- 4. CREAR UNIQUE INDEX PARA SKU ACTIVOS
+-- =========================================
+
+CREATE UNIQUE INDEX idx_product_variants_sku_active
+ON product_variants(sku)
+WHERE deleted_at IS NULL;
+
+
+
+-- =========================================
+-- 5. MODIFICAR variant_measurements
+-- =========================================
+
+-- Eliminar constraint UNIQUE antiguo
+ALTER TABLE variant_measurements
+DROP CONSTRAINT IF EXISTS variant_measurements_variant_id_size_id_measurement_type_key;
+
+-- Eliminar columna size_id
+ALTER TABLE variant_measurements
+DROP COLUMN IF EXISTS size_id;
+
+-- Crear nuevo UNIQUE
+ALTER TABLE variant_measurements
+ADD CONSTRAINT uq_variant_measurements
+UNIQUE (variant_id, measurement_type_id);
+
+
+
+-- =========================================
+-- 6. MEJORAR inventory_movements
+-- =========================================
+
+ALTER TABLE inventory_movements
+RENAME COLUMN type TO movement_type;
+
+
+
+ALTER TABLE inventory_movements
+ADD COLUMN stock_before INT,
+ADD COLUMN stock_after INT,
+ADD COLUMN reference_type VARCHAR(50),
+ADD COLUMN reference_id UUID,
+ADD COLUMN notes TEXT,
+ADD COLUMN created_by UUID REFERENCES users(id);
+
+
+
+-- =========================================
+-- 7. CAMBIAR CHECK DE movement_type
+-- =========================================
+
+ALTER TABLE inventory_movements
+DROP CONSTRAINT IF EXISTS inventory_movements_type_check;
+
+
+
+ALTER TABLE inventory_movements
+ADD CONSTRAINT inventory_movements_movement_type_check
+CHECK (
+    movement_type IN (
+        'purchase',
+        'sale',
+        'return',
+        'adjustment',
+        'transfer_in',
+        'transfer_out'
+    )
+);
+
+
+
+-- =========================================
+-- 8. AGREGAR CHECKS IMPORTANTES
+-- =========================================
+
+ALTER TABLE inventory_movements
+ADD CONSTRAINT chk_inventory_quantity_positive
+CHECK (quantity > 0);
+
+
+
+-- =========================================
+-- 9. ÍNDICES IMPORTANTES
+-- =========================================
+
+CREATE INDEX idx_inventory_movements_variant
+ON inventory_movements(variant_id);
+
+CREATE INDEX idx_inventory_movements_branch
+ON inventory_movements(branch_id);
+
+CREATE INDEX idx_inventory_movements_reference
+ON inventory_movements(reference_type, reference_id);
+
+
+
+-- =========================================
+-- 10. UNIQUE OPCIONAL PARA EVITAR
+-- DUPLICADOS BÁSICOS
+-- =========================================
+
+CREATE UNIQUE INDEX idx_variant_unique_combination
+ON product_variants (
+    product_id,
+    size_id,
+    fit_id,
+    sku
+)
+WHERE deleted_at IS NULL;
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- =========================================
+-- ATTRIBUTES
+-- =========================================
+
+INSERT INTO attributes (name)
+VALUES
+('Color'),
+('Material'),
+('Gender'),
+('Style'),
+('Season');
+
+
+
+-- =========================================
+-- ATTRIBUTE VALUES
+-- =========================================
+
+-- COLOR
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Negro'
+FROM attributes
+WHERE name = 'Color';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Blanco'
+FROM attributes
+WHERE name = 'Color';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Rojo'
+FROM attributes
+WHERE name = 'Color';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Azul'
+FROM attributes
+WHERE name = 'Color';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Verde'
+FROM attributes
+WHERE name = 'Color';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Gris'
+FROM attributes
+WHERE name = 'Color';
+
+
+
+-- MATERIAL
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Algodón'
+FROM attributes
+WHERE name = 'Material';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Poliéster'
+FROM attributes
+WHERE name = 'Material';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Jean'
+FROM attributes
+WHERE name = 'Material';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Lana'
+FROM attributes
+WHERE name = 'Material';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Cuero'
+FROM attributes
+WHERE name = 'Material';
+
+
+
+-- GENDER
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Hombre'
+FROM attributes
+WHERE name = 'Gender';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Mujer'
+FROM attributes
+WHERE name = 'Gender';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Unisex'
+FROM attributes
+WHERE name = 'Gender';
+
+
+
+-- STYLE
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Casual'
+FROM attributes
+WHERE name = 'Style';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Oversize'
+FROM attributes
+WHERE name = 'Style';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Deportivo'
+FROM attributes
+WHERE name = 'Style';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Formal'
+FROM attributes
+WHERE name = 'Style';
+
+
+
+-- SEASON
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Invierno'
+FROM attributes
+WHERE name = 'Season';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Verano'
+FROM attributes
+WHERE name = 'Season';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Primavera'
+FROM attributes
+WHERE name = 'Season';
+
+INSERT INTO attribute_values (attribute_id, value)
+SELECT id, 'Otoño'
+FROM attributes
+WHERE name = 'Season';
+
+
+
+-- =========================================
+-- SIZES
+-- =========================================
+
+INSERT INTO sizes (name, description)
+VALUES
+('XS', 'Extra Small'),
+('S', 'Small'),
+('M', 'Medium'),
+('L', 'Large'),
+('XL', 'Extra Large'),
+('XXL', 'Double Extra Large');
+
+
+
+-- =========================================
+-- FITS
+-- =========================================
+
+INSERT INTO fits (name)
+VALUES
+('Slim'),
+('Regular'),
+('Oversize'),
+('Relaxed'),
+('Skinny');
+
+
+
+-- =========================================
+-- MEASUREMENT TYPES
+-- =========================================
+
+INSERT INTO measurement_types (name)
+VALUES
+('Pecho'),
+('Cintura'),
+('Cadera'),
+('Largo'),
+('Manga'),
+('Hombro'),
+('Muslo'),
+('Tobillo');
+
+
+
+-- =========================================
+-- PRODUCT TYPE MEASUREMENTS
+-- =========================================
+
+-- POLO
+INSERT INTO product_type_measurements (
+    product_type_id,
+    measurement_type_id
+)
+SELECT
+    pt.id,
+    mt.id
+FROM product_types pt
+JOIN measurement_types mt
+ON mt.name IN (
+    'Pecho',
+    'Largo',
+    'Manga',
+    'Hombro'
+)
+WHERE pt.name = 'Polo';
+
+
+
+-- HOODIE
+INSERT INTO product_type_measurements (
+    product_type_id,
+    measurement_type_id
+)
+SELECT
+    pt.id,
+    mt.id
+FROM product_types pt
+JOIN measurement_types mt
+ON mt.name IN (
+    'Pecho',
+    'Largo',
+    'Manga',
+    'Hombro'
+)
+WHERE pt.name = 'Hoodie';
+
+
+
+-- JEANS
+INSERT INTO product_type_measurements (
+    product_type_id,
+    measurement_type_id
+)
+SELECT
+    pt.id,
+    mt.id
+FROM product_types pt
+JOIN measurement_types mt
+ON mt.name IN (
+    'Cintura',
+    'Cadera',
+    'Largo',
+    'Muslo',
+    'Tobillo'
+)
+WHERE pt.name = 'Jeans';
+
+
+
+-- PANTALÓN
+INSERT INTO product_type_measurements (
+    product_type_id,
+    measurement_type_id
+)
+SELECT
+    pt.id,
+    mt.id
+FROM product_types pt
+JOIN measurement_types mt
+ON mt.name IN (
+    'Cintura',
+    'Cadera',
+    'Largo'
+)
+WHERE pt.name = 'Pantalón';

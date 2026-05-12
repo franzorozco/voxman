@@ -12,7 +12,7 @@ use App\Models\Actors\Owner;
 use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductType;
 use App\Models\Catalog\ProductVariant;
-
+ 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;

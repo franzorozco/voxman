@@ -16,7 +16,7 @@ export default function ProductsTable({ products, onEdit, onDelete, onSort }) {
       maximumFractionDigits: 2,
     })}`;
   };
-
+ 
   const SortableTh = ({ label, field }) => (
     <th
       style={{ cursor: "pointer", userSelect: "none" }}
@@ -38,7 +38,7 @@ export default function ProductsTable({ products, onEdit, onDelete, onSort }) {
 
             <th>Propietario</th>
             <th>Categoría</th>
-            <th>SKU</th>
+            <th>Descuento</th>
 
             <SortableTh label="Precio" field="price" />
             <th>Costo</th>
@@ -101,8 +101,84 @@ export default function ProductsTable({ products, onEdit, onDelete, onSort }) {
                 {/* CATEGORY */}
                 <td>{p.category?.name || "Sin categoría"}</td>
 
-                {/* SKU */}
-                <td>{p.product_variants?.[0]?.sku || "N/A"}</td>
+                {/* DISCOUNT */}
+                <td>
+                  {p.product_discount ? (
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                      }}
+                    >
+                      <span
+                        style={{
+                          background: "#dcfce7",
+                          color: "#166534",
+                          padding: "4px 8px",
+                          borderRadius: 8,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          width: "fit-content",
+                        }}
+                      >
+                        Producto
+                      </span>
+
+                      <small style={{ fontWeight: 600 }}>
+                        {p.product_discount.name}
+                      </small>
+
+                      <small style={{ opacity: 0.7 }}>
+                        {p.product_discount.type === "percentage"
+                          ? `${p.product_discount.value}%`
+                          : formatMoney(p.product_discount.value)}
+                      </small>
+                    </div>
+
+                  ) : p.category_discount ? (
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                      }}
+                    >
+                      <span
+                        style={{
+                          background: "#dbeafe",
+                          color: "#1d4ed8",
+                          padding: "4px 8px",
+                          borderRadius: 8,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          width: "fit-content",
+                        }}
+                      >
+                        Categoría
+                      </span>
+
+                      <small style={{ fontWeight: 600 }}>
+                        {p.category_discount.name}
+                      </small>
+
+                      <small style={{ opacity: 0.7 }}>
+                        {p.category_discount.type === "percentage"
+                          ? `${p.category_discount.value}%`
+                          : formatMoney(p.category_discount.value)}
+                      </small>
+                    </div>
+
+                  ) : (
+
+                    <span style={{ opacity: 0.6 }}>
+                      Sin descuento
+                    </span>
+
+                  )}
+                </td>
 
                 {/* PRICE */}
                 <td>{formatMoney(p.price)}</td>

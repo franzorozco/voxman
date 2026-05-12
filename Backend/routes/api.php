@@ -14,6 +14,13 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\InventoryController;
 
+use App\Http\Controllers\Api\AttributeController;
+use App\Http\Controllers\Api\AttributeValueController;
+use App\Http\Controllers\Api\SizeController;
+use App\Http\Controllers\Api\FitController;
+use App\Http\Controllers\Api\MeasurementTypeController;
+use App\Http\Controllers\Api\ProductTypeMeasurementController;
+
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
 
@@ -77,5 +84,65 @@ Route::middleware([
     Route::prefix('inventories')->group(function () {
         Route::get('/', [InventoryController::class, 'index']);
         Route::put('/{id}', [InventoryController::class, 'update']);
+    });
+
+
+    Route::prefix('attributes')->group(function () {
+
+        Route::get('/', [AttributeController::class, 'index']);
+        Route::get('/{id}', [AttributeController::class, 'show']);
+        Route::post('/', [AttributeController::class, 'store']);
+        Route::put('/{id}', [AttributeController::class, 'update']);
+        Route::delete('/{id}', [AttributeController::class, 'destroy']);
+    });
+
+
+    Route::prefix('attribute-values')->group(function () {
+
+        Route::get('/', [AttributeValueController::class, 'index']);
+        Route::get('/{id}', [AttributeValueController::class, 'show']);
+        Route::post('/', [AttributeValueController::class, 'store']);
+        Route::put('/{id}', [AttributeValueController::class, 'update']);
+        Route::delete('/{id}', [AttributeValueController::class, 'destroy']);
+    });
+
+
+    Route::prefix('sizes')->group(function () {
+
+        Route::get('/', [SizeController::class, 'index']);
+        Route::get('/{id}', [SizeController::class, 'show']);
+        Route::post('/', [SizeController::class, 'store']);
+        Route::put('/{id}', [SizeController::class, 'update']);
+        Route::delete('/{id}', [SizeController::class, 'destroy']);
+    });
+
+
+    Route::prefix('fits')->group(function () {
+
+        Route::get('/', [FitController::class, 'index']);
+        Route::get('/{id}', [FitController::class, 'show']);
+        Route::post('/', [FitController::class, 'store']);
+        Route::put('/{id}', [FitController::class, 'update']);
+        Route::delete('/{id}', [FitController::class, 'destroy']);
+    });
+
+
+    Route::prefix('measurement-types')->group(function () {
+
+        Route::get('/', [MeasurementTypeController::class, 'index']);
+        Route::get('/{id}', [MeasurementTypeController::class, 'show']);
+        Route::post('/', [MeasurementTypeController::class, 'store']);
+        Route::put('/{id}', [MeasurementTypeController::class, 'update']);
+        Route::delete('/{id}', [MeasurementTypeController::class, 'destroy']);
+    });
+
+
+    Route::prefix('product-type-measurements')->group(function () {
+
+        Route::get('/', [ProductTypeMeasurementController::class, 'index']);
+        Route::get('/{id}', [ProductTypeMeasurementController::class, 'show']);
+        Route::post('/', [ProductTypeMeasurementController::class, 'store']);
+        Route::put('/{id}', [ProductTypeMeasurementController::class, 'update']);
+        Route::delete('/{id}', [ProductTypeMeasurementController::class, 'destroy']);
     });
 });

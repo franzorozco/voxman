@@ -240,33 +240,31 @@ CREATE TABLE attribute_values (
     value VARCHAR(100) NOT NULL
 );
 
--- VARIANTES (COMBINACIÓN)
 CREATE TABLE product_variants (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
 
-    sku VARCHAR(100) UNIQUE NOT NULL,
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    size_id UUID REFERENCES sizes(id),
+    fit_id UUID REFERENCES fits(id),
+    sku VARCHAR(100) NOT NULL,
     barcode VARCHAR(100),
-    weight DECIMAL(10,2),
+
     price DECIMAL(10,2),
     cost DECIMAL(10,2),
+    weight DECIMAL(10,2),
     is_active BOOLEAN DEFAULT TRUE,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
--- Relación variante - atributos
 CREATE TABLE variant_attribute_values (
     variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,
     attribute_value_id UUID REFERENCES attribute_values(id) ON DELETE CASCADE,
     PRIMARY KEY (variant_id, attribute_value_id)
 );
 
-
-
-
--- SISTEMA DE TALLAS
 CREATE TABLE sizes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(20) NOT NULL, -- S, M, L
@@ -280,15 +278,6 @@ CREATE TABLE sizes (
 CREATE TABLE fits (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(50) NOT NULL
-);
-
--- RELACIÓN VARIANTE CON TALLA Y FIT
-CREATE TABLE variant_sizes (
-    variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,
-    size_id UUID REFERENCES sizes(id),
-    fit_id UUID REFERENCES fits(id),
-
-    PRIMARY KEY (variant_id, size_id, fit_id)
 );
 
 -- MEDIDAS DEFINIBLES (PECHO, LARGO, etc.)
@@ -308,11 +297,9 @@ CREATE TABLE product_type_measurements (
 CREATE TABLE variant_measurements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,
-    size_id UUID REFERENCES sizes(id),
     measurement_type_id UUID REFERENCES measurement_types(id),
-    
-    value DECIMAL(10,2), -- cm
-    UNIQUE (variant_id, size_id, measurement_type_id),
+    value DECIMAL(10,2),
+    UNIQUE (variant_id, measurement_type_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -352,12 +339,31 @@ CREATE TABLE inventories (
 -- MOVIMIENTOS DE INVENTARIO (PRO)
 CREATE TABLE inventory_movements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
     variant_id UUID REFERENCES product_variants(id),
     branch_id UUID REFERENCES branches(id),
-    customer_id UUID REFERENCES customers(id),
-    type VARCHAR(20) CHECK (type IN ('in', 'out', 'adjustment')),
-    quantity INT,
-    reference TEXT,
+
+    movement_type VARCHAR(20)
+    CHECK (movement_type IN (
+        'purchase',
+        'sale',
+        'return',
+        'adjustment',
+        'transfer_in',
+        'transfer_out'
+    )),
+
+    quantity INT NOT NULL,
+
+    stock_before INT,
+    stock_after INT,
+
+    reference_type VARCHAR(50),
+    reference_id UUID,
+
+    notes TEXT,
+
+    created_by UUID REFERENCES users(id),
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

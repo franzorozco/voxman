@@ -6,8 +6,10 @@
 
 namespace App\Models\Base;
 
-use App\Models\DiscountCategory;
-use App\Models\Product;
+use App\Models\Discount\DiscountCategory;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\Category;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -55,4 +57,16 @@ class Discount extends Model
 	{
 		return $this->hasMany(DiscountCategory::class);
 	}
+
+	public function categories()
+	{
+		return $this->belongsToMany(
+			Category::class,
+			'discount_categories',
+			'discount_id',
+			'category_id'
+		);
+	}
+
+
 }
