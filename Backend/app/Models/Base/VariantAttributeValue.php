@@ -38,13 +38,10 @@ class VariantAttributeValue extends Model
 	
 	public function attribute_value()
 	{
-		return $this->belongsTo(
-			AttributeValue::class,
-			'attribute_value_id'
-		);
+		return $this->belongsTo(AttributeValue::class, 'attribute_value_id');
 	}
 
-
+ 
 
 
 }

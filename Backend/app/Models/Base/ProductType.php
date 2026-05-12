@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\Product;
-use App\Models\ProductTypeMeasurement;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductTypeMeasurement;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;

@@ -18,3 +18,6 @@ export const updateSize = (id, data) =>
 
 export const deleteSize = (id) =>
   api.delete(`${BASE_URL}/${id}`);
+
+export const restoreSize = (id) =>
+  api.post(`${BASE_URL}/${id}/restore`);

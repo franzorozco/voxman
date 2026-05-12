@@ -18,3 +18,6 @@ export const updateAttribute = (id, data) =>
 
 export const deleteAttribute = (id) =>
   api.delete(`${BASE_URL}/${id}`);
+
+export const restoreAttribute = (id) =>
+  api.post(`${BASE_URL}/${id}/restore`);

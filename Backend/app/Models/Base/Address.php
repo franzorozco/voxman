@@ -6,9 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\Branch;
-use App\Models\Shipment;
-use App\Models\User;
+use App\Models\Branch\Branch;
+use App\Models\Logistics\Shipment;
+use App\Models\Core\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;

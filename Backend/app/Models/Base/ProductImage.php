@@ -6,7 +6,7 @@
 
 namespace App\Models\Base;
 
-use App\Models\Product;
+use App\Models\Catalog\Product;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 

@@ -11,7 +11,6 @@ use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductVariant;
 use App\Models\Catalog\VariantAttributeValue;
-use App\Models\Catalog\VariantSize;
 use App\Models\Inventory\Inventory;
 use App\Models\Catalog\VariantMeasurement;
  
@@ -33,7 +32,6 @@ class ProductController extends Controller
                 'product_images',
 
                 'product_variants.variant_attribute_values.attribute_value.attribute',
-                'product_variants.variant_sizes',
                 'product_variants.inventories',
             ])
             ->whereNull('deleted_at')
@@ -154,7 +152,6 @@ class ProductController extends Controller
             'product_images',
             'product_variants.variant_attribute_values.attribute_value.attribute',
             'product_variants.variant_images',
-            'product_variants.variant_sizes',
             'product_variants.inventories.branch',
             'product_variants.variant_measurements.measurement_type',
 
@@ -194,14 +191,14 @@ class ProductController extends Controller
 
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $file) {
-                    $path = config('storage_paths.product_images');
                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs($path, $filename, 'public');
+                    $filePath = $file->storeAs(config('storage_paths.product_images'), $filename, 'public');
+
                     ProductImage::create([
-                        'id'         => Str::uuid(),
+                        'id' => Str::uuid(),
                         'product_id' => $product->id,
-                        'url'        => Storage::url($filePath),
-                        'is_main'    => false,
+                        'url' => Storage::url($filePath),
+                        'is_main' => false,
                     ]);
                 }
             }
@@ -211,6 +208,8 @@ class ProductController extends Controller
                     $variant = ProductVariant::create([
                         'id'         => Str::uuid(),
                         'product_id' => $product->id,
+                        'size_id'    => $variantData['size_id'],   // 👈 AQUÍ
+                        'fit_id'     => $variantData['fit_id'],
                         'sku'        => $variantData['sku'],
                         'barcode'    => $variantData['barcode'] ?? null,
                         'weight'     => $variantData['weight'] ?? 0,
@@ -218,22 +217,11 @@ class ProductController extends Controller
                         'cost'       => $variantData['cost'],
                         'is_active'  => true,
                     ]);
-
                     if (isset($variantData['attribute_value_ids'])) {
                         foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
                             VariantAttributeValue::create([
                                 'variant_id'         => $variant->id,
                                 'attribute_value_id' => $attributeValueId,
-                            ]);
-                        }
-                    }
-
-                    if (isset($variantData['sizes'])) {
-                        foreach ($variantData['sizes'] as $size) {
-                            VariantSize::create([
-                                'variant_id' => $variant->id,
-                                'size_id'    => $size['size_id'],
-                                'fit_id'     => $size['fit_id'],
                             ]);
                         }
                     }
@@ -253,11 +241,9 @@ class ProductController extends Controller
                     if (isset($variantData['measurements'])) {
                         foreach ($variantData['measurements'] as $measurement) {
                             VariantMeasurement::create([
-
-                                'variant_id'         => $variant->id,
-                                'size_id'            => $measurement['size_id'],
-                                'measurement_type_id'=> $measurement['measurement_type_id'],
-                                'value'              => $measurement['value'],
+                                'variant_id' => $variant->id,
+                                'measurement_type_id' => $measurement['measurement_type_id'],
+                                'value' => $measurement['value'],
                             ]);
                         }
                     }
@@ -272,8 +258,10 @@ class ProductController extends Controller
                     'category',
                     'product_type',
                     'product_images',
+                    'product_variants.size',
+                    'product_variants.fit',
+                    'product_variants.variant_attribute_values.attribute_value',
                     'product_variants.variant_attribute_values.attribute_value.attribute',
-                    'product_variants.variant_sizes',
                     'product_variants.inventories.branch',
                     'product_variants.variant_measurements.measurement_type',
                 ])->find($product->id)
@@ -333,6 +321,8 @@ class ProductController extends Controller
                     $variant = ProductVariant::create([
                         'id'         => Str::uuid(),
                         'product_id' => $product->id,
+                        'size_id'    => $variantData['size_id'],   // 👈 AQUÍ
+                        'fit_id'     => $variantData['fit_id'],
                         'sku'        => $variantData['sku'],
                         'barcode'    => $variantData['barcode'] ?? null,
                         'weight'     => $variantData['weight'] ?? 0,
@@ -346,17 +336,6 @@ class ProductController extends Controller
                             VariantAttributeValue::create([
                                 'variant_id'         => $variant->id,
                                 'attribute_value_id' => $attributeValueId,
-                            ]);
-                        }
-                    }
-
-                    if (isset($variantData['sizes'])) {
-
-                        foreach ($variantData['sizes'] as $size) {
-                            VariantSize::create([
-                                'variant_id' => $variant->id,
-                                'size_id'    => $size['size_id'],
-                                'fit_id'     => $size['fit_id'],
                             ]);
                         }
                     }
@@ -394,7 +373,6 @@ class ProductController extends Controller
                     'product_type',
                     'product_images',
                     'product_variants.variant_attribute_values.attribute_value.attribute',
-                    'product_variants.variant_sizes',
                     'product_variants.inventories.branch',
                     'product_variants.variant_measurements.measurement_type',
 

@@ -18,3 +18,6 @@ export const updateFit = (id, data) =>
 
 export const deleteFit = (id) =>
   api.delete(`${BASE_URL}/${id}`);
+
+export const restoreFit = (id) =>
+  api.post(`${BASE_URL}/${id}/restore`);

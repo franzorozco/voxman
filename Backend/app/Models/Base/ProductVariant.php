@@ -6,7 +6,7 @@
 
 namespace App\Models\Base;
 
-use App\Models\Sales\CartItem;
+use App\Models\Sales\CartItem;	
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\InventoryMovement;
 use App\Models\Catalog\Product;
@@ -43,7 +43,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Collection|CartItem[] $cart_items
  * @property Collection|ProductPriceHistory[] $product_price_histories
  * @property Collection|VariantAttributeValue[] $variant_attribute_values
- * @property Collection|VariantSize[] $variant_sizes
  * @property Collection|VariantMeasurement[] $variant_measurements
  * @property Collection|VariantImage[] $variant_images
  * @property Collection|Inventory[] $inventories
@@ -101,10 +100,16 @@ class ProductVariant extends Model
 		return $this->hasMany(VariantAttributeValue::class, 'variant_id');
 	}
 
-	public function variant_sizes()
+	public function size()
 	{
-		return $this->hasMany(VariantSize::class, 'variant_id');
+		return $this->belongsTo(\App\Models\Catalog\Size::class, 'size_id');
 	}
+
+	public function fit()
+	{
+		return $this->belongsTo(\App\Models\Catalog\Fit::class, 'fit_id');
+	}
+
 
 	public function variant_measurements()
 	{

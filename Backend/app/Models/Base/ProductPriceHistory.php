@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\ProductVariant;
-use App\Models\User;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Core\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 

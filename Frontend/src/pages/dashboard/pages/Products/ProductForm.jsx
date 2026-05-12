@@ -1,73 +1,814 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export default function ProductForm({ product, onClose, onSubmit }) {
+export default function ProductForm({
+  product,
+
+  categories = [],
+  owners = [],
+  productTypes = [],
+
+  attributes = [],
+  sizes = [],
+  fits = [],
+
+  onClose,
+  onSubmit,
+}) {
+
   const [form, setForm] = useState({
+
     name: "",
     description: "",
+
     base_price: "",
+
     category_id: "",
     owner_id: "",
+    product_type_id: "",
+
+    variants: [],
   });
 
   useEffect(() => {
+
     if (product) {
-      setForm(product);
+
+      setForm({
+
+        ...product,
+
+        variants:
+          product.product_variants || [],
+      });
     }
+
   }, [product]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  // ======================================================
+  // SKU
+  // ======================================================
+
+  const generateSKU = (
+    productName,
+    index
+  ) => {
+
+    const clean = productName
+      ?.toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 6);
+
+    return `${clean}-${index + 1}`;
   };
 
+  // ======================================================
+  // BARCODE
+  // ======================================================
+
+  const generateBarcode = () => {
+
+    return (
+      Date.now().toString() +
+      Math.floor(Math.random() * 999)
+    );
+  };
+
+  // ======================================================
+  // GENERAL CHANGE
+  // ======================================================
+
+  const handleChange = (e) => {
+
+    setForm({
+
+      ...form,
+
+      [e.target.name]:
+        e.target.value,
+    });
+  };
+
+  // ======================================================
+  // VARIANT CHANGE
+  // ======================================================
+
+  const handleVariantChange = (
+    index,
+    field,
+    value
+  ) => {
+
+    const updated = [...form.variants];
+
+    updated[index][field] = value;
+
+    setForm({
+
+      ...form,
+
+      variants: updated,
+    });
+  };
+
+  // ======================================================
+  // ATTRIBUTE CHANGE
+  // ======================================================
+
+  const handleAttributeChange = (
+    variantIndex,
+    attributeId,
+    attributeValueId
+  ) => {
+
+    const updated = [...form.variants];
+
+    const current =
+      updated[variantIndex]
+        .attribute_value_ids || [];
+
+    const filtered = current.filter(
+      (item) =>
+        item.attribute_id !== attributeId
+    );
+
+    filtered.push({
+
+      attribute_id: attributeId,
+
+      attribute_value_id:
+        attributeValueId,
+    });
+
+    updated[
+      variantIndex
+    ].attribute_value_ids = filtered;
+
+    setForm({
+
+      ...form,
+
+      variants: updated,
+    });
+  };
+
+  // ======================================================
+  // ADD VARIANT
+  // ======================================================
+
+  const addVariant = () => {
+
+    const index =
+      form.variants.length;
+
+    setForm({
+
+      ...form,
+
+      variants: [
+
+        ...form.variants,
+
+        {
+
+          sku: generateSKU(
+            form.name,
+            index
+          ),
+
+          barcode:
+            generateBarcode(),
+
+          price: "",
+          cost: "",
+          weight: "",
+
+          size_id: "",
+          fit_id: "",
+
+          attribute_value_ids: [],
+        },
+      ],
+    });
+  };
+
+  // ======================================================
+  // REMOVE VARIANT
+  // ======================================================
+
+  const removeVariant = (index) => {
+
+    const updated = [...form.variants];
+
+    updated.splice(index, 1);
+
+    setForm({
+
+      ...form,
+
+      variants: updated,
+    });
+  };
+
+  // ======================================================
+  // SUBMIT
+  // ======================================================
+
   const handleSubmit = (e) => {
+
     e.preventDefault();
+
     onSubmit(form);
   };
 
   return (
+
     <div className="modal-overlay">
-      <div className="modal">
-        <h2>{product ? "Editar Producto" : "Crear Producto"}</h2>
+
+      <div
+        className="modal"
+        style={{
+
+          maxWidth: 1300,
+
+          width: "95%",
+
+          maxHeight: "90vh",
+
+          overflowY: "auto",
+        }}
+      >
+
+        <h2>
+          {product
+            ? "Editar Producto"
+            : "Crear Producto"}
+        </h2>
 
         <form onSubmit={handleSubmit}>
+
+          {/* ====================================================== */}
+          {/* GENERAL */}
+          {/* ====================================================== */}
+
+          <h3>
+            Información General
+          </h3>
+
           <div className="form-grid">
+
             <div className="form-group">
-              <label>Nombre</label>
-              <input name="name" value={form.name} onChange={handleChange} />
+
+              <label>
+                Nombre
+              </label>
+
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+              />
+
             </div>
 
             <div className="form-group">
-              <label>Descripción</label>
-              <input name="description" value={form.description} onChange={handleChange} />
+
+              <label>
+                Categoría
+              </label>
+
+              <select
+                name="category_id"
+                value={form.category_id}
+                onChange={handleChange}
+                required
+              >
+
+                <option value="">
+                  Seleccionar
+                </option>
+
+                {categories.map((c) => (
+
+                  <option
+                    key={c.id}
+                    value={c.id}
+                  >
+                    {c.name}
+                  </option>
+
+                ))}
+
+              </select>
+
             </div>
 
             <div className="form-group">
-              <label>Precio</label>
-              <input name="base_price" value={form.base_price} onChange={handleChange} />
+
+              <label>
+                Tipo Producto
+              </label>
+
+              <select
+                name="product_type_id"
+                value={form.product_type_id}
+                onChange={handleChange}
+                required
+              >
+
+                <option value="">
+                  Seleccionar
+                </option>
+
+                {productTypes.map((t) => (
+
+                  <option
+                    key={t.id}
+                    value={t.id}
+                  >
+                    {t.name}
+                  </option>
+
+                ))}
+
+              </select>
+
             </div>
 
             <div className="form-group">
-              <label>Categoria ID</label>
-              <input name="category_id" value={form.category_id} onChange={handleChange} />
+
+              <label>
+                Propietario
+              </label>
+
+              <select
+                name="owner_id"
+                value={form.owner_id}
+                onChange={handleChange}
+              >
+
+                <option value="">
+                  Seleccionar
+                </option>
+
+                {owners.map((o) => (
+
+                  <option
+                    key={o.id}
+                    value={o.id}
+                  >
+                    {
+                      o.user
+                        ?.user_profiles?.[0]
+                        ?.first_name
+                    }
+                  </option>
+
+                ))}
+
+              </select>
+
             </div>
 
             <div className="form-group">
-              <label>Owner ID</label>
-              <input name="owner_id" value={form.owner_id} onChange={handleChange} />
+
+              <label>
+                Precio Base
+              </label>
+
+              <input
+                type="number"
+                name="base_price"
+                value={form.base_price}
+                onChange={handleChange}
+              />
+
             </div>
+
+            <div
+              className="form-group"
+              style={{
+                gridColumn: "1 / -1",
+              }}
+            >
+
+              <label>
+                Descripción
+              </label>
+
+              <textarea
+                rows={4}
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+              />
+
+            </div>
+
           </div>
 
-          <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>
+          {/* ====================================================== */}
+          {/* VARIANTS */}
+          {/* ====================================================== */}
+
+          <div
+            style={{
+              marginTop: 40,
+            }}
+          >
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  "space-between",
+                alignItems: "center",
+                marginBottom: 20,
+              }}
+            >
+
+              <h3>
+                Variantes
+              </h3>
+
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={addVariant}
+              >
+                Agregar Variante
+              </button>
+
+            </div>
+
+            {form.variants.map(
+              (variant, index) => (
+
+                <div
+                  key={index}
+                  style={{
+                    border:
+                      "1px solid #ddd",
+
+                    borderRadius: 12,
+
+                    padding: 20,
+
+                    marginBottom: 25,
+                  }}
+                >
+
+                  <h4>
+                    Variante #
+                    {index + 1}
+                  </h4>
+
+                  {/* ====================================================== */}
+                  {/* DATOS */}
+                  {/* ====================================================== */}
+
+                  <div className="form-grid">
+
+                    <div className="form-group">
+
+                      <label>
+                        SKU
+                      </label>
+
+                      <input
+                        value={
+                          variant.sku
+                        }
+                        readOnly
+                      />
+
+                    </div>
+
+                    <div className="form-group">
+
+                      <label>
+                        Barcode
+                      </label>
+
+                      <input
+                        value={
+                          variant.barcode
+                        }
+                        readOnly
+                      />
+
+                    </div>
+
+                    <div className="form-group">
+
+                      <label>
+                        Precio
+                      </label>
+
+                      <input
+                        type="number"
+                        value={
+                          variant.price
+                        }
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "price",
+                            e.target
+                              .value
+                          )
+                        }
+                      />
+
+                    </div>
+
+                    <div className="form-group">
+
+                      <label>
+                        Costo
+                      </label>
+
+                      <input
+                        type="number"
+                        value={
+                          variant.cost
+                        }
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "cost",
+                            e.target
+                              .value
+                          )
+                        }
+                      />
+
+                    </div>
+
+                    <div className="form-group">
+
+                      <label>
+                        Peso
+                      </label>
+
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={
+                          variant.weight
+                        }
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "weight",
+                            e.target
+                              .value
+                          )
+                        }
+                      />
+
+                    </div>
+
+                    {/* ====================================================== */}
+                    {/* TALLA */}
+                    {/* ====================================================== */}
+
+                    <div className="form-group">
+
+                      <label>
+                        Talla
+                      </label>
+
+                      <select
+                        value={
+                          variant.size_id
+                        }
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "size_id",
+                            e.target
+                              .value
+                          )
+                        }
+                      >
+
+                        <option value="">
+                          Seleccionar
+                        </option>
+
+                        {sizes.map(
+                          (size) => (
+
+                            <option
+                              key={
+                                size.id
+                              }
+                              value={
+                                size.id
+                              }
+                            >
+                              {
+                                size.name
+                              }
+                            </option>
+
+                          )
+                        )}
+
+                      </select>
+
+                    </div>
+
+                    {/* ====================================================== */}
+                    {/* FIT */}
+                    {/* ====================================================== */}
+
+                    <div className="form-group">
+
+                      <label>
+                        Fit
+                      </label>
+
+                      <select
+                        value={
+                          variant.fit_id
+                        }
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "fit_id",
+                            e.target
+                              .value
+                          )
+                        }
+                      >
+
+                        <option value="">
+                          Seleccionar
+                        </option>
+
+                        {fits.map(
+                          (fit) => (
+
+                            <option
+                              key={fit.id}
+                              value={
+                                fit.id
+                              }
+                            >
+                              {
+                                fit.name
+                              }
+                            </option>
+
+                          )
+                        )}
+
+                      </select>
+
+                    </div>
+
+                  </div>
+
+                  {/* ====================================================== */}
+                  {/* ATTRIBUTES */}
+                  {/* ====================================================== */}
+
+                  <h4
+                    style={{
+                      marginTop: 25,
+                    }}
+                  >
+                    Atributos
+                  </h4>
+
+                  <div className="form-grid">
+
+                    {attributes.map(
+                      (attribute) => (
+
+                        <div
+                          key={
+                            attribute.id
+                          }
+                          className="form-group"
+                        >
+
+                          <label>
+                            {
+                              attribute.name
+                            }
+                          </label>
+
+                          <select
+                            onChange={(e) =>
+                              handleAttributeChange(
+                                index,
+                                attribute.id,
+                                e.target
+                                  .value
+                              )
+                            }
+                          >
+
+                            <option value="">
+                              Seleccionar
+                            </option>
+
+                            {attribute.attribute_values?.map(
+                              (
+                                value
+                              ) => (
+
+                                <option
+                                  key={
+                                    value.id
+                                  }
+                                  value={
+                                    value.id
+                                  }
+                                >
+                                  {
+                                    value.value
+                                  }
+                                </option>
+
+                              )
+                            )}
+
+                          </select>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
+                  {/* ====================================================== */}
+                  {/* DELETE */}
+                  {/* ====================================================== */}
+
+                  <div
+                    style={{
+                      marginTop: 20,
+                    }}
+                  >
+
+                    <button
+                      type="button"
+                      className="btn-delete"
+                      onClick={() =>
+                        removeVariant(
+                          index
+                        )
+                      }
+                    >
+                      Eliminar Variante
+                    </button>
+
+                  </div>
+
+                </div>
+
+              )
+            )}
+
+          </div>
+
+          {/* ====================================================== */}
+          {/* ACTIONS */}
+          {/* ====================================================== */}
+
+          <div
+            className="form-actions"
+            style={{
+              marginTop: 30,
+            }}
+          >
+
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={onClose}
+            >
               Cancelar
             </button>
 
-            <button type="submit" className="btn-primary">
+            <button
+              type="submit"
+              className="btn-primary"
+            >
               Guardar
             </button>
+
           </div>
+
         </form>
+
       </div>
+
     </div>
   );
 }

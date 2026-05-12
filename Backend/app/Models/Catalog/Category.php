@@ -11,3 +11,4 @@ class Category extends BaseCategory
 		'parent_id'
 	];
 }
+ 

@@ -9,10 +9,10 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::with('children')
+        $categories = Category::with('categories')
             ->whereNull('parent_id')
             ->get();
 
         return response()->json($categories);
     }
-}
+} 

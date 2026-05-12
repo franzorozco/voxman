@@ -8,6 +8,8 @@ class ProductVariant extends BaseProductVariant
 {
 	protected $fillable = [
 		'product_id',
+		'size_id',
+		'fit_id',
 		'sku',
 		'barcode',
 		'weight',

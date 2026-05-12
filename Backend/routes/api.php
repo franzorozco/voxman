@@ -21,6 +21,9 @@ use App\Http\Controllers\Api\FitController;
 use App\Http\Controllers\Api\MeasurementTypeController;
 use App\Http\Controllers\Api\ProductTypeMeasurementController;
 
+use App\Http\Controllers\Api\OwnerController;
+use App\Http\Controllers\Api\ProductTypeController;
+
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
 
@@ -145,4 +148,22 @@ Route::middleware([
         Route::put('/{id}', [ProductTypeMeasurementController::class, 'update']);
         Route::delete('/{id}', [ProductTypeMeasurementController::class, 'destroy']);
     });
+
+    Route::prefix('owners')->group(function () {
+        Route::get('/', [OwnerController::class, 'index']);
+        Route::get('/{id}', [OwnerController::class, 'show']);
+        Route::post('/', [OwnerController::class, 'store']);
+        Route::put('/{id}', [OwnerController::class, 'update']);
+        Route::delete('/{id}', [OwnerController::class, 'destroy']);
+    });
+
+    Route::prefix('product-types')->group(function () {
+        Route::get('/', [ProductTypeController::class, 'index']);
+        Route::get('/{id}', [ProductTypeController::class, 'show']);
+        Route::post('/', [ProductTypeController::class, 'store']);
+        Route::put('/{id}', [ProductTypeController::class, 'update']);
+        Route::delete('/{id}', [ProductTypeController::class, 'destroy']);
+    });
+
+
 });
