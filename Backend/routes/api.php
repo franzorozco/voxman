@@ -97,6 +97,7 @@ Route::middleware([
         Route::post('/', [AttributeController::class, 'store']);
         Route::put('/{id}', [AttributeController::class, 'update']);
         Route::delete('/{id}', [AttributeController::class, 'destroy']);
+        Route::get('/', [ProductController::class, 'getAttributes']);
     });
 
 

@@ -11,6 +11,7 @@ use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductVariant;
 use App\Models\Catalog\VariantAttributeValue;
+use App\Models\Catalog\Attribute;
 use App\Models\Inventory\Inventory;
 use App\Models\Catalog\VariantMeasurement;
  
@@ -22,15 +23,11 @@ class ProductController extends Controller
         $query = Product::query()
             ->with([
                 'owner.user.user_profiles',
-
                 'category',
                 'category.discounts',
-
                 'discounts',
-
                 'product_type',
                 'product_images',
-
                 'product_variants.variant_attribute_values.attribute_value.attribute',
                 'product_variants.inventories',
             ])
@@ -217,14 +214,17 @@ class ProductController extends Controller
                         'cost'       => $variantData['cost'],
                         'is_active'  => true,
                     ]);
-                    if (isset($variantData['attribute_value_ids'])) {
-                        foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
-                            VariantAttributeValue::create([
-                                'variant_id'         => $variant->id,
-                                'attribute_value_id' => $attributeValueId,
-                            ]);
-                        }
-                    }
+if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribute_value_ids'])) {
+    foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
+
+        if ($attributeValueId) {
+            VariantAttributeValue::create([
+                'variant_id' => $variant->id,
+                'attribute_value_id' => $attributeValueId,
+            ]);
+        }
+    }
+}
 
                     if (isset($variantData['inventories'])) {
                         foreach ($variantData['inventories'] as $inventory) {
@@ -296,7 +296,7 @@ class ProductController extends Controller
             foreach ($product->product_variants as $variant) {
 
                 VariantAttributeValue::where('variant_id', $variant->id)->delete();
-                VariantSize::where('variant_id', $variant->id)->delete();
+                
                 Inventory::where('variant_id', $variant->id)->delete();
                 VariantMeasurement::where('variant_id', $variant->id)->delete();
             }
@@ -304,9 +304,8 @@ class ProductController extends Controller
             ProductVariant::where('product_id', $product->id)->delete();
 
             if ($request->has('product_images')) {
-
                 foreach ($request->product_images as $image) {
-                    $filePath = $file->storeAs(config('storage_paths.product_images'), $filename, 'public');
+
                     ProductImage::create([
                         'id'         => Str::uuid(),
                         'product_id' => $product->id,
@@ -331,14 +330,17 @@ class ProductController extends Controller
                         'is_active'  => true,
                     ]);
 
-                    if (isset($variantData['attribute_value_ids'])) {
-                        foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
-                            VariantAttributeValue::create([
-                                'variant_id'         => $variant->id,
-                                'attribute_value_id' => $attributeValueId,
-                            ]);
-                        }
-                    }
+if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribute_value_ids'])) {
+    foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
+
+        if ($attributeValueId) {
+            VariantAttributeValue::create([
+                'variant_id' => $variant->id,
+                'attribute_value_id' => $attributeValueId,
+            ]);
+        }
+    }
+}
 
                     if (isset($variantData['inventories'])) {
                         foreach ($variantData['inventories'] as $inventory) {
@@ -397,7 +399,7 @@ class ProductController extends Controller
             $variants = ProductVariant::where('product_id', $product->id)->get();
             foreach ($variants as $variant) {
                 VariantAttributeValue::where('variant_id', $variant->id)->delete();
-                VariantSize::where('variant_id', $variant->id)->delete();
+                
                 Inventory::where('variant_id', $variant->id)->delete();
                 VariantMeasurement::where('variant_id', $variant->id)->delete();
                 $variant->delete();
@@ -424,4 +426,12 @@ class ProductController extends Controller
             'message' => 'Producto restaurado correctamente'
         ]);
     }
-}
+
+    public function getAttributes()
+    {
+        return response()->json(
+            Attribute::with('attribute_values')->get()
+        );
+    }
+
+    }

@@ -28,19 +28,46 @@ export default function ProductForm({
     variants: [],
   });
 
-  useEffect(() => {
 
+  useEffect(() => {
     if (product) {
 
+      const transformedVariants = product.product_variants.map(v => {
+
+        const attributeMap = {};
+
+        v.variant_attribute_values?.forEach(av => {
+
+          const attributeId = av.attribute_value?.attribute?.id;
+          const valueId = av.attribute_value?.id;
+
+          if (attributeId && valueId) {
+            attributeMap[attributeId] = valueId;
+          }
+        });
+
+        return {
+          ...v,
+          size_id: v.size_id || "",
+          fit_id: v.fit_id || "",
+          price: v.price || "",
+          cost: v.cost || "",
+          weight: v.weight || "",
+          is_active: v.is_active ?? true,
+          attribute_value_ids: attributeMap
+        };
+      });
+
       setForm({
-
-        ...product,
-
-        variants:
-          product.product_variants || [],
+        name: product.name || "",
+        description: product.description || "",
+        base_price: product.base_price || "",
+        category_id: product.category_id || "",
+        owner_id: product.owner_id || "",
+        product_type_id: product.product_type_id || "",
+        variants: transformedVariants,
       });
     }
-
   }, [product]);
 
   // ======================================================
@@ -65,7 +92,6 @@ export default function ProductForm({
   // ======================================================
 
   const generateBarcode = () => {
-
     return (
       Date.now().toString() +
       Math.floor(Math.random() * 999)
@@ -79,9 +105,7 @@ export default function ProductForm({
   const handleChange = (e) => {
 
     setForm({
-
       ...form,
-
       [e.target.name]:
         e.target.value,
     });
@@ -96,15 +120,10 @@ export default function ProductForm({
     field,
     value
   ) => {
-
     const updated = [...form.variants];
-
     updated[index][field] = value;
-
     setForm({
-
       ...form,
-
       variants: updated,
     });
   };
@@ -113,27 +132,12 @@ export default function ProductForm({
   // ATTRIBUTE CHANGE
   // ======================================================
 
-  const handleAttributeChange = (
-    variantIndex,
-    attributeValueId
-  ) => {
+  const handleAttributeChange = (variantIndex, attributeId, valueId) => {
     const updated = [...form.variants];
-
-    const current =
-      updated[variantIndex].attribute_value_ids || [];
-
-    const exists = current.includes(attributeValueId);
-
-    if (exists) {
-      updated[variantIndex].attribute_value_ids =
-        current.filter((id) => id !== attributeValueId);
-    } else {
-      updated[variantIndex].attribute_value_ids = [
-        ...current,
-        attributeValueId,
-      ];
+    if (!updated[variantIndex].attribute_value_ids) {
+      updated[variantIndex].attribute_value_ids = {};
     }
-
+    updated[variantIndex].attribute_value_ids[attributeId] = valueId;
     setForm({ ...form, variants: updated });
   };
 
@@ -158,7 +162,7 @@ export default function ProductForm({
           weight: "",
           size_id: "",
           fit_id: "",
-          attribute_value_ids: []
+          attribute_value_ids: {}
         },
       ],
     });
@@ -169,15 +173,10 @@ export default function ProductForm({
   // ======================================================
 
   const removeVariant = (index) => {
-
     const updated = [...form.variants];
-
     updated.splice(index, 1);
-
     setForm({
-
       ...form,
-
       variants: updated,
     });
   };
@@ -185,13 +184,34 @@ export default function ProductForm({
   // ======================================================
   // SUBMIT
   // ======================================================
-
   const handleSubmit = (e) => {
-
     e.preventDefault();
 
-    onSubmit(form);
+    const payload = {
+      ...form,
+      variants: form.variants.map(v => ({
+        ...v,
+        attribute_value_ids: Object.values(v.attribute_value_ids || {})
+      }))
+    };
+
+    onSubmit(payload);
   };
+  
+
+useEffect(() => {
+  fetch("/api/attributes")
+    .then(res => res.json())
+    .then(data => {
+      console.log("ATTRIBUTES FULL:", data);
+      setAttributes(data);
+    });
+}, []);
+
+useEffect(() => {
+  if (!attributes || attributes.length === 0) return;
+  console.log("ATTRIBUTES FULL:", attributes);
+}, [attributes]);
 
   return (
 
@@ -200,13 +220,9 @@ export default function ProductForm({
       <div
         className="modal"
         style={{
-
           maxWidth: 1300,
-
           width: "95%",
-
           maxHeight: "90vh",
-
           overflowY: "auto",
         }}
       >
@@ -226,11 +242,8 @@ export default function ProductForm({
           <h3>
             Información General
           </h3>
-
           <div className="form-grid">
-
             <div className="form-group">
-
               <label>
                 Nombre
               </label>
@@ -269,15 +282,11 @@ export default function ProductForm({
                   >
                     {c.name}
                   </option>
-
                 ))}
-
               </select>
-
             </div>
 
             <div className="form-group">
-
               <label>
                 Tipo Producto
               </label>
@@ -288,28 +297,22 @@ export default function ProductForm({
                 onChange={handleChange}
                 required
               >
-
                 <option value="">
                   Seleccionar
                 </option>
-
+                  
                 {productTypes.map((t) => (
-
                   <option
                     key={t.id}
                     value={t.id}
                   >
                     {t.name}
                   </option>
-
                 ))}
-
               </select>
-
             </div>
 
             <div className="form-group">
-
               <label>
                 Propietario
               </label>
@@ -377,12 +380,9 @@ export default function ProductForm({
               />
 
             </div>
-
           </div>
 
-          {/* ====================================================== */}
           {/* VARIANTS */}
-          {/* ====================================================== */}
 
           <div
             style={{
@@ -403,7 +403,6 @@ export default function ProductForm({
               <h3>
                 Variantes
               </h3>
-
               <button
                 type="button"
                 className="btn-primary"
@@ -422,11 +421,8 @@ export default function ProductForm({
                   style={{
                     border:
                       "1px solid #ddd",
-
                     borderRadius: 12,
-
                     padding: 20,
-
                     marginBottom: 25,
                   }}
                 >
@@ -441,9 +437,7 @@ export default function ProductForm({
                   {/* ====================================================== */}
 
                   <div className="form-grid">
-
                     <div className="form-group">
-
                       <label>
                         SKU
                       </label>
@@ -458,7 +452,6 @@ export default function ProductForm({
                     </div>
 
                     <div className="form-group">
-
                       <label>
                         Barcode
                       </label>
@@ -473,7 +466,6 @@ export default function ProductForm({
                     </div>
 
                     <div className="form-group">
-
                       <label>
                         Precio
                       </label>
@@ -509,7 +501,6 @@ export default function ProductForm({
 
 
                     <div className="form-group">
-
                       <label>
                         Costo
                       </label>
@@ -532,7 +523,6 @@ export default function ProductForm({
                     </div>
 
                     <div className="form-group">
-
                       <label>
                         Peso
                       </label>
@@ -560,11 +550,9 @@ export default function ProductForm({
                     {/* ====================================================== */}
 
                     <div className="form-group">
-
                       <label>
                         Talla
                       </label>
-
                       <select
                         value={
                           variant.size_id
@@ -578,7 +566,6 @@ export default function ProductForm({
                           )
                         }
                       >
-
                         <option value="">
                           Seleccionar
                         </option>
@@ -676,19 +663,19 @@ export default function ProductForm({
                             }
                           </label>
 
-                          <select
-                              onChange={(e) =>
-                                handleAttributeChange(index, e.target.value)
+                            <select
+                              value={
+                                form.variants[index]?.attribute_value_ids?.[attribute.id] || ""
                               }
-                          >
+                              onChange={(e) =>
+                                handleAttributeChange(index, attribute.id, e.target.value)
+                              }
+                            >
                             <option value="">
                               Seleccionar
                             </option>
 
-                            {attribute.attribute_values?.map(
-                              (
-                                value
-                              ) => (
+                            {(attribute.attribute_values ?? []).map((value) => (
 
                                 <option
                                   key={
@@ -709,7 +696,6 @@ export default function ProductForm({
                         </div>
                       )
                     )}
-
                   </div>
 
                   {/* ====================================================== */}

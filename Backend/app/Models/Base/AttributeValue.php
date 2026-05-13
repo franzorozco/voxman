@@ -25,18 +25,16 @@ use Illuminate\Database\Eloquent\Model;
  */
 class AttributeValue extends Model
 {
-	protected $table = 'attribute_values';
-	protected $keyType = 'string';
-	public $incrementing = false;
-	public $timestamps = false;
+    protected $table = 'attribute_values';
+    public $timestamps = false;
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-	protected $casts = [
-	];
+    public function attribute()
+    {
+        return $this->belongsTo(Attribute::class, 'attribute_id');
+    }
 
-	public function attribute()
-	{
-		return $this->belongsTo(Attribute::class, 'attribute_id');
-	}
 
 	
 
