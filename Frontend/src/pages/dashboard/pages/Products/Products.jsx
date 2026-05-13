@@ -21,57 +21,29 @@ import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
 
 export default function Products() {
-
-  // ======================================================
-  // MAIN STATE
-  // ======================================================
-
   const [products, setProducts] = useState([]);
-
   const [categories, setCategories] = useState([]);
   const [owners, setOwners] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
   const [attributes, setAttributes] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [fits, setFits] = useState([]);
-
   const [selected, setSelected] = useState(null);
-
   const [open, setOpen] = useState(false);
-
-  // ======================================================
-  // FILTERS
-  // ======================================================
-
   const [filters, setFilters] = useState({
-
     search: "",
-
     category: "",
-
     owner: "",
-
     status: "",
-
     minPrice: "",
-
     maxPrice: "",
-
     sortBy: "name",
-
     sortDir: "asc",
   });
 
-  // ======================================================
-  // LOADERS
-  // ======================================================
-
   const loadProducts = async () => {
-
     try {
-
       const res = await getProducts();
-
       setProducts(
         res.data?.data ??
         res.data ??
@@ -79,7 +51,6 @@ export default function Products() {
       );
 
     } catch (error) {
-
       console.error(
         "Error cargando productos:",
         error
@@ -88,35 +59,20 @@ export default function Products() {
   };
 
   const loadInitialData = async () => {
-
     try {
-
       const [
-
         categoriesRes,
-
         ownersRes,
-
         productTypesRes,
-
         attributesRes,
-
         sizesRes,
-
         fitsRes,
-
       ] = await Promise.all([
-
         getCategories(),
-
         getOwners(),
-
         getProductTypes(),
-
         getAttributes(),
-
         getSizes(),
-
         getFits(),
       ]);
 
@@ -165,53 +121,28 @@ export default function Products() {
     }
   };
 
-  // ======================================================
-  // INIT
-  // ======================================================
-
   useEffect(() => {
-
     loadProducts();
-
     loadInitialData();
-
   }, []);
 
-  // ======================================================
-  // CREATE
-  // ======================================================
-
   const handleCreate = () => {
-
     setSelected(null);
-
     setOpen(true);
   };
 
-  // ======================================================
-  // SUBMIT
-  // ======================================================
-
   const handleSubmit = async (data) => {
-
     try {
-
       if (selected) {
-
         await updateProduct(
           selected.id,
           data
         );
-
       } else {
-
         await createProduct(data);
       }
-
       setOpen(false);
-
       loadProducts();
-
     } catch (error) {
 
       console.error(
@@ -221,17 +152,10 @@ export default function Products() {
     }
   };
 
-  // ======================================================
-  // ENRICHED PRODUCTS
-  // ======================================================
-
   const enrichedProducts = useMemo(() => {
-
     return products.map((p) => {
-
       const variants =
         p.product_variants || [];
-
       const stock = variants.reduce(
         (acc, v) => {
 
@@ -247,7 +171,6 @@ export default function Products() {
         },
         0
       );
-
       const cost =
         variants?.[0]?.cost || 0;
 
@@ -257,17 +180,11 @@ export default function Products() {
         0;
 
       return {
-
         ...p,
-
         stock,
-
         cost,
-
         price,
-
         margin: price - cost,
-
         variantsCount:
           variants.length,
       };
@@ -275,73 +192,45 @@ export default function Products() {
 
   }, [products]);
 
-  // ======================================================
-  // FILTERS
-  // ======================================================
-
   const filteredProducts = useMemo(() => {
 
     return enrichedProducts
-
       .filter((p) => {
-
         const search =
           filters.search.toLowerCase();
-
         const matchSearch =
-
           p.name
             ?.toLowerCase()
             .includes(search) ||
-
           p.slug
             ?.toLowerCase()
             .includes(search);
-
         const matchCategory =
-
           !filters.category ||
-
           p.category?.name ===
             filters.category;
-
         const matchStatus =
-
           !filters.status ||
-
           (
             filters.status ===
             "active"
-
               ? p.is_active
-
               : !p.is_active
           );
 
         const matchMin =
-
           !filters.minPrice ||
-
           p.price >=
             Number(filters.minPrice);
-
         const matchMax =
-
           !filters.maxPrice ||
-
           p.price <=
             Number(filters.maxPrice);
-
         return (
-
           matchSearch &&
-
           matchCategory &&
-
           matchStatus &&
-
           matchMin &&
-
           matchMax
         );
       })
@@ -401,30 +290,20 @@ export default function Products() {
   // ======================================================
 
   return (
-
     <div className="users-container">
-
       <div className="users-header">
-
         <h1 className="users-title">
           Productos
         </h1>
-
         <button
           className="btn-primary"
           onClick={handleCreate}
         >
           + Crear Producto
         </button>
-
       </div>
 
-      {/* ====================================================== */}
-      {/* FILTERS */}
-      {/* ====================================================== */}
-
       <div className="filters-bar">
-
         <input
           placeholder="Buscar producto..."
           value={filters.search}
@@ -442,9 +321,7 @@ export default function Products() {
         <select
           onChange={(e) =>
             setFilters({
-
               ...filters,
-
               category:
                 e.target.value,
             })
@@ -463,70 +340,51 @@ export default function Products() {
               )
             ),
           ].map((c) => (
-
             <option
               key={c}
               value={c}
             >
               {c}
             </option>
-
           ))}
-
         </select>
 
         <select
           onChange={(e) =>
             setFilters({
-
               ...filters,
-
               status:
                 e.target.value,
             })
           }
         >
-
           <option value="">
             Estado
           </option>
-
           <option value="active">
             Activo
           </option>
-
           <option value="inactive">
             Inactivo
           </option>
-
         </select>
-
       </div>
-
       {/* ====================================================== */}
       {/* TABLE */}
       {/* ====================================================== */}
 
       <ProductsTable
-
         products={filteredProducts}
-
         onEdit={(p) => {
-
           setSelected(p);
-
           setOpen(true);
         }}
 
         onDelete={async (id) => {
-
           await deleteProduct(id);
-
           loadProducts();
         }}
-
         onSort={(field) => {
-
           setFilters((prev) => ({
 
             ...prev,
@@ -544,37 +402,25 @@ export default function Products() {
           }));
         }}
       />
-
       {/* ====================================================== */}
       {/* MODAL */}
       {/* ====================================================== */}
 
       {open && (
-
         <ProductForm
-
           product={selected}
-
           categories={categories}
-
           owners={owners}
-
           productTypes={productTypes}
-
           attributes={attributes}
-
           sizes={sizes}
-
           fits={fits}
-
           onClose={() =>
             setOpen(false)
           }
-
           onSubmit={handleSubmit}
         />
       )}
-
     </div>
   );
 }

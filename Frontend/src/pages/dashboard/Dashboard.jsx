@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, NavLink } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import "./Dashboard.css";
 import logo from "../../assets/global/logo_black.png";
+
 
 import {
   LayoutDashboard,
@@ -44,6 +45,19 @@ export default function DashboardLayout() {
 
     window.location.href = "/login";
   };
+
+  const NavItem = ({ to, icon: Icon, label }) => (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `nav-link ${isActive ? "active" : ""}`
+      }
+    >
+      <Icon size={18} />
+      {!collapsed && label}
+    </NavLink>
+  );
+
 
   return (
     <>  
@@ -109,120 +123,62 @@ export default function DashboardLayout() {
           <div className="nav-section">
             <p className="section-title">{!collapsed && "PANEL"}</p>
 
-            <Link  to="/dashboard">
-              <LayoutDashboard size={18} />
-              {!collapsed && "Dashboard"}
-            </Link >
+            <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
           </div>
 
           {/* TIENDA */}
           <div className="nav-section">
             <p className="section-title">{!collapsed && "TIENDA"}</p>
 
-            <Link  to="/dashboard/products">
-              <Package size={18} />
-              {!collapsed && "Productos"}
-            </Link >
-
-            <Link  to="/dashboard/categories">
-              <Shapes size={18} />
-              {!collapsed && "Categorías"}
-            </Link >
-
-            <Link  to="/dashboard/inventory">
-              <Boxes size={18} />
-              {!collapsed && "Inventario"}
-            </Link >
-
-            <Link  to="/dashboard/orders">
-              <ShoppingCart size={18} />
-              {!collapsed && "Órdenes"}
-            </Link >
-
-            <Link  to="/dashboard/returns">
-              <RotateCcw size={18} />
-              {!collapsed && "Devoluciones"}
-            </Link >
-
-            <Link  to="/dashboard/shipping">
-              <Truck size={18} />
-              {!collapsed && "Envíos"}
-            </Link >
-
-            <Link  to="/dashboard/sales">
-              <BarChart3 size={18} />
-              {!collapsed && "Ventas"}
-            </Link >
+            <NavItem to="/dashboard/products" icon={Package} label="Productos" />
+            <NavItem to="/dashboard/categories" icon={Shapes} label="Categorías" />
+            <NavItem to="/dashboard/inventory" icon={Boxes} label="Inventario" />
+            <NavItem to="/dashboard/orders" icon={ShoppingCart} label="Órdenes" />
+            <NavItem to="/dashboard/returns" icon={RotateCcw} label="Devoluciones" />
+            <NavItem to="/dashboard/shipping" icon={Truck} label="Envíos" />
+            <NavItem to="/dashboard/sales" icon={BarChart3} label="Ventas" />
           </div>
+
+
+          {/* CONFIGURACIÓN DE PRODUCTO */}
+          <div className="nav-section">
+            <p className="section-title">{!collapsed && "CATÁLOGO"}</p>
+
+            <NavItem to="/dashboard/product-types" icon={Package} label="Tipos de producto" />
+            <NavItem to="/dashboard/attributes" icon={Shapes} label="Atributos" />
+            <NavItem to="/dashboard/attribute-values" icon={Boxes} label="Valores de atributos" />
+            <NavItem to="/dashboard/sizes" icon={ShoppingCart} label="Tallas" />
+            <NavItem to="/dashboard/fits" icon={RotateCcw} label="Fits" />
+          </div>
+
 
           {/* CLIENTES */}
           <div className="nav-section">
             <p className="section-title">{!collapsed && "CLIENTES"}</p>
 
-            <Link  to="/dashboard/clients">
-              <Users size={18} />
-              {!collapsed && "Clientes"}
-            </Link >
-
-            <Link  to="/dashboard/history">
-              <History size={18} />
-              {!collapsed && "Historial"}
-            </Link >
-
-            <Link  to="/dashboard/segments">
-              <UserRoundSearch size={18} />
-              {!collapsed && "Segmentos"}
-            </Link >
+            <NavItem to="/dashboard/clients" icon={Users} label="Clientes" />
+            <NavItem to="/dashboard/history" icon={History} label="Historial" />
+            <NavItem to="/dashboard/segments" icon={UserRoundSearch} label="Segmentos" />
           </div>
 
           {/* MARKETING */}
           <div className="nav-section">
             <p className="section-title">{!collapsed && "MARKETING"}</p>
 
-            <Link  to="/dashboard/coupons">
-              <TicketPercent size={18} />
-              {!collapsed && "Cupones"}
-            </Link >
-
-            <Link  to="/dashboard/promotions">
-              <BadgePercent size={18} />
-              {!collapsed && "Promociones"}
-            </Link >
-
-            <Link  to="/dashboard/carts">
-              <ShoppingBasket size={18} />
-              {!collapsed && "Carritos"}
-            </Link >
+            <NavItem to="/dashboard/coupons" icon={TicketPercent} label="Cupones" />
+            <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />
+            <NavItem to="/dashboard/carts" icon={ShoppingBasket} label="Carritos" />
           </div>
 
           {/* SISTEMA */}
           <div className="nav-section">
             <p className="section-title">{!collapsed && "SISTEMA"}</p>
 
-            <Link  to="/dashboard/users">
-              <Users size={18} />
-              {!collapsed && "Usuarios"}
-            </Link >
-
-            <Link  to="/dashboard/roles">
-              <Shield size={18} />
-              {!collapsed && "Roles"}
-            </Link >
-
-            <Link  to="/dashboard/permissions">
-              <KeyRound size={18} />
-              {!collapsed && "Permisos"}
-            </Link >
-
-            <Link  to="/dashboard/settings">
-              <Settings size={18} />
-              {!collapsed && "Configuración"}
-            </Link >
-
-            <Link  to="/dashboard/logs">
-              <FileText size={18} />
-              {!collapsed && "Logs"}
-            </Link >
+            <NavItem to="/dashboard/users" icon={Users} label="Usuarios" />
+            <NavItem to="/dashboard/roles" icon={Shield} label="Roles" />
+            <NavItem to="/dashboard/permissions" icon={KeyRound} label="Permisos" />
+            <NavItem to="/dashboard/settings" icon={Settings} label="Configuración" />
+            <NavItem to="/dashboard/logs" icon={FileText} label="Logs" />
           </div>
 
         </nav>

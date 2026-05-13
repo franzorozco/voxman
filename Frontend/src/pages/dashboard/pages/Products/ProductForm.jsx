@@ -6,14 +6,13 @@ export default function ProductForm({
   categories = [],
   owners = [],
   productTypes = [],
-
   attributes = [],
-  sizes = [],
+  sizes = [], 
   fits = [],
 
   onClose,
   onSubmit,
-}) {
+}){
 
   const [form, setForm] = useState({
 
@@ -116,76 +115,50 @@ export default function ProductForm({
 
   const handleAttributeChange = (
     variantIndex,
-    attributeId,
     attributeValueId
   ) => {
-
     const updated = [...form.variants];
 
     const current =
-      updated[variantIndex]
-        .attribute_value_ids || [];
+      updated[variantIndex].attribute_value_ids || [];
 
-    const filtered = current.filter(
-      (item) =>
-        item.attribute_id !== attributeId
-    );
+    const exists = current.includes(attributeValueId);
 
-    filtered.push({
-
-      attribute_id: attributeId,
-
-      attribute_value_id:
+    if (exists) {
+      updated[variantIndex].attribute_value_ids =
+        current.filter((id) => id !== attributeValueId);
+    } else {
+      updated[variantIndex].attribute_value_ids = [
+        ...current,
         attributeValueId,
-    });
+      ];
+    }
 
-    updated[
-      variantIndex
-    ].attribute_value_ids = filtered;
-
-    setForm({
-
-      ...form,
-
-      variants: updated,
-    });
+    setForm({ ...form, variants: updated });
   };
 
+  
   // ======================================================
   // ADD VARIANT
   // ======================================================
 
   const addVariant = () => {
 
-    const index =
-      form.variants.length;
+    const index = form.variants.length;
 
     setForm({
-
       ...form,
-
       variants: [
-
         ...form.variants,
-
         {
-
-          sku: generateSKU(
-            form.name,
-            index
-          ),
-
-          barcode:
-            generateBarcode(),
-
+          sku: generateSKU(form.name, index),
+          barcode: generateBarcode(),
           price: "",
           cost: "",
           weight: "",
-
           size_id: "",
           fit_id: "",
-
-          attribute_value_ids: [],
+          attribute_value_ids: []
         },
       ],
     });
@@ -521,6 +494,19 @@ export default function ProductForm({
                       />
 
                     </div>
+                    <div className="form-group">
+                      <label>Activo</label>
+                      <select
+                        value={variant.is_active}
+                        onChange={(e) =>
+                          handleVariantChange(index, "is_active", e.target.value === "true")
+                        }
+                      >
+                        <option value={true}>Activo</option>
+                        <option value={false}>Inactivo</option>
+                      </select>
+                    </div>
+
 
                     <div className="form-group">
 
@@ -612,24 +598,18 @@ export default function ProductForm({
                                 size.name
                               }
                             </option>
-
                           )
                         )}
-
                       </select>
-
                     </div>
 
                     {/* ====================================================== */}
                     {/* FIT */}
                     {/* ====================================================== */}
-
                     <div className="form-group">
-
                       <label>
                         Fit
                       </label>
-
                       <select
                         value={
                           variant.fit_id
@@ -643,7 +623,6 @@ export default function ProductForm({
                           )
                         }
                       >
-
                         <option value="">
                           Seleccionar
                         </option>
@@ -661,14 +640,10 @@ export default function ProductForm({
                                 fit.name
                               }
                             </option>
-
                           )
                         )}
-
                       </select>
-
                     </div>
-
                   </div>
 
                   {/* ====================================================== */}
@@ -702,16 +677,10 @@ export default function ProductForm({
                           </label>
 
                           <select
-                            onChange={(e) =>
-                              handleAttributeChange(
-                                index,
-                                attribute.id,
-                                e.target
-                                  .value
-                              )
-                            }
+                              onChange={(e) =>
+                                handleAttributeChange(index, e.target.value)
+                              }
                           >
-
                             <option value="">
                               Seleccionar
                             </option>
@@ -736,11 +705,8 @@ export default function ProductForm({
 
                               )
                             )}
-
                           </select>
-
                         </div>
-
                       )
                     )}
 
@@ -755,7 +721,6 @@ export default function ProductForm({
                       marginTop: 20,
                     }}
                   >
-
                     <button
                       type="button"
                       className="btn-delete"
@@ -767,16 +732,11 @@ export default function ProductForm({
                     >
                       Eliminar Variante
                     </button>
-
                   </div>
-
                 </div>
-
               )
             )}
-
           </div>
-
           {/* ====================================================== */}
           {/* ACTIONS */}
           {/* ====================================================== */}
@@ -787,7 +747,6 @@ export default function ProductForm({
               marginTop: 30,
             }}
           >
-
             <button
               type="button"
               className="btn-secondary"
@@ -795,20 +754,15 @@ export default function ProductForm({
             >
               Cancelar
             </button>
-
             <button
               type="submit"
               className="btn-primary"
             >
               Guardar
             </button>
-
           </div>
-
         </form>
-
       </div>
-
     </div>
   );
 }
