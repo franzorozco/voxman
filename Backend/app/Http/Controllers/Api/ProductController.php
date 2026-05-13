@@ -14,7 +14,7 @@ use App\Models\Catalog\VariantAttributeValue;
 use App\Models\Catalog\Attribute;
 use App\Models\Inventory\Inventory;
 use App\Models\Catalog\VariantMeasurement;
- 
+
 class ProductController extends Controller
 {
     
@@ -87,10 +87,6 @@ class ProductController extends Controller
 
             $now = now();
 
-            // =========================
-            // PRODUCT DISCOUNT
-            // =========================
-
             $productDiscount = $product->discounts
                 ->first(function ($discount) use ($now) {
 
@@ -100,10 +96,6 @@ class ProductController extends Controller
                         (!$discount->end_date || $discount->end_date >= $now);
                 });
 
-            // =========================
-            // CATEGORY DISCOUNT
-            // =========================
-
             $categoryDiscount = $product->category?->discounts
                 ?->first(function ($discount) use ($now) {
 
@@ -112,10 +104,6 @@ class ProductController extends Controller
                         (!$discount->start_date || $discount->start_date <= $now) &&
                         (!$discount->end_date || $discount->end_date >= $now);
                 });
-
-            // =========================
-            // FORMAT RESPONSE
-            // =========================
 
             $product->product_discount = $productDiscount
                 ? [
@@ -214,17 +202,17 @@ class ProductController extends Controller
                         'cost'       => $variantData['cost'],
                         'is_active'  => true,
                     ]);
-if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribute_value_ids'])) {
-    foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
+            if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribute_value_ids'])) {
+                foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
 
-        if ($attributeValueId) {
-            VariantAttributeValue::create([
-                'variant_id' => $variant->id,
-                'attribute_value_id' => $attributeValueId,
-            ]);
-        }
-    }
-}
+                    if ($attributeValueId) {
+                        VariantAttributeValue::create([
+                            'variant_id' => $variant->id,
+                            'attribute_value_id' => $attributeValueId,
+                        ]);
+                    }
+                }
+            }
 
                     if (isset($variantData['inventories'])) {
                         foreach ($variantData['inventories'] as $inventory) {
@@ -330,17 +318,17 @@ if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribu
                         'is_active'  => true,
                     ]);
 
-if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribute_value_ids'])) {
-    foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
+                    if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribute_value_ids'])) {
+                        foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
 
-        if ($attributeValueId) {
-            VariantAttributeValue::create([
-                'variant_id' => $variant->id,
-                'attribute_value_id' => $attributeValueId,
-            ]);
-        }
-    }
-}
+                            if ($attributeValueId) {
+                                VariantAttributeValue::create([
+                                    'variant_id' => $variant->id,
+                                    'attribute_value_id' => $attributeValueId,
+                                ]);
+                            }
+                        }
+                    }
 
                     if (isset($variantData['inventories'])) {
                         foreach ($variantData['inventories'] as $inventory) {
@@ -434,4 +422,4 @@ if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribu
         );
     }
 
-    }
+}

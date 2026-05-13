@@ -20,11 +20,9 @@ WHERE deleted_at IS NULL;
 CREATE TABLE user_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-
     first_name VARCHAR(100) NOT NULL,
     last_name_paternal VARCHAR(100),
     last_name_maternal VARCHAR(100),
-
     phone VARCHAR(20),
     birthdate DATE,
     gender VARCHAR(20),
@@ -46,9 +44,7 @@ CREATE TABLE owners (
 CREATE TABLE customers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-
     customer_code VARCHAR(20) UNIQUE NOT NULL,
-
     points INT DEFAULT 0,
     total_purchases DECIMAL(10,2) DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
@@ -60,32 +56,23 @@ CREATE TABLE customers (
 
 CREATE TABLE employees (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     branch_id UUID REFERENCES branches(id),
-
     role VARCHAR(50) CHECK (role IN ('seller','delivery','admin','manager','cashier')),
-
     employee_code VARCHAR(50) UNIQUE,
     phone VARCHAR(20),
     emergency_contact VARCHAR(100),
-
     base_salary DECIMAL(10,2) DEFAULT 0,
     commission_percentage DECIMAL(5,2) DEFAULT 0,
-
     max_discount_allowed DECIMAL(5,2) DEFAULT 0, 
     can_approve_returns BOOLEAN DEFAULT false,
     can_manage_inventory BOOLEAN DEFAULT false,
-
     hire_date DATE,
     contract_type VARCHAR(50),
-
     status VARCHAR(20) DEFAULT 'active', 
     is_active BOOLEAN DEFAULT true,
-
     last_promotion_date DATE,
     notes TEXT,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -93,26 +80,19 @@ CREATE TABLE employees (
 
 CREATE TABLE employee_commissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     employee_id UUID REFERENCES employees(id),
     sale_id UUID REFERENCES sales(id),
-
     commission_amount DECIMAL(10,2),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE employee_sales_summary (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     employee_id UUID REFERENCES employees(id),
-
     period_start DATE,
     period_end DATE,
-
     total_sales DECIMAL(10,2),
     total_commissions DECIMAL(10,2),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -125,11 +105,8 @@ CREATE TABLE employee_payments (
     commissions DECIMAL(10,2),
     bonuses DECIMAL(10,2) DEFAULT 0,
     deductions DECIMAL(10,2) DEFAULT 0,
-
     total_paid DECIMAL(10,2),
-
     payment_date TIMESTAMP,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -174,7 +151,6 @@ CREATE TABLE role_has_permissions (
     PRIMARY KEY(permission_id, role_id)
 );
 
-
 -- =========================================
 -- SUCURSALES
 -- =========================================
@@ -191,7 +167,6 @@ CREATE TABLE categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(150) NOT NULL,
     parent_id UUID REFERENCES categories(id),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -204,7 +179,6 @@ ON categories (LOWER(name), parent_id);
 CREATE TABLE product_types (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL, -- Polo, Camisa, Pantalón
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -216,7 +190,6 @@ CREATE TABLE products (
     owner_id UUID REFERENCES owners(id),
     category_id UUID REFERENCES categories(id),
     product_type_id UUID REFERENCES product_types(id),
-
     name VARCHAR(200) NOT NULL,
     description TEXT,
     slug VARCHAR(255) UNIQUE,
@@ -248,12 +221,10 @@ CREATE TABLE product_variants (
     fit_id UUID REFERENCES fits(id),
     sku VARCHAR(100) NOT NULL,
     barcode VARCHAR(100),
-
     price DECIMAL(10,2),
     cost DECIMAL(10,2),
     weight DECIMAL(10,2),
     is_active BOOLEAN DEFAULT TRUE,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -324,25 +295,20 @@ CREATE TABLE inventories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     branch_id UUID REFERENCES branches(id),
     variant_id UUID REFERENCES product_variants(id),
-
     stock INT DEFAULT 0,
     CHECK (stock >= 0),
     min_stock INT DEFAULT 0,
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
-
     UNIQUE(branch_id, variant_id)
 );
 
 -- MOVIMIENTOS DE INVENTARIO (PRO)
 CREATE TABLE inventory_movements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     variant_id UUID REFERENCES product_variants(id),
     branch_id UUID REFERENCES branches(id),
-
     movement_type VARCHAR(20)
     CHECK (movement_type IN (
         'purchase',
@@ -352,19 +318,13 @@ CREATE TABLE inventory_movements (
         'transfer_in',
         'transfer_out'
     )),
-
     quantity INT NOT NULL,
-
     stock_before INT,
     stock_after INT,
-
     reference_type VARCHAR(50),
     reference_id UUID,
-
     notes TEXT,
-
     created_by UUID REFERENCES users(id),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -372,15 +332,11 @@ CREATE TABLE inventory_movements (
 CREATE TABLE discounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
-
     type VARCHAR(20) CHECK (type IN ('percentage','fixed')),
     value DECIMAL(10,2) NOT NULL,
-
     start_date TIMESTAMP,
     end_date TIMESTAMP,
-
     active BOOLEAN DEFAULT TRUE,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -402,27 +358,20 @@ CREATE TABLE discount_categories (
 -- HISTORIAL DE PRECIOS (MEJORADO)
 CREATE TABLE product_price_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     variant_id UUID REFERENCES product_variants(id),
-
     old_price DECIMAL(10,2),
     new_price DECIMAL(10,2),
-
     changed_by UUID REFERENCES users(id),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Reseñas de productos
 CREATE TABLE product_reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     product_id UUID REFERENCES products(id),
     customer_id UUID REFERENCES customers(id),
-
     rating INT CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -444,7 +393,6 @@ CREATE TABLE wishlist_items (
 );
 CREATE TYPE sale_type AS ENUM ('store', 'online');
 CREATE TYPE sale_status AS ENUM ('pending', 'paid', 'cancelled', 'refunded');
-
 CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed');
 CREATE TYPE movement_type AS ENUM ('income', 'expense');
 
@@ -495,8 +443,6 @@ CREATE TABLE sale_details (
     deleted_at TIMESTAMP
 );
 
-
-
 CREATE TABLE sale_status_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sale_id UUID REFERENCES sales(id),
@@ -522,7 +468,6 @@ CREATE TABLE stock_reservations (
 CREATE TABLE carts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     customer_id UUID REFERENCES customers(id),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -570,18 +515,13 @@ CREATE TABLE returns (
 -- =========================================
 CREATE TABLE cash_registers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     branch_id UUID REFERENCES branches(id),
     employee_id UUID REFERENCES employees(id),
-
     opening_amount DECIMAL(10,2) NOT NULL,
     closing_amount DECIMAL(10,2),
-
     opened_at TIMESTAMP NOT NULL,
     closed_at TIMESTAMP,
-
     status VARCHAR(20) CHECK (status IN ('open', 'closed')),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -590,17 +530,12 @@ CREATE TABLE cash_registers (
 -- MOVIMIENTOS DE CAJA
 CREATE TABLE cash_movements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     cash_register_id UUID REFERENCES cash_registers(id),
-
     movement_type movement_type NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
-
     reference_type VARCHAR(50),
     reference_id UUID,
-
     description TEXT,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -611,15 +546,10 @@ CREATE TABLE cash_movements (
 -- =========================================
 CREATE TABLE owner_payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     owner_id UUID REFERENCES owners(id),
-
     total_amount DECIMAL(10,2) NOT NULL,
-
     status VARCHAR(20) DEFAULT 'pending',
-
     payment_date TIMESTAMP,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
@@ -627,16 +557,11 @@ CREATE TABLE owner_payments (
 
 CREATE TABLE owner_payment_details (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     owner_payment_id UUID REFERENCES owner_payments(id) ON DELETE CASCADE,
     sale_detail_id UUID REFERENCES sale_details(id),
-
     amount DECIMAL(10,2) NOT NULL,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-
 
 -- =========================================
 -- ENVÍOS
@@ -648,7 +573,6 @@ CREATE TYPE delivery_type AS ENUM (
     'scheduled_point'
 );
 
--- 
 CREATE TABLE shipments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sale_id UUID REFERENCES sales(id),
@@ -680,8 +604,6 @@ CREATE TABLE shipments (
     )
 );
 
-
-
 CREATE UNIQUE INDEX idx_unique_active_delivery_code 
 ON shipments (delivery_code)
 WHERE delivery_confirmed = FALSE AND delivery_code IS NOT NULL;
@@ -698,8 +620,6 @@ CREATE TABLE delivery_schedules (
         CHECK (status IN ('pending','assigned','completed','failed')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-
 
 CREATE TABLE shipment_tracking (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -722,7 +642,6 @@ CREATE TABLE delivery_drivers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 CREATE TABLE delivery_zones (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100),
@@ -731,7 +650,6 @@ CREATE TABLE delivery_zones (
     extra_cost_per_km DECIMAL(10,2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE shipment_cost_details (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -742,7 +660,6 @@ CREATE TABLE shipment_cost_details (
     total DECIMAL(10,2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE shipment_locations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -755,6 +672,7 @@ CREATE TABLE shipment_locations (
 -- =========================================
 -- DIRECCIONES
 -- =========================================
+
 CREATE TABLE addresses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
@@ -780,10 +698,10 @@ CREATE TABLE addresses (
     deleted_at TIMESTAMP
 );
 
-
 -- =========================================
 -- AUDITORÍA
 -- =========================================
+
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
@@ -795,8 +713,6 @@ CREATE TABLE audit_logs (
     new_data JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
- 
- 
 
 CREATE TABLE notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -808,8 +724,6 @@ CREATE TABLE notifications (
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-
 
 -- =========================================
 -- COMPRAS Y PROVEEDORES
@@ -830,9 +744,7 @@ CREATE TABLE suppliers (
     deleted_at TIMESTAMP
 );
 
-
 CREATE TYPE purchase_status AS ENUM ('pending','received','cancelled');
-
 CREATE TABLE purchases (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
@@ -861,7 +773,6 @@ CREATE TABLE purchase_details (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 CREATE TABLE supplier_payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
@@ -872,7 +783,6 @@ CREATE TABLE supplier_payments (
     status VARCHAR(20) DEFAULT 'completed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE accounts_payable (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -886,7 +796,6 @@ CREATE TABLE accounts_payable (
     status VARCHAR(20) CHECK (status IN ('pending','partial','paid')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE stock_transfers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -918,8 +827,6 @@ CREATE TABLE purchase_receptions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
 CREATE TABLE purchase_reception_details (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
@@ -934,10 +841,8 @@ CREATE TABLE purchase_reception_details (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 CREATE TABLE supplier_returns (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     supplier_id UUID REFERENCES suppliers(id),
     purchase_id UUID REFERENCES purchases(id),
     reason TEXT,

@@ -10,9 +10,12 @@ class OwnerController extends Controller
 {
     public function index()
     {
-        $owners = Owner::with('user')->whereNull('deleted_at')->get();
-
-        return response()->json($owners);
+        return Owner::with(['user.user_profiles'])
+            ->where('is_active', true)
+            ->whereHas('user', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->get();
     }
 
     public function show($id)
