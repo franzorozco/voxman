@@ -510,796 +510,799 @@ const getAttributeValueName = (valueId) => {
             </div>
 
           </div>
-
-          {/* VARIANTS */}
-
           {/* ====================================================== */}
-{/* VARIANTS */}
-{/* ====================================================== */}
+          {/* VARIANTS */}
+          {/* ====================================================== */}
 
-<div
-  style={{
-    marginTop: 40,
-  }}
->
-
-  {/* ====================================================== */}
-  {/* HEADER */}
-  {/* ====================================================== */}
-
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 20,
-      gap: 20,
-      flexWrap: "wrap",
-    }}
-  >
-
-    <div className="variant-mode-selector">
-
-      <label>
-        Modo de variantes
-      </label>
-
-      <select
-        value={variantMode}
-        onChange={(e) =>
-          setVariantMode(e.target.value)
-        }
-      >
-        <option value="advanced">
-          Avanzado
-        </option>
-
-        <option value="simple">
-          Simple
-        </option>
-      </select>
-
-    </div>
-
-    <h3>
-      Variantes
-    </h3>
-
-    {variantMode === "advanced" && (
-      <button
-        type="button"
-        className="btn-primary"
-        onClick={addVariant}
-      >
-        Agregar Variante
-      </button>
-    )}
-
-  </div>
-
-  {/* ====================================================== */}
-  {/* SIMPLE MODE */}
-  {/* ====================================================== */}
-
-  {variantMode === "simple" ? (
-
-    <div className="simple-mode-container">
-
-      {/* HEADER */}
-      <div className="simple-mode-header">
-
-        <div>
-          <div className="simple-mode-title">
-            Modo Simple
-          </div>
-
-          <div className="simple-mode-description">
-            Genera variantes automáticamente
-            usando colores y tallas
-          </div>
-        </div>
-
-      </div>
-
-      {/* GRID */}
-      <div className="simple-grid">
-
-        {/* ====================================================== */}
-        {/* COLORES */}
-        {/* ====================================================== */}
-
-        <div className="simple-card">
-
-          <h4>
-            Colores
-          </h4>
-
-          <label>
-            Selecciona colores
-          </label>
-
-          <select
-            multiple
-            className="simple-multiselect"
-            value={simpleConfig.colors}
-            onChange={(e) => {
-
-              const values =
-                Array.from(
-                  e.target.selectedOptions,
-                  option => option.value
-                );
-
-              setSimpleConfig({
-                ...simpleConfig,
-                colors: values
-              });
-
+          <div
+            style={{
+              marginTop: 40,
             }}
           >
 
-            {(colorAttribute?.attribute_values || []).map((value) => (
-
-              <option
-                key={value.id}
-                value={value.id}
-              >
-                {value.value}
-              </option>
-
-            ))}
-
-          </select>
-
-        </div>
-
-        {/* ====================================================== */}
-        {/* TALLAS */}
-        {/* ====================================================== */}
-
-        <div className="simple-card">
-
-          <h4>
-            Tallas
-          </h4>
-
-          <label>
-            Selecciona tallas
-          </label>
-
-          <select
-            multiple
-            className="simple-multiselect"
-            value={simpleConfig.sizes}
-            onChange={(e) => {
-
-              const values =
-                Array.from(
-                  e.target.selectedOptions,
-                  option => option.value
-                );
-
-              setSimpleConfig({
-                ...simpleConfig,
-                sizes: values
-              });
-
-            }}
-          >
-
-            {sizes.map((size) => (
-
-              <option
-                key={size.id}
-                value={size.id}
-              >
-                {size.name}
-              </option>
-
-            ))}
-
-          </select>
-
-        </div>
-
-      </div>
-
-      {/* ====================================================== */}
-      {/* ATRIBUTOS GLOBALES */}
-      {/* ====================================================== */}
-
-      <div
-        className="simple-card"
-        style={{
-          marginTop: 20
-        }}
-      >
-
-        <h4>
-          Configuración Global
-        </h4>
-
-        <div className="simple-attributes-grid">
-
-          {/* FIT */}
-          <div>
-
-            <label>
-              Fit
-            </label>
-
-            <select
-              value={
-                simpleConfig.globalAttributes.fit_id
-              }
-              onChange={(e) =>
-                setSimpleConfig({
-                  ...simpleConfig,
-                  globalAttributes: {
-                    ...simpleConfig.globalAttributes,
-                    fit_id: e.target.value
-                  }
-                })
-              }
-            >
-
-              <option value="">
-                Seleccionar
-              </option>
-
-              {fits.map((fit) => (
-
-                <option
-                  key={fit.id}
-                  value={fit.id}
-                >
-                  {fit.name}
-                </option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-          {/* MATERIAL */}
-          <div>
-
-            <label>
-              Material
-            </label>
-
-            <select
-              value={
-                simpleConfig.globalAttributes.material_id
-              }
-              onChange={(e) =>
-                setSimpleConfig({
-                  ...simpleConfig,
-                  globalAttributes: {
-                    ...simpleConfig.globalAttributes,
-                    material_id: e.target.value
-                  }
-                })
-              }
-            >
-
-              <option value="">
-                Seleccionar
-              </option>
-
-              {(materialAttribute?.attribute_values || []).map((value) => (
-
-                <option
-                  key={value.id}
-                  value={value.id}
-                >
-                  {value.value}
-                </option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-          {/* STYLE */}
-          <div>
-
-            <label>
-              Style
-            </label>
-
-            <select
-              value={
-                simpleConfig.globalAttributes.style_id
-              }
-              onChange={(e) =>
-                setSimpleConfig({
-                  ...simpleConfig,
-                  globalAttributes: {
-                    ...simpleConfig.globalAttributes,
-                    style_id: e.target.value
-                  }
-                })
-              }
-            >
-
-              <option value="">
-                Seleccionar
-              </option>
-
-              {(styleAttribute?.attribute_values || []).map((value) => (
-
-                <option
-                  key={value.id}
-                  value={value.id}
-                >
-                  {value.value}
-                </option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-          {/* SEASON */}
-          <div>
-
-            <label>
-              Season
-            </label>
-
-            <select
-              value={
-                simpleConfig.globalAttributes.season_id
-              }
-              onChange={(e) =>
-                setSimpleConfig({
-                  ...simpleConfig,
-                  globalAttributes: {
-                    ...simpleConfig.globalAttributes,
-                    season_id: e.target.value
-                  }
-                })
-              }
-            >
-
-              <option value="">
-                Seleccionar
-              </option>
-
-              {(seasonAttribute?.attribute_values || []).map((value) => (
-
-                <option
-                  key={value.id}
-                  value={value.id}
-                >
-                  {value.value}
-                </option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* ====================================================== */}
-      {/* SUMMARY */}
-      {/* ====================================================== */}
-
-      <div className="simple-summary">
-
-        <h4>
-          Resumen
-        </h4>
-
-        <div className="simple-summary-grid">
-
-          {/* COLORES */}
-          <div className="simple-summary-item">
-
-            <div className="simple-summary-label">
-              Colores
-            </div>
-
-            <div className="simple-summary-value">
-
-              {simpleConfig.colors.length
-                ? simpleConfig.colors
-                    .map(getAttributeValueName)
-                    .join(", ")
-                : "Ninguno"}
-
-            </div>
-
-          </div>
-
-          {/* TALLAS */}
-          <div className="simple-summary-item">
-
-            <div className="simple-summary-label">
-              Tallas
-            </div>
-
-            <div className="simple-summary-value">
-
-              {simpleConfig.sizes.length
-                ? simpleConfig.sizes
-                    .map(
-                      sizeId =>
-                        sizes.find(
-                          s => s.id === sizeId
-                        )?.name
-                    )
-                    .join(", ")
-                : "Ninguna"}
-
-            </div>
-
-          </div>
-
-          {/* FIT */}
-          <div className="simple-summary-item">
-
-            <div className="simple-summary-label">
-              Fit
-            </div>
-
-            <div className="simple-summary-value">
-
-              {fits.find(
-                f =>
-                  f.id ===
-                  simpleConfig.globalAttributes.fit_id
-              )?.name || "No definido"}
-
-            </div>
-
-          </div>
-
-          {/* VARIANTES */}
-          <div className="simple-summary-item">
-
-            <div className="simple-summary-label">
-              Variantes a generar
-            </div>
-
-            <div className="simple-summary-value">
-
-              {
-                simpleConfig.colors.length *
-                simpleConfig.sizes.length
-              }
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* ====================================================== */}
-      {/* GENERATE */}
-      {/* ====================================================== */}
-
-      <button
-        type="button"
-        className="simple-generate-btn"
-        onClick={generateSimpleVariants}
-      >
-        Generar Variantes Automáticamente
-      </button>
-
-      {form.variants.length > 0 && (
-
-        <div className="generated-count">
-
-          {form.variants.length}
-          {" "}
-          variantes generadas
-
-        </div>
-
-      )}
-
-    </div>
-
-  ) : (
-
-    /* ====================================================== */
-    /* ADVANCED MODE */
-    /* ====================================================== */
-
-    form.variants.map((variant, index) => (
-
-      <div
-        key={index}
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 12,
-          padding: 20,
-          marginBottom: 25,
-        }}
-      >
-
-        <h4>
-          Variante #{index + 1}
-        </h4>
-
-        {/* ================= DATOS ================= */}
-
-        <div className="form-grid">
-
-          <div className="form-group">
-            <label>SKU</label>
-            <input value={variant.sku} readOnly />
-          </div>
-
-          <div className="form-group">
-            <label>Barcode</label>
-            <input value={variant.barcode} readOnly />
-          </div>
-
-          <div className="form-group">
-            <label>Precio</label>
-
-            <input
-              type="number"
-              value={variant.price}
-              onChange={(e) =>
-                handleVariantChange(
-                  index,
-                  "price",
-                  e.target.value
-                )
-              }
-            />
-
-          </div>
-
-          <div className="form-group">
-
-            <label>
-              Activo
-            </label>
-
-            <select
-              value={variant.is_active}
-              onChange={(e) =>
-                handleVariantChange(
-                  index,
-                  "is_active",
-                  e.target.value === "true"
-                )
-              }
-            >
-              <option value={true}>
-                Activo
-              </option>
-
-              <option value={false}>
-                Inactivo
-              </option>
-
-            </select>
-
-          </div>
-
-          <div className="form-group">
-
-            <label>
-              Costo
-            </label>
-
-            <input
-              type="number"
-              value={variant.cost}
-              onChange={(e) =>
-                handleVariantChange(
-                  index,
-                  "cost",
-                  e.target.value
-                )
-              }
-            />
-
-          </div>
-
-          <div className="form-group">
-
-            <label>
-              Peso
-            </label>
-
-            <input
-              type="number"
-              step="0.01"
-              value={variant.weight}
-              onChange={(e) =>
-                handleVariantChange(
-                  index,
-                  "weight",
-                  e.target.value
-                )
-              }
-            />
-
-          </div>
-
-          {/* SIZE */}
-
-          <div className="form-group">
-
-            <label>
-              Talla
-            </label>
-
-            <select
-              value={variant.size_id}
-              onChange={(e) =>
-                handleVariantChange(
-                  index,
-                  "size_id",
-                  e.target.value
-                )
-              }
-            >
-
-              <option value="">
-                Seleccionar
-              </option>
-
-              {sizes.map((size) => (
-
-                <option
-                  key={size.id}
-                  value={size.id}
-                >
-                  {size.name}
-                </option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-          {/* FIT */}
-
-          <div className="form-group">
-
-            <label>
-              Fit
-            </label>
-
-            <select
-              value={variant.fit_id}
-              onChange={(e) =>
-                handleVariantChange(
-                  index,
-                  "fit_id",
-                  e.target.value
-                )
-              }
-            >
-
-              <option value="">
-                Seleccionar
-              </option>
-
-              {fits.map((fit) => (
-
-                <option
-                  key={fit.id}
-                  value={fit.id}
-                >
-                  {fit.name}
-                </option>
-
-              ))}
-
-            </select>
-
-          </div>
-
-        </div>
-
-        {/* ================= ATTRIBUTES ================= */}
-
-        <h4
-          style={{
-            marginTop: 25
-          }}
-        >
-          Atributos
-        </h4>
-
-        <div className="form-grid">
-
-          {attributes.map((attribute) => (
+            {/* ====================================================== */}
+            {/* HEADER */}
+            {/* ====================================================== */}
 
             <div
-              key={attribute.id}
-              className="form-group"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 20,
+                gap: 20,
+                flexWrap: "wrap",
+              }}
             >
 
-              <label>
-                {attribute.name}
-              </label>
+            <div className="variant-tabs">
 
-              <select
-                value={
-                  form.variants[index]
-                    ?.attribute_value_ids?.[
-                      attribute.id
-                    ] || ""
+              <button
+                type="button"
+                className={
+                  variantMode === "simple"
+                    ? "variant-tab active"
+                    : "variant-tab"
                 }
-                onChange={(e) =>
-                  handleAttributeChange(
-                    index,
-                    attribute.id,
-                    e.target.value
-                  )
+                onClick={() =>
+                  setVariantMode("simple")
                 }
               >
+                Modo Simple
+              </button>
 
-                <option value="">
-                  Seleccionar
-                </option>
-
-                {(attribute.attribute_values ?? []).map((value) => (
-
-                  <option
-                    key={value.id}
-                    value={value.id}
-                  >
-                    {value.value}
-                  </option>
-
-                ))}
-
-              </select>
+              <button
+                type="button"
+                className={
+                  variantMode === "advanced"
+                    ? "variant-tab active"
+                    : "variant-tab"
+                }
+                onClick={() =>
+                  setVariantMode("advanced")
+                }
+              >
+                Modo Avanzado
+              </button>
 
             </div>
 
-          ))}
 
-        </div>
+              {variantMode === "advanced" && (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={addVariant}
+                >
+                  Agregar Variante
+                </button>
+              )}
 
-        {/* DELETE */}
+            </div>
 
-        <div
-          style={{
-            marginTop: 20
-          }}
-        >
+            {/* ====================================================== */}
+            {/* SIMPLE MODE */}
+            {/* ====================================================== */}
 
-          <button
-            type="button"
-            className="btn-delete"
-            onClick={() =>
-              removeVariant(index)
-            }
-          >
-            Eliminar Variante
-          </button>
+            {variantMode === "simple" ? (
 
-        </div>
+              <div className="simple-mode-container">
 
-      </div>
+                {/* HEADER */}
+                <div className="simple-mode-header">
 
-    ))
+                  <div>
+                    <div className="simple-mode-title">
+                      Modo Simple
+                    </div>
 
-  )}
+                    <div className="simple-mode-description">
+                      Genera variantes automáticamente
+                      usando colores y tallas
+                    </div>
+                  </div>
 
-</div>
+                </div>
+
+                {/* GRID */}
+                <div className="simple-grid">
+
+                  {/* ====================================================== */}
+                  {/* COLORES */}
+                  {/* ====================================================== */}
+
+                  <div className="simple-card">
+
+                    <h4>
+                      Colores
+                    </h4>
+
+                    <label>
+                      Selecciona colores
+                    </label>
+
+                    <select
+                      multiple
+                      className="simple-multiselect"
+                      value={simpleConfig.colors}
+                      onChange={(e) => {
+
+                        const values =
+                          Array.from(
+                            e.target.selectedOptions,
+                            option => option.value
+                          );
+
+                        setSimpleConfig({
+                          ...simpleConfig,
+                          colors: values
+                        });
+
+                      }}
+                    >
+
+                      {(colorAttribute?.attribute_values || []).map((value) => (
+
+                        <option
+                          key={value.id}
+                          value={value.id}
+                        >
+                          {value.value}
+                        </option>
+
+                      ))}
+
+                    </select>
+
+                  </div>
+
+                  {/* ====================================================== */}
+                  {/* TALLAS */}
+                  {/* ====================================================== */}
+
+                  <div className="simple-card">
+
+                    <h4>
+                      Tallas
+                    </h4>
+
+                    <label>
+                      Selecciona tallas
+                    </label>
+
+                    <select
+                      multiple
+                      className="simple-multiselect"
+                      value={simpleConfig.sizes}
+                      onChange={(e) => {
+
+                        const values =
+                          Array.from(
+                            e.target.selectedOptions,
+                            option => option.value
+                          );
+
+                        setSimpleConfig({
+                          ...simpleConfig,
+                          sizes: values
+                        });
+
+                      }}
+                    >
+
+                      {sizes.map((size) => (
+
+                        <option
+                          key={size.id}
+                          value={size.id}
+                        >
+                          {size.name}
+                        </option>
+
+                      ))}
+
+                    </select>
+
+                  </div>
+
+                </div>
+
+                {/* ====================================================== */}
+                {/* ATRIBUTOS GLOBALES */}
+                {/* ====================================================== */}
+
+                <div
+                  className="simple-card"
+                  style={{
+                    marginTop: 20
+                  }}
+                >
+
+                  <h4>
+                    Configuración Global
+                  </h4>
+
+                  <div className="simple-attributes-grid">
+
+                    {/* FIT */}
+                    <div>
+
+                      <label>
+                        Fit
+                      </label>
+
+                      <select
+                        value={
+                          simpleConfig.globalAttributes.fit_id
+                        }
+                        onChange={(e) =>
+                          setSimpleConfig({
+                            ...simpleConfig,
+                            globalAttributes: {
+                              ...simpleConfig.globalAttributes,
+                              fit_id: e.target.value
+                            }
+                          })
+                        }
+                      >
+
+                        <option value="">
+                          Seleccionar
+                        </option>
+
+                        {fits.map((fit) => (
+
+                          <option
+                            key={fit.id}
+                            value={fit.id}
+                          >
+                            {fit.name}
+                          </option>
+
+                        ))}
+
+                      </select>
+
+                    </div>
+
+                    {/* MATERIAL */}
+                    <div>
+
+                      <label>
+                        Material
+                      </label>
+
+                      <select
+                        value={
+                          simpleConfig.globalAttributes.material_id
+                        }
+                        onChange={(e) =>
+                          setSimpleConfig({
+                            ...simpleConfig,
+                            globalAttributes: {
+                              ...simpleConfig.globalAttributes,
+                              material_id: e.target.value
+                            }
+                          })
+                        }
+                      >
+
+                        <option value="">
+                          Seleccionar
+                        </option>
+
+                        {(materialAttribute?.attribute_values || []).map((value) => (
+
+                          <option
+                            key={value.id}
+                            value={value.id}
+                          >
+                            {value.value}
+                          </option>
+
+                        ))}
+
+                      </select>
+
+                    </div>
+
+                    {/* STYLE */}
+                    <div>
+
+                      <label>
+                        Style
+                      </label>
+
+                      <select
+                        value={
+                          simpleConfig.globalAttributes.style_id
+                        }
+                        onChange={(e) =>
+                          setSimpleConfig({
+                            ...simpleConfig,
+                            globalAttributes: {
+                              ...simpleConfig.globalAttributes,
+                              style_id: e.target.value
+                            }
+                          })
+                        }
+                      >
+
+                        <option value="">
+                          Seleccionar
+                        </option>
+
+                        {(styleAttribute?.attribute_values || []).map((value) => (
+
+                          <option
+                            key={value.id}
+                            value={value.id}
+                          >
+                            {value.value}
+                          </option>
+
+                        ))}
+
+                      </select>
+
+                    </div>
+
+                    {/* SEASON */}
+                    <div>
+
+                      <label>
+                        Season
+                      </label>
+
+                      <select
+                        value={
+                          simpleConfig.globalAttributes.season_id
+                        }
+                        onChange={(e) =>
+                          setSimpleConfig({
+                            ...simpleConfig,
+                            globalAttributes: {
+                              ...simpleConfig.globalAttributes,
+                              season_id: e.target.value
+                            }
+                          })
+                        }
+                      >
+
+                        <option value="">
+                          Seleccionar
+                        </option>
+
+                        {(seasonAttribute?.attribute_values || []).map((value) => (
+
+                          <option
+                            key={value.id}
+                            value={value.id}
+                          >
+                            {value.value}
+                          </option>
+
+                        ))}
+
+                      </select>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* ====================================================== */}
+                {/* SUMMARY */}
+                {/* ====================================================== */}
+
+                <div className="simple-summary">
+
+                  <h4>
+                    Resumen
+                  </h4>
+
+                  <div className="simple-summary-grid">
+
+                    {/* COLORES */}
+                    <div className="simple-summary-item">
+
+                      <div className="simple-summary-label">
+                        Colores
+                      </div>
+
+                      <div className="simple-summary-value">
+
+                        {simpleConfig.colors.length
+                          ? simpleConfig.colors
+                              .map(getAttributeValueName)
+                              .join(", ")
+                          : "Ninguno"}
+
+                      </div>
+
+                    </div>
+
+                    {/* TALLAS */}
+                    <div className="simple-summary-item">
+
+                      <div className="simple-summary-label">
+                        Tallas
+                      </div>
+
+                      <div className="simple-summary-value">
+
+                        {simpleConfig.sizes.length
+                          ? simpleConfig.sizes
+                              .map(
+                                sizeId =>
+                                  sizes.find(
+                                    s => s.id === sizeId
+                                  )?.name
+                              )
+                              .join(", ")
+                          : "Ninguna"}
+
+                      </div>
+
+                    </div>
+
+                    {/* FIT */}
+                    <div className="simple-summary-item">
+
+                      <div className="simple-summary-label">
+                        Fit
+                      </div>
+
+                      <div className="simple-summary-value">
+
+                        {fits.find(
+                          f =>
+                            f.id ===
+                            simpleConfig.globalAttributes.fit_id
+                        )?.name || "No definido"}
+
+                      </div>
+
+                    </div>
+
+                    {/* VARIANTES */}
+                    <div className="simple-summary-item">
+
+                      <div className="simple-summary-label">
+                        Variantes a generar
+                      </div>
+
+                      <div className="simple-summary-value">
+
+                        {
+                          simpleConfig.colors.length *
+                          simpleConfig.sizes.length
+                        }
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* ====================================================== */}
+                {/* GENERATE */}
+                {/* ====================================================== */}
+
+                <button
+                  type="button"
+                  className="simple-generate-btn"
+                  onClick={generateSimpleVariants}
+                >
+                  Generar Variantes Automáticamente
+                </button>
+
+                {form.variants.length > 0 && (
+
+                  <div className="generated-count">
+
+                    {form.variants.length}
+                    {" "}
+                    variantes generadas
+
+                  </div>
+
+                )}
+
+              </div>
+
+            ) : (
+
+              /* ====================================================== */
+              /* ADVANCED MODE */
+              /* ====================================================== */
+
+              form.variants.map((variant, index) => (
+
+                <div
+                  key={index}
+                  style={{
+                    border: "1px solid #ddd",
+                    borderRadius: 12,
+                    padding: 20,
+                    marginBottom: 25,
+                  }}
+                >
+
+                  <h4>
+                    Variante #{index + 1}
+                  </h4>
+
+                  {/* ================= DATOS ================= */}
+
+                  <div className="form-grid">
+
+                    <div className="form-group">
+                      <label>SKU</label>
+                      <input value={variant.sku} readOnly />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Barcode</label>
+                      <input value={variant.barcode} readOnly />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Precio</label>
+
+                      <input
+                        type="number"
+                        value={variant.price}
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "price",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                    </div>
+
+                    <div className="form-group">
+
+                      <label>
+                        Activo
+                      </label>
+
+                      <select
+                        value={variant.is_active}
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "is_active",
+                            e.target.value === "true"
+                          )
+                        }
+                      >
+                        <option value={true}>
+                          Activo
+                        </option>
+
+                        <option value={false}>
+                          Inactivo
+                        </option>
+
+                      </select>
+
+                    </div>
+
+                    <div className="form-group">
+
+                      <label>
+                        Costo
+                      </label>
+
+                      <input
+                        type="number"
+                        value={variant.cost}
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "cost",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                    </div>
+
+                    <div className="form-group">
+
+                      <label>
+                        Peso
+                      </label>
+
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={variant.weight}
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "weight",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                    </div>
+
+                    {/* SIZE */}
+
+                    <div className="form-group">
+
+                      <label>
+                        Talla
+                      </label>
+
+                      <select
+                        value={variant.size_id}
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "size_id",
+                            e.target.value
+                          )
+                        }
+                      >
+
+                        <option value="">
+                          Seleccionar
+                        </option>
+
+                        {sizes.map((size) => (
+
+                          <option
+                            key={size.id}
+                            value={size.id}
+                          >
+                            {size.name}
+                          </option>
+
+                        ))}
+
+                      </select>
+
+                    </div>
+
+                    {/* FIT */}
+
+                    <div className="form-group">
+
+                      <label>
+                        Fit
+                      </label>
+
+                      <select
+                        value={variant.fit_id}
+                        onChange={(e) =>
+                          handleVariantChange(
+                            index,
+                            "fit_id",
+                            e.target.value
+                          )
+                        }
+                      >
+
+                        <option value="">
+                          Seleccionar
+                        </option>
+
+                        {fits.map((fit) => (
+
+                          <option
+                            key={fit.id}
+                            value={fit.id}
+                          >
+                            {fit.name}
+                          </option>
+
+                        ))}
+
+                      </select>
+
+                    </div>
+
+                  </div>
+
+                  {/* ================= ATTRIBUTES ================= */}
+
+                  <h4
+                    style={{
+                      marginTop: 25
+                    }}
+                  >
+                    Atributos
+                  </h4>
+
+                  <div className="form-grid">
+
+                    {attributes.map((attribute) => (
+
+                      <div
+                        key={attribute.id}
+                        className="form-group"
+                      >
+
+                        <label>
+                          {attribute.name}
+                        </label>
+
+                        <select
+                          value={
+                            form.variants[index]
+                              ?.attribute_value_ids?.[
+                                attribute.id
+                              ] || ""
+                          }
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              index,
+                              attribute.id,
+                              e.target.value
+                            )
+                          }
+                        >
+
+                          <option value="">
+                            Seleccionar
+                          </option>
+
+                          {(attribute.attribute_values ?? []).map((value) => (
+
+                            <option
+                              key={value.id}
+                              value={value.id}
+                            >
+                              {value.value}
+                            </option>
+
+                          ))}
+
+                        </select>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                  {/* DELETE */}
+
+                  <div
+                    style={{
+                      marginTop: 20
+                    }}
+                  >
+
+                    <button
+                      type="button"
+                      className="btn-delete"
+                      onClick={() =>
+                        removeVariant(index)
+                      }
+                    >
+                      Eliminar Variante
+                    </button>
+
+                  </div>
+
+                </div>
+
+              ))
+
+            )}
+
+          </div>
         </form>
       </div>
     </div>

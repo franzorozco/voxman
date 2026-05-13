@@ -955,3 +955,71 @@
     justify-content: center;
   }
 }
+
+/* =========================
+   VARIANT TABS
+========================= */
+
+.variant-tabs {
+  display: flex;
+  align-items: center;
+
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.06);
+
+  border-radius: 12px;
+  padding: 4px;
+
+  gap: 4px;
+
+  backdrop-filter: blur(8px);
+}
+
+.variant-tab {
+  border: none;
+  background: transparent;
+
+  color: rgba(255,255,255,0.6);
+
+  padding: 10px 18px;
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.variant-tab:hover {
+  background: rgba(255,255,255,0.04);
+  color: white;
+}
+
+.variant-tab.active {
+  background: #2563eb;
+
+  color: white;
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05),
+    0 8px 20px rgba(37,99,235,0.35);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+  .variant-tabs {
+    width: 100%;
+  }
+
+  .variant-tab {
+    flex: 1;
+    text-align: center;
+  }
+
+}
