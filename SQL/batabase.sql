@@ -210,6 +210,7 @@ CREATE TABLE attributes (
 CREATE TABLE attribute_values (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     attribute_id UUID REFERENCES attributes(id) ON DELETE CASCADE,
+    hex_code VARCHAR(7),
     value VARCHAR(100) NOT NULL
 );
 

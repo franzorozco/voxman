@@ -22,10 +22,12 @@ class SizeController extends Controller
 
     public function store(Request $request)
     {
-        $size = Size::create([
+        $size = new Size([
             'name' => $request->name,
             'description' => $request->description,
         ]);
+        $size->id = \Illuminate\Support\Str::uuid()->toString();
+        $size->save();
 
         return response()->json($size, 201);
     }

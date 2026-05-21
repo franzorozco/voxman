@@ -28,9 +28,7 @@ class AttributeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100'
         ]);
-
         $attribute = Attribute::create($validated);
-
         return response()->json([
             'message' => 'Atributo creado correctamente',
             'data' => $attribute
@@ -40,13 +38,10 @@ class AttributeController extends Controller
     public function update(Request $request, $id)
     {
         $attribute = Attribute::findOrFail($id);
-
         $validated = $request->validate([
             'name' => 'required|string|max:100'
         ]);
-
         $attribute->update($validated);
-
         return response()->json([
             'message' => 'Atributo actualizado correctamente',
             'data' => $attribute
@@ -56,9 +51,7 @@ class AttributeController extends Controller
     public function destroy($id)
     {
         $attribute = Attribute::findOrFail($id);
-
         $attribute->delete();
-
         return response()->json([
             'message' => 'Atributo eliminado correctamente'
         ]);

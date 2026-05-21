@@ -21,6 +21,7 @@ import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
 
 export default function Products() {
+  const [loadingData, setLoadingData] = useState(true);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [owners, setOwners] = useState([]);
@@ -60,6 +61,8 @@ export default function Products() {
 
   const loadInitialData = async () => {
     try {
+      setLoadingData(true);
+
       const [
         categoriesRes,
         ownersRes,
@@ -76,48 +79,16 @@ export default function Products() {
         getFits(),
       ]);
 
-      setCategories(
-        categoriesRes.data?.data ??
-        categoriesRes.data ??
-        []
-      );
-
-      setOwners(
-        ownersRes.data?.data ??
-        ownersRes.data ??
-        []
-      );
-
-      setProductTypes(
-        productTypesRes.data?.data ??
-        productTypesRes.data ??
-        []
-      );
-
-      setAttributes(
-        attributesRes.data?.data ??
-        attributesRes.data ??
-        []
-      );
-
-      setSizes(
-        sizesRes.data?.data ??
-        sizesRes.data ??
-        []
-      );
-
-      setFits(
-        fitsRes.data?.data ??
-        fitsRes.data ??
-        []
-      );
-
+      setCategories(categoriesRes.data?.data ?? categoriesRes.data ?? []);
+      setOwners(ownersRes.data?.data ?? ownersRes.data ?? []);
+      setProductTypes(productTypesRes.data?.data ?? productTypesRes.data ?? []);
+      setAttributes(attributesRes.data?.data ?? attributesRes.data ?? []);
+      setSizes(sizesRes.data?.data ?? sizesRes.data ?? []);
+      setFits(fitsRes.data?.data ?? fitsRes.data ?? []);
     } catch (error) {
-
-      console.error(
-        "Error cargando datos:",
-        error
-      );
+      console.error("Error cargando datos:", error);
+    } finally {
+      setLoadingData(false);
     }
   };
 
@@ -406,7 +377,7 @@ export default function Products() {
       {/* MODAL */}
       {/* ====================================================== */}
 
-      {open && (
+      {open && !loadingData && (
         <ProductForm
           product={selected}
           categories={categories}
@@ -415,9 +386,7 @@ export default function Products() {
           attributes={attributes}
           sizes={sizes}
           fits={fits}
-          onClose={() =>
-            setOpen(false)
-          }
+          onClose={() => setOpen(false)}
           onSubmit={handleSubmit}
         />
       )}

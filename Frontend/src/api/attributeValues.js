@@ -13,6 +13,7 @@ export const getAttributeValue = (id) =>
 export const createAttributeValue = (data) =>
   api.post(BASE_URL, data);
 
+
 export const updateAttributeValue = (id, data) =>
   api.put(`${BASE_URL}/${id}`, data);
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Catalog\AttributeValue;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AttributeValueController extends Controller
 {
@@ -18,16 +19,26 @@ class AttributeValueController extends Controller
     public function show($id)
     {
         return response()->json(
-            AttributeValue::with('attribute')->findOrFail($id)
+            AttributeValue::with('attribute')
+                ->findOrFail($id)
         );
     }
 
     public function store(Request $request)
     {
-        $value = AttributeValue::create([
+        $request->validate([
+            'attribute_id' => 'required|uuid',
+            'value' => 'required|string|max:100',
+            'hex_code' => 'nullable|string|max:7',
+        ]);
+
+        $value = new AttributeValue([
             'attribute_id' => $request->attribute_id,
             'value' => $request->value,
+            'hex_code' => $request->hex_code,
         ]);
+        $value->id = Str::uuid()->toString();
+        $value->save();
 
         return response()->json($value, 201);
     }
@@ -39,6 +50,7 @@ class AttributeValueController extends Controller
         $value->update([
             'attribute_id' => $request->attribute_id,
             'value' => $request->value,
+            'hex_code' => $request->hex_code,
         ]);
 
         return response()->json($value);

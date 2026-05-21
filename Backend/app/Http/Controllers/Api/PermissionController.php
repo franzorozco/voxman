@@ -8,34 +8,31 @@ use App\Models\Auth\Permission;
 
 class PermissionController extends Controller
 {
-    // 🔹 LISTAR
+    // LISTAR
     public function index()
     {
         return Permission::all();
     }
 
-    // 🔹 VER UNO
     public function show($id)
     {
         return Permission::findOrFail($id);
     }
 
-    // 🔹 CREAR
-public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|unique:permissions,name'
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|unique:permissions,name'
+        ]);
 
-    $permission = Permission::create([
-        'name' => $request->name,
-        'guard_name' => 'web'
-    ]);
+        $permission = Permission::create([
+            'name' => $request->name,
+            'guard_name' => 'web'
+        ]);
 
-    return response()->json($permission, 201);
-}
+        return response()->json($permission, 201);
+    }
 
-    // 🔹 ACTUALIZAR
     public function update(Request $request, $id)
     {
         try {
@@ -58,7 +55,6 @@ public function store(Request $request)
         }
     }
 
-    // 🔹 ELIMINAR
     public function destroy($id)
     {
         try {

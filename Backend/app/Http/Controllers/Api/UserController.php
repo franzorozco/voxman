@@ -142,9 +142,6 @@ class UserController extends Controller
                         if ($customer) $customer->update(['is_active' => false]);
                     }
 
-                    // =========================
-                    // EMPLOYEE
-                    // =========================
                     $employee = \App\Models\Actors\Employee::withTrashed()
                         ->where('user_id', $existingEmail->id)
                         ->first();
