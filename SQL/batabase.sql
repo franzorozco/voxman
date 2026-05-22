@@ -291,6 +291,18 @@ CREATE TABLE variant_images (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE attribute_value_images (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    attribute_value_id UUID REFERENCES attribute_values(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    is_main BOOLEAN DEFAULT FALSE,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
 -- INVENTARIO POR SUCURSAL
 CREATE TABLE inventories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

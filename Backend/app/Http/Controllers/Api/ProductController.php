@@ -14,6 +14,8 @@ use App\Models\Catalog\VariantAttributeValue;
 use App\Models\Catalog\Attribute;
 use App\Models\Inventory\Inventory;
 use App\Models\Catalog\VariantMeasurement;
+use App\Models\Catalog\AttributeValueImage;
+use App\Models\Catalog\VariantImage;
 
 class ProductController extends Controller
 {
@@ -28,7 +30,9 @@ class ProductController extends Controller
                 'discounts',
                 'product_type',
                 'product_images',
+                'attribute_value_images',
                 'product_variants.variant_attribute_values.attribute_value.attribute',
+                'product_variants.variant_images',
                 'product_variants.inventories',
             ])
             ->whereNull('deleted_at')
@@ -135,6 +139,7 @@ class ProductController extends Controller
             'category',
             'product_type',
             'product_images',
+            'attribute_value_images',
             'product_variants.variant_attribute_values.attribute_value.attribute',
             'product_variants.variant_images',
             'product_variants.inventories.branch',
@@ -196,6 +201,30 @@ class ProductController extends Controller
             }
 
             // =========================
+            // COLOR IMAGES (ATTRIBUTE VALUE IMAGES)
+            // =========================
+            if ($request->has('color_images') && is_array($request->file('color_images'))) {
+                foreach ($request->file('color_images') as $colorId => $files) {
+                    if (is_array($files)) {
+                        foreach ($files as $idx => $file) {
+                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                            $filePath = $file->storeAs('attributes', $filename, 'public');
+
+                            $image = new AttributeValueImage([
+                                'attribute_value_id' => $colorId,
+                                'product_id' => $product->id,
+                                'url'        => '/storage/' . $filePath,
+                                'is_main'    => $idx === 0,
+                                'sort_order' => $idx,
+                            ]);
+                            $image->id = Str::uuid()->toString();
+                            $image->save();
+                        }
+                    }
+                }
+            }
+
+            // =========================
             // VARIANTS (FIX IMPORTANTE)
             // =========================
             $variants = $request->input('variants');
@@ -206,7 +235,7 @@ class ProductController extends Controller
 
             if (is_array($variants)) {
 
-                foreach ($variants as $variantData) {
+                foreach ($variants as $index => $variantData) {
 
                     $variant = ProductVariant::create([
                         'id'         => Str::uuid(),
@@ -220,6 +249,23 @@ class ProductController extends Controller
                         'cost'       => $variantData['cost'],
                         'is_active'  => true,
                     ]);
+
+                    // =========================
+                    // VARIANT IMAGES
+                    // =========================
+                    if ($request->hasFile("variant_images.{$index}")) {
+                        foreach ($request->file("variant_images.{$index}") as $file) {
+                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                            $filePath = $file->storeAs('variants', $filename, 'public');
+
+                            $image = new VariantImage([
+                                'variant_id' => $variant->id,
+                                'url'        => '/storage/' . $filePath,
+                            ]);
+                            $image->id = Str::uuid()->toString();
+                            $image->save();
+                        }
+                    }
 
                     // atributos
                     foreach (($variantData['attribute_value_ids'] ?? []) as $attributeValueId) {

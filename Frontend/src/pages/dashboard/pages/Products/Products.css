@@ -1,5 +1,5 @@
 /* =========================
-   📦 PRODUCTS CONTAINER
+   ðŸ“¦ PRODUCTS CONTAINER
 ========================= */
 
 .products-container {
@@ -11,7 +11,7 @@
 /* =========================
    HEADER
 ========================= */
-
+ 
 .products-header {
   display: flex;
   justify-content: space-between;
@@ -79,21 +79,19 @@
 .products-table th {
   background: #1a1a1a;
   text-align: left;
-
   padding: 12px;
   font-weight: 600;
-
   color: rgba(255,255,255,0.7);
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .products-table td {
   padding: 12px;
-
   border-top: 1px solid rgba(255,255,255,0.05);
-
   font-size: 14px;
   color: rgba(255,255,255,0.85);
+  white-space: nowrap;
 }
 
 .products-table tr:hover {
@@ -114,7 +112,7 @@
 }
 
 /* =========================
-   BOTONES ACCIÓN
+   BOTONES ACCIÃ“N
 ========================= */
 
 .btn-edit {
@@ -163,14 +161,17 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .modal {
@@ -178,17 +179,13 @@
   color: white;
   width: 95%;
   max-width: 1000px;
+  max-height: 90vh;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   overflow: hidden;
-  animation: modalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(20px);
-}
-
-@keyframes modalEnter {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  display: flex;
+  flex-direction: column;
 }
 
 .modal h2 {
@@ -281,6 +278,7 @@
   width: 100%;
   height: 48px;
   padding: 0 16px;
+  box-sizing: border-box;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
@@ -367,7 +365,7 @@
 
 
 /* =========================
-   🔥 FILTERS PANEL (ESTILO USERS STYLE)
+   ðŸ”¥ FILTERS PANEL (ESTILO USERS STYLE)
 ========================= */
 
 .filters-bar {
@@ -390,6 +388,7 @@
 .filters-bar select {
   padding: 9px 12px;
   border-radius: 8px;
+  box-sizing: border-box;
 
   background: #0f0f0f;
   border: 1px solid rgba(255,255,255,0.1);
@@ -415,7 +414,7 @@
 }
 
 /* =========================
-   🔥 FILTROS EN GRUPO (opcional PRO)
+   ðŸ”¥ FILTROS EN GRUPO (opcional PRO)
 ========================= */
 
 .filters-group {
@@ -437,7 +436,7 @@
 }
 
 /* =========================
-   🔥 BOTÓN RESET FILTROS (recomendado)
+   ðŸ”¥ BOTÃ“N RESET FILTROS (recomendado)
 ========================= */
 
 .btn-filter-reset {
@@ -460,7 +459,7 @@
 }
 
 /* =========================
-   🔥 RESPONSIVE
+   ðŸ”¥ RESPONSIVE
 ========================= */
 
 @media (max-width: 768px) {
@@ -570,7 +569,7 @@
 
 
 /* =========================================================
-   🔥 VARIANT MODE SELECTOR
+   ðŸ”¥ VARIANT MODE SELECTOR
 ========================================================= */
 
 .variant-mode-selector {
@@ -1373,7 +1372,7 @@
 
 
 /* =========================================================
-   📱 MOBILE FIXES PRODUCT FORM
+   ðŸ“± MOBILE FIXES PRODUCT FORM
 ========================================================= */
 
 @media (max-width: 768px) {
@@ -1437,7 +1436,7 @@
   }
 
   /* =========================
-     BOTÓN AGREGAR VARIANTE
+     BOTÃ“N AGREGAR VARIANTE
   ========================= */
 
   .variants-header-actions .btn-primary {
@@ -1565,7 +1564,7 @@
 
 
 /* =========================================================
-   📱 MOBILE COMPACT UI
+   ðŸ“± MOBILE COMPACT UI
 ========================================================= */
 
 @media (max-width: 768px) {
@@ -1754,7 +1753,7 @@
 
 
 /* =========================================================
-   🔥 VARIANTS TABLE REDESIGN (COMPACT PRO)
+   ðŸ”¥ VARIANTS TABLE REDESIGN (COMPACT PRO)
 ========================================================= */
 
 .variants-preview-container {
@@ -2114,7 +2113,7 @@ select option {
   padding: 10px;
 }
 
-/* Opción seleccionada */
+/* OpciÃ³n seleccionada */
 select option:checked {
   background: #2563eb !important;
   color: #fff !important;
@@ -2127,7 +2126,7 @@ select option:focus {
   color: #fff !important;
 }
 
-/* Fix específico para tus clases */
+/* Fix especÃ­fico para tus clases */
 .form-group select,
 .simple-card select,
 .simple-global-field select,
@@ -2138,7 +2137,7 @@ select option:focus {
   border-color: rgba(255,255,255,0.1);
 }
 
-/* Flecha del select más limpia */
+/* Flecha del select mÃ¡s limpia */
 .form-group select,
 .simple-card select,
 .simple-global-field select,
@@ -2289,14 +2288,14 @@ select option:focus {
 
 @media (max-width: 768px) {
 
-  /* grid más compacto */
+  /* grid mÃ¡s compacto */
   .color-selector-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
 
-  /* tarjeta pequeña */
+  /* tarjeta pequeÃ±a */
   .color-circle {
     width: auto;
     min-width: unset;
@@ -2318,7 +2317,7 @@ select option:focus {
     transform: none;
   }
 
-  /* círculo pequeño */
+  /* cÃ­rculo pequeÃ±o */
   .color-circle-preview {
     width: 18px;
     height: 18px;
@@ -2328,26 +2327,26 @@ select option:focus {
     box-shadow: none;
   }
 
-  /* texto más pequeño */
+  /* texto mÃ¡s pequeÃ±o */
   .color-circle span {
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
   }
 
-  /* activo más limpio */
+  /* activo mÃ¡s limpio */
   .color-circle.active {
     border: 1px solid #3b82f6;
     background: rgba(59,130,246,.14);
   }
 
-  /* contador más chico */
+  /* contador mÃ¡s chico */
   .selected-counter {
     padding: 4px 10px;
     font-size: 11px;
   }
 
-  /* tallas también compactas */
+  /* tallas tambiÃ©n compactas */
   .size-selector {
     gap: 8px;
   }
@@ -2373,18 +2372,17 @@ select option:focus {
 
 
 /* ==========================================
-   VER MÁS BUTTON
+   VER MÃS BUTTON
 ========================================== */
 
 .see-more-btn {
   width: 100%;
-  margin-top: 16px;
-  height: 46px;
+  height: 36px;
   border: none;
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(59,130,246,.12);
   color: #60a5fa;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: .2s ease;
 }
@@ -2942,13 +2940,13 @@ select option:focus {
   min-width: 0;
 }
 
-/* talla más compacta */
+/* talla mÃ¡s compacta */
 .variant-size-group{
   display: flex;
   flex-direction: column;
 }
 
-/* grid de colores más ordenado */
+/* grid de colores mÃ¡s ordenado */
 .variant-color-group .advanced-color-grid{
   display: grid;
   grid-template-columns:
@@ -2957,7 +2955,7 @@ select option:focus {
   gap: 10px;
 }
 
-/* tallas más compactas */
+/* tallas mÃ¡s compactas */
 .variant-size-group .advanced-selector-grid{
   gap: 8px;
 }
@@ -3038,4 +3036,228 @@ select option:focus {
   font-size: 13px;
   opacity: 0.65;
   margin-top: 2px;
+}
+/* =========================
+   TABLE WRAPPER (MOBILE SCROLL)
+========================= */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+.table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 999px;
+}
+
+/* =========================================================
+   IMAGE GALLERY MODAL
+========================================================= */
+
+.modal-overlay.gallery-overlay {
+  z-index: 10001;
+}
+
+.modal.gallery-modal {
+  max-width: 800px;
+  width: 90%;
+}
+
+.image-dropzone {
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: min(40px, 5vw);
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 20px;
+  background: rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+.image-dropzone:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.image-dropzone-icon {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.image-dropzone-text {
+  margin: 0;
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.8);
+}
+
+.image-dropzone-subtext {
+  margin: 5px 0 0;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.5);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.gallery-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.gallery-item.main-item {
+  border: 2px solid #3b82f6;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-item-badge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.gallery-item-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+}
+
+.gallery-item-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.gallery-empty {
+  text-align: center;
+  color: rgba(255,255,255,0.5);
+  padding: 20px;
+}
+
+/* =========================================================
+   WARNING MODAL
+========================================================= */
+
+.warning-modal {
+  background: #1e2330;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.warning-modal-header {
+  padding: 24px 24px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.warning-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.warning-icon-wrapper.warning-yellow {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.warning-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.warning-modal-body {
+  padding: 0 24px 24px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.warning-modal-footer {
+  padding: 16px 24px;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.warning-btn-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.warning-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.warning-btn-confirm {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.warning-btn-confirm:hover {
+  background: #dc2626;
+}
+
+.warning-btn-confirm.btn-yellow {
+  background: #f59e0b;
+}
+
+.warning-btn-confirm.btn-yellow:hover {
+  background: #d97706;
 }

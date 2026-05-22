@@ -267,9 +267,9 @@ export default function Products() {
   // ======================================================
 
   return (
-    <div className="users-container">
-      <div className="users-header">
-        <h1 className="users-title">
+    <div className="products-container">
+      <div className="products-header">
+        <h1 className="products-title">
           Productos
         </h1>
         <button

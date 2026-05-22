@@ -65,7 +65,7 @@ export default function ProductsTable({
 
   return (
     <div className="table-wrapper">
-      <table className="users-table">
+      <table className="products-table">
 
         <thead>
           <tr>

@@ -4,7 +4,8 @@ import { getAttributes } from "../../../../api/attributes";
 import { createAttributeValue } from "../../../../api/attributeValues";
 import { createSize } from "../../../../api/sizes";
 import namer from "color-namer";
-import { Plus } from "lucide-react";
+import { Plus, Camera, AlertTriangle } from "lucide-react";
+import ImageGalleryModal from "./ImageGalleryModal";
 
 
 export default function ProductForm({
@@ -70,78 +71,93 @@ export default function ProductForm({
   
   const handleCreateColor = async () => {
     try {
-      const payload = {
-        attribute_id: colorAttribute.id,
-        value: newColor.value,
-        hex_code: newColor.hex_code,
-      };
+      if (!newColor.value || !newColor.hex_code) return;
 
-      const res =
-        await createAttributeValue(payload);
-
-      const createdColor = res.data?.data ?? res.data;
-
-      setAttributes(prev =>
-        prev.map(attr => {
-          if (attr.name?.toLowerCase() !== "color")
-            return attr;
-
-          return {
-            ...attr,
-            attribute_values: [
-              ...attr.attribute_values,
-              createdColor
-            ]
-          };
-        })
+      const existingColor = colorAttribute?.attribute_values?.find(
+        (c) =>
+          c.value.toLowerCase() === newColor.value.toLowerCase() ||
+          c.hex_code.toLowerCase() === newColor.hex_code.toLowerCase()
       );
 
-      // seleccionarlo automáticamente
-      setSimpleConfig(prev => ({
-        ...prev,
-        colors: [
-          ...prev.colors,
-          createdColor.id
-        ]
-      }));
+      let colorIdToSelect;
+
+      if (existingColor) {
+        colorIdToSelect = existingColor.id;
+      } else {
+        const payload = {
+          attribute_id: colorAttribute.id,
+          value: newColor.value,
+          hex_code: newColor.hex_code,
+        };
+
+        const res = await createAttributeValue(payload);
+        const createdColor = res.data?.data ?? res.data;
+        colorIdToSelect = createdColor.id;
+
+        setAttributes((prev) =>
+          prev.map((attr) => {
+            if (attr.name?.toLowerCase() !== "color") return attr;
+            return {
+              ...attr,
+              attribute_values: [...attr.attribute_values, createdColor],
+            };
+          })
+        );
+      }
+
+      if (advancedColorModal?.open && advancedColorModal.variantIndex !== null) {
+        handleAttributeChange(advancedColorModal.variantIndex, colorAttribute.id, colorIdToSelect);
+      } else {
+        setSimpleConfig((prev) => {
+          if (prev.colors.includes(colorIdToSelect)) return prev;
+          return {
+            ...prev,
+            colors: [...prev.colors, colorIdToSelect],
+          };
+        });
+      }
 
       setShowCreateColor(false);
-      setNewColor({
-        value: "",
-        hex_code: "#000000",
-      });
-
+      setNewColor({ value: "", hex_code: "#000000" });
     } catch (error) {
       console.error(error);
     }
-  };
+  };;
 
   const handleCreateSize = async () => {
     try {
-      const res =
-        await createSize(newSize);
+      if (!newSize.name) return;
 
-      const createdSize = res.data?.data ?? res.data;
-      setSizes(prev => [
-        ...prev,
-        createdSize
-      ]);
-      
-      setSimpleConfig(prev => ({
-        ...prev,
-        sizes: [
-          ...prev.sizes,
-          createdSize.id
-        ]
-      }));
+      const existingSize = sizes.find(
+        (s) => s.name.toLowerCase() === newSize.name.toLowerCase()
+      );
+
+      let sizeIdToSelect;
+
+      if (existingSize) {
+        sizeIdToSelect = existingSize.id;
+      } else {
+        const res = await createSize(newSize);
+        const createdSize = res.data?.data ?? res.data;
+        sizeIdToSelect = createdSize.id;
+
+        setSizes((prev) => [...prev, createdSize]);
+      }
+
+      if (advancedSizeModal?.open && advancedSizeModal.variantIndex !== null) {
+        handleVariantChange(advancedSizeModal.variantIndex, "size_id", sizeIdToSelect);
+      } else {
+        setSimpleConfig((prev) => {
+          if (prev.sizes.includes(sizeIdToSelect)) return prev;
+          return {
+            ...prev,
+            sizes: [...prev.sizes, sizeIdToSelect],
+          };
+        });
+      }
 
       setShowCreateSize(false);
-
-      setNewSize({
-        name: "",
-        description: "",
-      });
-
+      setNewSize({ name: "", description: "" });
     } catch (error) {
       console.error(error);
     }
@@ -157,6 +173,28 @@ export default function ProductForm({
   //  MODO SIMPLE
   //==========================================================
   const [variantMode, setVariantMode] = useState("simple");
+  const [showSwitchWarning, setShowSwitchWarning] = useState(false);
+  const [showStrategyWarning, setShowStrategyWarning] = useState(false);
+
+  // Imágenes por Variante o Color
+  const [colorImages, setColorImages] = useState({});
+  const [variantImages, setVariantImages] = useState({});
+  const [advancedImageMode, setAdvancedImageMode] = useState("color");
+  const [galleryModalConfig, setGalleryModalConfig] = useState({ open: false, type: "color", id: null });
+
+  const handleSwitchToSimple = () => {
+    if (variantMode === "advanced" && form.variants.length > 0) {
+      setShowSwitchWarning(true);
+    } else {
+      setVariantMode("simple");
+    }
+  };
+
+  const confirmSwitchToSimple = () => {
+    setVariantMode("simple");
+    setShowSwitchWarning(false);
+  };
+
   const [simpleConfig, setSimpleConfig] = useState({
     colors: [],
     sizes: [],
@@ -173,7 +211,15 @@ export default function ProductForm({
     }
   });
 
+  const [simpleModeError, setSimpleModeError] = useState("");
+
   const generateSimpleVariants = () => {
+    if (simpleConfig.colors.length === 0 || simpleConfig.sizes.length === 0) {
+      setSimpleModeError("Debes seleccionar al menos un color y una talla para generar variantes.");
+      return;
+    }
+    setSimpleModeError("");
+
     const variants = [];
     simpleConfig.colors.forEach((colorValueId) => {
       simpleConfig.sizes.forEach((sizeId) => {
@@ -322,13 +368,41 @@ const getAttributeValueName = (valueId) => {
         variants: transformedVariants,
       });
 
+      // Force Advanced Mode on Edit
+      setVariantMode("advanced");
+
+      // Resolve Strategy and Images
+      let strategy = "color";
+      const initialColorImages = {};
+      const initialVariantImages = {};
+
+      const getImageUrl = (url) => url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+
+      if (product.attribute_value_images && product.attribute_value_images.length > 0) {
+        strategy = "color";
+        product.attribute_value_images.forEach(img => {
+          if (!initialColorImages[img.attribute_value_id]) initialColorImages[img.attribute_value_id] = [];
+          initialColorImages[img.attribute_value_id].push(getImageUrl(img.url));
+        });
+      } else {
+        let hasVariantImages = false;
+        product.product_variants.forEach((v, index) => {
+          if (v.variant_images && v.variant_images.length > 0) {
+            hasVariantImages = true;
+            initialVariantImages[index] = v.variant_images.map(img => getImageUrl(img.url));
+          }
+        });
+        if (hasVariantImages) strategy = "variant";
+      }
+
+      setAdvancedImageMode(strategy);
+      setColorImages(initialColorImages);
+      setVariantImages(initialVariantImages);
+
       // Load existing image into preview
       if (product.product_images && product.product_images.length > 0) {
         const mainImage = product.product_images.find(img => img.is_main) || product.product_images[0];
-        const imageUrl = mainImage.url.startsWith("http")
-          ? mainImage.url
-          : `${API_BASE_URL}${mainImage.url}`;
-        setImagePreview(imageUrl);
+        setImagePreview(getImageUrl(mainImage.url));
       } else {
         setImagePreview(null);
       }
@@ -475,6 +549,39 @@ const getAttributeValueName = (valueId) => {
     });
   };
 
+  const handleImageModeSwitch = (targetMode) => {
+    if (advancedImageMode === targetMode) return;
+
+    if (targetMode === "variant") {
+      // Migrate Color to Variant
+      const newVariantImages = { ...variantImages };
+      let migrated = false;
+      form.variants.forEach((v, idx) => {
+        const colorId = v.attribute_value_ids?.[colorAttribute?.id];
+        if (colorId && colorImages[colorId] && colorImages[colorId].length > 0) {
+          newVariantImages[idx] = [...colorImages[colorId]];
+          migrated = true;
+        }
+      });
+      if (migrated) setVariantImages(newVariantImages);
+      setAdvancedImageMode("variant");
+    } else {
+      // Migrate Variant to Color (Destructive)
+      const hasVariantImages = Object.values(variantImages).some(arr => arr && arr.length > 0);
+      if (hasVariantImages) {
+        setShowStrategyWarning(true);
+      } else {
+        setAdvancedImageMode("color");
+      }
+    }
+  };
+
+  const confirmStrategySwitch = () => {
+    setVariantImages({});
+    setAdvancedImageMode("color");
+    setShowStrategyWarning(false);
+  };
+
   // ======================================================
   // SUBMIT
   // ======================================================
@@ -518,24 +625,43 @@ const getAttributeValueName = (valueId) => {
         formData.append("product_images[]", productImage);
     }
 
-    // variantes
-    formData.append(
-      "variants",
-      JSON.stringify(
-        form.variants.map((v) => ({
-          ...v,
-          attribute_value_ids:
-            Object.values(
-              v.attribute_value_ids || {}
-            )
-        }))
-      )
-    );
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-    onSubmit(formData);
-  };
+      // variantes
+      formData.append(
+        "variants",
+        JSON.stringify(
+          form.variants.map((v) => ({
+            ...v,
+            attribute_value_ids:
+              Object.values(
+                v.attribute_value_ids || {}
+              )
+          }))
+        )
+      );
+
+      // Color Images
+      Object.entries(colorImages).forEach(([colorId, files]) => {
+        files.forEach((file) => {
+          if (typeof file !== "string") {
+            formData.append(`color_images[${colorId}][]`, file);
+          }
+        });
+      });
+
+      // Variant Images
+      Object.entries(variantImages).forEach(([variantIndex, files]) => {
+        files.forEach((file) => {
+          if (typeof file !== "string") {
+            formData.append(`variant_images[${variantIndex}][]`, file);
+          }
+        });
+      });
+
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+      onSubmit(formData);
+    };
   
   useEffect(() => {
     if (!attributes.length) return;
@@ -594,6 +720,26 @@ const getAttributeValueName = (valueId) => {
     }));
   };
 
+  // ======================================================
+  // VALIDATIONS
+  // ======================================================
+  const duplicateVariants = form.variants.filter((v1, i) => {
+    return form.variants.findIndex(v2 => 
+      v1.size_id === v2.size_id && 
+      JSON.stringify(v1.attribute_value_ids) === JSON.stringify(v2.attribute_value_ids)
+    ) !== i;
+  });
+  const hasDuplicates = duplicateVariants.length > 0;
+  
+  const hasMissingVariantData = form.variants.some(v => !v.price || Number(v.price) <= 0);
+
+  const isFormValid = () => {
+    if (variantMode === "simple" && form.variants.length === 0) return false;
+    if (variantMode === "advanced" && (hasDuplicates || hasMissingVariantData || form.variants.length === 0)) return false;
+    if (!form.name || !form.base_price || !form.category_id) return false;
+    return true;
+  };
+
   return (
     <div className="modal-overlay">
       <div
@@ -615,7 +761,6 @@ const getAttributeValueName = (valueId) => {
           {/* GENERAL */}
           {/* ====================================================== */}
 
-          <h3>Información General</h3>
           <div className="product-layout">
 
             {/* IMAGEN */}
@@ -881,11 +1026,12 @@ const getAttributeValueName = (valueId) => {
 
               <div className="variants-header-actions">
                 <div className="variant-tabs">
-                  <button type="button" className={ variantMode === "simple" ? "variant-tab active" : "variant-tab" } onClick={() => setVariantMode("simple") } >
-                    Modo Simple
-                  </button>
-                    
-                  <button type="button" className={ variantMode === "advanced" ? "variant-tab active" : "variant-tab" } onClick={() => setVariantMode("advanced") } >
+                  {!product && (
+                    <button type="button" className={ variantMode === "simple" ? "variant-tab active" : "variant-tab" } onClick={handleSwitchToSimple} >
+                      Modo Simple
+                    </button>
+                  )}
+                  <button type="button" className={ variantMode === "advanced" ? "variant-tab active" : "variant-tab" } onClick={() => setVariantMode("advanced") } style={product ? {width: "100%", borderRadius: "10px"} : {}}>
                     Modo Avanzado
                   </button>
                 </div>
@@ -916,11 +1062,6 @@ const getAttributeValueName = (valueId) => {
 
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }} >
                         <h4>Colores</h4>
-
-                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true) } >
-                          <Plus size={18} strokeWidth={2.5} />
-                        </button>
-
                       </div>
                       <span className="selected-counter">
                         {simpleConfig.colors.length} seleccionados
@@ -947,12 +1088,17 @@ const getAttributeValueName = (valueId) => {
                         })}
                     </div>
 
-                    {(colorAttribute?.attribute_values?.length || 0) >
-                      MAX_VISIBLE_COLORS && (
-                      <button type="button" className="see-more-btn" onClick={() => setShowColorsModal(true) } >
-                        Ver todos los colores
+                    <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
+                      {(colorAttribute?.attribute_values?.length || 0) >
+                        MAX_VISIBLE_COLORS && (
+                        <button type="button" className="see-more-btn" onClick={() => setShowColorsModal(true) } >
+                          Ver todos los colores
+                        </button>
+                      )}
+                      <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true) } title="Crear nuevo color" >
+                        <Plus size={18} strokeWidth={2.5} />
                       </button>
-                    )}
+                    </div>
                   </div>
 
                   {/* ====================================================== */}
@@ -963,9 +1109,6 @@ const getAttributeValueName = (valueId) => {
                     <div className="selector-header">
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }} >
                         <h4>Tallas</h4>
-                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true) } >
-                          <Plus size={18} strokeWidth={2.5} />
-                        </button>
                       </div>
 
                       <span className="selected-counter">
@@ -990,11 +1133,16 @@ const getAttributeValueName = (valueId) => {
                         })}
                     </div>
 
-                    {sizes.length > MAX_VISIBLE_SIZES && (
-                      <button type="button" className="see-more-btn" onClick={() => setShowSizesModal(true) } >
-                        Ver todas las tallas
+                    <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
+                      {sizes.length > MAX_VISIBLE_SIZES && (
+                        <button type="button" className="see-more-btn" onClick={() => setShowSizesModal(true) } >
+                          Ver todas las tallas
+                        </button>
+                      )}
+                      <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true) } title="Crear nueva talla" >
+                        <Plus size={18} strokeWidth={2.5} />
                       </button>
-                    )}
+                    </div>
                   </div>
                 </div>
 
@@ -1228,12 +1376,49 @@ const getAttributeValueName = (valueId) => {
                 </div>
 
                 {/* ====================================================== */}
+                {/* GALLERY (SIMPLE MODE) */}
+                {/* ====================================================== */}
+                {simpleConfig.colors.length > 0 && (
+                  <div style={{ marginTop: 20, marginBottom: 20 }}>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 15, color: "rgba(255,255,255,0.9)" }}>
+                      Gestión de Imágenes por Color
+                    </div>
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                      {simpleConfig.colors.map(colorId => {
+                        const colorAttr = colorAttribute?.attribute_values?.find(c => c.id === colorId);
+                        const count = colorImages[colorId]?.length || 0;
+                        return (
+                          <button
+                            key={colorId}
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setGalleryModalConfig({ open: true, type: "color", id: colorId })}
+                            style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px" }}
+                          >
+                            <div style={{ width: 16, height: 16, borderRadius: "50%", background: colorAttr?.hex_code || "#ccc" }} />
+                            {colorAttr?.value || "Color"} 
+                            <span style={{ background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
+                              {count} <Camera size={14} />
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ====================================================== */}
                 {/* GENERATE */}
                 {/* ====================================================== */}
 
                 <button type="button" className="simple-generate-btn" onClick={generateSimpleVariants} >
                   Generar Variantes Automáticamente
                 </button>
+                {simpleModeError && (
+                  <div className="error-text" style={{ color: "#ef4444", marginTop: "10px", fontSize: "0.9rem", textAlign: "center" }}>
+                    {simpleModeError}
+                  </div>
+                )}
 
                 {form.variants.length > 0 && (
                   <div className="generated-count">
@@ -1246,6 +1431,50 @@ const getAttributeValueName = (valueId) => {
 
             ) : (
             <>
+              {/* ADVANCED MODE HEADERS (IMAGE MODE TOGGLE) */}
+              <div style={{ marginBottom: "20px", background: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: advancedImageMode === "color" ? "15px" : "0" }}>
+                  <div style={{ fontWeight: 600 }}>Estrategia de Imágenes</div>
+                  <div className="variant-tabs">
+                    <button type="button" className={`variant-tab ${advancedImageMode === "color" ? "active" : ""}`} onClick={() => handleImageModeSwitch("color")}>
+                      Por Color (Compartidas)
+                    </button>
+                    <button type="button" className={`variant-tab ${advancedImageMode === "variant" ? "active" : ""}`} onClick={() => handleImageModeSwitch("variant")}>
+                      Por Variante (Únicas)
+                    </button>
+                  </div>
+                </div>
+
+                {advancedImageMode === "color" && (
+                  <div>
+                    <div style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", marginBottom: "10px" }}>
+                      Imágenes compartidas por color entre todas las variantes
+                    </div>
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                      {Array.from(new Set(form.variants.map(v => v.attribute_value_ids?.[colorAttribute?.id]).filter(Boolean))).map(colorId => {
+                        const colorAttr = colorAttribute?.attribute_values?.find(c => c.id === colorId);
+                        const count = colorImages[colorId]?.length || 0;
+                        return (
+                          <button
+                            key={colorId}
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setGalleryModalConfig({ open: true, type: "color", id: colorId })}
+                            style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px" }}
+                          >
+                            <div style={{ width: 16, height: 16, borderRadius: "50%", background: colorAttr?.hex_code || "#ccc" }} />
+                            {colorAttr?.value || "Color"} 
+                            <span style={{ background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
+                              {count} <Camera size={14} />
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {form.variants.map((variant, index) => (
                 
               <div key={index} className="variant-card">
@@ -1269,6 +1498,16 @@ const getAttributeValueName = (valueId) => {
                       gap: 10
                     }}
                   >
+                    {advancedImageMode === "variant" && (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => setGalleryModalConfig({ open: true, type: "variant", id: index })}
+                        style={{ padding: "4px 8px", fontSize: "0.8rem", display: "flex", gap: "5px", alignItems: "center" }}
+                      >
+                        <Camera size={14} /> {variantImages[index]?.length || 0}
+                      </button>
+                    )}
                     <div className="variant-badge">
                       #{index + 1}
                     </div>
@@ -1305,7 +1544,7 @@ const getAttributeValueName = (valueId) => {
                       >
                         <label>Color</label>
 
-                        <div className="advanced-color-grid">
+                        <div className="color-selector-grid">
                           {(attribute.attribute_values ?? [])
                             .slice(0, MAX_VISIBLE_COLORS)
                             .map((value) => {
@@ -1322,8 +1561,8 @@ const getAttributeValueName = (valueId) => {
                                   type="button"
                                   className={
                                     selected
-                                      ? "advanced-color-item active"
-                                      : "advanced-color-item"
+                                      ? "color-circle active"
+                                      : "color-circle"
                                   }
                                   onClick={() =>
                                     handleAttributeChange(
@@ -1334,42 +1573,42 @@ const getAttributeValueName = (valueId) => {
                                   }
                                 >
                                   <div
-                                    className="advanced-color-dot"
+                                    className="color-circle-preview"
                                     style={{
                                       background:
                                         value.hex_code || "#ccc"
                                     }}
                                   />
 
-                                  <div>
-                                    <div>{value.value}</div>
-
-                                    <small>
-                                      {value.hex_code ||
-                                        "#000000"}
-                                    </small>
-                                  </div>
+                                  <span>
+                                    {value.value}
+                                  </span>
                                 </button>
                               );
                             })}
                         </div>
 
-                        {(attribute.attribute_values
-                          ?.length || 0) >
-                          MAX_VISIBLE_COLORS && (
-                          <button
-                            type="button"
-                            className="see-more-btn"
-                            onClick={() =>
-                              setAdvancedColorModal({
-                                open: true,
-                                variantIndex: index
-                              })
-                            }
-                          >
-                            Ver todos los colores
+                        <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
+                          {(attribute.attribute_values
+                            ?.length || 0) >
+                            MAX_VISIBLE_COLORS && (
+                            <button
+                              type="button"
+                              className="see-more-btn"
+                              onClick={() =>
+                                setAdvancedColorModal({
+                                  open: true,
+                                  variantIndex: index
+                                })
+                              }
+                            >
+                              Ver todos los colores
+                            </button>
+                          )}
+                          <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true) } title="Crear nuevo color" >
+                            <Plus size={18} strokeWidth={2.5} />
                           </button>
-                        )}
+                        </div>
                       </div>
                     );
                   })}
@@ -1378,7 +1617,7 @@ const getAttributeValueName = (valueId) => {
                   <div className="form-group variant-size-group">
                     <label>Talla</label>
 
-                    <div className="advanced-selector-grid">
+                    <div className="size-selector">
                       {sizes
                         .slice(0, MAX_VISIBLE_SIZES)
                         .map((size) => {
@@ -1409,20 +1648,25 @@ const getAttributeValueName = (valueId) => {
                         })}
                     </div>
 
-                    {sizes.length > MAX_VISIBLE_SIZES && (
-                      <button
-                        type="button"
-                        className="see-more-btn"
-                        onClick={() =>
-                          setAdvancedSizeModal({
-                            open: true,
-                            variantIndex: index
-                          })
-                        }
-                      >
-                        Ver todas las tallas
+                    <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
+                      {sizes.length > MAX_VISIBLE_SIZES && (
+                        <button
+                          type="button"
+                          className="see-more-btn"
+                          onClick={() =>
+                            setAdvancedSizeModal({
+                              open: true,
+                              variantIndex: index
+                            })
+                          }
+                        >
+                          Ver todas las tallas
+                        </button>
+                      )}
+                      <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true) } title="Crear nueva talla" >
+                        <Plus size={18} strokeWidth={2.5} />
                       </button>
-                    )}
+                    </div>
                   </div>
 
                 </div>
@@ -1841,7 +2085,7 @@ const getAttributeValueName = (valueId) => {
 
                 </div>
 
-                <div className="advanced-color-grid modal-grid">
+                <div className="color-selector-grid modal-grid">
                   {(colorAttribute?.attribute_values || [])
                     .map((color) => {
 
@@ -1858,8 +2102,8 @@ const getAttributeValueName = (valueId) => {
                           type="button"
                           className={
                             selected
-                              ? "advanced-color-item active"
-                              : "advanced-color-item"
+                              ? "color-circle active"
+                              : "color-circle"
                           }
                           onClick={() =>
                             handleAttributeChange(
@@ -1870,22 +2114,16 @@ const getAttributeValueName = (valueId) => {
                           }
                         >
                           <div
-                            className="advanced-color-dot"
+                            className="color-circle-preview"
                             style={{
                               background:
                                 color.hex_code || "#ccc"
                             }}
                           />
 
-                          <div>
-                            <div>
-                              {color.value}
-                            </div>
-
-                            <small>
-                              {color.hex_code}
-                            </small>
-                          </div>
+                          <span>
+                            {color.value}
+                          </span>
                         </button>
                       );
                     })}
@@ -2233,7 +2471,18 @@ const getAttributeValueName = (valueId) => {
             </div>
           )}
 
-          <div className="form-actions">
+          <div className="form-actions" style={{ flexWrap: "wrap" }}>
+            {variantMode === "advanced" && hasDuplicates && (
+              <div style={{ width: "100%", color: "#ef4444", marginBottom: "10px", fontSize: "0.9rem", textAlign: "right" }}>
+                Existen variantes duplicadas con el mismo color y talla. Por favor, corrígelas.
+              </div>
+            )}
+            {variantMode === "simple" && form.variants.length === 0 && (
+              <div style={{ width: "100%", color: "#ef4444", marginBottom: "10px", fontSize: "0.9rem", textAlign: "right" }}>
+                Debes generar las variantes antes de guardar.
+              </div>
+            )}
+            
             <button
               type="button"
               className="btn-secondary"
@@ -2244,6 +2493,8 @@ const getAttributeValueName = (valueId) => {
             <button
               type="submit"
               className="btn-primary"
+              disabled={!isFormValid()}
+              style={{ opacity: isFormValid() ? 1 : 0.5, cursor: isFormValid() ? "pointer" : "not-allowed" }}
             >
               {product
                 ? "Actualizar Producto"
@@ -2253,6 +2504,82 @@ const getAttributeValueName = (valueId) => {
 
         </form>
       </div>
+
+      {/* ====================================================== */}
+      {/* WARNING MODAL: SWITCH TO SIMPLE MODE */}
+      {/* ====================================================== */}
+      {showSwitchWarning && (
+        <div className="selector-modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="warning-modal">
+            <div className="warning-modal-header">
+              <div className="warning-icon-wrapper warning-yellow">
+                <AlertTriangle size={24} />
+              </div>
+              <h3>Advertencia</h3>
+            </div>
+            <div className="warning-modal-body">
+              Al cambiar al Modo Simple y regenerar las variantes, perderás los precios y cantidades que hayas configurado manualmente.
+              <br /><br />
+              ¿Deseas continuar?
+            </div>
+            <div className="warning-modal-footer">
+              <button type="button" className="warning-btn-cancel" onClick={() => setShowSwitchWarning(false)}>
+                Cancelar
+              </button>
+              <button type="button" className="warning-btn-confirm btn-yellow" onClick={confirmSwitchToSimple}>
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================== */}
+      {/* WARNING MODAL: IMAGE STRATEGY SWITCH */}
+      {/* ====================================================== */}
+      {showStrategyWarning && (
+        <div className="selector-modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="warning-modal">
+            <div className="warning-modal-header">
+              <div className="warning-icon-wrapper">
+                <AlertTriangle size={24} />
+              </div>
+              <h3>Pérdida de Datos</h3>
+            </div>
+            <div className="warning-modal-body">
+              ¿Estás seguro? Al pasar a la estrategia <strong>'Por Color'</strong> perderás todas las configuraciones individuales de imagen de cada variante actual.
+            </div>
+            <div className="warning-modal-footer">
+              <button type="button" className="warning-btn-cancel" onClick={() => setShowStrategyWarning(false)}>
+                Cancelar
+              </button>
+              <button type="button" className="warning-btn-confirm" onClick={confirmStrategySwitch}>
+                Sí, cambiar a Por Color
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ImageGalleryModal
+        isOpen={galleryModalConfig.open}
+        onClose={() => setGalleryModalConfig({ ...galleryModalConfig, open: false })}
+        title={galleryModalConfig.type === "color" 
+          ? `Imágenes del Color: ${colorAttribute?.attribute_values?.find(c => c.id === galleryModalConfig.id)?.value || ""}`
+          : `Imágenes de la Variante #${galleryModalConfig.id + 1}`
+        }
+        images={galleryModalConfig.type === "color" 
+          ? (colorImages[galleryModalConfig.id] || []) 
+          : (variantImages[galleryModalConfig.id] || [])
+        }
+        onImagesChange={(newImages) => {
+          if (galleryModalConfig.type === "color") {
+            setColorImages({ ...colorImages, [galleryModalConfig.id]: newImages });
+          } else {
+            setVariantImages({ ...variantImages, [galleryModalConfig.id]: newImages });
+          }
+        }}
+      />
     </div>
   );
 }

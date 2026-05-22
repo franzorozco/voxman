@@ -399,31 +399,69 @@ html, body {
 @media (max-width: 900px) {
 
   .topbar {
-    height: auto;
-    padding: 14px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    height: 60px;
+    padding: 0 14px 0 60px;
+
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+  }
+
+  .topbar-left h3 {
+    font-size: 15px;
   }
 
   .topbar-right {
-    width: 100%;
-    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .topbar-user {
-    width: 100%;
+    padding: 0;
+    gap: 6px;
+  }
+
+  .topbar-user svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .topbar-user-info {
+    display: flex;
+  }
+
+  .user-email {
+    display: none;
+  }
+
+  .user-name {
+    font-size: 12px;
+    max-width: 90px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .topbar-btn {
-    flex: 1;
-    justify-content: center;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .topbar-btn span {
+    display: none;
   }
 
 }
 
 @media (max-width: 600px) {
 
+    .topbar-left h3 {
+    display: none;
+  }
+  
   .topbar-user-info {
     overflow: hidden;
   }
@@ -434,6 +472,19 @@ html, body {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+    .topbar-user {
+    background: rgba(255,255,255,0.04);
+    padding: 4px 8px;
+    border-radius: 10px;
+  }
+
+  .user-name {
+    max-width: 70px;
+    font-size: 11px;
+  }
+
+  
 
 }
 
@@ -453,15 +504,11 @@ html, body {
 .logout-icon {
   width: 70px;
   height: 70px;
-
   margin: 0 auto 18px;
-
   border-radius: 50%;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: rgba(239, 68, 68, 0.15);
   color: #f87171;
 }

@@ -20,4 +20,9 @@ class Product extends BaseProduct
 		'is_active',
 		'views'
 	];
+
+    public function attribute_value_images()
+    {
+        return $this->hasMany(AttributeValueImage::class, 'product_id');
+    }
 }

@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Outlet, Link, NavLink } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Outlet, Link, NavLink, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import "./Dashboard.css";
 import logo from "../../assets/global/logo_black.png";
+
 
 
 import {
@@ -33,12 +34,18 @@ import {
 
 
 export default function DashboardLayout() {
-
+  const location = useLocation();
   const { logout, user } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [collapsed, setCollapsed] = useState(
     window.innerWidth <= 900
   );
+
+  useEffect(() => {
+    if (window.innerWidth <= 900) {
+      setCollapsed(true);
+    }
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -212,17 +219,17 @@ export default function DashboardLayout() {
 
               </div>
             </div>
-            <Link to="/" className="topbar-btn home-btn">
-              <House size={16} />
-              Inicio
-            </Link>
-            <button
-              onClick={() => setShowLogoutModal(true)}
-              className="topbar-btn logout-btn"
-            >
-              <LogOut size={16} />
-              Cerrar sesión
-            </button>
+              <Link to="/" className="topbar-btn home-btn">
+                <House size={16} />
+                <span>Inicio</span>
+              </Link>
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="topbar-btn logout-btn"
+              >
+                <LogOut size={16} />
+                <span>Cerrar sesión</span>
+              </button>
           </div>
 
         </div>
