@@ -142,6 +142,7 @@
   font-weight: 600;
   color: rgba(255,255,255,0.7);
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .users-table td {
@@ -149,6 +150,7 @@
   border-top: 1px solid rgba(255,255,255,0.05);
   font-size: 14px;
   color: rgba(255,255,255,0.85);
+  white-space: nowrap;
 }
 
 .users-table tr:hover {
@@ -303,14 +305,17 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 90%;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0,0,0,0.75);
-  overflow: auto;
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 20px;
+  z-index: 1000;
+  box-sizing: border-box;
 }
 
 /* 🔹 MODAL */
@@ -319,8 +324,8 @@
   color: white;
 
   width: 95vw;
-  max-width: 1200px; /* 🔥 MÁS ANCHO REAL */
-  height: 90vh;
+  max-width: 900px;
+  max-height: 90vh; /* changed from height: 90vh */
 
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.08);
@@ -328,16 +333,16 @@
   display: flex;
   flex-direction: column;
 
-  overflow: auto; /* 🔥 scroll si el contenido es muy alto */
+  overflow: hidden; /* we want form to scroll, not modal itself */
 }
-.modal form {
+form.modal {
   padding: 20px 25px;
   display: flex;
   flex-direction: column;
   gap: 25px;
 
   overflow-y: auto; /* 🔥 scroll interno */
-  height: 90%;
+  flex: 1; /* fills remaining space */
 }
 
 
@@ -399,8 +404,8 @@
 }
 
 form.modal {
-  max-width: none !important;
-  width: 70% !important;
+  width: 100% !important;
+  max-width: 900px !important;
 }
 .form-group input,
 .form-group select {
@@ -408,6 +413,7 @@ form.modal {
   padding: 12px;
   border-radius: 8px;
   font-size: 14px;
+  box-sizing: border-box;
 
   background: #0f0f0f;
   border: 1px solid rgba(255,255,255,0.1);
@@ -795,6 +801,72 @@ form.modal {
   }
 }
 
+/* =========================
+   🛑 MODAL CONFIRM & UTILS
+========================= */
+.modal-confirm {
+  background: #111;
+  color: white;
+  width: 95%;
+  max-width: 450px;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: modalFade 0.2s ease-in-out;
+}
+.modal-confirm h3 {
+  font-size: 18px;
+  color: #ef4444;
+  margin: 0;
+}
+.modal-confirm p {
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+  margin: 0;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: 500;
+}
+.btn-danger:hover {
+  background: #dc2626;
+}
+.btn-cancel {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-cancel:hover {
+  background: rgba(255,255,255,0.15);
+}
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-warning:hover {
+  background: #d97706;
+}
+
 @media (max-width: 600px) {
   .form-grid {
     grid-template-columns: 1fr;
@@ -996,7 +1068,7 @@ form.modal {
     border-radius: 0;
   }
 
-  .modal form {
+  form.modal {
     padding: 15px;
   }
 

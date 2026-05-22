@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../../../config/api";
 import { useEffect, useState } from "react";
 import { getAttributes } from "../../../../api/attributes";
 import { createAttributeValue } from "../../../../api/attributeValues";
@@ -324,9 +325,9 @@ const getAttributeValueName = (valueId) => {
       // Load existing image into preview
       if (product.product_images && product.product_images.length > 0) {
         const mainImage = product.product_images.find(img => img.is_main) || product.product_images[0];
-        const imageUrl = mainImage.url.startsWith("http") 
-          ? mainImage.url 
-          : `http://127.0.0.1:8000${mainImage.url}`;
+        const imageUrl = mainImage.url.startsWith("http")
+          ? mainImage.url
+          : `${API_BASE_URL}${mainImage.url}`;
         setImagePreview(imageUrl);
       } else {
         setImagePreview(null);
