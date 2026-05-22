@@ -56,6 +56,13 @@
   }
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
 #root {
   width: 100%;
   min-height: 100vh;

@@ -160,7 +160,9 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         DB::beginTransaction();
+
         try {
+
             $product = Product::create([
                 'id'              => Str::uuid(),
                 'owner_id'        => $request->owner_id,
@@ -174,26 +176,42 @@ class ProductController extends Controller
                 'views'           => 0,
             ]);
 
+            // =========================
+            // IMÁGENES
+            // =========================
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $file) {
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs(config('storage_paths.product_images'), $filename, 'public');
 
-                    ProductImage::create([
-                        'id' => Str::uuid(),
+                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs('products', $filename, 'public');
+
+                    $image = new ProductImage([
                         'product_id' => $product->id,
-                        'url' => Storage::url($filePath),
-                        'is_main' => false,
+                        'url'        => '/storage/' . $filePath,
+                        'is_main'    => false,
                     ]);
+                    $image->id = Str::uuid()->toString();
+                    $image->save();
                 }
             }
 
-            if ($request->has('variants')) {
-                foreach ($request->variants as $variantData) {
+            // =========================
+            // VARIANTS (FIX IMPORTANTE)
+            // =========================
+            $variants = $request->input('variants');
+
+            if (is_string($variants)) {
+                $variants = json_decode($variants, true);
+            }
+
+            if (is_array($variants)) {
+
+                foreach ($variants as $variantData) {
+
                     $variant = ProductVariant::create([
                         'id'         => Str::uuid(),
                         'product_id' => $product->id,
-                        'size_id'    => $variantData['size_id'],   // 👈 AQUÍ
+                        'size_id'    => $variantData['size_id'],
                         'fit_id'     => $variantData['fit_id'],
                         'sku'        => $variantData['sku'],
                         'barcode'    => $variantData['barcode'] ?? null,
@@ -202,38 +220,32 @@ class ProductController extends Controller
                         'cost'       => $variantData['cost'],
                         'is_active'  => true,
                     ]);
-            if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribute_value_ids'])) {
-                foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
 
-                    if ($attributeValueId) {
+                    // atributos
+                    foreach (($variantData['attribute_value_ids'] ?? []) as $attributeValueId) {
                         VariantAttributeValue::create([
                             'variant_id' => $variant->id,
                             'attribute_value_id' => $attributeValueId,
                         ]);
                     }
-                }
-            }
 
-                    if (isset($variantData['inventories'])) {
-                        foreach ($variantData['inventories'] as $inventory) {
-
-                            Inventory::create([
-                                'branch_id' => $inventory['branch_id'],
-                                'variant_id'=> $variant->id,
-                                'stock'     => $inventory['stock'],
-                                'min_stock' => $inventory['min_stock'] ?? 0,
-                            ]);
-                        }
+                    // inventarios
+                    foreach (($variantData['inventories'] ?? []) as $inventory) {
+                        Inventory::create([
+                            'branch_id' => $inventory['branch_id'],
+                            'variant_id'=> $variant->id,
+                            'stock'     => $inventory['stock'],
+                            'min_stock' => $inventory['min_stock'] ?? 0,
+                        ]);
                     }
 
-                    if (isset($variantData['measurements'])) {
-                        foreach ($variantData['measurements'] as $measurement) {
-                            VariantMeasurement::create([
-                                'variant_id' => $variant->id,
-                                'measurement_type_id' => $measurement['measurement_type_id'],
-                                'value' => $measurement['value'],
-                            ]);
-                        }
+                    // measurements
+                    foreach (($variantData['measurements'] ?? []) as $measurement) {
+                        VariantMeasurement::create([
+                            'variant_id' => $variant->id,
+                            'measurement_type_id' => $measurement['measurement_type_id'],
+                            'value' => $measurement['value'],
+                        ]);
                     }
                 }
             }
@@ -242,22 +254,13 @@ class ProductController extends Controller
 
             return response()->json([
                 'message' => 'Producto creado correctamente',
-                'product' => Product::with([
-                    'category',
-                    'product_type',
-                    'product_images',
-                    'product_variants.size',
-                    'product_variants.fit',
-                    'product_variants.variant_attribute_values.attribute_value',
-                    'product_variants.variant_attribute_values.attribute_value.attribute',
-                    'product_variants.inventories.branch',
-                    'product_variants.variant_measurements.measurement_type',
-                ])->find($product->id)
-
+                'product' => $product
             ], 201);
 
         } catch (\Exception $e) {
+
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Error al crear producto',
                 'error'   => $e->getMessage(),
@@ -268,8 +271,11 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         DB::beginTransaction();
+
         try {
+
             $product = Product::findOrFail($id);
+
             $product->update([
                 'owner_id'        => $request->owner_id,
                 'category_id'     => $request->category_id,
@@ -281,34 +287,56 @@ class ProductController extends Controller
                 'is_active'       => $request->is_active ?? true,
             ]);
 
+            // limpiar relaciones
             foreach ($product->product_variants as $variant) {
-
                 VariantAttributeValue::where('variant_id', $variant->id)->delete();
-                
                 Inventory::where('variant_id', $variant->id)->delete();
                 VariantMeasurement::where('variant_id', $variant->id)->delete();
             }
-            ProductImage::where('product_id', $product->id)->delete();
+
+            // =========================
+            // VARIANTS
+            // =========================
             ProductVariant::where('product_id', $product->id)->delete();
 
-            if ($request->has('product_images')) {
-                foreach ($request->product_images as $image) {
+            // =========================
+            // IMÁGENES (update)
+            // =========================
+            if ($request->hasFile('product_images')) {
+                // Sólo eliminar las imágenes anteriores si se suben nuevas
+                ProductImage::where('product_id', $product->id)->delete();
+                foreach ($request->file('product_images') as $file) {
 
-                    ProductImage::create([
-                        'id'         => Str::uuid(),
+                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs('products', $filename, 'public');
+
+                    $image = new ProductImage([
                         'product_id' => $product->id,
-                        'url'        => $image['url'],
-                        'is_main'    => $image['is_main'] ?? false,
+                        'url'        => '/storage/' . $filePath,
+                        'is_main'    => false,
                     ]);
+                    $image->id = Str::uuid()->toString();
+                    $image->save();
                 }
             }
 
-            if ($request->has('variants')) {
-                foreach ($request->variants as $variantData) {
+            // =========================
+            // VARIANTS FIX
+            // =========================
+            $variants = $request->input('variants');
+
+            if (is_string($variants)) {
+                $variants = json_decode($variants, true);
+            }
+
+            if (is_array($variants)) {
+
+                foreach ($variants as $variantData) {
+
                     $variant = ProductVariant::create([
                         'id'         => Str::uuid(),
                         'product_id' => $product->id,
-                        'size_id'    => $variantData['size_id'],   // 👈 AQUÍ
+                        'size_id'    => $variantData['size_id'],
                         'fit_id'     => $variantData['fit_id'],
                         'sku'        => $variantData['sku'],
                         'barcode'    => $variantData['barcode'] ?? null,
@@ -318,44 +346,34 @@ class ProductController extends Controller
                         'is_active'  => true,
                     ]);
 
-                    if (isset($variantData['attribute_value_ids']) && is_array($variantData['attribute_value_ids'])) {
-                        foreach ($variantData['attribute_value_ids'] as $attributeValueId) {
-
-                            if ($attributeValueId) {
-                                VariantAttributeValue::create([
-                                    'variant_id' => $variant->id,
-                                    'attribute_value_id' => $attributeValueId,
-                                ]);
-                            }
-                        }
+                    foreach (($variantData['attribute_value_ids'] ?? []) as $attributeValueId) {
+                        VariantAttributeValue::create([
+                            'variant_id' => $variant->id,
+                            'attribute_value_id' => $attributeValueId,
+                        ]);
                     }
 
-                    if (isset($variantData['inventories'])) {
-                        foreach ($variantData['inventories'] as $inventory) {
-                            Inventory::create([
-
-                                'branch_id' => $inventory['branch_id'],
-                                'variant_id'=> $variant->id,
-                                'stock'     => $inventory['stock'],
-                                'min_stock' => $inventory['min_stock'] ?? 0,
-                            ]);
-                        }
+                    foreach (($variantData['inventories'] ?? []) as $inventory) {
+                        Inventory::create([
+                            'branch_id' => $inventory['branch_id'],
+                            'variant_id'=> $variant->id,
+                            'stock'     => $inventory['stock'],
+                            'min_stock' => $inventory['min_stock'] ?? 0,
+                        ]);
                     }
 
-                    if (isset($variantData['measurements'])) {
-                        foreach ($variantData['measurements'] as $measurement) {
-                            VariantMeasurement::create([
-                                'variant_id'          => $variant->id,
-                                'size_id'             => $measurement['size_id'],
-                                'measurement_type_id' => $measurement['measurement_type_id'],
-                                'value'               => $measurement['value'],
-                            ]);
-                        }
+                    foreach (($variantData['measurements'] ?? []) as $measurement) {
+                        VariantMeasurement::create([
+                            'variant_id' => $variant->id,
+                            'measurement_type_id' => $measurement['measurement_type_id'],
+                            'value' => $measurement['value'],
+                        ]);
                     }
                 }
             }
 
             DB::commit();
+
             return response()->json([
                 'message' => 'Producto actualizado correctamente',
                 'product' => Product::with([
@@ -365,11 +383,13 @@ class ProductController extends Controller
                     'product_variants.variant_attribute_values.attribute_value.attribute',
                     'product_variants.inventories.branch',
                     'product_variants.variant_measurements.measurement_type',
-
                 ])->find($product->id)
             ]);
+
         } catch (\Exception $e) {
+
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Error al actualizar producto',
                 'error'   => $e->getMessage(),

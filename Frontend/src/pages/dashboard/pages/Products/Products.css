@@ -477,7 +477,22 @@
 
 
 
+.product-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.product-thumb img {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+}
 
 /* =========================
    LAYOUT PRINCIPAL
@@ -2906,4 +2921,121 @@ select option:focus {
 
 .modal-title-group h3{
   margin: 0;
+}
+
+
+
+
+/* ==========================================
+   COLOR + TALLA LADO A LADO
+========================================== */
+
+.variant-main-grid{
+  display: grid;
+  grid-template-columns: 1.3fr .9fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* color ocupa su espacio */
+.variant-color-group{
+  min-width: 0;
+}
+
+/* talla más compacta */
+.variant-size-group{
+  display: flex;
+  flex-direction: column;
+}
+
+/* grid de colores más ordenado */
+.variant-color-group .advanced-color-grid{
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fill, minmax(180px, 1fr));
+
+  gap: 10px;
+}
+
+/* tallas más compactas */
+.variant-size-group .advanced-selector-grid{
+  gap: 8px;
+}
+
+/* mobile: uno debajo del otro */
+@media(max-width:768px){
+
+  .variant-main-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+/* ==========================
+   ADD VARIANT CARD
+========================== */
+
+.add-variant-card {
+  width: 100%;
+  border: 2px dashed rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.03);
+
+  border-radius: 18px;
+  padding: 18px 24px;
+
+  margin-top: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  color: white;
+}
+
+.add-variant-card:hover {
+  border-color: #5b8cff;
+  background: rgba(91, 140, 255, 0.08);
+
+  transform: translateY(-2px);
+}
+
+.add-variant-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+
+  border-radius: 14px;
+
+  background: rgba(91, 140, 255, 0.15);
+  border: 1px solid rgba(91, 140, 255, 0.25);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 28px;
+  font-weight: 600;
+
+  color: #7aa2ff;
+}
+
+.add-variant-content {
+  text-align: left;
+}
+
+.add-variant-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.add-variant-subtitle {
+  font-size: 13px;
+  opacity: 0.65;
+  margin-top: 2px;
 }

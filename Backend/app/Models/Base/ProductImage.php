@@ -28,8 +28,15 @@ class ProductImage extends Model
 	protected $table = 'product_images';
 	protected $keyType = 'string';
 	public $incrementing = false;
-	public $timestamps = false;
+	public $timestamps = true;
+	const UPDATED_AT = null;
 
+	protected $fillable = [
+		'id',
+		'product_id',
+		'url',
+		'is_main',
+	];
 	protected $casts = [
 		'is_main' => 'bool'
 	];

@@ -22,6 +22,7 @@ import ProductForm from "./ProductForm";
 
 export default function Products() {
   const [loadingData, setLoadingData] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [owners, setOwners] = useState([]);
@@ -44,7 +45,10 @@ export default function Products() {
 
   const loadProducts = async () => {
     try {
+      setLoadingProducts(true);
+
       const res = await getProducts();
+
       setProducts(
         res.data?.data ??
         res.data ??
@@ -56,6 +60,8 @@ export default function Products() {
         "Error cargando productos:",
         error
       );
+    } finally {
+      setLoadingProducts(false);
     }
   };
 
@@ -118,7 +124,7 @@ export default function Products() {
 
       console.error(
         "Error guardando producto:",
-        error
+        error.response?.data
       );
     }
   };
@@ -346,6 +352,7 @@ export default function Products() {
 
       <ProductsTable
         products={filteredProducts}
+        loading={loadingProducts}
         onEdit={(p) => {
           setSelected(p);
           setOpen(true);
