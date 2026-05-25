@@ -96,7 +96,7 @@ export default function ProductForm({
 
         setAttributes((prev) =>
           prev.map((attr) => {
-            if (attr.name?.toLowerCase() !== "color") return attr;
+            if (attr.id !== colorAttribute?.id) return attr;
             return {
               ...attr,
               attribute_values: [...attr.attribute_values, createdColor],
@@ -291,20 +291,22 @@ export default function ProductForm({
     return `${p}-${c}-${s}`;
   };
 
+  const normalizeAttr = (name) => name?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
   const colorAttribute = attributes.find(
-    a => a.name.toLowerCase() === "color"
+    a => normalizeAttr(a.name).includes("color") || a.attribute_values?.some(v => v.hex_code)
   );
 
   const materialAttribute = attributes.find(
-    a => a.name.toLowerCase() === "material"
+    a => normalizeAttr(a.name).includes("material")
   );
 
   const seasonAttribute = attributes.find(
-    a => a.name.toLowerCase() === "season"
+    a => normalizeAttr(a.name).includes("season") || normalizeAttr(a.name).includes("temporada")
   );
 
   const styleAttribute = attributes.find(
-    a => a.name.toLowerCase() === "style"
+    a => normalizeAttr(a.name).includes("style") || normalizeAttr(a.name).includes("estilo")
   );
 
 const getAttributeValueName = (valueId) => {

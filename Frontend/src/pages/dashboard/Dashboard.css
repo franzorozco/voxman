@@ -203,12 +203,13 @@ html, body {
   background: rgba(255, 255, 255, 0.12);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
 
   .dashboard {
     position: relative;
   }
 
+  /* SIDEBAR MOBILE */
   .sidebar {
     position: fixed;
     top: 0;
@@ -219,48 +220,57 @@ html, body {
 
     z-index: 999;
 
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease;
+
+    /* oculto por defecto */
+    transform: translateX(-100%);
   }
 
-  .sidebar.collapsed {
-    width: 70px;
-    padding: 20px 10px;
+  /* cuando está abierto */
+  .sidebar:not(.collapsed) {
     transform: translateX(0);
   }
 
-  .sidebar.collapsed .sidebar-nav a {
-    justify-content: center;
-    font-size: 0;
+  /* colapsado = oculto completo */
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 260px;
+    padding: 24px;
+    display: none !important; /* Force hide the entire sidebar so icons cannot show */
   }
 
-  .sidebar.collapsed .sidebar-logo img {
-    display: none;
-  }
-
-  .sidebar.collapsed .section-title {
-    display: none;
-  }
-
-  .sidebar.collapsed .sidebar-footer {
-    display: none;
-  }
-
+  /* MAIN ocupa todo */
   .main {
     width: 100%;
-    margin-left: 70px;
+    margin-left: 0;
   }
 
+  /* BOTÓN HAMBURGUESA */
   .toggle-btn {
     position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 1000;
+    top: 14px;
+    left: 14px;
+    z-index: 1001;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 10px;
+
+    background: rgba(0,0,0,0.85);
+    border: 1px solid rgba(255,255,255,0.08);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+    font-size: 20px;
   }
 
   .topbar {
-    padding-left: 60px;
+    padding-left: 65px;
   }
-
 }
 
 
@@ -396,7 +406,7 @@ html, body {
 }
 
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
 
   .topbar {
     height: 60px;

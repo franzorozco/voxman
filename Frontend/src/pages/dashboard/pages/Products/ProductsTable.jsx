@@ -1,6 +1,7 @@
 import {
   API_BASE_URL
 } from "../../../../config/api";
+import Spinner from "../../components/Spinner/Spinner";
 
 export default function ProductsTable({
   products,
@@ -47,21 +48,7 @@ export default function ProductsTable({
     </th>
   );
 
-  const Spinner = () => (
-    <div
-      style={{
-        width: 38,
-        height: 38,
-        border: "4px solid #e5e7eb",
-        borderTop:
-          "4px solid #2563eb",
-        borderRadius: "50%",
-        animation:
-          "spin 0.8s linear infinite",
-        margin: "0 auto",
-      }}
-    />
-  );
+
 
   return (
     <div className="table-wrapper">

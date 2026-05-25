@@ -19,6 +19,7 @@ import Users from "../pages/dashboard/pages/users/Users";
 import Roles from "../pages/dashboard/pages/roles/Roles";
 import Permissions from "../pages/dashboard/pages/permissions/Permissions";
 import Products from "../pages/dashboard/pages/Products/Products";
+import Settings from "../pages/dashboard/pages/catalog-settings/Settings.jsx";
 
 export default function AppRouter() {
   return (
@@ -44,6 +45,7 @@ export default function AppRouter() {
         >
           <Route index element={<DashboardHome />} />
           <Route path="products" element={<Products />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />
           <Route path="permissions" element={<Permissions />} />
