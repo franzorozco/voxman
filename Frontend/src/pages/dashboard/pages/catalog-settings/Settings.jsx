@@ -361,9 +361,9 @@ function TabAttributes() {
   const [attributes, setAttributes] = useState([]);
   const [selectedAttr, setSelectedAttr] = useState(null);
 
-  // Attr Modal
+  // Estado para modal de atributos
   const [isAttrModalOpen, setIsAttrModalOpen] = useState(false);
-  const [attrForm, setAttrForm] = useState({ id: null, name: "" });
+  const [attrForm, setAttrForm] = useState({ id: null, name: "", is_fixed: false });
 
   // Value Modal
   const [values, setValues] = useState([]);
@@ -417,8 +417,8 @@ function TabAttributes() {
   const handleSaveAttr = async (e) => {
     e.preventDefault();
     try {
-      if (attrForm.id) await api.updateAttribute(attrForm.id, { name: attrForm.name });
-      else await api.createAttribute({ name: attrForm.name });
+      if (attrForm.id) await api.updateAttribute(attrForm.id, { name: attrForm.name, is_fixed: attrForm.is_fixed });
+      else await api.createAttribute({ name: attrForm.name, is_fixed: attrForm.is_fixed });
       setIsAttrModalOpen(false);
       loadAttributes();
     } catch (err) { console.error(err); }
@@ -456,7 +456,7 @@ function TabAttributes() {
       <div className="attr-list-container">
         <div className="settings-section-header" style={{ marginBottom: "15px" }}>
           <h2>Atributos</h2>
-          <button className="btn-add" onClick={() => { setAttrForm({ id: null, name: "" }); setIsAttrModalOpen(true); }}><Plus size={16}/></button>
+          <button className="btn-add" onClick={() => { setAttrForm({ id: null, name: "", is_fixed: false }); setIsAttrModalOpen(true); }}><Plus size={16}/></button>
         </div>
         <div className="attr-list">
           {loadingAttributes ? (
@@ -465,9 +465,9 @@ function TabAttributes() {
             <>
               {attributes.map(a => (
                 <div key={a.id} className={`attr-item ${selectedAttr?.id === a.id ? "active" : ""}`} onClick={() => loadValues(a)}>
-                  <span>{a.name}</span>
+                  <span>{a.name} {a.is_fixed && <span className="badge" style={{marginLeft: 5, background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa'}}>Fijo</span>}</span>
                   <div className="action-btns" onClick={e => e.stopPropagation()}>
-                    <button className="btn-icon" style={{width: 24, height: 24}} onClick={() => { setAttrForm({ id: a.id, name: a.name }); setIsAttrModalOpen(true); }}><Edit2 size={12}/></button>
+                    <button className="btn-icon" style={{width: 24, height: 24}} onClick={() => { setAttrForm({ id: a.id, name: a.name, is_fixed: a.is_fixed || false }); setIsAttrModalOpen(true); }}><Edit2 size={12}/></button>
                     <button className="btn-icon danger" style={{width: 24, height: 24}} onClick={() => handleDeleteAttr(a.id)}><Trash2 size={12}/></button>
                   </div>
                 </div>
@@ -549,6 +549,17 @@ function TabAttributes() {
               <div className="form-group">
                 <label>Nombre (Ej: Color, Material)</label>
                 <input required type="text" className="form-control" value={attrForm.name} onChange={e => setAttrForm({ ...attrForm, name: e.target.value })} />
+              </div>
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setAttrForm({ ...attrForm, is_fixed: !attrForm.is_fixed })}>
+                <div style={{
+                  width: 20, height: 20, borderRadius: 4, border: '2px solid rgba(255,255,255,0.3)', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: attrForm.is_fixed ? '#3b82f6' : 'transparent',
+                  borderColor: attrForm.is_fixed ? '#3b82f6' : 'rgba(255,255,255,0.3)'
+                }}>
+                  {attrForm.is_fixed && <span style={{color: 'white', fontSize: 14}}>✓</span>}
+                </div>
+                <label style={{ margin: 0, fontSize: 14, cursor: 'pointer', userSelect: 'none' }}>¿Es un Eje Fijo? (No se puede borrar de productos)</label>
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setIsAttrModalOpen(false)}>Cancelar</button>

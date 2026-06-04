@@ -26,7 +26,8 @@ class AttributeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100'
+            'name' => 'required|string|max:100',
+            'is_fixed' => 'nullable|boolean'
         ]);
         $attribute = Attribute::create($validated);
         return response()->json([
@@ -39,7 +40,8 @@ class AttributeController extends Controller
     {
         $attribute = Attribute::findOrFail($id);
         $validated = $request->validate([
-            'name' => 'required|string|max:100'
+            'name' => 'required|string|max:100',
+            'is_fixed' => 'nullable|boolean'
         ]);
         $attribute->update($validated);
         return response()->json([

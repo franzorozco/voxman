@@ -31,6 +31,24 @@ export default function ProductForm({
     setSizes(initialSizes);
   }, [initialSizes]);
 
+  const normalizeAttr = (name) => name?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const colorAttribute = attributes.find(
+    a => normalizeAttr(a.name).includes("color") || a.attribute_values?.some(v => v.hex_code)
+  );
+
+  const materialAttribute = attributes.find(
+    a => normalizeAttr(a.name).includes("material")
+  );
+
+  const seasonAttribute = attributes.find(
+    a => normalizeAttr(a.name).includes("season") || normalizeAttr(a.name).includes("temporada")
+  );
+
+  const styleAttribute = attributes.find(
+    a => normalizeAttr(a.name).includes("style") || normalizeAttr(a.name).includes("estilo")
+  );
+
   const [showCreateColor, setShowCreateColor] =
     useState(false);
 
@@ -196,8 +214,10 @@ export default function ProductForm({
   };
 
   const [simpleConfig, setSimpleConfig] = useState({
-    colors: [],
-    sizes: [],
+    axes: [
+      { id: colorAttribute?.id || "", type: "attribute", values: [] },
+      { id: "sizes", type: "size", values: [] }
+    ],
 
     globalPrice: "",
     globalCost: "",
@@ -213,67 +233,110 @@ export default function ProductForm({
 
   const [simpleModeError, setSimpleModeError] = useState("");
 
+  const handleAddAxis = () => {
+    setSimpleConfig({
+      ...simpleConfig,
+      axes: [...simpleConfig.axes, { id: "", type: "", values: [] }]
+    });
+  };
+
+  const handleRemoveAxis = (index) => {
+    const newAxes = [...simpleConfig.axes];
+    newAxes.splice(index, 1);
+    setSimpleConfig({ ...simpleConfig, axes: newAxes });
+  };
+
+  const handleAxisSelect = (index, newId, newType) => {
+    const newAxes = [...simpleConfig.axes];
+    newAxes[index] = { ...newAxes[index], id: newId, type: newType, values: [] };
+    setSimpleConfig({ ...simpleConfig, axes: newAxes });
+  };
+
+  const toggleSelection = (axisIndex, valueId) => {
+    const axis = simpleConfig.axes[axisIndex];
+    const newValues = axis.values.includes(valueId)
+      ? axis.values.filter(id => id !== valueId)
+      : [...axis.values, valueId];
+      
+    const newAxes = [...simpleConfig.axes];
+    newAxes[axisIndex] = { ...axis, values: newValues };
+    setSimpleConfig({ ...simpleConfig, axes: newAxes });
+  };
+
   const generateSimpleVariants = () => {
-    if (simpleConfig.colors.length === 0 || simpleConfig.sizes.length === 0) {
-      setSimpleModeError("Debes seleccionar al menos un color y una talla para generar variantes.");
+    // Validate axes
+    const validAxes = simpleConfig.axes.filter(a => a.id && a.values.length > 0);
+    if (validAxes.length === 0) {
+      setSimpleModeError("Debes configurar al menos un eje con valores para generar variantes.");
       return;
     }
+    
+    // Check if any defined axis is empty
+    const emptyDefinedAxis = simpleConfig.axes.find(a => a.id && a.values.length === 0);
+    if (emptyDefinedAxis) {
+      setSimpleModeError("Hay ejes configurados que no tienen ningún valor seleccionado.");
+      return;
+    }
+
     setSimpleModeError("");
 
-    const variants = [];
-    simpleConfig.colors.forEach((colorValueId) => {
-      simpleConfig.sizes.forEach((sizeId) => {
-        const attributeMap = {};
+    const generateCombinations = (axes, currentCombination, result) => {
+      if (axes.length === 0) {
+        result.push({ ...currentCombination });
+        return;
+      }
 
-        if (colorAttribute) {
-          attributeMap[colorAttribute.id] = colorValueId;
+      const currentAxis = axes[0];
+      const remainingAxes = axes.slice(1);
+
+      currentAxis.values.forEach(valueId => {
+        const nextCombination = { ...currentCombination };
+        if (currentAxis.type === "size") {
+          nextCombination.size_id = valueId;
+        } else if (currentAxis.type === "attribute") {
+          if (!nextCombination.attribute_value_ids) nextCombination.attribute_value_ids = {};
+          nextCombination.attribute_value_ids[currentAxis.id] = valueId;
         }
-
-        if (
-          materialAttribute &&
-          simpleConfig.globalAttributes.material_id
-        ) {
-          attributeMap[materialAttribute.id] =
-            simpleConfig.globalAttributes.material_id;
-        }
-
-        if (
-          styleAttribute &&
-          simpleConfig.globalAttributes.style_id
-        ) {
-          attributeMap[styleAttribute.id] =
-            simpleConfig.globalAttributes.style_id;
-        }
-
-        if (
-          seasonAttribute &&
-          simpleConfig.globalAttributes.season_id
-        ) {
-          attributeMap[seasonAttribute.id] =
-            simpleConfig.globalAttributes.season_id;
-        }
-
-        variants.push({
-          sku: generateSKU(
-            form.name,
-            sizeId,
-            simpleConfig.globalAttributes.fit_id,
-            attributeMap,
-            variants.length
-          ),
-          barcode: generateBarcode(),
-          price: simpleConfig.globalPrice || form.base_price || "",
-          cost: simpleConfig.globalCost || "",
-          weight: simpleConfig.globalWeight || "",
-          size_id: sizeId,
-          fit_id:
-            simpleConfig.globalAttributes.fit_id || "",
-          is_active: true,
-          attribute_value_ids: attributeMap
-
-        });
+        generateCombinations(remainingAxes, nextCombination, result);
       });
+    };
+
+    const combinations = [];
+    generateCombinations(validAxes, {}, combinations);
+
+    const variants = combinations.map((combo, idx) => {
+      const attributeMap = combo.attribute_value_ids || {};
+
+      // Add global attributes if not overridden by axes
+      if (materialAttribute && simpleConfig.globalAttributes.material_id && !attributeMap[materialAttribute.id]) {
+        attributeMap[materialAttribute.id] = simpleConfig.globalAttributes.material_id;
+      }
+      if (styleAttribute && simpleConfig.globalAttributes.style_id && !attributeMap[styleAttribute.id]) {
+        attributeMap[styleAttribute.id] = simpleConfig.globalAttributes.style_id;
+      }
+      if (seasonAttribute && simpleConfig.globalAttributes.season_id && !attributeMap[seasonAttribute.id]) {
+        attributeMap[seasonAttribute.id] = simpleConfig.globalAttributes.season_id;
+      }
+
+      return {
+        sku: generateSKU(
+          form.name,
+          combo.size_id || "",
+          simpleConfig.globalAttributes.fit_id,
+          attributeMap,
+          idx
+        ),
+        barcode: generateBarcode(),
+        price: simpleConfig.globalPrice || form.base_price || "",
+        cost: simpleConfig.globalCost || "",
+        weight: simpleConfig.globalWeight || "",
+        size_id: combo.size_id || null,
+        fit_id: simpleConfig.globalAttributes.fit_id || "",
+        is_active: true,
+        attribute_value_ids: attributeMap
+      };
     });
+
     setForm({
       ...form,
       variants
@@ -291,23 +354,7 @@ export default function ProductForm({
     return `${p}-${c}-${s}`;
   };
 
-  const normalizeAttr = (name) => name?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  const colorAttribute = attributes.find(
-    a => normalizeAttr(a.name).includes("color") || a.attribute_values?.some(v => v.hex_code)
-  );
-
-  const materialAttribute = attributes.find(
-    a => normalizeAttr(a.name).includes("material")
-  );
-
-  const seasonAttribute = attributes.find(
-    a => normalizeAttr(a.name).includes("season") || normalizeAttr(a.name).includes("temporada")
-  );
-
-  const styleAttribute = attributes.find(
-    a => normalizeAttr(a.name).includes("style") || normalizeAttr(a.name).includes("estilo")
-  );
 
 const getAttributeValueName = (valueId) => {
   for (const attr of attributes) {
@@ -692,11 +739,7 @@ const getAttributeValueName = (valueId) => {
     );
   };
 
-  const [showColorsModal, setShowColorsModal] =
-    useState(false);
-
-  const [showSizesModal, setShowSizesModal] =
-    useState(false);
+  const [activeAxisModal, setActiveAxisModal] = useState(null);
 
   const [advancedColorModal, setAdvancedColorModal] =
     useState({
@@ -713,14 +756,7 @@ const getAttributeValueName = (valueId) => {
   const MAX_VISIBLE_COLORS = 4;
   const MAX_VISIBLE_SIZES = 6;
 
-  const toggleSelection = (field, value) => {
-    setSimpleConfig((prev) => ({
-      ...prev,
-      [field]: prev[field].includes(value)
-        ? prev[field].filter((v) => v !== value)
-        : [...prev[field], value]
-    }));
-  };
+
 
   // ======================================================
   // VALIDATIONS
@@ -1058,93 +1094,127 @@ const getAttributeValueName = (valueId) => {
                 </div>
 
                 <div className="simple-grid">
-                  {/* COLORES */}
-                  <div className="simple-card">
-                    <div className="selector-header">
+                  {simpleConfig.axes.map((axis, axisIndex) => {
+                    const currentId = axis.id;
+                    const currentType = axis.type;
+                    const currentValues = axis.values;
 
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }} >
-                        <h4>Colores</h4>
-                      </div>
-                      <span className="selected-counter">
-                        {simpleConfig.colors.length} seleccionados
-                      </span>
-                    </div>
+                    let optionsToRender = [];
+                    let isColorGrid = false;
+                    let isFixedAxis = false;
+                    
+                    if (currentType === "size") {
+                      optionsToRender = sizes;
+                    } else if (currentType === "attribute") {
+                      const attr = attributes.find(a => a.id === currentId);
+                      optionsToRender = attr?.attribute_values || [];
+                      isColorGrid = optionsToRender.some(v => v.hex_code);
+                      isFixedAxis = attr?.is_fixed;
+                    }
 
-                    <div className="color-selector-grid">
-                      {(colorAttribute?.attribute_values || [])
-                        .slice(0, MAX_VISIBLE_COLORS)
-                        .map((color) => {
-
-                          const selected = simpleConfig.colors.includes(color.id);
-
-                          return (
-                            <button key={color.id} type="button" className={ selected ? "color-circle active" : "color-circle" } onClick={() => toggleSelection( "colors", color.id ) } >
-                              <div className="color-circle-preview" style={{ background: color.hex_code || "#ccc" }}
-                              />
-
-                              <span>
-                                {color.value}
+                    return (
+                      <div key={axisIndex} className="simple-card">
+                        <div className="selector-header" style={{flexDirection: 'column', alignItems: 'flex-start', gap: 10}}>
+                          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 style={{fontSize: 15, fontWeight: 600}}>Eje {axisIndex + 1}</h4>
+                            <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
+                              <span className="selected-counter">
+                                {currentValues.length} seleccionados
                               </span>
-                            </button>
-                          );
-                        })}
-                    </div>
+                              {!isFixedAxis && simpleConfig.axes.length > 1 && (
+                                <button type="button" onClick={() => handleRemoveAxis(axisIndex)} style={{background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer', padding: 0}} title="Eliminar Eje">✕</button>
+                              )}
+                            </div>
+                          </div>
+                          <select 
+                            className="form-control" 
+                            style={{width: '100%', marginBottom: 10, background: isFixedAxis ? 'rgba(255,255,255,0.05)' : undefined}}
+                            value={`${currentType}|${currentId}`}
+                            disabled={isFixedAxis}
+                            onChange={(e) => {
+                              const [t, id] = e.target.value.split('|');
+                              handleAxisSelect(axisIndex, id || "", t || "");
+                            }}
+                          >
+                            <option value="|">-- Ninguno --</option>
+                            <optgroup label="Sistema">
+                              <option value="size|sizes">Tallas</option>
+                            </optgroup>
+                            <optgroup label="Atributos">
+                              {attributes
+                                .filter(a => {
+                                  if (a.id === materialAttribute?.id) return false;
+                                  if (a.id === styleAttribute?.id) return false;
+                                  if (a.id === seasonAttribute?.id) return false;
+                                  return true;
+                                })
+                                .map(a => (
+                                <option key={a.id} value={`attribute|${a.id}`}>{a.name}</option>
+                              ))}
+                            </optgroup>
+                          </select>
+                        </div>
 
-                    <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
-                      {(colorAttribute?.attribute_values?.length || 0) >
-                        MAX_VISIBLE_COLORS && (
-                        <button type="button" className="see-more-btn" onClick={() => setShowColorsModal(true) } >
-                          Ver todos los colores
-                        </button>
-                      )}
-                      <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true) } title="Crear nuevo color" >
-                        <Plus size={18} strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  </div>
+                        {currentId ? (
+                          <>
+                            <div className={isColorGrid ? "color-selector-grid" : "size-selector"}>
+                              {optionsToRender
+                                .slice(0, isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES)
+                                .map((opt) => {
+                                  const selected = currentValues.includes(opt.id);
 
-                  {/* ====================================================== */}
-                  {/* TALLAS */}
-                  {/* ====================================================== */}
+                                  if (isColorGrid) {
+                                    return (
+                                      <button key={opt.id} type="button" className={ selected ? "color-circle active" : "color-circle" } onClick={() => toggleSelection(axisIndex, opt.id) } >
+                                        <div className="color-circle-preview" style={{ background: opt.hex_code || "#ccc" }} />
+                                        <span>{opt.value || opt.name}</span>
+                                      </button>
+                                    );
+                                  }
 
-                  <div className="simple-card">
-                    <div className="selector-header">
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }} >
-                        <h4>Tallas</h4>
+                                  return (
+                                    <button key={opt.id} type="button" className={ selected ? "size-chip active" : "size-chip" } onClick={() => toggleSelection(axisIndex, opt.id) } >
+                                      {opt.value || opt.name}
+                                    </button>
+                                  );
+                                })}
+                            </div>
+
+                            <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
+                              {optionsToRender.length > (isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES) && (
+                                <button type="button" className="see-more-btn" onClick={() => {
+                                  setActiveAxisModal(axisIndex);
+                                }}>
+                                  Ver todos
+                                </button>
+                              )}
+                              
+                              {currentType === "size" && (
+                                <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true)} title="Crear nueva talla">
+                                  <Plus size={18} strokeWidth={2.5} />
+                                </button>
+                              )}
+                              {currentType === "attribute" && isColorGrid && (
+                                <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true)} title="Crear nuevo color">
+                                  <Plus size={18} strokeWidth={2.5} />
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <div style={{color: '#888', fontSize: 13, padding: '20px 0', textAlign: 'center'}}>
+                            Selecciona un atributo para este eje
+                          </div>
+                        )}
                       </div>
-
-                      <span className="selected-counter">
-                        {simpleConfig.sizes.length}
-                        {" "}seleccionadas
-                      </span>
-                    </div>
-
-                    <div className="size-selector">
-                      {sizes
-                        .slice(0, MAX_VISIBLE_SIZES)
-                        .map((size) => {
-
-                          const selected =
-                            simpleConfig.sizes.includes(size.id);
-
-                          return (
-                            <button key={size.id} type="button" className={ selected ? "size-chip active" : "size-chip" } onClick={() => toggleSelection( "sizes", size.id ) } >
-                              {size.name}
-                            </button>
-                          );
-                        })}
-                    </div>
-
-                    <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
-                      {sizes.length > MAX_VISIBLE_SIZES && (
-                        <button type="button" className="see-more-btn" onClick={() => setShowSizesModal(true) } >
-                          Ver todas las tallas
-                        </button>
-                      )}
-                      <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true) } title="Crear nueva talla" >
-                        <Plus size={18} strokeWidth={2.5} />
-                      </button>
-                    </div>
+                    );
+                  })}
+                  
+                  {/* BOTÓN PARA AGREGAR EJE */}
+                  <div style={{display: 'flex', justifyContent: 'center', marginTop: 10, gridColumn: '1 / -1'}}>
+                    <button type="button" onClick={handleAddAxis} className="btn-secondary" style={{display: 'flex', alignItems: 'center', gap: 5, padding: '8px 16px', fontSize: 14}}>
+                      <Plus size={16} /> Agregar otro Eje
+                    </button>
                   </div>
                 </div>
 
@@ -1311,103 +1381,93 @@ const getAttributeValueName = (valueId) => {
                 {/* SUMMARY */}
                 {/* ====================================================== */}
                 <div className="simple-summary">
-                  <h4>
-                    Resumen
-                  </h4>
+                  <h4>Resumen</h4>
 
                   <div className="simple-summary-grid">
-                    <div className="simple-summary-item">
-                      <div className="simple-summary-label">
-                        Colores
-                      </div>
+                    {simpleConfig.axes.filter(a => a.id).map((axis, idx) => {
+                      let axisName = "Desconocido";
+                      if (axis.type === "size") axisName = "Tallas";
+                      else if (axis.type === "attribute") {
+                        const attr = attributes.find(a => a.id === axis.id);
+                        if (attr) axisName = attr.name;
+                      }
 
-                      <div className="simple-summary-value">
-                        {simpleConfig.colors.length
-                          ? simpleConfig.colors
-                              .map(getAttributeValueName)
-                              .join(", ")
-                          : "Ninguno"}
-                      </div>
-                    </div>
-
-                    <div className="simple-summary-item">
-                      <div className="simple-summary-label">
-                        Tallas
-                      </div>
-                      <div className="simple-summary-value">
-                        {simpleConfig.sizes.length
-                          ? simpleConfig.sizes
-                              .map(
-                                sizeId =>
-                                  sizes.find(
-                                    s => s.id === sizeId
-                                  )?.name
-                              )
-                              .join(", ")
-                          : "Ninguna"}
-                      </div>
-                    </div>
-
-                    <div className="simple-summary-item">
-                      <div className="simple-summary-label">
-                        Fit
-                      </div>
-                      <div className="simple-summary-value">
-
-                        {fits.find(
-                          f =>
-                            f.id ===
-                            simpleConfig.globalAttributes.fit_id
-                        )?.name || "No definido"}
-                      </div>
-                    </div>
-
-                    <div className="simple-summary-item">
-                      <div className="simple-summary-label">
-                        Variantes a generar
-                      </div>
-                      <div className="simple-summary-value">
-                        {
-                          simpleConfig.colors.length *
-                          simpleConfig.sizes.length
+                      let valueNames = "Ninguno";
+                      if (axis.values.length > 0) {
+                        if (axis.type === "size") {
+                          valueNames = axis.values.map(vId => sizes.find(s => s.id === vId)?.name).filter(Boolean).join(", ");
+                        } else if (axis.type === "attribute") {
+                          valueNames = axis.values.map(getAttributeValueName).filter(Boolean).join(", ");
                         }
+                      }
+
+                      return (
+                        <div key={idx} className="simple-summary-item">
+                          <div className="simple-summary-label">{axisName}</div>
+                          <div className="simple-summary-value">{valueNames}</div>
+                        </div>
+                      );
+                    })}
+
+                    <div className="simple-summary-item">
+                      <div className="simple-summary-label">Fit</div>
+                      <div className="simple-summary-value">
+                        {fits.find(f => f.id === simpleConfig.globalAttributes.fit_id)?.name || "No definido"}
                       </div>
                     </div>
 
+                    <div className="simple-summary-item">
+                      <div className="simple-summary-label">Variantes a generar</div>
+                      <div className="simple-summary-value">
+                        {(() => {
+                          const validAxes = simpleConfig.axes.filter(a => a.id && a.values.length > 0);
+                          if (validAxes.length === 0) return 0;
+                          return validAxes.reduce((acc, axis) => acc * axis.values.length, 1);
+                        })()}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* ====================================================== */}
                 {/* GALLERY (SIMPLE MODE) */}
                 {/* ====================================================== */}
-                {simpleConfig.colors.length > 0 && (
-                  <div style={{ marginTop: 20, marginBottom: 20 }}>
-                    <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 15, color: "rgba(255,255,255,0.9)" }}>
-                      Gestión de Imágenes por Color
+                {(() => {
+                  if (!colorAttribute) return null;
+                  const colorAxis = simpleConfig.axes.find(a => a.type === "attribute" && a.id === colorAttribute.id);
+                  const colorValues = colorAxis ? colorAxis.values : [];
+                  
+                  if (colorValues.length === 0) return null;
+
+                  return (
+                    <div style={{ marginTop: 20, marginBottom: 20 }}>
+                      <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 15, color: "rgba(255,255,255,0.9)" }}>
+                        Gestión de Imágenes por Color
+                      </div>
+                      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        {colorValues.map(colorId => {
+                          const colorAttr = colorAttribute?.attribute_values?.find(c => c.id === colorId);
+                          const count = colorImages[colorId]?.length || 0;
+                          return (
+                            <button
+                              key={colorId}
+                              type="button"
+                              className="btn-secondary"
+                              onClick={() => setGalleryModalConfig({ open: true, type: "color", id: colorId })}
+                              style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px" }}
+                            >
+                              <div style={{ width: 16, height: 16, borderRadius: "50%", background: colorAttr?.hex_code || "#ccc" }} />
+                              {colorAttr?.value || "Color"} 
+                              <span style={{ background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
+                                {count} <Camera size={14} />
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                      {simpleConfig.colors.map(colorId => {
-                        const colorAttr = colorAttribute?.attribute_values?.find(c => c.id === colorId);
-                        const count = colorImages[colorId]?.length || 0;
-                        return (
-                          <button
-                            key={colorId}
-                            type="button"
-                            className="btn-secondary"
-                            onClick={() => setGalleryModalConfig({ open: true, type: "color", id: colorId })}
-                            style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px" }}
-                          >
-                            <div style={{ width: 16, height: 16, borderRadius: "50%", background: colorAttr?.hex_code || "#ccc" }} />
-                            {colorAttr?.value || "Color"} 
-                            <span style={{ background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
-                              {count} <Camera size={14} />
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* ====================================================== */}
                 {/* GENERATE */}
@@ -1883,171 +1943,74 @@ const getAttributeValueName = (valueId) => {
           </div>
 
           {/* =======================================
-              MODAL COLORES
+              MODAL VER TODOS (DINÁMICO PARA EJE N)
           ======================================= */}
-          {showColorsModal && (
-            <div className="selector-modal-overlay">
-              <div className="selector-modal">
+          {activeAxisModal !== null && (() => {
+            const axis = simpleConfig.axes[activeAxisModal];
+            if (!axis || !axis.id) return null;
 
-                <div className="selector-modal-header">
+            let optionsToRender = [];
+            let isColorGrid = false;
+            let title = "";
 
-                  <div className="modal-title-group">
-                    <h3>Seleccionar Colores</h3>
+            if (axis.type === "size") {
+              optionsToRender = sizes;
+              title = "Seleccionar Tallas";
+            } else if (axis.type === "attribute") {
+              const attr = attributes.find(a => a.id === axis.id);
+              optionsToRender = attr?.attribute_values || [];
+              isColorGrid = optionsToRender.some(v => v.hex_code);
+              title = `Seleccionar ${attr?.name || "Opciones"}`;
+            }
 
-                    <button
-                      type="button"
-                      className="add-mini-btn"
-                      onClick={() =>
-                        setShowCreateColor(true)
-                      }
-                    >
-                      <Plus size={18} />
-                    </button>
+            return (
+              <div className="selector-modal-overlay">
+                <div className="selector-modal">
+                  <div className="selector-modal-header">
+                    <div className="modal-title-group">
+                      <h3>{title}</h3>
+                      {axis.type === "size" && (
+                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true)}>
+                          <Plus size={18} />
+                        </button>
+                      )}
+                      {axis.type === "attribute" && isColorGrid && (
+                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true)}>
+                          <Plus size={18} />
+                        </button>
+                      )}
+                    </div>
+                    <button type="button" className="close-modal-btn" onClick={() => setActiveAxisModal(null)}>✕</button>
                   </div>
 
-                  <button
-                    type="button"
-                    className="close-modal-btn"
-                    onClick={() =>
-                      setShowColorsModal(false)
-                    }
-                  >
-                    ✕
-                  </button>
+                  <div className={isColorGrid ? "color-selector-grid modal-grid" : "size-selector modal-size-grid"}>
+                    {optionsToRender.map((opt) => {
+                      const selected = axis.values.includes(opt.id);
 
-                </div>
-
-                <div className="color-selector-grid modal-grid">
-                  {(colorAttribute?.attribute_values || []).map(
-                    (color) => {
-
-                      const selected =
-                        simpleConfig.colors.includes(
-                          color.id
+                      if (isColorGrid) {
+                        return (
+                          <button key={opt.id} type="button" className={ selected ? "color-circle active" : "color-circle" } onClick={() => toggleSelection(activeAxisModal, opt.id)}>
+                            <div className="color-circle-preview" style={{ background: opt.hex_code || "#ccc" }} />
+                            <span>{opt.value || opt.name}</span>
+                          </button>
                         );
+                      }
 
                       return (
-                        <button
-                          key={color.id}
-                          type="button"
-                          className={
-                            selected
-                              ? "color-circle active"
-                              : "color-circle"
-                          }
-                          onClick={() =>
-                            toggleSelection(
-                              "colors",
-                              color.id
-                            )
-                          }
-                        >
-                          <div
-                            className="color-circle-preview"
-                            style={{
-                              background:
-                                color.hex_code || "#ccc"
-                            }}
-                          />
-
-                          <span>
-                            {color.value}
-                          </span>
+                        <button key={opt.id} type="button" className={ selected ? "size-chip active" : "size-chip" } onClick={() => toggleSelection(activeAxisModal, opt.id)}>
+                          {opt.value || opt.name}
                         </button>
                       );
-                    }
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  className="modal-ready-btn"
-                  onClick={() =>
-                    setShowColorsModal(false)
-                  }
-                >
-                  Listo
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* =======================================
-              MODAL TALLAS
-          ======================================= */}
-          {showSizesModal && (
-            <div className="selector-modal-overlay">
-              <div className="selector-modal">
-                <div className="selector-modal-header">
-
-                  <div className="modal-title-group">
-                    <h3>Seleccionar Tallas</h3>
-
-                    <button
-                      type="button"
-                      className="add-mini-btn"
-                      onClick={() =>
-                        setShowCreateSize(true)
-                      }
-                    >
-                      <Plus size={18} />
-                    </button>
+                    })}
                   </div>
 
-                  <button
-                    type="button"
-                    className="close-modal-btn"
-                    onClick={() =>
-                      setShowSizesModal(false)
-                    }
-                  >
-                    ✕
+                  <button type="button" className="modal-ready-btn" onClick={() => setActiveAxisModal(null)}>
+                    Listo
                   </button>
-
                 </div>
-
-                <div className="size-selector modal-size-grid">
-                  {sizes.map((size) => {
-
-                    const selected =
-                      simpleConfig.sizes.includes(
-                        size.id
-                      );
-
-                    return (
-                      <button
-                        key={size.id}
-                        type="button"
-                        className={
-                          selected
-                            ? "size-chip active"
-                            : "size-chip"
-                        }
-                        onClick={() =>
-                          toggleSelection(
-                            "sizes",
-                            size.id
-                          )
-                        }
-                      >
-                        {size.name}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  className="modal-ready-btn"
-                  onClick={() =>
-                    setShowSizesModal(false)
-                  }
-                >
-                  Listo
-                </button>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* =======================================
               ADVANCED COLOR MODAL
