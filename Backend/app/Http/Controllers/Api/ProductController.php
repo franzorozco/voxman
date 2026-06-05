@@ -33,7 +33,9 @@ class ProductController extends Controller
                 'attribute_value_images',
                 'product_variants.variant_attribute_values.attribute_value.attribute',
                 'product_variants.variant_images',
-                'product_variants.inventories',
+                'product_variants.inventories.branch',
+                'product_variants.size',
+                'product_variants.fit',
             ])
             ->whereNull('deleted_at')
             ->where('is_active', true);
