@@ -19,6 +19,7 @@ import "../css/stylesCruds.css";
 
 import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
+import ProductViewModal from "./ProductViewModal";
 
 export default function Products() {
   const [loadingData, setLoadingData] = useState(true);
@@ -31,7 +32,9 @@ export default function Products() {
   const [sizes, setSizes] = useState([]);
   const [fits, setFits] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [selectedView, setSelectedView] = useState(null);
   const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     category: "",
@@ -379,7 +382,23 @@ export default function Products() {
                 : "asc",
           }));
         }}
+        onView={(p) => {
+          setSelectedView(p);
+          setViewOpen(true);
+        }}
       />
+      
+      {/* ====================================================== */}
+      {/* VIEW MODAL */}
+      {/* ====================================================== */}
+
+      {viewOpen && !loadingData && (
+        <ProductViewModal
+          product={selectedView}
+          onClose={() => setViewOpen(false)}
+        />
+      )}
+
       {/* ====================================================== */}
       {/* MODAL */}
       {/* ====================================================== */}

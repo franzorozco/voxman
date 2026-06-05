@@ -8,7 +8,8 @@ export default function ProductsTable({
   loading,
   onEdit,
   onDelete,
-  onSort
+  onSort,
+  onView
 }) {
 
   const DEFAULT_IMAGE =
@@ -261,7 +262,7 @@ export default function ProductsTable({
                   </td>
 
                   <td>
-                    <button className="btn-view" onClick={() => console.log(p)}>
+                    <button className="btn-view" onClick={() => onView(p)}>
                       Ver
                     </button>
 
