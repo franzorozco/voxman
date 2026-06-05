@@ -13,11 +13,8 @@ export default function ImageGalleryModal({ isOpen, onClose, title, images, onIm
     });
     setPreviews(newPreviews);
 
-    return () => {
-      newPreviews.forEach(url => {
-        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
-      });
-    };
+    // Skip aggressive revokeObjectURL to avoid React StrictMode ERR_FILE_NOT_FOUND
+    return () => {};
   }, [images]);
 
   if (!isOpen) return null;

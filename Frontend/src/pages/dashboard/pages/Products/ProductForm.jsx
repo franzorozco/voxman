@@ -371,16 +371,22 @@ const getAttributeValueName = (valueId) => {
 };
 
 // =========================================================
-
   const [form, setForm] = useState({
     name: "",
     description: "",
+    short_description: "",
+    long_description: "",
     base_price: "",
+    cost_price: "",
+    brand: "",
+    sku: "",
     category_id: "",
-    owner_id: "",
     product_type_id: "",
+    owner_id: "",
     variants: [],
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
   useEffect(() => {
@@ -634,10 +640,12 @@ const getAttributeValueName = (valueId) => {
   // ======================================================
   // SUBMIT
   // ======================================================
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
 
     formData.append(
       "name",
@@ -693,6 +701,8 @@ const getAttributeValueName = (valueId) => {
         files.forEach((file) => {
           if (typeof file !== "string") {
             formData.append(`color_images[${colorId}][]`, file);
+          } else {
+            formData.append(`kept_color_images[${colorId}][]`, file);
           }
         });
       });
@@ -702,6 +712,8 @@ const getAttributeValueName = (valueId) => {
         files.forEach((file) => {
           if (typeof file !== "string") {
             formData.append(`variant_images[${variantIndex}][]`, file);
+          } else {
+            formData.append(`kept_variant_images[${variantIndex}][]`, file);
           }
         });
       });
@@ -709,8 +721,11 @@ const getAttributeValueName = (valueId) => {
       for (let pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
-      onSubmit(formData);
-    };
+      await onSubmit(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   useEffect(() => {
     if (!attributes.length) return;
@@ -2458,12 +2473,12 @@ const getAttributeValueName = (valueId) => {
             <button
               type="submit"
               className="btn-primary"
-              disabled={!isFormValid()}
-              style={{ opacity: isFormValid() ? 1 : 0.5, cursor: isFormValid() ? "pointer" : "not-allowed" }}
+              disabled={!isFormValid() || isSubmitting}
+              style={{ opacity: (!isFormValid() || isSubmitting) ? 0.5 : 1, cursor: (!isFormValid() || isSubmitting) ? "not-allowed" : "pointer" }}
             >
-              {product
-                ? "Actualizar Producto"
-                : "Crear Producto"}
+              {isSubmitting 
+                ? (product ? "Actualizando..." : "Guardando...") 
+                : (product ? "Actualizar Producto" : "Crear Producto")}
             </button>
           </div>
 

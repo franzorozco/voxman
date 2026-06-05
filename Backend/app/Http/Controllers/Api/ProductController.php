@@ -33,7 +33,9 @@ class ProductController extends Controller
                 'attribute_value_images',
                 'product_variants.variant_attribute_values.attribute_value.attribute',
                 'product_variants.variant_images',
-                'product_variants.inventories',
+                'product_variants.inventories.branch',
+                'product_variants.size',
+                'product_variants.fit',
             ])
             ->whereNull('deleted_at')
             ->where('is_active', true);
@@ -367,6 +369,48 @@ class ProductController extends Controller
             }
 
             // =========================
+            // COLOR IMAGES (UPDATE)
+            // =========================
+            AttributeValueImage::where('product_id', $product->id)->delete();
+
+            if ($request->has('kept_color_images') && is_array($request->input('kept_color_images'))) {
+                foreach ($request->input('kept_color_images') as $colorId => $urls) {
+                    if (is_array($urls)) {
+                        foreach ($urls as $idx => $url) {
+                            $image = new AttributeValueImage([
+                                'attribute_value_id' => $colorId,
+                                'product_id' => $product->id,
+                                'url'        => $url,
+                                'is_main'    => $idx === 0,
+                            ]);
+                            $image->id = Str::uuid()->toString();
+                            $image->save();
+                        }
+                    }
+                }
+            }
+
+            if ($request->has('color_images') && is_array($request->file('color_images'))) {
+                foreach ($request->file('color_images') as $colorId => $files) {
+                    if (is_array($files)) {
+                        foreach ($files as $idx => $file) {
+                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                            $filePath = $file->storeAs('attributes', $filename, 'public');
+
+                            $image = new AttributeValueImage([
+                                'attribute_value_id' => $colorId,
+                                'product_id' => $product->id,
+                                'url'        => '/storage/' . $filePath,
+                                'is_main'    => !isset($request->input('kept_color_images')[$colorId]) && $idx === 0,
+                            ]);
+                            $image->id = Str::uuid()->toString();
+                            $image->save();
+                        }
+                    }
+                }
+            }
+
+            // =========================
             // VARIANTS FIX
             // =========================
             $variants = $request->input('variants');
@@ -377,7 +421,7 @@ class ProductController extends Controller
 
             if (is_array($variants)) {
 
-                foreach ($variants as $variantData) {
+                foreach ($variants as $index => $variantData) {
 
                     $variant = ProductVariant::create([
                         'id'         => Str::uuid(),
@@ -415,6 +459,34 @@ class ProductController extends Controller
                             'value' => $measurement['value'],
                         ]);
                     }
+
+                    // =========================
+                    // VARIANT IMAGES UPDATE
+                    // =========================
+                    if ($request->has("kept_variant_images.{$index}") && is_array($request->input("kept_variant_images.{$index}"))) {
+                        foreach ($request->input("kept_variant_images.{$index}") as $url) {
+                            $image = new VariantImage([
+                                'variant_id' => $variant->id,
+                                'url'        => $url,
+                            ]);
+                            $image->id = Str::uuid()->toString();
+                            $image->save();
+                        }
+                    }
+
+                    if ($request->hasFile("variant_images.{$index}")) {
+                        foreach ($request->file("variant_images.{$index}") as $file) {
+                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                            $filePath = $file->storeAs('variants', $filename, 'public');
+
+                            $image = new VariantImage([
+                                'variant_id' => $variant->id,
+                                'url'        => '/storage/' . $filePath,
+                            ]);
+                            $image->id = Str::uuid()->toString();
+                            $image->save();
+                        }
+                    }
                 }
             }
 
@@ -426,8 +498,12 @@ class ProductController extends Controller
                     'category',
                     'product_type',
                     'product_images',
+                    'attribute_value_images',
                     'product_variants.variant_attribute_values.attribute_value.attribute',
+                    'product_variants.variant_images',
                     'product_variants.inventories.branch',
+                    'product_variants.size',
+                    'product_variants.fit',
                     'product_variants.variant_measurements.measurement_type',
                 ])->find($product->id)
             ]);

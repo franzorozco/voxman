@@ -120,6 +120,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
@@ -541,4 +542,90 @@
   background: var(--bg-card);
   border-radius: 16px;
   border: 1px solid var(--border-color);
+}
+/* =========================
+   MOBILE RESPONSIVENESS
+========================= */
+@media (max-width: 768px) {
+  .branches-container {
+    padding: 16px;
+  }
+
+  .branches-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .branches-header > div {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .filters-bar {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .filters-bar input,
+  .filters-bar select {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .branches-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .branch-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .branch-modal-header {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .branch-modal-header h2 {
+    font-size: 20px;
+  }
+
+  .branch-modal-header .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+
+  .branch-modal-content {
+    padding: 20px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .modal-actions {
+    padding: 20px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    margin: 0;
+  }
+
+  .table th, .table td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+  
+  .view-toggle {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
