@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\AttributeController;
 use App\Http\Controllers\Api\AttributeValueController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\FitController;
+use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\MeasurementTypeController;
 use App\Http\Controllers\Api\ProductTypeMeasurementController;
 
@@ -58,6 +59,18 @@ Route::middleware([
         Route::post('/', [PermissionController::class, 'store']);
         Route::put('/{id}', [PermissionController::class, 'update']);
         Route::delete('/{id}', [PermissionController::class, 'destroy']);
+    });
+
+    Route::prefix('branches')->group(function () {
+        Route::get('/', [BranchController::class, 'index']);
+        Route::get('/{id}', [BranchController::class, 'show']);
+        Route::post('/', [BranchController::class, 'store']);
+        Route::post('/{id}', [BranchController::class, 'update']);
+        Route::delete('/{id}', [BranchController::class, 'destroy']);
+    });
+
+    Route::get('/employees', function() {
+        return response()->json(\App\Models\Actors\Employee::with('user.profile')->where('is_active', true)->get());
     });
 
     Route::prefix('products')->group(function () {

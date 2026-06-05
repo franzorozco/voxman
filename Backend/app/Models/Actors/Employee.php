@@ -24,4 +24,9 @@ class Employee extends BaseEmployee
         'last_promotion_date',
         'notes'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\Core\User::class, 'user_id');
+    }
 }

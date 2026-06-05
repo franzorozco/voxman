@@ -20,6 +20,7 @@ import Roles from "../pages/dashboard/pages/roles/Roles";
 import Permissions from "../pages/dashboard/pages/permissions/Permissions";
 import Products from "../pages/dashboard/pages/Products/Products";
 import Settings from "../pages/dashboard/pages/catalog-settings/Settings.jsx";
+import Branches from "../pages/dashboard/pages/Branches/Branches.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -59,6 +60,7 @@ export default function AppRouter() {
             <Route index element={<DashboardHome />} />
             <Route path="products" element={<Products />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="branches" element={<Branches />} />
             <Route path="users" element={<Users />} />
             <Route path="roles" element={<Roles />} />
             <Route path="permissions" element={<Permissions />} />
@@ -70,4 +72,3 @@ export default function AppRouter() {
     </BrowserRouter>
   );
 }
-// force reload

@@ -16,21 +16,22 @@ import {
   Truck,
   BarChart3,
   Users,
-  History,
   UserRoundSearch,
   TicketPercent,
   BadgePercent,
   ShoppingBasket,
   Shield,
   KeyRound,
-  Settings,
   FileText,
+  Settings,
   Layers3,
-  House,
-  LogOut,
-  UserCircle2,
   Moon,
-  Sun
+  Sun,
+  LogOut,
+  House,
+  ChevronDown,
+  UserCircle2,
+  Store
 } from "lucide-react";
 
 export default function DashboardLayout() {
@@ -270,6 +271,12 @@ export default function DashboardLayout() {
               <p className="section-title">
                 {!collapsed && "SISTEMA"}
               </p>
+
+              <NavItem
+                to="/dashboard/branches"
+                icon={Store}
+                label="Sucursales"
+              />
 
               <NavItem
                 to="/dashboard/users"

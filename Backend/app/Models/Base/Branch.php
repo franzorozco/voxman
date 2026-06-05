@@ -6,12 +6,12 @@
 
 namespace App\Models\Base;
 
-use App\Models\Address;
-use App\Models\CashRegister;
-use App\Models\Inventory;
-use App\Models\InventoryMovement;
-use App\Models\Sale;
-use App\Models\StockReservation;
+use App\Models\Core\Address;
+use App\Models\Finance\CashRegister;
+use App\Models\Inventory\Inventory;
+use App\Models\Inventory\InventoryMovement;
+use App\Models\Sales\Sale;
+use App\Models\Inventory\StockReservation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
