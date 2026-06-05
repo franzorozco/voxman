@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, NavLink, useLocation } from "react-router-dom";
+import { useThemeStore } from "../../store/themeStore";
 import { useAuthStore } from "../../store/authStore";
 import "./Dashboard.css";
-import logo from "../../assets/global/logo_black.png";
+import logo_black from "../../assets/global/logo_black.png";
+import logo_white from "../../assets/global/logo_white.png";
 
 import {
   LayoutDashboard,
@@ -26,7 +28,9 @@ import {
   Layers3,
   House,
   LogOut,
-  UserCircle2
+  UserCircle2,
+  Moon,
+  Sun
 } from "lucide-react";
 
 export default function DashboardLayout() {
@@ -34,6 +38,7 @@ export default function DashboardLayout() {
   const location = useLocation();
 
   const { logout, user } = useAuthStore();
+  const { isDark, toggleTheme } = useThemeStore();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -122,7 +127,7 @@ export default function DashboardLayout() {
           <div className="sidebar-logo">
             {!collapsed && (
               <img
-                src={logo}
+                src={isDark ? logo_black : logo_white}
                 alt="VOXman"
               />
             )}
@@ -335,6 +340,14 @@ export default function DashboardLayout() {
 
               </div>
 
+              <button
+                onClick={toggleTheme}
+                className="topbar-btn theme-btn"
+                title="Cambiar tema"
+              >
+                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+
               <Link
                 to="/"
                 className="topbar-btn home-btn"
@@ -365,3 +378,4 @@ export default function DashboardLayout() {
     </>
   );
 }
+// force reload

@@ -242,7 +242,7 @@
 }
 
 .vox-heart-icon {
-  color: #ef4444;
+  color: var(--color-danger);
   margin: 0 auto 20px;
   display: block;
   filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5));

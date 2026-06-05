@@ -4,8 +4,8 @@
 
 .settings-page {
   padding: 30px;
-  background-color: #050505;
-  color: #fff;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   min-height: calc(100vh - 70px); /* Asumiendo header de 70px */
 }
 
@@ -17,13 +17,13 @@
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+  background: linear-gradient(135deg, var(--text-main) 0%, var(--text-muted) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .settings-header p {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
@@ -32,7 +32,7 @@
   display: flex;
   gap: 15px;
   margin-bottom: 30px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 10px;
   overflow-x: auto;
 }
@@ -40,7 +40,7 @@
 .settings-tab {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   padding: 10px 16px;
   font-size: 15px;
   font-weight: 500;
@@ -54,13 +54,13 @@
 }
 
 .settings-tab:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  background: var(--bg-overlay);
 }
 
 .settings-tab.active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  background: var(--bg-overlay);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -71,8 +71,8 @@
 
 /* CONTENT CARD */
 .settings-content-card {
-  background: #111;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 24px;
 }
@@ -93,8 +93,8 @@
 }
 
 .btn-add {
-  background: #2563eb;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -108,7 +108,7 @@
 }
 
 .btn-add:hover {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 /* TABLES */
@@ -125,11 +125,11 @@
 .settings-table td {
   padding: 14px 16px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .settings-table th {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-weight: 500;
   font-size: 13px;
   text-transform: uppercase;
@@ -138,11 +138,11 @@
 
 .settings-table td {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-main);
 }
 
 .settings-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-overlay);
 }
 
 /* ACTION BUTTONS IN TABLE */
@@ -152,9 +152,9 @@
 }
 
 .btn-icon {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
   width: 32px;
   height: 32px;
   border-radius: 6px;
@@ -166,13 +166,13 @@
 }
 
 .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--bg-overlay);
+  color: var(--text-main);
 }
 
 .btn-icon.danger:hover {
   background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  color: var(--color-danger);
   border-color: rgba(239, 68, 68, 0.3);
 }
 
@@ -192,8 +192,8 @@
 }
 
 .settings-modal {
-  background: #1a1a24;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   width: 100%;
   max-width: 500px;
@@ -220,15 +220,15 @@
 .form-group label {
   display: block;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
   margin-bottom: 8px;
 }
 
 .form-control {
   width: 100%;
   background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 14px;
@@ -237,11 +237,11 @@
 
 .form-control:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
 }
 
 .form-control::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
 }
 
 .color-preview-box {
@@ -261,14 +261,14 @@
 }
 
 .attr-list {
-  background: rgba(0,0,0,0.3);
+  background: var(--bg-card);
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
 }
 
 .attr-item {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -277,12 +277,12 @@
 }
 
 .attr-item:hover {
-  background: rgba(255,255,255,0.03);
+  background: var(--bg-overlay);
 }
 
 .attr-item.active {
-  background: rgba(59, 130, 246, 0.1);
-  border-left: 3px solid #3b82f6;
+  background: var(--bg-overlay);
+  border-left: 3px solid var(--color-primary);
 }
 
 /* Badges */
@@ -295,8 +295,8 @@
 }
 
 .badge.gray {
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.8);
+  background: var(--bg-overlay);
+  color: var(--text-main);
 }
 
 /* =========================================================
@@ -348,3 +348,11 @@
     overflow-y: auto;
   }
 }
+
+
+
+
+
+
+
+

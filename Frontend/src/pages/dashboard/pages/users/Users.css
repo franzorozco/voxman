@@ -1,11 +1,11 @@
-/* 🔹 CONTENEDOR */
+/*  CONTENEDOR */
 .users-container {
   padding: 20px;
   font-family: "Segoe UI", sans-serif;
-  color: white;
+  color: var(--text-main);
 }
 
-/* 🔹 HEADER */
+/*  HEADER */
 /* =========================
    HEADER MEJORADO
 ========================= */
@@ -17,18 +17,18 @@
   margin-bottom: 20px;
   padding: 12px 16px;
 
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
 
   backdrop-filter: blur(8px);
 }
 
-/* título más limpio */
+/* ttulo ms limpio */
 .users-title {
   font-size: 22px;
   font-weight: 600;
-  color: white;
+  color: var(--text-main);
   letter-spacing: 0.3px;
 }
 
@@ -40,11 +40,11 @@
 }
 
 /* =========================
-   BOTÓN PRIMARY (CREAR)
+   BOTN PRIMARY (CREAR)
 ========================= */
 .btn-primary {
-  background: #2563eb;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
 
   border: none;
   padding: 10px 14px;
@@ -62,18 +62,18 @@
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
 /* =========================
-   BOTÓN SECONDARY (EXPORTAR)
+   BOTN SECONDARY (EXPORTAR)
 ========================= */
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-overlay);
   color: #e5e7eb;
 
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   padding: 10px 14px;
 
   border-radius: 8px;
@@ -90,7 +90,7 @@
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-overlay);
   transform: translateY(-1px);
 }
 
@@ -110,10 +110,10 @@
   }
 }
 
-/* 🔹 BOTÓN PRINCIPAL (ORIGINAL RESTAURADO) */
+/*  BOTN PRINCIPAL (ORIGINAL RESTAURADO) */
 .btn-primary {
-  background: #2563eb;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   border: none;
   padding: 10px 16px;
   border-radius: 8px;
@@ -122,43 +122,43 @@
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
-/* 🔹 TABLA */
+/*  TABLA */
 .users-table {
   width: 100%;
   border-collapse: collapse;
-  background: #111;
+  background: var(--bg-card);
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
 }
 
 .users-table th {
-  background: #1a1a1a;
+  background: var(--bg-card);
   text-align: left;
   padding: 12px;
   font-weight: 600;
-  color: rgba(255,255,255,0.7);
+  color: var(--text-muted);
   font-size: 13px;
   white-space: nowrap;
 }
 
 .users-table td {
   padding: 12px;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid var(--border-color);
   font-size: 14px;
-  color: rgba(255,255,255,0.85);
+  color: var(--text-main);
   white-space: nowrap;
 }
 
 .users-table tr:hover {
-  background: rgba(255,255,255,0.04);
+  background: var(--bg-overlay);
 }
 
 
-/* 🔹 BADGES */
+/*  BADGES */
 .badge {
   padding: 4px 10px;
   border-radius: 999px;
@@ -167,26 +167,26 @@
 }
 
 .badge-owner {
-  background: rgba(59,130,246,0.15);
-  color: #60a5fa;
+  background: var(--bg-overlay);
+  color: var(--color-primary);
 }
 
 .badge-customer {
   background: rgba(34,197,94,0.15);
-  color: #4ade80;
+  color: var(--color-success);
 }
 
-/* 🔹 BOTONES ACCIÓN (ORIGINALES RESTAURADOS) */
-/* 🔹 BOTONES ACCIÓN (EDITAR / ELIMINAR) RESTAURADOS */
+/*  BOTONES ACCIN (ORIGINALES RESTAURADOS) */
+/*  BOTONES ACCIN (EDITAR / ELIMINAR) RESTAURADOS */
 
 
 /* =========================
-   👁️ VER
+    VER
 ========================= */
 .btn-view {
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  color: #60a5fa;
+  background: var(--bg-overlay);
+  border: 1px solid  var(--border-color);
+  color: var(--color-primary);
 
   padding: 6px 10px;
   margin-right: 5px;
@@ -201,7 +201,7 @@
 }
 
 .btn-view:hover {
-  background: rgba(59, 130, 246, 0.25);
+  background: var(--bg-overlay);
   transform: translateY(-1px);
 }
 
@@ -218,10 +218,11 @@
 .btn-edit {
   background: rgba(245, 158, 11, 0.15);
   border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--color-warning);
   padding: 6px 10px;
   margin-right: 5px;
   border-radius: 6px;
-  color: #fbbf24;
+  color: var(--color-warning);
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 13px;
@@ -237,12 +238,12 @@
 }
 
 /* =========================
-   📄 PDF / REPORTE
+    PDF / REPORTE
 ========================= */
 .btn-report {
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
+  color: var(--color-success);
 
   padding: 6px 10px;
   margin-right: 5px;
@@ -274,9 +275,10 @@
 .btn-delete {
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
   padding: 6px 10px;
   border-radius: 6px;
-  color: #f87171;
+  color: var(--color-danger);
   cursor: pointer;
   transition: 0.2s ease;
   font-size: 13px;
@@ -291,7 +293,7 @@
   transform: translateY(0px);
 }
 
-/* 🔥 mejora UX: focus accesible */
+/*  mejora UX: focus accesible */
 .btn-edit:focus,
 .btn-delete:focus {
   outline: 2px solid rgba(255,255,255,0.2);
@@ -299,8 +301,8 @@
 }
 
 
-/* 🔹 MODAL */
-/* 🔹 OVERLAY */
+/*  MODAL */
+/*  OVERLAY */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -318,17 +320,17 @@
   box-sizing: border-box;
 }
 
-/* 🔹 MODAL */
+/*  MODAL */
 .modal {
-  background: #111;
-  color: white;
+  background: var(--bg-card);
+  color: var(--text-main);
 
   width: 95vw;
   max-width: 900px;
   max-height: 90vh; /* changed from height: 90vh */
 
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--border-color);
 
   display: flex;
   flex-direction: column;
@@ -341,27 +343,27 @@ form.modal {
   flex-direction: column;
   gap: 25px;
 
-  overflow-y: auto; /* 🔥 scroll interno */
+  overflow-y: auto; /*  scroll interno */
   flex: 1; /* fills remaining space */
 }
 
 
 
-/* 🔹 HEADER */
+/*  HEADER */
 .modal h2 {
   padding: 20px 25px;
   font-size: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--border-color);
 }
 
 
 .modal > * {
-  width: 100%; /* 🔥 fuerza a ocupar todo el ancho */
+  width: 100%; /*  fuerza a ocupar todo el ancho */
 }
 
 
 
-/* 🔹 SECCIONES */
+/*  SECCIONES */
 .form-section {
   display: flex;
   width: 100%;
@@ -371,27 +373,27 @@ form.modal {
 
 .form-section h3 {
   font-size: 15px;
-  color: #60a5fa;
-  border-left: 3px solid #2563eb;
+  color: var(--color-primary);
+  border-left: 3px solid var(--color-primary);
   padding-left: 10px;
 }
 
-/* 🔹 GRID MEJORADO */
+/*  GRID MEJORADO */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 🔥 3 COLUMNAS */
+  grid-template-columns: repeat(3, 1fr); /*  3 COLUMNAS */
   gap: 16px;
 }
 
 .form-group {
-  width: 100%; /* 🔥 ESTO FALTABA */
+  width: 100%; /*  ESTO FALTABA */
 }
 
 
 .form-group label {
   font-size: 12px;
   margin-bottom: 6px;
-  color: rgba(255,255,255,0.65);
+  color: var(--text-muted);
 }
 
 
@@ -399,8 +401,8 @@ form.modal {
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #2563eb;
-  background: #0c0c0c;
+  border-color: var(--color-primary);
+  background: var(--bg-main);
 }
 
 form.modal {
@@ -415,36 +417,36 @@ form.modal {
   font-size: 14px;
   box-sizing: border-box;
 
-  background: #0f0f0f;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: white;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
 }
 
 
 .form-group input::placeholder {
-  color: rgba(255,255,255,0.4);
+  color: var(--text-muted);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border: 1px solid #2563eb;
-  box-shadow: 0 0 0 1px #2563eb33;
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary)33;
 }
 
-/* 🔹 FULL WIDTH */
+/*  FULL WIDTH */
 .form-group.full-width {
   grid-column: span 3;
 }
 
-/* 🔹 CHECKBOX */
+/*  CHECKBOX */
 .checkbox-group {
   display: flex;
   align-items: center;
   height: 100%;
 }
 
-/* 🔹 ROLES */
+/*  ROLES */
 .roles-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -452,7 +454,7 @@ form.modal {
 }
 
 .role-item {
-  background: rgba(255,255,255,0.04);
+  background: var(--bg-overlay);
   padding: 10px;
   border-radius: 8px;
   cursor: pointer;
@@ -461,63 +463,64 @@ form.modal {
 }
 
 .role-item:hover {
-  background: rgba(255,255,255,0.1);
+  background: var(--bg-overlay);
 }
 
-/* 🔹 FOOTER */
+/*  FOOTER */
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 
   padding-top: 15px;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid var(--border-color);
 }
 
-/* 🔹 BOTONES */
+/*  BOTONES */
 .btn-primary {
-  background: #2563eb;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   padding: 10px 18px;
   border-radius: 8px;
 }
 
 .btn-secondary {
-  background: #1f2937;
+  background: var(--color-secondary);
   padding: 10px 18px;
   border-radius: 8px;
-  color: white;
+  color: var(--text-main);
 }
 
 
-/* 🔥 FILTROS (nuevo agregado sin romper tu diseño) */
+/*  FILTROS (nuevo agregado sin romper tu diseo) */
 .filters-panel {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 15px;
   padding: 10px;
-  background: #111;
+  background: var(--bg-card);
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
 }
 
 .filters-panel input,
 .filters-panel select {
   padding: 8px;
   border-radius: 6px;
-  background: #0f0f0f;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: white;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
 }
 
-/* 🔥 GROUPING */
+/*  GROUPING */
 .group-section {
   margin-bottom: 20px;
 }
 
 .group-title {
   font-size: 14px;
-  color: #93c5fd;
+  color: var(--color-primary-hover);
   margin-bottom: 8px;
 }
 
@@ -529,7 +532,7 @@ form.modal {
   align-items: center;
   justify-content: center;
   height: 300px;
-  color: white;
+  color: var(--text-main);
   gap: 12px;
 }
 
@@ -553,7 +556,7 @@ form.modal {
 
 
 /* =========================
-   👁️ USER VIEW MODAL (DARK)
+    USER VIEW MODAL (DARK)
 ========================= */
 
 /* overlay ya lo tienes, pero lo mejoramos un poco */
@@ -564,7 +567,7 @@ form.modal {
   width: 100%;
   height: 100%;
   background: rgba(0,0,0,0.8);
-  backdrop-filter: blur(6px); /* 🔥 efecto pro */
+  backdrop-filter: blur(6px); /*  efecto pro */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -573,14 +576,14 @@ form.modal {
 
 /* contenedor principal */
 .modal {
-  background: #0f0f0f;
-  color: white;
+  background: var(--bg-main);
+  color: var(--text-main);
 
   width: 95%;
   max-width: 900px;
 
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--border-color);
 
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
 
@@ -592,7 +595,7 @@ form.modal {
   animation: modalFade 0.2s ease-in-out;
 }
 
-/* animación suave */
+/* animacin suave */
 @keyframes modalFade {
   from {
     opacity: 0;
@@ -609,11 +612,11 @@ form.modal {
   padding: 18px 22px;
   font-size: 18px;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  color: #60a5fa;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--color-primary);
 }
 
-/* grid de información */
+/* grid de informacin */
 .user-view-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -624,8 +627,8 @@ form.modal {
 
 /* cada bloque */
 .user-view-grid div {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.05);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-color);
 
   padding: 12px;
   border-radius: 10px;
@@ -634,7 +637,7 @@ form.modal {
 }
 
 .user-view-grid div:hover {
-  background: rgba(255,255,255,0.05);
+  background: var(--bg-overlay);
   transform: translateY(-1px);
 }
 
@@ -642,7 +645,7 @@ form.modal {
 .user-view-grid strong {
   display: block;
   font-size: 12px;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-muted);
   margin-bottom: 5px;
   letter-spacing: 0.3px;
 }
@@ -651,7 +654,7 @@ form.modal {
 .user-view-grid p {
   margin: 0;
   font-size: 14px;
-  color: white;
+  color: var(--text-main);
   word-break: break-word;
 }
 
@@ -661,25 +664,26 @@ form.modal {
   justify-content: flex-end;
 
   padding: 15px 20px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid var(--border-color);
 }
 
-/* botón cerrar */
+/* botn cerrar */
 .modal-actions .btn-primary {
-  background: #2563eb;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
   padding: 10px 16px;
   border-radius: 8px;
   transition: 0.2s;
 }
 
 .modal-actions .btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 
 
 .error {
-  color: #ef4444;
+  color: var(--color-danger);
   font-size: 12px;
   margin-top: 4px;
   display: block;
@@ -688,7 +692,7 @@ form.modal {
 
 /* input con error */
 .input-error {
-  border: 1px solid #ef4444 !important;
+  border: 1px solid var(--color-danger) !important;
   box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.25);
 }
 
@@ -699,10 +703,10 @@ form.modal {
   position: relative;
 }
 
-/* Título pequeño */
+/* Ttulo pequeo */
 .suggestions small {
   display: block;
-  color: #aaa;
+  color: var(--text-muted);
   font-size: 12px;
   margin-bottom: 6px;
 }
@@ -716,9 +720,9 @@ form.modal {
 
 /* Item individual */
 .suggestion-item {
-  background: #1f1f1f;
+  background: var(--bg-card);
   border: 1px solid #333;
-  color: #eaeaea;
+  color: var(--text-main);
   padding: 5px 10px;
   border-radius: 8px;
   font-size: 12px;
@@ -729,8 +733,8 @@ form.modal {
 
 /* Hover */
 .suggestion-item:hover {
-  background: #2c2c2c;
-  border-color: #555;
+  background: var(--bg-card);
+  border-color: var(--border-color);
   transform: translateY(-1px);
 }
 
@@ -739,7 +743,7 @@ form.modal {
   transform: scale(0.95);
 }
 
-/* Animación suave de entrada */
+/* Animacin suave de entrada */
 .suggestions {
   animation: fadeIn 0.2s ease-in-out;
 }
@@ -757,7 +761,7 @@ form.modal {
 
 /* Modo error (opcional si quieres integrarlo visualmente) */
 .input-error + .suggestions small {
-  color: #ff4d4f;
+  color: var(--color-danger);
 }
 
 
@@ -772,7 +776,7 @@ form.modal {
   }
 }
 /* =========================
-   📱 RESPONSIVE
+    RESPONSIVE
 ========================= */
 
 @media (max-width: 768px) {
@@ -786,7 +790,7 @@ form.modal {
 }
 
 
-/* 🔥 RESPONSIVE */
+/*  RESPONSIVE */
 @media (max-width: 1024px) {
   .form-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -802,16 +806,16 @@ form.modal {
 }
 
 /* =========================
-   🛑 MODAL CONFIRM & UTILS
+    MODAL CONFIRM & UTILS
 ========================= */
 .modal-confirm {
-  background: #111;
-  color: white;
+  background: var(--bg-card);
+  color: var(--text-main);
   width: 95%;
   max-width: 450px;
   border-radius: 12px;
   padding: 24px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -820,18 +824,18 @@ form.modal {
 }
 .modal-confirm h3 {
   font-size: 18px;
-  color: #ef4444;
+  color: var(--color-danger);
   margin: 0;
 }
 .modal-confirm p {
   font-size: 14px;
-  color: rgba(255,255,255,0.8);
+  color: var(--text-main);
   margin: 0;
 }
 
 .btn-danger {
-  background: #ef4444;
-  color: white;
+  background: var(--color-danger);
+  color: var(--text-main);
   padding: 10px 18px;
   border-radius: 8px;
   border: none;
@@ -840,11 +844,11 @@ form.modal {
   font-weight: 500;
 }
 .btn-danger:hover {
-  background: #dc2626;
+  background: var(--color-danger-hover);
 }
 .btn-cancel {
-  background: rgba(255,255,255,0.1);
-  color: white;
+  background: var(--bg-overlay);
+  color: var(--text-main);
   padding: 10px 18px;
   border-radius: 8px;
   border: none;
@@ -852,11 +856,11 @@ form.modal {
   transition: 0.2s;
 }
 .btn-cancel:hover {
-  background: rgba(255,255,255,0.15);
+  background: var(--bg-overlay);
 }
 .btn-warning {
-  background: #f59e0b;
-  color: white;
+  background: var(--color-warning);
+  color: var(--text-main);
   padding: 10px 18px;
   border-radius: 8px;
   border: none;
@@ -864,7 +868,7 @@ form.modal {
   transition: 0.2s;
 }
 .btn-warning:hover {
-  background: #d97706;
+  background: var(--color-warning-hover);
 }
 
 @media (max-width: 600px) {
@@ -883,7 +887,7 @@ form.modal {
 
 
 /* =========================
-   🔥 TYPES SELECTOR (PRO)
+    TYPES SELECTOR (PRO)
 ========================= */
 
 .types-grid {
@@ -897,8 +901,8 @@ form.modal {
   position: relative;
   cursor: pointer;
 
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-color);
 
   border-radius: 12px;
   padding: 14px;
@@ -921,29 +925,29 @@ form.modal {
   gap: 3px;
 }
 
-/* título */
+/* ttulo */
 .type-title {
   font-size: 14px;
   font-weight: 600;
-  color: white;
+  color: var(--text-main);
 }
 
-/* descripción */
+/* descripcin */
 .type-desc {
   font-size: 12px;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted);
 }
 
 /* hover */
 .type-card:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.15);
+  background: var(--bg-overlay);
+  border-color: var(--border-color);
   transform: translateY(-1px);
 }
 
 /* ACTIVO */
 .type-card.active {
-  border: 1px solid #2563eb;
+  border: 1px solid var(--color-primary);
   background: rgba(37, 99, 235, 0.15);
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.4);
 }
@@ -955,18 +959,18 @@ form.modal {
 
 /* indicador visual */
 .type-card.active::after {
-  content: "✓";
+  content: "";
   position: absolute;
   top: 10px;
   right: 12px;
 
   font-size: 12px;
-  color: #60a5fa;
+  color: var(--color-primary);
   font-weight: bold;
 }
 
 /* =========================
-   📱 RESPONSIVE
+    RESPONSIVE
 ========================= */
 @media (max-width: 600px) {
   .types-grid {
@@ -976,7 +980,7 @@ form.modal {
 
 
 /* =========================
-   📱 RESPONSIVE USERS TABLE
+    RESPONSIVE USERS TABLE
 ========================= */
 
 .table-wrapper {
@@ -991,7 +995,7 @@ form.modal {
 }
 
 .table-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.15);
+  background: var(--bg-overlay);
   border-radius: 999px;
 }
 
@@ -1123,3 +1127,12 @@ form.modal {
   }
 
 }
+
+
+
+
+
+
+
+
+
