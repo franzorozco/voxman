@@ -1,12 +1,69 @@
 import { API_BASE_URL } from "../../../../config/api";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getAttributes } from "../../../../api/attributes";
 import { createAttributeValue } from "../../../../api/attributeValues";
 import { createSize } from "../../../../api/sizes";
 import namer from "color-namer";
-import { Plus, Camera, AlertTriangle } from "lucide-react";
+import { Plus, Camera, AlertTriangle, ChevronDown, Eye, EyeOff } from "lucide-react";
 import ImageGalleryModal from "./ImageGalleryModal";
 import { X } from "lucide-react";
+
+function CustomDropdown({ buttonText, options, onSelect }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="custom-dropdown-container" ref={dropdownRef}>
+      <button 
+        type="button" 
+        className="custom-dropdown-trigger" 
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Plus size={16} />
+        {buttonText}
+        <ChevronDown size={14} className={`dropdown-arrow ${isOpen ? "open" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <div className="custom-dropdown-menu">
+          {options.map((group, gIndex) => {
+            if (!group.items || group.items.length === 0) return null;
+            return (
+              <div key={gIndex} className="custom-dropdown-group">
+                {group.label && <div className="custom-dropdown-label">{group.label}</div>}
+                {group.items.map((item, iIndex) => (
+                  <button
+                    key={iIndex}
+                    type="button"
+                    className="custom-dropdown-item"
+                    onClick={() => {
+                      onSelect(item.value);
+                      setIsOpen(false);
+                    }}
+                  >
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ProductForm({
   product,
@@ -33,7 +90,7 @@ export default function ProductForm({
 
   const normalizeAttr = (name) => name?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  const colorAttribute = attributes.find(
+  const colorAttribute = attributes.find(a => a.is_fixed) || attributes.find(
     a => normalizeAttr(a.name).includes("color") || a.attribute_values?.some(v => v.hex_code)
   );
 
@@ -223,15 +280,11 @@ export default function ProductForm({
     globalCost: "",
     globalWeight: "",
 
-    globalAttributes: {
-      fit_id: "",
-      material_id: "",
-      season_id: "",
-      style_id: ""
-    }
+    sharedAttributes: []
   });
 
   const [simpleModeError, setSimpleModeError] = useState("");
+  const [showSKU, setShowSKU] = useState(false);
 
   const handleAddAxis = () => {
     setSimpleConfig({
@@ -293,8 +346,10 @@ export default function ProductForm({
         const nextCombination = { ...currentCombination };
         if (currentAxis.type === "size") {
           nextCombination.size_id = valueId;
+        } else if (currentAxis.type === "fit") {
+          nextCombination.fit_id = valueId;
         } else if (currentAxis.type === "attribute") {
-          if (!nextCombination.attribute_value_ids) nextCombination.attribute_value_ids = {};
+          nextCombination.attribute_value_ids = { ...(currentCombination.attribute_value_ids || {}) };
           nextCombination.attribute_value_ids[currentAxis.id] = valueId;
         }
         generateCombinations(remainingAxes, nextCombination, result);
@@ -305,24 +360,20 @@ export default function ProductForm({
     generateCombinations(validAxes, {}, combinations);
 
     const variants = combinations.map((combo, idx) => {
-      const attributeMap = combo.attribute_value_ids || {};
-
-      // Add global attributes if not overridden by axes
-      if (materialAttribute && simpleConfig.globalAttributes.material_id && !attributeMap[materialAttribute.id]) {
-        attributeMap[materialAttribute.id] = simpleConfig.globalAttributes.material_id;
-      }
-      if (styleAttribute && simpleConfig.globalAttributes.style_id && !attributeMap[styleAttribute.id]) {
-        attributeMap[styleAttribute.id] = simpleConfig.globalAttributes.style_id;
-      }
-      if (seasonAttribute && simpleConfig.globalAttributes.season_id && !attributeMap[seasonAttribute.id]) {
-        attributeMap[seasonAttribute.id] = simpleConfig.globalAttributes.season_id;
-      }
+      const attributeMap = { ...(combo.attribute_value_ids || {}) };
+  
+        // Add shared attributes if not overridden by axes
+        simpleConfig.sharedAttributes.forEach(sa => {
+          if (sa.id && sa.valueId && !attributeMap[sa.id]) {
+            attributeMap[sa.id] = sa.valueId;
+          }
+        });
 
       return {
         sku: generateSKU(
           form.name,
           combo.size_id || "",
-          simpleConfig.globalAttributes.fit_id,
+          combo.fit_id || "",
           attributeMap,
           idx
         ),
@@ -331,7 +382,7 @@ export default function ProductForm({
         cost: simpleConfig.globalCost || "",
         weight: simpleConfig.globalWeight || "",
         size_id: combo.size_id || null,
-        fit_id: simpleConfig.globalAttributes.fit_id || "",
+        fit_id: combo.fit_id || "",
         is_active: true,
         attribute_value_ids: attributeMap
       };
@@ -470,32 +521,34 @@ const getAttributeValueName = (valueId) => {
   // SKU
   // ======================================================
   const generateSKU = (productName, sizeId, fitId, attributeIds = {}, index = 0) => {
-
     const cleanProduct = productName
       ?.toUpperCase()
       .replace(/[^A-Z0-9]/g, "")
-      .slice(0, 3);
+      .slice(0, 3) || "XXX";
 
-    const size = sizes.find(s => s.id === sizeId)?.name
-      ?.toUpperCase()
-      .slice(0, 3) || "NA";
+    const parts = [cleanProduct];
 
-    const fit = fits.find(f => f.id === fitId)?.name
-      ?.toUpperCase()
-      .slice(0, 2) || "";
+    const attrValues = Object.values(attributeIds || {}).filter(Boolean);
+    const attrStrings = attrValues.map(valId => {
+      const val = attributes?.flatMap(a => a.attribute_values)?.find(v => v?.id === valId)?.value;
+      return val?.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3);
+    }).filter(Boolean);
 
-    // tomar primer atributo (ej: color)
-    const attrValues = Object.values(attributeIds || {});
-    const attr = attributes
-      ?.flatMap(a => a.attribute_values)
-      ?.find(v => v.id === attrValues[0])
-      ?.value
-      ?.toUpperCase()
-      ?.slice(0, 3) || "";
+    parts.push(...attrStrings);
 
-    const extra = index + 1;
+    if (sizeId) {
+      const sizeStr = sizes.find(s => s.id === sizeId)?.name?.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3);
+      if (sizeStr) parts.push(sizeStr);
+    }
 
-    return `${cleanProduct}-${attr}-${size}${fit ? "-" + fit : ""}-${extra}`;
+    if (fitId) {
+      const fitStr = fits.find(f => f.id === fitId)?.name?.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 2);
+      if (fitStr) parts.push(fitStr);
+    }
+
+    parts.push(index + 1);
+
+    return parts.join("-");
   };
 
   // ======================================================
@@ -571,25 +624,40 @@ const getAttributeValueName = (valueId) => {
   // ======================================================
   const addVariant = () => {
     const index = form.variants.length;
-    const firstSize = sizes[0]?.id || "";
-    const firstFit = fits[0]?.id || "";
+    const initialAttrVals = {};
+    attributes.filter(a => a.is_fixed).forEach(a => {
+      initialAttrVals[a.id] = null;
+    });
 
     setForm({
       ...form,
       variants: [
         ...form.variants,
         {
-          sku: generateSKU(form.name, firstSize, firstFit, {}, index),
+          sku: generateSKU(form.name, "", "", {}, index),
           barcode: generateBarcode(),
           price: "",
           cost: "",
           weight: "",
-          size_id: firstSize,
-          fit_id: firstFit,
-          attribute_value_ids: {}
-        },
-      ],
+          size_id: undefined,
+          attribute_value_ids: initialAttrVals,
+          is_active: true
+        }
+      ]
     });
+  };
+
+  const removeAttributeFromVariant = (variantIndex, type, id) => {
+    const newVariants = [...form.variants];
+    if (type === 'size') {
+      newVariants[variantIndex].size_id = undefined;
+    } else if (type === 'fit') {
+      newVariants[variantIndex].fit_id = undefined;
+    } else {
+      if (!newVariants[variantIndex].attribute_value_ids) newVariants[variantIndex].attribute_value_ids = {};
+      delete newVariants[variantIndex].attribute_value_ids[id];
+    }
+    setForm({ ...form, variants: newVariants });
   };
 
   // ======================================================
@@ -729,7 +797,19 @@ const getAttributeValueName = (valueId) => {
   
   useEffect(() => {
     if (!attributes.length) return;
-  }, [attributes]);
+    if (colorAttribute?.id) {
+      setSimpleConfig((prev) => {
+        if (prev.axes.some(a => String(a.id) === String(colorAttribute.id))) return prev;
+        const emptyIndex = prev.axes.findIndex(a => a.type === "attribute" && !a.id);
+        if (emptyIndex !== -1) {
+          const newAxes = [...prev.axes];
+          newAxes[emptyIndex] = { ...newAxes[emptyIndex], id: colorAttribute.id };
+          return { ...prev, axes: newAxes };
+        }
+        return prev;
+      });
+    }
+  }, [attributes, colorAttribute]);
 
 
   const getOwnerName = (o) => {
@@ -756,17 +836,7 @@ const getAttributeValueName = (valueId) => {
 
   const [activeAxisModal, setActiveAxisModal] = useState(null);
 
-  const [advancedColorModal, setAdvancedColorModal] =
-    useState({
-      open: false,
-      variantIndex: null
-    });
-
-  const [advancedSizeModal, setAdvancedSizeModal] =
-    useState({
-      open: false,
-      variantIndex: null
-    });
+  const [advancedDynamicModal, setAdvancedDynamicModal] = useState({ open: false, variantIndex: null, axisIndex: null });
     
   const MAX_VISIBLE_COLORS = 4;
   const MAX_VISIBLE_SIZES = 6;
@@ -843,7 +913,7 @@ const getAttributeValueName = (valueId) => {
             <div className="product-form-right">
               <div className="form-grid">
 
-                {/* TODO TU FORM ACTUAL AQUÍ */}
+                {/* TODO TU FORM ACTUAL AQUÃ */}
                 <div className="form-group">
                   <label>Nombre</label>
                   <input name="name" value={form.name} onChange={handleChange} />
@@ -907,170 +977,135 @@ const getAttributeValueName = (valueId) => {
             {/* ====================================================== */}
             {form.variants.length > 0 && (
               <div className="variants-preview-container">
-                <div className="variants-preview-header">
-                  
-                  <div>
-                    <div className="variants-preview-title">
-                      Variantes Generadas
-                    </div>
+                {(() => {
+                  let tableColumns = [];
+                  const firstVariant = form.variants[0];
+                  Object.keys(firstVariant.attribute_value_ids || {}).forEach(attrId => {
+                    const attr = attributes.find(a => String(a.id) === String(attrId));
+                    tableColumns.push({ type: 'attribute', id: attrId, name: attr?.name || "Atributo", isFixed: attr?.is_fixed });
+                  });
+                  if (firstVariant.size_id !== undefined && firstVariant.size_id !== null) {
+                    tableColumns.push({ type: 'size', id: 'sizes', name: "Talla", isFixed: false });
+                  }
+                  if (firstVariant.fit_id !== undefined && firstVariant.fit_id !== null && firstVariant.fit_id !== "") {
+                    tableColumns.push({ type: 'fit', id: 'fits', name: "Fit", isFixed: false });
+                  }
+                  tableColumns.sort((a, b) => {
+                    if (a.isFixed && !b.isFixed) return -1;
+                    if (!a.isFixed && b.isFixed) return 1;
+                    return 0;
+                  });
 
-                    <div className="variants-preview-description">
-                      Vista rápida en tiempo real de las variantes configuradas
-                    </div>
-                  </div>
-
-                  <div className="variants-preview-count">
-                    {form.variants.length}
-                  </div>
-                </div>
-
-                <div className="variants-preview-table-wrapper">
-                  <table className="variants-preview-table">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>SKU</th>
-                        <th>Variante</th>
-                        <th>Atributos</th>
-                        <th>Precio</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {form.variants.map((variant, index) => {
-                        const attributesContent = [
-                          variant.fit_id && {
-                            id: "fit",
-                            name: "Fit",
-                            value:
-                              fits.find(
-                                f => f.id === variant.fit_id
-                              )?.name || "N/A"
-                          },
-
-                          ...Object.entries(
-                            variant.attribute_value_ids || {}
-                          )
-                            .filter(
-                              ([attributeId]) =>
-                                attributeId !== colorAttribute?.id
-                            )
-                            .map(([attributeId, valueId]) => {
-                              const attribute = attributes.find(
-                                a => a.id === attributeId
-                              );
-
-                              const value =
-                                attribute?.attribute_values?.find(
-                                  v => v.id === valueId
-                                );
-
-                              if (!value) return null;
-
-                              return {
-                                id: attributeId,
-                                name: attribute.name,
-                                value: value.value
-                              };
-                            })
-                        ]
-                        .filter(Boolean)
-                        .map((item) => (
-                          <div
-                            key={item.id}
-                            className="variant-attribute-tag"
-                          >
-                            <span className="variant-attribute-name">
-                              {item.name}
-                            </span>
-
-                            <span className="variant-attribute-value">
-                              {item.value}
-                            </span>
+                  return (
+                    <>
+                      <div className="variants-preview-header">
+                        <div>
+                          <div className="variants-preview-title">
+                            Variantes Generadas
                           </div>
-                        ));
+                          <div className="variants-preview-description">
+                            Vista rápida en tiempo real de las variantes configuradas
+                          </div>
+                        </div>
 
-                        return (
-                          <tr key={index}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                          <button 
+                            type="button" 
+                            onClick={() => setShowSKU(!showSKU)}
+                            style={{ 
+                              display: 'flex', alignItems: 'center', gap: '6px', 
+                              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                              color: showSKU ? '#fff' : 'var(--text-muted)', 
+                              padding: '6px 12px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {showSKU ? <Eye size={14} /> : <EyeOff size={14} />}
+                            {showSKU ? "Ocultar SKU" : "Mostrar SKU"}
+                          </button>
+                          <div className="variants-preview-count">
+                            {form.variants.length}
+                          </div>
+                        </div>
+                      </div>
 
-                            <td>
-                              #{index + 1}
-                            </td>
+                      <div className="variants-preview-table-wrapper">
+                        <table className="variants-preview-table">
+                          <thead>
+                            <tr>
+                              <th>ID</th>
+                              <th>SKU</th>
+                              {tableColumns.map((col, idx) => (
+                                <th key={idx}>{col.name}</th>
+                              ))}
+                              <th>Precio</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
 
-                            <td>
-                              {variant.sku || "-"}
-                            </td>
+                          <tbody>
+                            {form.variants.map((variant, index) => (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>
+                                  {showSKU ? (
+                                    <span style={{ wordBreak: 'break-all' }}>{variant.sku || "-"}</span>
+                                  ) : (
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                                      <EyeOff size={16} opacity={0.5} />
+                                    </div>
+                                  )}
+                                </td>
 
-                            <td>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 4
-                                }}
-                              >
-
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 10
-                                }}
-                              >
-                                {(() => {
-                                  const colorId =
-                                    variant.attribute_value_ids?.[
-                                      colorAttribute?.id
-                                    ];
-
-                                  const color =
-                                    colorAttribute?.attribute_values?.find(
-                                      c => c.id === colorId
-                                    );
+                                {tableColumns.map((col, cIdx) => {
+                                  let valName = "-";
+                                  let hexCode = null;
+                                  if (col.type === 'size') {
+                                    valName = sizes.find(s => String(s.id) === String(variant.size_id))?.name || "-";
+                                  } else if (col.type === 'fit') {
+                                    valName = fits.find(f => String(f.id) === String(variant.fit_id))?.name || "-";
+                                  } else if (col.type === 'attribute') {
+                                    const valId = variant.attribute_value_ids?.[col.id];
+                                    const attr = attributes.find(a => String(a.id) === String(col.id));
+                                    const valObj = attr?.attribute_values?.find(v => String(v.id) === String(valId));
+                                    valName = valObj?.value || valObj?.name || "-";
+                                    hexCode = valObj?.hex_code;
+                                  }
 
                                   return (
-                                    <>
-                                      <div style={{ width: 20, height: 20, borderRadius: 999, background: color?.hex_code || "#999", border: "2px solid rgba(255,255,255,.2)" }} 
-                                      />
-
-                                      <span style={{ fontWeight: 600 }}>
-                                        {color?.value || "Sin color"}
-                                      </span>
-                                    </>
+                                    <td key={cIdx}>
+                                      {hexCode ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <div style={{ width: 14, height: 14, borderRadius: "50%", background: hexCode, border: "1px solid rgba(255,255,255,0.2)" }} />
+                                          <span style={{ whiteSpace: "nowrap" }}>{valName}</span>
+                                        </div>
+                                      ) : (
+                                        <span style={{ whiteSpace: "nowrap" }}>{valName}</span>
+                                      )}
+                                    </td>
                                   );
-                                })()}
-                              </div>
+                                })}
 
-                                <span style={{ fontSize: 12, color: "rgba(255,255,255,.65)" }}>
-                                  Talla:{" "}
-                                  {sizes.find( s => s.id === variant.size_id )?.name || "-"}
-                                </span>
-
-                              </div>
-                            </td>
-
-                            <td className="variant-attributes-cell">
-                              {attributesContent?.length ? attributesContent : "Sin atributos"}
-                            </td>
-
-                            <td>
-                              {variant.price || "-"}
-                            </td>
-
-                            <td>
-                              <span className={ variant.is_active ? "variant-status active" : "variant-status inactive" } >
-                                { variant.is_active ? "Activo" : "Inactivo" }
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                                <td>{variant.price || "-"}</td>
+                                <td>
+                                  <span className={ variant.is_active ? "variant-status active" : "variant-status inactive" } >
+                                    { variant.is_active ? "Activo" : "Inactivo" }
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}          
+
+
+
+            
 
             <div className="variants-header">
               <div className="variants-header-info">
@@ -1115,7 +1150,10 @@ const getAttributeValueName = (valueId) => {
                   </div>
                 </div>
 
-                <div className="simple-grid">
+
+                {/* ====================================================== */}
+
+<div className="simple-grid">
                   {simpleConfig.axes.map((axis, axisIndex) => {
                     const currentId = axis.id;
                     const currentType = axis.type;
@@ -1127,6 +1165,8 @@ const getAttributeValueName = (valueId) => {
                     
                     if (currentType === "size") {
                       optionsToRender = sizes;
+                    } else if (currentType === "fit") {
+                      optionsToRender = fits;
                     } else if (currentType === "attribute") {
                       const attr = attributes.find(a => a.id === currentId);
                       optionsToRender = attr?.attribute_values || [];
@@ -1134,226 +1174,117 @@ const getAttributeValueName = (valueId) => {
                       isFixedAxis = attr?.is_fixed;
                     }
 
+                    if (!currentId) return null;
+
                     return (
                       <div key={axisIndex} className="simple-card">
-                        <div className="selector-header" style={{flexDirection: 'column', alignItems: 'flex-start', gap: 10}}>
-                          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h4 style={{fontSize: 15, fontWeight: 600}}>Eje {axisIndex + 1}</h4>
+                        <div className="selector-header" style={{flexDirection: 'column', alignItems: 'flex-start', gap: 10, marginBottom: 15}}>
+                          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{display: 'flex', flexDirection: 'column', gap: 2}}>
+                              <h4 style={{fontSize: 15, fontWeight: 600, margin: 0}}>Eje {axisIndex + 1}</h4>
+                              <span style={{fontSize: 13, color: 'var(--text-muted)'}}>
+                                {currentType === 'size' ? 'Tallas' : currentType === 'fit' ? 'Fit' : attributes.find(a => a.id === currentId)?.name}
+                              </span>
+                            </div>
                             <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
                               <span className="selected-counter">
                                 {currentValues.length} seleccionados
                               </span>
-                              {!isFixedAxis && simpleConfig.axes.length > 1 && (
-                                <button type="button" onClick={() => handleRemoveAxis(axisIndex)} style={{background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer', padding: 0}} title="Eliminar Eje">✕</button>
+                              {!isFixedAxis && (
+                                <button type="button" onClick={() => handleRemoveAxis(axisIndex)} style={{background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer', padding: 0}} title="Eliminar Eje"><X size={16} /></button>
                               )}
                             </div>
                           </div>
-                          <select 
-                            className="form-control" 
-                            style={{width: '100%', marginBottom: 10, background: isFixedAxis ? 'rgba(255,255,255,0.05)' : undefined}}
-                            value={`${currentType}|${currentId}`}
-                            disabled={isFixedAxis}
-                            onChange={(e) => {
-                              const [t, id] = e.target.value.split('|');
-                              handleAxisSelect(axisIndex, id || "", t || "");
-                            }}
-                          >
-                            <option value="|">-- Ninguno --</option>
-                            <optgroup label="Sistema">
-                              <option value="size|sizes">Tallas</option>
-                            </optgroup>
-                            <optgroup label="Atributos">
-                              {attributes
-                                .filter(a => {
-                                  if (a.id === materialAttribute?.id) return false;
-                                  if (a.id === styleAttribute?.id) return false;
-                                  if (a.id === seasonAttribute?.id) return false;
-                                  return true;
-                                })
-                                .map(a => (
-                                <option key={a.id} value={`attribute|${a.id}`}>{a.name}</option>
-                              ))}
-                            </optgroup>
-                          </select>
                         </div>
 
-                        {currentId ? (
-                          <>
-                            <div className={isColorGrid ? "color-selector-grid" : "size-selector"}>
-                              {optionsToRender
-                                .slice(0, isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES)
-                                .map((opt) => {
-                                  const selected = currentValues.includes(opt.id);
+                        <div className={isColorGrid ? "color-selector-grid" : "size-selector"}>
+                          {optionsToRender
+                            .slice(0, isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES)
+                            .map((opt) => {
+                              const selected = currentValues.includes(opt.id);
 
-                                  if (isColorGrid) {
-                                    return (
-                                      <button key={opt.id} type="button" className={ selected ? "color-circle active" : "color-circle" } onClick={() => toggleSelection(axisIndex, opt.id) } >
-                                        <div className="color-circle-preview" style={{ background: opt.hex_code || "#ccc" }} />
-                                        <span>{opt.value || opt.name}</span>
-                                      </button>
-                                    );
-                                  }
+                              if (isColorGrid) {
+                                return (
+                                  <button key={opt.id} type="button" className={ selected ? "color-circle active" : "color-circle" } onClick={() => toggleSelection(axisIndex, opt.id) } >
+                                    <div className="color-circle-preview" style={{ background: opt.hex_code || "#ccc" }} />
+                                    <span>{opt.value || opt.name}</span>
+                                  </button>
+                                );
+                              }
 
-                                  return (
-                                    <button key={opt.id} type="button" className={ selected ? "size-chip active" : "size-chip" } onClick={() => toggleSelection(axisIndex, opt.id) } >
-                                      {opt.value || opt.name}
-                                    </button>
-                                  );
-                                })}
-                            </div>
+                              return (
+                                <button key={opt.id} type="button" className={ selected ? "size-chip active" : "size-chip" } onClick={() => toggleSelection(axisIndex, opt.id) } >
+                                  {opt.value || opt.name}
+                                </button>
+                              );
+                            })}
+                        </div>
 
-                            <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
-                              {optionsToRender.length > (isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES) && (
-                                <button type="button" className="see-more-btn" onClick={() => {
-                                  setActiveAxisModal(axisIndex);
-                                }}>
-                                  Ver todos
-                                </button>
-                              )}
-                              
-                              {currentType === "size" && (
-                                <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true)} title="Crear nueva talla">
-                                  <Plus size={18} strokeWidth={2.5} />
-                                </button>
-                              )}
-                              {currentType === "attribute" && isColorGrid && (
-                                <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true)} title="Crear nuevo color">
-                                  <Plus size={18} strokeWidth={2.5} />
-                                </button>
-                              )}
-                            </div>
-                          </>
-                        ) : (
-                          <div style={{color: '#888', fontSize: 13, padding: '20px 0', textAlign: 'center'}}>
-                            Selecciona un atributo para este eje
-                          </div>
-                        )}
+                        <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
+                          {optionsToRender.length > (isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES) && (
+                            <button type="button" className="see-more-btn" onClick={() => {
+                              setActiveAxisModal(axisIndex);
+                            }}>
+                              Ver todos
+                            </button>
+                          )}
+                          
+                          {currentType === "size" && (
+                            <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true)} title="Crear nueva talla">
+                              <Plus size={18} strokeWidth={2.5} />
+                            </button>
+                          )}
+                          {currentType === "attribute" && isColorGrid && (
+                            <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true)} title="Crear nuevo color">
+                              <Plus size={18} strokeWidth={2.5} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                   
                   {/* BOTÓN PARA AGREGAR EJE */}
-                  <div style={{display: 'flex', justifyContent: 'center', marginTop: 10, gridColumn: '1 / -1'}}>
-                    <button type="button" onClick={handleAddAxis} className="btn-secondary" style={{display: 'flex', alignItems: 'center', gap: 5, padding: '8px 16px', fontSize: 14}}>
-                      <Plus size={16} /> Agregar otro Eje
-                    </button>
-                  </div>
+                    <div style={{display: 'flex', justifyContent: 'center', marginTop: 10, gridColumn: '1 / -1'}}>
+                      <CustomDropdown
+                        buttonText="Agregar Eje"
+                        options={[
+                          {
+                            label: "Sistema",
+                            items: [
+                              ...(!simpleConfig.axes.some(axis => axis.type === 'size') ? [{ name: "Tallas", value: "size|sizes" }] : []),
+                              ...(!simpleConfig.axes.some(axis => axis.type === 'fit') ? [{ name: "Fit", value: "fit|fits" }] : [])
+                            ]
+                          },
+                          {
+                            label: "Atributos",
+                            items: attributes
+                              .filter(a => 
+                                !simpleConfig.axes.some(axis => axis.type === 'attribute' && String(axis.id) === String(a.id)) &&
+                                !simpleConfig.sharedAttributes.some(shared => String(shared.id) === String(a.id))
+                              )
+                              .map(a => ({ name: a.name, value: `attribute|${a.id}` }))
+                          }
+                        ]}
+                        onSelect={(value) => {
+                          const [t, idStr] = value.split('|');
+                          const id = isNaN(Number(idStr)) || idStr === 'sizes' || idStr === 'fits' ? idStr : Number(idStr);
+                          setSimpleConfig({
+                            ...simpleConfig,
+                            axes: [...simpleConfig.axes.filter(a => a.id), { type: t, id: id, values: [] }]
+                          });
+                        }}
+                      />
+                    </div>
                 </div>
 
                 {/* ====================================================== */}
-                {/* ATRIBUTOS GLOBALES */}
+                {/* VALORES GLOBALES (PRECIO, COSTO, PESO) */}
                 {/* ====================================================== */}
 
                 <div className="simple-card" style={{ marginTop: 20 }}>
-                  <h4>Configuración Global</h4>
+                  <h4>Valores por Defecto y Compartidos</h4>
                   <div className="simple-attributes-grid">
-                    <div className="simple-global-field">
-                      <label>
-                        Fit
-                      </label>
-                      <select value={ simpleConfig.globalAttributes.fit_id }
-                        onChange={(e) =>
-                          setSimpleConfig({
-                            ...simpleConfig,
-                            globalAttributes: {
-                              ...simpleConfig.globalAttributes,
-                              fit_id: e.target.value } }) }
-                      >
-
-                        <option value="">
-                          Seleccionar
-                        </option>
-
-                        {fits.map((fit) => (
-
-                          <option key={fit.id} value={fit.id} >
-                            {fit.name}
-                          </option>
-
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* MATERIAL */}
-                    <div className="simple-global-field">
-
-                      <label>
-                        Material
-                      </label>
-
-                      <select value={ simpleConfig.globalAttributes.material_id }
-                        onChange={(e) =>
-                          setSimpleConfig({
-                            ...simpleConfig,
-                            globalAttributes: {
-                              ...simpleConfig.globalAttributes,
-                              material_id: e.target.value } }) }
-                      >
-                        <option value="">
-                          Seleccionar
-                        </option>
-
-                        {(materialAttribute?.attribute_values || []).map((value) => (
-                          <option key={value.id} value={value.id} >
-                            {value.value}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* STYLE */}
-                    <div className="simple-global-field">
-                      <label>
-                        Style
-                      </label>
-
-                      <select value={ simpleConfig.globalAttributes.style_id }
-                        onChange={(e) =>
-                          setSimpleConfig({
-                            ...simpleConfig,
-                            globalAttributes: {
-                              ...simpleConfig.globalAttributes,
-                              style_id: e.target.value } }) }
-                      >
-
-                        <option value="">
-                          Seleccionar
-                        </option>
-
-                        {(styleAttribute?.attribute_values || []).map((value) => (
-                          <option key={value.id} value={value.id} >
-                            {value.value}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* SEASON */}
-                    <div className="simple-global-field">
-                      <label>
-                        Season
-                      </label>
-
-                      <select value={ simpleConfig.globalAttributes.season_id }
-                        onChange={(e) =>
-                          setSimpleConfig({
-                            ...simpleConfig,
-                            globalAttributes: {
-                              ...simpleConfig.globalAttributes,
-                              season_id: e.target.value } }) }
-                      >
-                        <option value="">
-                          Seleccionar
-                        </option>
-
-                        {(seasonAttribute?.attribute_values || []).map((value) => (
-                          <option key={value.id} value={value.id} >
-                            {value.value}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
                     {/* PRECIO GLOBAL */}
                     <div className="simple-global-field">
                       <label>
@@ -1397,7 +1328,77 @@ const getAttributeValueName = (valueId) => {
                       />
                     </div>
                   </div>
+
+                  {/* ====================================================== */}
+                  {/* ATRIBUTOS COMPARTIDOS */}
+                  {/* ====================================================== */}
+                  <div style={{ marginTop: 25, borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 20 }}>
+                    <div style={{ marginBottom: 15 }}>
+                      <h4 style={{ margin: 0 }}>Atributos Compartidos</h4>
+                      <p style={{ margin: "5px 0 0 0", fontSize: "13px", color: "var(--text-muted)" }}>
+                        Estos atributos se aplicarán a todas las variantes (Selección Única).
+                      </p>
+                    </div>
+                  
+                  {simpleConfig.sharedAttributes.map((sa, idx) => {
+                    const attr = attributes.find(a => String(a.id) === String(sa.id));
+                    return (
+                      <div key={idx} style={{ display: 'flex', gap: 15, marginBottom: 15, alignItems: 'center' }}>
+                        <div style={{ width: '150px' }}>
+                          <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>{attr?.name || "Atributo"}</span>
+                        </div>
+                        <select
+                          className="form-control"
+                          style={{ flex: 1, padding: "10px", background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "8px", color: "white" }}
+                          value={sa.valueId || ""}
+                          onChange={(e) => {
+                            const newShared = [...simpleConfig.sharedAttributes];
+                            newShared[idx] = { ...newShared[idx], valueId: e.target.value };
+                            setSimpleConfig({ ...simpleConfig, sharedAttributes: newShared });
+                          }}
+                        >
+                          <option value="">-- Seleccionar --</option>
+                          {attr?.attribute_values?.map(val => (
+                            <option key={val.id} value={val.id}>{val.value || val.name}</option>
+                          ))}
+                        </select>
+                        <button type="button" onClick={() => {
+                          const newShared = [...simpleConfig.sharedAttributes];
+                          newShared.splice(idx, 1);
+                          setSimpleConfig({ ...simpleConfig, sharedAttributes: newShared });
+                        }} style={{background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer'}}>
+                          <X size={20} />
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  <div style={{ marginTop: 10 }}>
+                    <CustomDropdown
+                      buttonText="Agregar Atributo"
+                      options={[
+                        {
+                          label: "Atributos Disponibles",
+                          items: attributes
+                            .filter(a => 
+                              !simpleConfig.axes.some(axis => axis.type === 'attribute' && String(axis.id) === String(a.id)) &&
+                              !simpleConfig.sharedAttributes.some(shared => String(shared.id) === String(a.id))
+                            )
+                            .map(a => ({ name: a.name, value: `attribute|${a.id}` }))
+                        }
+                      ]}
+                      onSelect={(value) => {
+                        const [t, idStr] = value.split('|');
+                        const id = isNaN(Number(idStr)) ? idStr : Number(idStr);
+                        setSimpleConfig({
+                          ...simpleConfig,
+                          sharedAttributes: [...simpleConfig.sharedAttributes, { id: id, valueId: "" }]
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
+              </div>
 
                 {/* ====================================================== */}
                 {/* SUMMARY */}
@@ -1409,6 +1410,7 @@ const getAttributeValueName = (valueId) => {
                     {simpleConfig.axes.filter(a => a.id).map((axis, idx) => {
                       let axisName = "Desconocido";
                       if (axis.type === "size") axisName = "Tallas";
+                      else if (axis.type === "fit") axisName = "Fit";
                       else if (axis.type === "attribute") {
                         const attr = attributes.find(a => a.id === axis.id);
                         if (attr) axisName = attr.name;
@@ -1418,6 +1420,8 @@ const getAttributeValueName = (valueId) => {
                       if (axis.values.length > 0) {
                         if (axis.type === "size") {
                           valueNames = axis.values.map(vId => sizes.find(s => s.id === vId)?.name).filter(Boolean).join(", ");
+                        } else if (axis.type === "fit") {
+                          valueNames = axis.values.map(vId => fits.find(f => f.id === vId)?.name).filter(Boolean).join(", ");
                         } else if (axis.type === "attribute") {
                           valueNames = axis.values.map(getAttributeValueName).filter(Boolean).join(", ");
                         }
@@ -1431,12 +1435,16 @@ const getAttributeValueName = (valueId) => {
                       );
                     })}
 
-                    <div className="simple-summary-item">
-                      <div className="simple-summary-label">Fit</div>
-                      <div className="simple-summary-value">
-                        {fits.find(f => f.id === simpleConfig.globalAttributes.fit_id)?.name || "No definido"}
-                      </div>
-                    </div>
+                    {simpleConfig.sharedAttributes.filter(sa => sa.id && sa.valueId).map((sa, idx) => {
+                      const attr = attributes.find(a => String(a.id) === String(sa.id));
+                      const val = attr?.attribute_values?.find(v => String(v.id) === String(sa.valueId));
+                      return (
+                        <div key={`sa-${idx}`} className="simple-summary-item" style={{ borderLeft: '3px solid #6366f1', paddingLeft: '10px' }}>
+                          <div className="simple-summary-label">{attr?.name} <span style={{fontSize: 10, color: '#6366f1'}}>(Compartido)</span></div>
+                          <div className="simple-summary-value">{val?.value || val?.name || ""}</div>
+                        </div>
+                      );
+                    })}
 
                     <div className="simple-summary-item">
                       <div className="simple-summary-label">Variantes a generar</div>
@@ -1451,12 +1459,12 @@ const getAttributeValueName = (valueId) => {
                   </div>
                 </div>
 
-                {/* ====================================================== */}
+
                 {/* GALLERY (SIMPLE MODE) */}
                 {/* ====================================================== */}
                 {(() => {
                   if (!colorAttribute) return null;
-                  const colorAxis = simpleConfig.axes.find(a => a.type === "attribute" && a.id === colorAttribute.id);
+                  const colorAxis = simpleConfig.axes.find(a => a.type === "attribute" && String(a.id) === String(colorAttribute.id));
                   const colorValues = colorAxis ? colorAxis.values : [];
                   
                   if (colorValues.length === 0) return null;
@@ -1468,7 +1476,7 @@ const getAttributeValueName = (valueId) => {
                       </div>
                       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                         {colorValues.map(colorId => {
-                          const colorAttr = colorAttribute?.attribute_values?.find(c => c.id === colorId);
+                          const colorAttr = colorAttribute?.attribute_values?.find(c => String(c.id) === String(colorId));
                           const count = colorImages[colorId]?.length || 0;
                           return (
                             <button
@@ -1536,7 +1544,7 @@ const getAttributeValueName = (valueId) => {
                     </div>
                     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                       {Array.from(new Set(form.variants.map(v => v.attribute_value_ids?.[colorAttribute?.id]).filter(Boolean))).map(colorId => {
-                        const colorAttr = colorAttribute?.attribute_values?.find(c => c.id === colorId);
+                        const colorAttr = colorAttribute?.attribute_values?.find(c => String(c.id) === String(colorId));
                         const count = colorImages[colorId]?.length || 0;
                         return (
                           <button
@@ -1608,316 +1616,216 @@ const getAttributeValueName = (valueId) => {
 
                 {/* ================= COLOR + TALLA ================= */}
                 <div className="variant-section-title">
-                  Variante principal
+                  Atributos de la Variante
                 </div>
 
                 <div className="variant-main-grid">
-
-                  {/* COLOR */}
-                  {attributes.map((attribute) => {
-
-                    const isColor =
-                      attribute.id === colorAttribute?.id;
-
-                    if (!isColor) return null;
+                  {(() => {
+                    const variantAxes = [];
+                    Object.keys(variant.attribute_value_ids || {}).forEach(attrId => {
+                      const isFixed = attributes.find(a => String(a.id) === String(attrId))?.is_fixed;
+                      variantAxes.push({ type: 'attribute', id: attrId, isFixed });
+                    });
+                    if (variant.size_id !== undefined) {
+                      variantAxes.push({ type: 'size', id: 'sizes', isFixed: false });
+                    }
+                    if (variant.fit_id !== undefined) {
+                      variantAxes.push({ type: 'fit', id: 'fits', isFixed: false });
+                    }
+                    const getOrder = (axis) => {
+                      if (axis.isFixed) return 1;
+                      if (axis.type === 'size') return 2;
+                      if (axis.type === 'fit') return 3;
+                      return 4;
+                    };
+                    
+                    variantAxes.sort((a, b) => {
+                      return getOrder(a) - getOrder(b);
+                    });
 
                     return (
-                      <div
-                        key={attribute.id}
-                        className="form-group"
-                      >
-                        <label>Color</label>
+                      <>
+                      {variantAxes.map((axis, axisIndex) => {
+                        const currentId = axis.id;
+                        const currentType = axis.type;
+                        
+                        let optionsToRender = [];
+                        let isColorGrid = false;
+                        let label = "";
+                        let isFixedAxis = false;
 
-                        <div className="color-selector-grid">
-                          {(attribute.attribute_values ?? [])
-                            .slice(0, MAX_VISIBLE_COLORS)
-                            .map((value) => {
+                        if (currentType === "size") {
+                          optionsToRender = sizes;
+                          label = "Talla";
+                        } else if (currentType === "fit") {
+                          optionsToRender = fits;
+                          label = "Fit";
+                        } else if (currentType === "attribute") {
+                          const attr = attributes.find(a => String(a.id) === String(currentId));
+                          optionsToRender = attr?.attribute_values || [];
+                          isColorGrid = optionsToRender.some(v => v.hex_code);
+                          label = attr?.name || "Atributo";
+                          isFixedAxis = attr?.is_fixed;
+                        }
 
-                              const selected =
-                                form.variants[index]
-                                  ?.attribute_value_ids?.[
-                                    attribute.id
-                                  ] === value.id;
+                        return (
+                          <div key={`${currentId}-${axisIndex}`} className="form-group">
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                              <label style={{ margin: 0 }}>{label}</label>
+                              {!isFixedAxis && (
+                                <button type="button" onClick={() => removeAttributeFromVariant(index, currentType, currentId)} style={{background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer', padding: 0, fontSize: "0.85rem"}} title="Remover atributo">Remover</button>
+                              )}
+                            </div>
 
-                              return (
-                                <button
-                                  key={value.id}
-                                  type="button"
-                                  className={
-                                    selected
-                                      ? "color-circle active"
-                                      : "color-circle"
-                                  }
-                                  onClick={() =>
-                                    handleAttributeChange(
-                                      index,
-                                      attribute.id,
-                                      value.id
-                                    )
-                                  }
-                                >
-                                  <div
-                                    className="color-circle-preview"
-                                    style={{
-                                      background:
-                                        value.hex_code || "#ccc"
+                            <div className={isColorGrid ? "color-selector-grid" : "size-selector"}>
+                              {optionsToRender.slice(0, isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES).map((opt) => {
+                                let selected = false;
+                                if (currentType === "size") {
+                                  selected = form.variants[index]?.size_id === opt.id;
+                                } else if (currentType === "fit") {
+                                  selected = form.variants[index]?.fit_id === opt.id;
+                                } else {
+                                  selected = form.variants[index]?.attribute_value_ids?.[currentId] === opt.id;
+                                }
+
+                                if (isColorGrid) {
+                                  return (
+                                    <button
+                                      key={opt.id}
+                                      type="button"
+                                      className={selected ? "color-circle active" : "color-circle"}
+                                      onClick={(e) => { e.preventDefault(); handleAttributeChange(index, currentId, opt.id); }}
+                                    >
+                                      <div className="color-circle-preview" style={{ background: opt.hex_code || "#ccc" }} />
+                                      <span>{opt.value || opt.name}</span>
+                                    </button>
+                                  );
+                                }
+
+                                return (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    className={selected ? "size-chip active" : "size-chip"}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      if (currentType === "size") {
+                                        handleVariantChange(index, "size_id", opt.id);
+                                      } else if (currentType === "fit") {
+                                        handleVariantChange(index, "fit_id", opt.id);
+                                      } else {
+                                        handleAttributeChange(index, currentId, opt.id);
+                                      }
                                     }}
-                                  />
+                                  >
+                                    {opt.value || opt.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
 
-                                  <span>
-                                    {value.value}
-                                  </span>
+                            <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
+                              {optionsToRender.length > (isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES) && (
+                                <button
+                                  type="button"
+                                  className="see-more-btn"
+                                  onClick={(e) => { e.preventDefault(); setAdvancedDynamicModal({ open: true, variantIndex: index, axisIndex: currentId, axisType: currentType }); }}
+                                >
+                                  Ver todas las opciones
                                 </button>
-                              );
-                            })}
-                        </div>
-
-                        <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
-                          {(attribute.attribute_values
-                            ?.length || 0) >
-                            MAX_VISIBLE_COLORS && (
-                            <button
-                              type="button"
-                              className="see-more-btn"
-                              onClick={() =>
-                                setAdvancedColorModal({
-                                  open: true,
-                                  variantIndex: index
-                                })
-                              }
-                            >
-                              Ver todos los colores
-                            </button>
-                          )}
-                          <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true) } title="Crear nuevo color" >
-                            <Plus size={18} strokeWidth={2.5} />
-                          </button>
-                        </div>
+                              )}
+                              
+                              {currentType === "size" && (
+                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setShowCreateSize(true); }} title="Crear nueva talla">
+                                  <Plus size={18} strokeWidth={2.5} />
+                                </button>
+                              )}
+                              {currentType === "attribute" && isColorGrid && (
+                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setShowCreateColor(true); }} title="Crear nuevo color">
+                                  <Plus size={18} strokeWidth={2.5} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      
+                      <div className="form-group" style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-start", marginTop: "10px" }}>
+                        <CustomDropdown
+                          buttonText="Agregar Atributo"
+                          options={[
+                            {
+                              label: "Sistema",
+                              items: [
+                                ...(variant.size_id === undefined ? [{ name: "Talla", value: "size|sizes" }] : []),
+                                ...(variant.fit_id === undefined ? [{ name: "Fit", value: "fit|fits" }] : [])
+                              ]
+                            },
+                            {
+                              label: "Atributos",
+                              items: attributes
+                                .filter(a => !(variant.attribute_value_ids || {}).hasOwnProperty(a.id))
+                                .map(a => ({ name: a.name, value: `attribute|${a.id}` }))
+                            }
+                          ]}
+                          onSelect={(value) => {
+                            const [t, idStr] = value.split('|');
+                            const id = isNaN(Number(idStr)) ? idStr : Number(idStr);
+                            if (t === 'size') {
+                              handleVariantChange(index, "size_id", null);
+                            } else if (t === 'fit') {
+                              handleVariantChange(index, "fit_id", null);
+                            } else if (t === 'attribute') {
+                              handleAttributeChange(index, id, null);
+                            }
+                          }}
+                        />
                       </div>
+                      </>
                     );
-                  })}
-
-                  {/* TALLA */}
-                  <div className="form-group variant-size-group">
-                    <label>Talla</label>
-
-                    <div className="size-selector">
-                      {sizes
-                        .slice(0, MAX_VISIBLE_SIZES)
-                        .map((size) => {
-
-                          const selected =
-                            variant.size_id === size.id;
-
-                          return (
-                            <button
-                              key={size.id}
-                              type="button"
-                              className={
-                                selected
-                                  ? "size-chip active"
-                                  : "size-chip"
-                              }
-                              onClick={() =>
-                                handleVariantChange(
-                                  index,
-                                  "size_id",
-                                  size.id
-                                )
-                              }
-                            >
-                              {size.name}
-                            </button>
-                          );
-                        })}
-                    </div>
-
-                    <div style={{ display: "flex", gap: "10px", marginTop: "12px", alignItems: "center" }}>
-                      {sizes.length > MAX_VISIBLE_SIZES && (
-                        <button
-                          type="button"
-                          className="see-more-btn"
-                          onClick={() =>
-                            setAdvancedSizeModal({
-                              open: true,
-                              variantIndex: index
-                            })
-                          }
-                        >
-                          Ver todas las tallas
-                        </button>
-                      )}
-                      <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true) } title="Crear nueva talla" >
-                        <Plus size={18} strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  </div>
-
+                  })()}
                 </div>
 
-                {/* ================= CONFIGURACIÓN COMERCIAL ================= */}
+                {/* ================= DATOS DE VARIANTE ================= */}
                 <div className="variant-section-title">
-                  Configuración comercial
+                  Valores de Variante
                 </div>
 
                 <div className="form-grid">
-
                   <div className="form-group">
-                    <label>Precio</label>
+                    <label>Precio Venta</label>
                     <input
                       type="number"
-                      value={variant.price}
-                      onChange={(e) =>
-                        handleVariantChange(
-                          index,
-                          "price",
-                          e.target.value
-                        )
-                      }
+                      step="0.01"
+                      className="form-control"
+                      value={variant.price || ""}
+                      onChange={(e) => handleVariantChange(index, "price", e.target.value)}
                     />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Activo</label>
-
-                    <select
-                      value={variant.is_active}
-                      onChange={(e) =>
-                        handleVariantChange(
-                          index,
-                          "is_active",
-                          e.target.value === "true"
-                        )
-                      }
-                    >
-                      <option value={true}>
-                        Activo
-                      </option>
-
-                      <option value={false}>
-                        Inactivo
-                      </option>
-                    </select>
                   </div>
 
                   <div className="form-group">
                     <label>Costo</label>
-
-                    <input
-                      type="number"
-                      value={variant.cost}
-                      onChange={(e) =>
-                        handleVariantChange(
-                          index,
-                          "cost",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-
-                </div>
-
-                {/* ================= DETALLES ================= */}
-                <div className="variant-section-title">
-                  Detalles
-                </div>
-
-                <div className="form-grid">
-
-                  {/* FIT */}
-                  <div className="form-group">
-                    <label>Fit</label>
-
-                    <select
-                      value={variant.fit_id}
-                      onChange={(e) =>
-                        handleVariantChange(
-                          index,
-                          "fit_id",
-                          e.target.value
-                        )
-                      }
-                    >
-                      <option value="">
-                        Seleccionar
-                      </option>
-
-                      {fits.map((fit) => (
-                        <option
-                          key={fit.id}
-                          value={fit.id}
-                        >
-                          {fit.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* PESO */}
-                  <div className="form-group">
-                    <label>Peso</label>
-
                     <input
                       type="number"
                       step="0.01"
-                      value={variant.weight}
-                      onChange={(e) =>
-                        handleVariantChange(
-                          index,
-                          "weight",
-                          e.target.value
-                        )
-                      }
+                      className="form-control"
+                      value={variant.cost || ""}
+                      onChange={(e) => handleVariantChange(index, "cost", e.target.value)}
                     />
                   </div>
 
-                  {/* ATRIBUTOS EXTRAS */}
-                  {attributes
-                    .filter(
-                      (attribute) =>
-                        attribute.id !== colorAttribute?.id
-                    )
-                    .map((attribute) => (
-                      <div key={attribute.id} className="form-group variant-color-group" >
-                        <label>
-                          {attribute.name}
-                        </label>
-
-                        <select
-                          value={
-                            form.variants[index]
-                              ?.attribute_value_ids?.[
-                                attribute.id
-                              ] || ""
-                          }
-                          onChange={(e) =>
-                            handleAttributeChange(
-                              index,
-                              attribute.id,
-                              e.target.value
-                            )
-                          }
-                        >
-                          <option value="">
-                            Seleccionar
-                          </option>
-
-                          {(attribute.attribute_values ?? [])
-                            .map((value) => (
-                              <option
-                                key={value.id}
-                                value={value.id}
-                              >
-                                {value.value}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    ))}
+                  <div className="form-group">
+                    <label>Peso</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="form-control"
+                      value={variant.weight || ""}
+                      onChange={(e) => handleVariantChange(index, "weight", e.target.value)}
+                    />
+                  </div>
                 </div>
 
-                {/* ================= SOLO LECTURA ================= */}
                 <div className="variant-section-title">
                   Información generada
                 </div>
@@ -1928,6 +1836,7 @@ const getAttributeValueName = (valueId) => {
                     <label>SKU</label>
                     <input
                       value={variant.sku}
+                      className="form-control"
                       readOnly
                     />
                   </div>
@@ -1936,6 +1845,7 @@ const getAttributeValueName = (valueId) => {
                     <label>Barcode</label>
                     <input
                       value={variant.barcode}
+                      className="form-control"
                       readOnly
                     />
                   </div>
@@ -1965,7 +1875,7 @@ const getAttributeValueName = (valueId) => {
           </div>
 
           {/* =======================================
-              MODAL VER TODOS (DINÁMICO PARA EJE N)
+              MODAL VER TODOS (DINÃ MICO PARA EJE N)
           ======================================= */}
           {activeAxisModal !== null && (() => {
             const axis = simpleConfig.axes[activeAxisModal];
@@ -1979,7 +1889,7 @@ const getAttributeValueName = (valueId) => {
               optionsToRender = sizes;
               title = "Seleccionar Tallas";
             } else if (axis.type === "attribute") {
-              const attr = attributes.find(a => a.id === axis.id);
+              const attr = attributes.find(a => String(a.id) === String(axis.id));
               optionsToRender = attr?.attribute_values || [];
               isColorGrid = optionsToRender.some(v => v.hex_code);
               title = `Seleccionar ${attr?.name || "Opciones"}`;
@@ -2002,7 +1912,7 @@ const getAttributeValueName = (valueId) => {
                         </button>
                       )}
                     </div>
-                    <button type="button" className="close-modal-btn" onClick={() => setActiveAxisModal(null)}>✕</button>
+                    <button type="button" className="close-modal-btn" onClick={() => setActiveAxisModal(null)}><X size={16} /></button>
                   </div>
 
                   <div className={isColorGrid ? "color-selector-grid modal-grid" : "size-selector modal-size-grid"}>
@@ -2034,188 +1944,87 @@ const getAttributeValueName = (valueId) => {
             );
           })()}
 
-          {/* =======================================
-              ADVANCED COLOR MODAL
+{/* =======================================
+              ADVANCED DYNAMIC MODAL
           ======================================= */}
-          {advancedColorModal.open && (
-            <div className="selector-modal-overlay">
-              <div className="selector-modal">
+          {advancedDynamicModal.open && (() => {
+            const vIndex = advancedDynamicModal.variantIndex;
+            const aIndex = advancedDynamicModal.axisIndex;
+            const aType = advancedDynamicModal.axisType;
+            if (!aIndex) return null;
 
-                <div className="selector-modal-header">
+            const axis = { id: aIndex, type: aType };
 
-                  <div className="modal-title-group">
-                    <h3>Seleccionar Color</h3>
+            let optionsToRender = [];
+            let isColorGrid = false;
+            let title = "";
 
-                    <button
-                      type="button"
-                      className="add-mini-btn"
-                      onClick={() =>
-                        setShowCreateColor(true)
-                      }
-                    >
-                      <Plus size={18} />
-                    </button>
+            if (axis.type === "size") {
+              optionsToRender = sizes;
+              title = "Seleccionar Tallas";
+            } else if (axis.type === "attribute") {
+              const attr = attributes.find(a => String(a.id) === String(axis.id));
+              optionsToRender = attr?.attribute_values || [];
+              isColorGrid = optionsToRender.some(v => v.hex_code);
+              title = `Seleccionar ${attr?.name || "Opciones"}`;
+            }
+
+            return (
+              <div className="selector-modal-overlay">
+                <div className="selector-modal">
+                  <div className="selector-modal-header">
+                    <div className="modal-title-group">
+                      <h3>{title}</h3>
+                      {axis.type === "size" && (
+                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true)}>
+                          <Plus size={18} />
+                        </button>
+                      )}
+                      {axis.type === "attribute" && isColorGrid && (
+                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true)}>
+                          <Plus size={18} />
+                        </button>
+                      )}
+                    </div>
+                    <button type="button" className="close-modal-btn" onClick={() => setAdvancedDynamicModal({ open: false, variantIndex: null, axisIndex: null })}>X</button>
                   </div>
 
-                  <button
-                    type="button"
-                    className="close-modal-btn"
-                    onClick={() =>
-                      setAdvancedColorModal({
-                        open: false,
-                        variantIndex: null
-                      })
-                    }
-                  >
-                    ✕
-                  </button>
+                  <div className={isColorGrid ? "color-selector-grid modal-grid" : "size-selector modal-size-grid"}>
+                    {optionsToRender.map((opt) => {
+                      let selected = false;
+                      if (axis.type === "size") {
+                        selected = form.variants[vIndex]?.size_id === opt.id;
+                      } else {
+                        selected = form.variants[vIndex]?.attribute_value_ids?.[axis.id] === opt.id;
+                      }
 
-                </div>
-
-                <div className="color-selector-grid modal-grid">
-                  {(colorAttribute?.attribute_values || [])
-                    .map((color) => {
-
-                      const selected =
-                        form.variants[
-                          advancedColorModal.variantIndex
-                        ]?.attribute_value_ids?.[
-                          colorAttribute.id
-                        ] === color.id;
+                      if (isColorGrid) {
+                        return (
+                          <button key={opt.id} type="button" className={ selected ? "color-circle active" : "color-circle" } onClick={() => handleAttributeChange(vIndex, axis.id, opt.id)}>
+                            <div className="color-circle-preview" style={{ background: opt.hex_code || "#ccc" }} />
+                            <span>{opt.value || opt.name}</span>
+                          </button>
+                        );
+                      }
 
                       return (
-                        <button
-                          key={color.id}
-                          type="button"
-                          className={
-                            selected
-                              ? "color-circle active"
-                              : "color-circle"
-                          }
-                          onClick={() =>
-                            handleAttributeChange(
-                              advancedColorModal.variantIndex,
-                              colorAttribute.id,
-                              color.id
-                            )
-                          }
-                        >
-                          <div
-                            className="color-circle-preview"
-                            style={{
-                              background:
-                                color.hex_code || "#ccc"
-                            }}
-                          />
-
-                          <span>
-                            {color.value}
-                          </span>
+                        <button key={opt.id} type="button" className={ selected ? "size-chip active" : "size-chip" } onClick={() => {
+                          if (axis.type === "size") handleVariantChange(vIndex, "size_id", opt.id);
+                          else handleAttributeChange(vIndex, axis.id, opt.id);
+                        }}>
+                          {opt.value || opt.name}
                         </button>
                       );
                     })}
-                </div>
-
-                <button
-                  type="button"
-                  className="modal-ready-btn"
-                  onClick={() =>
-                    setAdvancedColorModal({
-                      open: false,
-                      variantIndex: null
-                    })
-                  }
-                >
-                  Listo
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* =======================================
-              ADVANCED SIZE MODAL
-          ======================================= */}
-          {advancedSizeModal.open && (
-            <div className="selector-modal-overlay">
-              <div className="selector-modal">
-
-                <div className="selector-modal-header">
-
-                  <div className="modal-title-group">
-                    <h3>Seleccionar Talla</h3>
-
-                    <button
-                      type="button"
-                      className="add-mini-btn"
-                      onClick={() =>
-                        setShowCreateSize(true)
-                      }
-                    >
-                      <Plus size={18} />
-                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    className="close-modal-btn"
-                    onClick={() =>
-                      setAdvancedSizeModal({
-                        open: false,
-                        variantIndex: null
-                      })
-                    }
-                  >
-                    ✕
+                  <button type="button" className="modal-ready-btn" onClick={() => setAdvancedDynamicModal({ open: false, variantIndex: null, axisIndex: null })}>
+                    Listo
                   </button>
-
                 </div>
-
-                <div className="size-selector modal-size-grid">
-                  {sizes.map((size) => {
-
-                    const selected =
-                      form.variants[
-                        advancedSizeModal.variantIndex
-                      ]?.size_id === size.id;
-
-                    return (
-                      <button
-                        key={size.id}
-                        type="button"
-                        className={
-                          selected
-                            ? "size-chip active"
-                            : "size-chip"
-                        }
-                        onClick={() =>
-                          handleVariantChange(
-                            advancedSizeModal.variantIndex,
-                            "size_id",
-                            size.id
-                          )
-                        }
-                      >
-                        {size.name}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  className="modal-ready-btn"
-                  onClick={() =>
-                    setAdvancedSizeModal({
-                      open: false,
-                      variantIndex: null
-                    })
-                  }
-                >
-                  Listo
-                </button>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* =======================================
               CREATE COLOR MODAL
@@ -2241,7 +2050,7 @@ const getAttributeValueName = (valueId) => {
                       setShowCreateColor(false)
                     }
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
 
@@ -2375,7 +2184,7 @@ const getAttributeValueName = (valueId) => {
                       setShowCreateSize(false)
                     }
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
 
@@ -2553,7 +2362,7 @@ const getAttributeValueName = (valueId) => {
         isOpen={galleryModalConfig.open}
         onClose={() => setGalleryModalConfig({ ...galleryModalConfig, open: false })}
         title={galleryModalConfig.type === "color" 
-          ? `Imágenes del Color: ${colorAttribute?.attribute_values?.find(c => c.id === galleryModalConfig.id)?.value || ""}`
+          ? `Imágenes del Color: ${colorAttribute?.attribute_values?.find(c => String(c.id) === String(galleryModalConfig.id))?.value || ""}`
           : `Imágenes de la Variante #${galleryModalConfig.id + 1}`
         }
         images={galleryModalConfig.type === "color" 
@@ -2568,6 +2377,46 @@ const getAttributeValueName = (valueId) => {
           }
         }}
       />
+      {/* FULL SCREEN LOADING OVERLAY */}
+      {isSubmitting && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background: "rgba(0,0,0,0.7)",
+          backdropFilter: "blur(4px)",
+          zIndex: 99999,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          color: "white"
+        }}>
+          <div style={{
+            width: "50px",
+            height: "50px",
+            border: "4px solid rgba(255,255,255,0.3)",
+            borderTop: "4px solid #fff",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+            marginBottom: "20px"
+          }} />
+          <style>
+            {`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}
+          </style>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: "600", margin: 0 }}>
+            {product ? "Actualizando Producto..." : "Guardando Producto..."}
+          </h2>
+          <p style={{ marginTop: "10px", color: "#ccc" }}>Por favor, no cierre esta ventana.</p>
+        </div>
+      )}
     </div>
   );
 }

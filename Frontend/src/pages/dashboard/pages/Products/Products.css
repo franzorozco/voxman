@@ -247,7 +247,7 @@
 .variant-card {
 
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .simple-card::before,
@@ -262,6 +262,7 @@
   right: 0;
 
   height: 1px;
+  border-radius: inherit;
 
   background:
     linear-gradient(
@@ -2933,7 +2934,7 @@ select option:focus {
 
 .variant-main-grid{
   display: grid;
-  grid-template-columns: 1.3fr .9fr;
+  grid-template-columns: 1fr 1fr;
   gap: 18px;
   align-items: start;
 }
@@ -3418,4 +3419,99 @@ select option:focus {
   font-size: 14px;
   color: var(--text-muted);
   font-weight: 500;
+}
+
+/* =========================================
+   CUSTOM DROPDOWN (ADD ATTRIBUTE)
+   ========================================= */
+.custom-dropdown-container {
+  position: relative;
+  display: inline-block;
+  width: fit-content;
+  margin-top: 10px;
+}
+
+.custom-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: var(--text-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.custom-dropdown-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.dropdown-arrow {
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 220px;
+  background: rgba(25, 25, 25, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  animation: dropdownFadeIn 0.2s ease forwards;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.custom-dropdown-group {
+  margin-bottom: 8px;
+}
+
+.custom-dropdown-group:last-child {
+  margin-bottom: 0;
+}
+
+.custom-dropdown-label {
+  padding: 4px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.custom-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s ease, padding-left 0.15s ease;
+}
+
+.custom-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  padding-left: 20px;
 }
