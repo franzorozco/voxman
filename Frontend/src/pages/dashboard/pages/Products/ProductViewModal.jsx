@@ -332,85 +332,146 @@ export default function ProductViewModal({ product, onClose }) {
             </div>
           )}
 
-          {activeTab === 'images' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              
-              {/* Product Global Images */}
-              <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)' }}>Imágenes Generales del Producto</h3>
-                {product.product_images?.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
-                    {product.product_images.map((img, iIndex) => (
-                      <div key={img.id || iIndex} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: img.is_main ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', aspectRatio: '1' }}>
-                        <img 
-                          src={getImageUrl(img.url)} 
-                          alt="Global Image" 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                        {img.is_main && (
-                          <div style={{ position: 'absolute', bottom: '8px', left: '8px', background: 'var(--color-primary)', color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>
-                            Principal
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>No hay imágenes generales.</div>
-                )}
-              </div>
+          {activeTab === 'images' && (() => {
+            // Helper para extraer nombres y colores de los atributos
+            const getAttributeDetails = (attrValId) => {
+              if (!product.product_variants) return null;
+              for (const variant of product.product_variants) {
+                const found = variant.variant_attribute_values?.find(vav => vav.attribute_value_id === attrValId);
+                if (found && found.attribute_value) {
+                  return found.attribute_value;
+                }
+              }
+              return null;
+            };
 
-              {/* Variant Images / Color Images */}
-              <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)' }}>Imágenes por Variante / Color</h3>
-                {product.product_variants?.some(v => v.variant_images?.length > 0) ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {product.product_variants.filter(v => v.variant_images?.length > 0).map((variant, vIdx) => (
-                      <div key={variant.id || vIdx} style={{ padding: '16px', background: 'var(--bg-overlay)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                          <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.sku}</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-                            ({variant.variant_attribute_values?.map(vav => vav.attribute_value?.value).join(', ')})
-                          </span>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '16px' }}>
-                          {variant.variant_images.map((img, iIdx) => (
-                            <div key={img.id || iIdx} style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)', aspectRatio: '1' }}>
-                              <img src={getImageUrl(img.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No hay imágenes específicas por variante o color.
-                  </div>
-                )}
-              </div>
+            const hasGlobalImages = product.product_images?.length > 0;
+            const hasColorImages = product.attribute_value_images?.length > 0;
+            const variantsWithImages = product.product_variants?.filter(v => v.variant_images?.length > 0) || [];
+            const hasVariantImages = variantsWithImages.length > 0;
 
-              {/* Attribute Value Images (Si el backend las expone) */}
-              {product.attribute_value_images?.length > 0 && (
-                <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                  <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)' }}>Imágenes por Atributo (Ej. Colores)</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
-                    {product.attribute_value_images.map((img, iIndex) => (
-                      <div key={img.id || iIndex} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', aspectRatio: '1' }}>
-                          <img src={getImageUrl(img.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                        <div style={{ textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)', fontWeight: '500' }}>
-                          Atributo ID: {img.attribute_value_id}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            if (!hasGlobalImages && !hasColorImages && !hasVariantImages) {
+              return (
+                <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <ImageIcon size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
+                  <p style={{ margin: 0, fontSize: '15px' }}>Este producto no tiene imágenes en su galería.</p>
                 </div>
-              )}
+              );
+            }
 
-            </div>
-          )}
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                
+                {/* 1. Portada y Galería Principal */}
+                {hasGlobalImages && (
+                  <div>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                      Portada y Galería Principal
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '20px' }}>
+                      {product.product_images.map((img, iIndex) => (
+                        <div key={img.id || iIndex} style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: img.is_main ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', aspectRatio: '1', background: 'var(--bg-overlay)' }}>
+                          <img 
+                            src={getImageUrl(img.url)} 
+                            alt="Global Image" 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          {img.is_main && (
+                            <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'var(--color-primary)', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                              ★ PORTADA
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Imágenes Agrupadas por Color */}
+                {hasColorImages && (
+                  <div>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                      Imágenes por Color (Compartidas)
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      {/* Agrupar attribute_value_images por attribute_value_id */}
+                      {Object.entries(
+                        product.attribute_value_images.reduce((acc, img) => {
+                          if (!acc[img.attribute_value_id]) acc[img.attribute_value_id] = [];
+                          acc[img.attribute_value_id].push(img);
+                          return acc;
+                        }, {})
+                      ).map(([attrValId, images], idx) => {
+                        const attrDetails = getAttributeDetails(attrValId);
+                        const colorName = attrDetails?.value || `ID: ${attrValId}`;
+                        const hexCode = attrDetails?.hex_code;
+
+                        return (
+                          <div key={idx} style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                              {hexCode && (
+                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: hexCode, border: '2px solid var(--border-color)' }}></div>
+                              )}
+                              <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-main)' }}>
+                                {colorName}
+                              </span>
+                              <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '8px' }}>
+                                Se aplica a todas las variantes de este color
+                              </span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '16px' }}>
+                              {images.map((img, iIndex) => (
+                                <div key={img.id || iIndex} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: img.is_main ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', aspectRatio: '1', background: 'var(--bg-overlay)' }}>
+                                  <img src={getImageUrl(img.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  {img.is_main && (
+                                    <div style={{ position: 'absolute', top: '6px', right: '6px', background: 'var(--bg-main)', color: 'var(--text-main)', padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: '700' }}>
+                                      Principal
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Imágenes Específicas por Variante */}
+                {hasVariantImages && (
+                  <div>
+                    <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                      Imágenes Específicas por Variante
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {variantsWithImages.map((variant, vIdx) => (
+                        <div key={variant.id || vIdx} style={{ background: 'var(--bg-overlay)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                            <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '15px' }}>{variant.sku}</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+                              {variant.variant_attribute_values?.map(vav => vav.attribute_value?.value).join(' • ')}
+                            </span>
+                            <span style={{ fontSize: '12px', color: 'var(--color-warning)', background: 'rgba(234, 179, 8, 0.1)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
+                              Únicas de esta variante
+                            </span>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '16px' }}>
+                            {variant.variant_images.map((img, iIndex) => (
+                              <div key={img.id || iIndex} style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)', aspectRatio: '1', background: 'var(--bg-main)' }}>
+                                <img src={getImageUrl(img.url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            );
+          })()}
 
         </div>
 

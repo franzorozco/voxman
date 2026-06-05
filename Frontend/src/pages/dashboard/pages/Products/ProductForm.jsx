@@ -6,7 +6,7 @@ import { createSize } from "../../../../api/sizes";
 import namer from "color-namer";
 import { Plus, Camera, AlertTriangle } from "lucide-react";
 import ImageGalleryModal from "./ImageGalleryModal";
-
+import { X } from "lucide-react";
 
 export default function ProductForm({
   product,
@@ -793,6 +793,7 @@ const getAttributeValueName = (valueId) => {
     return true;
   };
 
+
   return (
     <div className="modal-overlay">
       <div
@@ -805,9 +806,14 @@ const getAttributeValueName = (valueId) => {
         }}
       >
 
-        <h2>
-          {product ? "Editar Producto" : "Crear Producto"}
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0 }}>
+            {product ? "Editar Producto" : "Crear Producto"}
+          </h2>
+          <button className="close-btn" onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+            <X size={24} />
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit}>
           {/* ====================================================== */}
@@ -886,6 +892,7 @@ const getAttributeValueName = (valueId) => {
                 </div>
 
               </div>
+              
             </div>
 
           </div>
@@ -2483,6 +2490,7 @@ const getAttributeValueName = (valueId) => {
           </div>
 
         </form>
+        
       </div>
 
       {/* ====================================================== */}
