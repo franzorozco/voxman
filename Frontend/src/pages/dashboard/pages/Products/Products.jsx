@@ -21,6 +21,7 @@ import "../css/stylesCruds.css";
 import { Link } from "react-router-dom";
 import { X, Trash2, Search, Filter } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 
 import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
@@ -354,15 +355,19 @@ export default function Products() {
           Productos
         </h1>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <Link to="/dashboard/products/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
-            <Trash2 size={16} /> Papelera
-          </Link>
-          <button
-            className="btn-primary"
-            onClick={handleCreate}
-          >
-            + Crear Producto
-          </button>
+          <CanAccess permission="view_products">
+            <Link to="/dashboard/products/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
+              <Trash2 size={16} /> Papelera
+            </Link>
+          </CanAccess>
+          <CanAccess permission="create_products">
+            <button
+              className="btn-primary"
+              onClick={handleCreate}
+            >
+              + Crear Producto
+            </button>
+          </CanAccess>
         </div>
       </div>
 
@@ -449,12 +454,16 @@ export default function Products() {
             <div className="bulk-actions-left">
               <span className="bulk-actions-count">{selectedRows.length} seleccionados</span>
               <div className="bulk-actions-divider"></div>
-              <button className="btn btn-secondary" onClick={() => setBulkEditOpen(true)}>Editar</button>
-              <button className="btn btn-secondary" onClick={() => setConfirmModal({ isOpen: true, type: "bulkActive", payload: true })}>Activar</button>
-              <button className="btn btn-secondary" onClick={() => setConfirmModal({ isOpen: true, type: "bulkInactive", payload: false })}>Inactivar</button>
+              <CanAccess permission="edit_products">
+                <button className="btn btn-secondary" onClick={() => setBulkEditOpen(true)}>Editar</button>
+                <button className="btn btn-secondary" onClick={() => setConfirmModal({ isOpen: true, type: "bulkActive", payload: true })}>Activar</button>
+                <button className="btn btn-secondary" onClick={() => setConfirmModal({ isOpen: true, type: "bulkInactive", payload: false })}>Inactivar</button>
+              </CanAccess>
             </div>
             <div className="bulk-actions-right">
-              <button className="btn btn-danger-bulk" onClick={() => setConfirmModal({ isOpen: true, type: "bulkDelete", payload: null })}>Eliminar</button>
+              <CanAccess permission="delete_products">
+                <button className="btn btn-danger-bulk" onClick={() => setConfirmModal({ isOpen: true, type: "bulkDelete", payload: null })}>Eliminar</button>
+              </CanAccess>
             </div>
           </div>
         )}

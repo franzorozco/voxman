@@ -10,10 +10,11 @@ import {
 } from "../../../../api/users";
 import api from "../../../../api/client";
 import "./Users.css";
+import UserForm from "./UserForm";
 import SoftDeleteModal from "./SoftDeleteModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 
 import UsersTable from "./UsersTable";
-import UserForm from "./UserForm";
 
 const authUser = JSON.parse(localStorage.getItem("user"));
 
@@ -212,21 +213,27 @@ const handleOverwrite = async (data) => {
           <h1 className="users-title">Usuarios</h1>
 
           <div className="users-actions">
-            <button className="btn-primary" onClick={handleCreate}>
-              + Crear usuario
-            </button>
+            <CanAccess permission="create_users">
+              <button className="btn-primary" onClick={handleCreate}>
+                + Crear usuario
+              </button>
+            </CanAccess>
 
-            <button className="btn-secondary" onClick={generatePdf}>
-              Exportar PDF
-            </button>
+            <CanAccess permission="view_users">
+              <button className="btn-secondary" onClick={generatePdf}>
+                Exportar PDF
+              </button>
+            </CanAccess>
 
-            <Link 
-              to="/dashboard/users/deleted"
-              className="btn-secondary" 
-              style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
-            >
-              <Trash2 size={16} /> Papelera
-            </Link>
+            <CanAccess permission="view_users">
+              <Link 
+                to="/dashboard/users/deleted"
+                className="btn-secondary" 
+                style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+              >
+                <Trash2 size={16} /> Papelera
+              </Link>
+            </CanAccess>
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Filter, Search } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import UserViewModal from "./UserViewModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 export default function UsersTable({
   users,
   onEdit,
@@ -329,35 +330,43 @@ export default function UsersTable({
                     </td>
 
                     <td>
-                      <button
-                        className="btn-view"
-                        onClick={() => setViewUser(u)}
-                      >
-                        Ver
-                      </button>
+                      <CanAccess permission="view_users">
+                        <button
+                          className="btn-view"
+                          onClick={() => setViewUser(u)}
+                        >
+                          Ver
+                        </button>
+                      </CanAccess>
 
-                      <button className="btn-edit" onClick={() => onEdit(u)}>
-                        Editar
-                      </button>
+                      <CanAccess permission="edit_users">
+                        <button className="btn-edit" onClick={() => onEdit(u)}>
+                          Editar
+                        </button>
+                      </CanAccess>
 
-                      <button
-                        className="btn-report"
-                        onClick={() => generateUserPdf(u.id)}
-                      >
-                        PDF
-                      </button>
+                      <CanAccess permission="view_users">
+                        <button
+                          className="btn-report"
+                          onClick={() => generateUserPdf(u.id)}
+                        >
+                          PDF
+                        </button>
+                      </CanAccess>
 
-                      <button
-                        className={`btn-delete ${!canDelete(u) ? "disabled" : ""}`}
-                        disabled={!canDelete(u)}
-                        title={!canDelete(u) ? getDeleteReason(u) : "Eliminar usuario"}
-                        onClick={() => {
-                          if (!canDelete(u)) return; // 🔒 doble protección
-                          setConfirmId(u.id);
-                        }}
-                      >
-                        {canDelete(u) ? "Eliminar" : "No permitido"}
-                      </button>
+                      <CanAccess permission="delete_users">
+                        <button
+                          className={`btn-delete ${!canDelete(u) ? "disabled" : ""}`}
+                          disabled={!canDelete(u)}
+                          title={!canDelete(u) ? getDeleteReason(u) : "Eliminar usuario"}
+                          onClick={() => {
+                            if (!canDelete(u)) return; // 🔒 doble protección
+                            setConfirmId(u.id);
+                          }}
+                        >
+                          {canDelete(u) ? "Eliminar" : "No permitido"}
+                        </button>
+                      </CanAccess>
                     </td>
                   </tr>
                 ))}

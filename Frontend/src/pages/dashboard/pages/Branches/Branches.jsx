@@ -4,6 +4,7 @@ import { getBranches, deleteBranch } from "../../../../api/branches";
 import { LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2, Search, Filter } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import BranchFormModal from "./BranchFormModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 import "./Branches.css";
 import { API_BASE_URL } from "../../../../config/api";
 
@@ -75,17 +76,21 @@ export default function Branches() {
         <h1 className="branches-title">Sucursales</h1>
 
         <div className="branches-actions">
-          <button className="btn-primary" onClick={handleCreate}>
-            + Nueva Sucursal
-          </button>
+          <CanAccess permission="create_branches">
+            <button className="btn-primary" onClick={handleCreate}>
+              + Nueva Sucursal
+            </button>
+          </CanAccess>
 
-          <Link 
-            to="/dashboard/branches/deleted"
-            className="btn-secondary" 
-            style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
-          >
-            <Trash2 size={16} /> Papelera
-          </Link>
+          <CanAccess permission="view_branches">
+            <Link 
+              to="/dashboard/branches/deleted"
+              className="btn-secondary" 
+              style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+            >
+              <Trash2 size={16} /> Papelera
+            </Link>
+          </CanAccess>
         </div>
       </div>
 
@@ -207,12 +212,16 @@ export default function Branches() {
                     </div>
                   </div>
                   <div className="branch-card-actions">
-                    <button className="btn-icon" onClick={() => handleEdit(branch)} title="Editar">
-                      <Edit2 size={18} />
-                    </button>
-                    <button className="btn-icon delete" onClick={() => setConfirmModal({ isOpen: true, id: branch.id })} title="Eliminar">
-                      <Trash2 size={18} />
-                    </button>
+                    <CanAccess permission="edit_branches">
+                      <button className="btn-icon" onClick={() => handleEdit(branch)} title="Editar">
+                        <Edit2 size={18} />
+                      </button>
+                    </CanAccess>
+                    <CanAccess permission="delete_branches">
+                      <button className="btn-icon delete" onClick={() => setConfirmModal({ isOpen: true, id: branch.id })} title="Eliminar">
+                        <Trash2 size={18} />
+                      </button>
+                    </CanAccess>
                   </div>
                 </div>
               </div>
@@ -267,12 +276,18 @@ export default function Branches() {
                     </span>
                   </td>
                   <td>
-                    <button className="btn-edit" onClick={() => handleEdit(branch)}>
-                      Editar
-                    </button>
-                    <button className="btn-delete" onClick={() => setConfirmModal({ isOpen: true, id: branch.id })}>
-                      Eliminar
-                    </button>
+                    <div className="table-actions">
+                      <CanAccess permission="edit_branches">
+                        <button className="btn-edit" onClick={() => handleEdit(branch)}>
+                          Editar
+                        </button>
+                      </CanAccess>
+                      <CanAccess permission="delete_branches">
+                        <button className="btn-delete" onClick={() => setConfirmModal({ isOpen: true, id: branch.id })}>
+                          Eliminar
+                        </button>
+                      </CanAccess>
+                    </div>
                   </td>
                 </tr>
               ))

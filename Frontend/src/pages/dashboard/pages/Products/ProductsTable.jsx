@@ -1,6 +1,8 @@
 import {
   API_BASE_URL
 } from "../../../../config/api";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import CanAccess from "../../../../components/ui/CanAccess";
 import Spinner from "../../components/Spinner/Spinner";
 
 export default function ProductsTable({
@@ -296,20 +298,26 @@ export default function ProductsTable({
                   </td>
 
                   <td>
-                    <button className="btn-view" onClick={() => onView(p)}>
-                      Ver
-                    </button>
+                    <CanAccess permission="view_products">
+                      <button className="btn-view" onClick={() => onView(p)}>
+                        Ver
+                      </button>
+                    </CanAccess>
 
-                    <button className="btn-edit" onClick={() => onEdit(p)}>
-                      Editar
-                    </button>
+                    <CanAccess permission="edit_products">
+                      <button className="btn-edit" onClick={() => onEdit(p)}>
+                        Editar
+                      </button>
+                    </CanAccess>
 
-                    <button
-                      className="btn-delete"
-                      onClick={() => onDelete(p.id)}
-                    >
-                      Eliminar
-                    </button>
+                    <CanAccess permission="delete_products">
+                      <button
+                        className="btn-delete"
+                        onClick={() => onDelete(p.id)}
+                      >
+                        Eliminar
+                      </button>
+                    </CanAccess>
                   </td>
                 </tr>
               );

@@ -13,8 +13,9 @@ import { API_BASE_URL } from "../../../../config/api";
 import "./Products.css";
 import "../css/stylesCruds.css";
 
-import { RefreshCw, Trash2, ArrowLeft } from "lucide-react";
+import { RefreshCw, Trash2, ArrowLeft, RotateCcw } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 
 export default function DeletedProducts() {
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -242,41 +243,49 @@ export default function DeletedProducts() {
                   <td>
                     {activeTab === 'deleted' ? (
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button
-                          className="btn-edit"
-                          onClick={() => setConfirmModal({ isOpen: true, type: "restore", id: p.id })}
-                          title="Restaurar"
-                          style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.15)', width: 'max-content', padding: '6px 12px' }}
-                        >
-                          <RefreshCw size={16} /> Restaurar
-                        </button>
-                        <button
-                          className="btn-delete"
-                          onClick={() => setConfirmModal({ isOpen: true, type: "forceDelete", id: p.id })}
-                          title="Eliminar permanentemente"
-                          style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', width: 'max-content', padding: '6px 12px' }}
-                        >
-                          <Trash2 size={16} /> Eliminar
-                        </button>
+                        <CanAccess permission="restore_products">
+                          <button
+                            className="btn-edit"
+                            onClick={() => setConfirmModal({ isOpen: true, type: "restore", id: p.id })}
+                            title="Restaurar"
+                            style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.15)', width: 'max-content', padding: '6px 12px' }}
+                          >
+                            <RefreshCw size={16} /> Restaurar
+                          </button>
+                        </CanAccess>
+                        <CanAccess permission="delete_products">
+                          <button
+                            className="btn-delete"
+                            onClick={() => setConfirmModal({ isOpen: true, type: "forceDelete", id: p.id })}
+                            title="Eliminar permanentemente"
+                            style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', width: 'max-content', padding: '6px 12px' }}
+                          >
+                            <Trash2 size={16} /> Eliminar
+                          </button>
+                        </CanAccess>
                       </div>
                     ) : (
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button
-                          className="btn-edit"
-                          onClick={() => handleActivate(p.id)}
-                          title="Activar"
-                          style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#3b82f6', borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.15)', width: 'max-content', padding: '6px 12px' }}
-                        >
-                          <RefreshCw size={16} /> Activar
-                        </button>
-                        <button
-                          className="btn-delete"
-                          onClick={() => setConfirmModal({ isOpen: true, type: "softDelete", id: p.id })}
-                          title="Mover a papelera"
-                          style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', width: 'max-content', padding: '6px 12px' }}
-                        >
-                          <Trash2 size={16} /> Papelera
-                        </button>
+                        <CanAccess permission="edit_products">
+                          <button
+                            className="btn-edit"
+                            onClick={() => handleActivate(p.id)}
+                            title="Activar"
+                            style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#3b82f6', borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.15)', width: 'max-content', padding: '6px 12px' }}
+                          >
+                            <RefreshCw size={16} /> Activar
+                          </button>
+                        </CanAccess>
+                        <CanAccess permission="delete_products">
+                          <button
+                            className="btn-delete"
+                            onClick={() => setConfirmModal({ isOpen: true, type: "softDelete", id: p.id })}
+                            title="Mover a papelera"
+                            style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', width: 'max-content', padding: '6px 12px' }}
+                          >
+                            <Trash2 size={16} /> Papelera
+                          </button>
+                        </CanAccess>
                       </div>
                     )}
                   </td>

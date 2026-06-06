@@ -30,23 +30,22 @@ Route::post('/login', LoginController::class);
 
 Route::middleware([
     'auth:sanctum',
-    'role:Owner|Administrador'
 ])->prefix('v1/admin')->group(function () {
 
     Route::prefix('users')->group(function () {
-        Route::get('/', [UserController::class, 'index']);
-        Route::get('/report/pdf', [UserController::class, 'reportPdf']);
-        Route::get('/deleted', [UserController::class, 'deleted']);
-        Route::get('/{id}', [UserController::class, 'show']);
-        Route::post('/', [UserController::class, 'store']);
-        Route::put('/{id}', [UserController::class, 'update']);
-        Route::delete('/{id}', [UserController::class, 'destroy']);
-        Route::get('/{id}/pdf', [UserController::class, 'pdf']);
-        Route::post('/{id}/restore', [UserController::class, 'restore']);
-        Route::delete('/{id}/force', [UserController::class, 'forceDestroy']);
+        Route::get('/', [UserController::class, 'index'])->middleware('permission:view_users');
+        Route::get('/report/pdf', [UserController::class, 'reportPdf'])->middleware('permission:view_users');
+        Route::get('/deleted', [UserController::class, 'deleted'])->middleware('permission:view_users');
+        Route::get('/{id}/pdf', [UserController::class, 'pdf'])->middleware('permission:view_users');
+        Route::get('/{id}', [UserController::class, 'show'])->middleware('permission:view_users');
+        Route::post('/', [UserController::class, 'store'])->middleware('permission:create_users');
+        Route::put('/{id}', [UserController::class, 'update'])->middleware('permission:edit_users');
+        Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:delete_users');
+        Route::post('/{id}/restore', [UserController::class, 'restore'])->middleware('permission:restore_users');
+        Route::delete('/{id}/force', [UserController::class, 'forceDestroy'])->middleware('permission:delete_users');
     });
 
-    Route::prefix('roles')->group(function () {
+    Route::prefix('roles')->middleware('permission:manage_roles')->group(function () {
         Route::get('/', [RoleController::class, 'index']);
         Route::get('/{id}', [RoleController::class, 'show']);
         Route::post('/', [RoleController::class, 'store']);
@@ -55,7 +54,7 @@ Route::middleware([
     });
 
 
-    Route::prefix('permissions')->group(function () {
+    Route::prefix('permissions')->middleware('permission:manage_roles')->group(function () {
         Route::get('/', [PermissionController::class, 'index']);
         Route::get('/{id}', [PermissionController::class, 'show']);
         Route::post('/', [PermissionController::class, 'store']);
@@ -64,14 +63,14 @@ Route::middleware([
     });
 
     Route::prefix('branches')->group(function () {
-        Route::get('/', [BranchController::class, 'index']);
-        Route::get('/deleted', [BranchController::class, 'deleted']);
-        Route::post('/', [BranchController::class, 'store']);
-        Route::get('/{id}', [BranchController::class, 'show']);
-        Route::post('/{id}', [BranchController::class, 'update']);
-        Route::delete('/{id}', [BranchController::class, 'destroy']);
-        Route::post('/{id}/restore', [BranchController::class, 'restore']);
-        Route::delete('/{id}/force', [BranchController::class, 'forceDestroy']);
+        Route::get('/', [BranchController::class, 'index'])->middleware('permission:view_branches');
+        Route::get('/deleted', [BranchController::class, 'deleted'])->middleware('permission:view_branches');
+        Route::post('/', [BranchController::class, 'store'])->middleware('permission:create_branches');
+        Route::get('/{id}', [BranchController::class, 'show'])->middleware('permission:view_branches');
+        Route::post('/{id}', [BranchController::class, 'update'])->middleware('permission:edit_branches');
+        Route::delete('/{id}', [BranchController::class, 'destroy'])->middleware('permission:delete_branches');
+        Route::post('/{id}/restore', [BranchController::class, 'restore'])->middleware('permission:restore_branches');
+        Route::delete('/{id}/force', [BranchController::class, 'forceDestroy'])->middleware('permission:delete_branches');
     });
 
     Route::get('/employees', function() {
@@ -79,14 +78,14 @@ Route::middleware([
     });
 
     Route::prefix('products')->group(function () {
-        Route::get('/', [ProductController::class, 'index']);
-        Route::get('/{id}', [ProductController::class, 'show']);
-        Route::post('/', [ProductController::class, 'store']);
-        Route::put('/{id}', [ProductController::class, 'update']);
-        Route::patch('/{id}/partial', [ProductController::class, 'partialUpdate']);
-        Route::delete('/{id}', [ProductController::class, 'destroy']);
-        Route::post('/{id}/restore', [ProductController::class, 'restore']);
-        Route::delete('/{id}/force', [ProductController::class, 'forceDestroy']);
+        Route::get('/', [ProductController::class, 'index'])->middleware('permission:view_products');
+        Route::get('/{id}', [ProductController::class, 'show'])->middleware('permission:view_products');
+        Route::post('/', [ProductController::class, 'store'])->middleware('permission:create_products');
+        Route::put('/{id}', [ProductController::class, 'update'])->middleware('permission:edit_products');
+        Route::patch('/{id}/partial', [ProductController::class, 'partialUpdate'])->middleware('permission:edit_products');
+        Route::delete('/{id}', [ProductController::class, 'destroy'])->middleware('permission:delete_products');
+        Route::post('/{id}/restore', [ProductController::class, 'restore'])->middleware('permission:restore_products');
+        Route::delete('/{id}/force', [ProductController::class, 'forceDestroy'])->middleware('permission:delete_products');
     });
 
     Route::prefix('categories')->group(function () {

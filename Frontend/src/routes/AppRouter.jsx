@@ -54,22 +54,22 @@ export default function AppRouter() {
         {/* ================= DASHBOARD (ADMIN THEME) ================= */}
         <Route element={<ThemeLayout theme={adminThemeClass} />}>
           <Route path="/dashboard" element={
-              <ProtectedRoute roles={["Owner", "Administrador"]}>
+              <ProtectedRoute>
                 <DashboardLayout />
               </ProtectedRoute>
             }
           >
 
             <Route index element={<DashboardHome />} />
-            <Route path="products" element={<Products />} />
-            <Route path="products/deleted" element={<DeletedProducts />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="branches" element={<Branches />} />
-            <Route path="branches/deleted" element={<DeletedBranches />} />
-            <Route path="users" element={<Users />} />
-            <Route path="users/deleted" element={<DeletedUsers />} />
-            <Route path="roles" element={<Roles />} />
-            <Route path="permissions" element={<Permissions />} />
+            <Route path="products" element={<ProtectedRoute permissions={["view_products"]}><Products /></ProtectedRoute>} />
+            <Route path="products/deleted" element={<ProtectedRoute permissions={["view_products"]}><DeletedProducts /></ProtectedRoute>} />
+            <Route path="settings" element={<ProtectedRoute permissions={["manage_settings"]}><Settings /></ProtectedRoute>} />
+            <Route path="branches" element={<ProtectedRoute permissions={["view_branches"]}><Branches /></ProtectedRoute>} />
+            <Route path="branches/deleted" element={<ProtectedRoute permissions={["view_branches"]}><DeletedBranches /></ProtectedRoute>} />
+            <Route path="users" element={<ProtectedRoute permissions={["view_users"]}><Users /></ProtectedRoute>} />
+            <Route path="users/deleted" element={<ProtectedRoute permissions={["view_users"]}><DeletedUsers /></ProtectedRoute>} />
+            <Route path="roles" element={<ProtectedRoute permissions={["manage_roles"]}><Roles /></ProtectedRoute>} />
+            <Route path="permissions" element={<ProtectedRoute permissions={["manage_roles"]}><Permissions /></ProtectedRoute>} />
 
           </Route>
         </Route>

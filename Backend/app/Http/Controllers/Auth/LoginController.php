@@ -43,8 +43,9 @@ class LoginController extends Controller
                 'full_name' => optional($user->profile)->first_name . ' ' . optional($user->profile)->last_name_paternal,
                 'photo' => optional($user->profile)->photo ?? null,
 
-                // 👇 ESTO ES LO QUE TE FALTA
+                // 👇 ROLES Y PERMISOS
                 'roles' => $user->getRoleNames(), 
+                'permissions' => $user->getAllPermissions()->pluck('name'),
             ],
             'token' => $token
         ]);

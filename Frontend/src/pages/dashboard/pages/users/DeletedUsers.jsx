@@ -12,6 +12,7 @@ import "../css/stylesCruds.css";
 
 import { RefreshCw, Trash2, ArrowLeft } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 
 export default function DeletedUsers() {
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -131,22 +132,27 @@ export default function DeletedUsers() {
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <button
-                        className="btn-edit"
-                        onClick={() => setConfirmModal({ isOpen: true, type: "restore", id: u.id })}
-                        title="Restaurar"
-                        style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.15)', width: 'max-content', padding: '6px 12px' }}
-                      >
-                        <RefreshCw size={16} /> Restaurar
-                      </button>
-                      <button
-                        className="btn-delete"
-                        onClick={() => setConfirmModal({ isOpen: true, type: "forceDelete", id: u.id })}
-                        title="Eliminar permanentemente"
-                        style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', width: 'max-content', padding: '6px 12px' }}
-                      >
-                        <Trash2 size={16} /> Eliminar
-                      </button>
+                      <CanAccess permission="restore_users">
+                        <button
+                          className="btn-edit"
+                          onClick={() => setConfirmModal({ isOpen: true, type: "restore", id: u.id })}
+                          title="Restaurar"
+                          style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.15)', width: 'max-content', padding: '6px 12px' }}
+                        >
+                          <RefreshCw size={16} /> Restaurar
+                        </button>
+                      </CanAccess>
+                      
+                      <CanAccess permission="delete_users">
+                        <button
+                          className="btn-delete"
+                          onClick={() => setConfirmModal({ isOpen: true, type: "forceDelete", id: u.id })}
+                          title="Eliminar permanentemente"
+                          style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: '6px', width: 'max-content', padding: '6px 12px' }}
+                        >
+                          <Trash2 size={16} /> Eliminar
+                        </button>
+                      </CanAccess>
                     </div>
                   </td>
                 </tr>

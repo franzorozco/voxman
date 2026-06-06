@@ -5,6 +5,7 @@ import { useAuthStore } from "../../store/authStore";
 import "./Dashboard.css";
 import logo_black from "../../assets/global/logo_black.png";
 import logo_white from "../../assets/global/logo_white.png";
+import CanAccess from "../../components/ui/CanAccess";
 
 import {
   LayoutDashboard,
@@ -158,29 +159,37 @@ export default function DashboardLayout() {
                 {!collapsed && "CATÁLOGO"}
               </p>
 
-              <NavItem
-                to="/dashboard/products"
-                icon={Package}
-                label="Productos"
-              />
+              <CanAccess permission="view_products">
+                <NavItem
+                  to="/dashboard/products"
+                  icon={Package}
+                  label="Productos"
+                />
+              </CanAccess>
 
-              <NavItem
-                to="/dashboard/categories"
-                icon={Shapes}
-                label="Categorías"
-              />
+              <CanAccess permission="manage_settings">
+                <NavItem
+                  to="/dashboard/categories"
+                  icon={Shapes}
+                  label="Categorías"
+                />
+              </CanAccess>
 
-              <NavItem
-                to="/dashboard/inventory"
-                icon={Boxes}
-                label="Inventario"
-              />
+              <CanAccess permission="manage_settings">
+                <NavItem
+                  to="/dashboard/inventory"
+                  icon={Boxes}
+                  label="Inventario"
+                />
+              </CanAccess>
 
-              <NavItem
-                to="/dashboard/settings"
-                icon={Layers3}
-                label="Configuración"
-              />
+              <CanAccess permission="manage_settings">
+                <NavItem
+                  to="/dashboard/settings"
+                  icon={Layers3}
+                  label="Configuración"
+                />
+              </CanAccess>
 
             </div>
 
@@ -272,41 +281,53 @@ export default function DashboardLayout() {
                 {!collapsed && "SISTEMA"}
               </p>
 
-              <NavItem
-                to="/dashboard/branches"
-                icon={Store}
-                label="Sucursales"
-              />
+              <CanAccess permission="view_branches">
+                <NavItem
+                  to="/dashboard/branches"
+                  icon={Store}
+                  label="Sucursales"
+                />
+              </CanAccess>
 
-              <NavItem
-                to="/dashboard/users"
-                icon={Users}
-                label="Usuarios"
-              />
+              <CanAccess permission="view_users">
+                <NavItem
+                  to="/dashboard/users"
+                  icon={Users}
+                  label="Usuarios"
+                />
+              </CanAccess>
 
-              <NavItem
-                to="/dashboard/roles"
-                icon={Shield}
-                label="Roles"
-              />
+              <CanAccess permission="manage_roles">
+                <NavItem
+                  to="/dashboard/roles"
+                  icon={Shield}
+                  label="Roles"
+                />
+              </CanAccess>
 
-              <NavItem
-                to="/dashboard/permissions"
-                icon={KeyRound}
-                label="Permisos"
-              />
+              <CanAccess permission="manage_roles">
+                <NavItem
+                  to="/dashboard/permissions"
+                  icon={KeyRound}
+                  label="Permisos"
+                />
+              </CanAccess>
 
-              <NavItem
-                to="/dashboard/settings"
-                icon={Settings}
-                label="Configuración"
-              />
+              <CanAccess permission="manage_settings">
+                <NavItem
+                  to="/dashboard/settings"
+                  icon={Settings}
+                  label="Configuración"
+                />
+              </CanAccess>
 
-              <NavItem
-                to="/dashboard/logs"
-                icon={FileText}
-                label="Logs"
-              />
+              <CanAccess permission="manage_settings">
+                <NavItem
+                  to="/dashboard/logs"
+                  icon={FileText}
+                  label="Logs"
+                />
+              </CanAccess>
 
             </div>
 
