@@ -9,38 +9,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
 }
 
 .branches-title {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.3px;
   margin: 0;
 }
 
-.filters-bar {
+.branches-actions {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
 }
 
-.filters-bar input,
-.filters-bar select {
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-input);
-  color: var(--text-main);
-  outline: none;
-  font-size: 14px;
-  min-width: 200px;
-}
-
-.filters-bar input:focus,
-.filters-bar select:focus {
-  border-color: var(--color-primary);
-}
+/* filters container handled in inline styles and global classes */
 
 .branches-table-container {
   width: 100%;
@@ -107,7 +98,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 10000;
   backdrop-filter: blur(4px);
 }
 
@@ -557,9 +548,21 @@
     gap: 16px;
   }
   
-  .branches-header > div {
+  .branches-actions {
+    display: flex;
     flex-wrap: wrap;
+    gap: 10px;
     width: 100%;
+  }
+
+  .branches-actions > * {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 14px;
+    box-sizing: border-box;
+    white-space: nowrap;
   }
 
   .filters-bar {

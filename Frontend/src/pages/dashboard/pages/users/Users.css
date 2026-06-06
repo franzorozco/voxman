@@ -105,8 +105,24 @@
   }
 
   .users-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     width: 100%;
-    justify-content: flex-end;
+  }
+
+  .users-actions > * {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 14px;
+    box-sizing: border-box;
+    white-space: nowrap;
+  }
+
+  .hide-on-mobile {
+    display: none;
   }
 }
 
@@ -316,7 +332,7 @@
   justify-content: center;
   align-items: center;
   padding: 20px;
-  z-index: 1000;
+  z-index: 10000;
   box-sizing: border-box;
 }
 
@@ -571,7 +587,7 @@ form.modal {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 /* contenedor principal */
@@ -1103,17 +1119,6 @@ form.modal {
 
   .users-title {
     font-size: 18px;
-  }
-
-  .users-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
-    justify-content: center;
   }
 
   /* ocultar columnas menos importantes */

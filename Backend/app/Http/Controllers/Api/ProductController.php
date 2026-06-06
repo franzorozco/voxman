@@ -22,7 +22,7 @@ class ProductController extends Controller
     
     public function index(Request $request)
     {
-        $query = Product::query()
+            $query = Product::query()
             ->with([
                 'owner.user.user_profiles',
                 'category',
@@ -36,9 +36,17 @@ class ProductController extends Controller
                 'product_variants.inventories.branch',
                 'product_variants.size',
                 'product_variants.fit',
-            ])
-            ->whereNull('deleted_at')
-            ->where('is_active', true);
+            ]);
+
+        if ($request->status === 'deleted') {
+            $query->onlyTrashed();
+        } else if ($request->status === 'inactive') {
+            $query->where('is_active', false);
+        } else if ($request->status === 'all_with_deleted') {
+            $query->withTrashed();
+        } else {
+            $query->where('is_active', true);
+        }
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -564,19 +572,15 @@ class ProductController extends Controller
         try {
             $product = Product::findOrFail($id);
             $product->delete();
-            ProductImage::where('product_id', $product->id)->delete();
+            
             $variants = ProductVariant::where('product_id', $product->id)->get();
             foreach ($variants as $variant) {
-                VariantAttributeValue::where('variant_id', $variant->id)->delete();
-                
-                Inventory::where('variant_id', $variant->id)->delete();
-                VariantMeasurement::where('variant_id', $variant->id)->delete();
                 $variant->delete();
             }
 
             DB::commit();
             return response()->json([
-                'message' => 'Producto eliminado correctamente'
+                'message' => 'Producto movido a la papelera correctamente'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -589,11 +593,61 @@ class ProductController extends Controller
 
     public function restore($id)
     {
-        $product = Product::withTrashed()->findOrFail($id);
-        $product->restore();
-        return response()->json([
-            'message' => 'Producto restaurado correctamente'
-        ]);
+        DB::beginTransaction();
+        try {
+            $product = Product::withTrashed()->findOrFail($id);
+            $product->restore();
+            
+            $variants = ProductVariant::withTrashed()->where('product_id', $product->id)->get();
+            foreach ($variants as $variant) {
+                $variant->restore();
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Producto restaurado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al restaurar producto',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function forceDestroy($id)
+    {
+        DB::beginTransaction();
+        try {
+            $product = Product::withTrashed()->findOrFail($id);
+            
+            ProductImage::where('product_id', $product->id)->delete();
+            AttributeValueImage::where('product_id', $product->id)->delete();
+            
+            $variants = ProductVariant::withTrashed()->where('product_id', $product->id)->get();
+            foreach ($variants as $variant) {
+                VariantAttributeValue::where('variant_id', $variant->id)->delete();
+                Inventory::where('variant_id', $variant->id)->delete();
+                VariantMeasurement::where('variant_id', $variant->id)->delete();
+                VariantImage::where('variant_id', $variant->id)->delete();
+                
+                $variant->forceDelete();
+            }
+
+            $product->forceDelete();
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Producto eliminado permanentemente'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al eliminar producto permanentemente',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getAttributes()

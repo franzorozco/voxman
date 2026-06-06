@@ -16,11 +16,14 @@ import DashboardLayout from "../pages/dashboard/Dashboard";
 /* DASHBOARD PAGES */
 import DashboardHome from "../pages/dashboard/pages/home/Home";
 import Users from "../pages/dashboard/pages/users/Users";
+import DeletedUsers from "../pages/dashboard/pages/users/DeletedUsers";
 import Roles from "../pages/dashboard/pages/roles/Roles";
 import Permissions from "../pages/dashboard/pages/permissions/Permissions";
 import Products from "../pages/dashboard/pages/Products/Products";
+import DeletedProducts from "../pages/dashboard/pages/Products/DeletedProducts";
 import Settings from "../pages/dashboard/pages/catalog-settings/Settings.jsx";
 import Branches from "../pages/dashboard/pages/Branches/Branches.jsx";
+import DeletedBranches from "../pages/dashboard/pages/Branches/DeletedBranches.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -59,9 +62,12 @@ export default function AppRouter() {
 
             <Route index element={<DashboardHome />} />
             <Route path="products" element={<Products />} />
+            <Route path="products/deleted" element={<DeletedProducts />} />
             <Route path="settings" element={<Settings />} />
             <Route path="branches" element={<Branches />} />
+            <Route path="branches/deleted" element={<DeletedBranches />} />
             <Route path="users" element={<Users />} />
+            <Route path="users/deleted" element={<DeletedUsers />} />
             <Route path="roles" element={<Roles />} />
             <Route path="permissions" element={<Permissions />} />
 

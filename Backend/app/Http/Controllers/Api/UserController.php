@@ -435,6 +435,40 @@ class UserController extends Controller
         return response()->json(['message' => 'Usuario eliminado']);
     }
 
+    public function deleted()
+    {
+        return User::onlyTrashed()
+            ->with(['profile', 'roles', 'owner', 'customer', 'employee'])
+            ->get();
+    }
+
+    public function forceDestroy(Request $request, $id)
+    {
+        $user = User::onlyTrashed()->with(['roles', 'owner'])->findOrFail($id);
+        
+        $authUser = $request->user();
+
+        if (!$authUser) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+
+        if ($user->roles->contains('name', 'Administrador')) {
+            return response()->json([
+                'error' => 'No puedes eliminar definitivamente usuarios Administradores'
+            ], 403);
+        }
+
+        if ($user->owner && $user->owner->is_active) {
+            return response()->json([
+                'error' => 'No puedes eliminar definitivamente usuarios Owner activos'
+            ], 403);
+        }
+
+        $user->forceDelete();
+
+        return response()->json(['message' => 'Usuario eliminado permanentemente']);
+    }
+
     public function reportPdf(Request $request)
     {
 

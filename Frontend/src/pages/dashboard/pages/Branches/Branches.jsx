@@ -1,16 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { getBranches, deleteBranch } from "../../../../api/branches";
-import { LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2 } from "lucide-react";
+import { LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2, Search, Filter } from "lucide-react";
+import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import BranchFormModal from "./BranchFormModal";
 import "./Branches.css";
+import { API_BASE_URL } from "../../../../config/api";
 
 export default function Branches() {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: "all",
+  });
   const [viewMode, setViewMode] = useState("grid");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
 
   const loadBranches = async () => {
     try {
@@ -39,14 +47,12 @@ export default function Branches() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de eliminar esta sucursal?")) {
-      try {
-        await deleteBranch(id);
-        loadBranches();
-      } catch (error) {
-        console.error("Error eliminando sucursal:", error);
-        alert("No se pudo eliminar la sucursal");
-      }
+    try {
+      await deleteBranch(id);
+      loadBranches();
+    } catch (error) {
+      console.error("Error eliminando sucursal:", error);
+      alert("No se pudo eliminar la sucursal");
     }
   };
 
@@ -55,68 +61,117 @@ export default function Branches() {
     loadBranches();
   };
 
+  const filteredBranches = useMemo(() => {
+    return branches.filter((b) => {
+      if (filters.status === "active" && !b.is_active) return false;
+      if (filters.status === "inactive" && b.is_active) return false;
+      return true;
+    });
+  }, [branches, filters]);
+
   return (
     <div className="branches-container">
       <div className="branches-header">
         <h1 className="branches-title">Sucursales</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="view-toggle-segmented" style={{ display: 'flex', background: 'var(--bg-input)', padding: '4px', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
-            <button 
-              onClick={() => setViewMode('grid')}
-              title="Vista de Cuadrícula"
-              style={{ 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', border: 'none', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.3s ease',
-                background: viewMode === 'grid' ? 'var(--bg-card)' : 'transparent', 
-                color: viewMode === 'grid' ? 'var(--color-primary)' : 'var(--text-muted)',
-                boxShadow: viewMode === 'grid' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
-                fontWeight: viewMode === 'grid' ? '600' : '500'
-              }}
-            >
-              <LayoutGrid size={18} style={{ marginRight: '6px' }} /> Tarjetas
-            </button>
-            <button 
-              onClick={() => setViewMode('table')}
-              title="Vista de Lista"
-              style={{ 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', border: 'none', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.3s ease',
-                background: viewMode === 'table' ? 'var(--bg-card)' : 'transparent', 
-                color: viewMode === 'table' ? 'var(--color-primary)' : 'var(--text-muted)',
-                boxShadow: viewMode === 'table' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
-                fontWeight: viewMode === 'table' ? '600' : '500'
-              }}
-            >
-              <List size={18} style={{ marginRight: '6px' }} /> Lista
-            </button>
-          </div>
+
+        <div className="branches-actions">
           <button className="btn-primary" onClick={handleCreate}>
             + Nueva Sucursal
+          </button>
+
+          <Link 
+            to="/dashboard/branches/deleted"
+            className="btn-secondary" 
+            style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+          >
+            <Trash2 size={16} /> Papelera
+          </Link>
+        </div>
+      </div>
+
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              placeholder="Buscar sucursal por nombre o teléfono..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+          >
+            <Filter size={18} />
+            <span className="hide-on-mobile">Filtros</span>
+          </button>
+        </div>
+
+        {showFilters && (
+          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({ ...filters, status: e.target.value })
+                }
+              >
+                <option value="all">Todas</option>
+                <option value="active">Activas</option>
+                <option value="inactive">Inactivas</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+        <div className="view-toggle-segmented" style={{ display: 'inline-flex', background: 'var(--bg-input)', padding: '4px', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+          <button 
+            onClick={() => setViewMode('grid')}
+            title="Vista de Cuadrícula"
+            style={{ 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', border: 'none', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.3s ease',
+              background: viewMode === 'grid' ? 'var(--bg-card)' : 'transparent', 
+              color: viewMode === 'grid' ? 'var(--color-primary)' : 'var(--text-muted)',
+              boxShadow: viewMode === 'grid' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+              fontWeight: viewMode === 'grid' ? '600' : '500'
+            }}
+          >
+            <LayoutGrid size={18} style={{ marginRight: '6px' }} /> Tarjetas
+          </button>
+          <button 
+            onClick={() => setViewMode('table')}
+            title="Vista de Lista"
+            style={{ 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', border: 'none', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.3s ease',
+              background: viewMode === 'table' ? 'var(--bg-card)' : 'transparent', 
+              color: viewMode === 'table' ? 'var(--color-primary)' : 'var(--text-muted)',
+              boxShadow: viewMode === 'table' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+              fontWeight: viewMode === 'table' ? '600' : '500'
+            }}
+          >
+            <List size={18} style={{ marginRight: '6px' }} /> Lista
           </button>
         </div>
       </div>
 
-      <div className="filters-bar" style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '24px' }}>
-        <input
-          type="text"
-          placeholder="Buscar sucursal..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-          style={{ minWidth: '300px' }}
-        />
-      </div>
-
       {loading ? (
         <div className="loading-state">Cargando sucursales...</div>
-      ) : branches.length === 0 ? (
+      ) : filteredBranches.length === 0 ? (
         <div className="empty-state">No se encontraron sucursales.</div>
       ) : viewMode === "grid" ? (
         <div className="branches-grid">
-          {branches.map((branch) => {
+          {filteredBranches.map((branch) => {
             const primaryImage = branch.images?.find(img => img.is_primary)?.image_url 
               || branch.images?.[0]?.image_url 
               || "/storage/branches/default.png";
               
-            const imageUrl = primaryImage.startsWith("http") ? primaryImage : `http://localhost:8000${primaryImage}`;
+            const imageUrl = primaryImage.startsWith("http") ? primaryImage : `${API_BASE_URL}${primaryImage}`;
 
             const managerName = branch.manager?.user?.profile
               ? `${branch.manager.user.profile.first_name || ''} ${branch.manager.user.profile.last_name_paternal || ''}`.trim() || branch.manager.user.email
@@ -130,7 +185,7 @@ export default function Branches() {
             return (
               <div className="branch-card" key={branch.id}>
                 <div className="branch-card-image">
-                  <img src={imageUrl} alt={branch.name} onError={(e) => e.target.src = "http://localhost:8000/storage/branches/default.png"} />
+                  <img src={imageUrl} alt={branch.name} onError={(e) => e.target.src = `${API_BASE_URL}/storage/branches/default.png`} />
                   <span className={`branch-status-badge ${branch.is_active ? 'active' : 'inactive'}`}>
                     {branch.is_active ? 'Activa' : 'Inactiva'}
                   </span>
@@ -155,7 +210,7 @@ export default function Branches() {
                     <button className="btn-icon" onClick={() => handleEdit(branch)} title="Editar">
                       <Edit2 size={18} />
                     </button>
-                    <button className="btn-icon delete" onClick={() => handleDelete(branch.id)} title="Eliminar">
+                    <button className="btn-icon delete" onClick={() => setConfirmModal({ isOpen: true, id: branch.id })} title="Eliminar">
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -184,14 +239,14 @@ export default function Branches() {
                   Cargando sucursales...
                 </td>
               </tr>
-            ) : branches.length === 0 ? (
+            ) : filteredBranches.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: "center", padding: "24px" }}>
                   No se encontraron sucursales.
                 </td>
               </tr>
             ) : (
-              branches.map((branch) => (
+              filteredBranches.map((branch) => (
                 <tr key={branch.id}>
                   <td style={{ fontWeight: 500 }}>{branch.name}</td>
                   <td>
@@ -215,7 +270,7 @@ export default function Branches() {
                     <button className="btn-edit" onClick={() => handleEdit(branch)}>
                       Editar
                     </button>
-                    <button className="btn-delete" onClick={() => handleDelete(branch.id)}>
+                    <button className="btn-delete" onClick={() => setConfirmModal({ isOpen: true, id: branch.id })}>
                       Eliminar
                     </button>
                   </td>
@@ -234,6 +289,16 @@ export default function Branches() {
           onSave={handleSaveSuccess}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, id: null })}
+        onConfirm={() => handleDelete(confirmModal.id)}
+        title="Eliminar sucursal"
+        message="¿Estás seguro de eliminar esta sucursal? Se moverá a la papelera."
+        confirmText="Sí, eliminar"
+        type="danger"
+      />
     </div>
   );
 }

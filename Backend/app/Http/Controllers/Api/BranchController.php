@@ -253,4 +253,46 @@ class BranchController extends Controller
             ], 500);
         }
     }
+
+    public function deleted()
+    {
+        $branches = Branch::onlyTrashed()->with(['address', 'manager.user.profile', 'images'])->orderBy('deleted_at', 'desc')->get();
+        return response()->json($branches);
+    }
+
+    public function restore($id)
+    {
+        try {
+            $branch = Branch::onlyTrashed()->findOrFail($id);
+            $branch->restore();
+            return response()->json([
+                'message' => 'Sucursal restaurada exitosamente',
+                'branch' => $branch
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al restaurar la sucursal',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function forceDestroy($id)
+    {
+        try {
+            $branch = Branch::onlyTrashed()->findOrFail($id);
+            // Delete related images physically if needed, or rely on cascade
+            BranchImage::where('branch_id', $branch->id)->delete();
+            $branch->forceDelete();
+
+            return response()->json([
+                'message' => 'Sucursal eliminada de forma permanente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al eliminar permanentemente la sucursal',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-
+import { Filter, Search } from "lucide-react";
+import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import UserViewModal from "./UserViewModal";
 export default function UsersTable({
   users,
@@ -19,6 +20,7 @@ export default function UsersTable({
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState(null);
   const [viewUser, setViewUser] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
   // =========================
   // ⏳ LOADING CONTROL
   // =========================
@@ -146,72 +148,117 @@ export default function UsersTable({
     <div className="users-admin">
 
       {/* ================= FILTROS ================= */}
-      <div className="filters-panel">
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              placeholder="Buscar usuario por nombre, email o código..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+          >
+            <Filter size={18} />
+            <span className="hide-on-mobile">Filtros</span>
+          </button>
+        </div>
 
-        <input
-          placeholder="Buscar usuario..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        {showFilters && (
+          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({ ...filters, status: e.target.value })
+                }
+              >
+                <option value="all">Todos</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+              </select>
+            </div>
 
-        <select
-          onChange={(e) =>
-            setFilters({ ...filters, status: e.target.value })
-          }
-        >
-          <option value="all">Todos</option>
-          <option value="active">Activos</option>
-          <option value="inactive">Inactivos</option>
-        </select>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Tipo de cuenta</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.type}
+                onChange={(e) =>
+                  setFilters({ ...filters, type: e.target.value })
+                }
+              >
+                <option value="all">Todos tipos</option>
+                <option value="owner">Owner</option>
+                <option value="customer">Customer</option>
+                <option value="employee">Employee</option>
+              </select>
+            </div>
 
-        <select
-          onChange={(e) =>
-            setFilters({ ...filters, type: e.target.value })
-          }
-        >
-          <option value="all">Todos tipos</option>
-          <option value="owner">Owner</option>
-          <option value="customer">Customer</option>
-          <option value="employee">Employee</option>
-        </select>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ordenar por</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.sort}
+                onChange={(e) =>
+                  setFilters({ ...filters, sort: e.target.value })
+                }
+              >
+                <option value="created_at_desc">Más recientes</option>
+                <option value="created_at_asc">Más antiguos</option>
+                <option value="points_desc">Más puntos</option>
+                <option value="points_asc">Menos puntos</option>
+              </select>
+            </div>
 
-        <select
-          onChange={(e) =>
-            setFilters({ ...filters, sort: e.target.value })
-          }
-        >
-          <option value="created_at_desc">Más recientes</option>
-          <option value="created_at_asc">Más antiguos</option>
-          <option value="points_desc">Más puntos</option>
-          <option value="points_asc">Menos puntos</option>
-        </select>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Min puntos</label>
+              <input
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                placeholder="0"
+                type="number"
+                value={filters.minPoints}
+                onChange={(e) =>
+                  setFilters({ ...filters, minPoints: e.target.value })
+                }
+              />
+            </div>
 
-        <input
-          placeholder="Min puntos"
-          type="number"
-          onChange={(e) =>
-            setFilters({ ...filters, minPoints: e.target.value })
-          }
-        />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Max puntos</label>
+              <input
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                placeholder="1000"
+                type="number"
+                value={filters.maxPoints}
+                onChange={(e) =>
+                  setFilters({ ...filters, maxPoints: e.target.value })
+                }
+              />
+            </div>
 
-        <input
-          placeholder="Max puntos"
-          type="number"
-          onChange={(e) =>
-            setFilters({ ...filters, maxPoints: e.target.value })
-          }
-        />
-
-        <select
-          onChange={(e) =>
-            setFilters({ ...filters, groupBy: e.target.value })
-          }
-        >
-          <option value="none">Sin agrupar</option>
-          <option value="type">Por tipo</option>
-          <option value="role">Por rol</option>
-        </select>
-
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Agrupar tabla por</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.groupBy}
+                onChange={(e) =>
+                  setFilters({ ...filters, groupBy: e.target.value })
+                }
+              >
+                <option value="none">Sin agrupar</option>
+                <option value="type">Por tipo</option>
+                <option value="role">Por rol</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ================= TABLA ================= */}
@@ -321,47 +368,23 @@ export default function UsersTable({
         ))
       )}
 
-      {/* ================= MODAL (CORREGIDO) ================= */}
-      {confirmId && (
-        <div className="modal-overlay">
-          <div className="modal-confirm">
-
-            <h3>Eliminar usuario</h3>
-
-            <p>
-              ¿Seguro que deseas eliminar este usuario?
-            </p>
-
-            <div className="modal-actions">
-
-              <button
-                className="btn-cancel"
-                onClick={() => setConfirmId(null)}
-              >
-                Cancelar
-              </button>
-
-              <button
-                className="btn-danger"
-                onClick={() => {
-                  const userToDelete = users.find(u => u.id === confirmId);
-
-                  if (!userToDelete || !canDelete(userToDelete)) {
-                    setConfirmId(null);
-                    return;
-                  }
-
-                  onDelete(confirmId);
-                  setConfirmId(null);
-                }}
-              >
-                Sí, eliminar
-              </button>
-
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!confirmId}
+        onClose={() => setConfirmId(null)}
+        onConfirm={() => {
+          const userToDelete = users.find(u => u.id === confirmId);
+          if (!userToDelete || !canDelete(userToDelete)) {
+            setConfirmId(null);
+            return;
+          }
+          onDelete(confirmId);
+          setConfirmId(null);
+        }}
+        title="Eliminar usuario"
+        message="¿Seguro que deseas eliminar este usuario?"
+        confirmText="Sí, eliminar"
+        type="danger"
+      />
 
       {viewUser && (
         <UserViewModal

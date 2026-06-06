@@ -36,12 +36,14 @@ Route::middleware([
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/report/pdf', [UserController::class, 'reportPdf']);
+        Route::get('/deleted', [UserController::class, 'deleted']);
         Route::get('/{id}', [UserController::class, 'show']);
         Route::post('/', [UserController::class, 'store']);
         Route::put('/{id}', [UserController::class, 'update']);
         Route::delete('/{id}', [UserController::class, 'destroy']);
         Route::get('/{id}/pdf', [UserController::class, 'pdf']);
         Route::post('/{id}/restore', [UserController::class, 'restore']);
+        Route::delete('/{id}/force', [UserController::class, 'forceDestroy']);
     });
 
     Route::prefix('roles')->group(function () {
@@ -63,10 +65,13 @@ Route::middleware([
 
     Route::prefix('branches')->group(function () {
         Route::get('/', [BranchController::class, 'index']);
-        Route::get('/{id}', [BranchController::class, 'show']);
+        Route::get('/deleted', [BranchController::class, 'deleted']);
         Route::post('/', [BranchController::class, 'store']);
+        Route::get('/{id}', [BranchController::class, 'show']);
         Route::post('/{id}', [BranchController::class, 'update']);
         Route::delete('/{id}', [BranchController::class, 'destroy']);
+        Route::post('/{id}/restore', [BranchController::class, 'restore']);
+        Route::delete('/{id}/force', [BranchController::class, 'forceDestroy']);
     });
 
     Route::get('/employees', function() {
@@ -81,6 +86,7 @@ Route::middleware([
         Route::patch('/{id}/partial', [ProductController::class, 'partialUpdate']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::post('/{id}/restore', [ProductController::class, 'restore']);
+        Route::delete('/{id}/force', [ProductController::class, 'forceDestroy']);
     });
 
     Route::prefix('categories')->group(function () {

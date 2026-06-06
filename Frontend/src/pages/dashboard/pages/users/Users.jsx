@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 import {
   getUsers,
   createUser,
@@ -149,7 +151,7 @@ const handleOverwrite = async (data) => {
 
   const generatePdf = async () => {
     try {
-      const res = await api.get("/users/report/pdf", {
+      const res = await api.get("/v1/admin/users/report/pdf", {
         params: {
           search,
           status: filters.status,
@@ -185,7 +187,7 @@ const handleOverwrite = async (data) => {
   const generateUserPdf = async (userId) => {
     const token = localStorage.getItem("token");
 
-    const res = await api.get(`/users/${userId}/pdf`, {
+    const res = await api.get(`/v1/admin/users/${userId}/pdf`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -217,6 +219,14 @@ const handleOverwrite = async (data) => {
             <button className="btn-secondary" onClick={generatePdf}>
               Exportar PDF
             </button>
+
+            <Link 
+              to="/dashboard/users/deleted"
+              className="btn-secondary" 
+              style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+            >
+              <Trash2 size={16} /> Papelera
+            </Link>
           </div>
         </div>
 

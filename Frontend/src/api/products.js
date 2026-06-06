@@ -27,3 +27,9 @@ export const updatePartialProduct = (id, data) => {
 
 export const deleteProduct = (id) =>
   api.delete(`${BASE_URL}/${id}`);
+
+export const restoreProduct = (id) =>
+  api.post(`${BASE_URL}/${id}/restore`);
+
+export const forceDeleteProduct = (id) =>
+  api.delete(`${BASE_URL}/${id}/force`);

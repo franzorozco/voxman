@@ -18,3 +18,12 @@ export const deleteUser = (id) =>
 
 export const restoreUser = (id) =>
   api.post(`${BASE_URL}/${id}/restore`);
+
+export const getDeletedUsers = () =>
+  api.get(`${BASE_URL}/deleted`);
+
+export const forceDeleteUser = (id) =>
+  api.delete(`${BASE_URL}/${id}/force`);
+
+export const generateUserPdf = (id) =>
+  api.get(`${BASE_URL}/${id}/pdf`, { responseType: "blob" });

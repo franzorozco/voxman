@@ -18,7 +18,9 @@ import { getFits } from "../../../../api/fits";
 import "./Products.css";
 import "../css/stylesCruds.css";
 
-import { X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { X, Trash2, Search, Filter } from "lucide-react";
+import ConfirmModal from "../../../../components/ui/ConfirmModal";
 
 import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
@@ -34,10 +36,13 @@ export default function Products() {
   const [attributes, setAttributes] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [fits, setFits] = useState([]);
+
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: "", payload: null });
   const [selected, setSelected] = useState(null);
   const [selectedView, setSelectedView] = useState(null);
   const [open, setOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     category: "",
@@ -75,7 +80,6 @@ export default function Products() {
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`¿Estás seguro de eliminar ${selectedRows.length} productos?`)) return;
     try {
       setLoadingProducts(true);
       await Promise.all(selectedRows.map(id => deleteProduct(id)));
@@ -97,6 +101,18 @@ export default function Products() {
         return updatePartialProduct(id, fd);
       }));
       setSelectedRows([]);
+      loadProducts();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const handleSingleDelete = async (id) => {
+    try {
+      setLoadingProducts(true);
+      await deleteProduct(id);
       loadProducts();
     } catch (err) {
       console.error(err);
@@ -337,79 +353,92 @@ export default function Products() {
         <h1 className="products-title">
           Productos
         </h1>
-        <button
-          className="btn-primary"
-          onClick={handleCreate}
-        >
-          + Crear Producto
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <Link to="/dashboard/products/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
+            <Trash2 size={16} /> Papelera
+          </Link>
+          <button
+            className="btn-primary"
+            onClick={handleCreate}
+          >
+            + Crear Producto
+          </button>
+        </div>
       </div>
 
-      <div className="filters-bar">
-        <input
-          placeholder="Buscar producto..."
-          value={filters.search}
-          onChange={(e) =>
-            setFilters({
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              placeholder="Buscar producto por nombre o código..."
+              value={filters.search}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  search: e.target.value,
+                })
+              }
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+          >
+            <Filter size={18} />
+            <span className="hide-on-mobile">Filtros</span>
+          </button>
+        </div>
 
-              ...filters,
+        {showFilters && (
+          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Categoría</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.category}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    category: e.target.value,
+                  })
+                }
+              >
+                <option value="">Todas</option>
+                {[
+                  ...new Set(
+                    products.filter(p => p.category?.name).map(
+                      (p) => p.category?.name
+                    )
+                  ),
+                ].map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              search:
-                e.target.value,
-            })
-          }
-        />
-
-        <select
-          onChange={(e) =>
-            setFilters({
-              ...filters,
-              category:
-                e.target.value,
-            })
-          }
-        >
-
-          <option value="">
-            Categorías
-          </option>
-
-          {[
-            ...new Set(
-              products.map(
-                (p) =>
-                  p.category?.name
-              )
-            ),
-          ].map((c) => (
-            <option
-              key={c}
-              value={c}
-            >
-              {c}
-            </option>
-          ))}
-        </select>
-
-        <select
-          onChange={(e) =>
-            setFilters({
-              ...filters,
-              status:
-                e.target.value,
-            })
-          }
-        >
-          <option value="">
-            Estado
-          </option>
-          <option value="active">
-            Activo
-          </option>
-          <option value="inactive">
-            Inactivo
-          </option>
-        </select>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    status: e.target.value,
+                  })
+                }
+              >
+                <option value="">Todos</option>
+                <option value="active">Activo</option>
+                <option value="inactive">Inactivo</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
       {/* ====================================================== */}
       {/* TABLE */}
@@ -421,11 +450,11 @@ export default function Products() {
               <span className="bulk-actions-count">{selectedRows.length} seleccionados</span>
               <div className="bulk-actions-divider"></div>
               <button className="btn btn-secondary" onClick={() => setBulkEditOpen(true)}>Editar</button>
-              <button className="btn btn-secondary" onClick={() => handleBulkStatus(true)}>Activar</button>
-              <button className="btn btn-secondary" onClick={() => handleBulkStatus(false)}>Inactivar</button>
+              <button className="btn btn-secondary" onClick={() => setConfirmModal({ isOpen: true, type: "bulkActive", payload: true })}>Activar</button>
+              <button className="btn btn-secondary" onClick={() => setConfirmModal({ isOpen: true, type: "bulkInactive", payload: false })}>Inactivar</button>
             </div>
             <div className="bulk-actions-right">
-              <button className="btn btn-danger-bulk" onClick={handleBulkDelete}>Eliminar</button>
+              <button className="btn btn-danger-bulk" onClick={() => setConfirmModal({ isOpen: true, type: "bulkDelete", payload: null })}>Eliminar</button>
             </div>
           </div>
         )}
@@ -440,9 +469,8 @@ export default function Products() {
           setOpen(true);
         }}
 
-        onDelete={async (id) => {
-          await deleteProduct(id);
-          loadProducts();
+        onDelete={(id) => {
+          setConfirmModal({ isOpen: true, type: "singleDelete", payload: id });
         }}
         onSort={(field) => {
           setFilters((prev) => ({
@@ -540,6 +568,36 @@ export default function Products() {
           onSubmit={handleSubmit}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, type: "", payload: null })}
+        onConfirm={() => {
+          if (confirmModal.type === "bulkDelete") handleBulkDelete();
+          if (confirmModal.type === "bulkActive") handleBulkStatus(true);
+          if (confirmModal.type === "bulkInactive") handleBulkStatus(false);
+          if (confirmModal.type === "singleDelete") handleSingleDelete(confirmModal.payload);
+        }}
+        title={
+          confirmModal.type === "bulkDelete" ? "Eliminar productos" :
+          confirmModal.type === "singleDelete" ? "Eliminar producto" :
+          confirmModal.type === "bulkActive" ? "Activar productos" :
+          "Inactivar productos"
+        }
+        message={
+          confirmModal.type === "bulkDelete" ? `¿Estás seguro de eliminar ${selectedRows.length} productos? Se enviarán a la papelera.` :
+          confirmModal.type === "singleDelete" ? "¿Estás seguro de eliminar este producto? Se enviará a la papelera." :
+          confirmModal.type === "bulkActive" ? `¿Estás seguro de cambiar el estado de ${selectedRows.length} productos a Activo?` :
+          `¿Estás seguro de cambiar el estado de ${selectedRows.length} productos a Inactivo?`
+        }
+        confirmText={
+          confirmModal.type.includes("Delete") ? "Sí, eliminar" : "Sí, confirmar"
+        }
+        type={
+          confirmModal.type.includes("Delete") ? "danger" : 
+          confirmModal.type === "bulkActive" ? "success" : "warning"
+        }
+      />
     </div>
   );
 }

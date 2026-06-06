@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import * as api from "../../../../api/catalog-settings";
 import Spinner from "../../components/Spinner/Spinner";
+import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import "./Settings.css";
 
 function LoadingRow({ colSpan = 3, message = "Cargando..." }) {
@@ -127,6 +128,7 @@ function TabCategories() {
   const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: null, name: "", parent_id: "" });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
   const [loading, setLoading] = useState(true);
   useEffect(() => { loadCategories(); }, []);
 
@@ -158,7 +160,6 @@ function TabCategories() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar esta categoría?")) return;
     try {
       await api.deleteCategory(id);
       loadCategories();
@@ -216,7 +217,7 @@ function TabCategories() {
 
                         <button
                           className="btn-icon danger"
-                          onClick={() => handleDelete(c.id)}
+                          onClick={() => setConfirmModal({ isOpen: true, id: c.id })}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -262,6 +263,16 @@ function TabCategories() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, id: null })}
+        onConfirm={() => handleDelete(confirmModal.id)}
+        title="Eliminar Categoría"
+        message="¿Seguro que deseas eliminar esta categoría?"
+        confirmText="Sí, eliminar"
+        type="danger"
+      />
     </div>
   );
 }
@@ -271,6 +282,7 @@ function TabProductTypes() {
   const [types, setTypes] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: null, name: "" });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { loadTypes(); }, []);
@@ -299,7 +311,6 @@ function TabProductTypes() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar?")) return;
     try { await api.deleteProductType(id); loadTypes(); } catch (err) { console.error(err); }
   };
 
@@ -323,7 +334,7 @@ function TabProductTypes() {
                   <td>
                     <div className="action-btns">
                       <button className="btn-icon" onClick={() => { setFormData({ id: t.id, name: t.name }); setIsModalOpen(true); }}><Edit2 size={16}/></button>
-                      <button className="btn-icon danger" onClick={() => handleDelete(t.id)}><Trash2 size={16}/></button>
+                      <button className="btn-icon danger" onClick={() => setConfirmModal({ isOpen: true, id: t.id })}><Trash2 size={16}/></button>
                     </div>
                   </td>
                 </tr>
@@ -352,6 +363,16 @@ function TabProductTypes() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, id: null })}
+        onConfirm={() => handleDelete(confirmModal.id)}
+        title="Eliminar Tipo"
+        message="¿Seguro que deseas eliminar este tipo?"
+        confirmText="Sí, eliminar"
+        type="danger"
+      />
     </div>
   );
 }
@@ -372,6 +393,7 @@ function TabAttributes() {
 
   const [loadingAttributes, setLoadingAttributes] = useState(true);
   const [loadingValues, setLoadingValues] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: "", id: null });
 
   useEffect(() => { loadAttributes(); }, []);
 
@@ -425,7 +447,6 @@ function TabAttributes() {
   };
 
   const handleDeleteAttr = async (id) => {
-    if (!window.confirm("¿Eliminar atributo y todos sus valores?")) return;
     try { 
       await api.deleteAttribute(id); 
       if (selectedAttr?.id === id) setSelectedAttr(null);
@@ -446,7 +467,6 @@ function TabAttributes() {
   };
 
   const handleDeleteValue = async (id) => {
-    if (!window.confirm("¿Eliminar este valor?")) return;
     try { await api.deleteAttributeValue(id); loadValues(selectedAttr); } catch (err) { console.error(err); }
   };
 
@@ -468,7 +488,7 @@ function TabAttributes() {
                   <span>{a.name} {a.is_fixed && <span className="badge" style={{marginLeft: 5, background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa'}}>Fijo</span>}</span>
                   <div className="action-btns" onClick={e => e.stopPropagation()}>
                     <button className="btn-icon" style={{width: 24, height: 24}} onClick={() => { setAttrForm({ id: a.id, name: a.name, is_fixed: a.is_fixed || false }); setIsAttrModalOpen(true); }}><Edit2 size={12}/></button>
-                    <button className="btn-icon danger" style={{width: 24, height: 24}} onClick={() => handleDeleteAttr(a.id)}><Trash2 size={12}/></button>
+                    <button className="btn-icon danger" style={{width: 24, height: 24}} onClick={() => setConfirmModal({ isOpen: true, type: "attr", id: a.id })}><Trash2 size={12}/></button>
                   </div>
                 </div>
                 ))}
@@ -521,7 +541,7 @@ function TabAttributes() {
                       <td>
                         <div className="action-btns">
                           <button className="btn-icon" onClick={() => { setValueForm({ id: v.id, value: v.value, hex_code: v.hex_code || "", isColor: !!v.hex_code }); setIsValueModalOpen(true); }}><Edit2 size={16}/></button>
-                          <button className="btn-icon danger" onClick={() => handleDeleteValue(v.id)}><Trash2 size={16}/></button>
+                          <button className="btn-icon danger" onClick={() => setConfirmModal({ isOpen: true, type: "value", id: v.id })}><Trash2 size={16}/></button>
                         </div>
                       </td>
                     </tr>
@@ -609,6 +629,23 @@ function TabAttributes() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, type: "", id: null })}
+        onConfirm={() => {
+          if (confirmModal.type === "attr") handleDeleteAttr(confirmModal.id);
+          if (confirmModal.type === "value") handleDeleteValue(confirmModal.id);
+        }}
+        title={confirmModal.type === "attr" ? "Eliminar Atributo" : "Eliminar Valor"}
+        message={
+          confirmModal.type === "attr" 
+          ? "¿Eliminar atributo y todos sus valores?" 
+          : "¿Eliminar este valor?"
+        }
+        confirmText="Sí, eliminar"
+        type="danger"
+      />
     </div>
   );
 }
@@ -618,6 +655,7 @@ function TabSizes() {
   const [sizes, setSizes] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: null, name: "", description: "" });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
   const [loading, setLoading] = useState(true);
   useEffect(() => { loadSizes(); }, []);
 
@@ -646,7 +684,6 @@ function TabSizes() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar?")) return;
     try { await api.deleteSize(id); loadSizes(); } catch (err) { console.error(err); }
   };
 
@@ -671,7 +708,7 @@ function TabSizes() {
                   <td>
                     <div className="action-btns">
                       <button className="btn-icon" onClick={() => { setFormData({ id: s.id, name: s.name, description: s.description || "" }); setIsModalOpen(true); }}><Edit2 size={16}/></button>
-                      <button className="btn-icon danger" onClick={() => handleDelete(s.id)}><Trash2 size={16}/></button>
+                      <button className="btn-icon danger" onClick={() => setConfirmModal({ isOpen: true, id: s.id })}><Trash2 size={16}/></button>
                     </div>
                   </td>
                 </tr>
@@ -713,6 +750,7 @@ function TabFits() {
   const [fits, setFits] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: null, name: "" });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
   const [loading, setLoading] = useState(true);
   
 
@@ -739,7 +777,6 @@ function TabFits() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar?")) return;
     try { await api.deleteFit(id); loadFits(); } catch (err) { console.error(err); }
   };
 
@@ -763,7 +800,7 @@ function TabFits() {
                   <td>
                     <div className="action-btns">
                       <button className="btn-icon" onClick={() => { setFormData({ id: f.id, name: f.name }); setIsModalOpen(true); }}><Edit2 size={16}/></button>
-                      <button className="btn-icon danger" onClick={() => handleDelete(f.id)}><Trash2 size={16}/></button>
+                      <button className="btn-icon danger" onClick={() => setConfirmModal({ isOpen: true, id: f.id })}><Trash2 size={16}/></button>
                     </div>
                   </td>
                 </tr>
@@ -792,6 +829,16 @@ function TabFits() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, id: null })}
+        onConfirm={() => handleDelete(confirmModal.id)}
+        title="Eliminar Fit"
+        message="¿Seguro que deseas eliminar este fit?"
+        confirmText="Sí, eliminar"
+        type="danger"
+      />
     </div>
   );
 }
@@ -801,6 +848,7 @@ function TabMeasurements() {
   const [measurements, setMeasurements] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: null, name: "" });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { loadMeasurements(); }, []);
@@ -827,7 +875,6 @@ function TabMeasurements() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar?")) return;
     try { await api.deleteMeasurementType(id); loadMeasurements(); } catch (err) { console.error(err); }
   };
 
@@ -851,7 +898,7 @@ function TabMeasurements() {
                   <td>
                     <div className="action-btns">
                       <button className="btn-icon" onClick={() => { setFormData({ id: m.id, name: m.name }); setIsModalOpen(true); }}><Edit2 size={16}/></button>
-                      <button className="btn-icon danger" onClick={() => handleDelete(m.id)}><Trash2 size={16}/></button>
+                      <button className="btn-icon danger" onClick={() => setConfirmModal({ isOpen: true, id: m.id })}><Trash2 size={16}/></button>
                     </div>
                   </td>
                 </tr>
@@ -880,6 +927,16 @@ function TabMeasurements() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, id: null })}
+        onConfirm={() => handleDelete(confirmModal.id)}
+        title="Eliminar Medida"
+        message="¿Seguro que deseas eliminar esta medida?"
+        confirmText="Sí, eliminar"
+        type="danger"
+      />
     </div>
   );
 }

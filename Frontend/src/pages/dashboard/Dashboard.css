@@ -180,7 +180,7 @@ html, body {
   background: transparent;
   border: none;
   position: absolute;
-  top: 18px;
+  top: 19px;
   left: 18px;
 
   width: 32px;
@@ -251,7 +251,7 @@ html, body {
       background: transparent;
       border: none;
       position: fixed;
-    top: 14px;
+    top: 9px;
     left: 14px;
     z-index: 1001;
 
@@ -279,6 +279,8 @@ html, body {
 
 .topbar {
   height: 70px;
+  min-height: 70px;
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -328,7 +330,7 @@ html, body {
 
 .user-email {
   font-size: 11px;
-  color: rgba(255,255,255,0.5);
+  color: var( --text-main) !important;
 }
 
 /* BUTTONS */
@@ -410,6 +412,7 @@ html, body {
 
   .topbar {
     height: 60px;
+    min-height: 60px;
     padding: 0 14px 0 60px;
 
     flex-direction: row;
@@ -574,4 +577,10 @@ html, body {
   transform: translateY(-1px);
 }
 
-
+/* FORCE ALL MODAL OVERLAYS ABOVE MOBILE TOGGLE BTN */
+.modal-overlay,
+.branch-modal-overlay,
+.settings-modal-overlay,
+.selector-modal-overlay {
+  z-index: 10000 !important;
+}
