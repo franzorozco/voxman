@@ -41,7 +41,7 @@ class InventoryMovement extends Model
 		'quantity' => 'int'
 	];
 
-	public function product_variant()
+	public function variant()
 	{
 		return $this->belongsTo(ProductVariant::class, 'variant_id');
 	}

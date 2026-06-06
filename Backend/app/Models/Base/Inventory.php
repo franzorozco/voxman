@@ -48,7 +48,7 @@ class Inventory extends Model
 		return $this->belongsTo(Branch::class);
 	}
 
-	public function product_variant()
+	public function variant()
 	{
 		return $this->belongsTo(ProductVariant::class, 'variant_id');
 	}

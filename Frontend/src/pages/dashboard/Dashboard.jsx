@@ -175,7 +175,7 @@ export default function DashboardLayout() {
                 />
               </CanAccess>
 
-              <CanAccess permission="manage_settings">
+              <CanAccess permission="view_inventory">
                 <NavItem
                   to="/dashboard/inventory"
                   icon={Boxes}

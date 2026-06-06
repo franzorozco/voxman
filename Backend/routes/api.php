@@ -104,8 +104,10 @@ Route::middleware([
     });
 
     Route::prefix('inventories')->group(function () {
-        Route::get('/', [InventoryController::class, 'index']);
-        Route::put('/{id}', [InventoryController::class, 'update']);
+        Route::get('/', [InventoryController::class, 'index'])->middleware('permission:view_inventory');
+        Route::get('/movements', [InventoryController::class, 'movements'])->middleware('permission:view_inventory');
+        Route::post('/adjust', [InventoryController::class, 'adjust'])->middleware('permission:manage_inventory');
+        Route::post('/transfer', [InventoryController::class, 'transfer'])->middleware('permission:manage_inventory');
     });
 
 

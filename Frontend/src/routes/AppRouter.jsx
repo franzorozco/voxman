@@ -24,6 +24,8 @@ import DeletedProducts from "../pages/dashboard/pages/Products/DeletedProducts";
 import Settings from "../pages/dashboard/pages/catalog-settings/Settings.jsx";
 import Branches from "../pages/dashboard/pages/Branches/Branches.jsx";
 import DeletedBranches from "../pages/dashboard/pages/Branches/DeletedBranches.jsx";
+import Inventory from "../pages/dashboard/pages/inventory/Inventory.jsx";
+import InventoryMovements from "../pages/dashboard/pages/inventory/InventoryMovements.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -70,6 +72,8 @@ export default function AppRouter() {
             <Route path="users/deleted" element={<ProtectedRoute permissions={["view_users"]}><DeletedUsers /></ProtectedRoute>} />
             <Route path="roles" element={<ProtectedRoute permissions={["manage_roles"]}><Roles /></ProtectedRoute>} />
             <Route path="permissions" element={<ProtectedRoute permissions={["manage_roles"]}><Permissions /></ProtectedRoute>} />
+            <Route path="inventory" element={<ProtectedRoute permissions={["view_inventory"]}><Inventory /></ProtectedRoute>} />
+            <Route path="inventory/movements" element={<ProtectedRoute permissions={["view_inventory"]}><InventoryMovements /></ProtectedRoute>} />
 
           </Route>
         </Route>

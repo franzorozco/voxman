@@ -9,9 +9,16 @@ class InventoryMovement extends BaseInventoryMovement
 	protected $fillable = [
 		'variant_id',
 		'branch_id',
-		'user_id',
-		'type',
+		'created_by',
+		'movement_type',
 		'quantity',
 		'reference'
 	];
+
+
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\Core\User::class, 'created_by');
+    }
 }

@@ -12,4 +12,5 @@ class Inventory extends BaseInventory
 		'stock',
 		'min_stock'
 	];
+
 }
