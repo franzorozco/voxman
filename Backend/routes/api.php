@@ -78,6 +78,7 @@ Route::middleware([
         Route::get('/{id}', [ProductController::class, 'show']);
         Route::post('/', [ProductController::class, 'store']);
         Route::put('/{id}', [ProductController::class, 'update']);
+        Route::patch('/{id}/partial', [ProductController::class, 'partialUpdate']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::post('/{id}/restore', [ProductController::class, 'restore']);
     });

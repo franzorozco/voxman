@@ -478,7 +478,84 @@
   }
 }
 
+/* =========================
+    BULK ACTIONS BAR
+========================= */
 
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--bg-secondary, var(--bg-card));
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.bulk-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.bulk-actions-count {
+  font-weight: 600;
+  color: #fff;
+}
+
+.bulk-actions-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-color);
+}
+
+.bulk-actions-right {
+  display: flex;
+}
+
+.btn-danger-bulk {
+  background: #ff4d4f;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.btn-danger-bulk:hover {
+  background: #ff7875;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .bulk-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .bulk-actions-left {
+    justify-content: center;
+  }
+
+  .bulk-actions-divider {
+    display: none;
+  }
+  
+  .bulk-actions-right {
+    justify-content: center;
+  }
+
+  .btn-danger-bulk {
+    width: 100%;
+  }
+}
 
 .product-thumb {
   width: 50px;
@@ -3514,4 +3591,46 @@ select option:focus {
 .custom-dropdown-item:hover {
   background: rgba(255, 255, 255, 0.1);
   padding-left: 20px;
+}
+ 
+.custom-table-checkbox {
+  appearance: none;
+  background-color: var(--bg-main);
+  margin: 0;
+  font: inherit;
+  color: currentColor;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color); /* Usamos el borde del tema por defecto */
+  border-radius: 4px;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Efecto hover para notar interactividad */
+.custom-table-checkbox:hover {
+  border-color: var(--color-primary);
+}
+
+.custom-table-checkbox::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  /* El fondo del gancho toma el color de texto contrastante */
+  background-color: var(--color-primary-text);
+  transform-origin: center;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+.custom-table-checkbox:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.custom-table-checkbox:checked::before {
+  transform: scale(1);
 }

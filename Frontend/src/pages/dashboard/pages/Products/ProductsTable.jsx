@@ -9,8 +9,26 @@ export default function ProductsTable({
   onEdit,
   onDelete,
   onSort,
-  onView
+  onView,
+  selectedRows = [],
+  setSelectedRows = () => {}
 }) {
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedRows(products.map(p => p.id));
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  const handleSelectRow = (id) => {
+    if (selectedRows.includes(id)) {
+      setSelectedRows(selectedRows.filter(r => r !== id));
+    } else {
+      setSelectedRows([...selectedRows, id]);
+    }
+  };
 
   const DEFAULT_IMAGE =
     `${API_BASE_URL}/storage/product_images/default.png`;
@@ -57,6 +75,14 @@ export default function ProductsTable({
 
         <thead>
           <tr>
+            <th style={{ width: '40px' }}>
+              <input 
+                type="checkbox" 
+                checked={products.length > 0 && selectedRows.length === products.length} 
+                onChange={handleSelectAll} 
+                className="custom-table-checkbox"
+              />
+            </th>
             <th></th>
 
             <SortableTh label="Producto" field="name" />
@@ -83,7 +109,7 @@ export default function ProductsTable({
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="13" style={{ padding: "60px 0" }}>
+              <td colSpan="14" style={{ padding: "60px 0" }}>
                 <div
                   style={{
                     display: "flex",
@@ -97,7 +123,7 @@ export default function ProductsTable({
                   <span
                     style={{
                       fontSize: 14,
-                      color: "#6b7280",
+                      color: "#ffffff",
                       fontWeight: 500,
                     }}
                   >
@@ -109,7 +135,7 @@ export default function ProductsTable({
           ) : products.length === 0 ? (
             <tr>
               <td
-                colSpan="13"
+                colSpan="14"
                 style={{
                   textAlign: "center",
                   padding: "40px",
@@ -129,6 +155,14 @@ export default function ProductsTable({
 
               return (
                 <tr key={p.id}>
+                  <td>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedRows.includes(p.id)} 
+                      onChange={() => handleSelectRow(p.id)} 
+                      className="custom-table-checkbox"
+                    />
+                  </td>
                   {/* IMAGE */}
                   <td>
                     <div className="product-thumb">

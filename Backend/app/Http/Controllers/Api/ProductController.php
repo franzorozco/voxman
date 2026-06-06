@@ -519,6 +519,45 @@ class ProductController extends Controller
         }
     }
 
+    public function partialUpdate(Request $request, $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $product = Product::findOrFail($id);
+            $updateData = [];
+
+            if ($request->has('owner_id')) {
+                $updateData['owner_id'] = $request->owner_id;
+            }
+            if ($request->has('category_id')) {
+                $updateData['category_id'] = $request->category_id;
+            }
+            if ($request->has('is_active')) {
+                $updateData['is_active'] = $request->is_active;
+            }
+
+            if (!empty($updateData)) {
+                $product->update($updateData);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Producto actualizado parcialmente',
+                'product' => $product
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al actualizar producto',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function destroy($id)
     {
         DB::beginTransaction();

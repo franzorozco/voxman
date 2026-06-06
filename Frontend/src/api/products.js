@@ -20,5 +20,10 @@ export const updateProduct = (id, data) => {
   return api.post(`${BASE_URL}/${id}`, data);
 };
 
+export const updatePartialProduct = (id, data) => {
+  data.append("_method", "PATCH");
+  return api.post(`${BASE_URL}/${id}/partial`, data);
+};
+
 export const deleteProduct = (id) =>
   api.delete(`${BASE_URL}/${id}`);

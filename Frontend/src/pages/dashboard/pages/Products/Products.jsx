@@ -4,6 +4,7 @@ import {
   getProducts,
   createProduct,
   updateProduct,
+  updatePartialProduct,
   deleteProduct,
 } from "../../../../api/products";
 
@@ -16,6 +17,8 @@ import { getFits } from "../../../../api/fits";
 
 import "./Products.css";
 import "../css/stylesCruds.css";
+
+import { X } from "lucide-react";
 
 import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
@@ -45,6 +48,9 @@ export default function Products() {
     sortBy: "name",
     sortDir: "asc",
   });
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkEditForm, setBulkEditForm] = useState({ owner_id: "", category_id: "" });
 
   const loadProducts = async () => {
     try {
@@ -63,6 +69,62 @@ export default function Products() {
         "Error cargando productos:",
         error
       );
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`¿Estás seguro de eliminar ${selectedRows.length} productos?`)) return;
+    try {
+      setLoadingProducts(true);
+      await Promise.all(selectedRows.map(id => deleteProduct(id)));
+      setSelectedRows([]);
+      loadProducts();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const handleBulkStatus = async (isActive) => {
+    try {
+      setLoadingProducts(true);
+      await Promise.all(selectedRows.map(id => {
+        const fd = new FormData();
+        fd.append("is_active", isActive ? 1 : 0);
+        return updatePartialProduct(id, fd);
+      }));
+      setSelectedRows([]);
+      loadProducts();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const handleBulkEditSubmit = async () => {
+    if (!bulkEditForm.owner_id && !bulkEditForm.category_id) {
+      setBulkEditOpen(false);
+      return;
+    }
+
+    try {
+      setLoadingProducts(true);
+      await Promise.all(selectedRows.map(id => {
+        const fd = new FormData();
+        if (bulkEditForm.owner_id) fd.append("owner_id", bulkEditForm.owner_id);
+        if (bulkEditForm.category_id) fd.append("category_id", bulkEditForm.category_id);
+        return updatePartialProduct(id, fd);
+      }));
+      setSelectedRows([]);
+      setBulkEditOpen(false);
+      setBulkEditForm({ owner_id: "", category_id: "" });
+      loadProducts();
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoadingProducts(false);
     }
@@ -353,8 +415,25 @@ export default function Products() {
       {/* TABLE */}
       {/* ====================================================== */}
 
+        {selectedRows.length > 0 && (
+          <div className="bulk-actions-bar">
+            <div className="bulk-actions-left">
+              <span className="bulk-actions-count">{selectedRows.length} seleccionados</span>
+              <div className="bulk-actions-divider"></div>
+              <button className="btn btn-secondary" onClick={() => setBulkEditOpen(true)}>Editar</button>
+              <button className="btn btn-secondary" onClick={() => handleBulkStatus(true)}>Activar</button>
+              <button className="btn btn-secondary" onClick={() => handleBulkStatus(false)}>Inactivar</button>
+            </div>
+            <div className="bulk-actions-right">
+              <button className="btn btn-danger-bulk" onClick={handleBulkDelete}>Eliminar</button>
+            </div>
+          </div>
+        )}
+
       <ProductsTable
         products={filteredProducts}
+        selectedRows={selectedRows}
+        setSelectedRows={setSelectedRows}
         loading={loadingProducts}
         onEdit={(p) => {
           setSelected(p);
@@ -392,11 +471,56 @@ export default function Products() {
       {/* VIEW MODAL */}
       {/* ====================================================== */}
 
-      {viewOpen && !loadingData && (
+      {viewOpen && !loadingData && selectedView && (
         <ProductViewModal
           product={selectedView}
           onClose={() => setViewOpen(false)}
         />
+      )}
+
+      {bulkEditOpen && (
+        <div className="modal-overlay" style={{ backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.6)' }}>
+            <div className="modal-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 'none' }}>
+              <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 600 }}>Edición Masiva</h2>
+              <button onClick={() => setBulkEditOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', padding: '4px' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Propietario</label>
+                <select
+                  className="form-control"
+                  style={{ width: '100%', padding: '12px', background: 'var(--bg-secondary)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
+                  value={bulkEditForm.owner_id}
+                  onChange={(e) => setBulkEditForm({ ...bulkEditForm, owner_id: e.target.value })}
+                >
+                  <option value="">-- No modificar --</option>
+                  {owners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Categoría</label>
+                <select
+                  className="form-control"
+                  style={{ width: '100%', padding: '12px', background: 'var(--bg-secondary)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
+                  value={bulkEditForm.category_id}
+                  onChange={(e) => setBulkEditForm({ ...bulkEditForm, category_id: e.target.value })}
+                >
+                  <option value="">-- No modificar --</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setBulkEditOpen(false)}>Cancelar</button>
+              <button type="button" className="btn btn-primary" onClick={handleBulkEditSubmit} disabled={loadingProducts}>
+                Aplicar a {selectedRows.length} productos
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ====================================================== */}
