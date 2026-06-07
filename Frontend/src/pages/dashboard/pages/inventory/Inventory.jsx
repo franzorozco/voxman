@@ -1,28 +1,46 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getInventory } from "../../../../api/inventory";
 import { getBranches } from "../../../../api/branches";
-import { Search, Filter, History, AlertTriangle, ArrowRightLeft, PenTool } from "lucide-react";
+import { Search, Filter, History, AlertTriangle, ArrowRightLeft, PenTool, ChevronDown, ChevronRight, Package, Plus } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
 import AdjustStockModal from "./AdjustStockModal";
 import TransferStockModal from "./TransferStockModal";
+import ReceiveStockModal from "./components/ReceiveStockModal";
 import "./Inventory.css";
 import { API_BASE_URL } from "../../../../config/api";
+import { useAuthStore } from "../../../../store/authStore";
 
 export default function Inventory() {
   const [inventories, setInventories] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
   
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    total: 0
+  });
+
   const [filters, setFilters] = useState({
     search: "",
     branch_id: "",
-    status: ""
+    status: "",
+    page: 1
   });
 
   const [adjustModal, setAdjustModal] = useState({ isOpen: false, item: null });
   const [transferModal, setTransferModal] = useState({ isOpen: false, item: null });
+  const [receiveModalOpen, setReceiveModalOpen] = useState(false);
+
+  const [isBranchDropdownOpen, setIsBranchDropdownOpen] = useState(false);
+
+  const [viewMode, setViewMode] = useState("selector"); // "selector" or "table"
+
+  const user = useAuthStore((state) => state.user);
+  const canViewAllBranches = user?.permissions?.includes('view_inventory_all_branches') || user?.roles?.includes('Owner');
 
   const loadData = async () => {
     try {
@@ -32,7 +50,18 @@ export default function Inventory() {
         getBranches()
       ]);
       setInventories(invRes.data?.data || []);
-      setBranches(branchRes.data || branchRes || []);
+      
+      if (invRes.data?.current_page) {
+        setPagination({
+          current_page: invRes.data.current_page,
+          last_page: invRes.data.last_page,
+          total: invRes.data.total
+        });
+      }
+
+      const loadedBranches = branchRes.data || branchRes || [];
+      setBranches(loadedBranches);
+      
     } catch (error) {
       console.error("Error loading inventory:", error);
     } finally {
@@ -44,188 +73,421 @@ export default function Inventory() {
     loadData();
   }, [filters]);
 
+  const handleSearch = (e) => {
+    setFilters({ ...filters, search: e.target.value, page: 1 });
+  };
+
   const handleAdjustSuccess = () => {
-    setAdjustModal({ isOpen: false, item: null });
     loadData();
   };
 
   const handleTransferSuccess = () => {
-    setTransferModal({ isOpen: false, item: null });
     loadData();
   };
 
+  const selectedBranch = branches.find(b => b.id === filters.branch_id);
+
   return (
     <div className="inventory-container">
-      <div className="inventory-header">
-        <h1 className="inventory-title">Inventario</h1>
+      <div className="inventory-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1 className="inventory-title" style={{ margin: 0 }}>Gestión de Inventario</h1>
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+          
+          <div style={{ position: 'relative' }}>
+            <button 
+              className="btn-secondary" 
+              onClick={() => canViewAllBranches && setIsBranchDropdownOpen(!isBranchDropdownOpen)}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', cursor: canViewAllBranches ? 'pointer' : 'default' }}
+            >
+              {selectedBranch ? (
+                <>
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    <Package size={14} color="#fff" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1' }}>Sucursal Actual</span>
+                    <span style={{ fontSize: '14px', fontWeight: 600, lineHeight: '1.2' }}>{selectedBranch.name}</span>
+                  </div>
+                </>
+              ) : (
+                <span>Seleccionar Sucursal</span>
+              )}
+              {canViewAllBranches && <ChevronDown size={16} style={{ marginLeft: '4px' }} />}
+            </button>
 
-        <div className="inventory-actions">
-          <CanAccess permission="view_inventory">
+            {isBranchDropdownOpen && (
+              <div style={{ position: 'absolute', top: '100%', left: '0', marginTop: '8px', width: '280px', maxWidth: '85vw', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 99, overflow: 'hidden', animation: 'fadeIn 0.2s ease' }}>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cambiar Sucursal</span>
+                </div>
+                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                  <button
+                    onClick={() => { setFilters({ ...filters, branch_id: "", page: 1 }); setIsBranchDropdownOpen(false); setViewMode("table"); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 16px', border: 'none', borderBottom: '1px solid var(--border-color)', background: filters.branch_id === "" ? 'var(--primary-color-alpha)' : 'transparent', color: 'var(--text-main)', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'left' }}
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Package size={16} />
+                    </div>
+                    <span style={{ fontWeight: 500 }}>Todas las sucursales</span>
+                  </button>
+
+                  {branches.map(branch => (
+                    <button
+                      key={branch.id}
+                      onClick={() => { setFilters({ ...filters, branch_id: branch.id, page: 1 }); setIsBranchDropdownOpen(false); setViewMode("table"); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 16px', border: 'none', borderBottom: '1px solid var(--border-color)', background: filters.branch_id === branch.id ? 'var(--primary-color-alpha)' : 'transparent', color: 'var(--text-main)', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'left' }}
+                    >
+                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        {branch.images && branch.images.length > 0 ? (
+                          <img src={`${API_BASE_URL}${branch.images[0].image_url}`} alt={branch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <Package size={16} />
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontWeight: 600, fontSize: '14px' }}>{branch.name}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{branch.phone || "Sin teléfono"}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <CanAccess permission="view_inventory_history">
             <Link 
               to="/dashboard/inventory/movements"
               className="btn-secondary" 
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', padding: '12px 16px', borderRadius: '10px' }}
             >
-              <History size={16} /> Historial de Movimientos
+              <History size={18} /> <span className="hide-on-mobile">Historial</span>
             </Link>
+          </CanAccess>
+
+          <CanAccess permission="receive_inventory">
+            <button
+              onClick={() => setReceiveModalOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', fontWeight: 500, boxShadow: '0 4px 10px var(--bg-overlay)', transition: 'transform 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              <Plus size={18} strokeWidth={2.5} /> <span className="hide-on-mobile">Ingresar Stock</span>
+            </button>
           </CanAccess>
         </div>
       </div>
 
-      <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              placeholder="Buscar producto o SKU..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            />
-          </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--primary-color)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
-          >
-            <Filter size={18} />
-            <span className="hide-on-mobile">Filtros</span>
-          </button>
-        </div>
+      {viewMode === "selector" && canViewAllBranches ? (
+        <div className="branch-selector-view" style={{ padding: '20px 0', animation: 'fadeIn 0.3s ease' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>Selecciona una Sucursal</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '30px' }}>Elige la sucursal para la cual deseas consultar o gestionar el inventario.</p>
 
-        {showFilters && (
-          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Sucursal</label>
-              <select
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
-                value={filters.branch_id}
-                onChange={(e) => setFilters({ ...filters, branch_id: e.target.value })}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+            {branches.map(branch => (
+              <div 
+                key={branch.id}
+                onClick={() => { setFilters({ ...filters, branch_id: branch.id, page: 1 }); setViewMode("table"); }}
+                style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border-color)', cursor: 'pointer', height: '200px', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.15)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                <option value="">Todas</option>
-                {branches.map(b => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado de Stock</label>
-              <select
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
-                value={filters.status}
-                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              >
-                <option value="">Todos</option>
-                <option value="in_stock">En Stock</option>
-                <option value="low_stock">Bajo Stock</option>
-                <option value="out_of_stock">Agotado</option>
-              </select>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="table-wrapper">
-        <table className="inventory-table">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Sucursal</th>
-              <th>Stock Actual</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="5" style={{ textAlign: "center", padding: "24px" }}>
-                  Cargando inventario...
-                </td>
-              </tr>
-            ) : inventories.length === 0 ? (
-              <tr>
-                <td colSpan="5" style={{ textAlign: "center", padding: "24px" }}>
-                  No se encontraron registros de inventario.
-                </td>
-              </tr>
-            ) : (
-              inventories.map((item) => {
-                const product = item.variant?.product;
-                const isLowStock = item.stock <= item.min_stock && item.stock > 0;
-                const isOutOfStock = item.stock <= 0;
+                {branch.images && branch.images.length > 0 ? (
+                  <img src={`${API_BASE_URL}${branch.images[0].image_url}`} alt={branch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, var(--primary-color), var(--bg-body))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Package size={64} color="rgba(255,255,255,0.15)" />
+                  </div>
+                )}
                 
-                const imgUrl = product?.product_images?.find(img => img.is_main)?.url 
-                               || product?.product_images?.[0]?.url;
-                const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : `${API_BASE_URL}${imgUrl}`) : "/placeholder.png";
+                <div style={{ position: 'absolute', bottom: '0', left: '0', right: '0', padding: '20px', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)', display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ color: '#fff', fontSize: '20px', fontWeight: 600, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{branch.name}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success-color)' }}></div>
+                    {branch.phone || "Sucursal Activa"}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
 
-                const attributesText = item.variant?.variant_attribute_values?.map(vav => vav.attribute_value?.value).filter(Boolean).join(", ") || "Única";
+          <div style={{ display: 'flex', justifyContent: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '30px' }}>
+            <button
+              onClick={() => { setFilters({ ...filters, branch_id: "", page: 1 }); setViewMode("table"); }}
+              className="btn-secondary"
+              style={{ padding: '14px 28px', fontSize: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}
+            >
+              <Package size={18} /> Ver inventario de todas las sucursales
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="filters-container" style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+              <div style={{ flex: 1, position: 'relative' }}>
+                <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+                  placeholder="Buscar producto o SKU..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--primary-color)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+              >
+                <Filter size={18} />
+                <span className="hide-on-mobile">Filtros</span>
+              </button>
+            </div>
 
-                return (
-                  <tr key={item.id}>
-                    <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <img
-                          src={finalImgUrl}
-                          alt={product?.name}
-                          className="product-img"
-                          style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px' }}
-                          onError={(e) => { e.target.src = `${API_BASE_URL}/storage/products/default.png`; }}
-                        />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <div style={{ fontWeight: 600, lineHeight: '1.2' }}>{product?.name || "Desconocido"}</div>
-                          <div style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: '1.2' }}>
-                            {product?.sku} | {attributesText}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{item.branch?.name || "Sin sucursal"}</td>
-                    <td>
-                      <span style={{ fontWeight: 'bold', fontSize: '1.1em' }}>{item.stock}</span>
-                      <span style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginLeft: '4px' }}>uds</span>
-                    </td>
-                    <td>
-                      {isOutOfStock ? (
-                        <span className="status-badge danger"><AlertTriangle size={12} /> Agotado</span>
-                      ) : isLowStock ? (
-                        <span className="status-badge warning"><AlertTriangle size={12} /> Bajo Stock</span>
-                      ) : (
-                        <span className="status-badge success">En Stock</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="table-actions">
-                        <CanAccess permission="manage_inventory">
-                          <button 
-                            className="btn-edit" 
-                            onClick={() => setAdjustModal({ isOpen: true, item })}
-                            title="Ajustar Stock"
-                            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                          >
-                            <PenTool size={16} /> Ajustar
-                          </button>
-                        </CanAccess>
-                        
-                        <CanAccess permission="manage_inventory">
-                          <button 
-                            className="btn-secondary" 
-                            onClick={() => setTransferModal({ isOpen: true, item })}
-                            title="Transferir Stock"
-                            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                          >
-                            <ArrowRightLeft size={16} /> Transferir
-                          </button>
-                        </CanAccess>
-                      </div>
+            {showFilters && (
+              <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado de Stock</label>
+                  <select
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', transition: 'border 0.2s' }}
+                    value={filters.status}
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
+                  >
+                    <option value="">Todos los estados</option>
+                    <option value="in_stock">En Stock</option>
+                    <option value="low_stock">Bajo Stock</option>
+                    <option value="out_of_stock">Agotado</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="table-wrapper">
+            <table className="inventory-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>SKU / Cod.</th>
+                  <th>Sucursal</th>
+                  <th>Stock Actual</th>
+                  <th>Precio</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "24px" }}>
+                      Cargando inventario...
                     </td>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                ) : inventories.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "24px" }}>
+                      No se encontraron registros de inventario.
+                    </td>
+                  </tr>
+                ) : (
+                  (() => {
+                    const groupedInventories = inventories.reduce((acc, item) => {
+                      const productId = item.variant?.product?.id || "unknown";
+                      const branchId = item.branch_id || "unknown";
+                      const key = `${productId}-${branchId}`;
+                      
+                      if (!acc[key]) {
+                        acc[key] = {
+                          id: key,
+                          product: item.variant?.product,
+                          branch: item.branch,
+                          items: [],
+                          totalStock: 0,
+                          isExpanded: expandedGroups[key] || false
+                        };
+                      }
+                      
+                      acc[key].items.push(item);
+                      acc[key].totalStock += item.stock;
+                      return acc;
+                    }, {});
+
+                    return Object.values(groupedInventories).map((group) => {
+                      const toggleGroup = (id) => {
+                        setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
+                      };
+
+                      const groupImgUrl = group.product?.product_images?.find(img => img.is_main)?.url || group.product?.product_images?.[0]?.url;
+                      const groupFinalImgUrl = groupImgUrl ? (groupImgUrl.startsWith("http") ? groupImgUrl : `${API_BASE_URL}${groupImgUrl}`) : "/placeholder.png";
+
+                      const isGroupLowStock = group.items.some(i => i.stock <= i.min_stock && i.stock > 0);
+                      const isGroupOutOfStock = group.items.every(i => i.stock <= 0);
+
+                      return (
+                        <React.Fragment key={group.id}>
+                          <tr 
+                            style={{ background: 'var(--bg-card)', cursor: 'pointer', borderBottom: group.isExpanded ? 'none' : '1px solid var(--border-color)', transition: 'background 0.2s' }} 
+                            onClick={() => toggleGroup(group.id)}
+                            className="group-row"
+                          >
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                {group.isExpanded ? <ChevronDown size={18} color="var(--text-muted)" /> : <ChevronRight size={18} color="var(--text-muted)" />}
+                                <img
+                                  src={groupFinalImgUrl}
+                                  alt={group.product?.name}
+                                  className="product-img"
+                                  style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px' }}
+                                  onError={(e) => { e.target.src = `${API_BASE_URL}/storage/products/default.png`; }}
+                                />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  <div style={{ fontWeight: 600, lineHeight: '1.2', color: 'var(--text-main)' }}>{group.product?.name || "Desconocido"}</div>
+                                  <div style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: '1.2' }}>
+                                    {group.items.length} variante(s)
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Múltiples SKU</span>
+                            </td>
+                            <td>{group.branch?.name || "Sin sucursal"}</td>
+                            <td>
+                              <span style={{ fontWeight: 'bold', fontSize: '1.1em' }}>{group.totalStock}</span>
+                              <span style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginLeft: '4px' }}>uds</span>
+                            </td>
+                            <td>-</td>
+                            <td>
+                              {isGroupOutOfStock ? (
+                                <span className="status-badge danger"><AlertTriangle size={12} /> Agotado</span>
+                              ) : isGroupLowStock ? (
+                                <span className="status-badge warning"><AlertTriangle size={12} /> Bajo Stock</span>
+                              ) : (
+                                <span className="status-badge success">En Stock</span>
+                              )}
+                            </td>
+                            <td>
+                              {/* Parent row actions could be global (like view product), but we leave empty for variants */}
+                            </td>
+                          </tr>
+                          
+                          {group.isExpanded && group.items.map((item) => {
+                            const product = item.variant?.product;
+                            const isLowStock = item.stock <= item.min_stock && item.stock > 0;
+                            const isOutOfStock = item.stock <= 0;
+                            
+                            let imgUrl = item.variant?.variant_images?.[0]?.url;
+                            if (!imgUrl) {
+                              const attrIds = item.variant?.variant_attribute_values?.map(vav => vav.attribute_value_id) || [];
+                              const colorImg = product?.attribute_value_images?.find(img => attrIds.includes(img.attribute_value_id));
+                              if (colorImg) imgUrl = colorImg.url;
+                            }
+                            if (!imgUrl) {
+                              imgUrl = product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
+                            }
+                            const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : `${API_BASE_URL}${imgUrl}`) : "/placeholder.png";
+
+                            let colorVal = null;
+                            let otherAttrs = [];
+                            
+                            item.variant?.variant_attribute_values?.forEach(vav => {
+                              const attrName = vav.attribute_value?.attribute?.name?.toLowerCase() || "";
+                              const isColor = attrName.includes("color") || vav.attribute_value?.attribute?.is_fixed || vav.attribute_value?.hex_code;
+                              
+                              if (isColor && !colorVal) {
+                                colorVal = vav.attribute_value?.value;
+                              } else if (vav.attribute_value?.value) {
+                                otherAttrs.push(vav.attribute_value?.value);
+                              }
+                            });
+
+                            const orderedAttrs = [];
+                            if (colorVal) orderedAttrs.push(colorVal);
+                            if (item.variant?.size?.name) orderedAttrs.push(item.variant.size.name);
+                            orderedAttrs.push(...otherAttrs);
+                            if (item.variant?.fit?.name) orderedAttrs.push(item.variant.fit.name);
+
+                            const attributesText = orderedAttrs.length > 0 ? orderedAttrs.join(", ") : "Única";
+
+                            return (
+                              <tr key={item.id} style={{ background: 'var(--bg-body)', borderBottom: '1px solid var(--border-color)' }}>
+                                <td style={{ paddingLeft: '48px' }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                    <img
+                                      src={finalImgUrl}
+                                      alt={attributesText}
+                                      className="product-img"
+                                      style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px' }}
+                                      onError={(e) => { e.target.src = `${API_BASE_URL}/storage/products/default.png`; }}
+                                    />
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                      <div style={{ fontWeight: 500, lineHeight: '1.2', color: 'var(--text-main)', fontSize: '13px' }}>
+                                        {attributesText}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <span style={{ fontWeight: 500, color: 'var(--text-main)', fontSize: '13px' }}>{item.variant?.sku || "Sin SKU"}</span>
+                                    {item.variant?.barcode && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.variant.barcode}</span>}
+                                  </div>
+                                </td>
+                                <td style={{ color: 'var(--text-muted)' }}>{item.branch?.name || "Sin sucursal"}</td>
+                                <td>
+                                  <span style={{ fontWeight: 'bold', fontSize: '1.05em' }}>{item.stock}</span>
+                                  <span style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginLeft: '4px' }}>uds</span>
+                                </td>
+                                <td>
+                                  <span style={{ fontWeight: 600 }}>Bs {item.variant?.price?.toFixed(2) || "0.00"}</span>
+                                </td>
+                                <td>
+                                  {isOutOfStock ? (
+                                    <span className="status-badge danger"><AlertTriangle size={12} /> Agotado</span>
+                                  ) : isLowStock ? (
+                                    <span className="status-badge warning"><AlertTriangle size={12} /> Bajo Stock</span>
+                                  ) : (
+                                    <span className="status-badge success">En Stock</span>
+                                  )}
+                                </td>
+                                <td>
+                                  <div className="table-actions">
+                                    <CanAccess permission="adjust_inventory">
+                                      <button 
+                                        className="btn-edit" 
+                                        onClick={(e) => { e.stopPropagation(); setAdjustModal({ isOpen: true, item }); }}
+                                        title="Ajustar Stock"
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                                      >
+                                        <PenTool size={14} /> <span style={{fontSize: '12px'}}>Ajustar</span>
+                                      </button>
+                                    </CanAccess>
+                                    
+                                    <CanAccess permission="transfer_inventory">
+                                      <button 
+                                        className="btn-secondary" 
+                                        onClick={(e) => { e.stopPropagation(); setTransferModal({ isOpen: true, item }); }}
+                                        title="Transferir Stock"
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                                      >
+                                        <ArrowRightLeft size={14} /> <span style={{fontSize: '12px'}}>Transferir</span>
+                                      </button>
+                                    </CanAccess>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </React.Fragment>
+                      );
+                    });
+                  })()
+                )}
+              </tbody>
+            </table>
+          </div>
+
+        </>
+      )}
 
       {adjustModal.isOpen && (
         <AdjustStockModal 
@@ -241,6 +503,14 @@ export default function Inventory() {
           branches={branches}
           onClose={() => setTransferModal({ isOpen: false, item: null })}
           onSuccess={handleTransferSuccess}
+        />
+      )}
+
+      {receiveModalOpen && (
+        <ReceiveStockModal
+          defaultBranchId={filters.branch_id}
+          onClose={() => setReceiveModalOpen(false)}
+          onSuccess={() => { setReceiveModalOpen(false); loadData(); }}
         />
       )}
     </div>

@@ -16,6 +16,7 @@ import "../css/stylesCruds.css";
 import { RefreshCw, Trash2, ArrowLeft, RotateCcw } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
+import toast from "react-hot-toast";
 
 export default function DeletedProducts() {
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -50,10 +51,11 @@ export default function DeletedProducts() {
       const fd = new FormData();
       fd.append("is_active", 1);
       await updatePartialProduct(id, fd);
+      toast.success("Producto activado correctamente");
       loadProducts();
     } catch (err) {
       console.error("Error activando producto:", err);
-      alert("Error al activar el producto.");
+      toast.error(err.response?.data?.message || "Error al activar el producto.");
     } finally {
       setLoadingProducts(false);
     }
@@ -63,10 +65,11 @@ export default function DeletedProducts() {
     try {
       setLoadingProducts(true);
       await deleteProduct(id);
+      toast.success("Producto enviado a papelera");
       loadProducts();
     } catch (err) {
       console.error("Error moviendo a papelera:", err);
-      alert("Error al eliminar el producto.");
+      toast.error(err.response?.data?.message || "Error al eliminar el producto.");
     } finally {
       setLoadingProducts(false);
     }
@@ -76,10 +79,11 @@ export default function DeletedProducts() {
     try {
       setLoadingProducts(true);
       await restoreProduct(id);
+      toast.success("Producto restaurado correctamente");
       loadProducts();
     } catch (err) {
       console.error("Error restaurando producto:", err);
-      alert("Error al restaurar el producto.");
+      toast.error(err.response?.data?.message || "Error al restaurar el producto.");
     } finally {
       setLoadingProducts(false);
     }
@@ -89,10 +93,11 @@ export default function DeletedProducts() {
     try {
       setLoadingProducts(true);
       await forceDeleteProduct(id);
+      toast.success("Producto eliminado permanentemente");
       loadProducts();
     } catch (err) {
       console.error("Error eliminando permanentemente el producto:", err);
-      alert("Error al eliminar el producto de forma permanente.");
+      toast.error(err.response?.data?.message || "Error al eliminar el producto de forma permanente.");
     } finally {
       setLoadingProducts(false);
     }

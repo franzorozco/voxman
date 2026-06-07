@@ -86,7 +86,7 @@
   }
   
   .btn-edit {
-    background: var(--primary-color);
+    background: var(--color-warning);
     color: white;
     border: none;
     padding: 6px 12px;
@@ -128,4 +128,13 @@
       gap: 15px;
     }
   }
-  
+
+/* Ocultar flechas del input number */
+.no-spinners::-webkit-inner-spin-button,
+.no-spinners::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinners {
+  -moz-appearance: textfield; /* Firefox */
+}

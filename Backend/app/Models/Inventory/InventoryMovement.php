@@ -3,9 +3,11 @@
 namespace App\Models\Inventory;
 
 use App\Models\Base\InventoryMovement as BaseInventoryMovement;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class InventoryMovement extends BaseInventoryMovement
 {
+    use HasUuids;
 	protected $fillable = [
 		'variant_id',
 		'branch_id',
@@ -17,8 +19,4 @@ class InventoryMovement extends BaseInventoryMovement
 
 
 
-    public function user()
-    {
-        return $this->belongsTo(\App\Models\Core\User::class, 'created_by');
-    }
 }

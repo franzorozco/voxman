@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { adjustStock } from "../../../../api/inventory";
+import toast from "react-hot-toast";
 import { X } from "lucide-react";
 
 export default function AdjustStockModal({ item, onClose, onSuccess }) {
@@ -12,12 +13,12 @@ export default function AdjustStockModal({ item, onClose, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.quantity === 0) {
-      window.alert("La cantidad no puede ser cero.");
+      toast.error("La cantidad no puede ser cero.");
       return;
     }
     
     if (item.stock + formData.quantity < 0) {
-      window.alert("El ajuste no puede dejar el stock en negativo.");
+      toast.error("El ajuste no puede dejar el stock en negativo.");
       return;
     }
 
@@ -29,10 +30,12 @@ export default function AdjustStockModal({ item, onClose, onSuccess }) {
         quantity: formData.quantity,
         reference: formData.reference
       });
-      window.alert("Stock ajustado correctamente");
+      toast.success("Stock ajustado correctamente");
       onSuccess();
+      onClose();
     } catch (error) {
-      window.alert(error.response?.data?.message || "Error al ajustar stock");
+      console.error(error);
+      toast.error(error.response?.data?.message || "Error al ajustar stock");
     } finally {
       setLoading(false);
     }
@@ -68,15 +71,28 @@ export default function AdjustStockModal({ item, onClose, onSuccess }) {
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-main)' }}>
               Cantidad a Ajustar (+ / -)
             </label>
-            <input
-              type="number"
-              required
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '16px' }}
-              value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, quantity: formData.quantity - 1 })}
+                style={{ padding: '10px 20px', background: 'var(--bg-input)', border: 'none', borderRight: '1px solid var(--border-color)', color: 'var(--text-main)', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold' }}
+              >-</button>
+              <input
+                type="number"
+                required
+                style={{ width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', color: 'var(--text-main)', fontSize: '16px', fontWeight: 'bold', textAlign: 'center', outline: 'none' }}
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                className="no-spinners"
+              />
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, quantity: formData.quantity + 1 })}
+                style={{ padding: '10px 20px', background: 'var(--bg-input)', border: 'none', borderLeft: '1px solid var(--border-color)', color: 'var(--text-main)', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold' }}
+              >+</button>
+            </div>
             <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
-              Usa un número negativo para restar (Ej. -5) o positivo para sumar (Ej. 10).
+              Usa los botones para sumar o restar stock.
               <br/>
               <strong>Stock Final Estimado: {item.stock + formData.quantity}</strong>
             </small>
@@ -107,7 +123,7 @@ export default function AdjustStockModal({ item, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: '#fff', cursor: 'pointer', fontWeight: 500 }}
+              style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)', cursor: 'pointer', fontWeight: 500 }}
             >
               {loading ? "Guardando..." : "Confirmar Ajuste"}
             </button>

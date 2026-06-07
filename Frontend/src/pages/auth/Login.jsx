@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginUser } from "../../api/auth";
 import { useAuthStore } from "../../store/authStore";
+import toast from "react-hot-toast";
 import "./Auth.css"; 
 
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
@@ -68,7 +69,7 @@ export default function Login() {
 
     } catch (error) {
       console.log(error.response?.data || error.message);
-      alert(error.response?.data?.message || "Error al iniciar sesión");
+      toast.error(error.response?.data?.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }

@@ -18,24 +18,33 @@ class InventoryController extends Controller
         $query = Inventory::with([
             'branch',
             'variant.product.product_images',
+            'variant.product.attribute_value_images',
             'variant.product.category',
             'variant.variant_images',
+            'variant.size',
+            'variant.fit',
             'variant.variant_attribute_values.attribute_value.attribute'
         ]);
 
-        if ($request->has('branch_id') && $request->branch_id !== '') {
+        if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
         }
 
-        if ($request->has('search') && $request->search !== '') {
+        if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('variant.product', function ($q) use ($search) {
-                $q->where('name', 'ilike', '%' . $search . '%')
-                  ->orWhere('sku', 'ilike', '%' . $search . '%');
+            $query->where(function($q) use ($search) {
+                $q->whereHas('variant.product', function ($q2) use ($search) {
+                    $q2->where('name', 'ilike', '%' . $search . '%')
+                       ->orWhere('sku', 'ilike', '%' . $search . '%');
+                })
+                ->orWhereHas('variant', function ($q3) use ($search) {
+                    $q3->where('sku', 'ilike', '%' . $search . '%')
+                       ->orWhere('barcode', 'ilike', '%' . $search . '%');
+                });
             });
         }
 
-        if ($request->has('status') && $request->status !== '') {
+        if ($request->filled('status')) {
             if ($request->status === 'low_stock') {
                 $query->whereColumn('stock', '<=', 'min_stock')->where('stock', '>', 0);
             } elseif ($request->status === 'out_of_stock') {
@@ -45,7 +54,7 @@ class InventoryController extends Controller
             }
         }
 
-        $inventories = $query->paginate($request->get('per_page', 20));
+        $inventories = $query->orderBy('branch_id')->orderBy('variant_id')->paginate($request->get('per_page', 1000));
 
         return response()->json($inventories);
     }
@@ -88,7 +97,7 @@ class InventoryController extends Controller
                 'variant_id' => $request->variant_id,
                 'branch_id' => $request->branch_id,
                 'created_by' => auth()->id(),
-                'movement_type' => $request->quantity > 0 ? 'in' : 'out', // or 'adjustment' depending on logic, let's use 'adjustment'
+                'movement_type' => 'adjustment',
                 'quantity' => abs($request->quantity),
                 'reference' => 'Ajuste: ' . $request->reference
             ]);
@@ -102,6 +111,7 @@ class InventoryController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('AdjustStock Error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -137,7 +147,7 @@ class InventoryController extends Controller
                 'variant_id' => $request->variant_id,
                 'branch_id' => $request->from_branch_id,
                 'created_by' => auth()->id(),
-                'movement_type' => 'out',
+                'movement_type' => 'transfer_out',
                 'quantity' => $request->quantity,
                 'reference' => 'Transferencia a otra sucursal: ' . $request->reference
             ]);
@@ -160,7 +170,7 @@ class InventoryController extends Controller
                 'variant_id' => $request->variant_id,
                 'branch_id' => $request->to_branch_id,
                 'created_by' => auth()->id(),
-                'movement_type' => 'in',
+                'movement_type' => 'transfer_in',
                 'quantity' => $request->quantity,
                 'reference' => 'Transferencia recibida de otra sucursal: ' . $request->reference
             ]);
@@ -171,6 +181,7 @@ class InventoryController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('TransferStock Error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -183,6 +194,9 @@ class InventoryController extends Controller
         $query = InventoryMovement::with([
             'branch',
             'variant.product',
+            'variant.size',
+            'variant.fit',
+            'variant.variant_attribute_values.attribute_value.attribute',
             'user.profile'
         ])->orderBy('created_at', 'desc');
 

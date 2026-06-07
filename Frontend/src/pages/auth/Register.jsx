@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { registerUser } from "../../api/auth";
 import { useAuthStore } from "../../store/authStore";
+import toast from "react-hot-toast";
 import "./Auth.css";
 import { useNavigate, Link } from "react-router-dom";
 import fondo from "../../assets/global/fondos/premium_fashion_bg.png";
@@ -76,8 +77,8 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (Object.values(errors).some((e) => e !== "")) {
-      alert("Corrige los errores");
+    if (Object.values(errors).some((err) => err) || !form.username || !form.email || !form.password) {
+      toast.error("Corrige los errores");
       return;
     }
 
@@ -92,7 +93,7 @@ export default function Register() {
         }, 1200);
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Error en registro");
+      toast.error(error.response?.data?.message || "Error en registro");
     } finally {
       setLoading(false);
     }

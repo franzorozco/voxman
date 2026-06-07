@@ -140,12 +140,67 @@ export default function InventoryMovements() {
                                  ? `${mov.user.profile.first_name} ${mov.user.profile.last_name || ''}` 
                                  : mov.user?.username || 'Sistema';
 
+                const product = mov.variant?.product;
+                let imgUrl = mov.variant?.variant_images?.[0]?.url;
+
+                if (!imgUrl) {
+                  const attrIds = mov.variant?.variant_attribute_values?.map(vav => vav.attribute_value_id) || [];
+                  const colorImg = product?.attribute_value_images?.find(img => attrIds.includes(img.attribute_value_id));
+                  if (colorImg) {
+                    imgUrl = colorImg.url;
+                  }
+                }
+
+                if (!imgUrl) {
+                  imgUrl = product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
+                }
+
+                const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : `${API_BASE_URL}${imgUrl}`) : "/placeholder.png";
+
+                let colorVal = null;
+                let otherAttrs = [];
+                
+                mov.variant?.variant_attribute_values?.forEach(vav => {
+                  const attrName = vav.attribute_value?.attribute?.name?.toLowerCase() || "";
+                  const isColor = attrName.includes("color") || vav.attribute_value?.attribute?.is_fixed || vav.attribute_value?.hex_code;
+                  
+                  if (isColor && !colorVal) {
+                    colorVal = vav.attribute_value?.value;
+                  } else if (vav.attribute_value?.value) {
+                    otherAttrs.push(vav.attribute_value?.value);
+                  }
+                });
+
+                const orderedAttrs = [];
+                if (colorVal) orderedAttrs.push(colorVal);
+                if (mov.variant?.size?.name) orderedAttrs.push(mov.variant.size.name);
+                orderedAttrs.push(...otherAttrs);
+                if (mov.variant?.fit?.name) orderedAttrs.push(mov.variant.fit.name);
+
+                const attributesText = orderedAttrs.length > 0 ? orderedAttrs.join(", ") : "Única";
+
                 return (
                   <tr key={mov.id}>
                     <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{date}</td>
                     <td>{userName}</td>
                     <td>{mov.branch?.name || "-"}</td>
-                    <td style={{ fontWeight: 500 }}>{mov.variant?.product?.name || "Desconocido"}</td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <img
+                          src={finalImgUrl}
+                          alt={mov.variant?.product?.name}
+                          className="product-img"
+                          style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px' }}
+                          onError={(e) => { e.target.src = `${API_BASE_URL}/storage/products/default.png`; }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <div style={{ fontWeight: 600, lineHeight: '1.2' }}>{mov.variant?.product?.name || "Desconocido"}</div>
+                          <div style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: '1.2' }}>
+                            {mov.variant?.sku} | {attributesText}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {getTypeIcon(mov.movement_type)}

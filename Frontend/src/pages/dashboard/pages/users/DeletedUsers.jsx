@@ -13,6 +13,7 @@ import "../css/stylesCruds.css";
 import { RefreshCw, Trash2, ArrowLeft } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
+import toast from "react-hot-toast";
 
 export default function DeletedUsers() {
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -44,10 +45,11 @@ export default function DeletedUsers() {
     try {
       setLoadingUsers(true);
       await restoreUser(id);
+      toast.success("Usuario restaurado correctamente");
       loadUsers();
     } catch (err) {
       console.error("Error restaurando usuario:", err);
-      alert("Error al restaurar el usuario.");
+      toast.error(err.response?.data?.message || "Error al restaurar el usuario.");
     } finally {
       setLoadingUsers(false);
     }
@@ -57,10 +59,11 @@ export default function DeletedUsers() {
     try {
       setLoadingUsers(true);
       await forceDeleteUser(id);
+      toast.success("Usuario eliminado permanentemente");
       loadUsers();
     } catch (err) {
       console.error("Error eliminando permanentemente el usuario:", err);
-      alert("Error al eliminar el usuario de forma permanente.");
+      toast.error(err.response?.data?.message || "Error al eliminar el usuario de forma permanente.");
     } finally {
       setLoadingUsers(false);
     }

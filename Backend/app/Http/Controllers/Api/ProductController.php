@@ -57,13 +57,14 @@ class ProductController extends Controller
         }
 
         if ($request->filled('search')) {
-
             $search = $request->search;
-
             $query->where(function ($q) use ($search) {
-
                 $q->where('name', 'ILIKE', "%{$search}%")
-                ->orWhere('description', 'ILIKE', "%{$search}%");
+                ->orWhere('description', 'ILIKE', "%{$search}%")
+                ->orWhereHas('product_variants', function ($q2) use ($search) {
+                    $q2->where('sku', 'ILIKE', "%{$search}%")
+                       ->orWhere('barcode', 'ILIKE', "%{$search}%");
+                });
             });
         }
 

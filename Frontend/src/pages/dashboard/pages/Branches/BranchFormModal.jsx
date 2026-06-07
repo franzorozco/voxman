@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createBranch, updateBranch } from "../../../../api/branches";
 import { getEmployees } from "../../../../api/employees";
+import toast from "react-hot-toast";
 
 export default function BranchFormModal({ branch, onClose, onSave }) {
   const [loading, setLoading] = useState(false);
@@ -157,10 +158,11 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
       } else {
         await createBranch(data);
       }
+      toast.success(branch ? "Sucursal actualizada correctamente" : "Sucursal creada correctamente");
       onSave();
     } catch (error) {
       console.error('Error guardando sucursal:', error.response?.data || error);
-      alert("Error guardando la sucursal");
+      toast.error(error.response?.data?.message || "Error guardando la sucursal");
     } finally {
       setLoading(false);
     }

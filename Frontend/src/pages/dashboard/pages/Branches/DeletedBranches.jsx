@@ -13,6 +13,7 @@ import "../css/stylesCruds.css";
 import { RefreshCw, Trash2, ArrowLeft } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
+import toast from "react-hot-toast";
 
 export default function DeletedBranches() {
   const [loading, setLoading] = useState(true);
@@ -44,10 +45,11 @@ export default function DeletedBranches() {
     try {
       setLoading(true);
       await restoreBranch(id);
+      toast.success("Sucursal restaurada correctamente");
       loadBranches();
     } catch (err) {
       console.error("Error restaurando sucursal:", err);
-      alert("Error al restaurar la sucursal.");
+      toast.error(err.response?.data?.message || "Error al restaurar la sucursal.");
     } finally {
       setLoading(false);
     }
@@ -57,10 +59,11 @@ export default function DeletedBranches() {
     try {
       setLoading(true);
       await forceDeleteBranch(id);
+      toast.success("Sucursal eliminada permanentemente");
       loadBranches();
     } catch (err) {
       console.error("Error eliminando permanentemente la sucursal:", err);
-      alert("Error al eliminar la sucursal de forma permanente.");
+      toast.error(err.response?.data?.message || "Error al eliminar la sucursal de forma permanente.");
     } finally {
       setLoading(false);
     }

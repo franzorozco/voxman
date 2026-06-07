@@ -7,6 +7,7 @@ import BranchFormModal from "./BranchFormModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 import "./Branches.css";
 import { API_BASE_URL } from "../../../../config/api";
+import toast from "react-hot-toast";
 
 export default function Branches() {
   const [branches, setBranches] = useState([]);
@@ -50,10 +51,11 @@ export default function Branches() {
   const handleDelete = async (id) => {
     try {
       await deleteBranch(id);
+      toast.success("Sucursal eliminada a la papelera");
       loadBranches();
     } catch (error) {
       console.error("Error eliminando sucursal:", error);
-      alert("No se pudo eliminar la sucursal");
+      toast.error(error.response?.data?.message || "No se pudo eliminar la sucursal");
     }
   };
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { transferStock } from "../../../../api/inventory";
+import toast from "react-hot-toast";
 import { X, ArrowRight } from "lucide-react";
 
 export default function TransferStockModal({ item, branches, onClose, onSuccess }) {
@@ -16,12 +17,12 @@ export default function TransferStockModal({ item, branches, onClose, onSuccess 
     e.preventDefault();
     
     if (formData.quantity <= 0) {
-      window.alert("La cantidad a transferir debe ser mayor a cero.");
+      toast.error("La cantidad a transferir debe ser mayor a cero.");
       return;
     }
     
     if (formData.quantity > item.stock) {
-      window.alert("No puedes transferir más del stock disponible.");
+      toast.error("No puedes transferir más del stock disponible.");
       return;
     }
 
@@ -34,10 +35,12 @@ export default function TransferStockModal({ item, branches, onClose, onSuccess 
         quantity: formData.quantity,
         reference: formData.reference
       });
-      window.alert("Stock transferido correctamente");
+      toast.success("Stock transferido correctamente");
       onSuccess();
+      onClose();
     } catch (error) {
-      window.alert(error.response?.data?.message || "Error al transferir stock");
+      console.error(error);
+      toast.error(error.response?.data?.message || "Error al transferir stock");
     } finally {
       setLoading(false);
     }
@@ -87,15 +90,28 @@ export default function TransferStockModal({ item, branches, onClose, onSuccess 
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-main)' }}>
               Cantidad a Transferir
             </label>
-            <input
-              type="number"
-              required
-              min="1"
-              max={item?.stock}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '16px' }}
-              value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, quantity: Math.max(1, formData.quantity - 1) })}
+                style={{ padding: '10px 20px', background: 'var(--bg-input)', border: 'none', borderRight: '1px solid var(--border-color)', color: 'var(--text-main)', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold' }}
+              >-</button>
+              <input
+                type="number"
+                required
+                min="1"
+                max={item?.stock}
+                style={{ width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', color: 'var(--text-main)', fontSize: '16px', fontWeight: 'bold', textAlign: 'center', outline: 'none' }}
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                className="no-spinners"
+              />
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, quantity: Math.min(item?.stock, formData.quantity + 1) })}
+                style={{ padding: '10px 20px', background: 'var(--bg-input)', border: 'none', borderLeft: '1px solid var(--border-color)', color: 'var(--text-main)', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold' }}
+              >+</button>
+            </div>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
@@ -122,7 +138,7 @@ export default function TransferStockModal({ item, branches, onClose, onSuccess 
             <button
               type="submit"
               disabled={loading}
-              style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: '#fff', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               {loading ? "Transfiriendo..." : <><ArrowRight size={16} /> Transferir</>}
             </button>
