@@ -456,6 +456,8 @@ export default function Products() {
               <div className="bulk-actions-divider"></div>
               <CanAccess permission="edit_products">
                 <button className="btn btn-secondary" onClick={() => setBulkEditOpen(true)}>Editar</button>
+              </CanAccess>
+              <CanAccess permission="publish_products">
                 <button className="btn btn-secondary" onClick={() => setConfirmModal({ isOpen: true, type: "bulkActive", payload: true })}>Activar</button>
                 <button className="btn btn-secondary" onClick={() => setConfirmModal({ isOpen: true, type: "bulkInactive", payload: false })}>Inactivar</button>
               </CanAccess>

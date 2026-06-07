@@ -27,6 +27,9 @@ class RolePermissionSeeder extends Seeder
             'edit_users',
             'delete_users',
             'restore_users',
+            'manage_user_roles',
+            'manage_user_salaries',
+            'manage_executives',
 
             // Sucursales
             'view_branches',
@@ -41,6 +44,10 @@ class RolePermissionSeeder extends Seeder
             'edit_products',
             'delete_products',
             'restore_products',
+            'view_product_costs',
+            'manage_product_pricing',
+            'manage_discounts',
+            'publish_products',
 
             // Roles y Permisos
             'manage_roles',
@@ -52,7 +59,6 @@ class RolePermissionSeeder extends Seeder
             'transfer_inventory',
             'receive_inventory',
             'view_inventory_history',
-            'view_inventory_costs',
 
             // Configuraciones Generales
             'manage_settings',
@@ -102,6 +108,8 @@ class RolePermissionSeeder extends Seeder
         // Almacenista
         $warehouseRole->syncPermissions([
             'view_products',
+            'create_products',
+            'edit_products',
             'view_inventory_own_branch',
             'receive_inventory',
             'transfer_inventory',

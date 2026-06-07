@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { getRoles } from "../../../../api/roles";
 import { restoreUser } from "../../../../api/users";
+import { useAuthStore } from "../../../../store/authStore";
+
 export default function UserForm({ user, onClose, onSubmit }) {
+  const authUser = useAuthStore((state) => state.user);
+  const canManageRoles = authUser?.permissions?.includes("manage_user_roles") || authUser?.roles?.includes("Owner");
+  const canManageSalaries = authUser?.permissions?.includes("manage_user_salaries") || authUser?.roles?.includes("Owner");
+  const canManageExecutives = authUser?.permissions?.includes("manage_executives") || authUser?.roles?.includes("Owner");
+
   const [availableRoles, setAvailableRoles] = useState([]);
 
   const [form, setForm] = useState({
@@ -421,6 +428,7 @@ const handleSubmit = async (e) => {
               <input
                 type="checkbox"
                 checked={form.types.includes("owner")}
+                disabled={!canManageExecutives}
                 onChange={(e) => {
                   const checked = e.target.checked;
 
@@ -539,25 +547,29 @@ const handleSubmit = async (e) => {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>Salario base</label>
-                <input
-                  type="number"
-                  name="base_salary"
-                  value={form.base_salary}
-                  onChange={handleChange}
-                />
-              </div>
+              {canManageSalaries && (
+                <>
+                  <div className="form-group">
+                    <label>Salario base</label>
+                    <input
+                      type="number"
+                      name="base_salary"
+                      value={form.base_salary}
+                      onChange={handleChange}
+                    />
+                  </div>
 
-              <div className="form-group">
-                <label>% Comisión</label>
-                <input
-                  type="number"
-                  name="commission_percentage"
-                  value={form.commission_percentage}
-                  onChange={handleChange}
-                />
-              </div>
+                  <div className="form-group">
+                    <label>% Comisión</label>
+                    <input
+                      type="number"
+                      name="commission_percentage"
+                      value={form.commission_percentage}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -573,6 +585,7 @@ const handleSubmit = async (e) => {
                 <input
                   type="checkbox"
                   checked={form.roles.includes(role.name)}
+                  disabled={!canManageRoles}
                   onChange={(e) => {
                     const checked = e.target.checked;
 

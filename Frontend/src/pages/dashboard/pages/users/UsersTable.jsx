@@ -126,23 +126,28 @@ export default function UsersTable({
     }, {});
   }, [filteredUsers, filters.groupBy]);
   
-  const canDelete = (u) => {
+  const canManageExecutives = authUser?.permissions?.includes("manage_executives") || authUser?.roles?.includes("Owner");
 
-    const isAdmin = u.roles?.some(
-      r => r.name === "Administrador"
-    );
+  const canModify = (u) => {
+    const isSelf = authUser?.id === u.id;
+    if (isSelf) return false;
 
+    const isAdmin = u.roles?.some(r => r.name === "Administrador");
     const isOwner = u.owner?.is_active;
 
-    const isSelf = authUser?.id === u.id;
+    if ((isAdmin || isOwner) && !canManageExecutives) {
+      return false;
+    }
 
-    return !(isAdmin || isOwner || isSelf);
+    return true;
   };
 
-  const getDeleteReason = (u) => {
-    if (authUser?.id === u.id) return "No puedes eliminar tu propia cuenta";
-    if (u.roles?.some(r => r.name === "Administrador")) return "Es Administrador";
-    if (u.owner?.is_active) return "Es Owner";
+  const getModifyReason = (u) => {
+    if (authUser?.id === u.id) return "No puedes modificar tu propia cuenta desde aquí";
+    if (!canManageExecutives) {
+      if (u.roles?.some(r => r.name === "Administrador")) return "No tienes permiso para modificar a un Administrador";
+      if (u.owner?.is_active) return "No tienes permiso para modificar a un Owner";
+    }
     return "";
   };
   return (
@@ -340,7 +345,15 @@ export default function UsersTable({
                       </CanAccess>
 
                       <CanAccess permission="edit_users">
-                        <button className="btn-edit" onClick={() => onEdit(u)}>
+                        <button 
+                          className={`btn-edit ${!canModify(u) ? "disabled" : ""}`} 
+                          disabled={!canModify(u)}
+                          title={!canModify(u) ? getModifyReason(u) : "Editar usuario"}
+                          onClick={() => {
+                            if (!canModify(u)) return;
+                            onEdit(u);
+                          }}
+                        >
                           Editar
                         </button>
                       </CanAccess>
@@ -356,15 +369,15 @@ export default function UsersTable({
 
                       <CanAccess permission="delete_users">
                         <button
-                          className={`btn-delete ${!canDelete(u) ? "disabled" : ""}`}
-                          disabled={!canDelete(u)}
-                          title={!canDelete(u) ? getDeleteReason(u) : "Eliminar usuario"}
+                          className={`btn-delete ${!canModify(u) ? "disabled" : ""}`}
+                          disabled={!canModify(u)}
+                          title={!canModify(u) ? getModifyReason(u) : "Eliminar usuario"}
                           onClick={() => {
-                            if (!canDelete(u)) return; // 🔒 doble protección
+                            if (!canModify(u)) return; // 🔒 doble protección
                             setConfirmId(u.id);
                           }}
                         >
-                          {canDelete(u) ? "Eliminar" : "No permitido"}
+                          {canModify(u) ? "Eliminar" : "No permitido"}
                         </button>
                       </CanAccess>
                     </td>
@@ -382,7 +395,7 @@ export default function UsersTable({
         onClose={() => setConfirmId(null)}
         onConfirm={() => {
           const userToDelete = users.find(u => u.id === confirmId);
-          if (!userToDelete || !canDelete(userToDelete)) {
+          if (!userToDelete || !canModify(userToDelete)) {
             setConfirmId(null);
             return;
           }

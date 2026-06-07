@@ -7,6 +7,7 @@ import namer from "color-namer";
 import { Plus, Camera, AlertTriangle, ChevronDown, Eye, EyeOff } from "lucide-react";
 import ImageGalleryModal from "./ImageGalleryModal";
 import { X } from "lucide-react";
+import { useAuthStore } from "../../../../store/authStore";
 
 function CustomDropdown({ buttonText, options, onSelect }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -79,6 +80,10 @@ export default function ProductForm({
   const [attributes, setAttributes] = useState(initialAttributes);
   const [sizes, setSizes] = useState(initialSizes);
   const [productImage, setProductImage] = useState(null);
+
+  const user = useAuthStore((state) => state.user);
+  const canViewCosts = user?.permissions?.includes("view_product_costs") || user?.roles?.includes("Owner");
+  const canManagePricing = user?.permissions?.includes("manage_product_pricing") || user?.roles?.includes("Owner");
 
   useEffect(() => {
     setAttributes(initialAttributes);
@@ -953,7 +958,7 @@ const getAttributeValueName = (valueId) => {
 
                 <div className="form-group">
                   <label>Precio Base</label>
-                  <input type="number" name="base_price" value={form.base_price} onChange={handleChange} />
+                  <input type="number" name="base_price" value={form.base_price} onChange={handleChange} disabled={!canManagePricing} />
                 </div>
 
                 <div className="form-group" style={{ gridColumn: "1 / -1" }}>
@@ -1292,6 +1297,7 @@ const getAttributeValueName = (valueId) => {
                       </label>
 
                       <input className="simple-price-input" type="number" value={simpleConfig.globalPrice}
+                        disabled={!canManagePricing}
                         onChange={(e) =>
                           setSimpleConfig({
                             ...simpleConfig,
@@ -1300,20 +1306,22 @@ const getAttributeValueName = (valueId) => {
                     </div>
 
                     {/* COSTO GLOBAL */}
-                    <div className="simple-global-field">
+                    {canViewCosts && (
+                      <div className="simple-global-field">
 
-                      <label>
-                        Costo
-                      </label>
+                        <label>
+                          Costo
+                        </label>
 
-                      <input className="simple-price-input" type="number" value={simpleConfig.globalCost}
-                        onChange={(e) =>
-                          setSimpleConfig({
-                            ...simpleConfig,
-                            globalCost: e.target.value }) }
-                      />
+                        <input className="simple-price-input" type="number" value={simpleConfig.globalCost}
+                          onChange={(e) =>
+                            setSimpleConfig({
+                              ...simpleConfig,
+                              globalCost: e.target.value }) }
+                        />
 
-                    </div> 
+                      </div> 
+                    )}
 
                     <div className="simple-global-field">
                       <label>
@@ -1800,19 +1808,22 @@ const getAttributeValueName = (valueId) => {
                       className="form-control"
                       value={variant.price || ""}
                       onChange={(e) => handleVariantChange(index, "price", e.target.value)}
+                      disabled={!canManagePricing}
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label>Costo</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="form-control"
-                      value={variant.cost || ""}
-                      onChange={(e) => handleVariantChange(index, "cost", e.target.value)}
-                    />
-                  </div>
+                  {canViewCosts && (
+                    <div className="form-group">
+                      <label>Costo</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="form-control"
+                        value={variant.cost || ""}
+                        onChange={(e) => handleVariantChange(index, "cost", e.target.value)}
+                      />
+                    </div>
+                  )}
 
                   <div className="form-group">
                     <label>Peso</label>

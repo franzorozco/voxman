@@ -4,6 +4,7 @@ import {
 import { ChevronUp, ChevronDown } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
 import Spinner from "../../components/Spinner/Spinner";
+import { useAuthStore } from "../../../../store/authStore";
 
 export default function ProductsTable({
   products,
@@ -15,6 +16,9 @@ export default function ProductsTable({
   selectedRows = [],
   setSelectedRows = () => {}
 }) {
+
+  const user = useAuthStore((state) => state.user);
+  const canViewCosts = user?.permissions?.includes("view_product_costs") || user?.roles?.includes("Owner");
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -94,9 +98,9 @@ export default function ProductsTable({
             <th>Descuento</th>
 
             <SortableTh label="Precio" field="price" />
-            <th>Costo</th>
+            {canViewCosts && <th>Costo</th>}
 
-            <SortableTh label="Margen" field="margin" />
+            {canViewCosts && <SortableTh label="Margen" field="margin" />}
             <SortableTh label="Stock" field="stock" />
 
             <th>Variantes</th>
@@ -265,16 +269,18 @@ export default function ProductsTable({
                   </td>
 
                   <td>{formatMoney(p.price)}</td>
-                  <td>{formatMoney(p.cost)}</td>
+                  {canViewCosts && <td>{formatMoney(p.cost)}</td>}
 
-                  <td
-                    style={{
-                      color: p.margin >= 0 ? "#4ade80" : "#f87171",
-                      fontWeight: 600
-                    }}
-                  >
-                    {formatMoney(p.margin)}
-                  </td>
+                  {canViewCosts && (
+                    <td
+                      style={{
+                        color: p.margin >= 0 ? "#4ade80" : "#f87171",
+                        fontWeight: 600
+                      }}
+                    >
+                      {formatMoney(p.margin)}
+                    </td>
+                  )}
 
                   <td>
                     <span
