@@ -1,18 +1,23 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { getMovements } from "../../../../api/inventory";
 import { getBranches } from "../../../../api/branches";
+import { API_BASE_URL } from "../../../../config/api";
 import { Search, Filter, ArrowLeft, ArrowUpRight, ArrowDownRight, RefreshCcw } from "lucide-react";
 import "./Inventory.css";
 
 export default function InventoryMovements() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialBranchId = searchParams.get('branch_id') || "";
+
   const [movements, setMovements] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   
   const [filters, setFilters] = useState({
-    branch_id: "",
+    branch_id: initialBranchId,
     type: ""
   });
 
@@ -23,10 +28,12 @@ export default function InventoryMovements() {
         getMovements(filters),
         getBranches()
       ]);
-      setMovements(movRes.data?.data || []);
-      setBranches(branchRes.data || branchRes || []);
+      console.log("getMovements res:", movRes);
+      setMovements(movRes.data?.data || movRes.data || []);
+      setBranches(branchRes.data?.data || branchRes.data || branchRes || []);
     } catch (error) {
-      console.error("Error loading movements:", error);
+      console.error("Error loading movements details:", error);
+      if (error.response) console.error("Error response:", error.response.data);
     } finally {
       setLoading(false);
     }
@@ -38,16 +45,27 @@ export default function InventoryMovements() {
 
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'in': return <ArrowDownRight size={16} color="#22c55e" />;
-      case 'out': return <ArrowUpRight size={16} color="#ef4444" />;
-      default: return <RefreshCcw size={16} color="#3b82f6" />;
+      case 'transfer_in': 
+      case 'purchase': 
+      case 'return': 
+        return <ArrowDownRight size={16} color="#22c55e" />;
+      case 'transfer_out': 
+      case 'sale': 
+        return <ArrowUpRight size={16} color="#ef4444" />;
+      case 'adjustment':
+      default: 
+        return <RefreshCcw size={16} color="#3b82f6" />;
     }
   };
 
   const getTypeText = (type) => {
     switch (type) {
-      case 'in': return <span style={{ color: '#22c55e', fontWeight: 600 }}>Entrada</span>;
-      case 'out': return <span style={{ color: '#ef4444', fontWeight: 600 }}>Salida</span>;
+      case 'purchase': return <span style={{ color: '#22c55e', fontWeight: 600 }}>Compra</span>;
+      case 'return': return <span style={{ color: '#22c55e', fontWeight: 600 }}>Devolución</span>;
+      case 'transfer_in': return <span style={{ color: '#22c55e', fontWeight: 600 }}>Ingreso por Transferencia</span>;
+      case 'sale': return <span style={{ color: '#ef4444', fontWeight: 600 }}>Venta</span>;
+      case 'transfer_out': return <span style={{ color: '#ef4444', fontWeight: 600 }}>Salida por Transferencia</span>;
+      case 'adjustment': return <span style={{ color: '#3b82f6', fontWeight: 600 }}>Ajuste</span>;
       default: return <span style={{ color: '#3b82f6', fontWeight: 600 }}>Ajuste</span>;
     }
   };
@@ -98,8 +116,11 @@ export default function InventoryMovements() {
                 onChange={(e) => setFilters({ ...filters, type: e.target.value })}
               >
                 <option value="">Todos</option>
-                <option value="in">Entradas</option>
-                <option value="out">Salidas</option>
+                <option value="purchase">Compras</option>
+                <option value="sale">Ventas</option>
+                <option value="return">Devoluciones</option>
+                <option value="transfer_in">Ingreso por Transferencia</option>
+                <option value="transfer_out">Salida por Transferencia</option>
                 <option value="adjustment">Ajustes</option>
               </select>
             </div>

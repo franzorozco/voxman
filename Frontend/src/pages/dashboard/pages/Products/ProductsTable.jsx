@@ -1,7 +1,7 @@
 import {
   API_BASE_URL
 } from "../../../../config/api";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, Ruler } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
 import Spinner from "../../components/Spinner/Spinner";
 import { useAuthStore } from "../../../../store/authStore";
@@ -10,6 +10,7 @@ export default function ProductsTable({
   products,
   loading,
   onEdit,
+  onManageMeasurements,
   onDelete,
   onSort,
   onView,
@@ -304,26 +305,38 @@ export default function ProductsTable({
                   </td>
 
                   <td>
-                    <CanAccess permission="view_products">
-                      <button className="btn-view" onClick={() => onView(p)}>
-                        Ver
-                      </button>
-                    </CanAccess>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
+                      <CanAccess permission="view_products">
+                        <button className="btn-view" onClick={() => onView(p)}>
+                          Ver
+                        </button>
+                      </CanAccess>
 
-                    <CanAccess permission="edit_products">
-                      <button className="btn-edit" onClick={() => onEdit(p)}>
-                        Editar
-                      </button>
-                    </CanAccess>
+                      <CanAccess permission="edit_products">
+                        <button className="btn-edit" onClick={() => onEdit(p)}>
+                          Editar
+                        </button>
+                      </CanAccess>
 
-                    <CanAccess permission="delete_products">
-                      <button
-                        className="btn-delete"
-                        onClick={() => onDelete(p.id)}
-                      >
-                        Eliminar
-                      </button>
-                    </CanAccess>
+                      <CanAccess permission="manage_product_measurements">
+                        <button 
+                          className="btn-secondary" 
+                          onClick={() => onManageMeasurements?.(p)}
+                          style={{ display: "inline-flex", gap: "5px", alignItems: "center" }}
+                          title="Gestionar Medidas Físicas"
+                        >
+                          <Ruler size={14} /> <span className="hide-on-mobile">Medidas</span>
+                        </button>
+                      </CanAccess>
+                      <CanAccess permission="delete_products">
+                        <button
+                          className="btn-delete"
+                          onClick={() => onDelete(p.id)}
+                        >
+                          Eliminar
+                        </button>
+                      </CanAccess>
+                    </div>
                   </td>
                 </tr>
               );

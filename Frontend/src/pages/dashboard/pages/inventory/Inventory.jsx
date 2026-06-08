@@ -131,25 +131,32 @@ export default function Inventory() {
                     <span style={{ fontWeight: 500 }}>Todas las sucursales</span>
                   </button>
 
-                  {branches.map(branch => (
-                    <button
-                      key={branch.id}
-                      onClick={() => { setFilters({ ...filters, branch_id: branch.id, page: 1 }); setIsBranchDropdownOpen(false); setViewMode("table"); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 16px', border: 'none', borderBottom: '1px solid var(--border-color)', background: filters.branch_id === branch.id ? 'var(--primary-color-alpha)' : 'transparent', color: 'var(--text-main)', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'left' }}
-                    >
-                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        {branch.images && branch.images.length > 0 ? (
-                          <img src={`${API_BASE_URL}${branch.images[0].image_url}`} alt={branch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <Package size={16} />
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: 600, fontSize: '14px' }}>{branch.name}</span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{branch.phone || "Sin teléfono"}</span>
-                      </div>
-                    </button>
-                  ))}
+                  {branches.map(branch => {
+                    const primaryImg = branch.images && branch.images.length > 0 ? (branch.images.find(img => img.is_primary) || branch.images[0]) : null;
+                    return (
+                      <button
+                        key={branch.id}
+                        onClick={() => { setFilters({ ...filters, branch_id: branch.id, page: 1 }); setIsBranchDropdownOpen(false); setViewMode("table"); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px 16px', border: 'none', borderBottom: '1px solid var(--border-color)', background: filters.branch_id === branch.id ? 'var(--primary-color-alpha)' : 'transparent', color: 'var(--text-main)', cursor: 'pointer', transition: 'background 0.2s', textAlign: 'left' }}
+                      >
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                          {primaryImg ? (
+                            <img 
+                              src={primaryImg.image_url.startsWith('http') ? primaryImg.image_url : `${API_BASE_URL}${primaryImg.image_url.startsWith('/') ? '' : '/storage/'}${primaryImg.image_url}`} 
+                              alt={branch.name} 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                            />
+                          ) : null}
+                          {(!primaryImg) && <Package size={16} />}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontWeight: 600, fontSize: '14px' }}>{branch.name}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{branch.phone || "Sin teléfono"}</span>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -157,7 +164,7 @@ export default function Inventory() {
 
           <CanAccess permission="view_inventory_history">
             <Link 
-              to="/dashboard/inventory/movements"
+              to={`/dashboard/inventory/movements${filters.branch_id ? `?branch_id=${filters.branch_id}` : ''}`}
               className="btn-secondary" 
               style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', padding: '12px 16px', borderRadius: '10px' }}
             >
@@ -183,32 +190,45 @@ export default function Inventory() {
           <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>Selecciona una Sucursal</h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '30px' }}>Elige la sucursal para la cual deseas consultar o gestionar el inventario.</p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-            {branches.map(branch => (
-              <div 
-                key={branch.id}
-                onClick={() => { setFilters({ ...filters, branch_id: branch.id, page: 1 }); setViewMode("table"); }}
-                style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border-color)', cursor: 'pointer', height: '200px', transition: 'transform 0.2s, box-shadow 0.2s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.15)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-              >
-                {branch.images && branch.images.length > 0 ? (
-                  <img src={`${API_BASE_URL}${branch.images[0].image_url}`} alt={branch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, var(--primary-color), var(--bg-body))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Package size={64} color="rgba(255,255,255,0.15)" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+            {branches.map(branch => {
+              const primaryImg = branch.images && branch.images.length > 0 ? (branch.images.find(img => img.is_primary) || branch.images[0]) : null;
+              return (
+                <div
+                  key={branch.id}
+                  onClick={() => { setFilters({ ...filters, branch_id: branch.id, page: 1 }); setViewMode("table"); }}
+                  style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', background: 'var(--bg-card)', border: '1px solid var(--border-color)', cursor: 'pointer', height: '200px', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.15)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                  {primaryImg ? (
+                    <>
+                      <img 
+                        src={primaryImg.image_url.startsWith('http') ? primaryImg.image_url : `${API_BASE_URL}${primaryImg.image_url.startsWith('/') ? '' : '/storage/'}${primaryImg.image_url}`} 
+                        alt={branch.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                      />
+                      <div style={{ display: 'none', width: '100%', height: '100%', background: 'linear-gradient(135deg, var(--primary-color), var(--bg-body))', alignItems: 'center', justifyContent: 'center' }}>
+                        <Package size={64} color="rgba(255,255,255,0.15)" />
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, var(--primary-color), var(--bg-body))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Package size={64} color="rgba(255,255,255,0.15)" />
+                    </div>
+                  )}
+                  
+                  <div style={{ position: 'absolute', bottom: '0', left: '0', right: '0', padding: '20px', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)', display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ color: '#fff', fontSize: '20px', fontWeight: 600, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{branch.name}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success-color)' }}></div>
+                      {branch.phone || "Sucursal Activa"}
+                    </span>
                   </div>
-                )}
-                
-                <div style={{ position: 'absolute', bottom: '0', left: '0', right: '0', padding: '20px', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)', display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ color: '#fff', fontSize: '20px', fontWeight: 600, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{branch.name}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success-color)' }}></div>
-                    {branch.phone || "Sucursal Activa"}
-                  </span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '30px' }}>

@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { getAttributes } from "../../../../api/attributes";
 import { createAttributeValue } from "../../../../api/attributeValues";
 import { createSize } from "../../../../api/sizes";
+import { getBrands } from "../../../../api/catalog-settings";
 import namer from "color-namer";
 import { Plus, Camera, AlertTriangle, ChevronDown, Eye, EyeOff } from "lucide-react";
 import ImageGalleryModal from "./ImageGalleryModal";
@@ -79,6 +80,7 @@ export default function ProductForm({
 }){
   const [attributes, setAttributes] = useState(initialAttributes);
   const [sizes, setSizes] = useState(initialSizes);
+  const [brands, setBrands] = useState([]);
   const [productImage, setProductImage] = useState(null);
 
   const user = useAuthStore((state) => state.user);
@@ -88,6 +90,18 @@ export default function ProductForm({
   useEffect(() => {
     setAttributes(initialAttributes);
   }, [initialAttributes]);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const { data } = await getBrands();
+        setBrands(data?.data ?? data ?? []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchBrands();
+  }, []);
 
   useEffect(() => {
     setSizes(initialSizes);
@@ -434,7 +448,7 @@ const getAttributeValueName = (valueId) => {
     long_description: "",
     base_price: "",
     cost_price: "",
-    brand: "",
+    brand_id: "",
     sku: "",
     category_id: "",
     product_type_id: "",
@@ -465,7 +479,8 @@ const getAttributeValueName = (valueId) => {
           cost: v.cost || "",
           weight: v.weight || "",
           is_active: v.is_active ?? true,
-          attribute_value_ids: attributeMap
+          attribute_value_ids: attributeMap,
+          measurements: v.variant_measurements || []
         };
       });
 
@@ -474,6 +489,7 @@ const getAttributeValueName = (valueId) => {
         description: product.description || "",
         base_price: product.base_price || "",
         category_id: product.category_id || "",
+        brand_id: product.brand_id || "",
         owner_id: product.owner_id || "",
         product_type_id: product.product_type_id || "",
         variants: transformedVariants,
@@ -741,6 +757,11 @@ const getAttributeValueName = (valueId) => {
     );
 
     formData.append(
+      "brand_id",
+      form.brand_id || ""
+    );
+
+    formData.append(
       "owner_id",
       form.owner_id || ""
     );
@@ -918,7 +939,7 @@ const getAttributeValueName = (valueId) => {
             <div className="product-form-right">
               <div className="form-grid">
 
-                {/* TODO TU FORM ACTUAL AQUÃ */}
+                {/* TODO TU FORM ACTUAL AQUÃ  */}
                 <div className="form-group">
                   <label>Nombre</label>
                   <input name="name" value={form.name} onChange={handleChange} />
@@ -932,6 +953,25 @@ const getAttributeValueName = (valueId) => {
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
+                </div>
+                
+                <div className="form-group">
+                  <label>Marca (Opcional)</label>
+                  <div className="custom-brand-select" style={{ position: 'relative' }}>
+                    <select name="brand_id" value={form.brand_id} onChange={handleChange} className="form-control" style={{ paddingLeft: form.brand_id && brands.find(b => b.id == form.brand_id)?.logo_url ? '40px' : '10px' }}>
+                      <option value="">Ninguna</option>
+                      {brands.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                    {form.brand_id && brands.find(b => b.id == form.brand_id)?.logo_url && (
+                      <img 
+                        src={brands.find(b => b.id == form.brand_id).logo_url} 
+                        alt="logo" 
+                        style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '20px', height: '20px', objectFit: 'contain', background: '#fff', borderRadius: '4px', pointerEvents: 'none' }} 
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="form-group">

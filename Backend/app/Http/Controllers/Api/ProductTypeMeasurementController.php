@@ -12,8 +12,8 @@ class ProductTypeMeasurementController extends Controller
     {
         return response()->json(
             ProductTypeMeasurement::with([
-                'productType',
-                'measurementType'
+                'product_type',
+                'measurement_type'
             ])->get()
         );
     }
@@ -22,15 +22,15 @@ class ProductTypeMeasurementController extends Controller
     {
         return response()->json(
             ProductTypeMeasurement::with([
-                'productType',
-                'measurementType'
+                'product_type',
+                'measurement_type'
             ])->findOrFail($id)
         );
     }
 
     public function store(Request $request)
     {
-        $item = ProductTypeMeasurement::create([
+        $item = ProductTypeMeasurement::firstOrCreate([
             'product_type_id' => $request->product_type_id,
             'measurement_type_id' => $request->measurement_type_id,
         ]);

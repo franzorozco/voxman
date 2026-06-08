@@ -30,6 +30,12 @@ class InventoryController extends Controller
             $query->where('branch_id', $request->branch_id);
         }
 
+        if ($request->filled('product_id')) {
+            $query->whereHas('variant', function ($q) use ($request) {
+                $q->where('product_id', $request->product_id);
+            });
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -99,6 +105,8 @@ class InventoryController extends Controller
                 'created_by' => auth()->id(),
                 'movement_type' => 'adjustment',
                 'quantity' => abs($request->quantity),
+                'stock_before' => $inventory->stock - $request->quantity,
+                'stock_after' => $newStock,
                 'reference' => 'Ajuste: ' . $request->reference
             ]);
 
@@ -112,6 +120,73 @@ class InventoryController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('AdjustStock Error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Mass manually adjust stock
+     */
+    public function batchAdjust(Request $request)
+    {
+        $request->validate([
+            'branch_id' => 'required|uuid',
+            'items' => 'required|array|min:1',
+            'items.*.variant_id' => 'required|uuid',
+            'items.*.quantity' => 'required|integer|not_in:0',
+            'reference' => 'nullable|string|max:255'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $updatedInventories = [];
+
+            foreach ($request->items as $item) {
+                $inventory = Inventory::firstOrCreate(
+                    [
+                        'variant_id' => $item['variant_id'],
+                        'branch_id' => $request->branch_id,
+                    ],
+                    [
+                        'stock' => 0,
+                        'min_stock' => 5
+                    ]
+                );
+
+                $newStock = $inventory->stock + $item['quantity'];
+
+                if ($newStock < 0) {
+                    throw new \Exception("Stock no puede ser negativo para alguna variante.");
+                }
+
+                $inventory->stock = $newStock;
+                $inventory->save();
+
+                InventoryMovement::create([
+                    'variant_id' => $item['variant_id'],
+                    'branch_id' => $request->branch_id,
+                    'created_by' => auth()->id(),
+                    'movement_type' => 'adjustment',
+                    'quantity' => abs($item['quantity']),
+                    'stock_before' => $inventory->stock - $item['quantity'],
+                    'stock_after' => $newStock,
+                    'reference' => 'Ajuste Masivo: ' . ($request->reference ?? '')
+                ]);
+
+                $updatedInventories[] = $inventory->load('variant.product');
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Stock actualizado masivamente.',
+                'inventories' => $updatedInventories
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('BatchAdjust Error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -141,6 +216,7 @@ class InventoryController extends Controller
             }
 
             // Deduct from source
+            $stockBeforeSource = $sourceInventory->stock;
             $sourceInventory->decrement('stock', $request->quantity);
 
             InventoryMovement::create([
@@ -149,6 +225,8 @@ class InventoryController extends Controller
                 'created_by' => auth()->id(),
                 'movement_type' => 'transfer_out',
                 'quantity' => $request->quantity,
+                'stock_before' => $stockBeforeSource,
+                'stock_after' => $stockBeforeSource - $request->quantity,
                 'reference' => 'Transferencia a otra sucursal: ' . $request->reference
             ]);
 
@@ -164,6 +242,7 @@ class InventoryController extends Controller
                 ]
             );
 
+            $stockBeforeDest = $destInventory->stock;
             $destInventory->increment('stock', $request->quantity);
 
             InventoryMovement::create([
@@ -172,6 +251,8 @@ class InventoryController extends Controller
                 'created_by' => auth()->id(),
                 'movement_type' => 'transfer_in',
                 'quantity' => $request->quantity,
+                'stock_before' => $stockBeforeDest,
+                'stock_after' => $stockBeforeDest + $request->quantity,
                 'reference' => 'Transferencia recibida de otra sucursal: ' . $request->reference
             ]);
 
@@ -193,18 +274,19 @@ class InventoryController extends Controller
     {
         $query = InventoryMovement::with([
             'branch',
-            'variant.product',
+            'variant' => fn($q) => $q->withTrashed(),
+            'variant.product' => fn($q) => $q->withTrashed(),
             'variant.size',
             'variant.fit',
             'variant.variant_attribute_values.attribute_value.attribute',
             'user.profile'
         ])->orderBy('created_at', 'desc');
 
-        if ($request->has('branch_id') && $request->branch_id !== '') {
+        if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
         }
 
-        if ($request->has('type') && $request->type !== '') {
+        if ($request->filled('type')) {
             $query->where('movement_type', $request->type); // in, out, adjustment
         }
 

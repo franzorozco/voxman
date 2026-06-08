@@ -33,3 +33,6 @@ export const restoreProduct = (id) =>
 
 export const forceDeleteProduct = (id) =>
   api.delete(`${BASE_URL}/${id}/force`);
+
+export const updateProductMeasurements = (id, measurements) =>
+  api.post(`${BASE_URL}/${id}/measurements`, { measurements });

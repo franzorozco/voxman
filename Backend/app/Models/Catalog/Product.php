@@ -13,6 +13,7 @@ class Product extends BaseProduct
 		'owner_id',
 		'category_id',
 		'product_type_id',
+        'brand_id',
 		'name',
 		'description',
 		'slug',
@@ -20,6 +21,11 @@ class Product extends BaseProduct
 		'is_active',
 		'views'
 	];
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
 
     public function attribute_value_images()
     {

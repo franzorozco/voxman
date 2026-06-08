@@ -26,6 +26,7 @@ class ProductController extends Controller
             ->with([
                 'owner.user.user_profiles',
                 'category',
+                'brand',
                 'category.discounts',
                 'discounts',
                 'product_type',
@@ -36,6 +37,7 @@ class ProductController extends Controller
                 'product_variants.inventories.branch',
                 'product_variants.size',
                 'product_variants.fit',
+                'product_variants.variant_measurements.measurement_type',
             ]);
 
         if ($request->status === 'deleted') {
@@ -147,6 +149,7 @@ class ProductController extends Controller
     public function show($id)
     {
         $product = Product::with([
+            'brand',
             'category',
             'product_type',
             'product_images',
@@ -184,6 +187,7 @@ class ProductController extends Controller
                 'owner_id'        => $request->owner_id,
                 'category_id'     => $request->category_id,
                 'product_type_id' => $request->product_type_id,
+                'brand_id'        => $request->brand_id,
                 'name'            => $request->name,
                 'description'     => $request->description,
                 'slug'            => Str::slug($request->name),
@@ -337,6 +341,7 @@ class ProductController extends Controller
                 'owner_id'        => $request->owner_id,
                 'category_id'     => $request->category_id,
                 'product_type_id' => $request->product_type_id,
+                'brand_id'        => $request->brand_id,
                 'name'            => $request->name,
                 'description'     => $request->description,
                 'slug'            => Str::slug($request->name),
@@ -504,6 +509,7 @@ class ProductController extends Controller
             return response()->json([
                 'message' => 'Producto actualizado correctamente',
                 'product' => Product::with([
+                    'brand',
                     'category',
                     'product_type',
                     'product_images',
@@ -523,6 +529,45 @@ class ProductController extends Controller
 
             return response()->json([
                 'message' => 'Error al actualizar producto',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateMeasurements(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $product = Product::findOrFail($id);
+            $measurements = $request->input('measurements'); // format: { variant_id: [ { measurement_type_id, value } ] }
+
+            foreach ($measurements as $variantId => $variantMeasurements) {
+                // Verify variant belongs to product
+                $variant = ProductVariant::where('id', $variantId)->where('product_id', $product->id)->firstOrFail();
+
+                // Clear old measurements for this variant
+                VariantMeasurement::where('variant_id', $variant->id)->delete();
+
+                // Insert new ones
+                foreach ($variantMeasurements as $m) {
+                    if (!empty($m['value'])) {
+                        VariantMeasurement::create([
+                            'variant_id' => $variant->id,
+                            'measurement_type_id' => $m['measurement_type_id'],
+                            'value' => $m['value']
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Medidas actualizadas correctamente'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al actualizar medidas',
                 'error'   => $e->getMessage(),
             ], 500);
         }

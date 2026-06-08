@@ -59,9 +59,10 @@ export default function DashboardLayout() {
     window.location.href = "/login";
   };
 
-  const NavItem = ({ to, icon: Icon, label }) => (
+  const NavItem = ({ to, icon: Icon, label, end = false }) => (
     <NavLink
       to={to}
+      end={end}
       className={({ isActive }) =>
         `nav-link ${isActive ? "active" : ""}`
       }
@@ -144,11 +145,12 @@ export default function DashboardLayout() {
                 {!collapsed && "PANEL"}
               </p>
 
-              <NavItem
-                to="/dashboard"
-                icon={LayoutDashboard}
-                label="Dashboard"
-              />
+            <NavItem
+              to="/dashboard"
+              icon={LayoutDashboard}
+              label="Dashboard"
+              end
+            />
 
             </div>
 
@@ -167,13 +169,7 @@ export default function DashboardLayout() {
                 />
               </CanAccess>
 
-              <CanAccess permission="manage_settings">
-                <NavItem
-                  to="/dashboard/categories"
-                  icon={Shapes}
-                  label="Categorías"
-                />
-              </CanAccess>
+
 
               <CanAccess permission="view_inventory">
                 <NavItem
@@ -328,11 +324,8 @@ export default function DashboardLayout() {
                   label="Logs"
                 />
               </CanAccess>
-
             </div>
-
           </nav>
-
           <div className="sidebar-footer">
             {!collapsed && `VOXman © ${new Date().getFullYear()}`}
           </div>
@@ -349,11 +342,8 @@ export default function DashboardLayout() {
             </div>
 
             <div className="topbar-right">
-
               <div className="topbar-user">
-
                 <UserCircle2 size={34} />
-
                 <div className="topbar-user-info">
 
                   <span className="user-name">
@@ -391,17 +381,13 @@ export default function DashboardLayout() {
                 <LogOut size={16} />
                 <span>Cerrar sesión</span>
               </button>
-
             </div>
-
           </div>
 
           <div className="content">
             <Outlet />
           </div>
-
         </main>
-
       </div>
     </>
   );

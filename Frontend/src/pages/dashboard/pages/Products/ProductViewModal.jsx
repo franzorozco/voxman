@@ -144,7 +144,12 @@ export default function ProductViewModal({ product, onClose }) {
                     </div>
                     <div>
                       <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Marca</p>
-                      <p style={{ margin: 0, fontWeight: '500', color: 'var(--text-main)' }}>{product.brand || '-'}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {product.brand?.logo_url && (
+                          <img src={product.brand.logo_url} alt="logo" style={{ width: 20, height: 20, objectFit: 'contain', background: '#fff', borderRadius: 4 }} />
+                        )}
+                        <p style={{ margin: 0, fontWeight: '500', color: 'var(--text-main)' }}>{product.brand?.name || '-'}</p>
+                      </div>
                     </div>
                     <div>
                       <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Propietario / Dueño</p>

@@ -13,5 +13,8 @@ export const getMovements = (params = {}) =>
 export const adjustStock = (data) =>
   api.post(`${BASE_URL}/adjust`, data);
 
+export const batchAdjustStock = (data) =>
+  api.post(`${BASE_URL}/batch-adjust`, data);
+
 export const transferStock = (data) =>
   api.post(`${BASE_URL}/transfer`, data);

@@ -3,6 +3,14 @@ import api from "./client";
 const BASE = "/v1/admin";
 
 // =======================
+// BRANDS
+// =======================
+export const getBrands = () => api.get(`${BASE}/brands`);
+export const createBrand = (data) => api.post(`${BASE}/brands`, data);
+export const updateBrand = (id, data) => api.put(`${BASE}/brands/${id}`, data);
+export const deleteBrand = (id) => api.delete(`${BASE}/brands/${id}`);
+
+// =======================
 // CATEGORIES
 // =======================
 export const getCategories = () => api.get(`${BASE}/categories`);

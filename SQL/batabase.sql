@@ -927,3 +927,17 @@ CREATE INDEX idx_sales_branch ON sales(branch_id);
 CREATE INDEX idx_payments_method ON payments(payment_method_id);
 CREATE INDEX idx_inventory_variant ON inventories(variant_id);
 CREATE INDEX idx_active_users ON users(id) WHERE deleted_at IS NULL;
+
+-- Agregar tabla de marcas
+CREATE TABLE brands (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    logo_url VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL
+);
+
+-- Agregar brand_id a products
+ALTER TABLE products ADD COLUMN brand_id BIGINT UNSIGNED NULL AFTER product_type_id;
+ALTER TABLE products ADD CONSTRAINT fk_products_brand_id FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL;

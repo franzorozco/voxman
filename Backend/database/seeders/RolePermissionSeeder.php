@@ -48,6 +48,30 @@ class RolePermissionSeeder extends Seeder
             'manage_product_pricing',
             'manage_discounts',
             'publish_products',
+            'manage_product_measurements', // NUEVO
+
+            // Categorias
+            'view_categories',
+            'create_categories',
+            'edit_categories',
+            'delete_categories',
+
+            // Settings - Catálogo
+            'view_settings_categories',
+            'view_settings_product_types',
+            'view_settings_attributes',
+            'view_settings_sizes',
+            'view_settings_fits',
+            'view_settings_measurements',
+            'view_settings_brands',
+            
+            'edit_settings_categories',
+            'edit_settings_product_types',
+            'edit_settings_attributes',
+            'edit_settings_sizes',
+            'edit_settings_fits',
+            'edit_settings_measurements',
+            'edit_settings_brands',
 
             // Roles y Permisos
             'manage_roles',
@@ -59,6 +83,7 @@ class RolePermissionSeeder extends Seeder
             'transfer_inventory',
             'receive_inventory',
             'view_inventory_history',
+            'inventory_mass_entry',
 
             // Configuraciones Generales
             'manage_settings',
@@ -97,6 +122,7 @@ class RolePermissionSeeder extends Seeder
         $branchManagerRole->syncPermissions([
             'view_users',
             'view_products',
+            'view_categories',
             'view_branches',
             'view_inventory_own_branch',
             'view_inventory_history',
@@ -105,11 +131,12 @@ class RolePermissionSeeder extends Seeder
             'adjust_inventory', // con reservas, pero se lo damos
         ]);
 
-        // Almacenista
         $warehouseRole->syncPermissions([
             'view_products',
             'create_products',
             'edit_products',
+            'manage_product_measurements', // NUEVO
+            'view_categories',
             'view_inventory_own_branch',
             'receive_inventory',
             'transfer_inventory',
@@ -120,6 +147,7 @@ class RolePermissionSeeder extends Seeder
             'view_users',
             'view_branches',
             'view_products',
+            'view_categories',
             'view_inventory_own_branch',
             'view_inventory_all_branches', // Opcional, para que puedan ver stock de otras tiendas
         ]);

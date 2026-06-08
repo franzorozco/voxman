@@ -86,13 +86,21 @@ Route::middleware([
         Route::delete('/{id}', [ProductController::class, 'destroy'])->middleware('permission:delete_products');
         Route::post('/{id}/restore', [ProductController::class, 'restore'])->middleware('permission:restore_products');
         Route::delete('/{id}/force', [ProductController::class, 'forceDestroy'])->middleware('permission:delete_products');
+        Route::post('/{id}/measurements', [ProductController::class, 'updateMeasurements'])->middleware('permission:manage_product_measurements');
     });
 
     Route::prefix('categories')->group(function () {
-        Route::get('/', [CategoryController::class, 'index']);
-        Route::post('/', [CategoryController::class, 'store']);
-        Route::put('/{id}', [CategoryController::class, 'update']);
-        Route::delete('/{id}', [CategoryController::class, 'destroy']);
+        Route::get('/', [CategoryController::class, 'index'])->middleware('permission:view_categories');
+        Route::post('/', [CategoryController::class, 'store'])->middleware('permission:create_categories');
+        Route::put('/{id}', [CategoryController::class, 'update'])->middleware('permission:edit_categories');
+        Route::delete('/{id}', [CategoryController::class, 'destroy'])->middleware('permission:delete_categories');
+    });
+
+    Route::prefix('brands')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BrandController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\BrandController::class, 'store']);
+        Route::put('/{id}', [\App\Http\Controllers\BrandController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\BrandController::class, 'destroy']);
     });
 
 
@@ -107,6 +115,7 @@ Route::middleware([
         Route::get('/', [InventoryController::class, 'index'])->middleware('permission:view_inventory_own_branch|view_inventory_all_branches');
         Route::get('/movements', [InventoryController::class, 'movements'])->middleware('permission:view_inventory_history');
         Route::post('/adjust', [InventoryController::class, 'adjust'])->middleware('permission:adjust_inventory|receive_inventory');
+        Route::post('/batch-adjust', [InventoryController::class, 'batchAdjust'])->middleware('permission:inventory_mass_entry');
         Route::post('/transfer', [InventoryController::class, 'transfer'])->middleware('permission:transfer_inventory');
     });
 

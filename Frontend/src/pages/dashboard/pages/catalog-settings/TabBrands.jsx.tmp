@@ -1,0 +1,114 @@
+﻿function TabBrands() {
+  const [brands, setBrands] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ id: null, name: "", description: "", logo_url: "" });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { loadBrands(); }, []);
+
+  const loadBrands = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.getBrands();
+      setBrands(data?.data ?? data ?? []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      if (formData.id) await api.updateBrand(formData.id, { name: formData.name, description: formData.description, logo_url: formData.logo_url });
+      else await api.createBrand({ name: formData.name, description: formData.description, logo_url: formData.logo_url });
+      setIsModalOpen(false);
+      loadBrands();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDelete = async (id) => {
+    try { await api.deleteBrand(id); loadBrands(); } catch (err) { console.error(err); }
+  };
+
+  return (
+    <div>
+      <div className="settings-section-header">
+        <h2>Marcas Comerciales</h2>
+        <button className="btn-add" onClick={() => { setFormData({ id: null, name: "", description: "", logo_url: "" }); setIsModalOpen(true); }}><Plus size={18}/> Nueva Marca</button>
+      </div>
+      <div className="settings-table-wrapper">
+        <table className="settings-table">
+          <thead><tr><th>Logo</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr></thead>
+          <tbody>
+            {loading ? (
+              <LoadingRow colSpan={4} />
+            ) : (
+            <>
+              {brands.map(b => (
+                <tr key={b.id}>
+                  <td>{b.logo_url ? <img src={b.logo_url} alt={b.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4, background: '#fff' }} /> : <span className="badge gray">No Logo</span>}</td>
+                  <td>{b.name}</td>
+                  <td>{b.description || '-'}</td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="btn-icon" onClick={() => { setFormData({ id: b.id, name: b.name, description: b.description || "", logo_url: b.logo_url || "" }); setIsModalOpen(true); }}><Edit2 size={16}/></button>
+                      <button className="btn-icon danger" onClick={() => setConfirmModal({ isOpen: true, id: b.id })}><Trash2 size={16}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {brands.length === 0 && <tr><td colSpan="4">No hay marcas registradas.</td></tr>}
+            </>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {isModalOpen && (
+        <div className="settings-modal-overlay">
+          <div className="settings-modal">
+            <h3>{formData.id ? "Editar Marca" : "Nueva Marca"}</h3>
+            <form onSubmit={handleSave}>
+              <div className="form-group">
+                <label>Nombre</label>
+                <input required type="text" className="form-control" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>Descripción (Opcional)</label>
+                <textarea className="form-control" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>URL del Logotipo (Opcional)</label>
+                <input type="url" placeholder="https://..." className="form-control" value={formData.logo_url} onChange={e => setFormData({ ...formData, logo_url: e.target.value })} />
+                {formData.logo_url && (
+                  <div style={{ marginTop: 10 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Vista previa:</p>
+                    <img src={formData.logo_url} alt="Preview" style={{ maxWidth: 100, maxHeight: 50, objectFit: 'contain', background: '#fff', borderRadius: 4, padding: 4 }} />
+                  </div>
+                )}
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                <button type="submit" className="btn-add">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, id: null })}
+        onConfirm={() => handleDelete(confirmModal.id)}
+        title="Eliminar Marca"
+        message="¿Seguro que deseas eliminar esta marca? (Los productos asociados se quedarán sin marca asignada)"
+        confirmText="Sí, eliminar"
+        type="danger"
+      />
+    </div>
+  );
+}
+

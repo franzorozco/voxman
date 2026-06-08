@@ -11,24 +11,32 @@ class ProductTypeController extends Controller
     public function index()
     {
         return response()->json(
-            ProductType::whereNull('deleted_at')->get()
+            ProductType::with('measurement_types')->whereNull('deleted_at')->get()
         );
     }
 
     public function show($id)
     {
         return response()->json(
-            ProductType::findOrFail($id)
+            ProductType::with('measurement_types')->findOrFail($id)
         );
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100'
+            'name' => 'required|string|max:100',
+            'measurements' => 'nullable|array',
+            'measurements.*' => 'exists:measurement_types,id'
         ]);
 
-        $productType = ProductType::create($validated);
+        $productType = ProductType::create(['name' => $validated['name']]);
+
+        if (isset($validated['measurements'])) {
+            $productType->measurement_types()->sync($validated['measurements']);
+        }
+
+        $productType->load('measurement_types');
 
         return response()->json([
             'message' => 'Tipo de producto creado correctamente',
@@ -41,10 +49,23 @@ class ProductTypeController extends Controller
         $productType = ProductType::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:100'
+            'name' => 'required|string|max:100',
+            'measurements' => 'nullable|array',
+            'measurements.*' => 'exists:measurement_types,id'
         ]);
 
-        $productType->update($validated);
+        $productType->update(['name' => $validated['name']]);
+
+        if (isset($validated['measurements'])) {
+            $productType->measurement_types()->sync($validated['measurements']);
+        } else {
+            // Si mandan vacío explícitamente y queremos limpiar o si no lo mandan.
+            if ($request->has('measurements')) {
+                $productType->measurement_types()->sync([]);
+            }
+        }
+
+        $productType->load('measurement_types');
 
         return response()->json([
             'message' => 'Tipo de producto actualizado correctamente',
