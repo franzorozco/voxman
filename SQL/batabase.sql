@@ -352,12 +352,22 @@ CREATE TABLE inventory_movements (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+
+
 -- DESCUENTOS
 CREATE TABLE discounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code VARCHAR(50) UNIQUE,
     name VARCHAR(100) NOT NULL,
     type VARCHAR(20) CHECK (type IN ('percentage','fixed')),
     value DECIMAL(10,2) NOT NULL,
+    is_automatic BOOLEAN DEFAULT TRUE,
+    min_purchase_amount DECIMAL(10,2) DEFAULT 0,
+    min_quantity INT DEFAULT 0,
+    max_discount_amount DECIMAL(10,2),
+    usage_limit INT,
+    used_count INT DEFAULT 0,
     start_date TIMESTAMP,
     end_date TIMESTAMP,
     active BOOLEAN DEFAULT TRUE,
@@ -373,11 +383,43 @@ CREATE TABLE discount_products (
     PRIMARY KEY (discount_id, product_id)
 );
 
+CREATE TABLE discount_variants (
+    discount_id UUID REFERENCES discounts(id) ON DELETE CASCADE,
+    variant_id UUID REFERENCES product_variants(id) ON DELETE CASCADE,
+    PRIMARY KEY (discount_id, variant_id)
+);
+
 CREATE TABLE discount_categories (
     discount_id UUID REFERENCES discounts(id) ON DELETE CASCADE,
     category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
     PRIMARY KEY (discount_id, category_id)
 );
+
+CREATE TABLE discount_brands (
+    discount_id UUID REFERENCES discounts(id) ON DELETE CASCADE,
+    brand_id BIGINT REFERENCES brands(id) ON DELETE CASCADE,
+    PRIMARY KEY (discount_id, brand_id)
+);
+
+CREATE TABLE discount_branches (
+    discount_id UUID REFERENCES discounts(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE CASCADE,
+    PRIMARY KEY (discount_id, branch_id)
+);
+
+CREATE TABLE discount_customers (
+    discount_id UUID REFERENCES discounts(id) ON DELETE CASCADE,
+    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+    PRIMARY KEY (discount_id, customer_id)
+);
+
+CREATE TABLE discount_employees (
+    discount_id UUID REFERENCES discounts(id) ON DELETE CASCADE,
+    employee_id UUID REFERENCES employees(id) ON DELETE CASCADE,
+    PRIMARY KEY (discount_id, employee_id)
+);
+
+
 
 -- HISTORIAL DE PRECIOS (MEJORADO)
 CREATE TABLE product_price_history (
@@ -465,6 +507,15 @@ CREATE TABLE sale_details (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP
+);
+
+CREATE TABLE sale_applied_discounts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sale_id UUID REFERENCES sales(id) ON DELETE CASCADE,
+    sale_detail_id UUID REFERENCES sale_details(id) ON DELETE CASCADE,
+    discount_id UUID REFERENCES discounts(id) ON DELETE CASCADE,
+    discount_amount DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE sale_status_history (

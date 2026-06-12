@@ -21,6 +21,8 @@ import Roles from "../pages/dashboard/pages/roles/Roles";
 import Permissions from "../pages/dashboard/pages/permissions/Permissions";
 import Products from "../pages/dashboard/pages/Products/Products";
 import DeletedProducts from "../pages/dashboard/pages/Products/DeletedProducts";
+import Promotions from "../pages/dashboard/pages/Promotions/Promotions";
+import DeletedPromotions from "../pages/dashboard/pages/Promotions/DeletedPromotions";
 import Settings from "../pages/dashboard/pages/catalog-settings/Settings.jsx";
 import Branches from "../pages/dashboard/pages/Branches/Branches.jsx";
 import DeletedBranches from "../pages/dashboard/pages/Branches/DeletedBranches.jsx";
@@ -65,6 +67,8 @@ export default function AppRouter() {
             <Route index element={<DashboardHome />} />
             <Route path="products" element={<ProtectedRoute permissions={["view_products"]}><Products /></ProtectedRoute>} />
             <Route path="products/deleted" element={<ProtectedRoute permissions={["view_products"]}><DeletedProducts /></ProtectedRoute>} />
+            <Route path="promotions" element={<ProtectedRoute permissions={["manage_settings"]}><Promotions /></ProtectedRoute>} />
+            <Route path="promotions/deleted" element={<ProtectedRoute permissions={["manage_settings"]}><DeletedPromotions /></ProtectedRoute>} />
             <Route path="settings" element={<ProtectedRoute permissions={["manage_settings"]}><Settings /></ProtectedRoute>} />
             <Route path="branches" element={<ProtectedRoute permissions={["view_branches"]}><Branches /></ProtectedRoute>} />
             <Route path="branches/deleted" element={<ProtectedRoute permissions={["view_branches"]}><DeletedBranches /></ProtectedRoute>} />

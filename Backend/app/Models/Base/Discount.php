@@ -25,13 +25,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Carbon|null $start_date
  * @property Carbon|null $end_date
  * @property bool|null $active
+ * @property string|null $code
+ * @property bool|null $is_automatic
+ * @property float|null $min_purchase_amount
+ * @property int|null $min_quantity
+ * @property float|null $max_discount_amount
+ * @property int|null $usage_limit
+ * @property int|null $used_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property string|null $deleted_at
  * 
  * @property Collection|Product[] $products
  * @property Collection|DiscountCategory[] $discount_categories
- *
+ * @property Collection|DiscountCategory[] $discount_categories
+ * @property Collection|\App\Models\Catalog\Brand[] $brands
+ * @property Collection|\App\Models\Sales\SaleAppliedDiscount[] $sale_applied_discounts
  * @package App\Models\Base
  */
 class Discount extends Model
@@ -43,6 +52,12 @@ class Discount extends Model
 
 	protected $casts = [
 		'value' => 'float',
+		'is_automatic' => 'bool',
+		'min_purchase_amount' => 'float',
+		'min_quantity' => 'int',
+		'max_discount_amount' => 'float',
+		'usage_limit' => 'int',
+		'used_count' => 'int',
 		'start_date' => 'datetime',
 		'end_date' => 'datetime',
 		'active' => 'bool'
@@ -68,5 +83,18 @@ class Discount extends Model
 		);
 	}
 
+	public function brands()
+	{
+		return $this->belongsToMany(
+			\App\Models\Catalog\Brand::class,
+			'discount_brands',
+			'discount_id',
+			'brand_id'
+		);
+	}
 
+	public function sale_applied_discounts()
+	{
+		return $this->hasMany(\App\Models\Sales\SaleAppliedDiscount::class, 'discount_id');
+	}
 }

@@ -6,29 +6,29 @@
 
 namespace App\Models\Base;
 
-use App\Models\Catalog\Category;
 use App\Models\Discount\Discount;
+use App\Models\Catalog\Brand;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class DiscountCategory
+ * Class DiscountBrand
  * 
- * @property uuid $discount_id
- * @property uuid $category_id
+ * @property string $discount_id
+ * @property int $brand_id
  * 
  * @property Discount $discount
- * @property Category $category
+ * @property Brand $brand
  *
  * @package App\Models\Base
  */
-class DiscountCategory extends Model
+class DiscountBrand extends Model
 {
-	protected $table = 'discount_categories';
-	protected $keyType = 'string';
+	protected $table = 'discount_brands';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
+		'brand_id' => 'int'
 	];
 
 	public function discount()
@@ -36,8 +36,8 @@ class DiscountCategory extends Model
 		return $this->belongsTo(Discount::class);
 	}
 
-	public function category()
+	public function brand()
 	{
-		return $this->belongsTo(Category::class);
+		return $this->belongsTo(Brand::class);
 	}
 }

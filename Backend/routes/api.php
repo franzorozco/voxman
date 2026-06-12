@@ -1,29 +1,26 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
-
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\PermissionController;
-
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\ProductVariantController;
-use App\Http\Controllers\Api\InventoryController;
-
 use App\Http\Controllers\Api\AttributeController;
 use App\Http\Controllers\Api\AttributeValueController;
-use App\Http\Controllers\Api\SizeController;
-use App\Http\Controllers\Api\FitController;
 use App\Http\Controllers\Api\BranchController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\DiscountController;
+use App\Http\Controllers\Api\FitController;
+use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MeasurementTypeController;
-use App\Http\Controllers\Api\ProductTypeMeasurementController;
-
 use App\Http\Controllers\Api\OwnerController;
+use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductTypeController;
+use App\Http\Controllers\Api\ProductTypeMeasurementController;
+use App\Http\Controllers\Api\ProductVariantController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SizeController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\BrandController;
+use Illuminate\Support\Facades\Route;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
@@ -97,15 +94,27 @@ Route::middleware([
         Route::delete('/{id}', [CategoryController::class, 'destroy'])->middleware('permission:delete_categories');
     });
 
+    Route::prefix('discounts')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\DiscountController::class, 'index']);
+        Route::get('/deleted', [DiscountController::class, 'deleted']);
+        Route::get('/{id}', [DiscountController::class, 'show']);
+        Route::post('/', [DiscountController::class, 'store']);
+        Route::put('/{id}', [DiscountController::class, 'update']);
+        Route::delete('/{id}', [DiscountController::class, 'destroy']);
+        Route::post('/{id}/restore', [DiscountController::class, 'restore']);
+        Route::delete('/{id}/force', [DiscountController::class, 'forceDestroy']);
+    });
+
     Route::prefix('brands')->group(function () {
-        Route::get('/', [\App\Http\Controllers\BrandController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\BrandController::class, 'store']);
-        Route::put('/{id}', [\App\Http\Controllers\BrandController::class, 'update']);
-        Route::delete('/{id}', [\App\Http\Controllers\BrandController::class, 'destroy']);
+        Route::get('/', [BrandController::class, 'index']);
+        Route::post('/', [BrandController::class, 'store']);
+        Route::put('/{id}', [BrandController::class, 'update']);
+        Route::delete('/{id}', [BrandController::class, 'destroy']);
     });
 
 
     Route::prefix('variants')->group(function () {
+        Route::get('/', [ProductVariantController::class, 'index']);
         Route::get('/deleted', [ProductVariantController::class, 'deleted'])->middleware('permission:view_products');
         Route::get('/{id}', [ProductVariantController::class, 'show']);
         Route::post('/', [ProductVariantController::class, 'store']);
@@ -196,6 +205,14 @@ Route::middleware([
         Route::post('/', [ProductTypeController::class, 'store']);
         Route::put('/{id}', [ProductTypeController::class, 'update']);
         Route::delete('/{id}', [ProductTypeController::class, 'destroy']);
+    });
+
+    Route::prefix('customers')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\CustomerController::class, 'index']);
+    });
+
+    Route::prefix('employees')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\EmployeeController::class, 'index']);
     });
 
 

@@ -32,7 +32,8 @@ import {
   House,
   ChevronDown,
   UserCircle2,
-  Store
+  Store,
+  Ticket
 } from "lucide-react";
 
 export default function DashboardLayout() {

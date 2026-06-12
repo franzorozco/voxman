@@ -7,6 +7,11 @@ use App\Models\Catalog\ProductVariant;
 
 class ProductVariantController extends Controller
 {
+    public function index()
+    {
+        return response()->json(ProductVariant::with(['product', 'variant_attribute_values.attribute_value.attribute'])->where('is_active', true)->get());
+    }
+
     public function deleted()
     {
         $variants = ProductVariant::onlyTrashed()
