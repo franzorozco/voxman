@@ -3,6 +3,7 @@ import { Plus, Search, MoreVertical, Edit, Trash2, Ticket } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getPromotions, deletePromotion } from "../../../../api/discounts";
 import PromotionModal from "./PromotionModal";
+import PromotionCoupon from "./PromotionCoupon";
 import "../Products/Products.css";
 import { Link } from "react-router-dom";
 
@@ -13,6 +14,9 @@ export default function Promotions() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState(null);
+  
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [selectedCouponPromo, setSelectedCouponPromo] = useState(null);
 
   // Menú de acciones (Dropdown)
   const [activeMenuId, setActiveMenuId] = useState(null);
@@ -38,6 +42,11 @@ export default function Promotions() {
     setSelectedPromotion(promo);
     setIsModalOpen(true);
     setActiveMenuId(null);
+  };
+
+  const handleOpenCoupon = (promo) => {
+    setSelectedCouponPromo(promo);
+    setIsCouponModalOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -142,6 +151,14 @@ export default function Promotions() {
                     <td>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
                         <button 
+                          className="btn-secondary"
+                          onClick={() => handleOpenCoupon(promo)}
+                          title="Imprimir Ticket"
+                          style={{ padding: '6px' }}
+                        >
+                          <Ticket size={16} />
+                        </button>
+                        <button 
                           className="btn-edit"
                           onClick={() => handleOpenModal(promo)}
                         >
@@ -177,6 +194,13 @@ export default function Promotions() {
             setIsModalOpen(false);
             fetchPromotions();
           }}
+        />
+      )}
+
+      {isCouponModalOpen && selectedCouponPromo && (
+        <PromotionCoupon 
+          promotion={selectedCouponPromo}
+          onClose={() => setIsCouponModalOpen(false)}
         />
       )}
     </div>
