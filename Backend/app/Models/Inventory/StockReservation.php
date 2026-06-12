@@ -13,4 +13,9 @@ class StockReservation extends BaseStockReservation
 		'quantity',
 		'status'
 	];
+
+	public function variant()
+	{
+		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();
+	}
 }

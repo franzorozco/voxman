@@ -16,4 +16,9 @@ class SaleDetail extends BaseSaleDetail
 		'final_price',
 		'subtotal'
 	];
+
+	public function product_variant()
+	{
+		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();
+	}
 }

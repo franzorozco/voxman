@@ -10,7 +10,6 @@ export default function ProductsTable({
   products,
   loading,
   onEdit,
-  onManageMeasurements,
   onDelete,
   onSort,
   onView,
@@ -314,20 +313,10 @@ export default function ProductsTable({
 
                       <CanAccess permission="edit_products">
                         <button className="btn-edit" onClick={() => onEdit(p)}>
-                          Editar
+                          Variables
                         </button>
                       </CanAccess>
 
-                      <CanAccess permission="manage_product_measurements">
-                        <button 
-                          className="btn-secondary" 
-                          onClick={() => onManageMeasurements?.(p)}
-                          style={{ display: "inline-flex", gap: "5px", alignItems: "center" }}
-                          title="Gestionar Medidas Físicas"
-                        >
-                          <Ruler size={14} /> <span className="hide-on-mobile">Medidas</span>
-                        </button>
-                      </CanAccess>
                       <CanAccess permission="delete_products">
                         <button
                           className="btn-delete"

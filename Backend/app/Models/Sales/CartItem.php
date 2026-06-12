@@ -11,4 +11,9 @@ class CartItem extends BaseCartItem
 		'variant_id',
 		'quantity'
 	];
+
+	public function variant()
+	{
+		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();
+	}
 }

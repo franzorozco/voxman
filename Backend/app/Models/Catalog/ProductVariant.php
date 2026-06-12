@@ -17,4 +17,9 @@ class ProductVariant extends BaseProductVariant
 		'cost',
 		'is_active'
 	];
+
+	public function product()
+	{
+		return $this->belongsTo(\App\Models\Catalog\Product::class)->withTrashed();
+	}
 }

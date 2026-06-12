@@ -26,4 +26,9 @@ class InventoryMovement extends BaseInventoryMovement
 	{
 		return $this->belongsTo(\App\Models\Core\User::class, 'created_by');
 	}
+
+	public function variant()
+	{
+		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();
+	}
 }

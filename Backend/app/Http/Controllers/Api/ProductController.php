@@ -19,6 +19,28 @@ use App\Models\Catalog\VariantImage;
 
 class ProductController extends Controller
 {
+    private function generateUniqueSku($sku, $excludeVariantId = null)
+    {
+        if (!$sku) return null;
+        $originalSku = $sku;
+        $counter = 1;
+        
+        $query = ProductVariant::withTrashed()->where('sku', $sku);
+        if ($excludeVariantId) {
+            $query->where('id', '!=', $excludeVariantId);
+        }
+        
+        while ($query->exists()) {
+            $sku = $originalSku . '-' . $counter;
+            $counter++;
+            $query = ProductVariant::withTrashed()->where('sku', $sku);
+            if ($excludeVariantId) {
+                $query->where('id', '!=', $excludeVariantId);
+            }
+        }
+        
+        return $sku;
+    }
     
     public function index(Request $request)
     {
@@ -257,7 +279,7 @@ class ProductController extends Controller
                         'product_id' => $product->id,
                         'size_id'    => $variantData['size_id'],
                         'fit_id'     => $variantData['fit_id'],
-                        'sku'        => $variantData['sku'],
+                        'sku'        => $this->generateUniqueSku($variantData['sku'] ?? null),
                         'barcode'    => $variantData['barcode'] ?? null,
                         'weight'     => $variantData['weight'] ?? 0,
                         'price'      => $variantData['price'],
@@ -349,17 +371,7 @@ class ProductController extends Controller
                 'is_active'       => $request->is_active ?? true,
             ]);
 
-            // limpiar relaciones
-            foreach ($product->product_variants as $variant) {
-                VariantAttributeValue::where('variant_id', $variant->id)->delete();
-                Inventory::where('variant_id', $variant->id)->delete();
-                VariantMeasurement::where('variant_id', $variant->id)->delete();
-            }
-
-            // =========================
-            // VARIANTS
-            // =========================
-            ProductVariant::where('product_id', $product->id)->delete();
+            // Ya no borramos todo a ciegas aquí. Lo haremos de manera inteligente más abajo.
 
             // =========================
             // IMÁGENES (update)
@@ -425,7 +437,7 @@ class ProductController extends Controller
             }
 
             // =========================
-            // VARIANTS FIX
+            // VARIANTS FIX (Actualizar sin destruir)
             // =========================
             $variants = $request->input('variants');
 
@@ -435,21 +447,61 @@ class ProductController extends Controller
 
             if (is_array($variants)) {
 
+                // 1. Identificar IDs recibidos
+                $receivedVariantIds = collect($variants)->pluck('id')->filter()->toArray();
+
+                // 2. Eliminar lógicamente las variantes que NO vinieron (Soft Delete)
+                $variantsToDelete = ProductVariant::where('product_id', $product->id)
+                    ->whereNotIn('id', $receivedVariantIds)
+                    ->get();
+                    
+                foreach ($variantsToDelete as $varToDelete) {
+                    VariantAttributeValue::where('variant_id', $varToDelete->id)->delete();
+                    VariantMeasurement::where('variant_id', $varToDelete->id)->delete();
+                    Inventory::where('variant_id', $varToDelete->id)->delete();
+                    $varToDelete->delete();
+                }
+
                 foreach ($variants as $index => $variantData) {
 
-                    $variant = ProductVariant::create([
-                        'id'         => Str::uuid(),
-                        'product_id' => $product->id,
-                        'size_id'    => $variantData['size_id'],
-                        'fit_id'     => $variantData['fit_id'],
-                        'sku'        => $variantData['sku'],
-                        'barcode'    => $variantData['barcode'] ?? null,
-                        'weight'     => $variantData['weight'] ?? 0,
-                        'price'      => $variantData['price'],
-                        'cost'       => $variantData['cost'],
-                        'is_active'  => true,
-                    ]);
+                    if (isset($variantData['id']) && $variantData['id']) {
+                        // ACTUALIZAR VARIANTE EXISTENTE
+                        $variant = ProductVariant::find($variantData['id']);
+                        if ($variant && $variant->product_id === $product->id) {
+                            $variant->update([
+                                'size_id'    => $variantData['size_id'],
+                                'fit_id'     => $variantData['fit_id'],
+                                'sku'        => $this->generateUniqueSku($variantData['sku'] ?? null, $variant->id),
+                                'barcode'    => $variantData['barcode'] ?? null,
+                                'weight'     => $variantData['weight'] ?? 0,
+                                'price'      => $variantData['price'],
+                                'cost'       => $variantData['cost'],
+                                'is_active'  => $variantData['is_active'] ?? true,
+                            ]);
+                            
+                            // Limpiamos atributos y medidas para recrearlos limpios
+                            VariantAttributeValue::where('variant_id', $variant->id)->delete();
+                            VariantMeasurement::where('variant_id', $variant->id)->delete();
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        // CREAR NUEVA VARIANTE
+                        $variant = ProductVariant::create([
+                            'id'         => Str::uuid(),
+                            'product_id' => $product->id,
+                            'size_id'    => $variantData['size_id'],
+                            'fit_id'     => $variantData['fit_id'],
+                            'sku'        => $this->generateUniqueSku($variantData['sku'] ?? null),
+                            'barcode'    => $variantData['barcode'] ?? null,
+                            'weight'     => $variantData['weight'] ?? 0,
+                            'price'      => $variantData['price'],
+                            'cost'       => $variantData['cost'],
+                            'is_active'  => true,
+                        ]);
+                    }
 
+                    // Recrear Atributos
                     foreach (($variantData['attribute_value_ids'] ?? []) as $attributeValueId) {
                         VariantAttributeValue::create([
                             'variant_id' => $variant->id,
@@ -457,15 +509,20 @@ class ProductController extends Controller
                         ]);
                     }
 
+                    // Actualizar o Crear Inventarios
                     foreach (($variantData['inventories'] ?? []) as $inventory) {
-                        Inventory::create([
-                            'branch_id' => $inventory['branch_id'],
-                            'variant_id'=> $variant->id,
-                            'stock'     => $inventory['stock'],
+                        $invRecord = Inventory::firstOrCreate(
+                            ['branch_id' => $inventory['branch_id'], 'variant_id' => $variant->id],
+                            ['stock' => 0, 'min_stock' => 0]
+                        );
+                        
+                        $invRecord->update([
                             'min_stock' => $inventory['min_stock'] ?? 0,
+                            'stock'     => $inventory['stock'] ?? 0
                         ]);
                     }
 
+                    // Recrear Measurements
                     foreach (($variantData['measurements'] ?? []) as $measurement) {
                         VariantMeasurement::create([
                             'variant_id' => $variant->id,
@@ -477,16 +534,14 @@ class ProductController extends Controller
                     // =========================
                     // VARIANT IMAGES UPDATE
                     // =========================
-                    if ($request->has("kept_variant_images.{$index}") && is_array($request->input("kept_variant_images.{$index}"))) {
-                        foreach ($request->input("kept_variant_images.{$index}") as $url) {
-                            $image = new VariantImage([
-                                'variant_id' => $variant->id,
-                                'url'        => $url,
-                            ]);
-                            $image->id = Str::uuid()->toString();
-                            $image->save();
-                        }
+                    // Borramos las viejas que no se mantuvieron
+                    $keptVariantUrls = $request->input("kept_variant_images.{$index}") ?? [];
+                    if (!is_array($keptVariantUrls)) {
+                        $keptVariantUrls = [];
                     }
+                    VariantImage::where('variant_id', $variant->id)
+                                ->whereNotIn('url', $keptVariantUrls)
+                                ->delete();
 
                     if ($request->hasFile("variant_images.{$index}")) {
                         foreach ($request->file("variant_images.{$index}") as $file) {
@@ -529,6 +584,157 @@ class ProductController extends Controller
 
             return response()->json([
                 'message' => 'Error al actualizar producto',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateImages(Request $request, $id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $product = Product::findOrFail($id);
+
+            // =========================
+            // MAIN PRODUCT IMAGES
+            // =========================
+            if ($request->hasFile('product_images')) {
+                ProductImage::where('product_id', $product->id)->delete();
+                foreach ($request->file('product_images') as $file) {
+                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs('products', $filename, 'public');
+
+                    $image = new ProductImage([
+                        'product_id' => $product->id,
+                        'url'        => '/storage/' . $filePath,
+                        'is_main'    => false,
+                    ]);
+                    $image->id = Str::uuid()->toString();
+                    $image->save();
+                }
+            }
+
+            // =========================
+            // COLOR IMAGES (UPDATE)
+            // =========================
+            AttributeValueImage::where('product_id', $product->id)->delete();
+
+            if ($request->has('kept_color_images') && is_array($request->input('kept_color_images'))) {
+                foreach ($request->input('kept_color_images') as $colorId => $urls) {
+                    if (is_array($urls)) {
+                        foreach ($urls as $idx => $url) {
+                            $image = new AttributeValueImage([
+                                'attribute_value_id' => $colorId,
+                                'product_id' => $product->id,
+                                'url'        => $url,
+                                'is_main'    => $idx === 0,
+                                'sort_order' => $idx,
+                            ]);
+                            $image->id = Str::uuid()->toString();
+                            $image->save();
+                        }
+                    }
+                }
+            }
+
+            if ($request->has('color_images') && is_array($request->file('color_images'))) {
+                foreach ($request->file('color_images') as $colorId => $files) {
+                    if (is_array($files)) {
+                        foreach ($files as $idx => $file) {
+                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                            $filePath = $file->storeAs('attributes', $filename, 'public');
+
+                            $image = new AttributeValueImage([
+                                'attribute_value_id' => $colorId,
+                                'product_id' => $product->id,
+                                'url'        => '/storage/' . $filePath,
+                                'is_main'    => !isset($request->input('kept_color_images')[$colorId]) && $idx === 0,
+                                'sort_order' => (isset($request->input('kept_color_images')[$colorId]) ? count($request->input('kept_color_images')[$colorId]) : 0) + $idx,
+                            ]);
+                            $image->id = Str::uuid()->toString();
+                            $image->save();
+                        }
+                    }
+                }
+            }
+
+            // =========================
+            // VARIANT IMAGES (UPDATE)
+            // =========================
+            $allVariants = ProductVariant::where('product_id', $product->id)->orderBy('id')->get();
+            
+            // Delete old variant images
+            foreach ($allVariants as $variant) {
+                VariantImage::where('variant_id', $variant->id)->delete();
+            }
+
+            if ($request->has('kept_variant_images') && is_array($request->input('kept_variant_images'))) {
+                foreach ($request->input('kept_variant_images') as $variantIndex => $urls) {
+                    if (isset($allVariants[$variantIndex])) {
+                        $variant = $allVariants[$variantIndex];
+                        if (is_array($urls)) {
+                            foreach ($urls as $idx => $url) {
+                                $image = new VariantImage([
+                                    'variant_id' => $variant->id,
+                                    'url'        => $url,
+                                    'is_main'    => $idx === 0,
+                                    'sort_order' => $idx,
+                                ]);
+                                $image->id = Str::uuid()->toString();
+                                $image->save();
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($request->has('variant_images') && is_array($request->file('variant_images'))) {
+                foreach ($request->file('variant_images') as $variantIndex => $files) {
+                    if (isset($allVariants[$variantIndex])) {
+                        $variant = $allVariants[$variantIndex];
+                        if (is_array($files)) {
+                            foreach ($files as $idx => $file) {
+                                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                                $filePath = $file->storeAs('variants', $filename, 'public');
+
+                                $image = new VariantImage([
+                                    'variant_id' => $variant->id,
+                                    'url'        => '/storage/' . $filePath,
+                                    'is_main'    => !isset($request->input('kept_variant_images')[$variantIndex]) && $idx === 0,
+                                    'sort_order' => (isset($request->input('kept_variant_images')[$variantIndex]) ? count($request->input('kept_variant_images')[$variantIndex]) : 0) + $idx,
+                                ]);
+                                $image->id = Str::uuid()->toString();
+                                $image->save();
+                            }
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Imágenes actualizadas correctamente',
+                'product' => Product::with([
+                    'brand',
+                    'category',
+                    'product_type',
+                    'product_images',
+                    'attribute_value_images',
+                    'product_variants.variant_attribute_values.attribute_value.attribute',
+                    'product_variants.variant_images',
+                    'product_variants.inventories.branch',
+                    'product_variants.size',
+                    'product_variants.fit',
+                    'product_variants.variant_measurements.measurement_type',
+                ])->find($product->id)
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al actualizar imágenes',
                 'error'   => $e->getMessage(),
             ], 500);
         }

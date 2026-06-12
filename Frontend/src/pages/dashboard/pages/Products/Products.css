@@ -504,7 +504,7 @@
 
 .bulk-actions-count {
   font-weight: 600;
-  color: #fff;
+  color: var(--color-primary);
 }
 
 .bulk-actions-divider {
@@ -3633,4 +3633,52 @@ select option:focus {
 
 .custom-table-checkbox:checked::before {
   transform: scale(1);
+}
+/* =========================
+   MODAL RESPONSIVE FIXES
+========================= */
+.pvm-tabs {
+  white-space: nowrap;
+}
+
+.pvm-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+.pvm-tabs::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.pvm-tabs button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.pvm-modal-body {
+  padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+  background: var(--bg-main);
+}
+
+.pvm-modal-footer {
+  background: var(--bg-card);
+  padding: 24px 32px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .pvm-modal-body {
+    padding: 16px;
+  }
+  .pvm-modal-footer {
+    padding: 16px;
+    flex-direction: column;
+  }
+  .pvm-modal-footer button {
+    width: 100%;
+    justify-content: center;
+  }
 }

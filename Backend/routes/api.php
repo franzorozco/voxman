@@ -83,6 +83,7 @@ Route::middleware([
         Route::post('/', [ProductController::class, 'store'])->middleware('permission:create_products');
         Route::put('/{id}', [ProductController::class, 'update'])->middleware('permission:edit_products');
         Route::patch('/{id}/partial', [ProductController::class, 'partialUpdate'])->middleware('permission:edit_products');
+        Route::post('/{id}/images', [ProductController::class, 'updateImages'])->middleware('permission:edit_products');
         Route::delete('/{id}', [ProductController::class, 'destroy'])->middleware('permission:delete_products');
         Route::post('/{id}/restore', [ProductController::class, 'restore'])->middleware('permission:restore_products');
         Route::delete('/{id}/force', [ProductController::class, 'forceDestroy'])->middleware('permission:delete_products');
@@ -105,6 +106,7 @@ Route::middleware([
 
 
     Route::prefix('variants')->group(function () {
+        Route::get('/deleted', [ProductVariantController::class, 'deleted'])->middleware('permission:view_products');
         Route::get('/{id}', [ProductVariantController::class, 'show']);
         Route::post('/', [ProductVariantController::class, 'store']);
         Route::put('/{id}', [ProductVariantController::class, 'update']);

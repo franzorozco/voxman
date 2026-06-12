@@ -34,5 +34,11 @@ export const restoreProduct = (id) =>
 export const forceDeleteProduct = (id) =>
   api.delete(`${BASE_URL}/${id}/force`);
 
+export const updateProductImages = (id, data) =>
+  api.post(`${BASE_URL}/${id}/images`, data);
+
 export const updateProductMeasurements = (id, measurements) =>
   api.post(`${BASE_URL}/${id}/measurements`, { measurements });
+
+export const getDeletedVariants = () =>
+  api.get(`/v1/admin/variants/deleted`);

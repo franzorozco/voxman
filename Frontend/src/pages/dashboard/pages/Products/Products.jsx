@@ -26,7 +26,6 @@ import CanAccess from "../../../../components/ui/CanAccess";
 import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
 import ProductViewModal from "./ProductViewModal";
-import MeasurementsModal from "./MeasurementsModal";
 
 export default function Products() {
   const [loadingData, setLoadingData] = useState(true);
@@ -42,10 +41,8 @@ export default function Products() {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: "", payload: null });
   const [selected, setSelected] = useState(null);
   const [selectedView, setSelectedView] = useState(null);
-  const [selectedMeasurements, setSelectedMeasurements] = useState(null);
   const [open, setOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
-  const [measurementsOpen, setMeasurementsOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
@@ -482,10 +479,6 @@ export default function Products() {
           setSelected(p);
           setOpen(true);
         }}
-        onManageMeasurements={(p) => {
-          setSelectedMeasurements(p);
-          setMeasurementsOpen(true);
-        }}
         onDelete={(id) => {
           setConfirmModal({ isOpen: true, type: "singleDelete", payload: id });
         }}
@@ -520,6 +513,7 @@ export default function Products() {
         <ProductViewModal
           product={selectedView}
           onClose={() => setViewOpen(false)}
+          onUpdated={() => loadProducts()}
         />
       )}
 
@@ -583,17 +577,6 @@ export default function Products() {
           fits={fits}
           onClose={() => setOpen(false)}
           onSubmit={handleSubmit}
-        />
-      )}
-
-      {measurementsOpen && selectedMeasurements && (
-        <MeasurementsModal
-          product={selectedMeasurements}
-          onClose={() => setMeasurementsOpen(false)}
-          onSaved={() => {
-            setMeasurementsOpen(false);
-            loadProducts();
-          }}
         />
       )}
 
