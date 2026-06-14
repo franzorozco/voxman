@@ -12,6 +12,7 @@ use App\Models\Actors\Owner;
 use App\Models\Catalog\ProductImage;
 use App\Models\Catalog\ProductType;
 use App\Models\Catalog\ProductVariant;
+use App\Models\Catalog\BundleItem;
  
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $slug
  * @property float $base_price
  * @property bool|null $is_active
+ * @property bool|null $is_bundle
  * @property int|null $views
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -41,6 +43,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Collection|ProductVariant[] $product_variants
  * @property Collection|ProductImage[] $product_images
  * @property Collection|Discount[] $discounts
+ * @property Collection|BundleItem[] $bundle_items
  *
  * @package App\Models\Base
  */
@@ -55,6 +58,7 @@ class Product extends Model
 		
 		'base_price' => 'float',
 		'is_active' => 'bool',
+		'is_bundle' => 'bool',
 		'views' => 'int'
 	];
 	
@@ -87,5 +91,10 @@ class Product extends Model
 	public function discounts()
 	{
 		return $this->belongsToMany(Discount::class, 'discount_products');
+	}
+
+	public function bundle_items()
+	{
+		return $this->hasMany(BundleItem::class, 'bundle_id');
 	}
 }

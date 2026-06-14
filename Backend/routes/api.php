@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\BundleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrandController;
@@ -85,6 +86,14 @@ Route::middleware([
         Route::post('/{id}/restore', [ProductController::class, 'restore'])->middleware('permission:restore_products');
         Route::delete('/{id}/force', [ProductController::class, 'forceDestroy'])->middleware('permission:delete_products');
         Route::post('/{id}/measurements', [ProductController::class, 'updateMeasurements'])->middleware('permission:manage_product_measurements');
+    });
+
+    Route::prefix('bundles')->group(function () {
+        Route::get('/', [BundleController::class, 'index'])->middleware('permission:view_products');
+        Route::get('/{id}', [BundleController::class, 'show'])->middleware('permission:view_products');
+        Route::post('/', [BundleController::class, 'store'])->middleware('permission:create_products');
+        Route::put('/{id}', [BundleController::class, 'update'])->middleware('permission:edit_products');
+        Route::delete('/{id}', [BundleController::class, 'destroy'])->middleware('permission:delete_products');
     });
 
     Route::prefix('categories')->group(function () {

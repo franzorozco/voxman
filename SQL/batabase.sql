@@ -992,3 +992,28 @@ CREATE TABLE brands (
 -- Agregar brand_id a products
 ALTER TABLE products ADD COLUMN brand_id BIGINT UNSIGNED NULL AFTER product_type_id;
 ALTER TABLE products ADD CONSTRAINT fk_products_brand_id FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL;
+
+-- =========================================
+-- BUNDLES (CONJUNTOS)
+-- =========================================
+ALTER TABLE products ADD COLUMN is_bundle BOOLEAN DEFAULT FALSE;
+
+CREATE TABLE bundle_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    bundle_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id),
+    variant_id UUID REFERENCES product_variants(id),
+    quantity INT NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    CHECK (
+        (product_id IS NOT NULL AND variant_id IS NULL)
+        OR
+        (product_id IS NULL AND variant_id IS NOT NULL)
+    ),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE cart_items ADD COLUMN parent_id UUID REFERENCES cart_items(id) ON DELETE CASCADE;
+ALTER TABLE cart_items DROP CONSTRAINT cart_items_cart_id_variant_id_key;
+
+ALTER TABLE sale_details ADD COLUMN parent_id UUID REFERENCES sale_details(id) ON DELETE CASCADE;
+

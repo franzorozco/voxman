@@ -19,6 +19,7 @@ class Product extends BaseProduct
 		'slug',
 		'base_price',
 		'is_active',
+		'is_bundle',
 		'views'
 	];
 
