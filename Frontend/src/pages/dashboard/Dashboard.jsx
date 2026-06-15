@@ -189,6 +189,14 @@ export default function DashboardLayout() {
                 />
               </CanAccess>
 
+              <CanAccess permission="view_suppliers">
+                <NavItem
+                  to="/dashboard/suppliers"
+                  icon={Truck}
+                  label="Proveedores"
+                />
+              </CanAccess>
+
               <CanAccess permission="manage_settings">
                 <NavItem
                   to="/dashboard/settings"

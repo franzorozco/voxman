@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Admin\SizeController;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\BundleController;
 use App\Http\Controllers\Api\Admin\GiftcardController;
+use App\Http\Controllers\Api\Admin\SupplierController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrandController;
@@ -235,6 +236,18 @@ Route::middleware([
         Route::post('/digitalize', [GiftcardController::class, 'digitalize'])->middleware('permission:edit_giftcards');
         Route::post('/{id}/reload', [GiftcardController::class, 'reload'])->middleware('permission:edit_giftcards');
         Route::delete('/{id}', [GiftcardController::class, 'destroy'])->middleware('permission:delete_giftcards');
+    });
+
+    Route::prefix('suppliers')->group(function () {
+        Route::get('/deleted', [SupplierController::class, 'deleted'])->middleware('permission:view_suppliers');
+        Route::put('/{id}/restore', [SupplierController::class, 'restore'])->middleware('permission:restore_suppliers');
+        Route::delete('/{id}/force', [SupplierController::class, 'forceDestroy'])->middleware('permission:delete_suppliers');
+        
+        Route::get('/', [SupplierController::class, 'index'])->middleware('permission:view_suppliers');
+        Route::get('/{id}', [SupplierController::class, 'show'])->middleware('permission:view_suppliers');
+        Route::post('/', [SupplierController::class, 'store'])->middleware('permission:create_suppliers');
+        Route::put('/{id}', [SupplierController::class, 'update'])->middleware('permission:edit_suppliers');
+        Route::delete('/{id}', [SupplierController::class, 'destroy'])->middleware('permission:delete_suppliers');
     });
 
 });

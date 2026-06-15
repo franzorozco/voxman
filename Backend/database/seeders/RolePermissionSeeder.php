@@ -50,6 +50,13 @@ class RolePermissionSeeder extends Seeder
             'publish_products',
             'manage_product_measurements', // NUEVO
 
+            // Proveedores
+            'view_suppliers',
+            'create_suppliers',
+            'edit_suppliers',
+            'delete_suppliers',
+            'restore_suppliers',
+
             // Promociones
             'view_promotions',
             'create_promotions',

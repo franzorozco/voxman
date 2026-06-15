@@ -31,6 +31,8 @@ import Inventory from "../pages/dashboard/pages/inventory/Inventory.jsx";
 import InventoryMovements from "../pages/dashboard/pages/inventory/InventoryMovements.jsx";
 import Giftcards from "../pages/dashboard/pages/Giftcards/Giftcards.jsx";
 import DeletedGiftcards from "../pages/dashboard/pages/Giftcards/DeletedGiftcards.jsx";
+import Suppliers from "../pages/dashboard/pages/Suppliers/Suppliers.jsx";
+import DeletedSuppliers from "../pages/dashboard/pages/Suppliers/DeletedSuppliers.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -84,6 +86,8 @@ export default function AppRouter() {
             <Route path="inventory/movements" element={<ProtectedRoute permissions={["view_inventory"]}><InventoryMovements /></ProtectedRoute>} />
             <Route path="giftcards" element={<ProtectedRoute permissions={["view_giftcards"]}><Giftcards /></ProtectedRoute>} />
             <Route path="giftcards/deleted" element={<ProtectedRoute permissions={["view_giftcards"]}><DeletedGiftcards /></ProtectedRoute>} />
+            <Route path="suppliers" element={<ProtectedRoute permissions={["view_suppliers"]}><Suppliers /></ProtectedRoute>} />
+            <Route path="suppliers/deleted" element={<ProtectedRoute permissions={["view_suppliers"]}><DeletedSuppliers /></ProtectedRoute>} />
 
           </Route>
         </Route>

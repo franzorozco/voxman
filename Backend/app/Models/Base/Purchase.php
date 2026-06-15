@@ -11,7 +11,7 @@ use App\Models\Employee;
 use App\Models\PurchaseDetail;
 use App\Models\PurchaseReception;
 use App\Models\PurchasePriceHistory;
-use App\Models\Supplier;
+use App\Models\Purchase\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\AccountsPayable;
 use Carbon\Carbon;
