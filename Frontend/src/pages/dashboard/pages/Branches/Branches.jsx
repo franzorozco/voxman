@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { getBranches, deleteBranch } from "../../../../api/branches";
+import { getBranches, deleteBranch } from "../../../../api/admin/branches";
 import { LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2, Search, Filter } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import BranchFormModal from "./BranchFormModal";

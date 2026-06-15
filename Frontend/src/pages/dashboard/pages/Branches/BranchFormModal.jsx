@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { createBranch, updateBranch } from "../../../../api/branches";
-import { getEmployees } from "../../../../api/employees";
+import { createBranch, updateBranch } from "../../../../api/admin/branches";
+import { getEmployees } from "../../../../api/admin/employees";
 import { API_BASE_URL } from "../../../../config/api";
 import toast from "react-hot-toast";
 

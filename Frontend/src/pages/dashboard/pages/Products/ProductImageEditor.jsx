@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Camera, Image as ImageIcon } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
-import { updateProductImages } from "../../../../api/products";
+import { updateProductImages } from "../../../../api/admin/products";
 import ImageGalleryModal from "./ImageGalleryModal";
 import toast from "react-hot-toast";
 

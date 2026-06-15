@@ -6,14 +6,14 @@ import {
   updateProduct,
   updatePartialProduct,
   deleteProduct,
-} from "../../../../api/products";
+} from "../../../../api/admin/products";
 
-import { getCategories } from "../../../../api/categories";
-import { getOwners } from "../../../../api/owners";
-import { getProductTypes } from "../../../../api/productTypes";
-import { getAttributes } from "../../../../api/attributes";
-import { getSizes } from "../../../../api/sizes";
-import { getFits } from "../../../../api/fits";
+import { getCategories } from "../../../../api/admin/categories";
+import { getOwners } from "../../../../api/admin/owners";
+import { getProductTypes } from "../../../../api/admin/productTypes";
+import { getAttributes } from "../../../../api/admin/attributes";
+import { getSizes } from "../../../../api/admin/sizes";
+import { getFits } from "../../../../api/admin/fits";
 
 import "./Products.css";
 import "../css/stylesCruds.css";

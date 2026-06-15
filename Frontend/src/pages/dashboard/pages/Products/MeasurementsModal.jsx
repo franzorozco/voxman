@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Ruler, Save, Edit2, Copy } from "lucide-react";
 import api from "../../../../api/client";
-import { updateProductMeasurements } from "../../../../api/products";
+import { updateProductMeasurements } from "../../../../api/admin/products";
 import toast from "react-hot-toast";
 
 export default function MeasurementsModal({ product, onClose, onSaved }) {

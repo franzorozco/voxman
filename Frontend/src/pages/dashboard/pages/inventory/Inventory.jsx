@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getInventory } from "../../../../api/inventory";
-import { getBranches } from "../../../../api/branches";
+import { getInventory } from "../../../../api/admin/inventory";
+import { getBranches } from "../../../../api/admin/branches";
 import { Search, Filter, History, AlertTriangle, ArrowRightLeft, PenTool, ChevronDown, ChevronRight, Package, Plus } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
 import AdjustStockModal from "./AdjustStockModal";

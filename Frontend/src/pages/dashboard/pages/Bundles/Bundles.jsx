@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
-import { getBundles, deleteBundle } from "../../../../api/bundles";
-import { getCategories } from "../../../../api/categories";
-import { getOwners } from "../../../../api/owners";
-import { getProductTypes } from "../../../../api/productTypes";
+import { getBundles, deleteBundle } from "../../../../api/admin/bundles";
+import { getCategories } from "../../../../api/admin/categories";
+import { getOwners } from "../../../../api/admin/owners";
+import { getProductTypes } from "../../../../api/admin/productTypes";
 
 import "./Bundles.css";
 import "../css/stylesCruds.css";

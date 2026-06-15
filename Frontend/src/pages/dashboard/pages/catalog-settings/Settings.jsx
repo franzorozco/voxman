@@ -13,7 +13,7 @@ import {
   X,
   Award
 } from "lucide-react";
-import * as api from "../../../../api/catalog-settings";
+import * as api from "../../../../api/admin/catalog-settings";
 import Spinner from "../../components/Spinner/Spinner";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";

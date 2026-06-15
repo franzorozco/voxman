@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getPermissions } from "../../../../api/permissions";
+import { getPermissions } from "../../../../api/admin/permissions";
 
 export default function RoleForm({ role, onClose, onSubmit }) {
   const [name, setName] = useState("");

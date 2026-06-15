@@ -4,7 +4,7 @@ import {
   createPermission,
   updatePermission,
   deletePermission,
-} from "../../../../api/permissions";
+} from "../../../../api/admin/permissions";
 
 import "./Permissions.css";
 import PermissionsTable from "./PermissionsTable";

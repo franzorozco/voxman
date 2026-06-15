@@ -1,6 +1,6 @@
 // services/attributeValues.js
 
-import api from "./client";
+import api from "../client";
 
 const BASE_URL = "/v1/admin/attribute-values";
 

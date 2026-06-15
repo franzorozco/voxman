@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
-import { createPromotion, updatePromotion } from "../../../../api/discounts";
-import { getBrands } from "../../../../api/brands";
+import { createPromotion, updatePromotion } from "../../../../api/admin/discounts";
+import { getBrands } from "../../../../api/admin/brands";
 import api from "../../../../api/client";
 import Spinner from "../../components/Spinner/Spinner";
 

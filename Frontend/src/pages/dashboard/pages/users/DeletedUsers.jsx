@@ -5,7 +5,7 @@ import {
   getDeletedUsers,
   restoreUser,
   forceDeleteUser,
-} from "../../../../api/users";
+} from "../../../../api/admin/users";
 
 import "./Users.css";
 import "../css/stylesCruds.css";

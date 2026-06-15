@@ -7,7 +7,7 @@ import {
   updateUser,
   deleteUser,
   restoreUser,
-} from "../../../../api/users";
+} from "../../../../api/admin/users";
 import api from "../../../../api/client";
 import "./Users.css";
 import UserForm from "./UserForm";

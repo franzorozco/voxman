@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, RefreshCw, Trash2, Search, Ticket } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { getDeletedPromotions, restorePromotion, forceDeletePromotion } from "../../../../api/discounts";
+import { getDeletedPromotions, restorePromotion, forceDeletePromotion } from "../../../../api/admin/discounts";
 import { Link } from "react-router-dom";
 
 export default function DeletedPromotions() {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getMovements } from "../../../../api/inventory";
-import { getBranches } from "../../../../api/branches";
+import { getMovements } from "../../../../api/admin/inventory";
+import { getBranches } from "../../../../api/admin/branches";
 import { API_BASE_URL } from "../../../../config/api";
 import { Search, Filter, ArrowLeft, ArrowUpRight, ArrowDownRight, RefreshCcw } from "lucide-react";
 import "./Inventory.css";

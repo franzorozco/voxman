@@ -5,7 +5,7 @@ import {
   getDeletedBranches,
   restoreBranch,
   forceDeleteBranch,
-} from "../../../../api/branches";
+} from "../../../../api/admin/branches";
 
 import "./Branches.css";
 import "../css/stylesCruds.css";

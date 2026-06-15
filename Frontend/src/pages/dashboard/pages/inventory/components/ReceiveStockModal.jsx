@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Search, Package, Check, ChevronDown, Plus } from "lucide-react";
-import { adjustStock, batchAdjustStock, getInventory } from "../../../../../api/inventory";
+import { adjustStock, batchAdjustStock, getInventory } from "../../../../../api/admin/inventory";
 import toast from "react-hot-toast";
-import { getProducts } from "../../../../../api/products";
-import { getBranches } from "../../../../../api/branches";
+import { getProducts } from "../../../../../api/admin/products";
+import { getBranches } from "../../../../../api/admin/branches";
 import { API_BASE_URL } from "../../../../../config/api";
 import { useAuthStore } from "../../../../../store/authStore";
 

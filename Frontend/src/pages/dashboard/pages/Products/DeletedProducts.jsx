@@ -8,7 +8,7 @@ import {
   updatePartialProduct,
   deleteProduct,
   getDeletedVariants
-} from "../../../../api/products";
+} from "../../../../api/admin/products";
 import { API_BASE_URL } from "../../../../config/api";
 
 import "./Products.css";

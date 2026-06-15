@@ -3,8 +3,8 @@ import { X, Plus, Trash2 } from "lucide-react";
 import AsyncSelect from "react-select/async";
 import toast from "react-hot-toast";
 
-import { createBundle, updateBundle } from "../../../../api/bundles";
-import { getProducts } from "../../../../api/products";
+import { createBundle, updateBundle } from "../../../../api/admin/bundles";
+import { getProducts } from "../../../../api/admin/products";
 import { API_BASE_URL } from "../../../../config/api";
 
 export default function BundleForm({ bundle, categories, owners, productTypes, onClose, onSuccess }) {

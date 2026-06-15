@@ -1,4 +1,4 @@
-import api from "./client";
+import api from "../client";
 
 const BASE = "/v1/admin";
 

@@ -4,7 +4,7 @@ import {
   createRole,
   updateRole,
   deleteRole,
-} from "../../../../api/roles";
+} from "../../../../api/admin/roles";
 
 import "./Roles.css";
 import "../css/stylesCruds.css";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { transferStock } from "../../../../api/inventory";
+import { transferStock } from "../../../../api/admin/inventory";
 import toast from "react-hot-toast";
 import { X, ArrowRight } from "lucide-react";
 

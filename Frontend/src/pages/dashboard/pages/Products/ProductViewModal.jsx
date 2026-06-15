@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Package, Tag, DollarSign, Activity, Link as LinkIcon, Info, Users, ArrowUpRight, BarChart3, Image as ImageIcon, Ruler, Save, Edit2, Copy, PenTool } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
 import api from "../../../../api/client";
-import { updateProductMeasurements } from "../../../../api/products";
+import { updateProductMeasurements } from "../../../../api/admin/products";
 import CanAccess from "../../../../components/ui/CanAccess";
 import ProductImageEditor from "./ProductImageEditor";
 import toast from "react-hot-toast";

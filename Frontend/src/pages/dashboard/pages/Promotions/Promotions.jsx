@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, Ticket } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { getPromotions, deletePromotion } from "../../../../api/discounts";
+import { getPromotions, deletePromotion } from "../../../../api/admin/discounts";
 import PromotionModal from "./PromotionModal";
 import PromotionCoupon from "./PromotionCoupon";
 import "../Products/Products.css";

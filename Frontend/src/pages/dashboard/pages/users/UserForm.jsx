@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { getRoles } from "../../../../api/roles";
-import { restoreUser } from "../../../../api/users";
+import { getRoles } from "../../../../api/admin/roles";
+import { restoreUser } from "../../../../api/admin/users";
 import { useAuthStore } from "../../../../store/authStore";
 
 export default function UserForm({ user, onClose, onSubmit }) {

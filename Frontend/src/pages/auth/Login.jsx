@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { loginUser } from "../../api/auth";
+import { loginUser } from "../../api/admin/auth";
 import { useAuthStore } from "../../store/authStore";
 import toast from "react-hot-toast";
 import "./Auth.css"; 

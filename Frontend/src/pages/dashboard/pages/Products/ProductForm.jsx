@@ -1,9 +1,9 @@
 import { API_BASE_URL } from "../../../../config/api";
 import { useEffect, useState, useRef } from "react";
-import { getAttributes } from "../../../../api/attributes";
-import { createAttributeValue } from "../../../../api/attributeValues";
-import { createSize } from "../../../../api/sizes";
-import { getBrands } from "../../../../api/catalog-settings";
+import { getAttributes } from "../../../../api/admin/attributes";
+import { createAttributeValue } from "../../../../api/admin/attributeValues";
+import { createSize } from "../../../../api/admin/sizes";
+import { getBrands } from "../../../../api/admin/catalog-settings";
 import namer from "color-namer";
 import { Plus, Camera, AlertTriangle, ChevronDown, Eye, EyeOff } from "lucide-react";
 import ImageGalleryModal from "./ImageGalleryModal";

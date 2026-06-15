@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { registerUser } from "../../api/auth";
+import { registerUser } from "../../api/admin/auth";
 import { useAuthStore } from "../../store/authStore";
 import toast from "react-hot-toast";
 import "./Auth.css";
