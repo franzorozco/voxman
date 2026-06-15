@@ -29,6 +29,8 @@ import Branches from "../pages/dashboard/pages/Branches/Branches.jsx";
 import DeletedBranches from "../pages/dashboard/pages/Branches/DeletedBranches.jsx";
 import Inventory from "../pages/dashboard/pages/inventory/Inventory.jsx";
 import InventoryMovements from "../pages/dashboard/pages/inventory/InventoryMovements.jsx";
+import Giftcards from "../pages/dashboard/pages/Giftcards/Giftcards.jsx";
+import DeletedGiftcards from "../pages/dashboard/pages/Giftcards/DeletedGiftcards.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -69,8 +71,8 @@ export default function AppRouter() {
             <Route path="products" element={<ProtectedRoute permissions={["view_products"]}><Products /></ProtectedRoute>} />
             <Route path="products/deleted" element={<ProtectedRoute permissions={["view_products"]}><DeletedProducts /></ProtectedRoute>} />
             <Route path="bundles" element={<ProtectedRoute permissions={["view_products"]}><Bundles /></ProtectedRoute>} />
-            <Route path="promotions" element={<ProtectedRoute permissions={["manage_settings"]}><Promotions /></ProtectedRoute>} />
-            <Route path="promotions/deleted" element={<ProtectedRoute permissions={["manage_settings"]}><DeletedPromotions /></ProtectedRoute>} />
+            <Route path="promotions" element={<ProtectedRoute permissions={["view_promotions"]}><Promotions /></ProtectedRoute>} />
+            <Route path="promotions/deleted" element={<ProtectedRoute permissions={["view_promotions"]}><DeletedPromotions /></ProtectedRoute>} />
             <Route path="settings" element={<ProtectedRoute permissions={["manage_settings"]}><Settings /></ProtectedRoute>} />
             <Route path="branches" element={<ProtectedRoute permissions={["view_branches"]}><Branches /></ProtectedRoute>} />
             <Route path="branches/deleted" element={<ProtectedRoute permissions={["view_branches"]}><DeletedBranches /></ProtectedRoute>} />
@@ -80,6 +82,8 @@ export default function AppRouter() {
             <Route path="permissions" element={<ProtectedRoute permissions={["manage_roles"]}><Permissions /></ProtectedRoute>} />
             <Route path="inventory" element={<ProtectedRoute permissions={["view_inventory"]}><Inventory /></ProtectedRoute>} />
             <Route path="inventory/movements" element={<ProtectedRoute permissions={["view_inventory"]}><InventoryMovements /></ProtectedRoute>} />
+            <Route path="giftcards" element={<ProtectedRoute permissions={["view_giftcards"]}><Giftcards /></ProtectedRoute>} />
+            <Route path="giftcards/deleted" element={<ProtectedRoute permissions={["view_giftcards"]}><DeletedGiftcards /></ProtectedRoute>} />
 
           </Route>
         </Route>

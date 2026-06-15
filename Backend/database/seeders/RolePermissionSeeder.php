@@ -50,6 +50,23 @@ class RolePermissionSeeder extends Seeder
             'publish_products',
             'manage_product_measurements', // NUEVO
 
+            // Promociones
+            'view_promotions',
+            'create_promotions',
+            'edit_promotions',
+            'delete_promotions',
+            'restore_promotions',
+
+            // Giftcards
+            'view_giftcards',
+            'create_giftcards',
+            'edit_giftcards',
+            'delete_giftcards',
+            'restore_giftcards',
+
+            // Ajustes y Configuración
+            'manage_settings', // NUEVO
+
             // Categorias
             'view_categories',
             'create_categories',

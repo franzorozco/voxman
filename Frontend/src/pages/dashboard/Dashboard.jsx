@@ -245,11 +245,21 @@ export default function DashboardLayout() {
                 {!collapsed && "MARKETING"}
               </p>
 
-              <NavItem
-                to="/dashboard/promotions"
-                icon={BadgePercent}
-                label="Promociones"
-              />
+              <CanAccess permission="view_promotions">
+                <NavItem
+                  to="/dashboard/promotions"
+                  icon={BadgePercent}
+                  label="Promociones"
+                />
+              </CanAccess>
+
+              <CanAccess permission="view_giftcards">
+                <NavItem
+                  to="/dashboard/giftcards"
+                  icon={Ticket}
+                  label="Giftcards"
+                />
+              </CanAccess>
 
               <NavItem
                 to="/dashboard/coupons"

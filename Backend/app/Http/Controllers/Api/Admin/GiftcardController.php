@@ -17,7 +17,7 @@ class GiftcardController extends Controller
         $query = Giftcard::with(['customer', 'purchaser', 'transactions']);
         
         if ($request->filled('search')) {
-            $query->where('code', 'ILIKE', "%{$request->search}%");
+            $query->where('code', 'LIKE', "%{$request->search}%");
         }
 
         if ($request->filled('customer_id')) {
@@ -176,5 +176,29 @@ class GiftcardController extends Controller
         $giftcard->delete();
 
         return response()->json(['message' => 'Giftcard desactivada y eliminada']);
+    }
+
+    public function deleted()
+    {
+        $giftcards = Giftcard::onlyTrashed()->with(['customer', 'purchaser'])->get();
+        return response()->json($giftcards);
+    }
+
+    public function restore($id)
+    {
+        $giftcard = Giftcard::onlyTrashed()->findOrFail($id);
+        $giftcard->restore();
+        $giftcard->is_active = true;
+        $giftcard->save();
+
+        return response()->json(['message' => 'Giftcard restaurada']);
+    }
+
+    public function forceDestroy($id)
+    {
+        $giftcard = Giftcard::onlyTrashed()->findOrFail($id);
+        $giftcard->forceDelete();
+
+        return response()->json(['message' => 'Giftcard eliminada permanentemente']);
     }
 }

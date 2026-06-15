@@ -226,12 +226,15 @@ Route::middleware([
     });
 
     Route::prefix('giftcards')->group(function () {
-        Route::get('/', [GiftcardController::class, 'index']);
-        Route::post('/', [GiftcardController::class, 'store']);
-        Route::post('/validate', [GiftcardController::class, 'checkBalance']);
-        Route::post('/digitalize', [GiftcardController::class, 'digitalize']);
-        Route::post('/{id}/reload', [GiftcardController::class, 'reload']);
-        Route::delete('/{id}', [GiftcardController::class, 'destroy']);
+        Route::get('/deleted', [GiftcardController::class, 'deleted'])->middleware('permission:view_giftcards');
+        Route::put('/{id}/restore', [GiftcardController::class, 'restore'])->middleware('permission:restore_giftcards');
+        Route::delete('/{id}/force', [GiftcardController::class, 'forceDestroy'])->middleware('permission:delete_giftcards');
+        Route::get('/', [GiftcardController::class, 'index'])->middleware('permission:view_giftcards');
+        Route::post('/', [GiftcardController::class, 'store'])->middleware('permission:create_giftcards');
+        Route::post('/validate', [GiftcardController::class, 'checkBalance'])->middleware('permission:view_giftcards');
+        Route::post('/digitalize', [GiftcardController::class, 'digitalize'])->middleware('permission:edit_giftcards');
+        Route::post('/{id}/reload', [GiftcardController::class, 'reload'])->middleware('permission:edit_giftcards');
+        Route::delete('/{id}', [GiftcardController::class, 'destroy'])->middleware('permission:delete_giftcards');
     });
 
 });
