@@ -10,6 +10,7 @@ import CanAccess from "../../components/ui/CanAccess";
 import {
   LayoutDashboard,
   Package,
+  PackagePlus,
   Shapes,
   Boxes,
   ShoppingCart,
@@ -167,6 +168,14 @@ export default function DashboardLayout() {
                   to="/dashboard/products"
                   icon={Package}
                   label="Productos"
+                />
+              </CanAccess>
+
+              <CanAccess permission="view_products">
+                <NavItem
+                  to="/dashboard/bundles"
+                  icon={PackagePlus}
+                  label="Conjuntos"
                 />
               </CanAccess>
 

@@ -1,0 +1,247 @@
+/* =========================
+    BUNDLES CONTAINER
+========================= */
+
+.bundles-container {
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  color: var(--text-main);
+}
+
+/* =========================
+   HEADER
+========================= */
+ 
+.bundles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 20px;
+  padding: 12px 16px;
+
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+
+  backdrop-filter: blur(8px);
+}
+
+.bundles-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+/* =========================
+   BOTONES
+========================= */
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   TABLA BUNDLES
+========================= */
+
+.bundles-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  background: var(--bg-card);
+  border-radius: 10px;
+
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.bundles-table th {
+  background: var(--bg-card);
+  text-align: left;
+  padding: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.bundles-table td {
+  padding: 12px;
+  border-top: 1px solid var(--border-color);
+  font-size: 14px;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.bundles-table tr:hover {
+  background: var(--bg-overlay);
+}
+
+/* =========================
+   BOTONES ACCIÓN
+========================= */
+
+.btn-edit {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--color-warning);
+
+  padding: 6px 10px;
+  margin-right: 5px;
+
+  border-radius: 6px;
+
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+
+  padding: 6px 10px;
+  border-radius: 6px;
+
+  cursor: pointer;
+  font-size: 13px;
+
+  transition: 0.2s ease;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+
+.bundle-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.bundle-item-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: var(--bg-secondary);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.bundle-item-field {
+  flex: 1;
+}
+
+.bundle-item-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.bundle-item-select {
+  width: 100%;
+}
+
+.bundle-item-quantity {
+  width: 80px;
+}
+
+.bundle-item-quantity input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  outline: none;
+}
+
+.btn-remove-item {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-remove-item:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-add-item {
+  margin-top: 15px;
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  border: 1px dashed var(--border-color);
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.btn-add-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.bundle-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 8px;
+}

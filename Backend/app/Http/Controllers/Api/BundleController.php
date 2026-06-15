@@ -15,8 +15,10 @@ class BundleController extends Controller
     {
         $query = Product::where('is_bundle', true)
             ->with([
-                'bundle_items.product', 
+                'bundle_items.product.product_images', 
+                'bundle_items.product.attribute_value_images',
                 'bundle_items.variant.variant_attribute_values.attribute_value.attribute',
+                'bundle_items.variant.variant_images',
                 'product_images'
             ]);
             
@@ -31,8 +33,10 @@ class BundleController extends Controller
     {
         $bundle = Product::where('is_bundle', true)
             ->with([
-                'bundle_items.product', 
+                'bundle_items.product.product_images', 
+                'bundle_items.product.attribute_value_images',
                 'bundle_items.variant.variant_attribute_values.attribute_value.attribute',
+                'bundle_items.variant.variant_images',
                 'product_images'
             ])
             ->findOrFail($id);
@@ -54,12 +58,31 @@ class BundleController extends Controller
                 'description'     => $request->description,
                 'slug'            => Str::slug($request->name),
                 'base_price'      => $request->base_price ?? 0,
-                'is_active'       => true,
+                'is_active'       => $request->boolean('is_active', true),
                 'is_bundle'       => true,
                 'views'           => 0,
             ]);
 
+            if ($request->hasFile('product_images')) {
+                foreach ($request->file('product_images') as $file) {
+                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs('products', $filename, 'public');
+
+                    $image = new \App\Models\Catalog\ProductImage([
+                        'product_id' => $bundle->id,
+                        'url'        => '/storage/' . $filePath,
+                        'is_main'    => false,
+                    ]);
+                    $image->id = Str::uuid()->toString();
+                    $image->save();
+                }
+            }
+
             $items = $request->input('bundle_items', []);
+            if (is_string($items)) {
+                $items = json_decode($items, true) ?: [];
+            }
+            
             foreach ($items as $item) {
                 BundleItem::create([
                     'id'         => Str::uuid(),
@@ -73,10 +96,17 @@ class BundleController extends Controller
             DB::commit();
             return response()->json([
                 'message' => 'Conjunto creado correctamente', 
-                'bundle' => $bundle
+                'bundle' => Product::with([
+                    'bundle_items.product.product_images', 
+                    'bundle_items.product.attribute_value_images',
+                    'bundle_items.variant.variant_attribute_values.attribute_value.attribute', 
+                    'bundle_items.variant.variant_images',
+                    'product_images'
+                ])->find($bundle->id)
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error("Bundle Store Error: " . $e->getMessage());
             return response()->json([
                 'message' => 'Error al crear conjunto', 
                 'error' => $e->getMessage()
@@ -91,17 +121,45 @@ class BundleController extends Controller
             $bundle = Product::where('is_bundle', true)->findOrFail($id);
             
             $bundle->update($request->only([
-                'name', 'description', 'base_price', 'is_active', 'category_id', 'owner_id', 'brand_id'
+                'name', 'description', 'base_price', 'category_id', 'owner_id', 'brand_id'
             ]));
+
+            if ($request->has('is_active')) {
+                $bundle->is_active = $request->boolean('is_active');
+                $bundle->save();
+            }
             
             if ($request->has('name')) {
                 $bundle->slug = Str::slug($request->name);
                 $bundle->save();
             }
 
+            if ($request->hasFile('product_images')) {
+                // Remove old images when uploading new ones (optional, or just add them)
+                // We'll replace all if new ones are uploaded like in ProductController
+                \App\Models\Catalog\ProductImage::where('product_id', $bundle->id)->delete();
+                foreach ($request->file('product_images') as $file) {
+                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs('products', $filename, 'public');
+
+                    $image = new \App\Models\Catalog\ProductImage([
+                        'product_id' => $bundle->id,
+                        'url'        => '/storage/' . $filePath,
+                        'is_main'    => false,
+                    ]);
+                    $image->id = Str::uuid()->toString();
+                    $image->save();
+                }
+            }
+
             if ($request->has('bundle_items')) {
+                $items = $request->input('bundle_items');
+                if (is_string($items)) {
+                    $items = json_decode($items, true) ?: [];
+                }
+
                 BundleItem::where('bundle_id', $bundle->id)->delete();
-                foreach ($request->input('bundle_items') as $item) {
+                foreach ($items as $item) {
                     BundleItem::create([
                         'id'         => Str::uuid(),
                         'bundle_id'  => $bundle->id,
@@ -115,10 +173,17 @@ class BundleController extends Controller
             DB::commit();
             return response()->json([
                 'message' => 'Conjunto actualizado', 
-                'bundle' => $bundle
+                'bundle' => Product::with([
+                    'bundle_items.product.product_images', 
+                    'bundle_items.product.attribute_value_images',
+                    'bundle_items.variant.variant_attribute_values.attribute_value.attribute', 
+                    'bundle_items.variant.variant_images',
+                    'product_images'
+                ])->find($bundle->id)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error("Bundle Update Error: " . $e->getMessage());
             return response()->json([
                 'message' => 'Error al actualizar conjunto', 
                 'error' => $e->getMessage()

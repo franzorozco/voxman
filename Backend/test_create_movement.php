@@ -1,1 +1,0 @@
-<?php \ = null; try { App\Models\Inventory\InventoryMovement::create(['variant_id'=>'0209fc3f-a316-4bc7-bd92-4933dd2ed953','branch_id'=>'06596956-65eb-42cc-a068-164906f0b094','created_by'=>'e5ec9b6e-2d7a-4834-b6f6-23d95120e027','movement_type'=>'in','quantity'=>10,'reference'=>'test']); } catch (\Exception \) { \ = \; } echo \ ? \->getMessage() : 'Success';
