@@ -419,7 +419,36 @@ CREATE TABLE discount_employees (
     PRIMARY KEY (discount_id, employee_id)
 );
 
+-- =========================================
+-- GIFTCARDS / CUPONES
+-- =========================================
+CREATE TABLE giftcards (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code VARCHAR(50) UNIQUE NOT NULL,
+    initial_balance DECIMAL(10,2) NOT NULL,
+    current_balance DECIMAL(10,2) NOT NULL,
+    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+    purchaser_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+    sale_detail_id UUID, -- Optional link if bought with other items
+    expires_at TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_digitalized BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP
+);
 
+CREATE TABLE giftcard_transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    giftcard_id UUID REFERENCES giftcards(id) ON DELETE CASCADE,
+    type VARCHAR(20) CHECK (type IN ('issue', 'redemption', 'refund', 'reload')),
+    amount DECIMAL(10,2) NOT NULL,
+    sale_id UUID, -- The sale where it was redeemed/purchased
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP
+);
 
 -- HISTORIAL DE PRECIOS (MEJORADO)
 CREATE TABLE product_price_history (

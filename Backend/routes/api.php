@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\BundleController;
+use App\Http\Controllers\Api\GiftcardController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrandController;
@@ -224,5 +225,13 @@ Route::middleware([
         Route::get('/', [App\Http\Controllers\Api\EmployeeController::class, 'index']);
     });
 
+    Route::prefix('giftcards')->group(function () {
+        Route::get('/', [GiftcardController::class, 'index']);
+        Route::post('/', [GiftcardController::class, 'store']);
+        Route::post('/validate', [GiftcardController::class, 'checkBalance']);
+        Route::post('/digitalize', [GiftcardController::class, 'digitalize']);
+        Route::post('/{id}/reload', [GiftcardController::class, 'reload']);
+        Route::delete('/{id}', [GiftcardController::class, 'destroy']);
+    });
 
 });
