@@ -1,24 +1,24 @@
 <?php
 
-use App\Http\Controllers\Api\AttributeController;
-use App\Http\Controllers\Api\AttributeValueController;
-use App\Http\Controllers\Api\BranchController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\DiscountController;
-use App\Http\Controllers\Api\FitController;
-use App\Http\Controllers\Api\InventoryController;
-use App\Http\Controllers\Api\MeasurementTypeController;
-use App\Http\Controllers\Api\OwnerController;
-use App\Http\Controllers\Api\PermissionController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\ProductTypeController;
-use App\Http\Controllers\Api\ProductTypeMeasurementController;
-use App\Http\Controllers\Api\ProductVariantController;
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\SizeController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\BundleController;
-use App\Http\Controllers\Api\GiftcardController;
+use App\Http\Controllers\Api\Admin\AttributeController;
+use App\Http\Controllers\Api\Admin\AttributeValueController;
+use App\Http\Controllers\Api\Admin\BranchController;
+use App\Http\Controllers\Api\Admin\CategoryController;
+use App\Http\Controllers\Api\Admin\DiscountController;
+use App\Http\Controllers\Api\Admin\FitController;
+use App\Http\Controllers\Api\Admin\InventoryController;
+use App\Http\Controllers\Api\Admin\MeasurementTypeController;
+use App\Http\Controllers\Api\Admin\OwnerController;
+use App\Http\Controllers\Api\Admin\PermissionController;
+use App\Http\Controllers\Api\Admin\ProductController;
+use App\Http\Controllers\Api\Admin\ProductTypeController;
+use App\Http\Controllers\Api\Admin\ProductTypeMeasurementController;
+use App\Http\Controllers\Api\Admin\ProductVariantController;
+use App\Http\Controllers\Api\Admin\RoleController;
+use App\Http\Controllers\Api\Admin\SizeController;
+use App\Http\Controllers\Api\Admin\UserController;
+use App\Http\Controllers\Api\Admin\BundleController;
+use App\Http\Controllers\Api\Admin\GiftcardController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrandController;
@@ -105,7 +105,7 @@ Route::middleware([
     });
 
     Route::prefix('discounts')->group(function () {
-        Route::get('/', [App\Http\Controllers\Api\DiscountController::class, 'index']);
+        Route::get('/', [DiscountController::class, 'index']);
         Route::get('/deleted', [DiscountController::class, 'deleted']);
         Route::get('/{id}', [DiscountController::class, 'show']);
         Route::post('/', [DiscountController::class, 'store']);
@@ -218,11 +218,11 @@ Route::middleware([
     });
 
     Route::prefix('customers')->group(function () {
-        Route::get('/', [App\Http\Controllers\Api\CustomerController::class, 'index']);
+        Route::get('/', [App\Http\Controllers\Api\Admin\CustomerController::class, 'index']);
     });
 
     Route::prefix('employees')->group(function () {
-        Route::get('/', [App\Http\Controllers\Api\EmployeeController::class, 'index']);
+        Route::get('/', [App\Http\Controllers\Api\Admin\EmployeeController::class, 'index']);
     });
 
     Route::prefix('giftcards')->group(function () {
