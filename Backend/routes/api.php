@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\BundleController;
 use App\Http\Controllers\Api\Admin\GiftcardController;
 use App\Http\Controllers\Api\Admin\SupplierController;
+use App\Http\Controllers\Api\Admin\PurchaseController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrandController;
@@ -249,5 +250,19 @@ Route::middleware([
         Route::put('/{id}', [SupplierController::class, 'update'])->middleware('permission:edit_suppliers');
         Route::delete('/{id}', [SupplierController::class, 'destroy'])->middleware('permission:delete_suppliers');
     });
+
+    Route::prefix('purchases')->group(function () {
+        Route::get('/', [PurchaseController::class, 'index'])->middleware('permission:view_purchases');
+        Route::get('/{id}', [PurchaseController::class, 'show'])->middleware('permission:view_purchases');
+        Route::post('/', [PurchaseController::class, 'store'])->middleware('permission:create_purchases');
+        Route::put('/{id}/cancel', [PurchaseController::class, 'cancel'])->middleware('permission:cancel_purchases');
+        Route::post('/reception', [\App\Http\Controllers\Api\Admin\PurchaseReceptionController::class, 'store'])->middleware('permission:receive_inventory');
+    });
+
+    Route::prefix('quarantine')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\QuarantineController::class, 'index']); // Sin permiso por ahora
+        Route::post('/{id}/resolve', [\App\Http\Controllers\Api\Admin\QuarantineController::class, 'resolve']); // Sin permiso por ahora
+    });
+    Route::get('supplier-returns', [\App\Http\Controllers\Api\Admin\SupplierReturnController::class, 'index']);
 
 });

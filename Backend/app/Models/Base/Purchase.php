@@ -6,11 +6,11 @@
 
 namespace App\Models\Base;
 
-use App\Models\Branch;
-use App\Models\Employee;
-use App\Models\PurchaseDetail;
-use App\Models\PurchaseReception;
-use App\Models\PurchasePriceHistory;
+use App\Models\Branch\Branch;
+use App\Models\Actors\Employee;
+use App\Models\Purchase\PurchaseDetail;
+use App\Models\Inventory\PurchaseReception;
+use App\Models\Purchase\PurchasePriceHistory;
 use App\Models\Purchase\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\AccountsPayable;

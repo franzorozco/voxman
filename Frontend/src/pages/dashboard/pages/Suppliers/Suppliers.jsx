@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, Edit, Truck, RefreshCw } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Truck, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSuppliers, deleteSupplier } from "../../../../api/admin/suppliers";
 import SupplierModal from "./SupplierModal";
@@ -63,6 +63,10 @@ export default function Suppliers() {
         </h1>
 
         <div style={{ display: 'flex', gap: '10px' }}>
+          <Link to="/dashboard/suppliers/returns" className="btn-secondary">
+            <RotateCcw size={16} />
+            Devoluciones
+          </Link>
           <Link to="/dashboard/suppliers/deleted" className="btn-secondary">
             <Trash2 size={16} />
             Papelera

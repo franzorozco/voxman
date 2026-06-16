@@ -33,6 +33,11 @@ import Giftcards from "../pages/dashboard/pages/Giftcards/Giftcards.jsx";
 import DeletedGiftcards from "../pages/dashboard/pages/Giftcards/DeletedGiftcards.jsx";
 import Suppliers from "../pages/dashboard/pages/Suppliers/Suppliers.jsx";
 import DeletedSuppliers from "../pages/dashboard/pages/Suppliers/DeletedSuppliers.jsx";
+import SupplierReturns from "../pages/dashboard/pages/Suppliers/SupplierReturns.jsx";
+import PurchasesList from "../pages/dashboard/pages/Purchases/PurchasesList.jsx";
+import CreatePurchase from "../pages/dashboard/pages/Purchases/CreatePurchase.jsx";
+import ReceivePurchase from "../pages/dashboard/pages/Purchases/ReceivePurchase.jsx";
+import QuarantineList from "../pages/dashboard/pages/inventory/QuarantineList";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -87,7 +92,12 @@ export default function AppRouter() {
             <Route path="giftcards" element={<ProtectedRoute permissions={["view_giftcards"]}><Giftcards /></ProtectedRoute>} />
             <Route path="giftcards/deleted" element={<ProtectedRoute permissions={["view_giftcards"]}><DeletedGiftcards /></ProtectedRoute>} />
             <Route path="suppliers" element={<ProtectedRoute permissions={["view_suppliers"]}><Suppliers /></ProtectedRoute>} />
+            <Route path="suppliers/returns" element={<ProtectedRoute permissions={["view_suppliers"]}><SupplierReturns /></ProtectedRoute>} />
             <Route path="suppliers/deleted" element={<ProtectedRoute permissions={["view_suppliers"]}><DeletedSuppliers /></ProtectedRoute>} />
+            <Route path="purchases" element={<ProtectedRoute permissions={["view_purchases"]}><PurchasesList /></ProtectedRoute>} />
+            <Route path="purchases/create" element={<ProtectedRoute permissions={["create_purchases"]}><CreatePurchase /></ProtectedRoute>} />
+            <Route path="purchases/receive/:id" element={<ProtectedRoute permissions={["receive_inventory"]}><ReceivePurchase /></ProtectedRoute>} />
+            <Route path="inventory/quarantine" element={<ProtectedRoute permissions={["manage_inventory"]}><QuarantineList /></ProtectedRoute>} />
 
           </Route>
         </Route>

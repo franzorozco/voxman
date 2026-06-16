@@ -57,6 +57,11 @@ class RolePermissionSeeder extends Seeder
             'delete_suppliers',
             'restore_suppliers',
 
+            // Compras (Abastecimiento)
+            'view_purchases',
+            'create_purchases',
+            'cancel_purchases',
+
             // Promociones
             'view_promotions',
             'create_promotions',

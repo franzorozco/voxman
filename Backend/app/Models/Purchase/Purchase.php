@@ -7,6 +7,7 @@ use App\Models\Base\Purchase as BasePurchase;
 class Purchase extends BasePurchase
 {
 	protected $fillable = [
+		'id',
 		'supplier_id',
 		'branch_id',
 		'employee_id',

@@ -34,7 +34,8 @@ import {
   ChevronDown,
   UserCircle2,
   Store,
-  Ticket
+  Ticket,
+  AlertTriangle
 } from "lucide-react";
 
 export default function DashboardLayout() {
@@ -189,11 +190,27 @@ export default function DashboardLayout() {
                 />
               </CanAccess>
 
+              <CanAccess permission="manage_inventory">
+                <NavItem
+                  to="/dashboard/inventory/quarantine"
+                  icon={AlertTriangle}
+                  label="Mermas/Cuarentena"
+                />
+              </CanAccess>
+
               <CanAccess permission="view_suppliers">
                 <NavItem
                   to="/dashboard/suppliers"
                   icon={Truck}
                   label="Proveedores"
+                />
+              </CanAccess>
+
+              <CanAccess permission="view_purchases">
+                <NavItem
+                  to="/dashboard/purchases"
+                  icon={FileText}
+                  label="Compras"
                 />
               </CanAccess>
 
