@@ -14,8 +14,4 @@ class Customer extends BaseCustomer
 		'total_purchases'
 	];
 
-    public function user()
-    {
-        return $this->belongsTo(\App\Models\Core\User::class);
-    }
 }

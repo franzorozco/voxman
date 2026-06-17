@@ -6,8 +6,17 @@
 
 namespace App\Models\Base;
 
-use App\Models\Sale;
-use App\Models\User;
+use App\Models\Core\User;
+use App\Models\Core\UserProfile;
+use App\Models\Core\Address;
+use App\Models\Core\Notification;
+use App\Models\Catalog\Wishlist;
+use App\Models\Catalog\ProductReview;
+use App\Models\Sales\Cart;
+use App\Models\Sales\CartItem;
+use App\Models\Sales\Sale;
+use App\Models\Promotions\Discount;
+use App\Models\Payment\Giftcard;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -41,14 +50,34 @@ class Customer extends Model
 		'total_purchases' => 'float'
 	];
 
+	public function user()
+	{
+		return $this->belongsTo(User::class);
+	}
+
+	public function profile()
+	{
+		return $this->hasOneThrough(UserProfile::class, User::class, 'id', 'user_id', 'user_id', 'id');
+	}
+
 	public function wishlist()
 	{
 		return $this->hasOne(Wishlist::class);
 	}
 
+	public function wishlists()
+	{
+		return $this->hasMany(Wishlist::class);
+	}
+
 	public function cart()
 	{
 		return $this->hasOne(Cart::class);
+	}
+
+	public function cartItems()
+	{
+		return $this->hasMany(CartItem::class);
 	}
 
 	public function addresses()
@@ -69,5 +98,20 @@ class Customer extends Model
 	public function sales()
 	{
 		return $this->hasMany(Sale::class);
+	}
+
+	public function discounts()
+	{
+		return $this->belongsToMany(Discount::class, 'discount_customers', 'customer_id', 'discount_id');
+	}
+
+	public function received_giftcards()
+	{
+		return $this->hasMany(Giftcard::class, 'customer_id');
+	}
+
+	public function purchased_giftcards()
+	{
+		return $this->hasMany(Giftcard::class, 'purchaser_id');
 	}
 }

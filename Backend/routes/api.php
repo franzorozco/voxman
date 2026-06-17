@@ -3,9 +3,13 @@
 use App\Http\Controllers\Api\Admin\AttributeController;
 use App\Http\Controllers\Api\Admin\AttributeValueController;
 use App\Http\Controllers\Api\Admin\BranchController;
+use App\Http\Controllers\Api\Admin\BundleController;
 use App\Http\Controllers\Api\Admin\CategoryController;
+use App\Http\Controllers\Api\Admin\CustomerController;
 use App\Http\Controllers\Api\Admin\DiscountController;
+use App\Http\Controllers\Api\Admin\EmployeeController;
 use App\Http\Controllers\Api\Admin\FitController;
+use App\Http\Controllers\Api\Admin\GiftcardController;
 use App\Http\Controllers\Api\Admin\InventoryController;
 use App\Http\Controllers\Api\Admin\MeasurementTypeController;
 use App\Http\Controllers\Api\Admin\OwnerController;
@@ -14,13 +18,11 @@ use App\Http\Controllers\Api\Admin\ProductController;
 use App\Http\Controllers\Api\Admin\ProductTypeController;
 use App\Http\Controllers\Api\Admin\ProductTypeMeasurementController;
 use App\Http\Controllers\Api\Admin\ProductVariantController;
+use App\Http\Controllers\Api\Admin\PurchaseController;
 use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\SizeController;
-use App\Http\Controllers\Api\Admin\UserController;
-use App\Http\Controllers\Api\Admin\BundleController;
-use App\Http\Controllers\Api\Admin\GiftcardController;
 use App\Http\Controllers\Api\Admin\SupplierController;
-use App\Http\Controllers\Api\Admin\PurchaseController;
+use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrandController;
@@ -220,11 +222,15 @@ Route::middleware([
     });
 
     Route::prefix('customers')->group(function () {
-        Route::get('/', [App\Http\Controllers\Api\Admin\CustomerController::class, 'index']);
+        Route::get('/', [CustomerController::class, 'index']);
+        Route::get('/{id}', [CustomerController::class, 'show']);
+        Route::post('/', [CustomerController::class, 'store']);
+        Route::put('/{id}', [CustomerController::class, 'update']);
+        Route::delete('/{id}', [CustomerController::class, 'destroy']);
     });
 
     Route::prefix('employees')->group(function () {
-        Route::get('/', [App\Http\Controllers\Api\Admin\EmployeeController::class, 'index']);
+        Route::get('/', [EmployeeController::class, 'index']);
     });
 
     Route::prefix('giftcards')->group(function () {
