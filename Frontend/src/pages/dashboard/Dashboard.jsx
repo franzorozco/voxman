@@ -285,19 +285,6 @@ export default function DashboardLayout() {
                   label="Giftcards"
                 />
               </CanAccess>
-
-              <NavItem
-                to="/dashboard/coupons"
-                icon={TicketPercent}
-                label="Cupones"
-              />
-
-              <NavItem
-                to="/dashboard/segments"
-                icon={UserRoundSearch}
-                label="Segmentos"
-              />
-
             </div>
 
             {/* LOGÍSTICA */}
