@@ -223,6 +223,8 @@ Route::middleware([
 
     Route::prefix('customers')->group(function () {
         Route::get('/', [CustomerController::class, 'index']);
+        Route::get('/deleted', [CustomerController::class, 'getDeleted']);
+        Route::post('/{id}/restore', [CustomerController::class, 'restore']);
         Route::get('/{id}', [CustomerController::class, 'show']);
         Route::post('/', [CustomerController::class, 'store']);
         Route::put('/{id}', [CustomerController::class, 'update']);

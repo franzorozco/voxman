@@ -27,8 +27,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Wishlist extends Model
 {
-	use SoftDeletes;
-
 	protected $table = 'wishlists';
 	protected $keyType = 'string';
 	public $incrementing = false;

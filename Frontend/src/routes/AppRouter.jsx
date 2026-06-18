@@ -38,6 +38,8 @@ import PurchasesList from "../pages/dashboard/pages/Purchases/PurchasesList.jsx"
 import CreatePurchase from "../pages/dashboard/pages/Purchases/CreatePurchase.jsx";
 import ReceivePurchase from "../pages/dashboard/pages/Purchases/ReceivePurchase.jsx";
 import QuarantineList from "../pages/dashboard/pages/inventory/QuarantineList";
+import Customers from "../pages/dashboard/pages/Customers/Customers.jsx";
+import DeletedCustomers from "../pages/dashboard/pages/Customers/DeletedCustomers.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -98,6 +100,8 @@ export default function AppRouter() {
             <Route path="purchases/create" element={<ProtectedRoute permissions={["create_purchases"]}><CreatePurchase /></ProtectedRoute>} />
             <Route path="purchases/receive/:id" element={<ProtectedRoute permissions={["receive_inventory"]}><ReceivePurchase /></ProtectedRoute>} />
             <Route path="inventory/quarantine" element={<ProtectedRoute permissions={["manage_inventory"]}><QuarantineList /></ProtectedRoute>} />
+            <Route path="clients" element={<ProtectedRoute permissions={["view_customers"]}><Customers /></ProtectedRoute>} />
+            <Route path="clients/deleted" element={<ProtectedRoute permissions={["view_customers"]}><DeletedCustomers /></ProtectedRoute>} />
 
           </Route>
         </Route>

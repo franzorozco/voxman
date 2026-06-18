@@ -10,13 +10,12 @@ use App\Models\Core\User;
 use App\Models\Core\UserProfile;
 use App\Models\Core\Address;
 use App\Models\Core\Notification;
-use App\Models\Catalog\Wishlist;
-use App\Models\Catalog\ProductReview;
+use App\Models\Wishlist\Wishlist;
 use App\Models\Sales\Cart;
 use App\Models\Sales\CartItem;
 use App\Models\Sales\Sale;
-use App\Models\Promotions\Discount;
-use App\Models\Payment\Giftcard;
+use App\Models\Discount\Discount;
+use App\Models\Finance\Giftcard;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +43,7 @@ class Customer extends Model
 	use SoftDeletes;
 	protected $table = 'customers';
 	public $incrementing = false;
+	protected $keyType = 'string';
 
 	protected $casts = [
 		'points' => 'int',
@@ -77,7 +77,7 @@ class Customer extends Model
 
 	public function cartItems()
 	{
-		return $this->hasMany(CartItem::class);
+		return $this->hasManyThrough(CartItem::class, Cart::class);
 	}
 
 	public function addresses()
@@ -90,10 +90,6 @@ class Customer extends Model
 		return $this->hasMany(Notification::class);
 	}
 
-	public function reviews()
-	{
-		return $this->hasMany(ProductReview::class);
-	}
 
 	public function sales()
 	{

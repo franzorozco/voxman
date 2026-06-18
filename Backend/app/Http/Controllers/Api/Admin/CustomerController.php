@@ -15,9 +15,26 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Customer::with(['user.profile'])->where('is_active', true);
+        $query = Customer::with(['user.profile']);
         
-        if ($request->has('search') && !empty($request->query('search'))) {
+        if ($request->filled('status')) {
+            $status = $request->query('status');
+            if ($status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($status === 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
+
+        if ($request->filled('minPoints')) {
+            $query->where('points', '>=', $request->query('minPoints'));
+        }
+
+        if ($request->filled('maxPoints')) {
+            $query->where('points', '<=', $request->query('maxPoints'));
+        }
+
+        if ($request->filled('search')) {
             $search = $request->query('search');
             $query->where(function($q) use ($search) {
                 $q->where('customer_code', 'ILIKE', "%{$search}%")
@@ -32,7 +49,17 @@ class CustomerController extends Controller
             });
         }
         
-        return response()->json($query->orderBy('created_at', 'desc')->get());
+        $sortBy = $request->query('sortBy', 'created_at');
+        $sortDir = strtolower($request->query('sortDir', 'desc')) === 'asc' ? 'asc' : 'desc';
+        
+        $allowedSorts = ['points', 'total_purchases', 'created_at'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDir);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        return response()->json($query->get());
     }
 
     public function show($id)
@@ -40,8 +67,8 @@ class CustomerController extends Controller
         $customer = Customer::with([
             'user.profile',
             'addresses',
-            'sales.details',
-            'wishlists.items',
+            'sales.sale_details',
+            'wishlists',
             'discounts',
             'received_giftcards',
             'purchased_giftcards'
@@ -151,5 +178,45 @@ class CustomerController extends Controller
         $customer->delete();
 
         return response()->json(['message' => 'Customer deactivated successfully']);
+    }
+
+    public function getDeleted(Request $request)
+    {
+        $query = Customer::onlyTrashed()->with(['user' => function($q) {
+            $q->withTrashed()->with('profile');
+        }]);
+
+        if ($request->has('search') && !empty($request->query('search'))) {
+            $search = $request->query('search');
+            $query->where(function($q) use ($search) {
+                $q->where('customer_code', 'ILIKE', "%{$search}%")
+                  ->orWhereHas('user', function ($qUser) use ($search) {
+                      $qUser->withTrashed()
+                            ->where('email', 'ILIKE', "%{$search}%")
+                            ->orWhereHas('profile', function ($qProf) use ($search) {
+                                $qProf->where('first_name', 'ILIKE', "%{$search}%")
+                                      ->orWhere('last_name_paternal', 'ILIKE', "%{$search}%")
+                                      ->orWhere('phone', 'ILIKE', "%{$search}%");
+                            });
+                  });
+            });
+        }
+
+        return response()->json($query->orderBy('deleted_at', 'desc')->get());
+    }
+
+    public function restore($id)
+    {
+        $customer = Customer::onlyTrashed()->findOrFail($id);
+        $customer->restore();
+        $customer->update(['is_active' => true]);
+
+        if ($customer->user()->withTrashed()->first()) {
+            $user = $customer->user()->withTrashed()->first();
+            $user->restore();
+            $user->update(['is_active' => true]);
+        }
+
+        return response()->json(['message' => 'Customer restored successfully']);
     }
 }
