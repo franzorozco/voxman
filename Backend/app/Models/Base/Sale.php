@@ -6,13 +6,13 @@
 
 namespace App\Models\Base;
 
-use App\Models\Branch;
-use App\Models\Customer;
-use App\Models\Payment;
-use App\Models\SaleDetail;
-use App\Models\Shipment;
-use App\Models\StockReservation;
-use App\Models\User;
+use App\Models\Branch\Branch;
+use App\Models\Actors\Customer;
+use App\Models\Finance\Payment;
+use App\Models\Sales\SaleDetail;
+use App\Models\Logistics\Shipment;
+use App\Models\Inventory\StockReservation;
+use App\Models\Core\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -55,8 +55,8 @@ class Sale extends Model
 	public $incrementing = false;
 
 	protected $casts = [
-		'sale_type' => 'USER-DEFINED',
-		'status' => 'USER-DEFINED',
+		'sale_type' => 'string',
+		'status' => 'string',
 		'subtotal' => 'float',
 		'discount_total' => 'float',
 		'total' => 'float'

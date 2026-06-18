@@ -6,9 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\CashRegister;
-use App\Models\PaymentMethod;
-use App\Models\Sale;
+use App\Models\Finance\CashRegister;
+use App\Models\Finance\PaymentMethod;
+use App\Models\Sales\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -43,7 +43,7 @@ class Payment extends Model
 
 	protected $casts = [
 		'amount' => 'float',
-		'status' => 'USER-DEFINED'
+		'status' => 'string'
 	];
 
 	public function sale()

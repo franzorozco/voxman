@@ -13,7 +13,8 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
     last_name_paternal: "",
     email: "",
     phone: "",
-    password: ""
+    password: "",
+    is_active: true
   });
 
   useEffect(() => {
@@ -24,7 +25,8 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
         last_name_paternal: profile.last_name_paternal || "",
         email: customer.user?.email || "",
         phone: profile.phone || "",
-        password: "" // Keep empty on edit unless changing
+        password: "", // Keep empty on edit unless changing
+        is_active: customer.is_active !== undefined ? customer.is_active : true
       });
     }
   }, [customer, isEditing]);
@@ -65,12 +67,12 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
         <form onSubmit={handleSubmit}>
           <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="modal-form-grid">
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Nombres *</label>
                 <input 
                   type="text" 
-                  style={{ width: '100%', padding: '10px 14px', background: '#0a0a0a', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                   value={formData.first_name}
                   onChange={(e) => setFormData({...formData, first_name: e.target.value})}
                   required
@@ -80,7 +82,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Apellidos</label>
                 <input 
                   type="text" 
-                  style={{ width: '100%', padding: '10px 14px', background: '#0a0a0a', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                   value={formData.last_name_paternal}
                   onChange={(e) => setFormData({...formData, last_name_paternal: e.target.value})}
                 />
@@ -91,7 +93,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Correo Electrónico *</label>
               <input 
                 type="email" 
-                style={{ width: '100%', padding: '10px 14px', background: '#0a0a0a', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
@@ -102,7 +104,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
               <input 
                 type="text" 
-                style={{ width: '100%', padding: '10px 14px', background: '#0a0a0a', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
               />
@@ -114,11 +116,24 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
               </label>
               <input 
                 type="password" 
-                style={{ width: '100%', padding: '10px 14px', background: '#0a0a0a', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 placeholder={isEditing ? "********" : "Generada automáticamente si está vacío"}
               />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+              <input 
+                type="checkbox" 
+                id="is_active_checkbox"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+              />
+              <label htmlFor="is_active_checkbox" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}>
+                Cliente Activo (Permite iniciar sesión y comprar)
+              </label>
             </div>
 
           </div>

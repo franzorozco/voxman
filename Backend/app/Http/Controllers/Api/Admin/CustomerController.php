@@ -16,14 +16,15 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         $query = Customer::with(['user.profile']);
-        
-        if ($request->filled('status')) {
-            $status = $request->query('status');
-            if ($status === 'active') {
-                $query->where('is_active', true);
-            } elseif ($status === 'inactive') {
-                $query->where('is_active', false);
-            }
+        $status = $request->query('status');
+        if (empty($status)) {
+            $status = 'active'; // Default to active if empty
+        }
+
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
         }
 
         if ($request->filled('minPoints')) {
@@ -67,11 +68,14 @@ class CustomerController extends Controller
         $customer = Customer::with([
             'user.profile',
             'addresses',
-            'sales.sale_details',
+            'sales.sale_details.product_variant.product',
+            'sales.branch',
+            'sales.user.profile',
+            'sales.payments.payment_method',
             'wishlists',
             'discounts',
-            'received_giftcards',
-            'purchased_giftcards'
+            'received_giftcards.transactions',
+            'purchased_giftcards.transactions'
         ])->findOrFail($id);
 
         return response()->json($customer);
@@ -84,15 +88,18 @@ class CustomerController extends Controller
             'last_name_paternal' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
+            'is_active' => 'nullable|boolean'
         ]);
 
         try {
             DB::beginTransaction();
 
+            $isActive = $request->has('is_active') ? $request->boolean('is_active') : true;
+
             $user = User::create([
                 'email' => $request->email,
                 'password' => Hash::make($request->password ?? Str::random(10)),
-                'is_active' => true
+                'is_active' => $isActive
             ]);
 
             UserProfile::create([
@@ -107,7 +114,7 @@ class CustomerController extends Controller
             $customer = Customer::create([
                 'user_id' => $user->id,
                 'customer_code' => $customerCode,
-                'is_active' => true
+                'is_active' => $isActive
             ]);
 
             DB::commit();
@@ -128,14 +135,22 @@ class CustomerController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email,' . $user->id,
+            'is_active' => 'nullable|boolean'
         ]);
 
         try {
             DB::beginTransaction();
 
-            $user->update([
+            $updateData = [
                 'email' => $request->email,
-            ]);
+            ];
+            
+            if ($request->has('is_active')) {
+                $updateData['is_active'] = $request->boolean('is_active');
+                $customer->update(['is_active' => $request->boolean('is_active')]);
+            }
+
+            $user->update($updateData);
 
             if ($request->has('password') && !empty($request->password)) {
                 $user->update(['password' => Hash::make($request->password)]);

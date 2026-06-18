@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getCustomers, deleteCustomer } from "../../../../api/admin/customers";
@@ -13,7 +13,7 @@ export default function Customers() {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
-    status: "",
+    status: "active",
     minPoints: "",
     sortBy: "created_at"
   });
@@ -82,7 +82,7 @@ export default function Customers() {
       </div>
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+        <div className="filters-container-inner" style={{ marginBottom: showFilters ? '15px' : '0' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
@@ -94,7 +94,7 @@ export default function Customers() {
           </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--primary-color)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
           >
             <Filter size={18} />
             <span className="hide-on-mobile">Filtros</span>
@@ -110,8 +110,8 @@ export default function Customers() {
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >
-                <option value="">Todos</option>
-                <option value="active">Activos</option>
+                <option value="active">Activos (Por defecto)</option>
+                <option value="all">Todos</option>
                 <option value="inactive">Inactivos</option>
               </select>
             </div>
@@ -166,34 +166,34 @@ export default function Customers() {
                 
                 return (
                   <tr key={c.id}>
-                    <td>
+                    <td data-label="Código">
                       <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px' }}>
                         {c.customer_code}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Cliente">
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{fullName}</span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Contacto">
                       <div style={{ display: 'flex', flexDirection: 'column', fontSize: '12px', color: 'var(--text-muted)' }}>
                         <span>{c.user?.email || 'S/E'}</span>
                         {profile.phone && <span>Tel: {profile.phone}</span>}
                       </div>
                     </td>
-                    <td>
-                      <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{c.points} pts</span>
+                    <td data-label="Puntos">
+                      <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>{c.points} pts</span>
                     </td>
-                    <td>
+                    <td data-label="Total Compras">
                       <span style={{ fontWeight: 500 }}>${Number(c.total_purchases).toFixed(2)}</span>
                     </td>
-                    <td>
-                      <span className={`status-badge status-active`}>
-                        Activo
+                    <td data-label="Estado">
+                      <span style={{ background: 'var(--bg-overlay)', color: c.is_active ? 'var(--color-success)' : 'var(--color-danger)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                        {c.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                         <button 
                           className="btn-secondary"
@@ -242,7 +242,7 @@ export default function Customers() {
           onClose={() => setIsModalOpen(false)}
           onSuccess={() => {
             setIsModalOpen(false);
-            fetchCustomers(searchQuery);
+            fetchCustomers(filters);
           }}
         />
       )}
