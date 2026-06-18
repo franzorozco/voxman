@@ -29,4 +29,9 @@ class Employee extends BaseEmployee
     {
         return $this->belongsTo(\App\Models\Core\User::class, 'user_id');
     }
+
+    public function sales()
+    {
+        return $this->hasMany(\App\Models\Sales\Sale::class, 'employee_id');
+    }
 }

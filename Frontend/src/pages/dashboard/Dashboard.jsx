@@ -6,6 +6,7 @@ import "./Dashboard.css";
 import logo_black from "../../assets/global/logo_black.png";
 import logo_white from "../../assets/global/logo_white.png";
 import CanAccess from "../../components/ui/CanAccess";
+import AttendanceWidget from "./components/AttendanceWidget/AttendanceWidget";
 
 import {
   LayoutDashboard,
@@ -302,6 +303,33 @@ export default function DashboardLayout() {
 
             </div>
 
+            {/* RECURSOS HUMANOS */}
+            <div className="nav-section">
+
+              <p className="section-title">
+                {!collapsed && "RECURSOS HUMANOS"}
+              </p>
+
+              <NavItem
+                to="/dashboard/employees"
+                icon={UserRoundSearch}
+                label="Empleados"
+              />
+
+              <NavItem
+                to="/dashboard/payroll"
+                icon={FileText}
+                label="Nómina y Pagos"
+              />
+
+              <NavItem
+                to="/dashboard/attendances"
+                icon={BarChart3}
+                label="Control Asistencia"
+              />
+
+            </div>
+
             {/* SISTEMA */}
             <div className="nav-section">
 
@@ -374,6 +402,7 @@ export default function DashboardLayout() {
             </div>
 
             <div className="topbar-right">
+              <AttendanceWidget />
               <div className="topbar-user">
                 <UserCircle2 size={34} />
                 <div className="topbar-user-info">

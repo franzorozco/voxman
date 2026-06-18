@@ -1,0 +1,280 @@
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { createEmployee, updateEmployee } from "../../../../api/admin/employees";
+import { getBranches } from "../../../../api/admin/branches";
+import Spinner from "../../components/Spinner/Spinner";
+
+export default function EmployeeModal({ employee, onClose, onSuccess }) {
+  const isEditing = !!employee;
+  const [loading, setLoading] = useState(false);
+  const [branches, setBranches] = useState([]);
+  
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name_paternal: "",
+    last_name_maternal: "",
+    email: "",
+    phone: "",
+    password: "",
+    branch_id: "",
+    role: "seller",
+    base_salary: 0,
+    commission_percentage: 0,
+    hire_date: "",
+    contract_type: "",
+    is_active: true
+  });
+
+  useEffect(() => {
+    const fetchDependencies = async () => {
+      try {
+        const res = await getBranches();
+        setBranches(res.data || res);
+      } catch (err) {
+        toast.error("Error al cargar sucursales");
+      }
+    };
+    fetchDependencies();
+  }, []);
+
+  useEffect(() => {
+    if (isEditing) {
+      const profile = employee.user?.profile || {};
+      setFormData({
+        first_name: profile.first_name || "",
+        last_name_paternal: profile.last_name_paternal || "",
+        last_name_maternal: profile.last_name_maternal || "",
+        email: employee.user?.email || "",
+        phone: employee.phone || "",
+        password: "", // Keep empty on edit unless changing
+        branch_id: employee.branch_id || "",
+        role: employee.role || "seller",
+        base_salary: employee.base_salary || 0,
+        commission_percentage: employee.commission_percentage || 0,
+        hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : "",
+        contract_type: employee.contract_type || "",
+        is_active: employee.is_active !== undefined ? employee.is_active : true
+      });
+    }
+  }, [employee, isEditing]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const dataToSubmit = { ...formData };
+      if (!dataToSubmit.branch_id) {
+        delete dataToSubmit.branch_id;
+      }
+
+      if (isEditing) {
+        await updateEmployee(employee.id, dataToSubmit);
+        toast.success("Empleado actualizado exitosamente");
+      } else {
+        await createEmployee(dataToSubmit);
+        toast.success("Empleado creado exitosamente");
+      }
+      onSuccess();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error al procesar el empleado");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999 }}>
+      <div className="modal-content fade-in" style={{ background: 'var(--bg-main)', borderRadius: '16px', overflow: 'hidden', maxWidth: '600px', width: '100%', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
+            {isEditing ? 'Editar Empleado' : 'Nuevo Empleado'}
+          </h2>
+          <button type="button" onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <div style={{ overflowY: 'auto', flex: 1 }}>
+          <form id="employeeForm" onSubmit={handleSubmit}>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              <div className="modal-form-grid">
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Nombres *</label>
+                  <input 
+                    type="text" 
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Apellidos (Pat/Mat)</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Paterno"
+                      style={{ width: '50%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                      value={formData.last_name_paternal}
+                      onChange={(e) => setFormData({...formData, last_name_paternal: e.target.value})}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Materno"
+                      style={{ width: '50%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                      value={formData.last_name_maternal}
+                      onChange={(e) => setFormData({...formData, last_name_maternal: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-form-grid">
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Correo Electrónico *</label>
+                  <input 
+                    type="email" 
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
+                  <input 
+                    type="text" 
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                  Contraseña {isEditing ? '(Opcional, dejar vacío para no cambiar)' : '(Opcional)'}
+                </label>
+                <input 
+                  type="password" 
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  placeholder={isEditing ? "********" : "Generada automáticamente si está vacío"}
+                />
+              </div>
+
+              <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '8px 0' }} />
+
+              <div className="modal-form-grid">
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Rol del Empleado</label>
+                  <select
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  >
+                    <option value="seller">Vendedor</option>
+                    <option value="delivery">Repartidor</option>
+                    <option value="cashier">Cajero</option>
+                    <option value="admin">Administrador de Sucursal</option>
+                    <option value="manager">Gerente</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Sucursal Asignada</label>
+                  <select
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
+                    value={formData.branch_id}
+                    onChange={(e) => setFormData({...formData, branch_id: e.target.value})}
+                  >
+                    <option value="">Sin Asignar</option>
+                    {Array.isArray(branches) && branches.map(b => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="modal-form-grid">
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Sueldo Base (Bs.)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    min="0"
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.base_salary}
+                    onChange={(e) => setFormData({...formData, base_salary: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Comisión (%)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.commission_percentage}
+                    onChange={(e) => setFormData({...formData, commission_percentage: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-form-grid">
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Fecha Contratación</label>
+                  <input 
+                    type="date" 
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.hire_date}
+                    onChange={(e) => setFormData({...formData, hire_date: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Tipo de Contrato</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ej. Tiempo Completo, Indefinido"
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.contract_type}
+                    onChange={(e) => setFormData({...formData, contract_type: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                <input 
+                  type="checkbox" 
+                  id="is_active_checkbox"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+                />
+                <label htmlFor="is_active_checkbox" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}>
+                  Empleado Activo (Permite iniciar sesión en el sistema)
+                </label>
+              </div>
+
+            </div>
+          </form>
+        </div>
+        
+        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--bg-card)' }}>
+          <button type="button" className="btn-secondary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)' }} onClick={onClose} disabled={loading}>
+            Cancelar
+          </button>
+          <button type="submit" form="employeeForm" className="btn-primary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '160px' }} disabled={loading}>
+            {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Guardar Empleado"}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}

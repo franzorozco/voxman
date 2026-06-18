@@ -78,6 +78,18 @@ CREATE TABLE employees (
     deleted_at TIMESTAMP
 );
 
+CREATE TABLE employee_attendances (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employee_id UUID REFERENCES employees(id),
+    date DATE NOT NULL,
+    check_in TIMESTAMP,
+    check_out TIMESTAMP,
+    status VARCHAR(50) DEFAULT 'present',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
 CREATE TABLE employee_commissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     employee_id UUID REFERENCES employees(id),

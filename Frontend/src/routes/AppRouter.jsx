@@ -40,6 +40,10 @@ import ReceivePurchase from "../pages/dashboard/pages/Purchases/ReceivePurchase.
 import QuarantineList from "../pages/dashboard/pages/inventory/QuarantineList";
 import Customers from "../pages/dashboard/pages/Customers/Customers.jsx";
 import DeletedCustomers from "../pages/dashboard/pages/Customers/DeletedCustomers.jsx";
+import Employees from "../pages/dashboard/pages/Employees/Employees.jsx";
+import DeletedEmployees from "../pages/dashboard/pages/Employees/DeletedEmployees.jsx";
+import Payroll from "../pages/dashboard/pages/Payroll/Payroll.jsx";
+import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -102,6 +106,10 @@ export default function AppRouter() {
             <Route path="inventory/quarantine" element={<ProtectedRoute permissions={["manage_inventory"]}><QuarantineList /></ProtectedRoute>} />
             <Route path="clients" element={<ProtectedRoute permissions={["view_customers"]}><Customers /></ProtectedRoute>} />
             <Route path="clients/deleted" element={<ProtectedRoute permissions={["view_customers"]}><DeletedCustomers /></ProtectedRoute>} />
+            <Route path="employees" element={<Employees />} />
+            <Route path="employees/deleted" element={<DeletedEmployees />} />
+            <Route path="payroll" element={<Payroll />} />
+            <Route path="attendances" element={<Attendances />} />
 
           </Route>
         </Route>

@@ -233,6 +233,27 @@ Route::middleware([
 
     Route::prefix('employees')->group(function () {
         Route::get('/', [EmployeeController::class, 'index']);
+        Route::get('/deleted', [EmployeeController::class, 'getDeleted']);
+        Route::post('/{id}/restore', [EmployeeController::class, 'restore']);
+        Route::get('/{id}/stats', [EmployeeController::class, 'stats']);
+        Route::get('/{id}', [EmployeeController::class, 'show']);
+        Route::post('/', [EmployeeController::class, 'store']);
+        Route::put('/{id}', [EmployeeController::class, 'update']);
+        Route::delete('/{id}', [EmployeeController::class, 'destroy']);
+        Route::delete('/{id}/force', [EmployeeController::class, 'forceDestroy']);
+    });
+
+    Route::prefix('attendances')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'index']);
+        Route::post('/check-in', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'checkIn']);
+        Route::post('/check-out', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'checkOut']);
+        Route::get('/status/{employeeId}', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'status']);
+    });
+
+    Route::prefix('payroll')->group(function () {
+        Route::get('/history', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'history']);
+        Route::post('/calculate', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'calculate']);
+        Route::post('/pay', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'store']);
     });
 
     Route::prefix('giftcards')->group(function () {
