@@ -3,6 +3,7 @@ import { getPermissions } from "../../../../api/admin/permissions";
 
 export default function RoleForm({ role, onClose, onSubmit }) {
   const [name, setName] = useState("");
+  const [roleType, setRoleType] = useState("none");
   const [permissions, setPermissions] = useState([]);
   const [selectedPermissions, setSelectedPermissions] = useState([]);
 
@@ -11,6 +12,10 @@ export default function RoleForm({ role, onClose, onSubmit }) {
 
     if (role) {
       setName(role.name);
+      
+      if (role.is_employee) setRoleType('employee');
+      else if (role.is_customer) setRoleType('customer');
+      else setRoleType('none');
 
       // 🔥 cargar permisos del rol
       const ids = role.permissions?.map(p => p.name) || [];
@@ -36,7 +41,9 @@ export default function RoleForm({ role, onClose, onSubmit }) {
 
     onSubmit({
       name,
-      permissions: selectedPermissions // 🔥 clave
+      permissions: selectedPermissions, // 🔥 clave
+      is_employee: roleType === 'employee',
+      is_customer: roleType === 'customer'
     });
   };
 
@@ -45,14 +52,28 @@ export default function RoleForm({ role, onClose, onSubmit }) {
       <form className="modal" onSubmit={handleSubmit}>
         <h2>{role ? "Editar" : "Crear"} Rol</h2>
 
-        {/* 🔹 NOMBRE */}
         <div className="form-group">
           <label>Nombre</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nombre del rol"
+            required
           />
+        </div>
+
+        {/* 🔹 TIPO DE ROL */}
+        <div className="form-group">
+          <label>Asignable a</label>
+          <select 
+            value={roleType} 
+            onChange={(e) => setRoleType(e.target.value)}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+          >
+            <option value="none">Sin asignación específica</option>
+            <option value="employee">Empleados</option>
+            <option value="customer">Clientes</option>
+          </select>
         </div>
 
         {/* 🔹 PERMISOS */}

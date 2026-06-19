@@ -22,9 +22,21 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         try {
+            $request->validate([
+                'name' => 'required|string',
+                'is_employee' => 'boolean',
+                'is_customer' => 'boolean',
+            ]);
+
+            if ($request->is_employee && $request->is_customer) {
+                return response()->json(['error' => 'Un rol no puede ser de empleado y cliente a la vez'], 422);
+            }
+
             $role = Role::create([
                 'name' => $request->name,
-                'guard_name' => 'web'
+                'guard_name' => 'web',
+                'is_employee' => $request->is_employee ?? false,
+                'is_customer' => $request->is_customer ?? false,
             ]);
 
             if ($request->has('permissions')) {
@@ -41,10 +53,22 @@ class RoleController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $request->validate([
+                'name' => 'required|string',
+                'is_employee' => 'boolean',
+                'is_customer' => 'boolean',
+            ]);
+
+            if ($request->is_employee && $request->is_customer) {
+                return response()->json(['error' => 'Un rol no puede ser de empleado y cliente a la vez'], 422);
+            }
+
             $role = Role::findOrFail($id);
 
             $role->update([
-                'name' => $request->name
+                'name' => $request->name,
+                'is_employee' => $request->is_employee ?? false,
+                'is_customer' => $request->is_customer ?? false,
             ]);
 
             if ($request->has('permissions')) {

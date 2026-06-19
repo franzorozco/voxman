@@ -3,14 +3,18 @@ import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createEmployee, updateEmployee } from "../../../../api/admin/employees";
 import { getBranches } from "../../../../api/admin/branches";
+import { getRoles } from "../../../../api/admin/roles";
 import Spinner from "../../components/Spinner/Spinner";
 
 export default function EmployeeModal({ employee, onClose, onSuccess }) {
   const isEditing = !!employee;
   const [loading, setLoading] = useState(false);
   const [branches, setBranches] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [createWebAccount, setCreateWebAccount] = useState(false);
   
   const [formData, setFormData] = useState({
+    employee_code: "",
     first_name: "",
     last_name_paternal: "",
     last_name_maternal: "",
@@ -18,7 +22,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
     phone: "",
     password: "",
     branch_id: "",
-    role: "seller",
+    role: "",
     base_salary: 0,
     commission_percentage: 0,
     hire_date: "",
@@ -29,10 +33,15 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
   useEffect(() => {
     const fetchDependencies = async () => {
       try {
-        const res = await getBranches();
-        setBranches(res.data || res);
+        const [branchesRes, rolesRes] = await Promise.all([
+          getBranches(),
+          getRoles()
+        ]);
+        setBranches(branchesRes.data || branchesRes);
+        const allRoles = rolesRes.data || rolesRes;
+        setRoles(allRoles.filter(r => r.is_employee === true));
       } catch (err) {
-        toast.error("Error al cargar sucursales");
+        toast.error("Error al cargar dependencias");
       }
     };
     fetchDependencies();
@@ -41,21 +50,26 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
   useEffect(() => {
     if (isEditing) {
       const profile = employee.user?.profile || {};
+      const userEmail = employee.user?.email || "";
+      
       setFormData({
+        employee_code: employee.employee_code || "",
         first_name: profile.first_name || "",
         last_name_paternal: profile.last_name_paternal || "",
         last_name_maternal: profile.last_name_maternal || "",
-        email: employee.user?.email || "",
+        email: userEmail.includes('@guest') ? "" : userEmail,
         phone: employee.phone || "",
         password: "", // Keep empty on edit unless changing
         branch_id: employee.branch_id || "",
-        role: employee.role || "seller",
+        role: employee.user?.roles?.[0]?.name || employee.role || "",
         base_salary: employee.base_salary || 0,
         commission_percentage: employee.commission_percentage || 0,
         hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : "",
         contract_type: employee.contract_type || "",
         is_active: employee.is_active !== undefined ? employee.is_active : true
       });
+
+      setCreateWebAccount(!userEmail.includes('@guest'));
     }
   }, [employee, isEditing]);
 
@@ -65,6 +79,12 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
     
     try {
       const dataToSubmit = { ...formData };
+      
+      if (!createWebAccount) {
+        dataToSubmit.email = "";
+        dataToSubmit.password = "";
+      }
+
       if (!dataToSubmit.branch_id) {
         delete dataToSubmit.branch_id;
       }
@@ -100,6 +120,18 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
         <div style={{ overflowY: 'auto', flex: 1 }}>
           <form id="employeeForm" onSubmit={handleSubmit}>
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Empleado (Manual) *</label>
+                <input 
+                  type="text" 
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                  value={formData.employee_code}
+                  onChange={(e) => setFormData({...formData, employee_code: e.target.value.toUpperCase()})}
+                  placeholder="Ej. EMP-001"
+                  required
+                />
+              </div>
               
               <div className="modal-form-grid">
                 <div>
@@ -133,56 +165,77 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
                 </div>
               </div>
 
-              <div className="modal-form-grid">
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Correo Electrónico *</label>
-                  <input 
-                    type="email" 
-                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
-                  <input 
-                    type="text" 
-                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  />
-                </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
+                <input 
+                  type="text" 
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                />
               </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  Contraseña {isEditing ? '(Opcional, dejar vacío para no cambiar)' : '(Opcional)'}
-                </label>
-                <input 
-                  type="password" 
-                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  placeholder={isEditing ? "********" : "Generada automáticamente si está vacío"}
-                />
+              <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid var(--border-color)', marginTop: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: createWebAccount ? '16px' : '0' }}>
+                  <input 
+                    type="checkbox" 
+                    id="create_web_account"
+                    checked={createWebAccount}
+                    onChange={(e) => setCreateWebAccount(e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+                  />
+                  <label htmlFor="create_web_account" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
+                    Habilitar cuenta web (Correo y Contraseña)
+                  </label>
+                </div>
+
+                {createWebAccount && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        Correo Electrónico *
+                      </label>
+                      <input 
+                        type="email" 
+                        style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        required={createWebAccount}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        Contraseña {isEditing ? '(Opcional, dejar vacío para no cambiar)' : '*'}
+                      </label>
+                      <input 
+                        type="password" 
+                        style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                        value={formData.password}
+                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                        placeholder={isEditing ? "********" : "Ingresar contraseña"}
+                        required={createWebAccount && !isEditing}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '8px 0' }} />
 
               <div className="modal-form-grid">
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Rol del Empleado</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Rol del Empleado *</label>
                   <select
                     style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                     value={formData.role}
                     onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    required
                   >
-                    <option value="seller">Vendedor</option>
-                    <option value="delivery">Repartidor</option>
-                    <option value="cashier">Cajero</option>
-                    <option value="admin">Administrador de Sucursal</option>
-                    <option value="manager">Gerente</option>
+                    <option value="" disabled>Seleccione un rol...</option>
+                    {roles.map(r => (
+                      <option key={r.id} value={r.name}>{r.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div>

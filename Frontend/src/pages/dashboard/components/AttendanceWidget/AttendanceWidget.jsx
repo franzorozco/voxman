@@ -64,14 +64,14 @@ export default function AttendanceWidget() {
   if (!employeeId) return null;
 
   return (
-    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginRight: '16px' }}>
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', justifyContent: 'center' }}>
       {status === null && (
         <button 
           onClick={handleCheckIn} 
           disabled={loading}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#10b981', color: 'white', padding: '6px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#10b981', color: 'white', padding: '8px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap', width: '100%' }}
         >
-          <Clock size={16} /> Check In
+          <Clock size={16} /> <span className="hide-on-mobile">Check In</span>
         </button>
       )}
       
@@ -79,15 +79,15 @@ export default function AttendanceWidget() {
         <button 
           onClick={handleCheckOut} 
           disabled={loading}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ef4444', color: 'white', padding: '6px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#ef4444', color: 'white', padding: '8px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap', width: '100%' }}
         >
-          <Clock size={16} /> Check Out
+          <Clock size={16} /> <span className="hide-on-mobile">Check Out</span>
         </button>
       )}
 
       {status === 'checked_out' && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '14px', fontWeight: 'bold' }}>
-          <Clock size={16} /> Turno Finalizado
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap', width: '100%', padding: '8px 0' }}>
+          <Clock size={16} /> <span className="hide-on-mobile">Turno Finalizado</span>
         </div>
       )}
     </div>

@@ -21,6 +21,7 @@ export default function RolesTable({ roles, onEdit, onDelete }) {
           <tr>
             <th>ID</th>
             <th>Nombre</th>
+            <th>Asignable a</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -30,6 +31,15 @@ export default function RolesTable({ roles, onEdit, onDelete }) {
             <tr key={r.id}>
               <td>{r.id}</td>
               <td>{r.name}</td>
+              <td>
+                {r.is_employee ? (
+                  <span style={{ background: 'var(--color-primary)', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>Empleados</span>
+                ) : r.is_customer ? (
+                  <span style={{ background: '#10b981', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>Clientes</span>
+                ) : (
+                  <span style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>General</span>
+                )}
+              </td>
 
               <td>
                 <button className="btn-edit" onClick={() => onEdit(r)}>

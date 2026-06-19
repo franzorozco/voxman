@@ -17,7 +17,7 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Employee::with(['user.profile']);
+        $query = Employee::with(['user.profile', 'user.roles']);
         $status = $request->query('status');
         
         if (empty($status)) {
@@ -62,7 +62,8 @@ class EmployeeController extends Controller
     public function show($id)
     {
         $employee = Employee::with([
-            'user.profile'
+            'user.profile',
+            'user.roles'
         ])->findOrFail($id);
 
         return response()->json($employee);
@@ -74,10 +75,11 @@ class EmployeeController extends Controller
             'first_name' => 'required|string|max:100',
             'last_name_paternal' => 'nullable|string|max:100',
             'last_name_maternal' => 'nullable|string|max:100',
-            'email' => 'required|email|unique:users,email',
+            'employee_code' => 'required|string|max:20|unique:employees,employee_code',
+            'email' => 'nullable|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'branch_id' => 'nullable|uuid|exists:branches,id',
-            'role' => 'nullable|string|in:seller,delivery,admin,manager,cashier',
+            'role' => 'nullable|string',
             'base_salary' => 'nullable|numeric|min:0',
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
             'hire_date' => 'nullable|date',
@@ -90,8 +92,15 @@ class EmployeeController extends Controller
 
             $isActive = $request->has('is_active') ? $request->boolean('is_active') : true;
 
+            $employeeCode = strtoupper(trim($request->employee_code));
+
+            $emailToSave = $request->email;
+            if (empty($emailToSave)) {
+                $emailToSave = strtolower($employeeCode) . '@guest.voxman.local';
+            }
+
             $user = User::create([
-                'email' => $request->email,
+                'email' => $emailToSave,
                 'password' => Hash::make($request->password ?? Str::random(10)),
                 'is_active' => $isActive
             ]);
@@ -103,8 +112,6 @@ class EmployeeController extends Controller
                 'last_name_maternal' => $request->last_name_maternal,
                 'phone' => $request->phone,
             ]);
-
-            $employeeCode = 'EMP-' . strtoupper(Str::random(6));
             
             $employee = Employee::create([
                 'user_id' => $user->id,
@@ -119,6 +126,10 @@ class EmployeeController extends Controller
                 'status' => $isActive ? 'active' : 'inactive',
                 'phone' => $request->phone
             ]);
+
+            if ($request->filled('role')) {
+                $user->assignRole($request->role);
+            }
 
             DB::commit();
 
@@ -137,9 +148,10 @@ class EmployeeController extends Controller
 
         $request->validate([
             'first_name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'employee_code' => 'required|string|max:20|unique:employees,employee_code,' . $employee->id,
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
             'branch_id' => 'nullable|uuid|exists:branches,id',
-            'role' => 'nullable|string|in:seller,delivery,admin,manager,cashier',
+            'role' => 'nullable|string',
             'base_salary' => 'nullable|numeric|min:0',
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
             'is_active' => 'nullable|boolean'
@@ -148,9 +160,10 @@ class EmployeeController extends Controller
         try {
             DB::beginTransaction();
 
-            $updateData = [
-                'email' => $request->email,
-            ];
+            $updateData = [];
+            if ($request->has('email') && !empty($request->email)) {
+                $updateData['email'] = $request->email;
+            }
             
             if ($request->has('is_active')) {
                 $isActive = $request->boolean('is_active');
@@ -185,6 +198,7 @@ class EmployeeController extends Controller
             }
 
             $employee->update([
+                'employee_code' => strtoupper(trim($request->employee_code)),
                 'branch_id' => $request->branch_id,
                 'role' => $request->role,
                 'base_salary' => $request->base_salary ?? 0,
@@ -195,6 +209,12 @@ class EmployeeController extends Controller
                 'emergency_contact' => $request->emergency_contact,
                 'notes' => $request->notes
             ]);
+
+            if ($request->filled('role')) {
+                $user->syncRoles([$request->role]);
+            } else {
+                $user->syncRoles([]);
+            }
 
             DB::commit();
 
@@ -238,9 +258,14 @@ class EmployeeController extends Controller
 
     public function getDeleted(Request $request)
     {
-        $query = Employee::onlyTrashed()->with(['user' => function($q) {
-            $q->withTrashed()->with('profile');
-        }]);
+        $query = Employee::withTrashed()
+            ->where(function ($q) {
+                $q->whereNotNull('deleted_at')
+                  ->orWhere('is_active', false);
+            })
+            ->with(['user' => function($q) {
+                $q->withTrashed()->with(['profile', 'roles']);
+            }]);
 
         if ($request->has('search') && !empty($request->query('search'))) {
             $search = $request->query('search');
@@ -263,8 +288,12 @@ class EmployeeController extends Controller
 
     public function restore($id)
     {
-        $employee = Employee::onlyTrashed()->findOrFail($id);
-        $employee->restore();
+        $employee = Employee::withTrashed()->findOrFail($id);
+        
+        if ($employee->trashed()) {
+            $employee->restore();
+        }
+
         $employee->update([
             'is_active' => true,
             'status' => 'active'
@@ -272,7 +301,9 @@ class EmployeeController extends Controller
 
         if ($employee->user()->withTrashed()->first()) {
             $user = $employee->user()->withTrashed()->first();
-            $user->restore();
+            if ($user->trashed()) {
+                $user->restore();
+            }
             $user->update(['is_active' => true]);
         }
 

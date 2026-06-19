@@ -127,10 +127,13 @@ CREATE TABLE roles (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     guard_name VARCHAR(255) NOT NULL,
+    is_employee BOOLEAN DEFAULT false,
+    is_customer BOOLEAN DEFAULT false,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
-    UNIQUE(name, guard_name)
+    UNIQUE(name, guard_name),
+    CONSTRAINT check_roles_types CHECK (NOT (is_employee = true AND is_customer = true))
 );
 
 CREATE TABLE permissions (

@@ -13,6 +13,13 @@ class Role extends SpatieRole
 
 	protected $fillable = [
 		'name',
-		'guard_name'
+		'guard_name',
+		'is_employee',
+		'is_customer'
+	];
+
+	protected $casts = [
+		'is_employee' => 'boolean',
+		'is_customer' => 'boolean'
 	];
 }

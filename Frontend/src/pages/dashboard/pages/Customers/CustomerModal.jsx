@@ -7,8 +7,10 @@ import Spinner from "../../components/Spinner/Spinner";
 export default function CustomerModal({ customer, onClose, onSuccess }) {
   const isEditing = !!customer;
   const [loading, setLoading] = useState(false);
+  const [createWebAccount, setCreateWebAccount] = useState(false);
   
   const [formData, setFormData] = useState({
+    customer_code: "",
     first_name: "",
     last_name_paternal: "",
     email: "",
@@ -20,14 +22,19 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
   useEffect(() => {
     if (isEditing) {
       const profile = customer.user?.profile || {};
+      const userEmail = customer.user?.email || "";
+      
       setFormData({
+        customer_code: customer.customer_code || "",
         first_name: profile.first_name || "",
         last_name_paternal: profile.last_name_paternal || "",
-        email: customer.user?.email || "",
+        email: userEmail.includes('@guest') ? "" : userEmail,
         phone: profile.phone || "",
         password: "", // Keep empty on edit unless changing
         is_active: customer.is_active !== undefined ? customer.is_active : true
       });
+
+      setCreateWebAccount(!userEmail.includes('@guest'));
     }
   }, [customer, isEditing]);
 
@@ -36,11 +43,19 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
     setLoading(true);
     
     try {
+      // Si la cuenta web no está habilitada, limpiamos los campos de email y password
+      // para que el backend no los procese y genere los ficticios automáticamente.
+      const payload = { ...formData };
+      if (!createWebAccount) {
+        payload.email = "";
+        payload.password = "";
+      }
+
       if (isEditing) {
-        await updateCustomer(customer.id, formData);
+        await updateCustomer(customer.id, payload);
         toast.success("Cliente actualizado exitosamente");
       } else {
-        await createCustomer(formData);
+        await createCustomer(payload);
         toast.success("Cliente creado exitosamente");
       }
       onSuccess();
@@ -66,6 +81,18 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit}>
           <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Cliente (Manual) *</label>
+              <input 
+                type="text" 
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                value={formData.customer_code}
+                onChange={(e) => setFormData({...formData, customer_code: e.target.value.toUpperCase()})}
+                placeholder="Ej. CUST-001"
+                required
+              />
+            </div>
             
             <div className="modal-form-grid">
               <div>
@@ -90,17 +117,6 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Correo Electrónico *</label>
-              <input 
-                type="email" 
-                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                required
-              />
-            </div>
-
-            <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
               <input 
                 type="text" 
@@ -110,17 +126,50 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                Contraseña {isEditing ? '(Opcional, dejar vacío para no cambiar)' : '(Opcional)'}
-              </label>
-              <input 
-                type="password" 
-                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                placeholder={isEditing ? "********" : "Generada automáticamente si está vacío"}
-              />
+            <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid var(--border-color)', marginTop: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: createWebAccount ? '16px' : '0' }}>
+                <input 
+                  type="checkbox" 
+                  id="create_web_account"
+                  checked={createWebAccount}
+                  onChange={(e) => setCreateWebAccount(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+                />
+                <label htmlFor="create_web_account" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
+                  Habilitar cuenta web (Correo y Contraseña)
+                </label>
+              </div>
+
+              {createWebAccount && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      Correo Electrónico *
+                    </label>
+                    <input 
+                      type="email" 
+                      style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      required={createWebAccount}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      Contraseña {isEditing ? '(Opcional, dejar vacío para no cambiar)' : '*'}
+                    </label>
+                    <input 
+                      type="password" 
+                      style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                      value={formData.password}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      placeholder={isEditing ? "********" : "Ingresar contraseña"}
+                      required={createWebAccount && !isEditing}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>

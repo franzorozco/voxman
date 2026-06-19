@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Actors\Customer;
 use App\Models\Core\User;
 use App\Models\Core\UserProfile;
+use App\Models\Auth\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -86,7 +87,8 @@ class CustomerController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name_paternal' => 'nullable|string|max:100',
-            'email' => 'required|email|unique:users,email',
+            'customer_code' => 'required|string|max:20|unique:customers,customer_code',
+            'email' => 'nullable|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'is_active' => 'nullable|boolean'
         ]);
@@ -95,9 +97,18 @@ class CustomerController extends Controller
             DB::beginTransaction();
 
             $isActive = $request->has('is_active') ? $request->boolean('is_active') : true;
+            
+            // Tomar código manual
+            $customerCode = strtoupper(trim($request->customer_code));
+
+            // Si no tiene email, le generamos uno ficticio y único
+            $emailToSave = $request->email;
+            if (empty($emailToSave)) {
+                $emailToSave = strtolower($customerCode) . '@guest.voxman.local';
+            }
 
             $user = User::create([
-                'email' => $request->email,
+                'email' => $emailToSave,
                 'password' => Hash::make($request->password ?? Str::random(10)),
                 'is_active' => $isActive
             ]);
@@ -109,13 +120,17 @@ class CustomerController extends Controller
                 'phone' => $request->phone,
             ]);
 
-            $customerCode = 'CUST-' . strtoupper(Str::random(6));
-            
             $customer = Customer::create([
                 'user_id' => $user->id,
                 'customer_code' => $customerCode,
                 'is_active' => $isActive
             ]);
+
+            // Assign customer roles automatically
+            $customerRoles = Role::where('is_customer', true)->get();
+            if ($customerRoles->isNotEmpty()) {
+                $user->assignRole($customerRoles);
+            }
 
             DB::commit();
 
@@ -134,20 +149,29 @@ class CustomerController extends Controller
 
         $request->validate([
             'first_name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'customer_code' => 'required|string|max:20|unique:customers,customer_code,' . $customer->id,
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
             'is_active' => 'nullable|boolean'
         ]);
 
         try {
             DB::beginTransaction();
 
-            $updateData = [
-                'email' => $request->email,
-            ];
+            $updateData = [];
+            if ($request->has('email') && !empty($request->email)) {
+                $updateData['email'] = $request->email;
+            }
             
             if ($request->has('is_active')) {
                 $updateData['is_active'] = $request->boolean('is_active');
-                $customer->update(['is_active' => $request->boolean('is_active')]);
+                $customer->update([
+                    'is_active' => $request->boolean('is_active'),
+                    'customer_code' => strtoupper(trim($request->customer_code))
+                ]);
+            } else {
+                $customer->update([
+                    'customer_code' => strtoupper(trim($request->customer_code))
+                ]);
             }
 
             $user->update($updateData);

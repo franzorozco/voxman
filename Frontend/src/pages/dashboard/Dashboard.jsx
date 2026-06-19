@@ -47,6 +47,7 @@ export default function DashboardLayout() {
   const { isDark, toggleTheme } = useThemeStore();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const [collapsed, setCollapsed] = useState(
     window.innerWidth <= 1024
@@ -402,23 +403,6 @@ export default function DashboardLayout() {
             </div>
 
             <div className="topbar-right">
-              <AttendanceWidget />
-              <div className="topbar-user">
-                <UserCircle2 size={34} />
-                <div className="topbar-user-info">
-
-                  <span className="user-name">
-                    {user?.username || "SIN SESIÓN"}
-                  </span>
-
-                  <small className="user-email">
-                    {user?.email || "correo@voxman.com"}
-                  </small>
-
-                </div>
-
-              </div>
-
               <button
                 onClick={toggleTheme}
                 className="topbar-btn theme-btn"
@@ -427,21 +411,83 @@ export default function DashboardLayout() {
                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              <Link
-                to="/"
-                className="topbar-btn home-btn"
+              <div 
+                className="topbar-user" 
+                style={{ cursor: 'pointer', position: 'relative' }}
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
               >
-                <House size={16} />
-                <span>Inicio</span>
-              </Link>
+                <UserCircle2 size={34} />
+                <div className="topbar-user-info">
+                  <span className="user-name">
+                    {user?.username || "SIN SESIÓN"}
+                  </span>
+                  <small className="user-email">
+                    {user?.email || "correo@voxman.com"}
+                  </small>
+                </div>
+                <ChevronDown size={16} />
 
-              <button
-                onClick={() => setShowLogoutModal(true)}
-                className="topbar-btn logout-btn"
-              >
-                <LogOut size={16} />
-                <span>Cerrar sesión</span>
-              </button>
+                {showUserDropdown && (
+                  <>
+                    <div 
+                      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowUserDropdown(false);
+                      }}
+                    />
+                    <div className="user-dropdown" style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 10px)',
+                      right: 0,
+                      background: 'var(--bg-card)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                      minWidth: '220px',
+                      zIndex: 999
+                    }}>
+                      <div style={{ padding: '4px 0 12px 0', borderBottom: '1px solid var(--border-color)', marginBottom: '4px' }}>
+                        <AttendanceWidget />
+                      </div>
+                      
+                      <Link
+                        to="/"
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '8px',
+                          background: 'transparent', border: 'none', color: 'var(--text-main)',
+                          padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
+                          textDecoration: 'none', fontWeight: 500, fontSize: '14px'
+                        }}
+                      >
+                        <House size={16} />
+                        <span>Inicio</span>
+                      </Link>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowUserDropdown(false);
+                          setShowLogoutModal(true);
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '8px',
+                          background: 'transparent', border: 'none', color: 'var(--color-danger)',
+                          padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
+                          textAlign: 'left', fontWeight: 500, fontSize: '14px'
+                        }}
+                      >
+                        <LogOut size={16} />
+                        <span>Cerrar sesión</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
