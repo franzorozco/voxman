@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Admin\ProductTypeMeasurementController;
 use App\Http\Controllers\Api\Admin\ProductVariantController;
 use App\Http\Controllers\Api\Admin\PurchaseController;
 use App\Http\Controllers\Api\Admin\RoleController;
+use App\Http\Controllers\Api\Admin\SaleController;
 use App\Http\Controllers\Api\Admin\SizeController;
 use App\Http\Controllers\Api\Admin\SupplierController;
 use App\Http\Controllers\Api\Admin\UserController;
@@ -292,6 +293,14 @@ Route::middleware([
         Route::get('/', [\App\Http\Controllers\Api\Admin\QuarantineController::class, 'index']); // Sin permiso por ahora
         Route::post('/{id}/resolve', [\App\Http\Controllers\Api\Admin\QuarantineController::class, 'resolve']); // Sin permiso por ahora
     });
+    
+    Route::prefix('sales')->group(function () {
+        Route::get('/', [SaleController::class, 'index']);
+        Route::get('/{id}', [SaleController::class, 'show']);
+        Route::put('/{id}', [SaleController::class, 'update']);
+        Route::delete('/{id}', [SaleController::class, 'destroy']);
+    });
+
     Route::get('supplier-returns', [\App\Http\Controllers\Api\Admin\SupplierReturnController::class, 'index']);
 
 });

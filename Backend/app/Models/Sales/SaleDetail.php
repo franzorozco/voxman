@@ -21,4 +21,9 @@ class SaleDetail extends BaseSaleDetail
 	{
 		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();
 	}
+
+	public function giftcard()
+	{
+		return $this->hasOne(\App\Models\Base\Giftcard::class, 'sale_detail_id');
+	}
 }

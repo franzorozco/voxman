@@ -19,4 +19,9 @@ class Sale extends BaseSale
 		'invoice_number',
 		'notes'
 	];
+
+	public function giftcard_transactions()
+	{
+		return $this->hasMany(\App\Models\Base\GiftcardTransaction::class, 'sale_id');
+	}
 }

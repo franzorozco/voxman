@@ -44,6 +44,7 @@ import Employees from "../pages/dashboard/pages/Employees/Employees.jsx";
 import DeletedEmployees from "../pages/dashboard/pages/Employees/DeletedEmployees.jsx";
 import Payroll from "../pages/dashboard/pages/Payroll/Payroll.jsx";
 import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
+import Sales from "../pages/dashboard/pages/Sales/Sales.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -110,6 +111,7 @@ export default function AppRouter() {
             <Route path="employees/deleted" element={<DeletedEmployees />} />
             <Route path="payroll" element={<Payroll />} />
             <Route path="attendances" element={<Attendances />} />
+            <Route path="sales" element={<Sales />} />
 
           </Route>
         </Route>
