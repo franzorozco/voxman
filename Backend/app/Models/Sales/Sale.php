@@ -24,4 +24,9 @@ class Sale extends BaseSale
 	{
 		return $this->hasMany(\App\Models\Base\GiftcardTransaction::class, 'sale_id');
 	}
+
+	public function sale_applied_discounts()
+	{
+		return $this->hasMany(\App\Models\Sales\SaleAppliedDiscount::class, 'sale_id');
+	}
 }

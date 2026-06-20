@@ -24,6 +24,6 @@ class SaleDetail extends BaseSaleDetail
 
 	public function giftcard()
 	{
-		return $this->hasOne(\App\Models\Base\Giftcard::class, 'sale_detail_id');
+		return $this->belongsTo(\App\Models\Finance\Giftcard::class, 'gift_card_id');
 	}
 }

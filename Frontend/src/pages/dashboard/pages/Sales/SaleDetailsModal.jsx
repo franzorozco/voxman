@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle } from "lucide-react";
+import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle, Printer } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSale, updateSaleStatus, cancelSale } from "../../../../api/admin/sales";
 import Spinner from "../../components/Spinner/Spinner";
+import ThermalReceiptModal from "./ThermalReceiptModal";
 
 export default function SaleDetailsModal({ saleId, onClose }) {
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   useEffect(() => {
     const fetchSale = async () => {
@@ -37,7 +39,8 @@ export default function SaleDetailsModal({ saleId, onClose }) {
       const freshSale = await getSale(saleId);
       setSale(freshSale.data);
     } catch (error) {
-      toast.error("Error al actualizar estado");
+      const msg = error.response?.data?.message || "Error al actualizar estado";
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -55,7 +58,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
 
   return (
     <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999 }}>
-      <div className="modal-content fade-in" style={{ background: 'var(--bg-card)', borderRadius: '12px', overflow: 'hidden', width: '90%', maxWidth: '800px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="modal-content fade-in" style={{ background: 'var(--bg-card)', borderRadius: '12px', overflow: 'hidden', width: '95%', maxWidth: '1000px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
         
         {/* Header */}
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -117,53 +120,68 @@ export default function SaleDetailsModal({ saleId, onClose }) {
             <div className="sale-detail-title">
               <FileText size={18} /> Productos
             </div>
-            <table className="products-table" style={{ marginTop: '10px' }}>
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th style={{textAlign: 'center'}}>Cant.</th>
-                  <th style={{textAlign: 'right'}}>P. Unitario</th>
-                  <th style={{textAlign: 'right'}}>Descuento</th>
-                  <th style={{textAlign: 'right'}}>Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sale.sale_details && sale.sale_details.map((detail) => (
-                  <tr key={detail.id}>
-                    <td>
-                      <div style={{ fontWeight: 500 }}>
-                        {detail.giftcard ? `Giftcard ${detail.giftcard.code || ''}` : (detail.product_variant?.product?.name || 'Producto Desconocido')}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        {detail.giftcard ? 'Tarjeta de Regalo' : (detail.product_variant?.sku || '')}
-                      </div>
-                    </td>
-                    <td style={{textAlign: 'center'}}>{detail.quantity}</td>
-                    <td style={{textAlign: 'right'}}>Bs. {parseFloat(detail.unit_price).toFixed(2)}</td>
-                    <td style={{textAlign: 'right', color: parseFloat(detail.discount) > 0 ? 'var(--status-danger)' : 'var(--text-muted)'}}>
-                      {parseFloat(detail.discount) > 0 ? `-Bs. ${parseFloat(detail.discount).toFixed(2)}` : '-'}
-                    </td>
-                    <td style={{textAlign: 'right', fontWeight: 600}}>Bs. {parseFloat(detail.subtotal).toFixed(2)}</td>
+            <div style={{ overflowX: 'auto', width: '100%' }}>
+              <table className="products-table" style={{ marginTop: '10px' }}>
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th style={{textAlign: 'center'}}>Cant.</th>
+                    <th style={{textAlign: 'right'}}>P. Unitario</th>
+                    <th style={{textAlign: 'right'}}>Descuento</th>
+                    <th style={{textAlign: 'right'}}>Subtotal</th>
                   </tr>
-                ))}
-                {sale.giftcard_transactions && sale.giftcard_transactions.map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td>
-                      <div style={{ fontWeight: 500 }}>
-                        Giftcard {transaction.giftcard?.code || ''}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        Tarjeta de Regalo ({transaction.type === 'issue' ? 'Emisión' : transaction.type === 'reload' ? 'Recarga' : transaction.type})
-                      </div>
-                    </td>
-                    <td style={{textAlign: 'center'}}>1</td>
-                    <td style={{textAlign: 'right'}}>Bs. {parseFloat(transaction.amount).toFixed(2)}</td>
-                    <td style={{textAlign: 'right', color: 'var(--text-muted)'}}>-</td>
-                    <td style={{textAlign: 'right', fontWeight: 600}}>Bs. {parseFloat(transaction.amount).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sale.sale_details && sale.sale_details.map((detail) => (
+                    <tr key={detail.id}>
+                      <td>
+                        <div style={{ fontWeight: 500 }}>
+                          {detail.giftcard ? `Giftcard ${detail.giftcard.code || ''}` : 
+                           detail.bundle ? `Conjunto: ${detail.bundle.name}` :
+                           (detail.product_variant?.product?.name || 'Producto Desconocido')}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {detail.giftcard ? 'Tarjeta de Regalo' : 
+                           detail.bundle ? 'Conjunto Promocional' :
+                           (detail.product_variant?.sku || '')}
+                        </div>
+                      </td>
+                      <td style={{textAlign: 'center'}}>{detail.quantity}</td>
+                      <td style={{textAlign: 'right'}}>Bs. {parseFloat(detail.unit_price).toFixed(2)}</td>
+                      <td style={{textAlign: 'right', color: parseFloat(detail.discount) > 0 ? 'var(--status-danger)' : 'var(--text-muted)'}}>
+                        {parseFloat(detail.discount) > 0 ? (
+                          <>
+                            <div style={{ fontWeight: 600 }}>-Bs. {parseFloat(detail.discount).toFixed(2)}</div>
+                            <div style={{ fontSize: '11px', opacity: 0.8 }}>
+                              {sale.sale_applied_discounts?.find(d => d.sale_detail_id === detail.id)?.discount?.code 
+                                ? `Promo: ${sale.sale_applied_discounts.find(d => d.sale_detail_id === detail.id).discount.code}`
+                                : 'Manual'}
+                            </div>
+                          </>
+                        ) : '-'}
+                      </td>
+                      <td style={{textAlign: 'right', fontWeight: 600}}>Bs. {parseFloat(detail.subtotal).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  {sale.giftcard_transactions && sale.giftcard_transactions.map((transaction) => (
+                    <tr key={transaction.id}>
+                      <td>
+                        <div style={{ fontWeight: 500 }}>
+                          Giftcard {transaction.giftcard?.code || ''}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          Tarjeta de Regalo ({transaction.type === 'issue' ? 'Emisión' : transaction.type === 'reload' ? 'Recarga' : transaction.type})
+                        </div>
+                      </td>
+                      <td style={{textAlign: 'center'}}>1</td>
+                      <td style={{textAlign: 'right'}}>Bs. {parseFloat(transaction.amount).toFixed(2)}</td>
+                      <td style={{textAlign: 'right', color: 'var(--text-muted)'}}>-</td>
+                      <td style={{textAlign: 'right', fontWeight: 600}}>Bs. {parseFloat(transaction.amount).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Pagos */}
@@ -172,6 +190,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               <div className="sale-detail-title">
                 <CreditCard size={18} /> Pagos Realizados
               </div>
+            <div style={{ overflowX: 'auto', width: '100%' }}>
               <table className="products-table" style={{ marginTop: '10px' }}>
                 <thead>
                   <tr>
@@ -202,6 +221,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 </tbody>
               </table>
             </div>
+            </div>
           )}
 
           {/* Envíos */}
@@ -231,6 +251,18 @@ export default function SaleDetailsModal({ saleId, onClose }) {
             </div>
           )}
 
+          {/* Notas */}
+          {sale.notes && (
+            <div className="sale-detail-section" style={{ marginBottom: '20px' }}>
+              <div className="sale-detail-title">
+                <FileText size={18} /> Notas de la Venta
+              </div>
+              <div style={{ padding: '12px', background: 'var(--bg-input)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-main)', marginTop: '10px' }}>
+                {sale.notes}
+              </div>
+            </div>
+          )}
+
           {/* Totales */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <div className="sale-detail-section" style={{ width: '300px' }}>
@@ -240,7 +272,16 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Descuento Global:</span>
-                <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat(sale.discount_total || 0).toFixed(2)}</span>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat(sale.discount_total || 0).toFixed(2)}</span>
+                  {parseFloat(sale.discount_total) > 0 && (
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      {sale.sale_applied_discounts?.filter(d => !d.sale_detail_id).map(d => d.discount?.code).filter(Boolean).join(', ') 
+                       ? `Cupones: ${sale.sale_applied_discounts.filter(d => !d.sale_detail_id).map(d => d.discount?.code).filter(Boolean).join(', ')}`
+                       : 'Descuento Manual / Giftcard'}
+                    </div>
+                  )}
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '2px solid var(--border-color)' }}>
                 <span style={{ fontWeight: 700, fontSize: '16px' }}>TOTAL:</span>
@@ -274,12 +315,21 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               </button>
             )}
           </div>
-          <button className="btn-secondary" onClick={onClose} disabled={actionLoading}>
-            Cerrar
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowReceipt(true)}>
+              <Printer size={16} /> Imprimir Ticket
+            </button>
+            <button className="btn-secondary" onClick={onClose} disabled={actionLoading}>
+              Cerrar
+            </button>
+          </div>
         </div>
 
       </div>
+
+      {showReceipt && (
+        <ThermalReceiptModal sale={sale} onClose={() => setShowReceipt(false)} />
+      )}
     </div>
   );
 }

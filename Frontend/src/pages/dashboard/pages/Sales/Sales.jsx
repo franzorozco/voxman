@@ -10,9 +10,20 @@ import "./Sales.css";
 
 export default function Sales() {
   const [sales, setSales] = useState([]);
+  const [summary, setSummary] = useState({
+    total_revenue: 0,
+    total_sales: 0,
+    average_ticket: 0
+  });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: "",
+    source: "",
+    date_from: "",
+    date_to: ""
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState(null);
 
@@ -21,11 +32,17 @@ export default function Sales() {
       setLoading(true);
       const params = {};
       if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter;
+      if (filters.status) params.status = filters.status;
+      if (filters.source) params.source = filters.source;
+      if (filters.date_from) params.date_from = filters.date_from;
+      if (filters.date_to) params.date_to = filters.date_to;
 
       const { data } = await getSales(params);
       // Paginacion viene en data.data, si no es paginado, es data
       setSales(data.data || data);
+      if (data.summary) {
+        setSummary(data.summary);
+      }
     } catch (error) {
       toast.error("Error al cargar ventas");
       console.error(error);
@@ -35,8 +52,11 @@ export default function Sales() {
   };
 
   useEffect(() => {
-    fetchSales();
-  }, [search, statusFilter]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchSales();
+    }, 300);
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, filters]);
 
   const openDetailsModal = (id) => {
     setSelectedSaleId(id);
@@ -51,8 +71,8 @@ export default function Sales() {
 
   const renderStatusBadge = (status) => {
     switch (status) {
-      case 'completed':
-        return <span className="status-badge status-success"><CheckCircle size={14} style={{marginRight: '4px'}}/> Completada</span>;
+      case 'paid':
+        return <span className="status-badge status-success"><CheckCircle size={14} style={{marginRight: '4px'}}/> Pagada</span>;
       case 'pending':
         return <span className="status-badge status-warning"><Clock size={14} style={{marginRight: '4px'}}/> Pendiente</span>;
       case 'cancelled':
@@ -73,8 +93,23 @@ export default function Sales() {
         </h1>
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.3s ease' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ingresos Totales</span>
+          <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>Bs. {parseFloat(summary.total_revenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        </div>
+        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.4s ease' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ventas Realizadas</span>
+          <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>{summary.total_sales || 0}</span>
+        </div>
+        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.5s ease' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ticket Promedio</span>
+          <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>Bs. {parseFloat(summary.average_ticket || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        </div>
+      </div>
+
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div className="filters-container-inner" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
@@ -86,19 +121,78 @@ export default function Sales() {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <select 
-              style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none', cursor: 'pointer' }}
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">Todos los Estados</option>
-              <option value="completed">Completadas</option>
-              <option value="pending">Pendientes</option>
-              <option value="cancelled">Canceladas</option>
-            </select>
-          </div>
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+          >
+            <Filter size={18} />
+            <span className="hide-on-mobile">Filtros</span>
+          </button>
         </div>
+
+        {showFilters && (
+          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+              <select 
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              >
+                <option value="">Todos los Estados</option>
+                <option value="paid">Pagadas</option>
+                <option value="pending">Pendientes</option>
+                <option value="cancelled">Canceladas</option>
+                <option value="refunded">Reembolsadas</option>
+              </select>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Origen</label>
+              <select 
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.source}
+                onChange={(e) => setFilters({ ...filters, source: e.target.value })}
+              >
+                <option value="">Todos (Web/Tienda/Móvil)</option>
+                <option value="store">Tienda Física</option>
+                <option value="web">Tienda Web</option>
+                <option value="mobile">App Móvil</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Desde</label>
+              <input 
+                type="date"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', colorScheme: 'dark' }}
+                value={filters.date_from}
+                onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Hasta</label>
+              <input 
+                type="date"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', colorScheme: 'dark' }}
+                value={filters.date_to}
+                onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
+              />
+            </div>
+            
+            {(filters.status !== "" || filters.source !== "" || filters.date_from !== "" || filters.date_to !== "") && (
+              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <button 
+                  onClick={() => setFilters({ status: "", source: "", date_from: "", date_to: "" })}
+                  style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'transparent', color: 'var(--status-danger)', border: '1px solid var(--status-danger)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+                >
+                  Limpiar Filtros
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="table-container">
@@ -164,7 +258,7 @@ export default function Sales() {
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
                           {[
-                            ...(sale.sale_details || []).map(d => d.giftcard ? `Giftcard ${d.giftcard.code || ''}` : d.product_variant?.product?.name),
+                            ...(sale.sale_details || []).map(d => d.giftcard ? `Giftcard ${d.giftcard.code || ''}` : d.bundle ? `Conjunto: ${d.bundle.name}` : d.product_variant?.product?.name),
                             ...(sale.giftcard_transactions || []).map(t => `Giftcard ${t.giftcard?.code || ''}`)
                           ].filter(Boolean).join(', ')}
                         </div>

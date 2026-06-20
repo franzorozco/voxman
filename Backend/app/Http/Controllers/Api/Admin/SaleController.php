@@ -68,7 +68,28 @@ class SaleController extends Controller
 
         $perPage = $request->query('per_page', 50);
         
-        return response()->json($query->paginate($perPage));
+        $summary = [
+            'total_revenue' => (clone $query)->where('status', 'paid')->sum('total'),
+            'total_sales' => (clone $query)->where('status', '!=', 'cancelled')->count(),
+            'total_discount' => (clone $query)->where('status', 'paid')->sum('discount_total'),
+            'average_ticket' => 0
+        ];
+        if ($summary['total_sales'] > 0) {
+            $summary['average_ticket'] = $summary['total_revenue'] / $summary['total_sales'];
+        }
+
+        $paginated = $query->paginate($perPage);
+        
+        return response()->json([
+            'data' => $paginated->items(),
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total()
+            ],
+            'summary' => $summary
+        ]);
     }
 
     public function show($id)
@@ -82,7 +103,8 @@ class SaleController extends Controller
             'sale_details.owner.user.profile',
             'payments.payment_method',
             'shipments.address',
-            'giftcard_transactions.giftcard'
+            'giftcard_transactions.giftcard',
+            'sale_applied_discounts.discount'
         ])->findOrFail($id);
 
         return response()->json($sale);
@@ -90,19 +112,83 @@ class SaleController extends Controller
 
     public function update(Request $request, $id)
     {
-        $sale = Sale::findOrFail($id);
+        $sale = Sale::with(['sale_details', 'giftcard_transactions', 'payments'])->findOrFail($id);
 
         $request->validate([
-            'status' => 'required|string|in:pending,completed,cancelled,refunded',
+            'status' => 'required|string|in:pending,paid,cancelled,refunded',
             'notes' => 'nullable|string'
         ]);
 
         try {
             DB::beginTransaction();
 
-            // If cancelling a completed sale, we might need to restore inventory.
-            // For now, we simply update the status.
-            $sale->status = $request->status;
+            $oldStatus = $sale->status;
+            $newStatus = $request->status;
+
+            if ($oldStatus !== 'cancelled' && $newStatus === 'cancelled') {
+                // 1. VALIDACION Y ANULACION DE GIFTCARDS
+                $giftcardIdsFromDetails = $sale->sale_details->whereNotNull('gift_card_id')->pluck('gift_card_id')->toArray();
+                $giftcardIdsFromTx = $sale->giftcard_transactions->where('type', 'issue')->pluck('giftcard_id')->toArray();
+                
+                $allGiftcardIds = array_unique(array_merge($giftcardIdsFromDetails, $giftcardIdsFromTx));
+
+                if (!empty($allGiftcardIds)) {
+                    $giftcards = \App\Models\Finance\Giftcard::whereIn('id', $allGiftcardIds)->get();
+                    foreach ($giftcards as $gc) {
+                        if ((float)$gc->current_balance < (float)$gc->initial_balance) {
+                            throw new \Exception("No se puede cancelar la venta. La Giftcard {$gc->code} ya fue utilizada parcialmente.");
+                        }
+                    }
+
+                    // Si pasamos validación, las desactivamos
+                    foreach ($giftcards as $gc) {
+                        $gc->is_active = false;
+                        $gc->current_balance = 0;
+                        $gc->save();
+
+                        // Crear transacción de anulación
+                        \App\Models\Finance\GiftcardTransaction::create([
+                            'giftcard_id' => $gc->id,
+                            'type' => 'refund',
+                            'amount' => -$gc->initial_balance,
+                            'sale_id' => $sale->id,
+                            'notes' => 'Anulación por venta cancelada'
+                        ]);
+                    }
+                }
+
+                // 2. INVENTARIO: Devolver productos físicos
+                foreach ($sale->sale_details as $detail) {
+                    if ($detail->variant_id) {
+                        $inventory = \App\Models\Inventory\Inventory::firstOrCreate(
+                            ['branch_id' => $sale->branch_id, 'variant_id' => $detail->variant_id],
+                            ['stock' => 0, 'min_stock' => 0]
+                        );
+
+                        $stockBefore = $inventory->stock;
+                        $inventory->stock += $detail->quantity;
+                        $inventory->save();
+
+                        \App\Models\Inventory\InventoryMovement::create([
+                            'variant_id' => $detail->variant_id,
+                            'branch_id' => $sale->branch_id,
+                            'movement_type' => 'return',
+                            'quantity' => $detail->quantity,
+                            'stock_before' => $stockBefore,
+                            'stock_after' => $inventory->stock,
+                            'notes' => "Anulación de venta " . ($sale->invoice_number ?? $sale->id)
+                        ]);
+                    }
+                }
+
+                // 3. PAGOS: Marcarlos como failed
+                foreach ($sale->payments as $payment) {
+                    $payment->status = 'failed';
+                    $payment->save();
+                }
+            }
+
+            $sale->status = $newStatus;
             
             if ($request->has('notes')) {
                 $sale->notes = $request->notes;
@@ -115,7 +201,7 @@ class SaleController extends Controller
             return response()->json($sale);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error updating sale status', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
