@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property string|null $deleted_at
+ * @property string|null $type
  * 
  * @property Owner|null $owner
  * @property Collection|OwnerPaymentDetail[] $owner_payment_details
@@ -34,10 +35,11 @@ class OwnerPayment extends Model
 {
 	use SoftDeletes;
 	protected $table = 'owner_payments';
-	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
+		'id' => 'uuid',
+		'owner_id' => 'uuid',
 		'total_amount' => 'float',
 		'payment_date' => 'datetime'
 	];

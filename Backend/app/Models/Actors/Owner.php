@@ -10,4 +10,9 @@ class Owner extends BaseOwner
 		'user_id',
 		'is_active'
 	];
+
+	public function expense_splits()
+	{
+		return $this->hasMany(\App\Models\Finance\ExpenseSplit::class);
+	}
 }
