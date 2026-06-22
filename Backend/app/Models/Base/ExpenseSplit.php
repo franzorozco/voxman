@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\Expense;
-use App\Models\Owner;
+use App\Models\Finance\Expense;
+use App\Models\Actors\Owner;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -29,13 +29,14 @@ use Illuminate\Database\Eloquent\Model;
 class ExpenseSplit extends Model
 {
 	protected $table = 'expense_splits';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'expense_id' => 'uuid',
-		'owner_id' => 'uuid',
+		'id' => 'string',
+		'expense_id' => 'string',
+		'owner_id' => 'string',
 		'amount' => 'float',
 		'percentage' => 'float'
 	];

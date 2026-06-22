@@ -12,4 +12,15 @@ class ExpenseSplit extends BaseExpenseSplit
 		'amount',
 		'percentage'
 	];
+
+	protected static function boot()
+	{
+		parent::boot();
+
+		static::creating(function ($model) {
+			if (!$model->id) {
+				$model->id = (string) \Illuminate\Support\Str::uuid();
+			}
+		});
+	}
 }

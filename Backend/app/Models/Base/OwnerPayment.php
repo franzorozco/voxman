@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\Owner;
-use App\Models\OwnerPaymentDetail;
+use App\Models\Actors\Owner;
+use App\Models\Finance\OwnerPaymentDetail;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -36,10 +36,11 @@ class OwnerPayment extends Model
 	use SoftDeletes;
 	protected $table = 'owner_payments';
 	public $incrementing = false;
+	protected $keyType = 'string';
 
 	protected $casts = [
-		'id' => 'uuid',
-		'owner_id' => 'uuid',
+		'id' => 'string',
+		'owner_id' => 'string',
 		'total_amount' => 'float',
 		'payment_date' => 'datetime'
 	];

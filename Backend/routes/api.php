@@ -304,22 +304,22 @@ Route::middleware([
     Route::get('supplier-returns', [\App\Http\Controllers\Api\Admin\SupplierReturnController::class, 'index']);
 
     Route::prefix('finance')->group(function () {
-        Route::get('dashboard', [\App\Http\Controllers\Api\Admin\Finance\FinanceDashboardController::class, 'index']);
+        Route::get('dashboard', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'index']);
         
         Route::prefix('expenses')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Admin\Finance\ExpenseController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\Admin\Finance\ExpenseController::class, 'store']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\Admin\Finance\ExpenseController::class, 'show']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\Admin\Finance\ExpenseController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\Finance\ExpenseController::class, 'destroy']);
+            Route::get('/', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'destroy']);
         });
 
         Route::prefix('owner-payments')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\Admin\Finance\OwnerPaymentController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\Admin\Finance\OwnerPaymentController::class, 'store']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\Admin\Finance\OwnerPaymentController::class, 'show']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\Admin\Finance\OwnerPaymentController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\Finance\OwnerPaymentController::class, 'destroy']);
+            Route::get('/', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'destroy']);
         });
     });
 

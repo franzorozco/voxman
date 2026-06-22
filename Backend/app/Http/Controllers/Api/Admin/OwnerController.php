@@ -10,7 +10,7 @@ class OwnerController extends Controller
 {
     public function index()
     {
-        return Owner::with(['user.user_profiles'])
+        return Owner::with(['user.profile'])
             ->where('is_active', true)
             ->whereHas('user', function ($q) {
                 $q->where('is_active', true);

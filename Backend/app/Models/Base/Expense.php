@@ -6,9 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\Branch;
-use App\Models\ExpenseSplit;
-use App\Models\Owner;
+use App\Models\Branch\Branch;
+use App\Models\Finance\ExpenseSplit;
+use App\Models\Actors\Owner;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -34,12 +34,13 @@ use Illuminate\Database\Eloquent\Model;
 class Expense extends Model
 {
 	protected $table = 'expenses';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'branch_id' => 'uuid',
+		'id' => 'string',
+		'branch_id' => 'string',
 		'amount' => 'float',
 		'expense_date' => 'datetime'
 	];

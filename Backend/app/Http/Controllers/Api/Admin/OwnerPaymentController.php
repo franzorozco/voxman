@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Admin\Finance;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -11,6 +11,10 @@ class OwnerPaymentController extends Controller
     public function index()
     {
         $payments = OwnerPayment::with('owner.user.profile')->orderBy('payment_date', 'desc')->get();
+        $payments->map(function ($payment) {
+            $payment->amount = $payment->total_amount;
+            return $payment;
+        });
         return response()->json($payments);
     }
 
@@ -20,13 +24,16 @@ class OwnerPaymentController extends Controller
             'owner_id' => 'required|uuid',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'payment_method' => 'nullable|string|max:50',
-            'reference_number' => 'nullable|string|max:100',
-            'notes' => 'nullable|string',
             'type' => 'required|in:withdrawal,deposit'
         ]);
 
-        $payment = OwnerPayment::create($request->all());
+        $data = $request->all();
+        $data['total_amount'] = $request->amount;
+        $data['status'] = 'paid';
+
+        $payment = OwnerPayment::create($data);
+        
+        $payment->amount = $payment->total_amount;
 
         return response()->json($payment->load('owner.user.profile'), 201);
     }
@@ -43,14 +50,17 @@ class OwnerPaymentController extends Controller
             'owner_id' => 'required|uuid',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'payment_method' => 'nullable|string|max:50',
-            'reference_number' => 'nullable|string|max:100',
-            'notes' => 'nullable|string',
             'type' => 'required|in:withdrawal,deposit'
         ]);
 
         $payment = OwnerPayment::findOrFail($id);
-        $payment->update($request->all());
+        
+        $data = $request->all();
+        $data['total_amount'] = $request->amount;
+        
+        $payment->update($data);
+        
+        $payment->amount = $payment->total_amount;
 
         return response()->json($payment->load('owner.user.profile'));
     }

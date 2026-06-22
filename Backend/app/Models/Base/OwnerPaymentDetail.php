@@ -6,8 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\OwnerPayment;
-use App\Models\SaleDetail;
+use App\Models\Actors\Owner;
+use App\Models\Finance\OwnerPayment;
+use App\Models\Sales\SaleDetail;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 

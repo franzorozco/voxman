@@ -17,6 +17,20 @@ class SaleDetail extends BaseSaleDetail
 		'subtotal'
 	];
 
+	public static function boot()
+	{
+		parent::boot();
+
+		static::creating(function ($saleDetail) {
+			if (empty($saleDetail->owner_id) && !empty($saleDetail->variant_id)) {
+				$variant = \App\Models\Catalog\ProductVariant::with('product')->find($saleDetail->variant_id);
+				if ($variant && $variant->product) {
+					$saleDetail->owner_id = $variant->product->owner_id;
+				}
+			}
+		});
+	}
+
 	public function product_variant()
 	{
 		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();

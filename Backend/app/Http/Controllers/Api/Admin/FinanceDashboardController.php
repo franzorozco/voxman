@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Admin\Finance;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -34,10 +34,10 @@ class FinanceDashboardController extends Controller
             $expensesAssumed = ExpenseSplit::where('owner_id', $owner->id)->sum('amount');
             
             // 3. Retiros
-            $withdrawals = OwnerPayment::where('owner_id', $owner->id)->where('type', 'withdrawal')->sum('amount');
+            $withdrawals = OwnerPayment::where('owner_id', $owner->id)->where('type', 'withdrawal')->sum('total_amount');
             
             // 4. Inyecciones
-            $deposits = OwnerPayment::where('owner_id', $owner->id)->where('type', 'deposit')->sum('amount');
+            $deposits = OwnerPayment::where('owner_id', $owner->id)->where('type', 'deposit')->sum('total_amount');
             
             // 5. Saldo Actual
             $currentBalance = $salesRevenue - $expensesAssumed - $withdrawals + $deposits;

@@ -36,7 +36,8 @@ import {
   UserCircle2,
   Store,
   Ticket,
-  AlertTriangle
+  AlertTriangle,
+  DollarSign
 } from "lucide-react";
 
 export default function DashboardLayout() {
@@ -223,6 +224,21 @@ export default function DashboardLayout() {
                   label="Configuración"
                 />
               </CanAccess>
+
+            </div>
+
+            {/* FINANZAS */}
+            <div className="nav-section">
+
+              <p className="section-title">
+                {!collapsed && "FINANZAS"}
+              </p>
+
+              <NavItem
+                to="/dashboard/finance"
+                icon={DollarSign}
+                label="Finanzas"
+              />
 
             </div>
 
