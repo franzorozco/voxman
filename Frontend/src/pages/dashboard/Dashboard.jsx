@@ -143,265 +143,133 @@ export default function DashboardLayout() {
           </div>
 
           <nav className="sidebar-nav">
-
-            {/* PANEL */}
+            
+            {/* 1. DASHBOARD */}
             <div className="nav-section">
-
               <p className="section-title">
-                {!collapsed && "PANEL"}
+                {!collapsed && "RESUMEN"}
               </p>
-
-            <NavItem
-              to="/dashboard"
-              icon={LayoutDashboard}
-              label="Dashboard"
-              end
-            />
-
+              <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" end />
             </div>
 
-            {/* CATÁLOGO */}
+            {/* 2. VENTAS Y FACTURACIÓN */}
             <div className="nav-section">
-
               <p className="section-title">
-                {!collapsed && "CATÁLOGO"}
+                {!collapsed && "VENTAS Y COMERCIAL"}
               </p>
+              <NavItem to="/dashboard/orders" icon={ShoppingCart} label="Punto de Venta" />
+              <NavItem to="/dashboard/sales" icon={BarChart3} label="Historial de Ventas" />
+              <NavItem to="/dashboard/clients" icon={Users} label="Clientes" />
+              <NavItem to="/dashboard/returns" icon={RotateCcw} label="Devoluciones" />
+              <NavItem to="/dashboard/carts" icon={ShoppingBasket} label="Carritos / Proformas" />
+            </div>
 
+            {/* 3. CATÁLOGO E INVENTARIO */}
+            <div className="nav-section">
+              <p className="section-title">
+                {!collapsed && "CATÁLOGO E INVENTARIO"}
+              </p>
               <CanAccess permission="view_products">
-                <NavItem
-                  to="/dashboard/products"
-                  icon={Package}
-                  label="Productos"
-                />
+                <NavItem to="/dashboard/products" icon={Package} label="Productos" />
               </CanAccess>
-
               <CanAccess permission="view_products">
-                <NavItem
-                  to="/dashboard/bundles"
-                  icon={PackagePlus}
-                  label="Conjuntos"
-                />
+                <NavItem to="/dashboard/bundles" icon={PackagePlus} label="Conjuntos (Combos)" />
               </CanAccess>
-
-
-
               <CanAccess permission="view_inventory">
-                <NavItem
-                  to="/dashboard/inventory"
-                  icon={Boxes}
-                  label="Inventario"
-                />
+                <NavItem to="/dashboard/inventory" icon={Boxes} label="Stock Global" />
               </CanAccess>
-
               <CanAccess permission="manage_inventory">
-                <NavItem
-                  to="/dashboard/inventory/quarantine"
-                  icon={AlertTriangle}
-                  label="Mermas/Cuarentena"
-                />
+                <NavItem to="/dashboard/inventory/quarantine" icon={AlertTriangle} label="Mermas y Cuarentena" />
               </CanAccess>
-
-              <CanAccess permission="view_suppliers">
-                <NavItem
-                  to="/dashboard/suppliers"
-                  icon={Truck}
-                  label="Proveedores"
-                />
-              </CanAccess>
-
-              <CanAccess permission="view_purchases">
-                <NavItem
-                  to="/dashboard/purchases"
-                  icon={FileText}
-                  label="Compras"
-                />
-              </CanAccess>
-
-              <CanAccess permission="manage_settings">
-                <NavItem
-                  to="/dashboard/settings"
-                  icon={Layers3}
-                  label="Configuración"
-                />
-              </CanAccess>
-
+              {/* Placeholders */}
+              <NavItem to="/dashboard/inventory/transfers" icon={Truck} label="Traslados (Próximamente)" />
             </div>
 
-            {/* FINANZAS */}
+            {/* 4. COMPRAS Y ABASTECIMIENTO */}
             <div className="nav-section">
+              <p className="section-title">
+                {!collapsed && "ABASTECIMIENTO"}
+              </p>
+              <CanAccess permission="view_suppliers">
+                <NavItem to="/dashboard/suppliers" icon={Truck} label="Proveedores" />
+              </CanAccess>
+              <CanAccess permission="view_purchases">
+                <NavItem to="/dashboard/purchases" icon={FileText} label="Órdenes de Compra" />
+              </CanAccess>
+              {/* Placeholders */}
+              <NavItem to="/dashboard/purchases/reception" icon={Package} label="Recepción (Próximamente)" />
+              <NavItem to="/dashboard/purchases/accounts-payable" icon={DollarSign} label="Cuentas por Pagar (Próx.)" />
+            </div>
 
+            {/* 5. FINANZAS Y CONTABILIDAD */}
+            <div className="nav-section">
               <p className="section-title">
                 {!collapsed && "FINANZAS"}
               </p>
-
-              <NavItem
-                to="/dashboard/finance"
-                icon={DollarSign}
-                label="Finanzas"
-              />
-
+              <NavItem to="/dashboard/finance" icon={DollarSign} label="Tesorería y Capital" />
+              {/* Placeholders */}
+              <NavItem to="/dashboard/finance/cashflow" icon={BarChart3} label="Flujo de Caja (Próx.)" />
+              <NavItem to="/dashboard/finance/reports" icon={FileText} label="Reportes Contables (Próx.)" />
             </div>
 
-            {/* COMERCIAL */}
+            {/* 6. RECURSOS HUMANOS */}
             <div className="nav-section">
-
-              <p className="section-title">
-                {!collapsed && "COMERCIAL"}
-              </p>
-
-              <NavItem
-                to="/dashboard/orders"
-                icon={ShoppingCart}
-                label="Órdenes"
-              />
-
-              <NavItem
-                to="/dashboard/sales"
-                icon={BarChart3}
-                label="Ventas"
-              />
-
-              <NavItem
-                to="/dashboard/clients"
-                icon={Users}
-                label="Clientes"
-              />
-
-              <NavItem
-                to="/dashboard/returns"
-                icon={RotateCcw}
-                label="Devoluciones"
-              />
-
-              <NavItem
-                to="/dashboard/carts"
-                icon={ShoppingBasket}
-                label="Carritos"
-              />
-
-            </div>
-
-            {/* MARKETING */}
-            <div className="nav-section">
-
-              <p className="section-title">
-                {!collapsed && "MARKETING"}
-              </p>
-
-              <CanAccess permission="view_promotions">
-                <NavItem
-                  to="/dashboard/promotions"
-                  icon={BadgePercent}
-                  label="Promociones"
-                />
-              </CanAccess>
-
-              <CanAccess permission="view_giftcards">
-                <NavItem
-                  to="/dashboard/giftcards"
-                  icon={Ticket}
-                  label="Giftcards"
-                />
-              </CanAccess>
-            </div>
-
-            {/* LOGÍSTICA */}
-            <div className="nav-section">
-
-              <p className="section-title">
-                {!collapsed && "LOGÍSTICA"}
-              </p>
-
-              <NavItem
-                to="/dashboard/shipping"
-                icon={Truck}
-                label="Envíos"
-              />
-
-            </div>
-
-            {/* RECURSOS HUMANOS */}
-            <div className="nav-section">
-
               <p className="section-title">
                 {!collapsed && "RECURSOS HUMANOS"}
               </p>
-
-              <NavItem
-                to="/dashboard/employees"
-                icon={UserRoundSearch}
-                label="Empleados"
-              />
-
-              <NavItem
-                to="/dashboard/payroll"
-                icon={FileText}
-                label="Nómina y Pagos"
-              />
-
-              <NavItem
-                to="/dashboard/attendances"
-                icon={BarChart3}
-                label="Control Asistencia"
-              />
-
+              <NavItem to="/dashboard/employees" icon={UserRoundSearch} label="Personal" />
+              <NavItem to="/dashboard/attendances" icon={BarChart3} label="Asistencia" />
+              <NavItem to="/dashboard/payroll" icon={FileText} label="Nómina y Pagos" />
             </div>
 
-            {/* SISTEMA */}
+            {/* 7. MARKETING Y FIDELIZACIÓN */}
             <div className="nav-section">
+              <p className="section-title">
+                {!collapsed && "MARKETING"}
+              </p>
+              <CanAccess permission="view_promotions">
+                <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />
+              </CanAccess>
+              <CanAccess permission="view_giftcards">
+                <NavItem to="/dashboard/giftcards" icon={Ticket} label="Giftcards" />
+              </CanAccess>
+              {/* Placeholders */}
+              <NavItem to="/dashboard/marketing/campaigns" icon={Layers3} label="Campañas (Próximamente)" />
+            </div>
 
+            {/* 8. LOGÍSTICA */}
+            <div className="nav-section">
+              <p className="section-title">
+                {!collapsed && "LOGÍSTICA"}
+              </p>
+              <NavItem to="/dashboard/shipping" icon={Truck} label="Rutas de Envío" />
+            </div>
+
+            {/* 9. SISTEMA Y CONFIGURACIÓN */}
+            <div className="nav-section">
               <p className="section-title">
                 {!collapsed && "SISTEMA"}
               </p>
-
               <CanAccess permission="view_branches">
-                <NavItem
-                  to="/dashboard/branches"
-                  icon={Store}
-                  label="Sucursales"
-                />
+                <NavItem to="/dashboard/branches" icon={Store} label="Sucursales" />
               </CanAccess>
-
               <CanAccess permission="view_users">
-                <NavItem
-                  to="/dashboard/users"
-                  icon={Users}
-                  label="Usuarios"
-                />
+                <NavItem to="/dashboard/users" icon={Users} label="Usuarios" />
               </CanAccess>
-
               <CanAccess permission="manage_roles">
-                <NavItem
-                  to="/dashboard/roles"
-                  icon={Shield}
-                  label="Roles"
-                />
+                <NavItem to="/dashboard/roles" icon={Shield} label="Roles" />
               </CanAccess>
-
               <CanAccess permission="manage_roles">
-                <NavItem
-                  to="/dashboard/permissions"
-                  icon={KeyRound}
-                  label="Permisos"
-                />
+                <NavItem to="/dashboard/permissions" icon={KeyRound} label="Permisos" />
               </CanAccess>
-
               <CanAccess permission="manage_settings">
-                <NavItem
-                  to="/dashboard/settings"
-                  icon={Settings}
-                  label="Configuración"
-                />
+                <NavItem to="/dashboard/settings" icon={Settings} label="Ajustes Generales" />
               </CanAccess>
-
               <CanAccess permission="manage_settings">
-                <NavItem
-                  to="/dashboard/logs"
-                  icon={FileText}
-                  label="Logs"
-                />
+                <NavItem to="/dashboard/logs" icon={FileText} label="Auditoría (Logs)" />
               </CanAccess>
             </div>
+
           </nav>
           <div className="sidebar-footer">
             {!collapsed && `VOXman © ${new Date().getFullYear()}`}

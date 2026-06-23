@@ -42,7 +42,8 @@ class Expense extends Model
 		'id' => 'string',
 		'branch_id' => 'string',
 		'amount' => 'float',
-		'expense_date' => 'datetime'
+		'expense_date' => 'datetime',
+		'is_recurring' => 'bool'
 	];
 
 	public function branch()

@@ -10,7 +10,11 @@ class ExpenseSplit extends BaseExpenseSplit
 		'expense_id',
 		'owner_id',
 		'amount',
-		'percentage'
+		'percentage',
+        'status',
+        'deducted_from_wallet',
+        'fund_source',
+        'paid_at'
 	];
 
 	protected static function boot()

@@ -24,7 +24,11 @@ class OwnerPaymentController extends Controller
             'owner_id' => 'required|uuid',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'type' => 'required|in:withdrawal,deposit'
+            'type' => 'required|in:withdrawal,deposit',
+            'fund_source' => 'required|string|in:cash,bank',
+            'notes' => 'nullable|string',
+            'reference_number' => 'nullable|string',
+            'payment_method' => 'nullable|string'
         ]);
 
         $data = $request->all();
@@ -50,10 +54,21 @@ class OwnerPaymentController extends Controller
             'owner_id' => 'required|uuid',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
-            'type' => 'required|in:withdrawal,deposit'
+            'type' => 'required|in:withdrawal,deposit',
+            'fund_source' => 'required|string|in:cash,bank',
+            'notes' => 'nullable|string',
+            'reference_number' => 'nullable|string',
+            'payment_method' => 'nullable|string'
         ]);
 
         $payment = OwnerPayment::findOrFail($id);
+        
+        if ($payment->status !== 'paid') {
+            return response()->json(['error' => 'Solo se pueden editar movimientos en estado pagado.'], 400);
+        }
+        if ($payment->created_at->diffInHours(now()) > 24) {
+            return response()->json(['error' => 'No se puede editar un movimiento pasadas 24 horas desde su creación.'], 400);
+        }
         
         $data = $request->all();
         $data['total_amount'] = $request->amount;
@@ -67,8 +82,30 @@ class OwnerPaymentController extends Controller
 
     public function destroy($id)
     {
+        return response()->json(['error' => 'No se puede eliminar de forma definitiva. Use Archivar o Anular.'], 400);
+    }
+
+    public function archive($id)
+    {
         $payment = OwnerPayment::findOrFail($id);
-        $payment->delete();
-        return response()->json(['message' => 'Owner payment deleted successfully']);
+        
+        $payment->status = 'archived';
+        $payment->save();
+
+        return response()->json(['message' => 'Movimiento archivado. Ya no aparecerá en la lista principal pero sigue en el Kardex y contabilidad.']);
+    }
+
+    public function annul($id)
+    {
+        $payment = OwnerPayment::findOrFail($id);
+        
+        if ($payment->created_at->diffInHours(now()) > 24) {
+            return response()->json(['error' => 'No se puede anular un movimiento pasadas 24 horas. Use Archivar en su lugar.'], 400);
+        }
+
+        $payment->status = 'annulled';
+        $payment->save();
+
+        return response()->json(['message' => 'Movimiento anulado exitosamente.']);
     }
 }

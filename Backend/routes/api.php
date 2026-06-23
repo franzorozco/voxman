@@ -305,6 +305,7 @@ Route::middleware([
 
     Route::prefix('finance')->group(function () {
         Route::get('dashboard', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'index']);
+        Route::get('owners/{id}/ledger', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'ownerLedger']);
         
         Route::prefix('expenses')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'index']);
@@ -312,6 +313,11 @@ Route::middleware([
             Route::get('/{id}', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'show']);
             Route::put('/{id}', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'update']);
             Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'destroy']);
+            
+            Route::post('/{id}/archive', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'archive']);
+            Route::post('/{id}/annul', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'annul']);
+            
+            Route::post('/splits/{id}/pay', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'paySplit']);
         });
 
         Route::prefix('owner-payments')->group(function () {
@@ -320,6 +326,9 @@ Route::middleware([
             Route::get('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'show']);
             Route::put('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'update']);
             Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'destroy']);
+            
+            Route::post('/{id}/archive', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'archive']);
+            Route::post('/{id}/annul', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'annul']);
         });
     });
 

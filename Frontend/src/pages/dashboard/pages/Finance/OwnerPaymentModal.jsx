@@ -10,6 +10,7 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
     amount: "",
     payment_date: new Date().toISOString().split('T')[0],
     type: "withdrawal",
+    fund_source: "cash",
     payment_method: "",
     reference_number: "",
     notes: ""
@@ -26,6 +27,7 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
         amount: payment.amount || "",
         payment_date: payment.payment_date ? payment.payment_date.split('T')[0] : new Date().toISOString().split('T')[0],
         type: payment.type || "withdrawal",
+        fund_source: payment.fund_source || "cash",
         payment_method: payment.payment_method || "",
         reference_number: payment.reference_number || "",
         notes: payment.notes || ""
@@ -101,6 +103,14 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div className="form-group">
+              <label style={{ color: 'var(--color-primary)' }}>Origen / Destino de Fondos</label>
+              <select name="fund_source" value={formData.fund_source} onChange={handleChange}>
+                <option value="cash">Caja Física (Tienda)</option>
+                <option value="bank">Cuenta Bancaria (Marca)</option>
+              </select>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>

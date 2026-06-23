@@ -977,26 +977,19 @@ CREATE TABLE expenses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
     branch_id UUID REFERENCES branches(id),
-
     name VARCHAR(150), -- alquiler, luz, internet
     amount DECIMAL(10,2),
-
     expense_date DATE,
-
     type VARCHAR(50) CHECK (type IN ('fixed','variable')),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE owner_expense_shares (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
     expense_id UUID REFERENCES expenses(id),
     owner_id UUID REFERENCES owners(id),
-
     percentage DECIMAL(5,2), -- 80%, 20%
     amount DECIMAL(10,2),
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -12,7 +12,11 @@ class OwnerPayment extends BaseOwnerPayment
 		'total_amount',
 		'status',
 		'payment_date',
-		'type'
+		'type',
+		'fund_source',
+        'notes',
+        'reference_number',
+        'payment_method'
 	];
 
 	protected static function boot()
