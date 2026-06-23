@@ -80,3 +80,55 @@
 
 
 
+
+
+
+/* ----------------------------------------------------
+   TEMA DEL POS CLARO
+---------------------------------------------------- */
+.pos-theme {
+  --color-primary: #000000;       /* Negro puro */
+  --color-primary-text: #ffffff;
+  --color-primary-hover: #333333;
+  --color-secondary: #e5e7eb;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #f59e0b;       
+  --color-success: #10b981;       
+  
+  --bg-main: #ffffff;             /* Fondo blanco puro */
+  --bg-card: #ffffff;             
+  --bg-input: #ffffff;            
+  
+  --text-main: #000000;           /* Texto negro puro */
+  --text-muted: #6b7280;          
+  
+  --border-color: #000000;        /* Bordes negros */
+  --border-focus: #000000;
+  --bg-overlay: rgba(0, 0, 0, 0.05);
+}
+
+/* ----------------------------------------------------
+   TEMA DEL POS OSCURO
+---------------------------------------------------- */
+.pos-theme-dark {
+  --color-primary: #ffffff;       /* Blanco puro */
+  --color-primary-text: #000000;       
+  --color-primary-hover: #e5e7eb;
+  --color-secondary: #1f2937;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #fbbf24;       
+  --color-success: #34d399;       
+  
+  --bg-main: #0a0a0a;             /* Fondo casi negro puro (muy oscuro) */
+  --bg-card: #0a0a0a;             
+  --bg-input: #0a0a0a;            
+  
+  --text-main: #ffffff;           /* Texto blanco puro */
+  --text-muted: #9ca3af; 
+  
+  --border-color: #ffffff;        /* Bordes blancos */
+  --border-focus: #ffffff;
+  --bg-overlay: rgba(255, 255, 255, 0.05);
+}

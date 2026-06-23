@@ -13,6 +13,10 @@ import Register from "../pages/auth/Register";
 /* DASHBOARD LAYOUT */
 import DashboardLayout from "../pages/dashboard/Dashboard";
 
+/* POS */
+import PosLayout from "../pages/pos/Pos";
+import Terminal from "../pages/pos/pages/terminal/Terminal";
+
 /* DASHBOARD PAGES */
 import DashboardHome from "../pages/dashboard/pages/home/Home";
 import Users from "../pages/dashboard/pages/users/Users";
@@ -58,6 +62,7 @@ const ThemeLayout = ({ theme }) => (
 export default function AppRouter() {
   const { isDark } = useThemeStore();
   const adminThemeClass = isDark ? "admin-theme-dark" : "admin-theme";
+  const posThemeClass = isDark ? "pos-theme-dark" : "pos-theme";
 
   return (
     <BrowserRouter>
@@ -115,6 +120,18 @@ export default function AppRouter() {
             <Route path="sales" element={<Sales />} />
             <Route path="finance" element={<Finance />} />
 
+          </Route>
+        </Route>
+
+        {/* ================= POS (POS THEME) ================= */}
+        <Route element={<ThemeLayout theme={posThemeClass} />}>
+          <Route path="/pos" element={
+              <ProtectedRoute>
+                <PosLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Terminal />} />
           </Route>
         </Route>
 
