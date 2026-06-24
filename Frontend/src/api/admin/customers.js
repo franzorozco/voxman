@@ -7,7 +7,9 @@ export const getCustomers = (params) =>
 
 export const getCustomerById = (id) => 
     api.get(`${BASE_URL}/${id}`);
-export const createCustomer = (data) => api.post(BASE_URL, data);
+
+export const createCustomer = (data) => 
+    api.post(BASE_URL, data);
 
 export const updateCustomer = (id, data) => 
     api.put(`${BASE_URL}/${id}`, data);

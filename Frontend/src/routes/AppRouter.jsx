@@ -50,6 +50,7 @@ import Payroll from "../pages/dashboard/pages/Payroll/Payroll.jsx";
 import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
 import Sales from "../pages/dashboard/pages/Sales/Sales.jsx";
 import Finance from "../pages/dashboard/pages/Finance/Finance.jsx";
+import Carts from "../pages/dashboard/pages/Carts/Carts.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -119,6 +120,7 @@ export default function AppRouter() {
             <Route path="attendances" element={<Attendances />} />
             <Route path="sales" element={<Sales />} />
             <Route path="finance" element={<Finance />} />
+            <Route path="carts" element={<Carts />} />
 
           </Route>
         </Route>

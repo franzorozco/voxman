@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\Admin\PurchaseController;
 use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\SaleController;
 use App\Http\Controllers\Api\Admin\SizeController;
+use App\Http\Controllers\Api\Admin\CartController;
 use App\Http\Controllers\Api\Admin\SupplierController;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
@@ -299,6 +300,14 @@ Route::middleware([
         Route::get('/{id}', [SaleController::class, 'show']);
         Route::put('/{id}', [SaleController::class, 'update']);
         Route::delete('/{id}', [SaleController::class, 'destroy']);
+    });
+
+    Route::prefix('carts')->group(function () {
+        Route::get('/', [CartController::class, 'index']);
+        Route::get('/{id}', [CartController::class, 'show']);
+        Route::post('/{id}/convert', [CartController::class, 'convert']);
+        Route::post('/{id}/reminder', [CartController::class, 'sendReminder']);
+        Route::delete('/{id}', [CartController::class, 'destroy']);
     });
 
     Route::get('supplier-returns', [\App\Http\Controllers\Api\Admin\SupplierReturnController::class, 'index']);
