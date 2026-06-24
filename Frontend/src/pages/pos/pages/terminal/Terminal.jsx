@@ -46,7 +46,7 @@ const PosHome = () => {
     ];
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center bg-[var(--bg-main)] min-h-[calc(100vh-64px)]">
+        <div className="flex-1 flex flex-col items-center justify-center bg-[var(--bg-main)] w-full h-full">
             
             {/* The grid is explicitly set to 3 columns, and we constrain the max width to replicate the exact image proportions */}
             <div className="grid grid-cols-3 gap-3 w-full max-w-4xl px-8">

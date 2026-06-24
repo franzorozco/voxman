@@ -43,6 +43,16 @@ class LoginController extends Controller
                 'full_name' => optional($user->profile)->first_name . ' ' . optional($user->profile)->last_name_paternal,
                 'photo' => optional($user->profile)->photo ?? null,
 
+                // 👇 INFORMACION DE EMPLEADO (SI APLICA)
+                'employee' => $user->employee ? [
+                    'id' => $user->employee->id,
+                    'branch_id' => $user->employee->branch_id,
+                    'branch' => $user->employee->branch ? [
+                        'id' => $user->employee->branch->id,
+                        'name' => $user->employee->branch->name
+                    ] : null,
+                ] : null,
+
                 // 👇 ROLES Y PERMISOS
                 'roles' => $user->getRoleNames(), 
                 'permissions' => $user->getAllPermissions()->pluck('name'),

@@ -333,3 +333,18 @@ Route::middleware([
     });
 
 });
+
+/* =========================================================
+   RUTAS DEL PUNTO DE VENTA (POS)
+========================================================= */
+Route::middleware([
+    'auth:sanctum',
+    'pos.access'
+])->prefix('v1/pos')->group(function () {
+    
+    // Aquí irán las rutas específicas del POS como:
+    // Route::get('/products', [PosProductController::class, 'index']);
+    // Route::post('/checkout', [PosSaleController::class, 'store']);
+    // Route::post('/cash-register/open', [PosCashRegisterController::class, 'open']);
+    
+});

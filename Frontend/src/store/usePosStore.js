@@ -4,12 +4,14 @@ export const usePosStore = create((set, get) => ({
     // Estado de la caja y sucursal
     cashRegister: null,
     branchId: null,
+    branchName: '',
 
     // Estado del carrito
     cartItems: [],
     selectedCustomer: null, // Si es null, es cliente genérico
 
-    // Acciones de Caja
+    // Acciones de Caja y Sucursal
+    setBranchId: (branchId, branchName = '') => set({ branchId, branchName }),
     setCashRegister: (register, branchId) => set({ cashRegister: register, branchId }),
     clearCashRegister: () => set({ cashRegister: null, branchId: null, cartItems: [], selectedCustomer: null }),
 

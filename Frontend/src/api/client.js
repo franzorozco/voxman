@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../config/api";
+import { usePosStore } from "../store/usePosStore";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -14,6 +15,12 @@ api.interceptors.request.use((config) => {
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  const posBranchId = usePosStore.getState().branchId;
+  
+  if (posBranchId) {
+    config.headers['X-Branch-Id'] = posBranchId;
   }
 
   return config;

@@ -12,6 +12,14 @@ export default function Navbar({ logo }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isAdmin = user?.roles?.includes("Administrador");
+  
+  // Verificamos si tiene cualquier permiso administrativo o el rol Administrador para entrar al Dashboard
+  const hasDashboardAccess = isAdmin || user?.permissions?.some(p => 
+    p.startsWith('view_') || p.startsWith('manage_') || p.startsWith('create_') || p.startsWith('edit_')
+  );
+
+  // Verificamos si tiene alguno de los permisos de ventas para entrar al Punto de Venta
+  const hasPosAccess = user?.permissions?.includes("sell_own_branch") || user?.permissions?.includes("sell_all_branches");
 
   const menuRef = useRef();
 
@@ -112,9 +120,15 @@ export default function Navbar({ logo }) {
                 Favoritos
               </Link>
 
-              {isAdmin && (
+              {hasDashboardAccess && (
                 <Link to="/dashboard" onClick={closeMenu}>
                   Administración
+                </Link>
+              )}
+              
+              {hasPosAccess && (
+                <Link to="/pos" onClick={closeMenu}>
+                  Punto de venta
                 </Link>
               )}
 
@@ -180,9 +194,15 @@ export default function Navbar({ logo }) {
                     Favoritos
                   </Link>
 
-                  {isAdmin && (
+                  {hasDashboardAccess && (
                     <Link to="/dashboard">
                       Administración
+                    </Link>
+                  )}
+                  
+                  {hasPosAccess && (
+                    <Link to="/pos">
+                      Punto de venta
                     </Link>
                   )}
 

@@ -34,4 +34,9 @@ class Employee extends BaseEmployee
     {
         return $this->hasMany(\App\Models\Sales\Sale::class, 'employee_id');
     }
+
+    public function branch()
+    {
+        return $this->belongsTo(\App\Models\Branch\Branch::class, 'branch_id');
+    }
 }
