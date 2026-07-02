@@ -51,6 +51,9 @@ import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
 import Sales from "../pages/dashboard/pages/Sales/Sales.jsx";
 import Finance from "../pages/dashboard/pages/Finance/Finance.jsx";
 import Carts from "../pages/dashboard/pages/Carts/Carts.jsx";
+import Returns from "../pages/dashboard/pages/Returns/Returns.jsx";
+import CashFlow from "../pages/dashboard/pages/Finance/CashFlow/CashFlow.jsx";
+import FinanceReports from "../pages/dashboard/pages/Finance/Reports/Reports.jsx";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -120,7 +123,10 @@ export default function AppRouter() {
             <Route path="attendances" element={<Attendances />} />
             <Route path="sales" element={<Sales />} />
             <Route path="finance" element={<Finance />} />
+            <Route path="finance/cashflow" element={<CashFlow />} />
+            <Route path="finance/reports" element={<FinanceReports />} />
             <Route path="carts" element={<Carts />} />
+            <Route path="returns" element={<Returns />} />
 
           </Route>
         </Route>

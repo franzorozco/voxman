@@ -65,3 +65,9 @@ p {
     display: none !important;
   }
 }
+
+/* Fix global para dropdowns (options heredan el color del select para evitar bug en Chromium) */
+select option {
+  background-color: inherit;
+  color: inherit;
+}

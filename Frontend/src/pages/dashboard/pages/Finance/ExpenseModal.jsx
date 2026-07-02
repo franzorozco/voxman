@@ -12,7 +12,7 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
     amount: "",
     expense_date: new Date().toISOString().split('T')[0],
     category: "General",
-    status: "paid",
+    status: "pending",
     split_type: "equal",
     owner_id: "",
     splits: [],
@@ -23,9 +23,11 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
   });
 
   const [owners, setOwners] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [splitLoadingId, setSplitLoadingId] = useState(null);
+  const [splitError, setSplitError] = useState(null);
   
   const user = useAuthStore(state => state.user);
 
@@ -47,14 +49,16 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
 
   useEffect(() => {
     fetchOwners();
+    fetchBranches();
     if (expense) {
       setFormData({
+        branch_id: expense.branch_id || "",
         name: expense.name || "",
         description: expense.description || "",
         amount: expense.amount || "",
         expense_date: expense.expense_date ? expense.expense_date.split('T')[0] : new Date().toISOString().split('T')[0],
         category: expense.category || "General",
-        status: expense.status || "paid",
+        status: expense.status || "pending",
         split_type: expense.split_type || "equal",
         owner_id: expense.split_type === 'single_owner' && expense.expense_splits?.length ? expense.expense_splits[0].owner_id : "",
         splits: expense.split_type === 'custom' ? expense.expense_splits.map(s => ({ owner_id: s.owner_id, amount: s.amount })) : [],
@@ -65,6 +69,20 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
       });
     }
   }, [expense]);
+
+  const fetchBranches = async () => {
+    try {
+      // Usa fetch o getBranches si lo importas
+      const { getBranches } = await import('../../../../api/admin/branches');
+      const res = await getBranches();
+      setBranches(res.data || res);
+      if (!expense && res.data && res.data.length > 0) {
+        setFormData(prev => ({ ...prev, branch_id: res.data[0].id }));
+      }
+    } catch (error) {
+      console.error("Error al cargar sucursales", error);
+    }
+  };
 
   const fetchOwners = async () => {
     try {
@@ -145,9 +163,14 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
     }
   };
 
-  const handlePaySplit = async (splitId, deductedFromWallet, fundSource) => {
+  const handlePaySplit = async (splitId, deductedFromWallet, fundSource, branchId) => {
+    setSplitError(null);
     if (deductedFromWallet && !fundSource) {
-      toast.error("Debes seleccionar de qué cuenta saldrá el dinero (Caja o Banco).");
+      setSplitError("Debes seleccionar de qué cuenta saldrá el dinero (Caja o Banco).");
+      return;
+    }
+    if (deductedFromWallet && !branchId) {
+      setSplitError("Debes seleccionar de qué sucursal se hará el descuento.");
       return;
     }
     
@@ -155,12 +178,13 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
       setSplitLoadingId(splitId);
       await payExpenseSplit(splitId, { 
         deducted_from_wallet: deductedFromWallet,
-        fund_source: fundSource
+        fund_source: fundSource,
+        branch_id: branchId
       });
       toast.success("Cuota pagada correctamente");
       onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.error || "Error al procesar el pago");
+      setSplitError(error.response?.data?.error || "Error al procesar el pago");
     } finally {
       setSplitLoadingId(null);
     }
@@ -206,45 +230,70 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                               </div>
                             ) : isMySplit ? (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px', paddingTop: '15px', borderTop: '1px dashed var(--border-color)' }}>
-                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: 'var(--text-main)', cursor: 'pointer', background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', border: formData.deducted_from_wallet ? '1px solid var(--color-primary)' : '1px solid var(--border-color)', transition: 'all 0.2s' }}>
-                                  <input 
-                                    type="checkbox" 
-                                    checked={formData.deducted_from_wallet}
-                                    onChange={(e) => setFormData({...formData, deducted_from_wallet: e.target.checked})}
-                                    style={{ marginTop: '3px', width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
-                                  />
-                                  <span>
-                                    <strong style={{ color: formData.deducted_from_wallet ? 'var(--color-primary)' : 'var(--text-main)', display: 'block', marginBottom: '2px' }}>Descontar de la billetera (Saldo)</strong>
-                                    Si se marca, el monto se restará de tu Saldo Disponible en la tesorería (Kardex).
-                                  </span>
-                                </label>
+                                
+                                {splitError && (
+                                  <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '13px' }}>
+                                    <strong>Error:</strong> {splitError}
+                                  </div>
+                                )}
 
-                                <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', color: '#d97706', borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                                  <strong>⚠ ADVERTENCIA:</strong><br/>
-                                  {formData.deducted_from_wallet ? 
-                                    "Tu cuota se marcará como pagada y el dinero se restará de tu Saldo Disponible en la tesorería (Kardex). Esto descontará dinero físicamente de la tienda." : 
-                                    "Tu cuota se marcará como pagada pero NO se restará dinero de tu billetera ni de la tienda. Úsalo solo si ya entregaste el dinero físico."
-                                  }
+                                <div>
+                                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '10px', display: 'block' }}>¿Cómo realizarás este pago?</label>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <div 
+                                      onClick={() => { setFormData({...formData, deducted_from_wallet: false}); setSplitError(null); }}
+                                      style={{ padding: '12px', borderRadius: '8px', border: !formData.deducted_from_wallet ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', background: !formData.deducted_from_wallet ? 'rgba(59, 130, 246, 0.05)' : 'var(--bg-card)', cursor: 'pointer', transition: 'all 0.2s' }}
+                                    >
+                                      <strong style={{ color: !formData.deducted_from_wallet ? 'var(--color-primary)' : 'var(--text-main)', display: 'block', fontSize: '14px' }}>💳 Lo pagué de mi bolsillo</strong>
+                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Solo marcar como pagado. No se descontará dinero de la tienda.</span>
+                                    </div>
+
+                                    <div 
+                                      onClick={() => { setFormData({...formData, deducted_from_wallet: true}); setSplitError(null); }}
+                                      style={{ padding: '12px', borderRadius: '8px', border: formData.deducted_from_wallet ? '2px solid var(--color-danger)' : '1px solid var(--border-color)', background: formData.deducted_from_wallet ? 'rgba(239, 68, 68, 0.05)' : 'var(--bg-card)', cursor: 'pointer', transition: 'all 0.2s' }}
+                                    >
+                                      <strong style={{ color: formData.deducted_from_wallet ? 'var(--color-danger)' : 'var(--text-main)', display: 'block', fontSize: '14px' }}>🏪 Sacar dinero de la tienda</strong>
+                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>El dinero se restará físicamente de la Caja o Banco de la tienda seleccionada.</span>
+                                    </div>
+                                  </div>
                                 </div>
 
                                 {formData.deducted_from_wallet && (
-                                  <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
-                                      ¿De qué cuenta se pagará tu cuota?
-                                    </label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                      <div 
-                                        onClick={() => setFormData({...formData, fund_source: 'cash'})}
-                                        style={{ padding: '10px', borderRadius: '6px', border: formData.fund_source === 'cash' ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', background: formData.fund_source === 'cash' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-input)', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: formData.fund_source === 'cash' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: formData.fund_source === 'cash' ? 600 : 400, transition: 'all 0.2s ease' }}
-                                      >
-                                        Caja Física
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                      <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
+                                        ¿De qué cuenta se pagará tu cuota?
+                                      </label>
+                                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                        <div 
+                                          onClick={() => setFormData({...formData, fund_source: 'cash'})}
+                                          style={{ padding: '10px', borderRadius: '6px', border: formData.fund_source === 'cash' ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', background: formData.fund_source === 'cash' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-input)', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: formData.fund_source === 'cash' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: formData.fund_source === 'cash' ? 600 : 400, transition: 'all 0.2s ease' }}
+                                        >
+                                          Caja Física
+                                        </div>
+                                        <div 
+                                          onClick={() => setFormData({...formData, fund_source: 'bank'})}
+                                          style={{ padding: '10px', borderRadius: '6px', border: formData.fund_source === 'bank' ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', background: formData.fund_source === 'bank' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-input)', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: formData.fund_source === 'bank' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: formData.fund_source === 'bank' ? 600 : 400, transition: 'all 0.2s ease' }}
+                                        >
+                                          Cuenta Bancaria
+                                        </div>
                                       </div>
-                                      <div 
-                                        onClick={() => setFormData({...formData, fund_source: 'bank'})}
-                                        style={{ padding: '10px', borderRadius: '6px', border: formData.fund_source === 'bank' ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', background: formData.fund_source === 'bank' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-input)', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: formData.fund_source === 'bank' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: formData.fund_source === 'bank' ? 600 : 400, transition: 'all 0.2s ease' }}
+                                    </div>
+                                    
+                                    <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                      <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
+                                        ¿De qué sucursal se hará el descuento?
+                                      </label>
+                                      <select 
+                                        className="form-control"
+                                        value={formData.branch_id || ""}
+                                        onChange={(e) => setFormData({...formData, branch_id: e.target.value})}
                                       >
-                                        Cuenta Bancaria
-                                      </div>
+                                        <option value="">Seleccione una sucursal</option>
+                                        {branches.map(b => (
+                                          <option key={b.id} value={b.id}>{b.name}</option>
+                                        ))}
+                                      </select>
                                     </div>
                                   </div>
                                 )}
@@ -253,8 +302,8 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                                   type="button" 
                                   className="btn-primary" 
                                   style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}
-                                  disabled={splitLoadingId === s.id || countdown > 0 || (formData.deducted_from_wallet && !formData.fund_source)}
-                                  onClick={() => handlePaySplit(s.id, formData.deducted_from_wallet, formData.fund_source)}
+                                  disabled={splitLoadingId === s.id || countdown > 0 || (formData.deducted_from_wallet && (!formData.fund_source || !formData.branch_id))}
+                                  onClick={() => handlePaySplit(s.id, formData.deducted_from_wallet, formData.fund_source, formData.branch_id)}
                                 >
                                   {splitLoadingId === s.id 
                                     ? 'Procesando...' 
@@ -280,9 +329,21 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
               </div>
             ) : (
               <>
-                <div className="form-group">
-                  <label>Concepto / Nombre del Gasto</label>
-                  <input type="text" name="name" required value={formData.name} onChange={handleChange} placeholder="Ej. Alquiler Local" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div className="form-group">
+                    <label>Sucursal</label>
+                    <select name="branch_id" value={formData.branch_id} onChange={handleChange} required>
+                      <option value="">Seleccione una sucursal</option>
+                      {branches.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Concepto / Nombre del Gasto</label>
+                    <input type="text" name="name" required value={formData.name} onChange={handleChange} placeholder="Ej. Alquiler Local" />
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -291,13 +352,6 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                     <input type="number" step="0.01" min="0" name="amount" required value={formData.amount} onChange={handleChange} placeholder="0.00" />
                   </div>
 
-                  <div className="form-group">
-                    <label>Fecha del Gasto</label>
-                    <input type="date" name="expense_date" required value={formData.expense_date} onChange={handleChange} />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                   <div className="form-group">
                     <label>Categoría</label>
                     <select name="category" value={formData.category} onChange={handleChange}>
@@ -309,32 +363,52 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                       <option value="Planilla">Planilla / Sueldos</option>
                     </select>
                   </div>
+                </div>
 
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                   <div className="form-group">
                     <label>Estado de Pago</label>
                     <select name="status" value={formData.status} onChange={handleChange}>
-                      <option value="paid">Pagado</option>
                       <option value="pending">Pendiente</option>
+                      <option value="paid">Pagado</option>
                     </select>
                   </div>
 
                   {formData.status === 'paid' && (
                     <div className="form-group">
-                      <label style={{ color: 'var(--color-primary)' }}>Origen de Fondos</label>
-                      <select name="fund_source" value={formData.fund_source} onChange={handleChange}>
-                        <option value="cash">Caja Física (Tienda)</option>
-                        <option value="bank">Cuenta Bancaria (Marca)</option>
+                      <label style={{ color: 'var(--color-primary)' }}>Origen de Fondos <span className="text-danger">*</span></label>
+                      <select name="fund_source" value={formData.fund_source} onChange={handleChange} required>
+                        <option value="">Selecciona de dónde salió el dinero</option>
+                        <option value="cash">Caja Física (Dinero en Tienda)</option>
+                        <option value="bank">Cuenta Bancaria (Transferencia)</option>
                       </select>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                        Para mantener el saldo real cuadrando con el sistema.
+                      </span>
                     </div>
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label>Descripción (Opcional)</label>
-                  <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Detalles adicionales..." style={{ minHeight: '80px' }}></textarea>
-                </div>
-
                 <div style={{ background: 'var(--bg-overlay)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: formData.is_recurring ? '1fr 1fr' : '1fr', gap: '15px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label>
+                        {formData.is_recurring ? "Fecha del Primer Cobro" : "Fecha del Gasto"}
+                      </label>
+                      <input type="date" name="expense_date" required value={formData.expense_date} onChange={handleChange} />
+                    </div>
+                    {formData.is_recurring && (
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label>Frecuencia de Recurrencia</label>
+                        <select name="recurrence_interval" value={formData.recurrence_interval} onChange={handleChange}>
+                          <option value="weekly">Semanal</option>
+                          <option value="monthly">Mensual</option>
+                          <option value="yearly">Anual</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <input 
                       type="checkbox" 
@@ -348,18 +422,15 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                   </div>
                   
                   {formData.is_recurring && (
-                    <div className="form-group">
-                      <label>Frecuencia de Recurrencia</label>
-                      <select name="recurrence_interval" value={formData.recurrence_interval} onChange={handleChange}>
-                        <option value="weekly">Semanal</option>
-                        <option value="monthly">Mensual</option>
-                        <option value="yearly">Anual</option>
-                      </select>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '5px' }}>
-                        Al marcar este gasto como pagado, se generará automáticamente el gasto del próximo ciclo en estado "Pendiente".
-                      </span>
-                    </div>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      A partir de la fecha seleccionada, al marcar este gasto como pagado, se generará automáticamente el gasto del próximo ciclo en estado "Pendiente".
+                    </span>
                   )}
+                </div>
+
+                <div className="form-group">
+                  <label>Descripción (Opcional)</label>
+                  <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Detalles adicionales..." style={{ minHeight: '80px' }}></textarea>
                 </div>
 
                 <div style={{ background: 'var(--bg-overlay)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>

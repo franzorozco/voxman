@@ -310,11 +310,26 @@ Route::middleware([
         Route::delete('/{id}', [CartController::class, 'destroy']);
     });
 
+    Route::prefix('returns')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'index']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'show']);
+        Route::post('/{id}/approve', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'approve']);
+        Route::post('/{id}/reject', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'reject']);
+    });
+    Route::prefix('cashflow')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'index']);
+        Route::post('/transfer', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'transfer']);
+        Route::post('/register/open', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'openRegister']);
+        Route::post('/register/close', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'closeRegister']);
+        Route::post('/adjustment', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'addAdjustment']);
+    });
+    
     Route::get('supplier-returns', [\App\Http\Controllers\Api\Admin\SupplierReturnController::class, 'index']);
 
     Route::prefix('finance')->group(function () {
         Route::get('dashboard', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'index']);
         Route::get('owners/{id}/ledger', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'ownerLedger']);
+        Route::get('reports', [\App\Http\Controllers\Api\Admin\FinanceReportController::class, 'index']);
         
         Route::prefix('expenses')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'index']);
@@ -336,6 +351,7 @@ Route::middleware([
             Route::put('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'update']);
             Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'destroy']);
             
+            Route::post('/transfer', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'transfer']);
             Route::post('/{id}/archive', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'archive']);
             Route::post('/{id}/annul', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'annul']);
         });

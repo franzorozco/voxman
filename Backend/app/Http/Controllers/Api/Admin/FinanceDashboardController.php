@@ -11,6 +11,7 @@ use App\Models\Finance\ExpenseSplit;
 use App\Models\Finance\Expense;
 use App\Models\Finance\Payment;
 use App\Models\Finance\PaymentMethod;
+use App\Models\Branch\Branch;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -18,132 +19,287 @@ class FinanceDashboardController extends Controller
 {
     public function index(Request $request)
     {
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        if ($startDate && $endDate) {
+            $startDate = \Carbon\Carbon::parse($startDate)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($endDate)->endOfDay();
+        }
+
+        // Dynamically recalculate proportional splits before fetching
+        $pendingExpensesQuery = \App\Models\Finance\Expense::with('expense_splits')->where('status', 'pending')->where('split_type', 'proportional');
+        if ($startDate && $endDate) {
+            $pendingExpensesQuery->whereBetween('expense_date', [$startDate, $endDate]);
+        }
+        $pendingExpensesQuery->get()->each->recalculateProportionalSplits();
+        
+        $branchIdFilter = $request->query('branch_id', 'all');
         $owners = Owner::with('user.profile')->where('is_active', true)->get();
+        $allBranches = Branch::where('is_active', true)->get();
         
         $data = [];
-        
-        $totalStoreRevenue = 0;
-        $totalStoreExpenses = Expense::whereIn('status', ['paid', 'archived'])->sum('amount');
         
         // TREASURY LOGIC FIRST
         $cashMethod = PaymentMethod::where('name', 'Efectivo')->first();
         $cashMethodId = $cashMethod ? $cashMethod->id : null;
         $giftcardMethodIds = PaymentMethod::where('name', 'ILIKE', '%giftcard%')->pluck('id')->toArray();
 
-        $cashSales = 0;
-        $bankSales = 0;
-        $giftcardSales = 0;
-
-        if ($cashMethodId) {
-            $cashSales = Payment::where('payment_method_id', $cashMethodId)->sum('amount');
-            
-            $bankQuery = Payment::where('payment_method_id', '!=', $cashMethodId);
-            if (!empty($giftcardMethodIds)) {
-                $bankQuery->whereNotIn('payment_method_id', $giftcardMethodIds);
-                $giftcardSales = Payment::whereIn('payment_method_id', $giftcardMethodIds)->sum('amount');
-            }
-            $bankSales = $bankQuery->sum('amount');
-        } else {
-            $bankSales = Payment::sum('amount');
+        $expensesQuery = Expense::whereIn('status', ['paid', 'archived']);
+        if ($branchIdFilter !== 'all') {
+            $expensesQuery->where('branch_id', $branchIdFilter);
         }
+        $totalStoreExpenses = $expensesQuery->sum('amount');
+        
+        $cashSalesQuery = Payment::where('payment_method_id', $cashMethodId);
+        $bankSalesQuery = Payment::where('payment_method_id', '!=', $cashMethodId);
+        if (!empty($giftcardMethodIds)) {
+            $bankSalesQuery->whereNotIn('payment_method_id', $giftcardMethodIds);
+        }
+        $giftcardSalesQuery = Payment::whereIn('payment_method_id', $giftcardMethodIds);
+        
+        if ($branchIdFilter !== 'all') {
+            $cashSalesQuery->whereHas('sale', function($q) use ($branchIdFilter) {
+                $q->where('branch_id', $branchIdFilter);
+            });
+            $bankSalesQuery->whereHas('sale', function($q) use ($branchIdFilter) {
+                $q->where('branch_id', $branchIdFilter);
+            });
+            $giftcardSalesQuery->whereHas('sale', function($q) use ($branchIdFilter) {
+                $q->where('branch_id', $branchIdFilter);
+            });
+        }
+        
+        $cashSales = $cashSalesQuery->sum('amount');
+        $bankSales = $bankSalesQuery->sum('amount');
+        $giftcardSales = $giftcardSalesQuery->sum('amount');
 
-        $cashExpenses = Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'cash')->sum('amount');
-        $bankExpenses = Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank')->sum('amount');
+        $cashExpensesQuery = Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'cash');
+        $bankExpensesQuery = Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank');
+        if ($branchIdFilter !== 'all') {
+            $cashExpensesQuery->where('branch_id', $branchIdFilter);
+            $bankExpensesQuery->where('branch_id', $branchIdFilter);
+        }
+        $cashExpenses = $cashExpensesQuery->sum('amount');
+        $bankExpenses = $bankExpensesQuery->sum('amount');
 
-        $cashDeposits = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'deposit')->where('fund_source', 'cash')->sum('total_amount');
-        $bankDeposits = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'deposit')->where('fund_source', 'bank')->sum('total_amount');
+        $cashDepositsQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'deposit')->where('fund_source', 'cash');
+        $bankDepositsQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'deposit')->where('fund_source', 'bank');
+        if ($branchIdFilter !== 'all') {
+            $cashDepositsQuery->where('branch_id', $branchIdFilter);
+            $bankDepositsQuery->where('branch_id', $branchIdFilter);
+        }
+        $cashDeposits = $cashDepositsQuery->sum('total_amount');
+        $bankDeposits = $bankDepositsQuery->sum('total_amount');
 
-        $cashWithdrawals = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'withdrawal')->where('fund_source', 'cash')->sum('total_amount');
-        $bankWithdrawals = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'withdrawal')->where('fund_source', 'bank')->sum('total_amount');
+        $cashWithdrawalsQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'withdrawal')->where('fund_source', 'cash');
+        $bankWithdrawalsQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'withdrawal')->where('fund_source', 'bank');
+        if ($branchIdFilter !== 'all') {
+            $cashWithdrawalsQuery->where('branch_id', $branchIdFilter);
+            $bankWithdrawalsQuery->where('branch_id', $branchIdFilter);
+        }
+        $cashWithdrawals = $cashWithdrawalsQuery->sum('total_amount');
+        $bankWithdrawals = $bankWithdrawalsQuery->sum('total_amount');
 
-        // CALCULAR BALANCE POR SOCIO
+        $totalStoreRevenue = $cashSales + $bankSales + $giftcardSales;
+
+        // CALCULAR BALANCE POR SOCIO Y SUCURSAL
+        $data['owners'] = [];
         foreach ($owners as $owner) {
-            $salesDetails = SaleDetail::with('sale.payments')
-                ->whereHas('sale', function($q) {
-                    $q->where('status', 'paid');
-                })
-                ->where('owner_id', $owner->id)
-                ->get();
-            
-            $ownerCashSales = 0;
-            $ownerBankSales = 0;
-            $salesRevenue = 0;
+            $ownerTotalRevenue = 0;
+            $ownerTotalExpenses = 0;
+            $ownerTotalPendingDebts = 0;
+            $ownerTotalWithdrawals = 0;
+            $ownerTotalDeposits = 0;
+            $ownerTotalCashBalance = 0;
+            $ownerTotalBankBalance = 0;
 
-            foreach ($salesDetails as $detail) {
-                $detailTotal = $detail->subtotal - $detail->discount;
-                $salesRevenue += $detailTotal;
-                
-                $sale = $detail->sale;
-                $saleTotal = $sale->total;
-                
-                if ($saleTotal > 0 && $sale->payments->count() > 0) {
-                    $saleCash = 0;
-                    $saleBank = 0;
-                    foreach ($sale->payments as $p) {
-                        if ($p->payment_method_id === $cashMethodId) {
-                            $saleCash += $p->amount;
-                        } else {
-                            $saleBank += $p->amount; // Giftcards treated as bank/digital for owner balance
+            $ownerBranches = [];
+
+            // We calculate per branch
+            foreach ($allBranches as $branch) {
+                // Sales
+                $salesQuery = SaleDetail::with('sale.payments')
+                    ->whereHas('sale', function($q) use ($branch, $startDate, $endDate) {
+                        $q->where('status', 'paid')->where('branch_id', $branch->id);
+                        if ($startDate && $endDate) {
+                            $q->whereBetween('created_at', [$startDate, $endDate]);
                         }
-                    }
-                    $cashRatio = $saleCash / $saleTotal;
-                    $bankRatio = 1 - $cashRatio;
-                    
-                    $ownerCashSales += ($detailTotal * $cashRatio);
-                    $ownerBankSales += ($detailTotal * $bankRatio);
-                } else {
-                    $ownerBankSales += $detailTotal; // Default to bank if no payments found
-                }
-            }
-            
-            $expensesCash = ExpenseSplit::where('owner_id', $owner->id)
-                ->whereIn('status', ['paid', 'archived'])
-                ->where('deducted_from_wallet', true)
-                ->where('fund_source', 'cash')
-                ->sum('amount');
+                    })
+                    ->where('owner_id', $owner->id);
+                $salesDetails = $salesQuery->get();
                 
-            $expensesBank = ExpenseSplit::where('owner_id', $owner->id)
-                ->whereIn('status', ['paid', 'archived'])
-                ->where('deducted_from_wallet', true)
-                ->where('fund_source', 'bank')
-                ->sum('amount');
-                
-            // Compatibilidad hacia atrás (si fund_source es nulo en splits viejos, caen a cash por defecto)
-            $expensesLegacy = ExpenseSplit::where('owner_id', $owner->id)
-                ->whereIn('status', ['paid', 'archived'])
-                ->where('deducted_from_wallet', true)
-                ->whereNull('fund_source')
-                ->sum('amount');
-            $expensesCash += $expensesLegacy;
+                $branchCashSales = 0;
+                $branchBankSales = 0;
+                $branchSalesRevenue = 0;
 
-            $expensesAssumed = $expensesCash + $expensesBank;
+                foreach ($salesDetails as $detail) {
+                    $detailTotal = $detail->subtotal - $detail->discount;
+                    $branchSalesRevenue += $detailTotal;
+                    
+                    $sale = $detail->sale;
+                    $saleTotal = $sale->total;
+                    
+                    if ($saleTotal > 0 && $sale->payments->count() > 0) {
+                        $saleCash = 0;
+                        $saleBank = 0;
+                        foreach ($sale->payments as $p) {
+                            if ($p->payment_method_id === $cashMethodId) {
+                                $saleCash += $p->amount;
+                            } else {
+                                $saleBank += $p->amount;
+                            }
+                        }
+                        $cashRatio = $saleCash / $saleTotal;
+                        $bankRatio = 1 - $cashRatio;
+                        
+                        $branchCashSales += ($detailTotal * $cashRatio);
+                        $branchBankSales += ($detailTotal * $bankRatio);
+                    } else {
+                        $branchBankSales += $detailTotal;
+                    }
+                }
+
+                // Expenses
+                $expensesCashQuery = ExpenseSplit::where('owner_id', $owner->id)
+                    ->whereHas('expense', function($q) use ($branch) {
+                        $q->where('branch_id', $branch->id);
+                    })
+                    ->whereIn('status', ['paid', 'archived'])
+                    ->where('deducted_from_wallet', true)
+                    ->where('fund_source', 'cash');
+                    
+                $expensesBankQuery = ExpenseSplit::where('owner_id', $owner->id)
+                    ->whereHas('expense', function($q) use ($branch) {
+                        $q->where('branch_id', $branch->id);
+                    })
+                    ->whereIn('status', ['paid', 'archived'])
+                    ->where('deducted_from_wallet', true)
+                    ->where('fund_source', 'bank');
+                    
+                $expensesLegacyQuery = ExpenseSplit::where('owner_id', $owner->id)
+                    ->whereHas('expense', function($q) use ($branch) {
+                        $q->where('branch_id', $branch->id);
+                    })
+                    ->whereIn('status', ['paid', 'archived'])
+                    ->where('deducted_from_wallet', true)
+                    ->whereNull('fund_source');
+
+                $pendingDebtsQuery = ExpenseSplit::where('owner_id', $owner->id)
+                    ->whereHas('expense', function($q) use ($branch) {
+                        $q->where('branch_id', $branch->id);
+                    })
+                    ->where('status', 'pending');
+
+                if ($startDate && $endDate) {
+                    $expensesCashQuery->where(function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('paid_at', [$startDate, $endDate])->orWhereBetween('created_at', [$startDate, $endDate]);
+                    });
+                    $expensesBankQuery->where(function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('paid_at', [$startDate, $endDate])->orWhereBetween('created_at', [$startDate, $endDate]);
+                    });
+                    $expensesLegacyQuery->where(function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('paid_at', [$startDate, $endDate])->orWhereBetween('created_at', [$startDate, $endDate]);
+                    });
+                    $pendingDebtsQuery->whereHas('expense', function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('expense_date', [$startDate, $endDate]);
+                    });
+                }
+
+                $expensesCash = $expensesCashQuery->sum('amount');
+                $expensesBank = $expensesBankQuery->sum('amount');
+                $expensesLegacy = $expensesLegacyQuery->sum('amount');
+                $pendingDebts = $pendingDebtsQuery->sum('amount');
+                $expensesCash += $expensesLegacy;
+                $branchExpensesAssumed = $expensesCash + $expensesBank;
+
+                // Withdrawals / Deposits
+                $withdrawalsCashQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'cash')->where('branch_id', $branch->id);
+                $withdrawalsBankQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'bank')->where('branch_id', $branch->id);
+                $depositsCashQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'cash')->where('branch_id', $branch->id);
+                $depositsBankQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'bank')->where('branch_id', $branch->id);
+
+                if ($startDate && $endDate) {
+                    $withdrawalsCashQuery->whereBetween('created_at', [$startDate, $endDate]);
+                    $withdrawalsBankQuery->whereBetween('created_at', [$startDate, $endDate]);
+                    $depositsCashQuery->whereBetween('created_at', [$startDate, $endDate]);
+                    $depositsBankQuery->whereBetween('created_at', [$startDate, $endDate]);
+                }
+
+                $withdrawalsCash = $withdrawalsCashQuery->sum('total_amount');
+                $withdrawalsBank = $withdrawalsBankQuery->sum('total_amount');
+                $branchWithdrawals = $withdrawalsCash + $withdrawalsBank;
+                
+                $depositsCash = $depositsCashQuery->sum('total_amount');
+                $depositsBank = $depositsBankQuery->sum('total_amount');
+                $branchDeposits = $depositsCash + $depositsBank;
+
+                // Branch Balances
+                $branchCashBalance = $branchCashSales - $expensesCash - $withdrawalsCash + $depositsCash;
+                $branchBankBalance = $branchBankSales - $expensesBank - $withdrawalsBank + $depositsBank;
+                $branchCurrentBalance = $branchCashBalance + $branchBankBalance;
+
+                $ownerBranches[] = [
+                    'branch_id' => $branch->id,
+                    'branch_name' => $branch->name,
+                    'sales_revenue' => $branchSalesRevenue,
+                    'expenses_assumed' => $branchExpensesAssumed,
+                    'pending_debts' => $pendingDebts,
+                    'withdrawals' => $branchWithdrawals,
+                    'deposits' => $branchDeposits,
+                    'cash_balance' => $branchCashBalance,
+                    'bank_balance' => $branchBankBalance,
+                    'current_balance' => $branchCurrentBalance
+                ];
+
+                $ownerTotalRevenue += $branchSalesRevenue;
+                $ownerTotalExpenses += $branchExpensesAssumed;
+                $ownerTotalPendingDebts += $pendingDebts;
+                $ownerTotalWithdrawals += $branchWithdrawals;
+                $ownerTotalDeposits += $branchDeposits;
+                $ownerTotalCashBalance += $branchCashBalance;
+                $ownerTotalBankBalance += $branchBankBalance;
+            }
+
+            // Legacy payments with no branch
+            $withdrawalsCashGlobal = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'cash')->whereNull('branch_id')->sum('total_amount');
+            $withdrawalsBankGlobal = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'bank')->whereNull('branch_id')->sum('total_amount');
+            $depositsCashGlobal = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'cash')->whereNull('branch_id')->sum('total_amount');
+            $depositsBankGlobal = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'bank')->whereNull('branch_id')->sum('total_amount');
             
-            $withdrawalsCash = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'cash')->sum('total_amount');
-            $withdrawalsBank = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'bank')->sum('total_amount');
-            $withdrawals = $withdrawalsCash + $withdrawalsBank;
-            
-            $depositsCash = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'cash')->sum('total_amount');
-            $depositsBank = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'bank')->sum('total_amount');
-            $deposits = $depositsCash + $depositsBank;
-            
-            $cashBalance = $ownerCashSales - $expensesCash - $withdrawalsCash + $depositsCash;
-            $bankBalance = $ownerBankSales - $expensesBank - $withdrawalsBank + $depositsBank;
-            $currentBalance = $cashBalance + $bankBalance;
-            
+            $ownerTotalWithdrawals += $withdrawalsCashGlobal + $withdrawalsBankGlobal;
+            $ownerTotalDeposits += $depositsCashGlobal + $depositsBankGlobal;
+            $ownerTotalCashBalance = $ownerTotalCashBalance - $withdrawalsCashGlobal + $depositsCashGlobal;
+            $ownerTotalBankBalance = $ownerTotalBankBalance - $withdrawalsBankGlobal + $depositsBankGlobal;
+
+            // Add an "Unassigned" branch if legacy payments exist
+            if ($withdrawalsCashGlobal > 0 || $withdrawalsBankGlobal > 0 || $depositsCashGlobal > 0 || $depositsBankGlobal > 0) {
+                $ownerBranches[] = [
+                    'branch_id' => null,
+                    'branch_name' => 'Sin Sucursal (Legado)',
+                    'sales_revenue' => 0,
+                    'expenses_assumed' => 0,
+                    'withdrawals' => $withdrawalsCashGlobal + $withdrawalsBankGlobal,
+                    'deposits' => $depositsCashGlobal + $depositsBankGlobal,
+                    'cash_balance' => -$withdrawalsCashGlobal + $depositsCashGlobal,
+                    'bank_balance' => -$withdrawalsBankGlobal + $depositsBankGlobal,
+                    'current_balance' => (-$withdrawalsCashGlobal + $depositsCashGlobal) + (-$withdrawalsBankGlobal + $depositsBankGlobal)
+                ];
+            }
+
             $data['owners'][] = [
                 'owner_id' => $owner->id,
                 'user_id' => $owner->user_id,
                 'name' => $owner->user->profile->first_name . ' ' . $owner->user->profile->last_name,
-                'sales_revenue' => $salesRevenue,
-                'expenses_assumed' => $expensesAssumed,
-                'withdrawals' => $withdrawals,
-                'deposits' => $deposits,
-                'cash_balance' => $cashBalance,
-                'bank_balance' => $bankBalance,
-                'current_balance' => $currentBalance
+                'sales_revenue' => $ownerTotalRevenue,
+                'expenses_assumed' => $ownerTotalExpenses,
+                'pending_debts' => $ownerTotalPendingDebts,
+                'withdrawals' => $ownerTotalWithdrawals,
+                'deposits' => $ownerTotalDeposits,
+                'cash_balance' => $ownerTotalCashBalance,
+                'bank_balance' => $ownerTotalBankBalance,
+                'current_balance' => $ownerTotalCashBalance + $ownerTotalBankBalance,
+                'branches' => $ownerBranches
             ];
-            
-            $totalStoreRevenue += $salesRevenue;
         }
 
         $treasury = [
@@ -178,16 +334,27 @@ class FinanceDashboardController extends Controller
         return response()->json($data);
     }
 
-    public function ownerLedger($id)
+    public function ownerLedger(Request $request, $id)
     {
         $owner = Owner::findOrFail($id);
         
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        if ($startDate && $endDate) {
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+        }
+
         $ledger = [];
 
         // 1. Sales
-        $sales = SaleDetail::with('sale.payments')->whereHas('sale', function($q) {
+        $salesQuery = SaleDetail::with('sale.payments', 'sale.branch')->whereHas('sale', function($q) use ($startDate, $endDate) {
             $q->where('status', 'paid');
-        })->where('owner_id', $owner->id)->get();
+            if ($startDate && $endDate) {
+                $q->whereBetween('created_at', [$startDate, $endDate]);
+            }
+        })->where('owner_id', $owner->id);
+        $sales = $salesQuery->get();
 
         $cashMethod = PaymentMethod::where('name', 'Efectivo')->first();
         $cashMethodId = $cashMethod ? $cashMethod->id : null;
@@ -196,6 +363,7 @@ class FinanceDashboardController extends Controller
             $detailTotal = $saleDetail->subtotal - $saleDetail->discount;
             $sale = $saleDetail->sale;
             $saleTotal = $sale->total;
+            $branchName = $sale->branch ? $sale->branch->name : 'N/A';
 
             $fundStr = 'Banco';
             if ($saleTotal > 0 && $sale->payments->count() > 0) {
@@ -215,6 +383,7 @@ class FinanceDashboardController extends Controller
 
             $ledger[] = [
                 'date' => Carbon::parse($sale->created_at)->toIso8601String(),
+                'branch_name' => $branchName,
                 'description' => 'Ingreso por venta (' . $fundStr . '): ' . $saleDetail->product_name,
                 'type' => 'sale',
                 'amount' => $detailTotal
@@ -222,14 +391,24 @@ class FinanceDashboardController extends Controller
         }
 
         // 2. Expenses Assumed
-        $expenses = ExpenseSplit::with('expense')
+        $expensesQuery = ExpenseSplit::with('expense.branch')
                                 ->whereIn('status', ['paid', 'archived'])
                                 ->where('deducted_from_wallet', true)
-                                ->where('owner_id', $owner->id)->get();
+                                ->where('owner_id', $owner->id);
+                                
+        if ($startDate && $endDate) {
+            $expensesQuery->where(function($q) use ($startDate, $endDate) {
+                $q->whereBetween('paid_at', [$startDate, $endDate])
+                  ->orWhereBetween('created_at', [$startDate, $endDate]);
+            });
+        }
+        $expenses = $expensesQuery->get();
 
         foreach ($expenses as $expenseSplit) {
+            $branchName = $expenseSplit->expense && $expenseSplit->expense->branch ? $expenseSplit->expense->branch->name : 'N/A';
             $ledger[] = [
                 'date' => $expenseSplit->paid_at ? Carbon::parse($expenseSplit->paid_at)->toIso8601String() : Carbon::parse($expenseSplit->created_at)->toIso8601String(),
+                'branch_name' => $branchName,
                 'description' => 'Gasto asumido (' . ($expenseSplit->fund_source === 'bank' ? 'Banco' : 'Caja') . '): ' . $expenseSplit->expense->name,
                 'type' => 'expense',
                 'amount' => -$expenseSplit->amount
@@ -237,13 +416,19 @@ class FinanceDashboardController extends Controller
         }
 
         // 3. Owner Payments (Deposits / Withdrawals)
-        $payments = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->get();
+        $paymentsQuery = OwnerPayment::with('branch')->whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id);
+        if ($startDate && $endDate) {
+            $paymentsQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        $payments = $paymentsQuery->get();
 
         foreach ($payments as $payment) {
             $isDeposit = $payment->type === 'deposit';
             $fundLabel = $payment->fund_source === 'bank' ? 'Banco' : 'Caja';
+            $branchName = $payment->branch ? $payment->branch->name : 'Global/Legado';
             $ledger[] = [
                 'date' => Carbon::parse($payment->created_at)->toIso8601String(),
+                'branch_name' => $branchName,
                 'description' => ($isDeposit ? 'Inyección de capital (' : 'Retiro de capital (') . $fundLabel . ')',
                 'type' => $payment->type,
                 'amount' => $isDeposit ? $payment->total_amount : -$payment->total_amount

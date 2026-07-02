@@ -206,10 +206,9 @@ export default function DashboardLayout() {
               <p className="section-title">
                 {!collapsed && "FINANZAS"}
               </p>
-              <NavItem to="/dashboard/finance" icon={DollarSign} label="Tesorería y Capital" />
-              {/* Placeholders */}
-              <NavItem to="/dashboard/finance/cashflow" icon={BarChart3} label="Flujo de Caja (Próx.)" />
-              <NavItem to="/dashboard/finance/reports" icon={FileText} label="Reportes Contables (Próx.)" />
+              <NavItem to="/dashboard/finance" icon={DollarSign} label="Gastos y Capital" end />
+              <NavItem to="/dashboard/finance/cashflow" icon={BarChart3} label="Flujo de Caja" />
+              <NavItem to="/dashboard/finance/reports" icon={FileText} label="Reportes Contables" />
             </div>
 
             {/* 6. RECURSOS HUMANOS */}

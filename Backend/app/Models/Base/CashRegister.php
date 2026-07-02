@@ -6,10 +6,10 @@
 
 namespace App\Models\Base;
 
-use App\Models\Branch;
-use App\Models\CashMovement;
-use App\Models\Payment;
-use App\Models\User;
+use App\Models\Branch\Branch;
+use App\Models\Finance\CashMovement;
+use App\Models\Finance\Payment;
+use App\Models\Core\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -56,9 +56,9 @@ class CashRegister extends Model
 		return $this->belongsTo(Branch::class);
 	}
 
-	public function user()
+	public function employee()
 	{
-		return $this->belongsTo(User::class);
+		return $this->belongsTo(\App\Models\Actors\Employee::class);
 	}
 
 	public function cash_movements()

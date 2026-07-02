@@ -13,10 +13,26 @@ use Carbon\Carbon;
 
 class ExpenseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->processRecurringExpenses();
-        $expenses = Expense::with(['expense_splits.owner.user.profile', 'branch'])->orderBy('expense_date', 'desc')->get();
+        
+        // Dynamically recalculate proportional splits before fetching
+        Expense::with('expense_splits')->where('status', 'pending')->where('split_type', 'proportional')->get()->each->recalculateProportionalSplits();
+        
+        $query = Expense::with(['expense_splits.owner.user.profile', 'branch'])->orderBy('expense_date', 'desc');
+        
+        if ($request->has('branch_id') && $request->branch_id !== 'all' && $request->branch_id !== '') {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('expense_date', [$startDate, $endDate]);
+        }
+        
+        $expenses = $query->get();
         return response()->json($expenses);
     }
 
@@ -44,11 +60,11 @@ class ExpenseController extends Controller
         ]);
 
         if ($request->status === 'paid' && $request->fund_source) {
-            $balance = $this->getTreasuryBalance($request->fund_source);
+            $balance = $this->getTreasuryBalance($request->fund_source, $request->branch_id);
             $amountToDeduct = $request->amount;
             if ($balance < $amountToDeduct) {
                 $sourceName = $request->fund_source === 'cash' ? 'Caja Física' : 'Cuenta Bancaria';
-                return response()->json(['error' => "Saldo insuficiente en $sourceName. Saldo disponible: Bs. " . number_format($balance, 2)], 400);
+                return response()->json(['error' => "Saldo insuficiente en $sourceName de la sucursal seleccionada. Saldo disponible: Bs. " . number_format($balance, 2)], 400);
             }
         }
 
@@ -92,14 +108,14 @@ class ExpenseController extends Controller
         $oldStatus = $expense->status;
 
         if ($request->status === 'paid' && $request->fund_source) {
-            $balance = $this->getTreasuryBalance($request->fund_source);
+            $balance = $this->getTreasuryBalance($request->fund_source, $expense->branch_id);
             $amountToDeduct = $request->amount;
             if ($oldStatus === 'paid' && $expense->fund_source === $request->fund_source) {
                 $balance += $expense->amount; 
             }
             if ($balance < $amountToDeduct) {
                 $sourceName = $request->fund_source === 'cash' ? 'Caja Física' : 'Cuenta Bancaria';
-                return response()->json(['error' => "Saldo insuficiente en $sourceName. Saldo disponible: Bs. " . number_format($balance, 2)], 400);
+                return response()->json(['error' => "Saldo insuficiente en $sourceName de la sucursal. Saldo disponible: Bs. " . number_format($balance, 2)], 400);
             }
         }
 
@@ -187,7 +203,8 @@ class ExpenseController extends Controller
     {
         $request->validate([
             'deducted_from_wallet' => 'boolean',
-            'fund_source' => 'nullable|in:cash,bank'
+            'fund_source' => 'nullable|in:cash,bank',
+            'branch_id' => 'required_if:deducted_from_wallet,true|nullable|uuid'
         ]);
 
         $split = ExpenseSplit::findOrFail($id);
@@ -205,10 +222,13 @@ class ExpenseController extends Controller
             if (!$request->fund_source) {
                 return response()->json(['error' => 'Debes especificar de qué cuenta saldrá el dinero.'], 400);
             }
-            $balance = $this->getTreasuryBalance($request->fund_source);
+            if (!$request->branch_id) {
+                return response()->json(['error' => 'Debes especificar de qué sucursal saldrá el dinero.'], 400);
+            }
+            $balance = $this->getTreasuryBalance($request->fund_source, $request->branch_id);
             if ($balance < $split->amount) {
                 $accountName = $request->fund_source === 'cash' ? 'Caja Física' : 'Cuenta Bancaria';
-                return response()->json(['error' => "Saldo insuficiente en $accountName para realizar el pago de Bs. {$split->amount}."], 400);
+                return response()->json(['error' => "Saldo insuficiente en $accountName de la sucursal para realizar el pago de Bs. {$split->amount}."], 400);
             }
         }
 
@@ -412,16 +432,34 @@ class ExpenseController extends Controller
         }
     }
 
-    protected function getTreasuryBalance($type) {
+    protected function getTreasuryBalance($type, $branchId = null) {
         $cashMethod = \App\Models\Finance\PaymentMethod::where('name', 'Efectivo')->first();
         $cashMethodId = $cashMethod ? $cashMethod->id : null;
         
+        $applyBranch = function($query) use ($branchId) {
+            if ($branchId) {
+                // Determine if query is on Payment model (has 'sale' relationship) or Expense/OwnerPayment (has 'branch_id')
+                if (method_exists($query->getModel(), 'sale')) {
+                    $query->whereHas('sale', function($q) use ($branchId) {
+                        $q->where('branch_id', $branchId);
+                    });
+                } else if (\Illuminate\Support\Facades\Schema::hasColumn($query->getModel()->getTable(), 'branch_id')) {
+                    $query->where('branch_id', $branchId);
+                } else if ($query->getModel() instanceof \App\Models\Finance\ExpenseSplit) {
+                    $query->whereHas('expense', function($q) use ($branchId) {
+                        $q->where('branch_id', $branchId);
+                    });
+                }
+            }
+            return $query;
+        };
+
         if ($type === 'cash') {
-            $sales = $cashMethodId ? \App\Models\Finance\Payment::where('payment_method_id', $cashMethodId)->sum('amount') : 0;
-            $expenses = \App\Models\Finance\Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'cash')->sum('amount');
-            $splitExpenses = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])->where('deducted_from_wallet', true)->where('fund_source', 'cash')->sum('amount');
-            $deposits = \App\Models\Finance\OwnerPayment::where('type', 'deposit')->where('fund_source', 'cash')->sum('total_amount');
-            $withdrawals = \App\Models\Finance\OwnerPayment::where('type', 'withdrawal')->where('fund_source', 'cash')->sum('total_amount');
+            $sales = $cashMethodId ? $applyBranch(\App\Models\Finance\Payment::where('payment_method_id', $cashMethodId))->sum('amount') : 0;
+            $expenses = $applyBranch(\App\Models\Finance\Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'cash'))->sum('amount');
+            $splitExpenses = $applyBranch(\App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])->where('deducted_from_wallet', true)->where('fund_source', 'cash'))->sum('amount');
+            $deposits = $applyBranch(\App\Models\Finance\OwnerPayment::where('type', 'deposit')->where('fund_source', 'cash'))->sum('total_amount');
+            $withdrawals = $applyBranch(\App\Models\Finance\OwnerPayment::where('type', 'withdrawal')->where('fund_source', 'cash'))->sum('total_amount');
             return $sales + $deposits - $expenses - $splitExpenses - $withdrawals;
         } elseif ($type === 'bank') {
             if ($cashMethodId) {
@@ -430,14 +468,14 @@ class ExpenseController extends Controller
                 if (!empty($giftcardMethodIds)) {
                     $bankQuery->whereNotIn('payment_method_id', $giftcardMethodIds);
                 }
-                $sales = $bankQuery->sum('amount');
+                $sales = $applyBranch($bankQuery)->sum('amount');
             } else {
-                $sales = \App\Models\Finance\Payment::sum('amount');
+                $sales = $applyBranch(\App\Models\Finance\Payment::query())->sum('amount');
             }
-            $expenses = \App\Models\Finance\Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank')->sum('amount');
-            $splitExpenses = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])->where('deducted_from_wallet', true)->where('fund_source', 'bank')->sum('amount');
-            $deposits = \App\Models\Finance\OwnerPayment::where('type', 'deposit')->where('fund_source', 'bank')->sum('total_amount');
-            $withdrawals = \App\Models\Finance\OwnerPayment::where('type', 'withdrawal')->where('fund_source', 'bank')->sum('total_amount');
+            $expenses = $applyBranch(\App\Models\Finance\Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank'))->sum('amount');
+            $splitExpenses = $applyBranch(\App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])->where('deducted_from_wallet', true)->where('fund_source', 'bank'))->sum('amount');
+            $deposits = $applyBranch(\App\Models\Finance\OwnerPayment::where('type', 'deposit')->where('fund_source', 'bank'))->sum('total_amount');
+            $withdrawals = $applyBranch(\App\Models\Finance\OwnerPayment::where('type', 'withdrawal')->where('fund_source', 'bank'))->sum('total_amount');
             return $sales + $deposits - $expenses - $splitExpenses - $withdrawals;
         }
         return 0;

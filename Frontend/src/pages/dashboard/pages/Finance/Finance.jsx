@@ -11,8 +11,8 @@ export default function Finance() {
   return (
     <div className="finance-page fade-in">
       <div className="finance-header">
-        <h1>Finanzas</h1>
-        <p>Gestiona el resumen general, gastos operativos y movimientos de capital.</p>
+        <h1>Gastos y Capital</h1>
+        <p>Controla los egresos del negocio y el patrimonio aportado o retirado por los socios.</p>
       </div>
         
       {/* TAB NAVIGATION */}
@@ -22,7 +22,7 @@ export default function Finance() {
             onClick={() => setActiveTab("dashboard")}
           >
             <PieChart size={18} />
-            Resumen General
+            Balance Financiero
           </button>
           
           <button 
@@ -30,7 +30,7 @@ export default function Finance() {
             onClick={() => setActiveTab("expenses")}
           >
             <TrendingDown size={18} />
-            Gastos Operativos
+            Control de Gastos
           </button>
           
           <button 
@@ -38,7 +38,7 @@ export default function Finance() {
             onClick={() => setActiveTab("owner-payments")}
           >
             <Wallet size={18} />
-            Movimientos de Capital
+            Aportes y Retiros (Socios)
           </button>
         </div>
       <div className="settings-content-card" style={{ padding: '0', background: 'transparent', border: 'none' }}>

@@ -6,30 +6,40 @@ import { toast } from "react-hot-toast";
 export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData }) {
   const [formData, setFormData] = useState({
     owner_id: "",
+    branch_id: "",
     amount: "",
     fund_source: "cash",
-    payment_method: "",
+    payment_method: "Efectivo",
     reference_number: "",
-    notes: ""
+    notes: "Retiro de utilidades del mes"
   });
   const [loading, setLoading] = useState(false);
+  const [availableBranches, setAvailableBranches] = useState([]);
 
   useEffect(() => {
     if (isOpen && initialData) {
+      // Filter out the 'legacy' pseudo-branch
+      const branches = (initialData.branches || []).filter(b => b.branch_id);
+      setAvailableBranches(branches);
       setFormData({
         owner_id: initialData.owner_id || "",
+        branch_id: branches.length > 0 ? branches[0].branch_id : "",
         amount: "",
         fund_source: "cash",
-        payment_method: "",
-        reference_number: "",
-        notes: ""
+        payment_method: "Efectivo",
+        reference_number: `REF-${Date.now()}`,
+        notes: "Retiro de utilidades del mes"
       });
     }
   }, [isOpen, initialData]);
 
-  const maxBalance = formData.fund_source === 'cash' 
-    ? Number(initialData?.cash_balance || 0) 
-    : Number(initialData?.bank_balance || 0);
+  // Determine which branch the user selected
+  const selectedBranch = availableBranches.find(b => b.branch_id === formData.branch_id);
+
+  // Calculate max balance based on selected branch and fund_source
+  const maxBalance = selectedBranch 
+    ? (formData.fund_source === 'cash' ? Number(selectedBranch.cash_balance || 0) : Number(selectedBranch.bank_balance || 0))
+    : 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,9 +48,14 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
       return;
     }
     
+    if (!formData.branch_id) {
+      toast.error("Debes seleccionar una sucursal para realizar el retiro.");
+      return;
+    }
+
     // Check balance
     if (Number(formData.amount) > maxBalance) {
-      toast.error(`El monto supera el saldo disponible en ${formData.fund_source === 'cash' ? 'Caja' : 'Banco'} (Bs. ${maxBalance.toFixed(2)}).`);
+      toast.error(`El monto supera el saldo disponible en ${formData.fund_source === 'cash' ? 'Caja' : 'Banco'} para esta sucursal (Bs. ${maxBalance.toFixed(2)}).`);
       return;
     }
 
@@ -88,6 +103,23 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
             
             <div className="form-group" style={{ margin: 0 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Sucursal de Origen <span className="text-danger">*</span>
+              </label>
+              <select 
+                className="form-control" 
+                value={formData.branch_id}
+                onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+                required
+              >
+                <option value="">Seleccione una sucursal</option>
+                {availableBranches.map(b => (
+                  <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Fondo a Retirar <span className="text-danger">*</span>
               </label>
               <select 
@@ -101,41 +133,51 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
               </select>
             </div>
 
-            <div style={{ padding: '16px', background: 'var(--bg-overlay)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <p style={{ margin: '0 0 5px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Saldo Disponible en {formData.fund_source === 'cash' ? 'Caja' : 'Banco'}:</p>
-              <h3 style={{ margin: 0, fontSize: '28px', color: 'var(--text-main)', fontWeight: 700 }}>Bs. {maxBalance.toFixed(2)}</h3>
-            </div>
-
-            <div className="form-group" style={{ margin: 0 }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Monto a Retirar (Bs) <span className="text-danger">*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  type="number" 
-                  className="form-control" 
+            <div style={{ background: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Saldo Disponible:</span>
+                <span style={{ fontSize: '16px', fontWeight: 700, color: maxBalance > 0 ? '#22c55e' : '#ef4444' }}>
+                  Bs. {maxBalance.toFixed(2)}
+                </span>
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Monto a Retirar (Bs.) <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={maxBalance > 0 ? maxBalance : 0.01}
+                  className="form-control"
+                  style={{ fontSize: '18px', fontWeight: 'bold' }}
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   placeholder="0.00"
-                  step="0.01"
-                  min="0.01"
-                  max={maxBalance}
                   required
-                  style={{ paddingLeft: '40px', fontSize: '18px', fontWeight: 'bold' }}
                 />
-                <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>Bs.</span>
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div className="form-group" style={{ margin: 0 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Método de Pago</label>
-                <input type="text" className="form-control" value={formData.payment_method} onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })} placeholder="Ej. Transferencia" />
+                <select 
+                  className="form-control" 
+                  value={formData.payment_method} 
+                  onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                >
+                  <option value="Transferencia">Transferencia</option>
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="QR">QR</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                  <option value="Otro">Otro</option>
+                </select>
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nro. Referencia</label>
-                <input type="text" className="form-control" value={formData.reference_number} onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })} placeholder="Ej. 123456" />
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nro. Referencia (Automático)</label>
+                <input type="text" className="form-control" value={formData.reference_number} readOnly style={{ backgroundColor: 'var(--bg-overlay)' }} />
               </div>
             </div>
 

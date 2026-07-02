@@ -108,4 +108,68 @@ class OwnerPaymentController extends Controller
 
         return response()->json(['message' => 'Movimiento anulado exitosamente.']);
     }
+
+    public function transfer(Request $request)
+    {
+        $request->validate([
+            'owner_id' => 'required|uuid',
+            'branch_id' => 'required|uuid|exists:branches,id',
+            'from_fund' => 'required|in:cash,bank',
+            'to_fund' => 'required|in:cash,bank',
+            'amount' => 'required|numeric|min:0.01',
+            'transfer_date' => 'required|date',
+            'notes' => 'nullable|string'
+        ]);
+
+        if ($request->from_fund === $request->to_fund) {
+            return response()->json(['error' => 'No se puede transferir a la misma cuenta.'], 400);
+        }
+
+        $owner = \App\Models\Actors\Owner::findOrFail($request->owner_id);
+        if ($owner->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Solo puedes transferir fondos de tu propia cuenta.'], 403);
+        }
+
+        $balance = $this->getTreasuryBalance($request->from_fund, $request->branch_id);
+        if ($balance < $request->amount) {
+            $fundName = $request->from_fund === 'cash' ? 'Caja Física' : 'Cuenta Bancaria';
+            return response()->json([
+                'error' => "Saldo insuficiente en {$fundName} de la sucursal seleccionada para realizar la transferencia de Bs. {$request->amount}. Saldo disponible: Bs. " . number_format($balance, 2)
+            ], 400);
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            // 1. Withdrawal from source
+            \App\Models\Finance\OwnerPayment::create([
+                'owner_id' => $request->owner_id,
+                'branch_id' => $request->branch_id,
+                'total_amount' => $request->amount,
+                'amount' => $request->amount, // needed? Wait, the model uses total_amount but maybe mutator? I'll provide both.
+                'payment_date' => $request->transfer_date,
+                'type' => 'withdrawal',
+                'fund_source' => $request->from_fund,
+                'notes' => 'TRANSFERENCIA - RETIRO: ' . ($request->notes ?: 'Transferencia entre cuentas'),
+                'payment_method' => 'Transferencia Interna',
+                'reference_number' => 'TRF-OUT-' . time(),
+                'status' => 'paid'
+            ]);
+
+            // 2. Deposit to destination
+            \App\Models\Finance\OwnerPayment::create([
+                'owner_id' => $request->owner_id,
+                'branch_id' => $request->branch_id,
+                'total_amount' => $request->amount,
+                'amount' => $request->amount,
+                'payment_date' => $request->transfer_date,
+                'type' => 'deposit',
+                'fund_source' => $request->to_fund,
+                'notes' => 'TRANSFERENCIA - INGRESO: ' . ($request->notes ?: 'Transferencia entre cuentas'),
+                'payment_method' => 'Transferencia Interna',
+                'reference_number' => 'TRF-IN-' . time(),
+                'status' => 'paid'
+            ]);
+        });
+
+        return response()->json(['message' => 'Transferencia completada correctamente.'], 201);
+    }
 }

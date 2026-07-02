@@ -3,8 +3,8 @@ import api from "../client";
 const BASE_URL = "/v1/admin/finance";
 
 // Dashboard
-export const getFinanceDashboard = () => 
-    api.get(`${BASE_URL}/dashboard`);
+export const getFinanceDashboard = (params) => 
+    api.get(`${BASE_URL}/dashboard`, { params });
 
 export const getOwnerLedger = (ownerId) => 
     api.get(`${BASE_URL}/owners/${ownerId}/ledger`);
@@ -55,3 +55,26 @@ export const archiveOwnerPayment = (id) =>
 
 export const annulOwnerPayment = (id) =>
     api.post(`${BASE_URL}/owner-payments/${id}/annul`);
+
+export const transferOwnerFunds = (data) =>
+    api.post(`${BASE_URL}/owner-payments/transfer`, data);
+
+// CashFlow
+export const getCashFlow = () => 
+    api.get(`/v1/admin/cashflow`);
+
+export const transferCash = (data) => 
+    api.post(`/v1/admin/cashflow/transfer`, data);
+
+export const openCashRegister = (data) => 
+    api.post(`/v1/admin/cashflow/register/open`, data);
+
+export const closeCashRegister = (data) => 
+    api.post(`/v1/admin/cashflow/register/close`, data);
+
+export const addTreasuryAdjustment = (data) => 
+    api.post(`/v1/admin/cashflow/adjustment`, data);
+
+// Reports
+export const getFinanceReports = (params) =>
+    api.get(`${BASE_URL}/reports`, { params });

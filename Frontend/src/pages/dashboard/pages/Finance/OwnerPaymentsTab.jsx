@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Edit, Archive, XCircle, ArrowDownCircle, ArrowUpCircle, Eye, List, History } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getOwnerPayments, archiveOwnerPayment, annulOwnerPayment } from "../../../../api/admin/finance";
+import { getBranches } from "../../../../api/admin/branches";
 import OwnerPaymentModal from "./OwnerPaymentModal";
 import OwnerPaymentDetailModal from "./OwnerPaymentDetailModal";
 
@@ -13,15 +14,31 @@ export default function OwnerPaymentsTab() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [filterMode, setFilterMode] = useState('active'); // 'active' or 'history'
+  
+  const [branches, setBranches] = useState([]);
+  const [selectedBranchId, setSelectedBranchId] = useState('all');
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [selectedBranchId]);
+
+  const fetchBranches = async () => {
+    try {
+      const res = await getBranches();
+      setBranches(res.data || res);
+    } catch (error) {
+      console.error("Error al cargar sucursales", error);
+    }
+  };
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const res = await getOwnerPayments();
+      const res = await getOwnerPayments(selectedBranchId === 'all' ? {} : { branch_id: selectedBranchId });
       setPayments(res.data);
     } catch (error) {
       toast.error("Error al cargar movimientos");
@@ -83,7 +100,7 @@ export default function OwnerPaymentsTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+      <div className="dashboard-summary-cards">
         <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-success)' }}>
             <ArrowDownCircle size={20} />
@@ -110,49 +127,66 @@ export default function OwnerPaymentsTab() {
           </p>
         </div>
       </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+           {/* Action Bar */}
+      <div className="responsive-header" style={{ marginTop: '20px' }}>
         <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-overlay)', padding: '4px', borderRadius: '8px' }}>
-          <button
+          <button 
             onClick={() => setFilterMode('active')}
             style={{ 
-              padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px',
-              background: filterMode === 'active' ? 'var(--color-primary)' : 'transparent',
-              color: filterMode === 'active' ? 'var(--color-primary-text)' : 'var(--text-main)'
+              padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '13px',
+              background: filterMode === 'active' ? 'var(--bg-card)' : 'transparent',
+              color: filterMode === 'active' ? 'var(--text-main)' : 'var(--text-muted)',
+              boxShadow: filterMode === 'active' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
             }}
           >
-            <List size={16} /> Activos
+            <List size={16} /> Movimientos Activos
           </button>
-          <button
+          <button 
             onClick={() => setFilterMode('history')}
             style={{ 
-              padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px',
-              background: filterMode === 'history' ? 'var(--color-primary)' : 'transparent',
-              color: filterMode === 'history' ? 'var(--color-primary-text)' : 'var(--text-main)'
+              padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '13px',
+              background: filterMode === 'history' ? 'var(--bg-card)' : 'transparent',
+              color: filterMode === 'history' ? 'var(--text-main)' : 'var(--text-muted)',
+              boxShadow: filterMode === 'history' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
             }}
           >
-            <History size={16} /> Historial Anulados/Archivados
+            <History size={16} /> Historial / Kardex
           </button>
         </div>
 
-        <button 
-          className="btn-primary" 
-          onClick={() => { setSelectedPayment(null); setIsModalOpen(true); }}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <Plus size={18} />
-          Nuevo Movimiento
-        </button>
+        <div className="responsive-filters" style={{ gap: '15px' }}>
+          <select 
+            value={selectedBranchId} 
+            onChange={(e) => setSelectedBranchId(e.target.value)} 
+            className="form-control"
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', minWidth: '200px' }}
+          >
+            <option value="all">Todas las Sucursales</option>
+            {branches.map(b => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+          <button 
+            className="btn-primary" 
+            onClick={() => { setSelectedPayment(null); setIsModalOpen(true); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Plus size={18} />
+            Registrar Movimiento
+          </button>
+        </div>
       </div>
 
       <div className="table-container">
         {loading ? (
           <div className="loading-state">Cargando movimientos...</div>
         ) : (
+          <div className="table-responsive">
           <table className="products-table">
             <thead>
               <tr>
                 <th>Fecha</th>
+                <th>Sucursal</th>
                 <th>Socio</th>
                 <th>Tipo</th>
                 <th>Monto</th>
@@ -166,6 +200,9 @@ export default function OwnerPaymentsTab() {
                 <tr key={p.id} style={{ opacity: p.status === 'annulled' ? 0.6 : 1 }}>
                   <td data-label="Fecha">
                     <span style={{ fontWeight: 500 }}>{new Date(p.payment_date).toLocaleDateString()}</span>
+                  </td>
+                  <td data-label="Sucursal">
+                    <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{p.branch?.name || 'Global'}</span>
                   </td>
                   <td data-label="Socio">
                     <span style={{ fontWeight: 600 }}>{p.owner?.user?.profile?.first_name} {p.owner?.user?.profile?.last_name_paternal}</span>
@@ -253,6 +290,7 @@ export default function OwnerPaymentsTab() {
               )}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

@@ -9,6 +9,7 @@ class OwnerPayment extends BaseOwnerPayment
 {
 	protected $fillable = [
 		'owner_id',
+		'branch_id',
 		'total_amount',
 		'status',
 		'payment_date',
@@ -19,6 +20,11 @@ class OwnerPayment extends BaseOwnerPayment
         'payment_method'
 	];
 
+	protected $casts = [
+        'payment_date' => 'datetime',
+        'total_amount' => 'decimal:2',
+    ];
+
 	protected static function boot()
 	{
 		parent::boot();
@@ -28,4 +34,14 @@ class OwnerPayment extends BaseOwnerPayment
 			}
 		});
 	}
+
+    public function owner()
+    {
+        return $this->belongsTo(\App\Models\Actors\Owner::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(\App\Models\Branch\Branch::class, 'branch_id');
+    }
 }
