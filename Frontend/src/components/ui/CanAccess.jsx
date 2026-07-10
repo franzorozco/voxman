@@ -13,7 +13,12 @@ export default function CanAccess({ permission, role, children }) {
 
   // Si se pasa un permiso, validamos si tiene ese permiso
   if (permission) {
-    const hasPermission = user.permissions?.includes(permission) || user.roles?.includes('Owner');
+    let hasPermission = false;
+    if (Array.isArray(permission)) {
+      hasPermission = permission.some(p => user.permissions?.includes(p)) || user.roles?.includes('Owner');
+    } else {
+      hasPermission = user.permissions?.includes(permission) || user.roles?.includes('Owner');
+    }
     if (hasPermission) return children;
   }
 

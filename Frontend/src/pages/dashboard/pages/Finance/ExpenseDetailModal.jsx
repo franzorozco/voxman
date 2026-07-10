@@ -71,7 +71,7 @@ export default function ExpenseDetailModal({ isOpen, onClose, expense }) {
           {/* Splits Details */}
           <div>
             <h3 style={{ fontSize: '15px', margin: '0 0 10px 0' }}>Distribución y Estado de Pagos</h3>
-            <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+            <div className="table-responsive" style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead style={{ background: 'var(--bg-overlay)' }}>
                   <tr>

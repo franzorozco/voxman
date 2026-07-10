@@ -11,13 +11,13 @@ const customStyles = {
   menuPortal: base => ({ ...base, zIndex: 99999 }),
   control: (base) => ({
     ...base,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: 'var(--bg-input)',
     borderColor: 'var(--border-color)',
     color: 'var(--text-main)',
   }),
   menu: (base) => ({
     ...base,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: 'var(--bg-card)',
     border: '1px solid var(--border-color)',
     zIndex: 99999,
   }),
@@ -182,9 +182,9 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
   return (
     <div className="modal-overlay">
       <div className="modal">
-        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0 }}>
+        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, padding: '24px 30px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '20px', fontWeight: '600' }}>
           {promotion ? "Editar Promoción" : "Nueva Promoción"}
-          <button className="btn-secondary" style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'inherit', cursor: 'pointer' }} onClick={onClose}>
+          <button className="btn-secondary" style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer' }} onClick={onClose}>
             <X size={20} />
           </button>
         </h2>
@@ -344,7 +344,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   onChange={(selected) => setFormData({...formData, brands: selected ? selected.map(s => s.value) : []})}
                   placeholder="Selecciona marcas..."
                   styles={customStyles}
-                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
 
@@ -357,7 +357,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   onChange={(selected) => setFormData({...formData, categories: selected ? selected.map(s => s.value) : []})}
                   placeholder="Selecciona categorías..."
                   styles={customStyles}
-                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
 
@@ -370,7 +370,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   onChange={(selected) => setFormData({...formData, branches: selected ? selected.map(s => s.value) : []})}
                   placeholder="Selecciona sucursales..."
                   styles={customStyles}
-                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
 
@@ -383,7 +383,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   onChange={(selected) => setFormData({...formData, products: selected ? selected.map(s => s.value) : []})}
                   placeholder="Selecciona productos..."
                   styles={customStyles}
-                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
 
@@ -396,7 +396,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   onChange={(selected) => setFormData({...formData, variants: selected ? selected.map(s => s.value) : []})}
                   placeholder="Selecciona variantes..."
                   styles={customStyles}
-                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
 
@@ -415,7 +415,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   onChange={(selected) => setFormData({...formData, customers: selected ? selected.map(s => s.value) : []})}
                   placeholder="Selecciona clientes..."
                   styles={customStyles}
-                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
 
@@ -434,7 +434,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   onChange={(selected) => setFormData({...formData, employees: selected ? selected.map(s => s.value) : []})}
                   placeholder="Selecciona empleados..."
                   styles={customStyles}
-                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
             </div>

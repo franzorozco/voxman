@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { getSale, updateSaleStatus, cancelSale } from "../../../../api/admin/sales";
 import Spinner from "../../components/Spinner/Spinner";
 import ThermalReceiptModal from "./ThermalReceiptModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 
 export default function SaleDetailsModal({ saleId, onClose }) {
   const [sale, setSale] = useState(null);
@@ -294,31 +295,35 @@ export default function SaleDetailsModal({ saleId, onClose }) {
         {/* Footer actions */}
         <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', background: 'var(--bg-main)' }}>
           <div>
-            {sale.status !== 'cancelled' && sale.status !== 'refunded' && (
-              <button 
-                className="btn-secondary" 
-                style={{ color: 'var(--status-danger)', borderColor: 'var(--status-danger)' }}
-                onClick={() => handleStatusChange('cancelled')}
-                disabled={actionLoading}
-              >
-                <RotateCcw size={16} /> Cancelar Venta
-              </button>
-            )}
-            {sale.status === 'pending' && (
-              <button 
-                className="btn-primary" 
-                style={{ marginLeft: '10px' }}
-                onClick={() => handleStatusChange('completed')}
-                disabled={actionLoading}
-              >
-                <CheckCircle size={16} /> Marcar Completada
-              </button>
-            )}
+            <CanAccess permission="manage_sales">
+              {sale.status !== 'cancelled' && sale.status !== 'refunded' && (
+                <button 
+                  className="btn-secondary" 
+                  style={{ color: 'var(--status-danger)', borderColor: 'var(--status-danger)' }}
+                  onClick={() => handleStatusChange('cancelled')}
+                  disabled={actionLoading}
+                >
+                  <RotateCcw size={16} /> Cancelar Venta
+                </button>
+              )}
+              {sale.status === 'pending' && (
+                <button 
+                  className="btn-primary" 
+                  style={{ marginLeft: '10px' }}
+                  onClick={() => handleStatusChange('completed')}
+                  disabled={actionLoading}
+                >
+                  <CheckCircle size={16} /> Marcar Completada
+                </button>
+              )}
+            </CanAccess>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowReceipt(true)}>
-              <Printer size={16} /> Imprimir Ticket
-            </button>
+            <CanAccess permission="print_sale_receipt">
+              <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowReceipt(true)}>
+                <Printer size={16} /> Imprimir Ticket
+              </button>
+            </CanAccess>
             <button className="btn-secondary" onClick={onClose} disabled={actionLoading}>
               Cerrar
             </button>

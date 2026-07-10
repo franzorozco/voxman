@@ -18,6 +18,13 @@ class ReturnController extends Controller
             'sale_detail.product_variant.product'
         ])->orderBy('created_at', 'desc');
 
+        if (auth()->check() && !auth()->user()->can('view_returns_all_branches')) {
+            $branchId = auth()->user()->branch_id;
+            $query->whereHas('sale_detail.sale', function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -57,6 +64,12 @@ class ReturnController extends Controller
             'sale_detail.product_variant.size',
             'sale_detail.product_variant.fit'
         ])->findOrFail($id);
+
+        if (auth()->check() && !auth()->user()->can('view_returns_all_branches')) {
+            if ($return->sale_detail && $return->sale_detail->sale && $return->sale_detail->sale->branch_id !== auth()->user()->branch_id) {
+                abort(403, 'No tienes permiso para ver devoluciones de otras sucursales.');
+            }
+        }
 
         return response()->json($return);
     }

@@ -3,6 +3,7 @@ import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw
 import { toast } from "react-hot-toast";
 import { getCarts, deleteCart, convertCartToSale, sendCartReminder } from "../../../../api/admin/carts";
 import CartDetailsModal from "./CartDetailsModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 import "./Carts.css";
 
 export default function Carts() {
@@ -239,19 +240,23 @@ export default function Carts() {
                       <button className="btn-view" onClick={() => handleViewDetails(cart)} title="Ver Detalles">
                         <Eye size={18} />
                       </button>
-                      {cart.status !== 'converted' && (
-                        <button className="btn-convert" onClick={() => handleConvert(cart.id)} title="Convertir a Venta">
-                          <CheckCircle size={18} />
+                      <CanAccess permission="manage_carts">
+                        {cart.status !== 'converted' && (
+                          <button className="btn-convert" onClick={() => handleConvert(cart.id)} title="Convertir a Venta">
+                            <CheckCircle size={18} />
+                          </button>
+                        )}
+                        {cart.status === 'abandoned' && (
+                          <button className="btn-reminder" onClick={() => handleReminder(cart.id)} title="Enviar Recordatorio">
+                            <Bell size={18} />
+                          </button>
+                        )}
+                      </CanAccess>
+                      <CanAccess permission="delete_carts">
+                        <button className="btn-delete" onClick={() => handleDelete(cart.id)} title="Eliminar">
+                          <Trash2 size={18} />
                         </button>
-                      )}
-                      {cart.status === 'abandoned' && (
-                        <button className="btn-reminder" onClick={() => handleReminder(cart.id)} title="Enviar Recordatorio">
-                          <Bell size={18} />
-                        </button>
-                      )}
-                      <button className="btn-delete" onClick={() => handleDelete(cart.id)} title="Eliminar">
-                        <Trash2 size={18} />
-                      </button>
+                      </CanAccess>
                     </td>
                   </tr>
                 ))

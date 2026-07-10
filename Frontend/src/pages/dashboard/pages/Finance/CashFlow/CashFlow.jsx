@@ -6,6 +6,7 @@ import TransferModal from "./TransferModal";
 import TreasuryAdjustmentModal from "./TreasuryAdjustmentModal";
 import OpenRegisterModal from "./OpenRegisterModal";
 import CloseRegisterModal from "./CloseRegisterModal";
+import CanAccess from "../../../../../components/ui/CanAccess";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -77,7 +78,7 @@ export default function CashFlow() {
             <p className="cashflow-subtitle">Control de efectivo por sucursales y cuenta bancaria global.</p>
         </div>
         
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div className="responsive-filters">
             <div style={{ zIndex: 10 }}>
               <DatePicker
                 selectsRange={true}
@@ -92,22 +93,26 @@ export default function CashFlow() {
                 dateFormat="dd/MM/yyyy"
               />
             </div>
-            <button 
-                className="btn-primary" 
-                onClick={() => setIsAdjustmentModalOpen(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
-            >
-                <PlusCircle size={16} />
-                Ajuste Extraordinario
-            </button>
-            <button 
-                className="btn-primary" 
-                onClick={() => setIsTransferModalOpen(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-                <ArrowRightLeft size={16} />
-                Transferir Fondos
-            </button>
+            <CanAccess permission="manage_cashflow">
+              <button 
+                  className="btn-primary" 
+                  onClick={() => setIsAdjustmentModalOpen(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
+              >
+                  <PlusCircle size={16} />
+                  Ajuste Extraordinario
+              </button>
+            </CanAccess>
+            <CanAccess permission="manage_cashflow">
+              <button 
+                  className="btn-primary" 
+                  onClick={() => setIsTransferModalOpen(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                  <ArrowRightLeft size={16} />
+                  Transferir Fondos
+              </button>
+            </CanAccess>
             <button 
                 className="btn-secondary" 
                 onClick={fetchCashFlow} 
@@ -132,13 +137,14 @@ export default function CashFlow() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
+      <div className="charts-grid" style={{ marginBottom: '40px' }}>
         <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
           <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '16px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <TrendingUp size={18} /> Flujo de Liquidez Diario (Runway)
           </h3>
-          <div style={{ width: '100%', height: '300px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="chart-scroll-container" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ minWidth: '600px', height: '300px' }}>
+              <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={data?.daily_flow || []}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -150,14 +156,16 @@ export default function CashFlow() {
                 <Legend />
                 <Area type="monotone" dataKey="balance" name="Saldo Acumulado" stroke="#3b82f6" fillOpacity={0.3} fill="#3b82f6" />
               </AreaChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
         <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
           <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '16px', color: 'var(--text-main)' }}>Comparativa Efectivo por Sucursal (Ingresos vs Egresos)</h3>
-          <div style={{ width: '100%', height: '300px' }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <div className="chart-scroll-container" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ minWidth: '600px', height: '300px' }}>
+            <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={branches || []}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -170,8 +178,9 @@ export default function CashFlow() {
               <Bar dataKey="cash_sales" name="Ingresos (Ventas)" fill="#10b981" radius={[4, 4, 0, 0]} />
               <Bar dataKey="cash_expenses" name="Egresos (Gastos)" fill="#ef4444" radius={[4, 4, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
-        </div>
+            </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -217,15 +226,17 @@ export default function CashFlow() {
             </div>
             
             <div style={{ marginTop: '16px' }}>
-                {branch.is_register_open ? (
-                    <button className="btn-secondary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderColor: 'transparent' }} onClick={() => handleRegisterAction(branch, 'close')}>
-                        <Lock size={16} /> Cerrar Caja / Arqueo
-                    </button>
-                ) : (
-                    <button className="btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: '#22c55e', borderColor: '#22c55e' }} onClick={() => handleRegisterAction(branch, 'open')}>
-                        <Unlock size={16} /> Abrir Caja
-                    </button>
-                )}
+                <CanAccess permission="manage_cashflow">
+                  {branch.is_register_open ? (
+                      <button className="btn-secondary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderColor: 'transparent' }} onClick={() => handleRegisterAction(branch, 'close')}>
+                          <Lock size={16} /> Cerrar Caja / Arqueo
+                      </button>
+                  ) : (
+                      <button className="btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: '#22c55e', borderColor: '#22c55e' }} onClick={() => handleRegisterAction(branch, 'open')}>
+                          <Unlock size={16} /> Abrir Caja
+                      </button>
+                  )}
+                </CanAccess>
             </div>
           </div>
         ))}
@@ -237,7 +248,7 @@ export default function CashFlow() {
           <Banknote size={20} />
           Historial de Movimientos (Kardex de Cajas)
         </h2>
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', overflowX: 'auto' }}>
+        <div className="table-responsive" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>

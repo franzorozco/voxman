@@ -5,6 +5,7 @@ import { DollarSign, TrendingDown, TrendingUp, Wallet, ArrowDownCircle, ArrowUpC
 import { toast } from "react-hot-toast";
 import WithdrawModal from "./WithdrawModal";
 import OwnerTransferModal from "./OwnerTransferModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 import { useAuthStore } from "../../../../store/authStore";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -281,7 +282,7 @@ export default function FinanceDashboard() {
             </div>
 
             {/* RIGHT PANE: Details Grid */}
-            <div style={{ padding: '30px 40px', background: 'transparent' }}>
+            <div className="owner-detail-pane">
               {activeOwnerData && (
                 <div className="fade-in">
                   <div style={{ marginBottom: '30px' }}>
@@ -309,38 +310,40 @@ export default function FinanceDashboard() {
                       </div>
                       
                       {activeOwnerData.current_balance > 0 && user?.id === activeOwnerData.user_id && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                          <button 
-                            className="btn-secondary" 
-                            style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setTransferData({
-                                owner_id: activeOwnerData.owner_id,
-                                branches: activeOwnerData.branches
-                              });
-                              setIsTransferModalOpen(true);
-                            }}
-                          >
-                            <ArrowRight size={16} /> Transferir
-                          </button>
-                          <button 
-                            className="btn-primary" 
-                            style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setWithdrawPaymentData({
-                                owner_id: activeOwnerData.owner_id,
-                                cash_balance: activeOwnerData.cash_balance,
-                                bank_balance: activeOwnerData.bank_balance,
-                                branches: activeOwnerData.branches
-                              });
-                              setIsWithdrawModalOpen(true);
-                            }}
-                          >
-                            <DownloadCloud size={16} /> Retirar Fondos
-                          </button>
-                        </div>
+                        <CanAccess permission="manage_owner_payments">
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button 
+                              className="btn-secondary" 
+                              style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTransferData({
+                                  owner_id: activeOwnerData.owner_id,
+                                  branches: activeOwnerData.branches
+                                });
+                                setIsTransferModalOpen(true);
+                              }}
+                            >
+                              <ArrowRight size={16} /> Transferir
+                            </button>
+                            <button 
+                              className="btn-primary" 
+                              style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setWithdrawPaymentData({
+                                  owner_id: activeOwnerData.owner_id,
+                                  cash_balance: activeOwnerData.cash_balance,
+                                  bank_balance: activeOwnerData.bank_balance,
+                                  branches: activeOwnerData.branches
+                                });
+                                setIsWithdrawModalOpen(true);
+                              }}
+                            >
+                              <DownloadCloud size={16} /> Retirar Fondos
+                            </button>
+                          </div>
+                        </CanAccess>
                       )}
                     </div>
                     
@@ -457,16 +460,18 @@ export default function FinanceDashboard() {
                     {ledgerData.length > 0 && (
                       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
                         <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', color: 'var(--text-main)' }}>Evolución del Capital</h3>
-                        <div style={{ width: '100%', height: '250px' }}>
-                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={[...ledgerData].reverse()}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                              <XAxis dataKey="date" tickFormatter={(t) => new Date(t).toLocaleDateString()} stroke="var(--text-muted)" />
-                              <YAxis stroke="var(--text-muted)" />
-                              <RechartsTooltip labelFormatter={(t) => new Date(t).toLocaleDateString()} formatter={(value) => `Bs. ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'var(--bg-overlay)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }} />
-                              <Line type="monotone" dataKey="new_balance" name="Capital Disponible" stroke="var(--color-primary)" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-                            </LineChart>
-                          </ResponsiveContainer>
+                        <div className="chart-scroll-container" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                          <div style={{ minWidth: '500px', height: '250px' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={[...ledgerData].reverse()}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                                <XAxis dataKey="date" tickFormatter={(t) => new Date(t).toLocaleDateString()} stroke="var(--text-muted)" />
+                                <YAxis stroke="var(--text-muted)" />
+                                <RechartsTooltip labelFormatter={(t) => new Date(t).toLocaleDateString()} formatter={(value) => `Bs. ${value.toFixed(2)}`} contentStyle={{ backgroundColor: 'var(--bg-overlay)', borderColor: 'var(--border-color)', color: 'var(--text-main)' }} />
+                                <Line type="monotone" dataKey="new_balance" name="Capital Disponible" stroke="var(--color-primary)" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
                         </div>
                       </div>
                     )}

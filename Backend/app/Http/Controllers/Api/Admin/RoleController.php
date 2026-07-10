@@ -11,7 +11,11 @@ class RoleController extends Controller
 {
     public function index()
     {
-        return Role::with('permissions')->get();
+        return Role::with('permissions')
+            ->withCount('users')
+            ->withCount('permissions')
+            ->orderBy('permissions_count', 'desc')
+            ->get();
     }
 
     public function show($id)

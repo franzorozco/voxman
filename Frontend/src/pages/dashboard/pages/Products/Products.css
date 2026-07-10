@@ -183,8 +183,8 @@
   max-width: 1000px;
   max-height: 90vh;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 var(--border-color);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4), inset 0 1px 0 var(--border-color);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -195,9 +195,8 @@
   font-size: 24px;
   font-weight: 700;
   border-bottom: 1px solid var(--border-color);
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
+  background: transparent;
   margin: 0;
   letter-spacing: 0.5px;
 }
@@ -600,7 +599,7 @@
   width: 100%;
   aspect-ratio: 1 / 1;
 
-  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border: 2px dashed var(--border-color);
   border-radius: 16px;
 
   background: var(--bg-overlay);
@@ -717,7 +716,7 @@
 .simple-mode-container:hover,
 .variant-card:hover {
 
-  border-color: rgba(255,255,255,0.12);
+  border-color: var(--border-color);
 
   box-shadow:
     0 14px 40px rgba(0,0,0,0.32);
@@ -776,7 +775,7 @@
 }
 
 .simple-card:hover {
-  border-color: rgba(255,255,255,0.12);
+  border-color: var(--border-color);
 }
 
 .simple-card h4 {
@@ -917,7 +916,7 @@
   border-radius: 999px;
 
   border: 2px solid
-    rgba(255,255,255,.2);
+    var(--border-color);
 
   flex-shrink: 0;
 }
@@ -974,7 +973,7 @@
 
 .simple-global-field select:hover,
 .simple-global-field input:hover {
-  border-color: rgba(255,255,255,0.14);
+  border-color: var(--border-color);
 }
 
 .simple-global-field select:focus,
@@ -1173,7 +1172,7 @@
 
 .simple-multiselect::-webkit-scrollbar-thumb:hover,
 .modal::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.2);
+  background: var(--border-color);
 }
 
 /* =========================================================
@@ -1864,7 +1863,7 @@
   background:
     linear-gradient(
       180deg,
-      rgba(255,255,255,0.02),
+      var(--border-color),
       transparent
     );
 }
@@ -1972,14 +1971,14 @@
   color: var(--text-main);
 
   border-bottom:
-    1px solid rgba(255,255,255,0.04);
+    1px solid var(--border-color);
 
   vertical-align: middle;
 }
 
 /* zebra */
 .variants-preview-table tbody tr:nth-child(even) {
-  background: rgba(255,255,255,0.015);
+  background: var(--border-color);
 }
 
 .variants-preview-table tbody tr {
@@ -2308,7 +2307,7 @@ select option:focus {
   border-radius: 999px;
 
   border:
-    3px solid rgba(255,255,255,.18);
+    3px solid var(--border-color);
 
   box-shadow:
     inset 0 0 0 1px var(--border-color),
@@ -2590,7 +2589,7 @@ select option:focus {
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  border: 2px solid rgba(255,255,255,.25);
+  border: 2px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -2827,7 +2826,7 @@ select option:focus {
   height: 74px;
   border-radius: 999px;
   border:
-    4px solid rgba(255,255,255,.15);
+    4px solid var(--border-color);
   box-shadow:
     0 12px 30px rgba(0,0,0,.25);
 }
@@ -2899,7 +2898,7 @@ select option:focus {
 
 .size-preview-description{
   color:
-    rgba(255,255,255,.45);
+    var(--border-color);
 
   font-size: 13px;
 }
@@ -3059,7 +3058,7 @@ select option:focus {
 
 .add-variant-card {
   width: 100%;
-  border: 2px dashed rgba(255,255,255,0.15);
+  border: 2px dashed var(--border-color);
   background: var(--bg-overlay);
 
   border-radius: 18px;
@@ -3148,7 +3147,7 @@ select option:focus {
 }
 
 .image-dropzone {
-  border: 2px dashed rgba(255,255,255,0.2);
+  border: 2px dashed var(--border-color);
   border-radius: 12px;
   padding: min(40px, 5vw);
   text-align: center;
@@ -3512,8 +3511,8 @@ select option:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: var(--border-color);
+  border: 1px dashed var(--border-color);
   color: var(--text-color);
   padding: 8px 16px;
   border-radius: 8px;
@@ -3525,8 +3524,8 @@ select option:focus {
 }
 
 .custom-dropdown-trigger:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--border-color);
+  border-color: var(--border-color);
 }
 
 .dropdown-arrow {
@@ -3545,7 +3544,7 @@ select option:focus {
   min-width: 220px;
   background: rgba(25, 25, 25, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 8px 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -3589,7 +3588,7 @@ select option:focus {
 }
 
 .custom-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-color);
   padding-left: 20px;
 }
  

@@ -185,11 +185,12 @@ export default function FinanceReports() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
+          <div className="charts-grid">
             <div className="chart-card" style={{ marginBottom: 0 }}>
               <h3>Flujo Histórico (Ventas vs Egresos)</h3>
-              <div style={{ width: '100%', height: 300 }}>
-                <ResponsiveContainer>
+              <div className="chart-scroll-container">
+                <div style={{ minWidth: '600px', height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data?.timeline || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                     <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickMargin={10} />
@@ -199,15 +200,17 @@ export default function FinanceReports() {
                     <Bar dataKey="sales" name="Ventas" fill="#22c55e" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="expenses" name="Egresos" fill="#ef4444" radius={[4, 4, 0, 0]} />
                   </BarChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
 
             <div className="chart-card" style={{ marginBottom: 0 }}>
               <h3>Distribución de Gastos</h3>
-              <div style={{ width: '100%', height: 300 }}>
+              <div className="chart-scroll-container">
+                <div style={{ minWidth: '350px', height: 300 }}>
                 {data?.expense_categories && data.expense_categories.length > 0 ? (
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={data.expense_categories}
@@ -231,6 +234,7 @@ export default function FinanceReports() {
                     No hay gastos en este periodo
                   </div>
                 )}
+                </div>
               </div>
             </div>
           </div>
@@ -239,7 +243,7 @@ export default function FinanceReports() {
             <div className="table-header">
               <h3>Desglose por Día</h3>
             </div>
-            <div style={{ overflowX: 'auto' }}>
+            <div className="table-responsive">
               <table className="reports-table">
                 <thead>
                   <tr>

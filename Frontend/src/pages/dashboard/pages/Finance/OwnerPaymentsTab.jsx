@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Archive, XCircle, ArrowDownCircle, ArrowUpCircle, Eye, List, History } from "lucide-react";
+import { Plus, Edit, Archive, XCircle, AlertCircle, ArrowDownCircle, ArrowUpCircle, Eye, List, History } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getOwnerPayments, archiveOwnerPayment, annulOwnerPayment } from "../../../../api/admin/finance";
 import { getBranches } from "../../../../api/admin/branches";
 import OwnerPaymentModal from "./OwnerPaymentModal";
 import OwnerPaymentDetailModal from "./OwnerPaymentDetailModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 
 export default function OwnerPaymentsTab() {
   const [payments, setPayments] = useState([]);
@@ -166,14 +167,16 @@ export default function OwnerPaymentsTab() {
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </select>
-          <button 
-            className="btn-primary" 
-            onClick={() => { setSelectedPayment(null); setIsModalOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <Plus size={18} />
-            Registrar Movimiento
-          </button>
+          <CanAccess permission="manage_owner_payments">
+            <button 
+              className="btn-primary" 
+              onClick={() => { setSelectedPayment(null); setIsModalOpen(true); }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Plus size={18} />
+              Registrar Movimiento
+            </button>
+          </CanAccess>
         </div>
       </div>
 
@@ -248,24 +251,28 @@ export default function OwnerPaymentsTab() {
                       </button>
 
                       {p.status === 'paid' && (
-                        <button 
-                          className="btn-secondary"
-                          onClick={() => { setSelectedPayment(p); setIsModalOpen(true); }}
-                          title="Editar"
-                          style={{ padding: '6px' }}
-                        >
-                          <Edit size={16} />
-                        </button>
+                        <CanAccess permission="manage_owner_payments">
+                          <button 
+                            className="btn-secondary"
+                            onClick={() => { setSelectedPayment(p); setIsModalOpen(true); }}
+                            title="Editar"
+                            style={{ padding: '6px' }}
+                          >
+                            <Edit size={16} />
+                          </button>
+                        </CanAccess>
                       )}
 
                       {p.status === 'paid' && isRecent(p.created_at) && (
-                        <button 
-                          onClick={() => handleAnnul(p.id)}
-                          title="Anular Movimiento (Revertir)"
-                          style={{ padding: '6px', background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)', borderRadius: '6px', cursor: 'pointer' }}
-                        >
-                          <XCircle size={16} />
-                        </button>
+                        <CanAccess permission="manage_owner_payments">
+                          <button 
+                            onClick={() => handleAnnul(p.id)}
+                            title="Anular Movimiento (Revertir)"
+                            style={{ padding: '6px', background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)', borderRadius: '6px', cursor: 'pointer' }}
+                          >
+                            <XCircle size={16} />
+                          </button>
+                        </CanAccess>
                       )}
 
                       {p.status === 'paid' && !isRecent(p.created_at) && (

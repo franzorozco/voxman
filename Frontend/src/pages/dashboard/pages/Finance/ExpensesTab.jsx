@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, CalendarDays, CheckCircle, Archive, XCircle, List, History, Eye, Building } from "lucide-react";
+import { Plus, Edit, Trash2, CalendarDays, CheckCircle, Archive, XCircle, List, History, Eye, Building, Edit2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getExpenses, deleteExpense, createExpense, payExpenseSplit, archiveExpense, annulExpense } from "../../../../api/admin/finance";
 import { getBranches } from "../../../../api/admin/branches";
 import ExpenseModal from "./ExpenseModal";
 import ExpenseDetailModal from "./ExpenseDetailModal";
+import CanAccess from "../../../../components/ui/CanAccess";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
@@ -273,14 +274,15 @@ export default function ExpensesTab() {
               ))}
             </select>
           </div>
-          <button 
-            className="btn-primary" 
-            onClick={() => { setSelectedExpense(null); setIsModalOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <Plus size={18} />
-            Registrar Gasto
-          </button>
+          <CanAccess permission="manage_expenses">
+            <button 
+              className="btn-primary" 
+              onClick={() => { setSelectedExpense(null); setIsModalOpen(true); }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Plus size={18} /> Añadir Gasto
+            </button>
+          </CanAccess>
         </div>
       </div>
 
@@ -350,15 +352,17 @@ export default function ExpensesTab() {
                           const hasPaidMySplit = mySplit?.status === 'paid';
                           
                           return (
-                            <button 
-                              className="btn-primary"
-                              onClick={() => { setSelectedExpense({...e, status: 'paid', fund_source: 'cash'}); setIsQuickPayModalOpen(true); }}
-                              title="Pagar ahora"
-                              disabled={hasPaidMySplit}
-                              style={{ padding: '6px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', opacity: hasPaidMySplit ? 0.5 : 1, cursor: hasPaidMySplit ? 'not-allowed' : 'pointer' }}
-                            >
-                              <CheckCircle size={16} /> Pagar
-                            </button>
+                            <CanAccess permission="manage_expenses" key="pay-split">
+                              <button 
+                                className="btn-primary"
+                                onClick={() => { setSelectedExpense({...e, status: 'paid', fund_source: 'cash'}); setIsQuickPayModalOpen(true); }}
+                                title="Pagar ahora"
+                                disabled={hasPaidMySplit}
+                                style={{ padding: '6px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', opacity: hasPaidMySplit ? 0.5 : 1, cursor: hasPaidMySplit ? 'not-allowed' : 'pointer' }}
+                              >
+                                <CheckCircle size={16} /> Pagar
+                              </button>
+                            </CanAccess>
                           );
                         })()
                       )}
@@ -372,35 +376,40 @@ export default function ExpensesTab() {
                       </button>
 
                       {e.status !== 'annulled' && (
-                        <button 
-                          className="btn-secondary"
-                          onClick={() => { setSelectedExpense(e); setIsModalOpen(true); }}
-                          title="Editar"
-                          style={{ padding: '6px' }}
-                        >
-                          <Edit size={16} />
-                        </button>
-                      )}
-
-                      {e.status === 'pending' && (
-                        <button 
-                          className="btn-danger"
-                          onClick={() => handleDelete(e.id)}
-                          title="Eliminar Gasto Pendiente"
-                          style={{ padding: '6px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <CanAccess permission="manage_expenses">
+                            <button
+                              className="btn-secondary"
+                              onClick={() => { setSelectedExpense(e); setIsModalOpen(true); }}
+                              title="Editar"
+                              style={{ padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              className="btn-danger"
+                              onClick={() => handleDelete(e.id)}
+                              title="Eliminar Gasto Pendiente"
+                              style={{ padding: '6px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </CanAccess>
+                        </div>
                       )}
 
                       {e.status === 'paid' && isRecent(e.created_at) && (
-                        <button 
-                          onClick={() => handleAnnul(e.id)}
-                          title="Anular Gasto (Devolver saldo)"
-                          style={{ padding: '6px', background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)', borderRadius: '6px', cursor: 'pointer' }}
-                        >
-                          <XCircle size={16} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <CanAccess permission="manage_expenses">
+                            <button 
+                              onClick={() => handleAnnul(e.id)}
+                              title="Anular Gasto (Devolver saldo)"
+                              style={{ padding: '6px', background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)', borderRadius: '6px', cursor: 'pointer' }}
+                            >
+                              <AlertCircle size={16} />
+                            </button>
+                          </CanAccess>
+                        </div>
                       )}
 
                       {e.status === 'paid' && !isRecent(e.created_at) && (

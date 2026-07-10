@@ -3,6 +3,7 @@ import FinanceDashboard from "./FinanceDashboard";
 import ExpensesTab from "./ExpensesTab";
 import OwnerPaymentsTab from "./OwnerPaymentsTab";
 import { PieChart, TrendingDown, Wallet } from "lucide-react";
+import CanAccess from "../../../../components/ui/CanAccess";
 import "./Finance.css";
 
 export default function Finance() {
@@ -25,26 +26,34 @@ export default function Finance() {
             Balance Financiero
           </button>
           
-          <button 
-            className={`finance-tab ${activeTab === "expenses" ? "active" : ""}`}
-            onClick={() => setActiveTab("expenses")}
-          >
-            <TrendingDown size={18} />
-            Control de Gastos
-          </button>
+          <CanAccess permission="manage_expenses">
+            <button 
+              className={`finance-tab ${activeTab === "expenses" ? "active" : ""}`}
+              onClick={() => setActiveTab("expenses")}
+            >
+              <TrendingDown size={18} />
+              Control de Gastos
+            </button>
+          </CanAccess>
           
-          <button 
-            className={`finance-tab ${activeTab === "owner-payments" ? "active" : ""}`}
-            onClick={() => setActiveTab("owner-payments")}
-          >
-            <Wallet size={18} />
-            Aportes y Retiros (Socios)
-          </button>
+          <CanAccess permission="manage_owner_payments">
+            <button 
+              className={`finance-tab ${activeTab === "owner-payments" ? "active" : ""}`}
+              onClick={() => setActiveTab("owner-payments")}
+            >
+              <Wallet size={18} />
+              Aportes y Retiros (Socios)
+            </button>
+          </CanAccess>
         </div>
       <div className="settings-content-card" style={{ padding: '0', background: 'transparent', border: 'none' }}>
         {activeTab === "dashboard" && <FinanceDashboard />}
-        {activeTab === "expenses" && <ExpensesTab />}
-        {activeTab === "owner-payments" && <OwnerPaymentsTab />}
+        <CanAccess permission="manage_expenses">
+          {activeTab === "expenses" && <ExpensesTab />}
+        </CanAccess>
+        <CanAccess permission="manage_owner_payments">
+          {activeTab === "owner-payments" && <OwnerPaymentsTab />}
+        </CanAccess>
       </div>
     </div>
   );

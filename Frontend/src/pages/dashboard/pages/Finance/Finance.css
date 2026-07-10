@@ -3983,3 +3983,30 @@ select option:focus {
   }
 }
 
+
+/* Fix grid blowout */
+.owners-grid > div,
+.treasury-grid > div,
+.dashboard-summary-cards > div,
+.metrics-grid > div,
+.branches-grid > div {
+  min-width: 0;
+}
+.owner-detail-pane {
+  padding: 30px 40px;
+  background: transparent;
+}
+@media (max-width: 768px) {
+  .owner-detail-pane {
+    padding: 10px;
+  }
+}
+
+
+.table-container,
+.ledger-table-container,
+.finance-page .content,
+.finance-page {
+  min-width: 0;
+}
+

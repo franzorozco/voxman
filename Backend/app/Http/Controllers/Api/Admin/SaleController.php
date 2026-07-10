@@ -21,6 +21,10 @@ class SaleController extends Controller
             'giftcard_transactions.giftcard'
         ]);
 
+        if (auth()->check() && !auth()->user()->can('view_sales_all_branches')) {
+            $query->where('branch_id', auth()->user()->branch_id);
+        }
+
         // Filters
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -106,6 +110,12 @@ class SaleController extends Controller
             'giftcard_transactions.giftcard',
             'sale_applied_discounts.discount'
         ])->findOrFail($id);
+
+        if (auth()->check() && !auth()->user()->can('view_sales_all_branches')) {
+            if ($sale->branch_id !== auth()->user()->branch_id) {
+                abort(403, 'No tienes permiso para ver ventas de otras sucursales.');
+            }
+        }
 
         return response()->json($sale);
     }

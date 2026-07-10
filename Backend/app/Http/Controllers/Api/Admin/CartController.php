@@ -13,6 +13,13 @@ class CartController extends Controller
         $query = Cart::with(['user.profile', 'items.product_variant.product'])
             ->orderBy('created_at', 'desc');
 
+        if (auth()->check() && !auth()->user()->can('view_carts_all_branches')) {
+            $branchId = auth()->user()->branch_id;
+            $query->whereHas('user', function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -69,6 +76,12 @@ class CartController extends Controller
             'items.product_variant.size',
             'items.product_variant.fit'
         ])->findOrFail($id);
+        
+        if (auth()->check() && !auth()->user()->can('view_carts_all_branches')) {
+            if ($cart->user && $cart->user->branch_id !== auth()->user()->branch_id) {
+                abort(403, 'No tienes permiso para ver carritos de otras sucursales.');
+            }
+        }
         
         $cart->total_amount_calculated = $cart->total_amount;
         

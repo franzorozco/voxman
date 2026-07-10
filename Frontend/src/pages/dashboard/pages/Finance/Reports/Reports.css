@@ -157,3 +157,48 @@
     font-size: 14px;
     color: var(--text-main);
 }
+
+/* Prevent grid blowout */
+.kpi-row > div,
+.charts-grid > div,
+.finance-reports {
+    min-width: 0;
+}
+.charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+.chart-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .reports-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .reports-filters {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+    .date-picker-input {
+        width: 100% !important;
+    }
+    .kpi-row {
+        grid-template-columns: 1fr;
+    }
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

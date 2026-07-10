@@ -296,42 +296,42 @@ Route::middleware([
     });
     
     Route::prefix('sales')->group(function () {
-        Route::get('/', [SaleController::class, 'index']);
-        Route::get('/{id}', [SaleController::class, 'show']);
-        Route::put('/{id}', [SaleController::class, 'update']);
-        Route::delete('/{id}', [SaleController::class, 'destroy']);
+        Route::get('/', [SaleController::class, 'index'])->middleware('permission:view_sales');
+        Route::get('/{id}', [SaleController::class, 'show'])->middleware('permission:view_sales');
+        Route::put('/{id}', [SaleController::class, 'update'])->middleware('permission:manage_sales');
+        Route::delete('/{id}', [SaleController::class, 'destroy'])->middleware('permission:manage_sales');
     });
 
     Route::prefix('carts')->group(function () {
-        Route::get('/', [CartController::class, 'index']);
-        Route::get('/{id}', [CartController::class, 'show']);
-        Route::post('/{id}/convert', [CartController::class, 'convert']);
-        Route::post('/{id}/reminder', [CartController::class, 'sendReminder']);
-        Route::delete('/{id}', [CartController::class, 'destroy']);
+        Route::get('/', [CartController::class, 'index'])->middleware('permission:view_carts');
+        Route::get('/{id}', [CartController::class, 'show'])->middleware('permission:view_carts');
+        Route::post('/{id}/convert', [CartController::class, 'convert'])->middleware('permission:manage_carts');
+        Route::post('/{id}/reminder', [CartController::class, 'sendReminder'])->middleware('permission:manage_carts');
+        Route::delete('/{id}', [CartController::class, 'destroy'])->middleware('permission:delete_carts');
     });
 
     Route::prefix('returns')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'index']);
-        Route::get('/{id}', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'show']);
-        Route::post('/{id}/approve', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'approve']);
-        Route::post('/{id}/reject', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'reject']);
+        Route::get('/', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'index'])->middleware('permission:view_returns');
+        Route::get('/{id}', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'show'])->middleware('permission:view_returns');
+        Route::post('/{id}/approve', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'approve'])->middleware('permission:manage_returns');
+        Route::post('/{id}/reject', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'reject'])->middleware('permission:manage_returns');
     });
     Route::prefix('cashflow')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'index']);
-        Route::post('/transfer', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'transfer']);
-        Route::post('/register/open', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'openRegister']);
-        Route::post('/register/close', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'closeRegister']);
-        Route::post('/adjustment', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'addAdjustment']);
+        Route::get('/', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'index'])->middleware('permission:view_cashflow');
+        Route::post('/transfer', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'transfer'])->middleware('permission:manage_cashflow');
+        Route::post('/register/open', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'openRegister'])->middleware('permission:manage_cashflow');
+        Route::post('/register/close', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'closeRegister'])->middleware('permission:manage_cashflow');
+        Route::post('/adjustment', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'addAdjustment'])->middleware('permission:manage_cashflow');
     });
     
     Route::get('supplier-returns', [\App\Http\Controllers\Api\Admin\SupplierReturnController::class, 'index']);
 
     Route::prefix('finance')->group(function () {
-        Route::get('dashboard', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'index']);
-        Route::get('owners/{id}/ledger', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'ownerLedger']);
-        Route::get('reports', [\App\Http\Controllers\Api\Admin\FinanceReportController::class, 'index']);
+        Route::get('dashboard', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'index'])->middleware('permission:view_finance');
+        Route::get('owners/{id}/ledger', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'ownerLedger'])->middleware('permission:view_finance');
+        Route::get('reports', [\App\Http\Controllers\Api\Admin\FinanceReportController::class, 'index'])->middleware('permission:view_finance_reports');
         
-        Route::prefix('expenses')->group(function () {
+        Route::prefix('expenses')->middleware('permission:manage_expenses')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'store']);
             Route::get('/{id}', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'show']);
@@ -344,7 +344,7 @@ Route::middleware([
             Route::post('/splits/{id}/pay', [\App\Http\Controllers\Api\Admin\ExpenseController::class, 'paySplit']);
         });
 
-        Route::prefix('owner-payments')->group(function () {
+        Route::prefix('owner-payments')->middleware('permission:manage_owner_payments')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'store']);
             Route::get('/{id}', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'show']);

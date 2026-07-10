@@ -14,13 +14,13 @@
 .page-header h1 {
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-main);
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: var(--bg-surface);
+  background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 16px;
@@ -35,11 +35,11 @@
   padding: 8px;
   width: 100%;
   outline: none;
-  color: var(--text-primary);
+  color: var(--text-main);
 }
 
 .search-bar svg {
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .giftcards-grid {
@@ -49,7 +49,7 @@
 }
 
 .giftcard-card {
-  background-color: var(--bg-surface);
+  background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px;
@@ -72,11 +72,11 @@
   left: 0;
   width: 4px;
   height: 100%;
-  background-color: var(--primary-color);
+  background-color: var(--color-primary);
 }
 
 .giftcard-card.inactive::before {
-  background-color: var(--danger-color);
+  background-color: var(--color-danger);
 }
 
 .giftcard-header {
@@ -93,7 +93,7 @@
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: var(--text-primary);
+  color: var(--text-main);
 }
 
 .status-badge {
@@ -104,13 +104,13 @@
 }
 
 .status-badge.active {
-  background-color: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
 }
 
 .status-badge.inactive {
   background-color: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 .giftcard-body {
@@ -123,27 +123,27 @@
 
 .balance-info .label {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   margin: 0 0 4px 0;
 }
 
 .balance-info .amount {
   font-size: 28px;
   font-weight: 700;
-  color: var(--primary-color);
+  color: var(--color-primary);
   margin: 0;
 }
 
 .details-info p {
   margin: 4px 0;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   display: flex;
   justify-content: space-between;
 }
 
 .details-info p strong {
-  color: var(--text-primary);
+  color: var(--text-main);
   font-weight: 500;
 }
 
@@ -165,23 +165,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   transition: all 0.2s;
 }
 
 .action-btn:hover:not(:disabled) {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
+  background-color: var(--bg-input);
+  color: var(--text-main);
 }
 
 .action-btn.reload:hover:not(:disabled) {
-  color: var(--primary-color);
-  border-color: var(--primary-color);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .action-btn.delete:hover:not(:disabled) {
-  color: var(--danger-color);
-  border-color: var(--danger-color);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .action-btn:disabled {
@@ -190,6 +190,94 @@
 }
 
 /* Modal specific overrides if any */
-.giftcard-modal {
+.giftcard-modal,
+.giftcard-history-modal {
   max-width: 450px !important;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.giftcard-history-modal {
+  max-width: 600px !important;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-main);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-main);
+  outline: none;
+}
+
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--color-primary);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-secondary {
+  padding: 10px 16px;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.btn-primary {
+  padding: 10px 16px;
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  color: var(--bg-card); /* Inverse text color */
+  cursor: pointer;
+  font-weight: 500;
 }

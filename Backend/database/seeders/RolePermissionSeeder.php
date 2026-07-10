@@ -114,6 +114,35 @@ class RolePermissionSeeder extends Seeder
             'view_inventory_history',
             'inventory_mass_entry',
 
+            // Finanzas
+            'view_finance',
+            'manage_expenses',
+            'manage_owner_payments',
+            'view_cashflow',
+            'manage_cashflow',
+            'view_finance_reports',
+
+            // Ventas
+            'view_sales',
+            'view_sales_own_branch',
+            'view_sales_all_branches',
+            'manage_sales',
+            'print_sale_receipt',
+            'view_sale_profits',
+
+            // Devoluciones
+            'view_returns',
+            'view_returns_own_branch',
+            'view_returns_all_branches',
+            'manage_returns',
+
+            // Carritos y Proformas
+            'view_carts',
+            'view_carts_own_branch',
+            'view_carts_all_branches',
+            'manage_carts',
+            'delete_carts',
+
             // Configuraciones Generales
             'manage_settings',
         ];
@@ -141,10 +170,10 @@ class RolePermissionSeeder extends Seeder
         $deliveryRole = Role::firstOrCreate(['name' => 'Repartidor', 'guard_name' => 'web']);
 
         // Asignar TODO a Owner
-        $ownerRole->syncPermissions(Permission::all());
+        $ownerRole->syncPermissions(Permission::where('guard_name', 'web')->get());
 
         // Asignar al Administrador (casi todo, menos manage_roles)
-        $adminPermissions = Permission::where('name', '!=', 'manage_roles')->get();
+        $adminPermissions = Permission::where('guard_name', 'web')->where('name', '!=', 'manage_roles')->get();
         $adminRole->syncPermissions($adminPermissions);
 
         // Gerente de Sucursal
@@ -158,6 +187,16 @@ class RolePermissionSeeder extends Seeder
             'receive_inventory',
             'transfer_inventory',
             'adjust_inventory', // con reservas, pero se lo damos
+            'view_sales',
+            'view_sales_own_branch',
+            'print_sale_receipt',
+            'view_returns',
+            'view_returns_own_branch',
+            'manage_returns',
+            'view_carts',
+            'view_carts_own_branch',
+            'manage_carts',
+            'delete_carts',
         ]);
 
         $warehouseRole->syncPermissions([
@@ -179,6 +218,16 @@ class RolePermissionSeeder extends Seeder
             'view_categories',
             'view_inventory_own_branch',
             'view_inventory_all_branches', // Opcional, para que puedan ver stock de otras tiendas
+            'view_sales',
+            'view_sales_own_branch',
+            'print_sale_receipt',
+            'view_returns',
+            'view_returns_own_branch',
+            'manage_returns',
+            'view_carts',
+            'view_carts_own_branch',
+            'manage_carts',
+            'delete_carts',
         ]);
 
         // Repartidor

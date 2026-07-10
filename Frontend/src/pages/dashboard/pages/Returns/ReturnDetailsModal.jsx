@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Undo2, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { approveReturn, rejectReturn } from "../../../../api/admin/returns";
+import CanAccess from "../../../../components/ui/CanAccess";
 import "./Returns.css";
 
 export default function ReturnDetailsModal({ returnItem, onClose }) {
@@ -138,24 +139,26 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                <button 
-                  onClick={handleReject} 
-                  disabled={loading}
-                  style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'transparent', border: '1px solid #f44336', color: '#f44336', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                >
-                  <XCircle size={18} />
-                  Denegar Devolución
-                </button>
-                <button 
-                  onClick={handleApprove} 
-                  disabled={loading}
-                  style={{ flex: 1, padding: '12px', borderRadius: '8px', background: '#4caf50', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-                >
-                  <CheckCircle size={18} />
-                  Aprobar y Reembolsar
-                </button>
-              </div>
+              <CanAccess permission="manage_returns">
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                  <button 
+                    onClick={handleReject} 
+                    disabled={loading}
+                    style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'transparent', border: '1px solid #f44336', color: '#f44336', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontWeight: 600 }}
+                  >
+                    <XCircle size={18} />
+                    Denegar Devolución
+                  </button>
+                  <button 
+                    onClick={handleApprove} 
+                    disabled={loading}
+                    style={{ flex: 1, padding: '12px', borderRadius: '8px', background: '#4caf50', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontWeight: 600 }}
+                  >
+                    <CheckCircle size={18} />
+                    Aprobar Devolución
+                  </button>
+                </div>
+              </CanAccess>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '20px', background: 'var(--bg-input)', borderRadius: '12px' }}>
