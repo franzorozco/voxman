@@ -514,6 +514,25 @@ CREATE TABLE public.customers (
 ALTER TABLE public.customers OWNER TO admin;
 
 --
+-- TOC entry X (Custom)
+-- Name: pos_customer_profiles; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.pos_customer_profiles (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    customer_id uuid NOT NULL,
+    first_name character varying(100) NOT NULL,
+    last_name_paternal character varying(100),
+    last_name_maternal character varying(100),
+    phone character varying(20),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone
+);
+
+ALTER TABLE public.pos_customer_profiles OWNER TO admin;
+
+--
 -- TOC entry 284 (class 1259 OID 48898)
 -- Name: delivery_drivers; Type: TABLE; Schema: public; Owner: admin
 --
@@ -3542,6 +3561,14 @@ ALTER TABLE ONLY public.categories
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+--
+-- TOC entry X (Custom FK)
+-- Name: pos_customer_profiles pos_customer_profiles_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.pos_customer_profiles
+    ADD CONSTRAINT pos_customer_profiles_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
 
 
 --

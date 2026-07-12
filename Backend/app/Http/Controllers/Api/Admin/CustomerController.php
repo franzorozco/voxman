@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Actors\Customer;
+use App\Models\Actors\PosCustomerProfile;
 use App\Models\Core\User;
 use App\Models\Core\UserProfile;
 use App\Models\Auth\Role;
@@ -16,7 +17,7 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Customer::with(['user.profile']);
+        $query = Customer::with(['user.profile', 'posProfile']);
         $status = $request->query('status');
         if (empty($status)) {
             $status = 'active'; // Default to active if empty
@@ -47,6 +48,11 @@ class CustomerController extends Controller
                                ->orWhere('last_name_paternal', 'ILIKE', "%{$search}%")
                                ->orWhere('phone', 'ILIKE', "%{$search}%");
                         });
+                  })
+                  ->orWhereHas('posProfile', function ($qPos) use ($search) {
+                      $qPos->where('first_name', 'ILIKE', "%{$search}%")
+                           ->orWhere('last_name_paternal', 'ILIKE', "%{$search}%")
+                           ->orWhere('phone', 'ILIKE', "%{$search}%");
                   });
             });
         }
@@ -68,6 +74,7 @@ class CustomerController extends Controller
     {
         $customer = Customer::with([
             'user.profile',
+            'posProfile',
             'addresses',
             'sales.sale_details.product_variant.product',
             'sales.branch',
@@ -101,40 +108,53 @@ class CustomerController extends Controller
             // Tomar código manual
             $customerCode = strtoupper(trim($request->customer_code));
 
-            // Si no tiene email, le generamos uno ficticio y único
             $emailToSave = $request->email;
-            if (empty($emailToSave)) {
-                $emailToSave = strtolower($customerCode) . '@guest.voxman.local';
-            }
+            
+            if (!empty($emailToSave)) {
+                // Crear Usuario Web Completo
+                $user = User::create([
+                    'email' => $emailToSave,
+                    'password' => Hash::make($request->password ?? Str::random(10)),
+                    'is_active' => $isActive
+                ]);
 
-            $user = User::create([
-                'email' => $emailToSave,
-                'password' => Hash::make($request->password ?? Str::random(10)),
-                'is_active' => $isActive
-            ]);
+                UserProfile::create([
+                    'user_id' => $user->id,
+                    'first_name' => $request->first_name,
+                    'last_name_paternal' => $request->last_name_paternal,
+                    'phone' => $request->phone,
+                ]);
 
-            UserProfile::create([
-                'user_id' => $user->id,
-                'first_name' => $request->first_name,
-                'last_name_paternal' => $request->last_name_paternal,
-                'phone' => $request->phone,
-            ]);
+                $customer = Customer::create([
+                    'user_id' => $user->id,
+                    'customer_code' => $customerCode,
+                    'is_active' => $isActive
+                ]);
 
-            $customer = Customer::create([
-                'user_id' => $user->id,
-                'customer_code' => $customerCode,
-                'is_active' => $isActive
-            ]);
-
-            // Assign customer roles automatically
-            $customerRoles = Role::where('is_customer', true)->get();
-            if ($customerRoles->isNotEmpty()) {
-                $user->assignRole($customerRoles);
+                // Assign customer roles automatically
+                $customerRoles = Role::where('is_customer', true)->get();
+                if ($customerRoles->isNotEmpty()) {
+                    $user->assignRole($customerRoles);
+                }
+            } else {
+                // Crear Solo Cliente POS
+                $customer = Customer::create([
+                    'user_id' => null,
+                    'customer_code' => $customerCode,
+                    'is_active' => $isActive
+                ]);
+                
+                PosCustomerProfile::create([
+                    'customer_id' => $customer->id,
+                    'first_name' => $request->first_name,
+                    'last_name_paternal' => $request->last_name_paternal,
+                    'phone' => $request->phone,
+                ]);
             }
 
             DB::commit();
 
-            return response()->json(Customer::with('user.profile')->find($customer->id), 201);
+            return response()->json(Customer::with(['user.profile', 'posProfile'])->find($customer->id), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error creating customer', 'error' => $e->getMessage()], 500);
@@ -158,12 +178,8 @@ class CustomerController extends Controller
             DB::beginTransaction();
 
             $updateData = [];
-            if ($request->has('email') && !empty($request->email)) {
-                $updateData['email'] = $request->email;
-            }
             
             if ($request->has('is_active')) {
-                $updateData['is_active'] = $request->boolean('is_active');
                 $customer->update([
                     'is_active' => $request->boolean('is_active'),
                     'customer_code' => strtoupper(trim($request->customer_code))
@@ -174,30 +190,66 @@ class CustomerController extends Controller
                 ]);
             }
 
-            $user->update($updateData);
+            // Flujo de Migración POS a WEB o Actualización Normal
+            if (!empty($request->email)) {
+                if ($user) {
+                    // Update existing web user
+                    $updateData['email'] = $request->email;
+                    $user->update($updateData);
 
-            if ($request->has('password') && !empty($request->password)) {
-                $user->update(['password' => Hash::make($request->password)]);
-            }
+                    if ($request->has('password') && !empty($request->password)) {
+                        $user->update(['password' => Hash::make($request->password)]);
+                    }
 
-            if ($profile) {
-                $profile->update([
-                    'first_name' => $request->first_name,
-                    'last_name_paternal' => $request->last_name_paternal,
-                    'phone' => $request->phone,
-                ]);
+                    if ($profile) {
+                        $profile->update([
+                            'first_name' => $request->first_name,
+                            'last_name_paternal' => $request->last_name_paternal,
+                            'phone' => $request->phone,
+                        ]);
+                    }
+                } else {
+                    // Convert POS customer to Web Customer
+                    $newUser = User::create([
+                        'email' => $request->email,
+                        'password' => Hash::make($request->password ?? Str::random(10)),
+                        'is_active' => $customer->is_active
+                    ]);
+
+                    UserProfile::create([
+                        'user_id' => $newUser->id,
+                        'first_name' => $request->first_name,
+                        'last_name_paternal' => $request->last_name_paternal,
+                        'phone' => $request->phone,
+                    ]);
+
+                    $customer->update(['user_id' => $newUser->id]);
+
+                    // Assign roles
+                    $customerRoles = Role::where('is_customer', true)->get();
+                    if ($customerRoles->isNotEmpty()) {
+                        $newUser->assignRole($customerRoles);
+                    }
+
+                    // Remove old pos profile
+                    if ($customer->posProfile) {
+                        $customer->posProfile->delete();
+                    }
+                }
             } else {
-                UserProfile::create([
-                    'user_id' => $user->id,
-                    'first_name' => $request->first_name,
-                    'last_name_paternal' => $request->last_name_paternal,
-                    'phone' => $request->phone,
-                ]);
+                // Update only POS profile
+                if ($customer->posProfile) {
+                    $customer->posProfile->update([
+                        'first_name' => $request->first_name,
+                        'last_name_paternal' => $request->last_name_paternal,
+                        'phone' => $request->phone,
+                    ]);
+                }
             }
 
             DB::commit();
 
-            return response()->json(Customer::with('user.profile')->find($customer->id));
+            return response()->json(Customer::with(['user.profile', 'posProfile'])->find($customer->id));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error updating customer', 'error' => $e->getMessage()], 500);

@@ -14,4 +14,8 @@ class Customer extends BaseCustomer
 		'total_purchases'
 	];
 
+	public function posProfile()
+	{
+		return $this->hasOne(PosCustomerProfile::class, 'customer_id');
+	}
 }
