@@ -67,6 +67,10 @@ Route::middleware([
         Route::delete('/{id}', [PermissionController::class, 'destroy']);
     });
 
+    Route::prefix('logs')->middleware('permission:view_audit_logs')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\AuditLogController::class, 'index']);
+    });
+
     Route::prefix('branches')->group(function () {
         Route::get('/', [BranchController::class, 'index'])->middleware('permission:view_branches');
         Route::get('/deleted', [BranchController::class, 'deleted'])->middleware('permission:view_branches');
@@ -208,11 +212,11 @@ Route::middleware([
     });
 
     Route::prefix('owners')->group(function () {
-        Route::get('/', [OwnerController::class, 'index']);
-        Route::get('/{id}', [OwnerController::class, 'show']);
-        Route::post('/', [OwnerController::class, 'store']);
-        Route::put('/{id}', [OwnerController::class, 'update']);
-        Route::delete('/{id}', [OwnerController::class, 'destroy']);
+        Route::get('/', [OwnerController::class, 'index'])->middleware('permission:view_owners');
+        Route::get('/{id}', [OwnerController::class, 'show'])->middleware('permission:view_owners');
+        Route::post('/', [OwnerController::class, 'store'])->middleware('permission:manage_owners');
+        Route::put('/{id}', [OwnerController::class, 'update'])->middleware('permission:manage_owners');
+        Route::delete('/{id}', [OwnerController::class, 'destroy'])->middleware('permission:manage_owners');
     });
 
     Route::prefix('product-types')->group(function () {

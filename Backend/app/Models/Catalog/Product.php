@@ -6,6 +6,8 @@ use App\Models\Base\Product as BaseProduct;
 
 class Product extends BaseProduct
 {
+    use \App\Traits\Auditable;
+    
 	protected $fillable = [
 
         'id',

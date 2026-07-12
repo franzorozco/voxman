@@ -21,6 +21,11 @@ class RolePermissionSeeder extends Seeder
 
         // Lista de Permisos a crear
         $permissions = [
+            // Socios
+            'view_owners',
+            'manage_owners',
+            'manage_owners_credentials',
+
             // Usuarios
             'view_users',
             'create_users',
@@ -145,6 +150,9 @@ class RolePermissionSeeder extends Seeder
 
             // Configuraciones Generales
             'manage_settings',
+
+            // Auditoría
+            'view_audit_logs',
         ];
 
         // Crear los permisos si no existen

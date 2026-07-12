@@ -64,11 +64,13 @@ export default function RoleForm({ role, onClose, onSubmit }) {
     else if (name.includes('product') || name.includes('categor') || name.includes('discount')) group = "Catálogo de Productos";
     else if (name.includes('salary') || name.includes('salaries') || name.includes('finance') || name.includes('cashflow') || name.includes('expense') || name.includes('owner_payment')) group = "Finanzas y Salarios";
     else if (name.includes('user') || name.includes('role') || name.includes('executive')) group = "Usuarios y Roles";
+    else if (name.includes('owner')) group = "Socios / Dueños";
     else if (name.includes('purchase') || name.includes('supplier')) group = "Compras y Proveedores";
     else if (name.includes('branch')) group = "Sucursales";
     else if (name.includes('giftcard')) group = "Giftcards";
     else if (name.includes('promotion')) group = "Promociones";
     else if (name.includes('setting')) group = "Ajustes y Configuración";
+    else if (name.includes('audit')) group = "Auditoría";
     
     if (!acc[group]) acc[group] = [];
     acc[group].push(p);

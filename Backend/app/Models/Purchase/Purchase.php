@@ -6,6 +6,8 @@ use App\Models\Base\Purchase as BasePurchase;
 
 class Purchase extends BasePurchase
 {
+    use \App\Traits\Auditable;
+    
 	protected $fillable = [
 		'id',
 		'supplier_id',

@@ -217,6 +217,20 @@ class UserController extends Controller
 
             if ($request->filled('roles')) {
                 $user->syncRoles($request->roles);
+                $newRoles = $user->roles()->pluck('name')->toArray();
+                
+                try {
+                    \App\Models\System\AuditLog::create([
+                        'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                        'action' => 'assign_roles',
+                        'table_name' => 'users (roles)',
+                        'record_id' => $user->id,
+                        'old_data' => null,
+                        'new_data' => json_encode(['roles' => $newRoles]),
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('AuditLog Error: ' . $e->getMessage());
+                }
             }
 
             DB::commit();
@@ -284,7 +298,24 @@ class UserController extends Controller
             );
 
             if ($request->has('roles')) {
+                $oldRoles = $user->roles->pluck('name')->toArray();
                 $user->syncRoles($request->roles ?? []);
+                $newRoles = $user->roles()->pluck('name')->toArray();
+
+                if ($oldRoles !== $newRoles) {
+                    try {
+                        \App\Models\System\AuditLog::create([
+                            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                            'action' => 'update_roles',
+                            'table_name' => 'users (roles)',
+                            'record_id' => $user->id,
+                            'old_data' => json_encode(['roles' => $oldRoles]),
+                            'new_data' => json_encode(['roles' => $newRoles]),
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::error('AuditLog Error: ' . $e->getMessage());
+                    }
+                }
             }
 
             $types = $request->types ?? [];

@@ -182,6 +182,9 @@ export default function DashboardLayout() {
                 <p className="section-title">
                   {!collapsed && "CATÁLOGO E INVENTARIO"}
                 </p>
+                <CanAccess permission="manage_settings">
+                  <NavItem to="/dashboard/settings" icon={Settings} label="Ajustes de Catálogo" />
+                </CanAccess>
                 <CanAccess permission="view_products">
                   <NavItem to="/dashboard/products" icon={Package} label="Productos" />
                 </CanAccess>
@@ -211,9 +214,6 @@ export default function DashboardLayout() {
                 </CanAccess>
                 <CanAccess permission="view_purchases">
                   <NavItem to="/dashboard/purchases" icon={FileText} label="Órdenes de Compra" />
-                </CanAccess>
-                <CanAccess permission="receive_inventory">
-                  <NavItem to="/dashboard/purchases/reception" icon={Package} label="Recepción (Próximamente)" />
                 </CanAccess>
                 <CanAccess permission="manage_expenses">
                   <NavItem to="/dashboard/purchases/accounts-payable" icon={DollarSign} label="Cuentas por Pagar (Próx.)" />
@@ -245,6 +245,9 @@ export default function DashboardLayout() {
                 <p className="section-title">
                   {!collapsed && "RECURSOS HUMANOS"}
                 </p>
+                <CanAccess permission="view_owners">
+                  <NavItem to="/dashboard/owners" icon={UserRoundSearch} label="Socios / Dueños" />
+                </CanAccess>
                 <CanAccess permission="manage_executives">
                   <NavItem to="/dashboard/employees" icon={UserRoundSearch} label="Personal" />
                 </CanAccess>
@@ -288,7 +291,7 @@ export default function DashboardLayout() {
             </CanAccess>
 
             {/* 9. SISTEMA Y CONFIGURACIÓN */}
-            <CanAccess permission={['view_branches', 'view_users', 'manage_roles', 'manage_settings']}>
+            <CanAccess permission={['view_branches', 'view_users', 'manage_roles', 'manage_settings', 'view_audit_logs']}>
               <div className="nav-section">
                 <p className="section-title">
                   {!collapsed && "SISTEMA"}
@@ -305,10 +308,8 @@ export default function DashboardLayout() {
                 <CanAccess permission="manage_roles">
                   <NavItem to="/dashboard/permissions" icon={KeyRound} label="Permisos" />
                 </CanAccess>
-                <CanAccess permission="manage_settings">
-                  <NavItem to="/dashboard/settings" icon={Settings} label="Ajustes Generales" />
-                </CanAccess>
-                <CanAccess permission="manage_settings">
+
+                <CanAccess permission="view_audit_logs">
                   <NavItem to="/dashboard/logs" icon={FileText} label="Auditoría (Logs)" />
                 </CanAccess>
               </div>

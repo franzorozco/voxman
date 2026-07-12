@@ -29,6 +29,7 @@ import Bundles from "../pages/dashboard/pages/Bundles/Bundles";
 import Promotions from "../pages/dashboard/pages/Promotions/Promotions";
 import DeletedPromotions from "../pages/dashboard/pages/Promotions/DeletedPromotions";
 import Settings from "../pages/dashboard/pages/catalog-settings/Settings.jsx";
+import Logs from "../pages/dashboard/pages/Logs/Logs.jsx";
 import Branches from "../pages/dashboard/pages/Branches/Branches.jsx";
 import DeletedBranches from "../pages/dashboard/pages/Branches/DeletedBranches.jsx";
 import Inventory from "../pages/dashboard/pages/inventory/Inventory.jsx";
@@ -45,6 +46,7 @@ import QuarantineList from "../pages/dashboard/pages/inventory/QuarantineList";
 import Customers from "../pages/dashboard/pages/Customers/Customers.jsx";
 import DeletedCustomers from "../pages/dashboard/pages/Customers/DeletedCustomers.jsx";
 import Employees from "../pages/dashboard/pages/Employees/Employees.jsx";
+import Owners from "../pages/dashboard/pages/Owners/Owners.jsx";
 import DeletedEmployees from "../pages/dashboard/pages/Employees/DeletedEmployees.jsx";
 import Payroll from "../pages/dashboard/pages/Payroll/Payroll.jsx";
 import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
@@ -98,6 +100,7 @@ export default function AppRouter() {
             <Route path="promotions" element={<ProtectedRoute permissions={["view_promotions"]}><Promotions /></ProtectedRoute>} />
             <Route path="promotions/deleted" element={<ProtectedRoute permissions={["view_promotions"]}><DeletedPromotions /></ProtectedRoute>} />
             <Route path="settings" element={<ProtectedRoute permissions={["manage_settings"]}><Settings /></ProtectedRoute>} />
+            <Route path="logs" element={<ProtectedRoute permissions={["view_audit_logs"]}><Logs /></ProtectedRoute>} />
             <Route path="branches" element={<ProtectedRoute permissions={["view_branches"]}><Branches /></ProtectedRoute>} />
             <Route path="branches/deleted" element={<ProtectedRoute permissions={["view_branches"]}><DeletedBranches /></ProtectedRoute>} />
             <Route path="users" element={<ProtectedRoute permissions={["view_users"]}><Users /></ProtectedRoute>} />
@@ -117,16 +120,17 @@ export default function AppRouter() {
             <Route path="inventory/quarantine" element={<ProtectedRoute permissions={["manage_inventory"]}><QuarantineList /></ProtectedRoute>} />
             <Route path="clients" element={<ProtectedRoute permissions={["view_customers"]}><Customers /></ProtectedRoute>} />
             <Route path="clients/deleted" element={<ProtectedRoute permissions={["view_customers"]}><DeletedCustomers /></ProtectedRoute>} />
-            <Route path="employees" element={<Employees />} />
-            <Route path="employees/deleted" element={<DeletedEmployees />} />
-            <Route path="payroll" element={<Payroll />} />
-            <Route path="attendances" element={<Attendances />} />
-            <Route path="sales" element={<Sales />} />
-            <Route path="finance" element={<Finance />} />
-            <Route path="finance/cashflow" element={<CashFlow />} />
-            <Route path="finance/reports" element={<FinanceReports />} />
-            <Route path="carts" element={<Carts />} />
-            <Route path="returns" element={<Returns />} />
+            <Route path="employees" element={<ProtectedRoute permissions={["manage_executives"]}><Employees /></ProtectedRoute>} />
+            <Route path="owners" element={<ProtectedRoute permissions={["view_owners"]}><Owners /></ProtectedRoute>} />
+            <Route path="employees/deleted" element={<ProtectedRoute permissions={["manage_executives"]}><DeletedEmployees /></ProtectedRoute>} />
+            <Route path="payroll" element={<ProtectedRoute permissions={["manage_user_salaries"]}><Payroll /></ProtectedRoute>} />
+            <Route path="attendances" element={<ProtectedRoute permissions={["manage_executives"]}><Attendances /></ProtectedRoute>} />
+            <Route path="sales" element={<ProtectedRoute permissions={["view_sales"]}><Sales /></ProtectedRoute>} />
+            <Route path="finance" element={<ProtectedRoute permissions={["view_finance"]}><Finance /></ProtectedRoute>} />
+            <Route path="finance/cashflow" element={<ProtectedRoute permissions={["view_cashflow"]}><CashFlow /></ProtectedRoute>} />
+            <Route path="finance/reports" element={<ProtectedRoute permissions={["view_finance_reports"]}><FinanceReports /></ProtectedRoute>} />
+            <Route path="carts" element={<ProtectedRoute permissions={["view_carts"]}><Carts /></ProtectedRoute>} />
+            <Route path="returns" element={<ProtectedRoute permissions={["view_returns"]}><Returns /></ProtectedRoute>} />
 
           </Route>
         </Route>

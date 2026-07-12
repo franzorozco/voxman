@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class User extends BaseUser
 {
-	use HasApiTokens, HasRoles;
+	use HasApiTokens, HasRoles, \App\Traits\Auditable;
 	protected $guard_name = 'web';
 	protected $hidden = [
 		'password'

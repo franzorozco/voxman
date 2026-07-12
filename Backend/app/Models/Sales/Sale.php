@@ -6,6 +6,8 @@ use App\Models\Base\Sale as BaseSale;
 
 class Sale extends BaseSale
 {
+    use \App\Traits\Auditable;
+    
 	protected $fillable = [
 		'customer_id',
 		'branch_id',
