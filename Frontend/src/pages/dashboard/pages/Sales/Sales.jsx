@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Search, Eye, Filter, CheckCircle, XCircle, ShoppingBag, Clock, RotateCcw } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSales } from "../../../../api/admin/sales";
+import { getBranches } from "../../../../api/admin/branches";
+import { getUsers } from "../../../../api/admin/users";
 import SaleDetailsModal from "./SaleDetailsModal";
 import { Link } from "react-router-dom";
 import CanAccess from "../../../../components/ui/CanAccess";
@@ -18,11 +20,15 @@ export default function Sales() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [branches, setBranches] = useState([]);
+  const [users, setUsers] = useState([]);
   const [filters, setFilters] = useState({
     status: "",
     source: "",
     date_from: "",
-    date_to: ""
+    date_to: "",
+    branch_id: "",
+    user_id: ""
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState(null);
@@ -36,6 +42,8 @@ export default function Sales() {
       if (filters.source) params.source = filters.source;
       if (filters.date_from) params.date_from = filters.date_from;
       if (filters.date_to) params.date_to = filters.date_to;
+      if (filters.branch_id) params.branch_id = filters.branch_id;
+      if (filters.user_id) params.user_id = filters.user_id;
 
       const { data } = await getSales(params);
       // Paginacion viene en data.data, si no es paginado, es data
@@ -50,6 +58,20 @@ export default function Sales() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchSelectData = async () => {
+      try {
+        const branchesRes = await getBranches();
+        const usersRes = await getUsers();
+        setBranches(branchesRes.data || branchesRes);
+        setUsers(usersRes.data || usersRes);
+      } catch (err) {
+        console.error("Error loading filter data", err);
+      }
+    };
+    fetchSelectData();
+  }, []);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -183,10 +205,43 @@ export default function Sales() {
               />
             </div>
             
-            {(filters.status !== "" || filters.source !== "" || filters.date_from !== "" || filters.date_to !== "") && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Sucursal</label>
+              <select 
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.branch_id}
+                onChange={(e) => setFilters({ ...filters, branch_id: e.target.value })}
+              >
+                <option value="">Todas las Sucursales</option>
+                {Array.isArray(branches) && branches.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Vendedor</label>
+              <select 
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.user_id}
+                onChange={(e) => setFilters({ ...filters, user_id: e.target.value })}
+              >
+                <option value="">Todos los Vendedores</option>
+                {Array.isArray(users) && users.filter(u => u.employee).map(u => {
+                  const branchName = branches?.find(b => b.id === u.employee?.branch_id)?.name || 'General';
+                  return (
+                    <option key={u.id} value={u.id}>
+                      {u.profile?.first_name} {u.profile?.last_name_paternal} - {u.employee?.role || 'Empleado'} ({branchName})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            
+            {(filters.status !== "" || filters.source !== "" || filters.date_from !== "" || filters.date_to !== "" || filters.branch_id !== "" || filters.user_id !== "") && (
               <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                 <button 
-                  onClick={() => setFilters({ status: "", source: "", date_from: "", date_to: "" })}
+                  onClick={() => setFilters({ status: "", source: "", date_from: "", date_to: "", branch_id: "", user_id: "" })}
                   style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'transparent', color: 'var(--status-danger)', border: '1px solid var(--status-danger)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
                 >
                   Limpiar Filtros
@@ -226,18 +281,44 @@ export default function Sales() {
                 <tr key={sale.id}>
                   <td>
                     <div style={{ fontWeight: 600 }}>{sale.invoice_number || 'S/N'}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{sale.source || 'Tienda'}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {sale.source === 'store' ? <span style={{color: 'var(--color-warning)'}}>• Tienda Física</span> : 
+                       sale.source === 'web' ? <span style={{color: 'var(--color-primary)'}}>• Tienda Web</span> : 
+                       `• ${sale.source || 'Tienda'}`}
+                    </div>
                   </td>
                   <td>
                     {new Date(sale.created_at).toLocaleDateString('es-ES', {
                       year: 'numeric', month: 'short', day: 'numeric',
                       hour: '2-digit', minute: '2-digit'
                     })}
+                    {sale.branch?.name && (
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        Sucursal: {sale.branch.name}
+                      </div>
+                    )}
                   </td>
                   <td>
-                    {sale.customer?.user?.profile ? (
-                      <div style={{ fontWeight: 500 }}>
-                        {sale.customer.user.profile.first_name} {sale.customer.user.profile.last_name_paternal}
+                    {sale.customer ? (
+                      <div>
+                        {sale.customer.user?.profile ? (
+                          <>
+                            <div style={{ fontWeight: 500 }}>
+                              {sale.customer.user.profile.first_name} {sale.customer.user.profile.last_name_paternal}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 500 }}>Cliente Web</div>
+                          </>
+                        ) : (sale.customer.pos_profile || sale.customer.posProfile) ? (
+                          <>
+                            <div style={{ fontWeight: 500 }}>
+                              {(sale.customer.pos_profile || sale.customer.posProfile).first_name} {(sale.customer.pos_profile || sale.customer.posProfile).last_name_paternal}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: 500 }}>Cliente Caja (POS)</div>
+                          </>
+                        ) : (
+                          <div style={{ color: 'var(--text-muted)' }}>Cliente sin perfil</div>
+                        )}
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Cód: {sale.customer.customer_code}</div>
                       </div>
                     ) : (
                       <div style={{ color: 'var(--text-muted)' }}>Cliente Ocasional</div>

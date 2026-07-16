@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, ShoppingBag, Gift, Ticket, Award, CreditCard, ChevronDown, ChevronUp, Clock, Store, User as UserIcon, Tag } from "lucide-react";
-import { getCustomerById } from "../../../../api/admin/customers";
+import { X, MapPin, ShoppingBag, Gift, Ticket, Award, CreditCard, ChevronDown, ChevronUp, Clock, Store, User as UserIcon, Tag, Plus, Minus, History } from "lucide-react";
+import { getCustomerById, updateCustomerTags, adjustCustomerPoints, getCustomerTimeline } from "../../../../api/admin/customers";
+import { toast } from "react-hot-toast";
 import Spinner from "../../components/Spinner/Spinner";
 
 export default function CustomerDetails({ customerId, onClose }) {
@@ -8,6 +9,11 @@ export default function CustomerDetails({ customerId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedSales, setExpandedSales] = useState({});
+  const [timeline, setTimeline] = useState([]);
+  
+  // States for management
+  const [newTag, setNewTag] = useState('');
+  const [pointsAdjust, setPointsAdjust] = useState({ amount: 0, reason: '' });
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -21,8 +27,68 @@ export default function CustomerDetails({ customerId, onClose }) {
         setLoading(false);
       }
     };
-    if (customerId) fetchCustomer();
+    const fetchTimeline = async () => {
+      try {
+        const res = await getCustomerTimeline(customerId);
+        setTimeline(res.data);
+      } catch (error) {
+        console.error("Error fetching timeline", error);
+      }
+    };
+    if (customerId) {
+      fetchCustomer();
+      fetchTimeline();
+    }
   }, [customerId]);
+
+  const handleAddTag = async () => {
+    if (!newTag.trim()) return;
+    try {
+      const currentTags = customer.tags || [];
+      if (currentTags.includes(newTag.trim())) {
+        toast.error('La etiqueta ya existe');
+        return;
+      }
+      const updatedTags = [...currentTags, newTag.trim()];
+      await updateCustomerTags(customer.id, updatedTags);
+      setCustomer({ ...customer, tags: updatedTags });
+      setNewTag('');
+      toast.success('Etiqueta agregada');
+    } catch (error) {
+      toast.error('Error al agregar etiqueta');
+    }
+  };
+
+  const handleRemoveTag = async (tagToRemove) => {
+    try {
+      const updatedTags = (customer.tags || []).filter(t => t !== tagToRemove);
+      await updateCustomerTags(customer.id, updatedTags);
+      setCustomer({ ...customer, tags: updatedTags });
+      toast.success('Etiqueta eliminada');
+    } catch (error) {
+      toast.error('Error al eliminar etiqueta');
+    }
+  };
+
+  const handleAdjustPoints = async (type) => {
+    if (!pointsAdjust.amount || !pointsAdjust.reason) {
+      toast.error('Ingrese cantidad y motivo');
+      return;
+    }
+    const finalAmount = type === 'add' ? Math.abs(pointsAdjust.amount) : -Math.abs(pointsAdjust.amount);
+    
+    try {
+      const res = await adjustCustomerPoints(customer.id, { points: finalAmount, reason: pointsAdjust.reason });
+      setCustomer(res.data.customer);
+      toast.success('Puntos ajustados');
+      setPointsAdjust({ amount: 0, reason: '' });
+      // reload timeline
+      const tRes = await getCustomerTimeline(customerId);
+      setTimeline(tRes.data);
+    } catch (error) {
+      toast.error('Error al ajustar puntos');
+    }
+  };
 
   const toggleSale = (id) => {
     setExpandedSales(prev => ({ ...prev, [id]: !prev[id] }));
@@ -36,8 +102,9 @@ export default function CustomerDetails({ customerId, onClose }) {
     );
   }
 
-  const profile = customer.user?.profile || {};
-  const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
+  const isWebCustomer = !!customer.user;
+  const profile = isWebCustomer ? (customer.user?.profile || {}) : (customer.pos_profile || customer.posProfile || {});
+  const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''} ${profile.last_name_maternal || ''}`.replace(/\s+/g, ' ').trim() || 'Sin Nombre';
 
   // Calculate accurate total gastado
   const validSales = customer.sales?.filter(s => s.status !== 'cancelled' && s.status !== 'refunded') || [];
@@ -66,10 +133,14 @@ export default function CustomerDetails({ customerId, onClose }) {
                   <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', color: 'var(--text-main)', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid var(--border-color)' }}>
                     {customer.customer_code}
                   </span>
+                  <span style={{ fontWeight: 600, letterSpacing: '0.5px', background: isWebCustomer ? 'rgba(59, 130, 246, 0.1)' : 'rgba(139, 92, 246, 0.1)', color: isWebCustomer ? '#3b82f6' : '#8b5cf6', border: `1px solid ${isWebCustomer ? 'rgba(59, 130, 246, 0.2)' : 'rgba(139, 92, 246, 0.2)'}`, padding: '6px 12px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isWebCustomer ? '#3b82f6' : '#8b5cf6' }}></span>
+                    {isWebCustomer ? 'Cliente Web' : 'Cliente Caja (POS)'}
+                  </span>
                 </div>
-                <div style={{ display: 'flex', gap: '20px', color: 'var(--text-muted)', fontSize: '14px', marginTop: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><UserIcon size={14}/> {customer.user?.email || 'S/E'}</span>
-                  {profile.phone && <span>• {profile.phone}</span>}
+                <div style={{ display: 'flex', gap: '20px', color: 'var(--text-muted)', fontSize: '14px', marginTop: '12px', flexWrap: 'wrap' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><UserIcon size={14}/> {customer.user?.email || 'Sin correo registrado'}</span>
+                  {profile.phone && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📞 {profile.phone}</span>}
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14}/> Miembro desde {new Date(customer.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
@@ -117,7 +188,9 @@ export default function CustomerDetails({ customerId, onClose }) {
         <div className="customer-modal-tabs">
           {[
             { id: 'overview', label: 'Resumen' },
+            { id: 'timeline', label: 'Historial' },
             { id: 'sales', label: `Compras (${customer.sales?.length || 0})` },
+            { id: 'management', label: 'Gestión CRM' },
             { id: 'giftcards', label: `Giftcards (${customer.received_giftcards?.length || 0})` },
             { id: 'discounts', label: 'Cupones' },
             { id: 'addresses', label: 'Direcciones' }
@@ -165,12 +238,24 @@ export default function CustomerDetails({ customerId, onClose }) {
                         </div>
                         <div>
                            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Correo Electrónico</label>
-                           <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{customer.user?.email}</div>
+                           <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{customer.user?.email || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No registrado (POS)</span>}</div>
                         </div>
                         <div>
                            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Teléfono</label>
-                           <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{profile.phone || 'No registrado'}</div>
+                           <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{profile.phone || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No registrado</span>}</div>
                         </div>
+                        {isWebCustomer && (
+                          <>
+                            <div>
+                               <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Género</label>
+                               <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{profile.gender === 'male' ? 'Masculino' : profile.gender === 'female' ? 'Femenino' : profile.gender === 'other' ? 'Otro' : <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No especificado</span>}</div>
+                            </div>
+                            <div>
+                               <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Fecha de Nacimiento</label>
+                               <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{profile.birthdate ? new Date(profile.birthdate).toLocaleDateString() : <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No especificada</span>}</div>
+                            </div>
+                          </>
+                        )}
                      </div>
                   </div>
                   <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
@@ -191,6 +276,132 @@ export default function CustomerDetails({ customerId, onClose }) {
                      </div>
                   </div>
                </div>
+            </div>
+          )}
+
+          {/* TIMELINE TAB */}
+          {activeTab === 'timeline' && (
+            <div className="fade-in">
+              <h3 style={{ fontSize: '20px', marginBottom: '24px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <History size={20} color="var(--color-primary)"/> Línea de Tiempo
+              </h3>
+              
+              {timeline.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                  No hay actividad registrada aún.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', paddingLeft: '20px' }}>
+                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: '6px', width: '2px', background: 'var(--border-color)' }}></div>
+                  {timeline.map((event) => (
+                    <div key={event.id} style={{ display: 'flex', gap: '16px', position: 'relative' }}>
+                      <div style={{ position: 'absolute', left: '-18px', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--color-primary)', border: '2px solid var(--bg-main)', top: '6px' }}></div>
+                      <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '14px', textTransform: 'capitalize' }}>
+                            {event.event_type.replace('_', ' ')}
+                          </span>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            {new Date(event.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)' }}>{event.description}</p>
+                        {event.creator && (
+                          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <UserIcon size={12}/> {event.creator.profile?.first_name} {event.creator.profile?.last_name_paternal}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* MANAGEMENT TAB */}
+          {activeTab === 'management' && (
+            <div className="fade-in">
+              <h3 style={{ fontSize: '20px', marginBottom: '24px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Store size={20} color="var(--color-primary)"/> Gestión de Cliente (CRM)
+              </h3>
+              
+              <div className="customer-modal-grid-2">
+                {/* Puntos */}
+                <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ margin: '0 0 16px 0', color: 'var(--color-warning)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Award size={18} /> Ajuste Manual de Puntos
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Los puntos actuales son <strong>{customer.points}</strong>. Usa esta herramienta para sumar o restar puntos en casos especiales.</p>
+                    
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <input 
+                        type="number" 
+                        value={pointsAdjust.amount || ''}
+                        onChange={(e) => setPointsAdjust({...pointsAdjust, amount: e.target.value})}
+                        placeholder="Ej. 50 (sumar) o -20 (restar)"
+                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                      />
+                    </div>
+                    <input 
+                      type="text" 
+                      value={pointsAdjust.reason}
+                      onChange={(e) => setPointsAdjust({...pointsAdjust, reason: e.target.value})}
+                      placeholder="Motivo del ajuste (obligatorio)"
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                    
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+                      <button onClick={() => handleAdjustPoints('add')} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'var(--color-success)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                        <Plus size={16}/> Sumar
+                      </button>
+                      <button onClick={() => handleAdjustPoints('sub')} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'var(--color-danger)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                        <Minus size={16}/> Restar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Etiquetas */}
+                <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ margin: '0 0 16px 0', color: 'var(--color-primary)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Tag size={18} /> Etiquetas (Tags)
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        type="text" 
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                        placeholder="Ej: Mayorista, VIP..."
+                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                      />
+                      <button onClick={handleAddTag} style={{ padding: '10px 16px', borderRadius: '8px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                        Agregar
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {(!customer.tags || customer.tags.length === 0) ? (
+                        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>No hay etiquetas asignadas.</span>
+                      ) : (
+                        customer.tags.map(tag => (
+                          <div key={tag} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-overlay)', border: '1px solid var(--border-color)', padding: '4px 8px 4px 12px', borderRadius: '20px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>{tag}</span>
+                            <button onClick={() => handleRemoveTag(tag)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

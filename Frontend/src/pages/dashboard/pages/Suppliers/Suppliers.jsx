@@ -1,24 +1,32 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Trash2, Edit, Truck, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { getSuppliers, deleteSupplier } from "../../../../api/admin/suppliers";
+import { Eye } from "lucide-react";
+import { getSuppliers, deleteSupplier, getSupplierStats } from "../../../../api/admin/suppliers";
 import SupplierModal from "./SupplierModal";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CanAccess from "../../../../components/ui/CanAccess";
 import "./Suppliers.css";
+import { Building2, DollarSign, ShoppingBag } from "lucide-react";
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const navigate = useNavigate();
 
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
-      const { data } = await getSuppliers(search);
-      setSuppliers(data);
+      const [suppRes, statsRes] = await Promise.all([
+        getSuppliers(search),
+        getSupplierStats()
+      ]);
+      setSuppliers(suppRes.data);
+      setStats(statsRes.data);
     } catch (error) {
       toast.error("Error al cargar proveedores");
       console.error(error);
@@ -80,6 +88,34 @@ export default function Suppliers() {
         </div>
       </div>
 
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Proveedores</span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Building2 size={16} /></div>
+            </div>
+            <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.total_suppliers}</div>
+          </div>
+          
+          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Proveedores Activos</span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Truck size={16} /></div>
+            </div>
+            <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.active_suppliers}</div>
+          </div>
+
+          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Compras de este mes</span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(245,158,11,0.1)', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DollarSign size={16} /></div>
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.purchases_this_month).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          </div>
+        </div>
+      )}
+
       <div className="suppliers-filters">
         <div className="suppliers-search-box">
           <Search size={18} />
@@ -136,6 +172,16 @@ export default function Suppliers() {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
+                    <CanAccess permission="view_suppliers">
+                      <button
+                        className="btn-edit"
+                        style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', marginRight: '5px' }}
+                        onClick={() => navigate(`/dashboard/suppliers/${supplier.id}`)}
+                        title="Ver Perfil"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </CanAccess>
                     <CanAccess permission="edit_suppliers">
                       <button
                         className="btn-edit"

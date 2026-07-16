@@ -22,7 +22,8 @@ class Product extends BaseProduct
 		'base_price',
 		'is_active',
 		'is_bundle',
-		'views'
+		'views',
+		'tags'
 	];
 
     public function brand()

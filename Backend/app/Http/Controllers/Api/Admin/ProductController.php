@@ -216,6 +216,7 @@ class ProductController extends Controller
                 'base_price'      => $request->base_price,
                 'is_active'       => true,
                 'views'           => 0,
+                'tags'            => json_decode($request->tags, true),
             ]);
 
             // =========================
@@ -369,6 +370,7 @@ class ProductController extends Controller
                 'slug'            => Str::slug($request->name),
                 'base_price'      => $request->base_price,
                 'is_active'       => $request->is_active ?? true,
+                'tags'            => json_decode($request->tags, true),
             ]);
 
             // Ya no borramos todo a ciegas aquí. Lo haremos de manera inteligente más abajo.
@@ -772,6 +774,7 @@ class ProductController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Error in updateMeasurements: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
             return response()->json([
                 'message' => 'Error al actualizar medidas',
                 'error'   => $e->getMessage(),
@@ -795,6 +798,9 @@ class ProductController extends Controller
             }
             if ($request->has('is_active')) {
                 $updateData['is_active'] = $request->is_active;
+            }
+            if ($request->has('tags')) {
+                $updateData['tags'] = is_string($request->tags) ? json_decode($request->tags, true) : $request->tags;
             }
 
             if (!empty($updateData)) {

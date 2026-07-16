@@ -10,6 +10,7 @@ export default function InventoryMovements() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialBranchId = searchParams.get('branch_id') || "";
+  const initialSearch = searchParams.get('search') || "";
 
   const [movements, setMovements] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -18,7 +19,8 @@ export default function InventoryMovements() {
   
   const [filters, setFilters] = useState({
     branch_id: initialBranchId,
-    type: ""
+    type: "",
+    search: initialSearch
   });
 
   const loadData = async () => {
@@ -83,6 +85,16 @@ export default function InventoryMovements() {
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+          <div className="search-bar" style={{ flex: 1, maxWidth: '400px' }}>
+            <Search size={20} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Buscar por SKU, producto o nota..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="search-input"
+            />
+          </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--primary-color)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
@@ -143,15 +155,37 @@ export default function InventoryMovements() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan="7" style={{ textAlign: "center", padding: "24px" }}>
-                  Cargando movimientos...
-                </td>
-              </tr>
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} style={{ animation: 'pulse 1.5s infinite ease-in-out' }}>
+                  <td style={{ padding: '16px' }}><div style={{ width: '80px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
+                  <td><div style={{ width: '100px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
+                  <td><div style={{ width: '110px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'var(--bg-input)' }}></div>
+                      <div>
+                        <div style={{ width: '130px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)', marginBottom: '4px' }}></div>
+                        <div style={{ width: '90px', height: '10px', borderRadius: '4px', background: 'var(--bg-input)' }}></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><div style={{ width: '80px', height: '20px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
+                  <td><div style={{ width: '40px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
+                  <td><div style={{ width: '140px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
+                </tr>
+              ))
             ) : movements.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: "center", padding: "24px" }}>
-                  No hay movimientos registrados.
+                <td colSpan="7" style={{ textAlign: "center", padding: "60px 20px" }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', opacity: 0.8 }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--color-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                      <History size={32} />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--text-main)', fontWeight: 600 }}>Sin movimientos</h3>
+                      <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)' }}>No se encontraron registros en el historial de movimientos.</p>
+                    </div>
+                  </div>
                 </td>
               </tr>
             ) : (

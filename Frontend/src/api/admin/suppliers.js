@@ -19,3 +19,8 @@ export const restoreSupplier = (id) =>
     api.put(`${BASE_URL}/${id}/restore`);
 export const forceDeleteSupplier = (id) => 
     api.delete(`${BASE_URL}/${id}/force`);
+
+export const getSupplierStats = () =>
+    api.get(`${BASE_URL}/stats`);
+export const getSupplierProfile = (id) =>
+    api.get(`${BASE_URL}/${id}/profile`);

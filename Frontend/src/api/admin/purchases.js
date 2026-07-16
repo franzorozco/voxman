@@ -18,3 +18,9 @@ export const cancelPurchase = (id) =>
   api.put(`${BASE_URL}/${id}/cancel`);
 export const receivePurchase = (data) => 
   api.post(`${BASE_URL}/reception`, data);
+export const getPurchaseStats = () => 
+  api.get(`${BASE_URL}/stats`);
+export const updatePurchaseCosts = (id, data) => 
+  api.put(`${BASE_URL}/${id}/update-costs`, data);
+export const registerPurchasePayment = (id, data) => 
+  api.post(`${BASE_URL}/${id}/pay`, data);

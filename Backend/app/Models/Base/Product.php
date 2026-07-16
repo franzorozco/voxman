@@ -59,7 +59,8 @@ class Product extends Model
 		'base_price' => 'float',
 		'is_active' => 'bool',
 		'is_bundle' => 'bool',
-		'views' => 'int'
+		'views' => 'int',
+		'tags' => 'array'
 	];
 	
 	public function owner()

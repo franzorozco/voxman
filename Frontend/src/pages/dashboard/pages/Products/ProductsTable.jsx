@@ -93,6 +93,7 @@ export default function ProductsTable({
 
             <SortableTh label="Producto" field="name" />
 
+            <th>Etiquetas</th>
             <th>Propietario</th>
             <th>Categoría</th>
             <th>Descuento</th>
@@ -190,6 +191,21 @@ export default function ProductsTable({
                     <small style={{ opacity: 0.6 }}>
                       {p.slug}
                     </small>
+                  </td>
+
+                  {/* TAGS */}
+                  <td>
+                    {(p.tags || []).length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '160px' }}>
+                        {p.tags.map((tag, idx) => (
+                          <span key={idx} style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '12px', background: 'var(--color-primary-alpha, rgba(99,102,241,0.15))', color: 'var(--color-primary)', fontSize: '10px', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>—</span>
+                    )}
                   </td>
 
                   <td>{p.owner_name || "Sin propietario"}</td>

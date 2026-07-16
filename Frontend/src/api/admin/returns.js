@@ -13,3 +13,6 @@ export const approveReturn = (id, data) =>
 
 export const rejectReturn = (id) => 
    api.post(`${BASE_URL}/${id}/reject`);
+
+export const createReturn = (data) =>
+   api.post(BASE_URL, data);

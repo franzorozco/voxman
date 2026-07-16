@@ -120,4 +120,38 @@ class SupplierController extends Controller
 
         return response()->json(['message' => 'Proveedor eliminado de forma permanente']);
     }
+
+    public function stats()
+    {
+        $totalSuppliers = Supplier::count();
+        $activeSuppliers = Supplier::where('status', 'active')->count();
+        
+        // Cargar modelo Purchase de base de datos
+        $purchasesThisMonth = \App\Models\Purchase\Purchase::whereMonth('created_at', now()->month)
+                                  ->whereYear('created_at', now()->year)
+                                  ->sum('total');
+
+        return response()->json([
+            'total_suppliers' => $totalSuppliers,
+            'active_suppliers' => $activeSuppliers,
+            'purchases_this_month' => $purchasesThisMonth
+        ]);
+    }
+
+    public function profile($id)
+    {
+        $supplier = Supplier::with(['purchases' => function($q) {
+            $q->orderBy('created_at', 'desc')->take(20);
+        }])->findOrFail($id);
+        
+        $totalSpent = \App\Models\Purchase\Purchase::where('supplier_id', $id)->sum('total');
+
+        return response()->json([
+            'supplier' => $supplier,
+            'stats' => [
+                'total_spent' => $totalSpent,
+                'total_purchases' => $supplier->purchases->count()
+            ]
+        ]);
+    }
 }

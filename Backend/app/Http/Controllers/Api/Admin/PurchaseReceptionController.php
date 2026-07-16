@@ -131,11 +131,45 @@ class PurchaseReceptionController extends Controller
                 'status' => 'received'
             ]);
 
+            // Create Accounts Payable record for this purchase
+            $accountsPayable = \App\Models\Finance\AccountsPayable::create([
+                'id' => Str::uuid(),
+                'supplier_id' => $purchase->supplier_id,
+                'purchase_id' => $purchase->id,
+                'total_amount' => $purchase->total,
+                'paid_amount' => 0,
+                'balance' => $purchase->total,
+                'due_date' => now()->addDays(30), // Por defecto a 30 días, se puede ajustar
+                'status' => 'pending',
+                'created_at' => now()
+            ]);
+
+            // Update Product Variants Cost (Landed Cost)
+            // Prorrateamos el costo adicional de forma simple (o tomamos el unit_cost directo si no hay extra)
+            $totalQuantity = collect($request->items)->sum('accepted_quantity');
+            
+            if ($totalQuantity > 0) {
+                // Si la orden tiene un costo adicional global (en el 'total' frente al 'subtotal+tax')
+                // lo distribuimos equitativamente o en base al valor, pero para simplificar, usaremos el unit_cost.
+                
+                foreach ($request->items as $item) {
+                    if ($item['accepted_quantity'] > 0) {
+                        $variant = \App\Models\Catalog\ProductVariant::find($item['variant_id']);
+                        if ($variant) {
+                            // Actualizamos el costo al último costo de importación
+                            $variant->cost = $item['unit_cost'];
+                            $variant->save();
+                        }
+                    }
+                }
+            }
+
             DB::commit();
 
             return response()->json([
-                'message' => 'Mercadería recepcionada e inventario actualizado exitosamente.',
-                'reception_id' => $reception->id
+                'message' => 'Mercadería recepcionada, inventario actualizado y cuenta por pagar generada exitosamente.',
+                'reception_id' => $reception->id,
+                'accounts_payable_id' => $accountsPayable->id
             ], 201);
 
         } catch (\Exception $e) {

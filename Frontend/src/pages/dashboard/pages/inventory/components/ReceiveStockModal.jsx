@@ -6,6 +6,9 @@ import { getProducts } from "../../../../../api/admin/products";
 import { getBranches } from "../../../../../api/admin/branches";
 import { API_BASE_URL } from "../../../../../config/api";
 import { useAuthStore } from "../../../../../store/authStore";
+import useScanner from "../../../../../hooks/useScanner";
+import { useScannerStore } from "../../../../../store/useScannerStore";
+import { Camera } from "lucide-react";
 
 export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess }) {
   const { user } = useAuthStore();
@@ -29,6 +32,8 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
   const [localInventory, setLocalInventory] = useState({});
   const [quantities, setQuantities] = useState({}); // { variant_id: qty }
   const [reference, setReference] = useState("");
+  
+  const openScanner = useScannerStore(state => state.openScanner);
 
   const searchTimeoutRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -113,6 +118,69 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const processScannedCode = async (scannedText) => {
+    const code = scannedText.includes('/p/') ? scannedText.split('/p/').pop().trim() : scannedText.trim();
+    if (!code) return;
+
+    if (!selectedBranchId) {
+      toast.error("Selecciona una sucursal destino primero");
+      return;
+    }
+
+    try {
+      const res = await getProducts({ search: code });
+      const products = res.data?.data || [];
+      
+      let foundVariant = null;
+      let foundProduct = null;
+      
+      for (const prod of products) {
+        const variant = prod.product_variants?.find(v => v.sku === code || v.barcode === code);
+        if (variant) {
+          foundVariant = variant;
+          foundProduct = prod;
+          break;
+        }
+      }
+
+      if (!foundVariant && products.length > 0) {
+        foundProduct = products[0];
+        foundVariant = foundProduct.product_variants?.[0];
+      }
+
+      if (foundProduct && foundVariant) {
+        if (selectedProduct?.id !== foundProduct.id) {
+          await selectProduct(foundProduct);
+        }
+        
+        if (!hasPermission) {
+          setSelectedVariant(foundVariant);
+        }
+        
+        setQuantities(prev => ({
+          ...prev,
+          [foundVariant.id]: (prev[foundVariant.id] || 0) + 1
+        }));
+        
+        toast.success(`+1 añadido: ${foundVariant.sku}`);
+      } else {
+        toast.error(`SKU ${code} no encontrado`);
+      }
+    } catch (err) {
+      toast.error("Error al buscar producto escaneado");
+    }
+  };
+
+  const handleScanClick = () => {
+    if (!selectedBranchId) {
+      toast.error("Selecciona una sucursal destino primero");
+      return;
+    }
+    openScanner(processScannedCode, true);
+  };
+
+  useScanner(processScannedCode, true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -241,20 +309,33 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
             </div>
 
             {!selectedProduct ? (
-              <div style={{ position: 'relative' }}>
-                <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="Buscar en el catálogo global por nombre o SKU..."
-                  value={searchQuery}
-                  onChange={handleSearch}
-                  onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
-                  style={{ width: '100%', padding: '12px 14px 12px 40px', borderRadius: '10px', border: '1px solid var(--color-primary)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '15px', outline: 'none', boxShadow: '0 0 0 2px var(--bg-overlay)' }}
-                />
-                
-                {isSearching && (
-                  <div style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: 'var(--text-muted)' }}>Buscando...</div>
-                )}
+              <>
+                <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input
+                      type="text"
+                      placeholder="Buscar en el catálogo global por nombre o SKU..."
+                      value={searchQuery}
+                      onChange={handleSearch}
+                      onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
+                      style={{ width: '100%', padding: '12px 14px 12px 40px', borderRadius: '10px', border: '1px solid var(--color-primary)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '15px', outline: 'none', boxShadow: '0 0 0 2px var(--bg-overlay)' }}
+                    />
+                    {isSearching && (
+                      <div style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: 'var(--text-muted)' }}>Buscando...</div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleScanClick}
+                    title="Escanear con Cámara"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '45px', height: '45px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--color-primary)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500, flexShrink: 0 }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(99,102,241,0.05)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-card)' }}
+                  >
+                    <Camera size={20} />
+                  </button>
+                </div>
 
                 {/* DROPDOWN DE RESULTADOS */}
                 {showDropdown && (
@@ -288,7 +369,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
                     )}
                   </div>
                 )}
-              </div>
+              </>
             ) : (
               // PRODUCTO SELECCIONADO (VISTA PREVIA)
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid var(--color-success)' }}>

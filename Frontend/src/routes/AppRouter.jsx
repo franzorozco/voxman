@@ -37,6 +37,7 @@ import InventoryMovements from "../pages/dashboard/pages/inventory/InventoryMove
 import Giftcards from "../pages/dashboard/pages/Giftcards/Giftcards.jsx";
 import DeletedGiftcards from "../pages/dashboard/pages/Giftcards/DeletedGiftcards.jsx";
 import Suppliers from "../pages/dashboard/pages/Suppliers/Suppliers.jsx";
+import SupplierProfile from "../pages/dashboard/pages/Suppliers/SupplierProfile.jsx";
 import DeletedSuppliers from "../pages/dashboard/pages/Suppliers/DeletedSuppliers.jsx";
 import SupplierReturns from "../pages/dashboard/pages/Suppliers/SupplierReturns.jsx";
 import PurchasesList from "../pages/dashboard/pages/Purchases/PurchasesList.jsx";
@@ -112,6 +113,7 @@ export default function AppRouter() {
             <Route path="giftcards" element={<ProtectedRoute permissions={["view_giftcards"]}><Giftcards /></ProtectedRoute>} />
             <Route path="giftcards/deleted" element={<ProtectedRoute permissions={["view_giftcards"]}><DeletedGiftcards /></ProtectedRoute>} />
             <Route path="suppliers" element={<ProtectedRoute permissions={["view_suppliers"]}><Suppliers /></ProtectedRoute>} />
+            <Route path="suppliers/:id" element={<ProtectedRoute permissions={["view_suppliers"]}><SupplierProfile /></ProtectedRoute>} />
             <Route path="suppliers/returns" element={<ProtectedRoute permissions={["view_suppliers"]}><SupplierReturns /></ProtectedRoute>} />
             <Route path="suppliers/deleted" element={<ProtectedRoute permissions={["view_suppliers"]}><DeletedSuppliers /></ProtectedRoute>} />
             <Route path="purchases" element={<ProtectedRoute permissions={["view_purchases"]}><PurchasesList /></ProtectedRoute>} />

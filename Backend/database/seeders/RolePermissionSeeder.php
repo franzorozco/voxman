@@ -134,19 +134,27 @@ class RolePermissionSeeder extends Seeder
             'manage_sales',
             'print_sale_receipt',
             'view_sale_profits',
+            'edit_sale_notes',
+            'view_loyalty_points',
 
             // Devoluciones
             'view_returns',
             'view_returns_own_branch',
             'view_returns_all_branches',
             'manage_returns',
+            'create_returns',
 
             // Carritos y Proformas
             'view_carts',
             'view_carts_own_branch',
             'view_carts_all_branches',
             'manage_carts',
+            'create_carts',
+            'edit_carts',
             'delete_carts',
+            'convert_carts',
+            'send_cart_reminders',
+            'apply_cart_discounts',
 
             // Configuraciones Generales
             'manage_settings',
@@ -198,13 +206,21 @@ class RolePermissionSeeder extends Seeder
             'view_sales',
             'view_sales_own_branch',
             'print_sale_receipt',
+            'edit_sale_notes',
+            'view_loyalty_points',
             'view_returns',
             'view_returns_own_branch',
             'manage_returns',
+            'create_returns',
             'view_carts',
             'view_carts_own_branch',
             'manage_carts',
+            'create_carts',
+            'edit_carts',
             'delete_carts',
+            'convert_carts',
+            'send_cart_reminders',
+            'apply_cart_discounts',
         ]);
 
         $warehouseRole->syncPermissions([
@@ -229,13 +245,20 @@ class RolePermissionSeeder extends Seeder
             'view_sales',
             'view_sales_own_branch',
             'print_sale_receipt',
+            'edit_sale_notes',
+            'view_loyalty_points',
             'view_returns',
             'view_returns_own_branch',
-            'manage_returns',
+            'create_returns',
             'view_carts',
             'view_carts_own_branch',
             'manage_carts',
+            'create_carts',
+            'edit_carts',
             'delete_carts',
+            'convert_carts',
+            'send_cart_reminders',
+            'apply_cart_discounts',
         ]);
 
         // Repartidor

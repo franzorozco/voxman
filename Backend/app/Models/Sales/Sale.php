@@ -17,10 +17,17 @@ class Sale extends BaseSale
 		'source',
 		'subtotal',
 		'discount_total',
+		'total_discount',
 		'total',
 		'invoice_number',
-		'notes'
+		'notes',
+		'discount_id'
 	];
+
+	public function discount()
+	{
+		return $this->belongsTo(\App\Models\Discount\Discount::class, 'discount_id');
+	}
 
 	public function giftcard_transactions()
 	{

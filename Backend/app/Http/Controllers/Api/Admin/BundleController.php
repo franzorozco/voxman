@@ -15,10 +15,14 @@ class BundleController extends Controller
     {
         $query = Product::where('is_bundle', true)
             ->with([
+                'bundle_items.product.owner.user.profile',
                 'bundle_items.product.product_images', 
                 'bundle_items.product.attribute_value_images',
+                'bundle_items.product.product_variants.inventories',
+                'bundle_items.variant.product.owner.user.profile',
                 'bundle_items.variant.variant_attribute_values.attribute_value.attribute',
                 'bundle_items.variant.variant_images',
+                'bundle_items.variant.inventories',
                 'product_images'
             ]);
             
@@ -33,10 +37,14 @@ class BundleController extends Controller
     {
         $bundle = Product::where('is_bundle', true)
             ->with([
+                'bundle_items.product.owner.user.profile',
                 'bundle_items.product.product_images', 
                 'bundle_items.product.attribute_value_images',
+                'bundle_items.product.product_variants.inventories',
+                'bundle_items.variant.product.owner.user.profile',
                 'bundle_items.variant.variant_attribute_values.attribute_value.attribute',
                 'bundle_items.variant.variant_images',
+                'bundle_items.variant.inventories',
                 'product_images'
             ])
             ->findOrFail($id);
@@ -97,11 +105,13 @@ class BundleController extends Controller
             return response()->json([
                 'message' => 'Conjunto creado correctamente', 
                 'bundle' => Product::with([
-                    'bundle_items.product.product_images', 
-                    'bundle_items.product.attribute_value_images',
-                    'bundle_items.variant.variant_attribute_values.attribute_value.attribute', 
-                    'bundle_items.variant.variant_images',
-                    'product_images'
+                'bundle_items.product.product_images', 
+                'bundle_items.product.attribute_value_images',
+                'bundle_items.product.product_variants.inventories',
+                'bundle_items.variant.variant_attribute_values.attribute_value.attribute', 
+                'bundle_items.variant.variant_images',
+                'bundle_items.variant.inventories',
+                'product_images'
                 ])->find($bundle->id)
             ], 201);
         } catch (\Exception $e) {
@@ -176,8 +186,10 @@ class BundleController extends Controller
                 'bundle' => Product::with([
                     'bundle_items.product.product_images', 
                     'bundle_items.product.attribute_value_images',
+                    'bundle_items.product.product_variants.inventories',
                     'bundle_items.variant.variant_attribute_values.attribute_value.attribute', 
                     'bundle_items.variant.variant_images',
+                    'bundle_items.variant.inventories',
                     'product_images'
                 ])->find($bundle->id)
             ]);

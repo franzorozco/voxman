@@ -13,6 +13,7 @@ class SaleController extends Controller
     {
         $query = Sale::with([
             'customer.user.profile', 
+            'customer.posProfile',
             'user.profile', 
             'branch',
             'sale_details.product_variant.product',
@@ -100,6 +101,7 @@ class SaleController extends Controller
     {
         $sale = Sale::with([
             'customer.user.profile', 
+            'customer.posProfile',
             'user.profile', 
             'branch',
             'sale_details.product_variant.product',

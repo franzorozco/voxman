@@ -196,7 +196,7 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
             </label>
           </div> 
 
-          <div style={{ background: "rgba(255,255,255,0.02)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+          <div style={{ minWidth: 0, background: "rgba(255,255,255,0.02)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "20px" }}>
               <div style={{ fontWeight: 600, color: "var(--text-main)" }}>Estrategia de Imágenes</div>
               <div className="variant-tabs" style={{ display: "flex", gap: "8px", background: "var(--bg-input)", padding: "4px", borderRadius: "8px" }}>
@@ -312,9 +312,9 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
         <button className="btn-secondary" onClick={onCancel} disabled={isSubmitting}>Cancelar</button>
-        <button className="btn-save" onClick={handleSave} disabled={isSubmitting}>
+        <button className="btn-primary" onClick={handleSave} disabled={isSubmitting}>
           {isSubmitting ? "Guardando..." : "Guardar Imágenes"}
         </button>
       </div>

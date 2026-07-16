@@ -7,7 +7,7 @@
 namespace App\Models\Base;
 
 use App\Models\Cart;
-use App\Models\ProductVariant;
+use App\Models\Catalog\ProductVariant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 

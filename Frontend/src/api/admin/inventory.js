@@ -18,3 +18,9 @@ export const batchAdjustStock = (data) =>
 
 export const transferStock = (data) =>
   api.post(`${BASE_URL}/transfer`, data);
+
+export const getInventoryStats = (params = {}) =>
+  api.get(`${BASE_URL}/stats`, { params });
+
+export const submitInventoryAudit = (data) =>
+  api.post(`${BASE_URL}/audit`, data);

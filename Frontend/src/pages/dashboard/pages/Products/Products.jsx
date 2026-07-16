@@ -17,11 +17,14 @@ import { getFits } from "../../../../api/admin/fits";
 
 import "./Products.css";
 import "../css/stylesCruds.css";
-
 import { Link } from "react-router-dom";
-import { X, Trash2, Search, Filter } from "lucide-react";
+import { X, Trash2, Search, Filter, Camera } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
+
+import useScanner from "../../../../hooks/useScanner";
+import { useScannerStore } from "../../../../store/useScannerStore";
+import toast from "react-hot-toast";
 
 import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
@@ -51,12 +54,44 @@ export default function Products() {
     status: "",
     minPrice: "",
     maxPrice: "",
+    stockStatus: "",
+    tag: "",
     sortBy: "name",
     sortDir: "asc",
   });
   const [selectedRows, setSelectedRows] = useState([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [bulkEditForm, setBulkEditForm] = useState({ owner_id: "", category_id: "" });
+
+  const openScanner = useScannerStore(state => state.openScanner);
+  const [scannedVariantId, setScannedVariantId] = useState(null);
+
+  const processScannedCode = (scannedText) => {
+    const code = scannedText.includes('/p/') ? scannedText.split('/p/').pop().trim() : scannedText.trim();
+    if (!code) return;
+    
+    let foundVariant = null;
+    let foundProduct = null;
+    
+    for (const p of products) {
+        const v = p.product_variants?.find(v => v.sku === code || v.barcode === code);
+        if (v) {
+            foundVariant = v;
+            foundProduct = p;
+            break;
+        }
+    }
+    
+    if (foundVariant && foundProduct) {
+        setSelectedView(foundProduct);
+        setScannedVariantId(foundVariant.id);
+        setViewOpen(true);
+    } else {
+        toast.error("Producto o variante no encontrada", { icon: '🔍' });
+    }
+  };
+
+  useScanner(processScannedCode, !open && !viewOpen && !bulkEditOpen);
 
   const loadProducts = async () => {
     try {
@@ -252,45 +287,57 @@ export default function Products() {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-
     return enrichedProducts
+      .filter((p) => !p.is_bundle)
       .filter((p) => {
-        const search =
-          filters.search.toLowerCase();
+        const search = filters.search.toLowerCase();
         const matchSearch =
-          p.name
-            ?.toLowerCase()
-            .includes(search) ||
-          p.slug
-            ?.toLowerCase()
-            .includes(search);
+          p.name?.toLowerCase().includes(search) ||
+          p.slug?.toLowerCase().includes(search);
+          
         const matchCategory =
-          !filters.category ||
-          p.category?.name ===
-            filters.category;
+          !filters.category || p.category?.name === filters.category;
+          
         const matchStatus =
           !filters.status ||
-          (
-            filters.status ===
-            "active"
-              ? p.is_active
-              : !p.is_active
-          );
+          (filters.status === "active" ? p.is_active : !p.is_active);
 
         const matchMin =
-          !filters.minPrice ||
-          p.price >=
-            Number(filters.minPrice);
+          !filters.minPrice || p.price >= Number(filters.minPrice);
+          
         const matchMax =
-          !filters.maxPrice ||
-          p.price <=
-            Number(filters.maxPrice);
+          !filters.maxPrice || p.price <= Number(filters.maxPrice);
+          
+        const matchOwner = 
+          !filters.owner || String(p.owner_id) === String(filters.owner);
+          
+        const matchTag = 
+          !filters.tag || (p.tags && p.tags.includes(filters.tag));
+          
+        let matchStock = true;
+        if (filters.stockStatus) {
+          if (filters.stockStatus === 'in_stock') matchStock = p.stock > 0;
+          if (filters.stockStatus === 'out_of_stock') matchStock = p.stock <= 0;
+          if (filters.stockStatus === 'low_stock') {
+            // Simplified low stock check: any variant has stock <= min_stock
+            const variants = p.product_variants || [];
+            matchStock = variants.some(v => {
+              const vStock = v.inventories?.reduce((s, inv) => s + (inv.stock || inv.quantity || 0), 0) || 0;
+              const minStock = v.inventories?.reduce((max, inv) => Math.max(max, inv.min_stock || 0), 0) || 0;
+              return vStock > 0 && vStock <= minStock;
+            });
+          }
+        }
+
         return (
           matchSearch &&
           matchCategory &&
           matchStatus &&
           matchMin &&
-          matchMax
+          matchMax &&
+          matchOwner &&
+          matchTag &&
+          matchStock
         );
       })
 
@@ -388,6 +435,13 @@ export default function Products() {
             />
           </div>
           <button
+            onClick={() => openScanner(processScannedCode)}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 16px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s' }}
+            title="Escanear código de barras o QR"
+          >
+            <Camera size={18} />
+          </button>
+          <button
             onClick={() => setShowFilters(!showFilters)}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
           >
@@ -441,6 +495,74 @@ export default function Products() {
                 <option value="active">Activo</option>
                 <option value="inactive">Inactivo</option>
               </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Propietario</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.owner}
+                onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
+              >
+                <option value="">Todos</option>
+                {owners.map(o => (
+                  <option key={o.id} value={o.id}>
+                    {o.user?.profile?.first_name 
+                      ? `${o.user.profile.first_name} ${o.user.profile.last_name_paternal || ''}`
+                      : o.user?.email || 'Desconocido'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Inventario</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.stockStatus}
+                onChange={(e) => setFilters({ ...filters, stockStatus: e.target.value })}
+              >
+                <option value="">Todos</option>
+                <option value="in_stock">En Stock</option>
+                <option value="low_stock">Stock Bajo (Crítico)</option>
+                <option value="out_of_stock">Sin Stock</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Etiqueta</label>
+              <select
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.tag}
+                onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
+              >
+                <option value="">Todas</option>
+                {[...new Set(products.flatMap(p => p.tags || []))].map(tag => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio Mínimo (Bs)</label>
+              <input
+                type="number"
+                placeholder="0"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.minPrice}
+                onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio Máximo (Bs)</label>
+              <input
+                type="number"
+                placeholder="0"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.maxPrice}
+                onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+              />
             </div>
           </div>
         )}
@@ -512,7 +634,12 @@ export default function Products() {
       {viewOpen && !loadingData && selectedView && (
         <ProductViewModal
           product={selectedView}
-          onClose={() => setViewOpen(false)}
+          initialVariantId={scannedVariantId}
+          directVariantMode={!!scannedVariantId}
+          onClose={() => {
+             setViewOpen(false);
+             setScannedVariantId(null);
+          }}
           onUpdated={() => loadProducts()}
         />
       )}

@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, FileText, XCircle, RefreshCw, Eye, Package } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { getPurchases, cancelPurchase } from "../../../../api/admin/purchases";
+import { getPurchases, cancelPurchase, getPurchaseStats } from "../../../../api/admin/purchases";
 import { Link } from "react-router-dom";
 import CanAccess from "../../../../components/ui/CanAccess";
 import Spinner from "../../components/Spinner/Spinner";
 import ViewPurchaseModal from "./ViewPurchaseModal";
 import "./Purchases.css";
+import { DollarSign, Clock, CheckCircle } from "lucide-react";
 
 export default function PurchasesList() {
   const [purchases, setPurchases] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -18,8 +20,12 @@ export default function PurchasesList() {
   const fetchPurchases = async () => {
     try {
       setLoading(true);
-      const { data } = await getPurchases({ search, status: statusFilter });
-      setPurchases(data.data || data); // handle pagination
+      const [purRes, statsRes] = await Promise.all([
+        getPurchases({ search, status: statusFilter }),
+        getPurchaseStats()
+      ]);
+      setPurchases(purRes.data.data || purRes.data); // handle pagination
+      setStats(statsRes.data);
     } catch (error) {
       toast.error("Error al cargar órdenes de compra");
       console.error(error);
@@ -49,7 +55,8 @@ export default function PurchasesList() {
       {selectedPurchase && (
         <ViewPurchaseModal 
           purchase={selectedPurchase} 
-          onClose={() => setSelectedPurchase(null)} 
+          onClose={() => setSelectedPurchase(null)}
+          onUpdate={fetchPurchases}
         />
       )}
 
@@ -68,6 +75,34 @@ export default function PurchasesList() {
           </CanAccess>
         </div>
       </div>
+
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Deuda Total (Cuentas por Pagar)</span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Clock size={16} /></div>
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.total_debt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          </div>
+          
+          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Pagado (Mes)</span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CheckCircle size={16} /></div>
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.monthly_payments).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          </div>
+
+          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Mercadería Recibida (Mes)</span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={16} /></div>
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.monthly_purchases).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          </div>
+        </div>
+      )}
 
       <div className="purchases-filters">
         <div className="purchases-search-box">
@@ -131,9 +166,16 @@ export default function PurchasesList() {
                   <td>{purchase.invoice_number || "-"}</td>
                   <td style={{ fontWeight: 600 }}>${Number(purchase.total).toFixed(2)}</td>
                   <td>
-                    <span className={`status-badge status-${purchase.status}`}>
-                      {purchase.status === 'pending' ? 'Pendiente' : purchase.status === 'received' ? 'Recepcionado' : 'Cancelado'}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      <span className={`status-badge status-${purchase.status}`}>
+                        {purchase.status === 'pending' ? 'Pendiente' : purchase.status === 'received' ? 'Recepcionado' : 'Cancelado'}
+                      </span>
+                      {purchase.accounts_payables && purchase.accounts_payables.length > 0 && (
+                        <span className={`status-badge status-${purchase.accounts_payables[0].status === 'paid' ? 'success' : purchase.accounts_payables[0].status === 'partial' ? 'warning' : 'danger'}`}>
+                          {purchase.accounts_payables[0].status === 'paid' ? 'Pagado' : purchase.accounts_payables[0].status === 'partial' ? 'Pago Parcial' : 'Por Pagar'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>

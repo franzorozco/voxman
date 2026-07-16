@@ -13,6 +13,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
     customer_code: "",
     first_name: "",
     last_name_paternal: "",
+    last_name_maternal: "",
     email: "",
     phone: "",
     password: "",
@@ -21,20 +22,25 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
 
   useEffect(() => {
     if (isEditing) {
-      const profile = customer.user?.profile || {};
+      const isWebCustomer = !!customer.user;
+      const profile = isWebCustomer 
+        ? (customer.user?.profile || {}) 
+        : (customer.pos_profile || customer.posProfile || {});
+        
       const userEmail = customer.user?.email || "";
       
       setFormData({
         customer_code: customer.customer_code || "",
         first_name: profile.first_name || "",
         last_name_paternal: profile.last_name_paternal || "",
+        last_name_maternal: profile.last_name_maternal || "",
         email: userEmail.includes('@guest') ? "" : userEmail,
         phone: profile.phone || "",
         password: "", // Keep empty on edit unless changing
         is_active: customer.is_active !== undefined ? customer.is_active : true
       });
 
-      setCreateWebAccount(!userEmail.includes('@guest'));
+      setCreateWebAccount(isWebCustomer && !userEmail.includes('@guest'));
     }
   }, [customer, isEditing]);
 
@@ -106,12 +112,21 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Apellidos</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Apellido Paterno</label>
                 <input 
                   type="text" 
                   style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                   value={formData.last_name_paternal}
                   onChange={(e) => setFormData({...formData, last_name_paternal: e.target.value})}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Apellido Materno</label>
+                <input 
+                  type="text" 
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                  value={formData.last_name_maternal}
+                  onChange={(e) => setFormData({...formData, last_name_maternal: e.target.value})}
                 />
               </div>
             </div>

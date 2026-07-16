@@ -144,8 +144,10 @@ Route::middleware([
 
     Route::prefix('inventories')->group(function () {
         Route::get('/', [InventoryController::class, 'index'])->middleware('permission:view_inventory_own_branch|view_inventory_all_branches');
+        Route::get('/stats', [InventoryController::class, 'stats'])->middleware('permission:view_inventory_own_branch|view_inventory_all_branches');
         Route::get('/movements', [InventoryController::class, 'movements'])->middleware('permission:view_inventory_history');
         Route::post('/adjust', [InventoryController::class, 'adjust'])->middleware('permission:adjust_inventory|receive_inventory');
+        Route::post('/audit', [InventoryController::class, 'audit'])->middleware('permission:adjust_inventory');
         Route::post('/batch-adjust', [InventoryController::class, 'batchAdjust'])->middleware('permission:inventory_mass_entry');
         Route::post('/transfer', [InventoryController::class, 'transfer'])->middleware('permission:transfer_inventory');
     });
@@ -229,9 +231,16 @@ Route::middleware([
 
     Route::prefix('customers')->group(function () {
         Route::get('/', [CustomerController::class, 'index']);
+        Route::get('/kpis', [CustomerController::class, 'kpis']);
         Route::get('/deleted', [CustomerController::class, 'getDeleted']);
         Route::post('/{id}/restore', [CustomerController::class, 'restore']);
+        Route::get('/search-unlinked-users', [CustomerController::class, 'searchUnlinkedUsers']);
+        Route::get('/search-pos-customers', [CustomerController::class, 'searchPosCustomers']);
+        Route::post('/link-user', [CustomerController::class, 'linkUser']);
         Route::get('/{id}', [CustomerController::class, 'show']);
+        Route::get('/{id}/timeline', [CustomerController::class, 'getTimeline']);
+        Route::put('/{id}/tags', [CustomerController::class, 'updateTags']);
+        Route::post('/{id}/points', [CustomerController::class, 'adjustPoints']);
         Route::post('/', [CustomerController::class, 'store']);
         Route::put('/{id}', [CustomerController::class, 'update']);
         Route::delete('/{id}', [CustomerController::class, 'destroy']);
@@ -279,7 +288,9 @@ Route::middleware([
         Route::put('/{id}/restore', [SupplierController::class, 'restore'])->middleware('permission:restore_suppliers');
         Route::delete('/{id}/force', [SupplierController::class, 'forceDestroy'])->middleware('permission:delete_suppliers');
         
+        Route::get('/stats', [SupplierController::class, 'stats'])->middleware('permission:view_suppliers');
         Route::get('/', [SupplierController::class, 'index'])->middleware('permission:view_suppliers');
+        Route::get('/{id}/profile', [SupplierController::class, 'profile'])->middleware('permission:view_suppliers');
         Route::get('/{id}', [SupplierController::class, 'show'])->middleware('permission:view_suppliers');
         Route::post('/', [SupplierController::class, 'store'])->middleware('permission:create_suppliers');
         Route::put('/{id}', [SupplierController::class, 'update'])->middleware('permission:edit_suppliers');
@@ -287,10 +298,13 @@ Route::middleware([
     });
 
     Route::prefix('purchases')->group(function () {
+        Route::get('/stats', [PurchaseController::class, 'stats'])->middleware('permission:view_purchases');
         Route::get('/', [PurchaseController::class, 'index'])->middleware('permission:view_purchases');
         Route::get('/{id}', [PurchaseController::class, 'show'])->middleware('permission:view_purchases');
         Route::post('/', [PurchaseController::class, 'store'])->middleware('permission:create_purchases');
         Route::put('/{id}/cancel', [PurchaseController::class, 'cancel'])->middleware('permission:cancel_purchases');
+        Route::put('/{id}/update-costs', [PurchaseController::class, 'updateCosts'])->middleware('permission:edit_purchases');
+        Route::post('/{id}/pay', [\App\Http\Controllers\Api\Admin\AccountsPayableController::class, 'storePayment'])->middleware('permission:create_purchases');
         Route::post('/reception', [\App\Http\Controllers\Api\Admin\PurchaseReceptionController::class, 'store'])->middleware('permission:receive_inventory');
     });
 
@@ -304,18 +318,23 @@ Route::middleware([
         Route::get('/{id}', [SaleController::class, 'show'])->middleware('permission:view_sales');
         Route::put('/{id}', [SaleController::class, 'update'])->middleware('permission:manage_sales');
         Route::delete('/{id}', [SaleController::class, 'destroy'])->middleware('permission:manage_sales');
+        Route::put('/{id}/status', [\App\Http\Controllers\Api\Admin\SaleController::class, 'updateStatus'])->middleware('permission:manage_sales|edit_sale_notes');
+        Route::post('/{id}/cancel', [\App\Http\Controllers\Api\Admin\SaleController::class, 'cancel'])->middleware('permission:manage_sales');
     });
 
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartController::class, 'index'])->middleware('permission:view_carts');
+        Route::post('/', [CartController::class, 'store'])->middleware('permission:create_carts');
         Route::get('/{id}', [CartController::class, 'show'])->middleware('permission:view_carts');
-        Route::post('/{id}/convert', [CartController::class, 'convert'])->middleware('permission:manage_carts');
-        Route::post('/{id}/reminder', [CartController::class, 'sendReminder'])->middleware('permission:manage_carts');
+        Route::put('/{id}', [CartController::class, 'update'])->middleware('permission:edit_carts');
+        Route::post('/{id}/convert', [CartController::class, 'convert'])->middleware('permission:convert_carts');
+        Route::post('/{id}/reminder', [CartController::class, 'sendReminder'])->middleware('permission:send_cart_reminders');
         Route::delete('/{id}', [CartController::class, 'destroy'])->middleware('permission:delete_carts');
     });
 
     Route::prefix('returns')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'index'])->middleware('permission:view_returns');
+        Route::post('/', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'store'])->middleware('permission:create_returns');
         Route::get('/{id}', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'show'])->middleware('permission:view_returns');
         Route::post('/{id}/approve', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'approve'])->middleware('permission:manage_returns');
         Route::post('/{id}/reject', [\App\Http\Controllers\Api\Admin\ReturnController::class, 'reject'])->middleware('permission:manage_returns');

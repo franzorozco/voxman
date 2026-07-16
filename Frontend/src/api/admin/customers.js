@@ -22,3 +22,24 @@ export const getDeletedCustomers = (params) =>
 
 export const restoreCustomer = (id) => 
     api.post(`${BASE_URL}/${id}/restore`);
+
+export const searchUnlinkedUsers = (query) => 
+    api.get(`${BASE_URL}/search-unlinked-users`, { params: { q: query } });
+
+export const searchPosCustomers = (query) => 
+    api.get(`${BASE_URL}/search-pos-customers`, { params: { q: query } });
+
+export const linkUserToCustomer = (data) => 
+    api.post(`${BASE_URL}/link-user`, data);
+
+export const getCustomerKpis = () => 
+    api.get(`${BASE_URL}/kpis`);
+
+export const updateCustomerTags = (id, tags) => 
+    api.put(`${BASE_URL}/${id}/tags`, { tags });
+
+export const adjustCustomerPoints = (id, data) => 
+    api.post(`${BASE_URL}/${id}/points`, data);
+
+export const getCustomerTimeline = (id) => 
+    api.get(`${BASE_URL}/${id}/timeline`);

@@ -41,4 +41,50 @@ class ProductVariantController extends Controller
 
         return response()->json($variant);
     }
+
+    public function update(\Illuminate\Http\Request $request, $id)
+    {
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $variant = ProductVariant::findOrFail($id);
+            if ($request->has('price')) $variant->price = $request->price === '' ? 0 : $request->price;
+            if ($request->has('cost')) $variant->cost = $request->cost === '' ? 0 : $request->cost;
+            if ($request->has('weight')) $variant->weight = $request->weight === '' ? 0 : $request->weight;
+            if ($request->has('size_id')) $variant->size_id = empty($request->size_id) ? null : $request->size_id;
+            if ($request->has('fit_id')) $variant->fit_id = empty($request->fit_id) ? null : $request->fit_id;
+            
+            $variant->save();
+
+            if ($request->has('attribute_value_ids')) {
+                \App\Models\Catalog\VariantAttributeValue::where('variant_id', $variant->id)->delete();
+                foreach ($request->attribute_value_ids as $attrValId) {
+                    \App\Models\Catalog\VariantAttributeValue::create([
+                        'variant_id' => $variant->id,
+                        'attribute_value_id' => $attrValId
+                    ]);
+                }
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'message' => 'Variante actualizada correctamente',
+                'variant' => ProductVariant::with([
+                    'variant_attribute_values.attribute_value.attribute',
+                    'size',
+                    'fit',
+                    'inventories.branch',
+                    'variant_images',
+                    'variant_measurements.measurement_type'
+                ])->find($variant->id)
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Variant update error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return response()->json([
+                'message' => 'Error al actualizar variante',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

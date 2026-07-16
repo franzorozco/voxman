@@ -13,7 +13,7 @@ class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Purchase::with(['supplier', 'branch', 'employee.user.user_profiles', 'purchase_details.product_variant.product']);
+        $query = Purchase::with(['supplier', 'branch', 'employee.user.user_profiles', 'purchase_details.product_variant.product', 'accounts_payables']);
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -35,7 +35,14 @@ class PurchaseController extends Controller
 
     public function show($id)
     {
-        $purchase = Purchase::with(['supplier', 'branch', 'employee.user.user_profiles', 'purchase_details.product_variant.product.product_images'])->findOrFail($id);
+        $purchase = Purchase::with([
+            'supplier', 
+            'branch', 
+            'employee.user.user_profiles', 
+            'purchase_details.product_variant.product.product_images',
+            'accounts_payables',
+            'supplier_payments.paymentMethod'
+        ])->findOrFail($id);
         return response()->json($purchase);
     }
 
@@ -124,6 +131,75 @@ class PurchaseController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error al cancelar la orden.'], 500);
+        }
+    }
+
+    public function stats()
+    {
+        // Deuda Total Pendiente (suma de balances en accounts_payable)
+        $totalDebt = \App\Models\Finance\AccountsPayable::sum('balance');
+
+        // Total Comprado este mes (estado received)
+        $monthlyPurchases = Purchase::whereMonth('created_at', now()->month)
+                                    ->whereYear('created_at', now()->year)
+                                    ->where('status', 'received')
+                                    ->sum('total');
+
+        // Total Pagado este mes a proveedores
+        $monthlyPayments = \App\Models\Finance\SupplierPayment::whereMonth('created_at', now()->month)
+                                    ->whereYear('created_at', now()->year)
+                                    ->where('status', 'completed')
+                                    ->sum('amount');
+
+        return response()->json([
+            'total_debt' => $totalDebt,
+            'monthly_purchases' => $monthlyPurchases,
+            'monthly_payments' => $monthlyPayments,
+        ]);
+    }
+
+    public function updateCosts(Request $request, $id)
+    {
+        $request->validate([
+            'shipping_cost' => 'required|numeric|min:0',
+            'other_costs' => 'nullable|numeric|min:0'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $purchase = Purchase::findOrFail($id);
+            
+            if ($purchase->status !== 'pending') {
+                return response()->json(['message' => 'Solo se pueden actualizar costos de importación en órdenes pendientes antes de su recepción.'], 400);
+            }
+
+            $shipping = $request->input('shipping_cost', 0);
+            $other = $request->input('other_costs', 0);
+
+            // Sum to total
+            // Since there is no shipping_cost column in purchases table as per DB schema,
+            // we have to just add it to the total, or store it in 'notes'.
+            // Wait, we can't easily store shipping_cost if the column doesn't exist.
+            // Let's store it in a JSON column? No, we don't have one.
+            // Let's just adjust the 'total' and append to 'notes' for now to avoid migration.
+            
+            $purchase->total = $purchase->subtotal + $purchase->tax + $shipping + $other;
+            $purchase->notes = $purchase->notes . "\n[Landed Cost] Flete/Otros: Bs. " . ($shipping + $other);
+            $purchase->save();
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Costos adicionales agregados exitosamente',
+                'purchase' => $purchase
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al actualizar costos',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

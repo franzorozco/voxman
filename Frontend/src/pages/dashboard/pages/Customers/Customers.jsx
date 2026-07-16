@@ -1,25 +1,33 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter } from "lucide-react";
+import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { getCustomers, deleteCustomer } from "../../../../api/admin/customers";
+import { getCustomers, deleteCustomer, getCustomerKpis } from "../../../../api/admin/customers";
 import CustomerModal from "./CustomerModal";
 import CustomerDetails from "./CustomerDetails";
+import LinkCustomerModal from "./LinkCustomerModal";
 import "./Customers.css"; // Reuse existing UI token styles
 import { Link } from "react-router-dom";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [kpis, setKpis] = useState({ totalCustomers: 0, activeCustomers: 0, newThisMonth: 0, totalPoints: 0 });
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     status: "active",
     minPoints: "",
-    sortBy: "created_at"
+    sortBy: "created_at",
+    type: "all",
+    tag: "",
+    startDate: "",
+    endDate: ""
   });
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [detailsCustomer, setDetailsCustomer] = useState(null);
@@ -40,8 +48,20 @@ export default function Customers() {
     fetchCustomers(filters);
   }, [filters]);
 
+  useEffect(() => {
+    const fetchKpis = async () => {
+      try {
+        const res = await getCustomerKpis();
+        setKpis(res.data);
+      } catch (error) {
+        console.error("Error fetching KPIs", error);
+      }
+    };
+    fetchKpis();
+  }, []);
+
   const handleDelete = async (id) => {
-    if (!window.confirm("Â¿EstÃ¡s seguro de eliminar este cliente? Se enviarÃ¡ a la papelera.")) return;
+    if (!window.confirm("¿Estás seguro de eliminar este cliente? Se enviará a la papelera.")) return;
     try {
       await deleteCustomer(id);
       toast.success("Cliente enviado a la papelera");
@@ -71,6 +91,14 @@ export default function Customers() {
             Papelera
           </Link>
           <button 
+            className="btn-secondary" 
+            onClick={() => setIsLinkModalOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Link2 size={18} />
+            <span className="hide-on-mobile">Vincular</span>
+          </button>
+          <button 
             className="btn-primary" 
             onClick={() => { setSelectedCustomer(null); setIsModalOpen(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
@@ -78,6 +106,26 @@ export default function Customers() {
             <Plus size={18} />
             Nuevo Cliente
           </button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Total de Clientes</span>
+          <span style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{kpis.totalCustomers}</span>
+        </div>
+        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Clientes Activos</span>
+          <span style={{ fontSize: '28px', fontWeight: 700, color: 'var(--color-primary)' }}>{kpis.activeCustomers}</span>
+        </div>
+        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Nuevos (Este Mes)</span>
+          <span style={{ fontSize: '28px', fontWeight: 700, color: '#10b981' }}>+{kpis.newThisMonth}</span>
+        </div>
+        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Puntos Distribuidos</span>
+          <span style={{ fontSize: '28px', fontWeight: 700, color: '#f59e0b' }}>{kpis.totalPoints}</span>
         </div>
       </div>
 
@@ -115,9 +163,33 @@ export default function Customers() {
                 <option value="inactive">Inactivos</option>
               </select>
             </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Tipo de Cliente</label>
+              <select 
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.type}
+                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+              >
+                <option value="all">Todos</option>
+                <option value="web">Cliente Web</option>
+                <option value="pos">Cliente POS</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Etiqueta (Tag)</label>
+              <input 
+                type="text"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                placeholder="Ej. VIP"
+                value={filters.tag}
+                onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
+              />
+            </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Puntos MÃ­nimos</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Puntos Mínimos</label>
               <input 
                 type="number"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
@@ -138,6 +210,26 @@ export default function Customers() {
                 <option value="points">Puntos</option>
                 <option value="total_purchases">Total Comprado</option>
               </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Registrado Desde</label>
+              <input 
+                type="date"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.startDate}
+                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Registrado Hasta</label>
+              <input 
+                type="date"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.endDate}
+                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+              />
             </div>
           </div>
         )}
@@ -161,9 +253,11 @@ export default function Customers() {
             </thead>
             <tbody>
               {customers.map((c) => {
-                const profile = c.user?.profile || {};
-                const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
-                
+                const isWebCustomer = !!c.user;
+                const profile = isWebCustomer ? (c.user?.profile || {}) : (c.pos_profile || c.posProfile || {});
+                const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''} ${profile.last_name_maternal || ''}`.replace(/\s+/g, ' ').trim() || 'Sin Nombre';
+                const initial = profile.first_name ? profile.first_name.charAt(0).toUpperCase() : 'C';
+
                 return (
                   <tr key={c.id}>
                     <td data-label="Código">
@@ -172,14 +266,35 @@ export default function Customers() {
                       </span>
                     </td>
                     <td data-label="Cliente">
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{fullName}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--color-primary)', color: 'var(--color-primary-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
+                          {initial}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{fullName}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isWebCustomer ? '#3b82f6' : '#8b5cf6' }}></span>
+                            {isWebCustomer ? 'Cliente Web' : 'Cliente Caja (POS)'}
+                          </span>
+                          
+                          {/* Tags */}
+                          {c.tags && c.tags.length > 0 && (
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
+                              {c.tags.slice(0, 3).map((tag, idx) => (
+                                <span key={idx} style={{ fontSize: '10px', padding: '2px 6px', background: 'var(--bg-main)', color: 'var(--text-muted)', border: '1px solid var(--border-color)', borderRadius: '10px', fontWeight: 500 }}>{tag}</span>
+                              ))}
+                              {c.tags.length > 3 && (
+                                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{c.tags.length - 3}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td data-label="Contacto">
-                      <div style={{ display: 'flex', flexDirection: 'column', fontSize: '12px', color: 'var(--text-muted)' }}>
-                        <span>{c.user?.email || 'S/E'}</span>
-                        {profile.phone && <span>Tel: {profile.phone}</span>}
+                      <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', color: 'var(--text-muted)', gap: '2px' }}>
+                        <span style={{ color: 'var(--text-main)' }}>{c.user?.email || 'Sin Correo'}</span>
+                        {profile.phone && <span>📞 {profile.phone}</span>}
                       </div>
                     </td>
                     <td data-label="Puntos">
@@ -251,6 +366,16 @@ export default function Customers() {
         <CustomerDetails 
           customerId={detailsCustomer.id}
           onClose={() => setIsDetailsOpen(false)}
+        />
+      )}
+
+      {isLinkModalOpen && (
+        <LinkCustomerModal 
+          onClose={() => setIsLinkModalOpen(false)}
+          onSuccess={() => {
+            setIsLinkModalOpen(false);
+            fetchCustomers(filters);
+          }}
         />
       )}
     </div>

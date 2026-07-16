@@ -4,39 +4,110 @@ import "./Carts.css";
 export default function CartDetailsModal({ cart, onClose }) {
   if (!cart) return null;
 
+  const getImageUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `http://localhost:8000${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
+  const getVariantImage = (variant) => {
+    if (!variant) return null;
+    
+    // 1. Imagen unitaria de la variante
+    if (variant.variant_images && variant.variant_images.length > 0) {
+      return variant.variant_images[0].url;
+    }
+    
+    // 2. Imagen por color (atributo)
+    if (variant.variant_attribute_values?.length > 0 && variant.product?.attribute_value_images?.length > 0) {
+      for (const vav of variant.variant_attribute_values) {
+        const colorImage = variant.product.attribute_value_images.find(img => img.attribute_value_id === vav.attribute_value_id);
+        if (colorImage) {
+          return colorImage.url;
+        }
+      }
+    }
+    
+    // 3. Fallback a imagen del producto
+    if (variant.product?.product_images && variant.product.product_images.length > 0) {
+      return variant.product.product_images[0].url;
+    }
+    
+    return null;
+  };
+
+  const renderVariantAttributes = (variant) => {
+    if (!variant) return null;
+    
+    // Si tiene atributos dinámicos, los usamos
+    if (variant.variant_attribute_values && variant.variant_attribute_values.length > 0) {
+      return variant.variant_attribute_values.map((vav, idx) => {
+        const attrName = vav.attribute_value?.attribute?.name || "Atributo";
+        const attrValue = vav.attribute_value?.value || "N/A";
+        return (
+          <div key={idx}>
+            {attrName}: {attrValue}
+          </div>
+        );
+      });
+    }
+
+    // Fallback a los atributos legacy (size_id, fit_id) si no hay dinámicos
+    return (
+      <>
+        Talla: {variant.size?.name || "N/A"}<br />
+        Color/Fit: {variant.fit?.name || "N/A"}
+      </>
+    );
+  };
+
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '800px', width: '90%' }}>
+      <div className="modal-content">
         <div className="modal-header">
-          <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h2 className="modal-title">
             <Package className="text-primary" />
-            Detalles del Carrito {cart.reference_number ? `(${cart.reference_number})` : ""}
+            {cart.status === 'proforma' ? 'Detalles de la Proforma ' : 
+             cart.status === 'converted' ? 'Detalles de la Venta ' : 
+             'Detalles del Carrito '} 
+            {cart.reference_number ? `(${cart.reference_number})` : ""}
           </h2>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
 
-        <div className="modal-body" style={{ padding: '20px' }}>
+        <div className="modal-body-content">
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', background: 'var(--bg-input)', padding: '16px', borderRadius: '8px' }}>
+          <div className="modal-info-grid">
             <div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Cliente</div>
-              <div style={{ fontWeight: 600 }}>{cart.user ? (cart.user.profile?.first_name + " " + cart.user.profile?.last_name) : "Usuario Anónimo"}</div>
+              <div className="modal-info-label">Cliente</div>
+              <div className="modal-info-value">
+                {cart.customer 
+                  ? (cart.customer.user 
+                      ? (cart.customer.user.profile?.first_name + " " + (cart.customer.user.profile?.last_name_paternal || "")) 
+                      : (cart.customer.posProfile?.first_name + " " + (cart.customer.posProfile?.last_name_paternal || ""))) 
+                  : "Usuario Anónimo"}
+              </div>
             </div>
             <div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Origen</div>
-              <div style={{ textTransform: 'capitalize', fontWeight: 600 }}>{cart.source}</div>
+              <div className="modal-info-label">Origen</div>
+              <div className="modal-info-value">{cart.source}</div>
             </div>
             <div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Estado</div>
-              <div style={{ textTransform: 'capitalize', fontWeight: 600 }}>{cart.status}</div>
+              <div className="modal-info-label">Estado</div>
+              <div className="modal-info-value">
+                {cart.status === 'active' && 'Carrito Web (Activo)'}
+                {cart.status === 'abandoned' && 'Abandonado'}
+                {cart.status === 'proforma' && 'Proforma (Manual)'}
+                {cart.status === 'converted' && 'Venta Concretada'}
+              </div>
             </div>
             <div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Fecha de Creación</div>
-              <div style={{ fontWeight: 600 }}>{new Date(cart.created_at).toLocaleString()}</div>
+              <div className="modal-info-label">Fecha de Creación</div>
+              <div className="font-semibold">{new Date(cart.created_at).toLocaleString()}</div>
             </div>
           </div>
 
-          <h3 style={{ marginBottom: '16px', fontSize: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Productos Seleccionados</h3>
+          <h3 className="modal-section-title">Productos Seleccionados</h3>
           
           <table className="products-table">
             <thead>
@@ -44,8 +115,8 @@ export default function CartDetailsModal({ cart, onClose }) {
                 <th>Producto</th>
                 <th>Variante</th>
                 <th>Cantidad</th>
-                <th style={{ textAlign: 'right' }}>Precio Unit.</th>
-                <th style={{ textAlign: 'right' }}>Subtotal</th>
+                <th className="text-right">Precio Unit.</th>
+                <th className="text-right">Subtotal</th>
               </tr>
             </thead>
             <tbody>
@@ -53,40 +124,39 @@ export default function CartDetailsModal({ cart, onClose }) {
                 cart.items.map((item) => (
                   <tr key={item.id}>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {item.product_variant?.product?.images?.[0] ? (
+                      <div className="modal-product-cell">
+                        {getVariantImage(item.product_variant) ? (
                           <img 
-                            src={`http://localhost:8000/storage/${item.product_variant.product.images[0].image_path}`} 
+                            src={getImageUrl(getVariantImage(item.product_variant))} 
                             alt="product" 
-                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }}
+                            className="modal-product-image"
                           />
                         ) : (
-                          <div style={{ width: '40px', height: '40px', background: 'var(--border-color)', borderRadius: '6px' }}></div>
+                          <div className="modal-product-placeholder"></div>
                         )}
-                        <span style={{ fontWeight: 500 }}>{item.product_variant?.product?.name || "Desconocido"}</span>
+                        <span className="modal-product-name">{item.product_variant?.product?.name || "Desconocido"}</span>
                       </div>
                     </td>
                     <td>
-                      <div style={{ fontSize: '13px' }}>
-                        Talla: {item.product_variant?.size?.name || "N/A"}<br />
-                        Color/Fit: {item.product_variant?.fit?.name || "N/A"}
+                      <div className="modal-variant-info">
+                        {renderVariantAttributes(item.product_variant)}
                       </div>
                     </td>
-                    <td style={{ fontWeight: 600 }}>{item.quantity}</td>
-                    <td style={{ textAlign: 'right' }}>Bs. {Number(item.product_variant?.price || 0).toFixed(2)}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 600 }}>Bs. {((item.product_variant?.price || 0) * item.quantity).toFixed(2)}</td>
+                    <td className="font-semibold">{item.quantity}</td>
+                    <td className="text-right">Bs. {Number(item.product_variant?.price || 0).toFixed(2)}</td>
+                    <td className="text-right font-semibold">Bs. {((item.product_variant?.price || 0) * item.quantity).toFixed(2)}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No hay productos en este carrito</td>
+                  <td colSpan="5" className="text-center modal-empty-state">No hay productos en este carrito</td>
                 </tr>
               )}
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan="4" style={{ textAlign: 'right', fontWeight: 700, padding: '16px' }}>Total a Pagar:</td>
-                <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '18px', padding: '16px', color: 'var(--color-primary)' }}>
+                <td colSpan="4" className="text-right font-bold modal-footer-label">Total a Pagar:</td>
+                <td className="text-right font-bold modal-footer-value">
                   Bs. {Number(cart.total_amount_calculated).toFixed(2)}
                 </td>
               </tr>

@@ -7,7 +7,9 @@ use App\Models\Sales\Returns;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\InventoryMovement;
 use App\Models\Inventory\QuarantineItem;
+use App\Models\Sales\SaleDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ReturnController extends Controller
 {
@@ -53,6 +55,36 @@ class ReturnController extends Controller
                 'return_rate' => $returnRate
             ]
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'sale_detail_id' => 'required|exists:sale_details,id',
+            'quantity' => 'required|integer|min:1',
+            'reason' => 'required|string',
+        ]);
+
+        $saleDetail = SaleDetail::findOrFail($request->sale_detail_id);
+
+        // Check if quantity to return is valid (not more than bought - already returned)
+        // For simplicity, just check against bought quantity
+        if ($request->quantity > $saleDetail->quantity) {
+            return response()->json(['message' => 'La cantidad a devolver excede la cantidad comprada.'], 400);
+        }
+
+        $return = Returns::create([
+            'sale_detail_id' => $saleDetail->id,
+            'quantity' => $request->quantity,
+            'reason' => $request->reason,
+            'reference_number' => 'RET-' . strtoupper(Str::random(8)),
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Solicitud de devolución creada correctamente.',
+            'return' => $return
+        ], 201);
     }
 
     public function show($id)

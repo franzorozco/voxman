@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { X, Package, Tag, DollarSign, Activity, Link as LinkIcon, Info, Users, ArrowUpRight, BarChart3, Image as ImageIcon, Ruler, Save, Edit2, Copy, PenTool } from "lucide-react";
+import { X, Package, Tag, DollarSign, Activity, Link as LinkIcon, Info, Users, ArrowUpRight, BarChart3, Image as ImageIcon, Ruler, Save, Edit2, Copy, PenTool, ExternalLink, Box, CheckCircle, AlertCircle, ShoppingBag } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
 import api from "../../../../api/client";
-import { updateProductMeasurements } from "../../../../api/admin/products";
+import { updateProductMeasurements, updatePartialProduct } from "../../../../api/admin/products";
 import CanAccess from "../../../../components/ui/CanAccess";
 import ProductImageEditor from "./ProductImageEditor";
+import QrPrintTab from "./components/QrPrintTab";
+import VariantViewModal from "./VariantViewModal";
 import toast from "react-hot-toast";
 import "./Products.css";
 
-export default function ProductViewModal({ product: initialProduct, onClose, onUpdated }) {
+export default function ProductViewModal({ product: initialProduct, initialVariantId, directVariantMode = false, onClose, onUpdated }) {
   if (!initialProduct) return null;
 
   const [product, setProduct] = useState(initialProduct);
   const [activeTab, setActiveTab] = useState("general");
+  
+  const [viewingVariant, setViewingVariant] = useState(() => {
+    if (initialVariantId && initialProduct.product_variants) {
+      return initialProduct.product_variants.find(v => v.id === initialVariantId) || null;
+    }
+    return null;
+  });
   const [isEditingImages, setIsEditingImages] = useState(false);
+  const [tagInput, setTagInput] = useState("");
 
   // Measurements State
   const [loadingMeas, setLoadingMeas] = useState(true);
@@ -108,7 +118,7 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
         formattedMeasurements[variantId] = [];
         Object.keys(measurementsState[variantId]).forEach(typeId => {
           formattedMeasurements[variantId].push({
-            measurement_type_id: parseInt(typeId),
+            measurement_type_id: typeId,
             value: measurementsState[variantId][typeId]
           });
         });
@@ -140,6 +150,20 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
     if (!url) return `${API_BASE_URL}/storage/product_images/default.png`;
     if (url.startsWith("http")) return url;
     return `${API_BASE_URL}${url}`;
+  };
+
+  const handleTagUpdate = async (newTags) => {
+    try {
+      setProduct(prev => ({ ...prev, tags: newTags }));
+      const formData = new FormData();
+      formData.append("tags", JSON.stringify(newTags));
+      await updatePartialProduct(product.id, formData);
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al actualizar etiquetas");
+      refreshProduct();
+    }
   };
 
   // Determine Product primary image
@@ -181,8 +205,8 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
     : product.owner?.user?.email || "Sin propietario";
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal pvm-container" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose} style={directVariantMode ? { background: 'transparent' } : {}}>
+      <div className="modal pvm-container" onClick={(e) => e.stopPropagation()} style={{ display: directVariantMode ? 'none' : 'flex' }}>
         
         {/* Header */}
         <div className="pvm-header">
@@ -259,6 +283,19 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
           >
             Medidas Físicas
           </button>
+          <button 
+            onClick={() => setActiveTab('qr_print')}
+            style={{ 
+              padding: '16px 0', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '15px', fontWeight: '600',
+              color: activeTab === 'qr_print' ? 'var(--color-primary)' : 'var(--text-muted)',
+              borderBottom: activeTab === 'qr_print' ? '2px solid var(--color-primary)' : '2px solid transparent',
+              transition: '0.2s',
+              display: 'flex', alignItems: 'center', gap: '6px'
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="7" y1="7" x2="7" y2="7"></line><line x1="17" y1="7" x2="17" y2="7"></line><line x1="7" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="17" y2="17"></line></svg>
+            Imprimir Etiquetas
+          </button>
         </div>
 
         {/* Content */}
@@ -301,6 +338,86 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
                     <div style={{ gridColumn: '1 / -1' }}>
                       <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Descripción Larga</p>
                       <p style={{ margin: 0, color: 'var(--text-main)', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{product.long_description || 'Sin descripción'}</p>
+                    </div>
+                    <div style={{ gridColumn: '1 / -1', marginTop: '16px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                        <Tag size={16} color="var(--color-primary)" /> Etiquetas de Marketing
+                      </label>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+                        Agrega etiquetas para destacar este producto (ej: "Nuevo", "Oferta").
+                      </p>
+
+                      {/* Quick add suggestions */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                        {['Nuevo', 'Oferta', 'Best Seller', 'Liquidación', 'Exclusivo', 'Ed. Limitada', 'Temporada'].map(suggestion => (
+                          <button
+                            key={suggestion}
+                            type="button"
+                            onClick={() => {
+                              if (!(product.tags || []).includes(suggestion)) {
+                                handleTagUpdate([...(product.tags || []), suggestion]);
+                              }
+                            }}
+                            disabled={(product.tags || []).includes(suggestion)}
+                            style={{
+                              padding: '4px 12px', borderRadius: '14px', fontSize: '11px', fontWeight: '500', cursor: 'pointer',
+                              border: '1px dashed var(--border-color)',
+                              background: (product.tags || []).includes(suggestion) ? 'var(--bg-overlay)' : 'transparent',
+                              color: (product.tags || []).includes(suggestion) ? 'var(--text-muted)' : 'var(--text-main)',
+                              opacity: (product.tags || []).includes(suggestion) ? 0.5 : 1,
+                              transition: '0.15s'
+                            }}
+                          >
+                            + {suggestion}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Current tags */}
+                      {(product.tags || []).length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                          {product.tags.map((tag, idx) => (
+                            <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '20px', background: 'var(--color-primary-alpha, rgba(99,102,241,0.15))', color: 'var(--color-primary)', fontSize: '12px', fontWeight: '600' }}>
+                              {tag}
+                              <button type="button" onClick={() => handleTagUpdate(product.tags.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: '16px', padding: 0, lineHeight: 1, fontWeight: 'bold' }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Custom tag input */}
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                          type="text"
+                          placeholder="Escribe una etiqueta y presiona Enter..."
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && tagInput.trim()) {
+                              e.preventDefault();
+                              if (!(product.tags || []).includes(tagInput.trim())) {
+                                handleTagUpdate([...(product.tags || []), tagInput.trim()]);
+                              }
+                              setTagInput("");
+                            }
+                          }}
+                          style={{ 
+                            flex: 1, 
+                            background: 'var(--bg-input, transparent)', 
+                            border: '1px solid var(--border-color)', 
+                            color: 'var(--text-main)',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            fontSize: '13px'
+                          }}
+                        />
+                        <button type="button" className="btn btn-secondary" style={{ whiteSpace: 'nowrap' }} onClick={() => {
+                          if (tagInput.trim() && !(product.tags || []).includes(tagInput.trim())) {
+                            handleTagUpdate([...(product.tags || []), tagInput.trim()]);
+                          }
+                          setTagInput("");
+                        }}>Agregar</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -356,9 +473,49 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
           )}
 
           {activeTab === 'variants' && (
-            <div className="pvm-table-container">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Mini KPIs */}
+              {(() => {
+                const variants = product.product_variants || [];
+                const totalStock = variants.reduce((acc, v) => acc + (v.inventories?.reduce((s, inv) => s + (inv.stock || inv.quantity || 0), 0) || 0), 0);
+                const lowStockCount = variants.filter(v => {
+                  const vStock = v.inventories?.reduce((s, inv) => s + (inv.stock || inv.quantity || 0), 0) || 0;
+                  const minStock = v.inventories?.reduce((max, inv) => Math.max(max, inv.min_stock || 0), 0) || 0;
+                  return vStock > 0 && vStock <= minStock;
+                }).length;
+                const noStockCount = variants.filter(v => {
+                  const vStock = v.inventories?.reduce((s, inv) => s + (inv.stock || inv.quantity || 0), 0) || 0;
+                  return vStock === 0;
+                }).length;
+                return (
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>📦</div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Stock Total</div>
+                        <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>{totalStock}</div>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>⚠️</div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Stock Bajo</div>
+                        <div style={{ fontSize: '18px', fontWeight: '700', color: lowStockCount > 0 ? 'var(--color-warning, #f59e0b)' : 'var(--text-main)' }}>{lowStockCount}</div>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🔴</div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sin Stock</div>
+                        <div style={{ fontSize: '18px', fontWeight: '700', color: noStockCount > 0 ? 'var(--color-danger)' : 'var(--text-main)' }}>{noStockCount}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               {product.product_variants?.length > 0 ? (
-                <table className="products-table" style={{ width: '100%', border: 'none', borderRadius: 0 }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="products-table" style={{ width: '100%', border: 'none', borderRadius: 0 }}>
                   <thead>
                     <tr>
                       <th style={{ background: 'var(--bg-overlay)', width: '25%' }}>Variante (SKU)</th>
@@ -458,15 +615,41 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
                             )}
                           </td>
                           <td>
-                            <span className={`status-badge ${variant.is_active ? 'active' : 'inactive'}`} style={{ padding: '4px 8px', fontSize: '11px', whiteSpace: 'nowrap' }}>
-                              {variant.is_active ? 'Activa' : 'Inactiva'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span className={`status-badge ${variant.is_active ? 'active' : 'inactive'}`} style={{ padding: '4px 8px', fontSize: '11px', whiteSpace: 'nowrap' }}>
+                                {variant.is_active ? 'Activa' : 'Inactiva'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setViewingVariant(variant)}
+                                title="Ver detalles completos de variante"
+                                style={{
+                                  background: 'var(--color-primary-alpha, rgba(99,102,241,0.1))',
+                                  color: 'var(--color-primary)',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '6px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: 'pointer',
+                                  transition: '0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-primary)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--color-primary-alpha, rgba(99,102,241,0.1))'}
+                                onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-primary-text)'}
+                                onMouseOut={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+                              >
+                                <ExternalLink size={14} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               ) : (
                 <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                   <Package size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
@@ -645,16 +828,54 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
           })()}
 
           {activeTab === 'measurements' && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
-                <h3 style={{ margin: "0 0 8px 0", display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", color: "var(--text-main)" }}>
-                  <Ruler size={18} color="var(--color-primary)" /> Catálogo de Medidas Físicas
-                </h3>
-                <p style={{ margin: "0 0 20px 0", fontSize: "13px", color: "var(--text-muted)" }}>
-                  {isEditingMeas 
-                    ? "Ingresa los centímetros exactos de las prendas para el almacén y control de tallas."
-                    : "Consulta las medidas físicas actuales para todas las variantes."}
-                </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
+                <div>
+                  <h3 style={{ margin: "0 0 8px 0", display: "flex", alignItems: "center", gap: "8px", fontSize: "18px", color: "var(--text-main)" }}>
+                    <Ruler size={18} color="var(--color-primary)" /> {isEditingMeas ? "Editando Medidas" : "Catálogo de Medidas Físicas"}
+                  </h3>
+                  <p style={{ margin: "0", fontSize: "13px", color: "var(--text-muted)" }}>
+                    {isEditingMeas 
+                      ? "Ingresa los centímetros exactos de las prendas para el almacén y control de tallas."
+                      : "Consulta las medidas físicas actuales para todas las variantes."}
+                  </p>
+                </div>
+                
+                <div style={{ display: "flex", gap: "10px" }}>
+                  {isEditingMeas ? (
+                    <>
+                      <button 
+                        className="btn-secondary"
+                        onClick={() => { setIsEditingMeas(false); setMeasurementsState(initialMeasValues); }} 
+                        disabled={savingMeas}
+                        style={{ whiteSpace: "nowrap" }}
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        className="btn-primary"
+                        onClick={handleSaveMeasurements} 
+                        disabled={savingMeas}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap" }}
+                      >
+                        <Save size={16} /> {savingMeas ? "Guardando..." : "Guardar Medidas"}
+                      </button>
+                    </>
+                  ) : (
+                    requiredMeasurements.length > 0 && product.product_variants?.length > 0 && (
+                      <CanAccess permission="manage_product_measurements">
+                        <button
+                          className="btn-secondary"
+                          onClick={() => setIsEditingMeas(true)}
+                          style={{ display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap" }}
+                        >
+                          <Edit2 size={16} /> Editar Medidas
+                        </button>
+                      </CanAccess>
+                    )
+                  )}
+                </div>
+              </div>
 
                 {loadingMeas ? (
                   <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>Cargando esquema de medidas...</div>
@@ -790,56 +1011,44 @@ export default function ProductViewModal({ product: initialProduct, onClose, onU
                     </table>
                   </div>
                 )}
-              </div>
             </div>
+          )}
+
+          {activeTab === 'qr_print' && (
+            <QrPrintTab product={product} />
           )}
 
         </div>
 
         {/* Footer */}
         <div className="modal-actions pvm-modal-footer">
-          {activeTab === 'measurements' && isEditingMeas ? (
-            <>
-              <button 
-                className="btn-secondary"
-                onClick={() => { setIsEditingMeas(false); setMeasurementsState(initialMeasValues); }} 
-                disabled={savingMeas}
-                style={{ whiteSpace: "nowrap" }}
-              >
-                Cancelar
-              </button>
-              <button 
-                className="btn-save"
-                onClick={handleSaveMeasurements} 
-                disabled={savingMeas}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", opacity: savingMeas ? 0.7 : 1, whiteSpace: "nowrap" }}
-              >
-                <Save size={18} />
-                {savingMeas ? "Guardando..." : "Guardar Medidas"}
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="btn-secondary" onClick={onClose} style={{ minWidth: '120px' }}>
-                Cerrar
-              </button>
-              {activeTab === 'measurements' && requiredMeasurements.length > 0 && product.product_variants?.length > 0 && (
-                <CanAccess permission="manage_product_measurements">
-                  <button 
-                    className="btn-edit"
-                    onClick={() => setIsEditingMeas(true)} 
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", whiteSpace: "nowrap" }}
-                  >
-                    <Edit2 size={18} />
-                    Editar Medidas
-                  </button>
-                </CanAccess>
-              )}
-            </>
-          )}
+          <button className="btn-secondary" onClick={onClose} style={{ minWidth: '120px' }}>
+            Cerrar
+          </button>
         </div>
 
       </div>
+      
+      {/* Variant View Modal */}
+      {viewingVariant && (
+        <VariantViewModal
+          variant={viewingVariant}
+          product={product}
+          requiredMeasurements={requiredMeasurements}
+          measurementsState={measurementsState}
+          onClose={() => {
+             if (directVariantMode) {
+                onClose();
+             } else {
+                setViewingVariant(null);
+             }
+          }}
+          onVariantUpdated={(updatedVariant) => {
+             setViewingVariant(updatedVariant);
+             refreshProduct();
+          }}
+        />
+      )}
     </div>
   );
 }

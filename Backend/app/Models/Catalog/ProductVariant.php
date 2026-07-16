@@ -22,4 +22,14 @@ class ProductVariant extends BaseProductVariant
 	{
 		return $this->belongsTo(\App\Models\Catalog\Product::class)->withTrashed();
 	}
+
+	public function size()
+	{
+		return $this->belongsTo(\App\Models\Catalog\Size::class, 'size_id');
+	}
+
+	public function fit()
+	{
+		return $this->belongsTo(\App\Models\Catalog\Fit::class, 'fit_id');
+	}
 }

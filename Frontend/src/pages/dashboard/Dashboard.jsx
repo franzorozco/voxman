@@ -7,6 +7,7 @@ import logo_black from "../../assets/global/logo_black.png";
 import logo_white from "../../assets/global/logo_white.png";
 import CanAccess from "../../components/ui/CanAccess";
 import AttendanceWidget from "./components/AttendanceWidget/AttendanceWidget";
+import GlobalScannerModal from "../../components/ui/GlobalScannerModal";
 
 import {
   LayoutDashboard,
@@ -422,6 +423,7 @@ export default function DashboardLayout() {
 
           <div className="content">
             <Outlet />
+            <GlobalScannerModal />
           </div>
         </main>
       </div>

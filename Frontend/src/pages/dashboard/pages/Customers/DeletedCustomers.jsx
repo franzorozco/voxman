@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Search, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDeletedCustomers, restoreCustomer } from "../../../../api/admin/customers";
@@ -77,8 +77,9 @@ export default function DeletedCustomers() {
             </thead>
             <tbody>
               {customers.map((c) => {
-                const profile = c.user?.profile || {};
-                const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
+                const isWebCustomer = !!c.user;
+                const profile = isWebCustomer ? (c.user?.profile || {}) : (c.pos_profile || c.posProfile || {});
+                const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''} ${profile.last_name_maternal || ''}`.replace(/\s+/g, ' ').trim() || 'Sin Nombre';
                 
                 return (
                   <tr key={c.id}>

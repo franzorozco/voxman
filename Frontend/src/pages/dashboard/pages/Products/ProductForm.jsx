@@ -454,7 +454,10 @@ const getAttributeValueName = (valueId) => {
     product_type_id: "",
     owner_id: "",
     variants: [],
+    tags: [],
   });
+
+  const [tagInput, setTagInput] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -493,6 +496,7 @@ const getAttributeValueName = (valueId) => {
         owner_id: product.owner_id || "",
         product_type_id: product.product_type_id || "",
         variants: transformedVariants,
+        tags: product.tags || [],
       });
 
       // Force Advanced Mode on Edit
@@ -769,6 +773,11 @@ const getAttributeValueName = (valueId) => {
     formData.append(
       "product_type_id",
       form.product_type_id || ""
+    );
+
+    formData.append(
+      "tags",
+      JSON.stringify(form.tags || [])
     );
 
     // imagen

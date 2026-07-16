@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Camera } from "lucide-react";
 import AsyncSelect from "react-select/async";
 import toast from "react-hot-toast";
 
 import { createBundle, updateBundle } from "../../../../api/admin/bundles";
 import { getProducts } from "../../../../api/admin/products";
 import { API_BASE_URL } from "../../../../config/api";
+import useScanner from "../../../../hooks/useScanner";
+import { useScannerStore } from "../../../../store/useScannerStore";
 
 export default function BundleForm({ bundle, categories, owners, productTypes, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -21,6 +23,8 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
     is_active: true,
     bundle_items: []
   });
+
+  const openScanner = useScannerStore(state => state.openScanner);
 
   useEffect(() => {
     if (bundle) {
@@ -51,13 +55,41 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
         }
         const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : `${API_BASE_URL}${mainImage}`) : null;
 
+        let price = 0;
+        let cost = 0;
+        let sku = "";
+        let attributesText = "";
+
+        if (type === 'product') {
+          price = parseFloat(item.product?.base_price || 0);
+          cost = parseFloat(item.product?.product_variants?.[0]?.cost || 0);
+          sku = item.product?.sku || item.product?.code || "N/A";
+        } else if (type === 'variant') {
+          price = parseFloat(item.variant?.price || item.product?.base_price || 0);
+          cost = parseFloat(item.variant?.cost || 0);
+          sku = item.variant?.sku || "N/A";
+          const color = item.variant?.variant_attribute_values?.[0]?.attribute_value?.value || '';
+          const size = item.variant?.size?.name || '';
+          attributesText = [size, color].filter(Boolean).join(" - ");
+        }
+
         return {
           id: item.id,
           type,
           product_id: item.product_id,
           variant_id: item.variant_id,
           quantity: item.quantity,
-          selectOption: { value, label, type, productId: item.product_id, image: imageUrl }
+          selectOption: { 
+            value, 
+            label, 
+            type, 
+            productId: item.product_id, 
+            image: imageUrl,
+            price,
+            cost,
+            sku,
+            attributesText
+          }
         };
       });
 
@@ -90,7 +122,17 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
         const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : `${API_BASE_URL}${mainImage}`) : null;
 
         // Opción de elegir el producto completo (dinámico)
-        options.push({ value: p.id, label: `[Producto] ${p.name}`, type: 'product', price: parseFloat(p.base_price || 0), image: imageUrl });
+        const productCost = p.product_variants?.length > 0 ? parseFloat(p.product_variants[0].cost || 0) : 0;
+        options.push({ 
+          value: p.id, 
+          label: `[Producto] ${p.name}`, 
+          type: 'product', 
+          price: parseFloat(p.base_price || 0), 
+          cost: productCost, 
+          image: imageUrl,
+          sku: p.sku || p.code || 'N/A',
+          attributesText: ''
+        });
         
         // Opción de elegir variantes específicas (fijo)
         if (p.product_variants) {
@@ -105,13 +147,17 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
             
             const sizeName = v.size?.name || '';
             const colorName = v.variant_attribute_values?.[0]?.attribute_value?.value || '';
+            
             options.push({
               value: v.id,
               label: `[Variante] ${p.name} - ${sizeName} ${colorName} (SKU: ${v.sku})`,
               type: 'variant',
               productId: p.id,
               price: parseFloat(v.price || p.base_price || 0),
-              image: finalVariantImage
+              cost: parseFloat(v.cost || 0),
+              image: finalVariantImage,
+              sku: v.sku || 'N/A',
+              attributesText: [sizeName, colorName].filter(Boolean).join(" - ")
             });
           });
         }
@@ -147,6 +193,13 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
     }, 0);
   };
 
+  const calculateTotalCost = (items) => {
+    return items.reduce((sum, item) => {
+      const cost = item.selectOption?.cost || 0;
+      return sum + (cost * item.quantity);
+    }, 0);
+  };
+
   const handleItemChange = (index, selectedOption) => {
     const newItems = [...formData.bundle_items];
     if (!selectedOption) {
@@ -171,6 +224,94 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
     const newPrice = calculateTotal(newItems);
     setFormData({ ...formData, bundle_items: newItems, base_price: newPrice.toFixed(2) });
   };
+
+  const processScannedCode = async (scannedText) => {
+    const code = scannedText.includes('/p/') ? scannedText.split('/p/').pop().trim() : scannedText.trim();
+    if (!code) return;
+
+    try {
+      const res = await getProducts({ search: code });
+      const products = res.data?.data ?? res.data ?? [];
+      
+      let foundVariant = null;
+      let foundProduct = null;
+      
+      for (const prod of products) {
+        const variant = prod.product_variants?.find(v => v.sku === code || v.barcode === code);
+        if (variant) {
+          foundVariant = variant;
+          foundProduct = prod;
+          break;
+        }
+      }
+
+      if (!foundVariant && products.length > 0) {
+         foundProduct = products[0];
+         foundVariant = foundProduct.product_variants?.[0];
+      }
+
+      if (foundProduct && foundVariant) {
+        const p = foundProduct;
+        const v = foundVariant;
+        
+        let variantImage = v.variant_images?.[0]?.url;
+        if (!variantImage && p.attribute_value_images) {
+            const colorId = v.variant_attribute_values?.[0]?.attribute_value_id;
+            const avi = p.attribute_value_images.find(img => img.attribute_value_id === colorId);
+            if (avi) variantImage = avi.url;
+        }
+        const mainImage = p.product_images?.find(img => img.is_main)?.url || p.product_images?.[0]?.url;
+        const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : `${API_BASE_URL}${mainImage}`) : null;
+        const finalVariantImage = variantImage ? (variantImage.startsWith('http') ? variantImage : `${API_BASE_URL}${variantImage}`) : imageUrl;
+        
+        const sizeName = v.size?.name || '';
+        const colorName = v.variant_attribute_values?.[0]?.attribute_value?.value || '';
+
+        const selectOption = {
+            value: v.id,
+            label: `[Variante] ${p.name} - ${sizeName} ${colorName} (SKU: ${v.sku})`,
+            type: 'variant',
+            productId: p.id,
+            price: parseFloat(v.price || p.base_price || 0),
+            cost: parseFloat(v.cost || 0),
+            image: finalVariantImage,
+            sku: v.sku || 'N/A',
+            attributesText: [sizeName, colorName].filter(Boolean).join(" - ")
+        };
+
+        setFormData(prev => {
+            const newItems = [...prev.bundle_items];
+            const existingIndex = newItems.findIndex(item => item.variant_id === v.id);
+            if (existingIndex >= 0) {
+                newItems[existingIndex] = {
+                  ...newItems[existingIndex],
+                  quantity: newItems[existingIndex].quantity + 1
+                };
+            } else {
+                newItems.push({
+                    product_id: p.id,
+                    variant_id: v.id,
+                    quantity: 1,
+                    type: 'variant',
+                    selectOption
+                });
+            }
+            return {
+                ...prev,
+                bundle_items: newItems,
+                base_price: calculateTotal(newItems).toFixed(2)
+            };
+        });
+        toast.success(`+1 añadido: ${v.sku}`);
+      } else {
+        toast.error(`SKU ${code} no encontrado`);
+      }
+    } catch (err) {
+      toast.error("Error al buscar el producto escaneado");
+    }
+  };
+
+  useScanner(processScannedCode, true);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -226,6 +367,8 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
     }
   };
 
+  const themeNode = document.querySelector('.admin-theme') || document.querySelector('.admin-theme-dark') || document.body;
+
   const selectStyles = {
     control: (provided, state) => ({
       ...provided,
@@ -241,35 +384,46 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
     }),
     menu: (provided) => ({
       ...provided,
-      background: '#1a1a1a', // Fondo oscuro para el menú
+      background: 'var(--bg-card)',
       zIndex: 9999,
       border: '1px solid var(--border-color)',
       borderRadius: '8px',
-      boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+      boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
       overflow: 'hidden'
     }),
     menuList: (provided) => ({
       ...provided,
       padding: '4px'
     }),
-    option: (provided, state) => ({
-      ...provided,
-      background: state.isFocused ? 'var(--color-primary)' : 'transparent',
-      color: '#ffffff', // Aseguramos que el texto sea blanco
-      cursor: 'pointer',
-      borderRadius: '6px',
-      margin: '2px 0',
-      padding: '10px 14px',
-      fontSize: '13px'
-    }),
+    option: (provided, state) => {
+      let bg = 'transparent';
+      let textColor = 'var(--text-main)';
+      if (state.isFocused) {
+        bg = 'var(--color-primary)';
+        textColor = 'var(--color-primary-text)';
+      } else if (state.isSelected) {
+        bg = 'var(--color-primary-hover, var(--color-primary))';
+        textColor = 'var(--color-primary-text)';
+      }
+      return {
+        ...provided,
+        background: bg,
+        color: textColor,
+        cursor: 'pointer',
+        borderRadius: '6px',
+        margin: '2px 0',
+        padding: '10px 14px',
+        fontSize: '13px'
+      };
+    },
     singleValue: (provided) => ({
       ...provided,
-      color: '#ffffff',
+      color: 'var(--text-main)',
       fontSize: '13px'
     }),
     input: (provided) => ({
       ...provided,
-      color: '#ffffff',
+      color: 'var(--text-main)',
     }),
     placeholder: (provided) => ({
       ...provided,
@@ -281,7 +435,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '800px' }}>
+      <div className="modal-content" style={{ maxWidth: '1100px', width: '95%' }}>
         <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 30px', borderBottom: '1px solid var(--border-color)' }}>
           <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700, background: 'linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             {bundle ? "Editar Conjunto" : "Crear Conjunto"}
@@ -291,82 +445,142 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body">
-          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <div className="form-group">
-              <label>Nombre del Conjunto</label>
-              <input type="text" className="form-control" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-            </div>
+        <form onSubmit={handleSubmit} className="modal-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px', padding: '24px 30px' }}>
+          
+          {/* Columna Izquierda: Info Principal */}
+          <div className="form-info-col">
+            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>Información del Conjunto</h3>
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+              <div className="form-group">
+                <label>Nombre del Conjunto</label>
+                <input type="text" className="form-control" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+              </div>
 
-            <div className="form-group">
-              <label>Precio Base</label>
-              <input type="number" step="0.01" className="form-control" required value={formData.base_price} onChange={(e) => setFormData({ ...formData, base_price: e.target.value })} />
-            </div>
-
-            <div className="form-group">
-              <label>Categoría <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 'normal' }}>(Opcional)</span></label>
-              <select className="form-control" value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
-                <option value="">Seleccione...</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Tipo de Producto</label>
-              <select className="form-control" value={formData.product_type_id} onChange={(e) => setFormData({ ...formData, product_type_id: e.target.value })}>
-                <option value="">Seleccione...</option>
-                {productTypes.map(pt => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
-              </select>
-            </div>
-
-            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label>Descripción</label>
-              <textarea className="form-control" rows="3" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}></textarea>
-            </div>
-
-            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label>Imágenes del Conjunto</label>
-              <input 
-                type="file" 
-                multiple 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-                className="form-control" 
-                style={{ padding: '8px' }} 
-              />
-              {imagePreviews.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '12px', marginTop: '12px' }}>
-                  {imagePreviews.map((preview, idx) => (
-                    <div key={idx} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-                      <img src={preview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  ))}
+              <div className="form-group" style={{ position: 'relative' }}>
+                <label style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                  <span>Precio del Conjunto</span>
+                  {(() => {
+                    const regularPrice = calculateTotal(formData.bundle_items);
+                    const basePrice = parseFloat(formData.base_price || 0);
+                    const savings = regularPrice - basePrice;
+                    if (savings > 0) {
+                      return (
+                        <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: '600' }}>
+                          Ahorro Cliente: Bs. {savings.toFixed(2)}
+                        </span>
+                      );
+                    }
+                    return null;
+                  })()}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input type="number" step="0.01" className="form-control" required value={formData.base_price} onChange={(e) => setFormData({ ...formData, base_price: e.target.value })} />
+                  {(() => {
+                    const regularPrice = calculateTotal(formData.bundle_items);
+                    if (regularPrice > 0) {
+                      return (
+                        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: 'var(--text-muted)' }}>
+                          Reg: <span style={{ textDecoration: 'line-through' }}>Bs. {regularPrice.toFixed(2)}</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
-              )}
+                
+                {/* Rentabilidad Interna */}
+                {(() => {
+                  const totalCost = calculateTotalCost(formData.bundle_items);
+                  const basePrice = parseFloat(formData.base_price || 0);
+                  const margin = basePrice - totalCost;
+                  
+                  if (totalCost > 0 || basePrice > 0) {
+                    return (
+                      <div style={{ marginTop: '8px', padding: '10px', borderRadius: '8px', background: margin >= 0 ? 'var(--color-success-alpha)' : 'var(--color-danger-alpha)', border: `1px solid ${margin >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Costo Total Ítems</span>
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-main)' }}>Bs. {totalCost.toFixed(2)}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Margen de Ganancia</span>
+                          <span style={{ fontSize: '14px', fontWeight: '700', color: margin >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                            Bs. {margin.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label>Categoría <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 'normal' }}>(Opcional)</span></label>
+                  <select className="form-control" value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
+                    <option value="">Seleccione...</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Tipo de Prod.</label>
+                  <select className="form-control" value={formData.product_type_id} onChange={(e) => setFormData({ ...formData, product_type_id: e.target.value })}>
+                    <option value="">Seleccione...</option>
+                    {productTypes.map(pt => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Descripción</label>
+                <textarea className="form-control" rows="3" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}></textarea>
+              </div>
+
+              <div className="form-group">
+                <label>Imágenes del Conjunto</label>
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  onChange={handleImageUpload} 
+                  className="form-control" 
+                  style={{ padding: '8px' }} 
+                />
+                {imagePreviews.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '12px', marginTop: '12px' }}>
+                    {imagePreviews.map((preview, idx) => (
+                      <div key={idx} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                        <img src={preview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="form-section-title" style={{ marginTop: '30px', marginBottom: '15px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
-            <h3>Ítems del Conjunto</h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '5px 0 0 0' }}>Selecciona Productos (el cliente elige talla/color) o Variantes (talla/color fijo).</p>
-          </div>
+          {/* Columna Derecha: Ítems del Conjunto */}
+          <div className="form-items-col">
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>Ítems del Conjunto</h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px 0' }}>Selecciona Productos (el cliente elige talla/color) o Variantes (talla/color fijo).</p>
 
-          <div className="bundle-items-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', marginTop: '15px', paddingRight: '5px' }}>
-            {formData.bundle_items.map((item, index) => (
-              <div key={index} className="bundle-item-card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-                <button type="button" onClick={() => handleRemoveItem(index)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s', zIndex: 10 }}>
-                  <X size={16} />
-                </button>
-                
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginTop: '8px' }}>
-                  <div style={{ width: '60px', height: '60px', borderRadius: '10px', overflow: 'hidden', background: 'var(--bg-overlay)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div className="bundle-items-cards" style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
+              {formData.bundle_items.map((item, index) => (
+                <div key={index} className="bundle-item-card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', gap: '16px', position: 'relative', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                  <button type="button" onClick={() => handleRemoveItem(index)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s', zIndex: 10 }}>
+                    <X size={16} />
+                  </button>
+                  
+                  <div style={{ width: '100px', height: '100px', borderRadius: '10px', overflow: 'hidden', background: 'var(--bg-overlay)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {item.selectOption?.image ? (
                       <img src={item.selectOption.image} alt="Portada" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Sin img</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sin img</span>
                     )}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingRight: '36px' }}>
                      <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ítem {index + 1}</label>
                      <AsyncSelect
                         className="bundle-item-select"
@@ -378,33 +592,70 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                         onChange={(opt) => handleItemChange(index, opt)}
                         placeholder="Buscar producto o variante..."
                         noOptionsMessage={() => "No se encontraron resultados"}
-                        menuPortalTarget={document.body}
+                        menuPortalTarget={themeNode}
                         menuPosition="fixed"
                       />
+
+                      {item.selectOption && (
+                        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>SKU / Cód.</span>
+                              <span style={{ fontSize: '12px', color: 'var(--text-main)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.selectOption.sku || 'N/A'}</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Variante</span>
+                              <span style={{ fontSize: '12px', color: 'var(--text-main)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.selectOption.attributesText || 'General'}</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Precio Reg.</span>
+                              <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: 600 }}>Bs. {parseFloat(item.selectOption.price || 0).toFixed(2)}</span>
+                            </div>
+                          </div>
+                          
+                          <div style={{ background: 'var(--bg-overlay)', border: '1px dashed var(--border-color)', borderRadius: '6px', padding: '6px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Costo Interno (Fábrica)</span>
+                            <span style={{ fontSize: '12px', color: 'var(--color-danger)', fontWeight: 600 }}>Bs. {parseFloat(item.selectOption.cost || 0).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '12px' }}>
+                        <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                          Cantidad {item.type === 'product' && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>(Fija)</span>}
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          disabled={item.type === 'product'}
+                          style={{ width: '80px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: item.type === 'product' ? 'var(--bg-overlay)' : 'var(--bg-input)', color: item.type === 'product' ? 'var(--text-muted)' : 'var(--text-main)', outline: 'none', textAlign: 'center', fontWeight: 600, cursor: item.type === 'product' ? 'not-allowed' : 'text' }}
+                          value={item.quantity}
+                          onChange={(e) => handleQuantityChange(index, e.target.value)}
+                        />
+                      </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '4px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                    Cantidad {item.type === 'product' && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>(Fija)</span>}
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    disabled={item.type === 'product'}
-                    style={{ width: '80px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: item.type === 'product' ? 'var(--bg-overlay)' : 'var(--bg-input)', color: item.type === 'product' ? 'var(--text-muted)' : 'var(--text-main)', outline: 'none', textAlign: 'center', fontWeight: 600, cursor: item.type === 'product' ? 'not-allowed' : 'text' }}
-                    value={item.quantity}
-                    onChange={(e) => handleQuantityChange(index, e.target.value)}
-                  />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px', alignItems: 'stretch' }}>
+              <button type="button" className="btn-add-item" onClick={handleAddItem} style={{ flex: 1, marginTop: 0 }}>
+                <Plus size={18} /> Agregar Ítem Manual
+              </button>
+              <button
+                type="button"
+                onClick={() => openScanner(processScannedCode, true)}
+                title="Escanear Ítem"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 15px', borderRadius: '8px', background: 'var(--bg-card)', color: 'var(--color-primary)', border: '1px dashed var(--border-color)', cursor: 'pointer', transition: '0.2s', flexShrink: 0 }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(99,102,241,0.05)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-card)' }}
+              >
+                <Camera size={20} />
+              </button>
+            </div>
           </div>
 
-          <button type="button" className="btn-add-item" onClick={handleAddItem}>
-            <Plus size={18} /> Agregar Ítem al Conjunto
-          </button>
-
-          <div className="modal-footer" style={{ marginTop: '30px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="modal-footer" style={{ gridColumn: '1 / -1', marginTop: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: 0 }}>
               <input type="checkbox" id="bundle-active" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }} />
               <label htmlFor="bundle-active" style={{ margin: 0, cursor: 'pointer', fontWeight: 500 }}>Conjunto Activo</label>

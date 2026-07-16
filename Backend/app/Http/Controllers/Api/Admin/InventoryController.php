@@ -50,6 +50,30 @@ class InventoryController extends Controller
             });
         }
 
+        if ($request->filled('category_id')) {
+            $query->whereHas('variant.product', function ($q) use ($request) {
+                $q->where('category_id', $request->category_id);
+            });
+        }
+
+        if ($request->filled('brand_id')) {
+            $query->whereHas('variant.product', function ($q) use ($request) {
+                $q->where('brand_id', $request->brand_id);
+            });
+        }
+
+        if ($request->filled('min_price')) {
+            $query->whereHas('variant', function ($q) use ($request) {
+                $q->where('price', '>=', $request->min_price);
+            });
+        }
+
+        if ($request->filled('max_price')) {
+            $query->whereHas('variant', function ($q) use ($request) {
+                $q->where('price', '<=', $request->max_price);
+            });
+        }
+
         if ($request->filled('status')) {
             if ($request->status === 'low_stock') {
                 $query->whereColumn('stock', '<=', 'min_stock')->where('stock', '>', 0);
@@ -290,8 +314,120 @@ class InventoryController extends Controller
             $query->where('movement_type', $request->type); // in, out, adjustment
         }
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('variant', function($q2) use ($search) {
+                    $q2->where('sku', 'like', "%{$search}%")
+                      ->orWhere('barcode', 'like', "%{$search}%")
+                      ->orWhereHas('product', function($q3) use ($search) {
+                          $q3->where('name', 'like', "%{$search}%");
+                      });
+                })->orWhere('reference', 'like', "%{$search}%");
+            });
+        }
+
         $movements = $query->paginate($request->get('per_page', 20));
 
         return response()->json($movements);
+    }
+
+    public function stats(Request $request)
+    {
+        $branchId = $request->get('branch_id');
+
+        $query = Inventory::with('variant');
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+
+        $inventories = $query->get();
+
+        $totalItems = 0;
+        $totalCostValue = 0;
+        $totalRetailValue = 0;
+        $lowStockCount = 0;
+
+        foreach ($inventories as $inv) {
+            $stock = (int)$inv->stock;
+            if ($stock > 0) {
+                $totalItems += $stock;
+                if ($inv->variant) {
+                    $totalCostValue += ($inv->variant->cost * $stock);
+                    $totalRetailValue += ($inv->variant->price * $stock);
+                }
+                if ($stock <= $inv->min_stock) {
+                    $lowStockCount++;
+                }
+            } else if ($stock <= 0) {
+                $lowStockCount++; // Agotados también cuentan como alerta de bajo stock
+            }
+        }
+
+        return response()->json([
+            'total_items' => $totalItems,
+            'total_cost_value' => $totalCostValue,
+            'total_retail_value' => $totalRetailValue,
+            'low_stock_alerts' => $lowStockCount
+        ]);
+    }
+
+    public function audit(Request $request)
+    {
+        $request->validate([
+            'branch_id' => 'required|uuid',
+            'items' => 'required|array',
+            'items.*.variant_id' => 'required|uuid',
+            'items.*.actual_stock' => 'required|numeric',
+        ]);
+
+        $userId = auth()->id();
+        $branchId = $request->branch_id;
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($request->items as $item) {
+                $variantId = $item['variant_id'];
+                $actualStock = (int)$item['actual_stock'];
+
+                $inventory = Inventory::firstOrCreate(
+                    [
+                        'variant_id' => $variantId,
+                        'branch_id' => $branchId,
+                    ],
+                    [
+                        'stock' => 0,
+                        'min_stock' => 5
+                    ]
+                );
+
+                $difference = $actualStock - $inventory->stock;
+
+                if ($difference != 0) {
+                    InventoryMovement::create([
+                        'variant_id' => $variantId,
+                        'branch_id' => $branchId,
+                        'created_by' => $userId,
+                        'movement_type' => 'adjustment',
+                        'quantity' => $difference,
+                        'reference' => 'Auditoría Física',
+                        'stock_before' => $inventory->stock,
+                        'stock_after' => $actualStock,
+                        'notes' => 'Ajuste automático por auditoría física'
+                    ]);
+
+                    $inventory->update(['stock' => $actualStock]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json(['message' => 'Auditoría guardada exitosamente.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al guardar la auditoría.', 'error' => $e->getMessage()], 500);
+        }
     }
 }

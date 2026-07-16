@@ -1,8 +1,20 @@
-import React, { useEffect } from "react";
-import { X, FileText, ShoppingCart, Info, MapPin, User, Hash } from "lucide-react";
+import React, { useState } from "react";
+import { X, FileText, ShoppingCart, Info, MapPin, User, Hash, Printer, DollarSign, Plus } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
+import { registerPurchasePayment, updatePurchaseCosts } from "../../../../api/admin/purchases";
+import { toast } from "react-hot-toast";
 
-export default function ViewPurchaseModal({ purchase, onClose }) {
+export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+
+  const [isAddingCost, setIsAddingCost] = useState(false);
+  const [shippingCost, setShippingCost] = useState("");
+  const [otherCost, setOtherCost] = useState("");
+  const [submittingCost, setSubmittingCost] = useState(false);
+
   if (!purchase) return null;
 
   const getImageUrl = (url) => {
@@ -36,17 +48,67 @@ export default function ViewPurchaseModal({ purchase, onClose }) {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleRegisterPayment = async () => {
+    if (!paymentAmount || Number(paymentAmount) <= 0) return toast.error("Ingresa un monto válido");
+    try {
+      setSubmittingPayment(true);
+      await registerPurchasePayment(purchase.id, {
+        amount: paymentAmount,
+        notes: paymentNotes
+      });
+      toast.success("Pago registrado exitosamente");
+      setIsAddingPayment(false);
+      setPaymentAmount("");
+      setPaymentNotes("");
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error al registrar pago");
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
+  const handleUpdateCosts = async () => {
+    try {
+      setSubmittingCost(true);
+      await updatePurchaseCosts(purchase.id, {
+        shipping_cost: shippingCost || 0,
+        other_costs: otherCost || 0
+      });
+      toast.success("Costos de importación actualizados");
+      setIsAddingCost(false);
+      setShippingCost("");
+      setOtherCost("");
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error al actualizar costos");
+    } finally {
+      setSubmittingCost(false);
+    }
+  };
+
+  const account = purchase.accounts_payables?.[0];
+
   return (
-    <div className="purchase-detail-modal-overlay" onClick={onClose}>
+    <div className="purchase-detail-modal-overlay print-overlay" onClick={onClose}>
       <div className="purchase-detail-modal" onClick={e => e.stopPropagation()}>
-        <div className="purchase-detail-header">
+        <div className="purchase-detail-header no-print">
           <h2>
             <FileText size={20} color="var(--color-primary)" />
             Detalles de Orden de Compra
           </h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
-            <X size={24} />
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={handlePrint} className="btn-secondary" style={{ padding: '6px 12px' }}>
+              <Printer size={16} /> Imprimir
+            </button>
+            <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
         <div className="purchase-detail-body">
@@ -165,12 +227,94 @@ export default function ViewPurchaseModal({ purchase, onClose }) {
           
           {purchase.notes && (
             <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '8px', border: '1px dashed var(--border-color)', fontSize: '13px', color: 'var(--text-muted)' }}>
-              <strong style={{ color: 'var(--text-main)' }}>Notas:</strong> {purchase.notes}
+              <strong style={{ color: 'var(--text-main)' }}>Notas:</strong> 
+              <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>{purchase.notes}</pre>
+            </div>
+          )}
+
+          {/* FINANCIAL SECTION */}
+          {account && (
+            <div className="no-print" style={{ marginTop: '20px', padding: '16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px' }}>
+              <h3 style={{ fontSize: '15px', color: 'var(--text-main)', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <DollarSign size={16} color="var(--color-success)" />
+                  Estado Financiero de la Orden
+                </div>
+                <span className={`status-badge status-${account.status === 'paid' ? 'success' : account.status === 'partial' ? 'warning' : 'danger'}`}>
+                  {account.status === 'paid' ? 'Pagado' : account.status === 'partial' ? 'Pago Parcial' : 'Por Pagar'}
+                </span>
+              </h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '15px' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total a Pagar</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold' }}>Bs. {Number(account.total_amount).toFixed(2)}</div>
+                </div>
+                <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Pagado</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-success)' }}>Bs. {Number(account.paid_amount).toFixed(2)}</div>
+                </div>
+                <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Saldo Pendiente</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-danger)' }}>Bs. {Number(account.balance).toFixed(2)}</div>
+                </div>
+              </div>
+
+              {account.balance > 0 && (
+                <div style={{ marginTop: '10px' }}>
+                  {!isAddingPayment ? (
+                    <button className="btn-primary" onClick={() => setIsAddingPayment(true)}>
+                      <Plus size={16} /> Registrar Abono / Pago
+                    </button>
+                  ) : (
+                    <div style={{ background: 'var(--bg-card)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                      <div className="form-group" style={{ margin: 0, flex: 1 }}>
+                        <label>Monto a Pagar (Bs)</label>
+                        <input type="number" className="purchase-form-input" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} max={account.balance} />
+                      </div>
+                      <div className="form-group" style={{ margin: 0, flex: 2 }}>
+                        <label>Notas / Ref</label>
+                        <input type="text" className="purchase-form-input" value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} placeholder="Nro de transferencia, etc..." />
+                      </div>
+                      <button className="btn-primary" onClick={handleRegisterPayment} disabled={submittingPayment}>
+                        Guardar
+                      </button>
+                      <button className="btn-secondary" onClick={() => setIsAddingPayment(false)}>Cancelar</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {purchase.status === 'pending' && (
+            <div className="no-print" style={{ marginTop: '20px', padding: '16px', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px' }}>
+              <h3 style={{ fontSize: '15px', color: 'var(--text-main)', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin size={16} color="var(--color-warning)" /> Costos de Importación (Landed Cost)
+              </h3>
+              {!isAddingCost ? (
+                <button className="btn-secondary" onClick={() => setIsAddingCost(true)}>
+                  <Plus size={16} /> Agregar Flete o Seguros
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label>Flete (Bs)</label>
+                    <input type="number" className="purchase-form-input" value={shippingCost} onChange={e => setShippingCost(e.target.value)} />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label>Otros Costos (Bs)</label>
+                    <input type="number" className="purchase-form-input" value={otherCost} onChange={e => setOtherCost(e.target.value)} />
+                  </div>
+                  <button className="btn-primary" onClick={handleUpdateCosts} disabled={submittingCost}>Guardar</button>
+                  <button className="btn-secondary" onClick={() => setIsAddingCost(false)}>Cancelar</button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        <div className="purchase-detail-footer">
+        <div className="purchase-detail-footer no-print">
           <button className="btn-secondary" onClick={onClose}>
             Cerrar
           </button>

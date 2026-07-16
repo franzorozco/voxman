@@ -233,3 +233,310 @@
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* Modal Base Styles for Carts */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-overlay, rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--color-danger);
+}
+
+/* Cart Form Modal specific */
+.cart-form-modal-container {
+  max-width: 1000px;
+  width: 95%;
+}
+.cart-form-title {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.cart-form-group {
+  margin-bottom: 15px;
+}
+.cart-form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.cart-form-dropdown-wrapper {
+  position: relative;
+}
+.cart-form-input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+.cart-form-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.cart-form-dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+.cart-form-dropdown-item:hover {
+  background-color: var(--color-secondary);
+}
+.cart-form-clear-btn {
+  margin-top: 8px;
+  font-size: 12px;
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+}
+.cart-form-dropdown-group {
+  border-bottom: 2px solid var(--border-color);
+}
+.cart-form-group-title {
+  padding: 8px 10px;
+  font-weight: 600;
+  background-color: var(--color-secondary);
+  color: var(--text-main);
+}
+.cart-form-variant-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+.cart-form-variant-item:hover {
+  background-color: var(--color-secondary);
+}
+.cart-form-items-section {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+.cart-form-text-center {
+  text-align: center;
+}
+.cart-form-empty-td {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px;
+}
+.cart-form-font-bold {
+  font-weight: 600;
+  color: var(--text-main);
+}
+.cart-form-sku-td {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+.cart-form-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-main);
+}
+.cart-form-qty-btn {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  cursor: pointer;
+}
+.cart-form-qty-btn:hover {
+  background-color: var(--color-secondary);
+}
+.cart-form-delete-btn {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+}
+.cart-form-footer-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+.cart-form-total-title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-success);
+}
+.cart-form-actions-box {
+  display: flex;
+  gap: 10px;
+}
+.cart-form-btn-cancel {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  cursor: pointer;
+}
+.cart-form-btn-cancel:hover {
+  background: var(--color-secondary);
+}
+.cart-form-btn-save {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
+  cursor: pointer;
+  font-weight: 600;
+}
+.cart-form-btn-save:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.modal-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.modal-product-image {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+.modal-product-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--bg-input);
+  border: 1px dashed var(--border-color);
+}
+.modal-variant-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* CartDetailsModal Styles */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+.modal-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  color: var(--text-main);
+}
+.modal-body-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.modal-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  background: var(--bg-input);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+.modal-info-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.modal-info-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.modal-section-title {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+.modal-empty-state {
+  padding: 30px;
+  color: var(--text-muted);
+}
+.modal-footer-label {
+  font-size: 14px;
+  padding: 16px;
+}
+.modal-footer-value {
+  font-size: 1.15rem;
+  padding: 16px;
+  color: var(--color-success);
+}
+.text-right {
+  text-align: right;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.font-bold {
+  font-weight: 700;
+}

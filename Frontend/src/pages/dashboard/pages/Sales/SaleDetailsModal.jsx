@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { getSale, updateSaleStatus, cancelSale } from "../../../../api/admin/sales";
 import Spinner from "../../components/Spinner/Spinner";
 import ThermalReceiptModal from "./ThermalReceiptModal";
+import SaleReturnModal from "./SaleReturnModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 
 export default function SaleDetailsModal({ saleId, onClose }) {
@@ -11,6 +12,9 @@ export default function SaleDetailsModal({ saleId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [returnDetail, setReturnDetail] = useState(null);
 
   useEffect(() => {
     const fetchSale = async () => {
@@ -18,6 +22,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
         setLoading(true);
         const { data } = await getSale(saleId);
         setSale(data);
+        setNotes(data.notes || "");
       } catch (error) {
         toast.error("Error al cargar los detalles de la venta");
         onClose();
@@ -41,6 +46,21 @@ export default function SaleDetailsModal({ saleId, onClose }) {
       setSale(freshSale.data);
     } catch (error) {
       const msg = error.response?.data?.message || "Error al actualizar estado";
+      toast.error(msg);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    try {
+      setActionLoading(true);
+      const { data } = await updateSaleStatus(saleId, { status: sale.status, notes: notes });
+      toast.success("Notas guardadas correctamente");
+      setSale(data);
+      setIsEditingNotes(false);
+    } catch (error) {
+      const msg = error.response?.data?.message || "Error al guardar notas";
       toast.error(msg);
     } finally {
       setActionLoading(false);
@@ -84,12 +104,38 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               <div className="sale-detail-title">
                 <User size={18} /> Cliente
               </div>
-              {sale.customer?.user?.profile ? (
+              {sale.customer ? (
                 <div>
-                  <div style={{ fontWeight: 600 }}>{sale.customer.user.profile.first_name} {sale.customer.user.profile.last_name_paternal}</div>
+                  {sale.customer.user?.profile ? (
+                    <>
+                      <div style={{ fontWeight: 600 }}>{sale.customer.user.profile.first_name} {sale.customer.user.profile.last_name_paternal} <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 500, marginLeft: '8px' }}>• Cliente Web</span></div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Email: {sale.customer.user.email}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Teléfono: {sale.customer.user.profile.phone || 'N/A'}</div>
+                    </>
+                  ) : (sale.customer.pos_profile || sale.customer.posProfile) ? (
+                    <>
+                      <div style={{ fontWeight: 600 }}>{(sale.customer.pos_profile || sale.customer.posProfile).first_name} {(sale.customer.pos_profile || sale.customer.posProfile).last_name_paternal} <span style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: 500, marginLeft: '8px' }}>• Cliente Caja (POS)</span></div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Teléfono: {(sale.customer.pos_profile || sale.customer.posProfile).phone || 'N/A'}</div>
+                    </>
+                  ) : (
+                    <div style={{ color: 'var(--text-muted)' }}>Cliente sin perfil</div>
+                  )}
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>DNI/NIT: {sale.customer.tax_id || 'N/A'}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Email: {sale.customer.user.email}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Teléfono: {sale.customer.phone || 'N/A'}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Código: {sale.customer.customer_code}</div>
+                  
+                  <CanAccess permission="view_loyalty_points">
+                    <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#d97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <CheckCircle size={14} /> Puntos de Fidelidad
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-main)', marginTop: '4px' }}>
+                        Acumulados: <strong>{sale.customer.points || 0} pts</strong>
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        Generados en esta venta: +{Math.floor(sale.total / 10)} pts
+                      </div>
+                    </div>
+                  </CanAccess>
                 </div>
               ) : (
                 <div style={{ color: 'var(--text-muted)' }}>Cliente Ocasional / Sin Registrar</div>
@@ -130,6 +176,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                     <th style={{textAlign: 'right'}}>P. Unitario</th>
                     <th style={{textAlign: 'right'}}>Descuento</th>
                     <th style={{textAlign: 'right'}}>Subtotal</th>
+                    <th style={{textAlign: 'center'}}>Devolución</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,6 +209,22 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                         ) : '-'}
                       </td>
                       <td style={{textAlign: 'right', fontWeight: 600}}>Bs. {parseFloat(detail.subtotal).toFixed(2)}</td>
+                      <td style={{textAlign: 'center'}}>
+                        {detail.quantity > 0 && !detail.giftcard ? (
+                          <CanAccess permission="create_returns" fallback={<span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>-</span>}>
+                            <button
+                              onClick={() => setReturnDetail(detail)}
+                              style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '6px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', margin: '0 auto' }}
+                              title="Devolver este producto"
+                            >
+                              <RotateCcw size={12} />
+                              Devolver
+                            </button>
+                          </CanAccess>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>-</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                   {sale.giftcard_transactions && sale.giftcard_transactions.map((transaction) => (
@@ -178,6 +241,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                       <td style={{textAlign: 'right'}}>Bs. {parseFloat(transaction.amount).toFixed(2)}</td>
                       <td style={{textAlign: 'right', color: 'var(--text-muted)'}}>-</td>
                       <td style={{textAlign: 'right', fontWeight: 600}}>Bs. {parseFloat(transaction.amount).toFixed(2)}</td>
+                      <td style={{textAlign: 'center'}}>-</td>
                     </tr>
                   ))}
                 </tbody>
@@ -253,16 +317,47 @@ export default function SaleDetailsModal({ saleId, onClose }) {
           )}
 
           {/* Notas */}
-          {sale.notes && (
-            <div className="sale-detail-section" style={{ marginBottom: '20px' }}>
-              <div className="sale-detail-title">
-                <FileText size={18} /> Notas de la Venta
-              </div>
-              <div style={{ padding: '12px', background: 'var(--bg-input)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-main)', marginTop: '10px' }}>
-                {sale.notes}
-              </div>
+          <div className="sale-detail-section" style={{ marginBottom: '20px' }}>
+            <div className="sale-detail-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div><FileText size={18} /> Notas Internas de la Venta</div>
+              {!isEditingNotes && (
+                <CanAccess permission="edit_sale_notes">
+                  <button onClick={() => setIsEditingNotes(true)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>
+                    Editar Notas
+                  </button>
+                </CanAccess>
+              )}
             </div>
-          )}
+            
+            {isEditingNotes ? (
+              <div style={{ marginTop: '10px' }}>
+                <textarea 
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Añade notas internas visibles solo para el personal..."
+                  style={{ width: '100%', padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', minHeight: '80px', color: 'var(--text-main)', resize: 'vertical', outline: 'none' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                  <button onClick={() => { setIsEditingNotes(false); setNotes(sale.notes || ""); }} disabled={actionLoading} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '6px', cursor: 'pointer' }}>
+                    Cancelar
+                  </button>
+                  <button onClick={handleSaveNotes} disabled={actionLoading} style={{ padding: '6px 12px', background: 'var(--color-primary)', border: 'none', color: 'var(--color-primary-text)', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}>
+                    {actionLoading ? 'Guardando...' : 'Guardar Notas'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              sale.notes ? (
+                <div style={{ padding: '12px', background: 'var(--bg-input)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-main)', marginTop: '10px' }}>
+                  {sale.notes}
+                </div>
+              ) : (
+                <div style={{ padding: '12px', background: 'var(--bg-main)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '10px', fontStyle: 'italic' }}>
+                  No hay notas para esta venta. Haz clic en "Editar Notas" para agregar una.
+                </div>
+              )
+            )}
+          </div>
 
           {/* Totales */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -332,9 +427,19 @@ export default function SaleDetailsModal({ saleId, onClose }) {
 
       </div>
 
-      {showReceipt && (
-        <ThermalReceiptModal sale={sale} onClose={() => setShowReceipt(false)} />
-      )}
+        {showReceipt && (
+          <ThermalReceiptModal saleId={saleId} onClose={() => setShowReceipt(false)} />
+        )}
+
+        {returnDetail && (
+          <SaleReturnModal 
+            detail={returnDetail} 
+            onClose={() => setReturnDetail(null)} 
+            onReturnSuccess={() => {
+              setReturnDetail(null);
+            }} 
+          />
+        )}
     </div>
   );
 }

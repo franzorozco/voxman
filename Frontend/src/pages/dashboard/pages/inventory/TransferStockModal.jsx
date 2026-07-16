@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { transferStock } from "../../../../api/admin/inventory";
 import toast from "react-hot-toast";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, ArrowLeft } from "lucide-react";
 
-export default function TransferStockModal({ item, branches, onClose, onSuccess }) {
+export default function TransferStockModal({ item, branches, onClose, onSuccess, onBack }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     to_branch_id: "",
@@ -50,9 +50,20 @@ export default function TransferStockModal({ item, branches, onClose, onSuccess 
     <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, animation: 'fadeIn 0.2s ease' }}>
       <div className="modal-content" style={{ background: 'var(--bg-card)', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
         
-        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--text-main)' }}>Transferir Stock</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {onBack && (
+              <button 
+                type="button" 
+                onClick={onBack}
+                style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-main)' }}
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--text-main)' }}>Transferir Stock</h2>
+          </div>
+          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={20} />
           </button>
         </div>

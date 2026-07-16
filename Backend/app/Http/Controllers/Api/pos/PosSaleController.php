@@ -71,6 +71,8 @@ class PosSaleController extends Controller
             $sale->source = 'store';
             $sale->subtotal = $request->subtotal;
             $sale->discount_total = $request->discount_total ?? 0;
+            $sale->total_discount = $request->discount_total ?? 0;
+            $sale->discount_id = $request->discount_id;
             $sale->total = $request->total;
             // Generate simple invoice number
             $sale->invoice_number = 'POS-' . time() . '-' . rand(1000, 9999);
@@ -118,6 +120,7 @@ class PosSaleController extends Controller
                 $saleDetail->quantity = $item['quantity'];
                 $saleDetail->unit_price = $item['unit_price'];
                 $saleDetail->discount = $detailDiscount;
+                $saleDetail->discount_amount = $detailDiscount;
                 $saleDetail->final_price = $finalPrice;
                 $saleDetail->subtotal = $finalPrice * $item['quantity'];
                 $saleDetail->save();

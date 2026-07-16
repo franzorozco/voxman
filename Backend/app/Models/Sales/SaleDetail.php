@@ -13,6 +13,7 @@ class SaleDetail extends BaseSaleDetail
 		'quantity',
 		'unit_price',
 		'discount',
+		'discount_amount',
 		'final_price',
 		'subtotal'
 	];

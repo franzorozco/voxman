@@ -40,5 +40,8 @@ export const updateProductImages = (id, data) =>
 export const updateProductMeasurements = (id, measurements) =>
   api.post(`${BASE_URL}/${id}/measurements`, { measurements });
 
+export const updateVariant = (id, data) =>
+  api.put(`/v1/admin/variants/${id}`, data);
+
 export const getDeletedVariants = () =>
   api.get(`/v1/admin/variants/deleted`);

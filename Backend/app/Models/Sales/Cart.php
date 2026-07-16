@@ -4,24 +4,37 @@ namespace App\Models\Sales;
 
 use App\Models\Base\Cart as BaseCart;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+
 class Cart extends BaseCart
 {
+	use HasUuids;
 	protected $fillable = [
 		'user_id',
 		'reference_number',
 		'status',
 		'source',
 		'expires_at',
-		'updated_at'
+		'updated_at',
+		'discount_id',
+		'total_discount'
 	];
 
 	protected $appends = ['total_amount'];
 
+	public function discount()
+	{
+		return $this->belongsTo(\App\Models\Discount\Discount::class, 'discount_id');
+	}
+
 	public function getTotalAmountAttribute()
 	{
-		return $this->items->sum(function ($item) {
+		$subtotal = $this->items->sum(function ($item) {
 			$price = $item->product_variant->price ?? 0;
 			return $price * $item->quantity;
 		});
+
+		$discount = $this->total_discount ?? 0;
+		return max(0, $subtotal - $discount);
 	}
 }

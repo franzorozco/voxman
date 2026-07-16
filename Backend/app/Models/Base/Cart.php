@@ -6,7 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\CartItem;
+use App\Models\Sales\CartItem;
+use App\Models\Actors\Customer;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
