@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Actors\EmployeePayment;
 use App\Models\Actors\Employee;
+use App\Models\Actors\EmployeeAttendance;
 use App\Models\Sales\Sale;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -17,6 +18,11 @@ class EmployeePaymentController extends Controller
 
         if ($request->has('employee_id')) {
             $query->where('employee_id', $request->employee_id);
+        }
+        
+        if ($request->has('month') && $request->has('year')) {
+            $query->whereMonth('payment_date', $request->month)
+                  ->whereYear('payment_date', $request->year);
         }
 
         return response()->json($query->get());
@@ -32,30 +38,56 @@ class EmployeePaymentController extends Controller
 
         $employee = Employee::findOrFail($request->employee_id);
         
-        $startOfMonth = Carbon::create($request->year, $request->month, 1)->startOfMonth();
-        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+        // Define cycle bounds based on hire_date
+        $hireDate = $employee->hire_date ? Carbon::parse($employee->hire_date) : null;
+        $hireDay = $hireDate ? clone $hireDate->day : 1;
+        
+        // If hire_day is e.g. 3, cycle for July (month 7) goes from June 3 to July 2.
+        // If hire_day is > 28, handle edge cases.
+        $cycleEnd = Carbon::createFromDate($request->year, $request->month, 1)->endOfMonth();
+        $targetDay = min($hireDay, $cycleEnd->day);
+        
+        $endOfCycle = Carbon::createFromDate($request->year, $request->month, $targetDay)->endOfDay();
+        $startOfCycle = clone $endOfCycle;
+        $startOfCycle->subMonth()->addDay()->startOfDay();
 
         $sales = Sale::where('employee_id', $employee->id)
             ->where('status', 'paid')
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereBetween('created_at', [$startOfCycle, $endOfCycle])
             ->get();
 
         $totalSales = $sales->sum('total');
         $commissionPercentage = $employee->commission_percentage ?? 0;
         $commissions = $totalSales * ($commissionPercentage / 100);
+        
+        // Calculate absences and lates in this cycle
+        $attendances = EmployeeAttendance::where('employee_id', $employee->id)
+            ->whereBetween('date', [$startOfCycle->toDateString(), $endOfCycle->toDateString()])
+            ->get();
+            
+        $absencesCount = $attendances->where('status', 'absent')->count();
+        $latesCount = $attendances->where('status', 'late')->count();
 
-        // Check if already paid this month
+        // Check if already paid this cycle (using payment_date to represent the month it pays for)
         $existingPayment = EmployeePayment::where('employee_id', $employee->id)
             ->whereMonth('payment_date', $request->month)
             ->whereYear('payment_date', $request->year)
             ->first();
+            
+        $baseSalary = $employee->base_salary ?? 0;
+        $salaryPerDay = $baseSalary / 30;
 
         return response()->json([
             'employee' => $employee->load('user.profile'),
-            'base_salary' => $employee->base_salary ?? 0,
+            'base_salary' => $baseSalary,
+            'salary_per_day' => $salaryPerDay,
             'commissions' => $commissions,
             'total_sales' => $totalSales,
             'sales_count' => $sales->count(),
+            'absences_count' => $absencesCount,
+            'lates_count' => $latesCount,
+            'start_cycle' => $startOfCycle->toDateString(),
+            'end_cycle' => $endOfCycle->toDateString(),
             'already_paid' => $existingPayment ? true : false,
             'existing_payment' => $existingPayment
         ]);
@@ -85,5 +117,13 @@ class EmployeePaymentController extends Controller
         ]);
 
         return response()->json(['message' => 'Pago registrado exitosamente', 'payment' => $payment]);
+    }
+
+    public function destroy($id)
+    {
+        $payment = EmployeePayment::findOrFail($id);
+        $payment->delete();
+
+        return response()->json(['message' => 'Pago anulado exitosamente']);
     }
 }

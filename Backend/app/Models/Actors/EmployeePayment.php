@@ -10,6 +10,8 @@ class EmployeePayment extends Model
 {
     use HasFactory, HasUuids;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'employee_id',
         'base_salary',

@@ -26,5 +26,15 @@ export const restoreEmployee = (id) =>
 export const forceDeleteEmployee = (id) => 
     api.delete(`${BASE_URL}/${id}/force`);
 
+
 export const getEmployeeStats = (id) => 
     api.get(`${BASE_URL}/${id}/stats`);
+
+export const assignPermissionToEmployee = (id, permission) =>
+    api.post(`${BASE_URL}/${id}/permissions`, { permission });
+
+export const assignRoleToEmployee = (id, role) =>
+    api.post(`${BASE_URL}/${id}/role`, { role });
+
+export const revokePermissionFromEmployee = (id, permission) =>
+    api.delete(`${BASE_URL}/${id}/permissions`, { data: { permission } });

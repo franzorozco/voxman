@@ -10,3 +10,6 @@ export const calculatePayroll = (employeeId, month, year) =>
 
 export const payPayroll = (data) => 
     api.post(`${BASE_URL}/pay`, data);
+
+export const deletePayroll = (id) =>
+    api.delete(`${BASE_URL}/${id}`);

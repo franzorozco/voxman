@@ -66,7 +66,70 @@ class EmployeeController extends Controller
             'user.roles'
         ])->findOrFail($id);
 
-        return response()->json($employee);
+        $directPermissions = [];
+        $rolePermissions = [];
+        $allAvailablePermissions = \Spatie\Permission\Models\Permission::pluck('name');
+
+        if ($employee->user) {
+            $directPermissions = $employee->user->getDirectPermissions()->pluck('name');
+            $rolePermissions = $employee->user->getPermissionsViaRoles()->pluck('name');
+        }
+
+        $allRoles = \Spatie\Permission\Models\Role::with('permissions')->get()->map(function($role) {
+            return [
+                'name' => $role->name,
+                'permissions' => $role->permissions->pluck('name')
+            ];
+        });
+
+        $payments = \App\Models\Actors\EmployeePayment::where('employee_id', $id)
+            ->orderBy('payment_date', 'desc')
+            ->get();
+
+        return response()->json([
+            'employee' => $employee,
+            'role_permissions' => $rolePermissions,
+            'all_roles' => $allRoles,
+            'payments' => $payments
+        ]);
+    }
+
+    public function assignRole(Request $request, $id)
+    {
+        $request->validate(['role' => 'required|string']);
+        $employee = Employee::findOrFail($id);
+        
+        if ($employee->user) {
+            // Eliminar roles anteriores y asignar el nuevo
+            $employee->user->syncRoles([$request->role]);
+            $employee->update(['role' => $request->role]);
+        }
+
+        return response()->json(['message' => 'Rol asignado correctamente']);
+    }
+
+    public function assignPermission(Request $request, $id)
+    {
+        $request->validate(['permission' => 'required|string']);
+        $employee = Employee::findOrFail($id);
+        
+        if ($employee->user) {
+            $employee->user->givePermissionTo($request->permission);
+        }
+
+        return response()->json(['message' => 'Permiso asignado correctamente']);
+    }
+
+    public function revokePermission(Request $request, $id)
+    {
+        $request->validate(['permission' => 'required|string']);
+        $employee = Employee::findOrFail($id);
+        
+        if ($employee->user) {
+            $employee->user->revokePermissionTo($request->permission);
+        }
+
+        return response()->json(['message' => 'Permiso revocado correctamente']);
     }
 
     public function store(Request $request)
@@ -84,7 +147,9 @@ class EmployeeController extends Controller
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
             'hire_date' => 'nullable|date',
             'contract_type' => 'nullable|string|max:50',
-            'is_active' => 'nullable|boolean'
+            'is_active' => 'nullable|boolean',
+            'shift_start_time' => 'nullable|date_format:H:i',
+            'shift_end_time' => 'nullable|date_format:H:i'
         ]);
 
         try {
@@ -124,7 +189,9 @@ class EmployeeController extends Controller
                 'contract_type' => $request->contract_type,
                 'is_active' => $isActive,
                 'status' => $isActive ? 'active' : 'inactive',
-                'phone' => $request->phone
+                'phone' => $request->phone,
+                'shift_start_time' => $request->shift_start_time ?? '09:00:00',
+                'shift_end_time' => $request->shift_end_time ?? '18:00:00'
             ]);
 
             if ($request->filled('role')) {
@@ -154,7 +221,9 @@ class EmployeeController extends Controller
             'role' => 'nullable|string',
             'base_salary' => 'nullable|numeric|min:0',
             'commission_percentage' => 'nullable|numeric|min:0|max:100',
-            'is_active' => 'nullable|boolean'
+            'is_active' => 'nullable|boolean',
+            'shift_start_time' => 'nullable|date_format:H:i',
+            'shift_end_time' => 'nullable|date_format:H:i'
         ]);
 
         try {
@@ -207,7 +276,9 @@ class EmployeeController extends Controller
                 'contract_type' => $request->contract_type,
                 'phone' => $request->phone,
                 'emergency_contact' => $request->emergency_contact,
-                'notes' => $request->notes
+                'notes' => $request->notes,
+                'shift_start_time' => $request->has('shift_start_time') ? $request->shift_start_time : $employee->shift_start_time,
+                'shift_end_time' => $request->has('shift_end_time') ? $request->shift_end_time : $employee->shift_end_time
             ]);
 
             if ($request->filled('role')) {

@@ -53,8 +53,10 @@ class EmployeeAttendanceController extends Controller
         }
 
         $now = Carbon::now();
-        // Assume check-in after 9:15 AM is late (configurable later)
-        $status = $now->format('H:i') > '09:15' ? 'late' : 'present';
+        // Shift start time logic, add 15 minutes grace period
+        $shiftStart = $employee->shift_start_time ? Carbon::parse($employee->shift_start_time) : Carbon::parse('09:00:00');
+        $graceTime = $shiftStart->copy()->addMinutes(15);
+        $status = $now->format('H:i') > $graceTime->format('H:i') ? 'late' : 'present';
 
         $attendance = EmployeeAttendance::create([
             'employee_id' => $employeeId,
@@ -64,6 +66,62 @@ class EmployeeAttendanceController extends Controller
         ]);
 
         return response()->json(['message' => 'Entrada registrada exitosamente', 'attendance' => $attendance]);
+    }
+
+    // Admin Methods
+    public function store(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|uuid|exists:employees,id',
+            'date' => 'required|date',
+            'status' => 'required|string',
+            'check_in' => 'nullable|date_format:H:i',
+            'check_out' => 'nullable|date_format:H:i',
+            'notes' => 'nullable|string'
+        ]);
+
+        $attendance = EmployeeAttendance::updateOrCreate(
+            ['employee_id' => $request->employee_id, 'date' => $request->date],
+            [
+                'check_in' => $request->check_in ? $request->date . ' ' . $request->check_in . ':00' : null,
+                'check_out' => $request->check_out ? $request->date . ' ' . $request->check_out . ':00' : null,
+                'status' => $request->status,
+                'notes' => $request->notes
+            ]
+        );
+
+        return response()->json(['message' => 'Asistencia registrada', 'attendance' => $attendance]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string',
+            'check_in' => 'nullable|date_format:H:i',
+            'check_out' => 'nullable|date_format:H:i',
+            'notes' => 'nullable|string'
+        ]);
+
+        $attendance = EmployeeAttendance::findOrFail($id);
+
+        $date = $attendance->date;
+
+        $attendance->update([
+            'check_in' => $request->check_in ? $date . ' ' . $request->check_in . ':00' : null,
+            'check_out' => $request->check_out ? $date . ' ' . $request->check_out . ':00' : null,
+            'status' => $request->status,
+            'notes' => $request->notes
+        ]);
+
+        return response()->json(['message' => 'Asistencia actualizada', 'attendance' => $attendance]);
+    }
+
+    public function destroy($id)
+    {
+        $attendance = EmployeeAttendance::findOrFail($id);
+        $attendance->delete();
+
+        return response()->json(['message' => 'Asistencia eliminada']);
     }
 
     public function checkOut(Request $request)

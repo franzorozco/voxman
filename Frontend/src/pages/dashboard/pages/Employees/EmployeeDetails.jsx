@@ -1,13 +1,26 @@
 import { useState, useEffect } from "react";
-import { X, User, Phone, Mail, Building, Briefcase, Calendar, DollarSign, Percent, Info, TrendingUp, Activity, ShoppingCart, List } from "lucide-react";
-import { getEmployeeById, getEmployeeStats } from "../../../../api/admin/employees";
+import { X, User, Phone, Mail, Building, Briefcase, Calendar, DollarSign, Percent, Info, TrendingUp, Activity, ShoppingCart, List, ShieldCheck, Wallet, Banknote, Plus, Save } from "lucide-react";
+import { getEmployeeById, getEmployeeStats, assignRoleToEmployee } from "../../../../api/admin/employees";
+import { toast } from "react-hot-toast";
 import Spinner from "../../components/Spinner/Spinner";
 
 export default function EmployeeDetails({ employee, onClose }) {
   const [data, setData] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("profile"); // profile | performance
+  const [activeTab, setActiveTab] = useState("profile"); // profile | performance | finances | permissions
+
+  const [selectedRole, setSelectedRole] = useState("");
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+
+  const fetchEmployeeData = async () => {
+    try {
+      const resData = await getEmployeeById(employee.id);
+      setData(resData.data || resData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,6 +32,13 @@ export default function EmployeeDetails({ employee, onClose }) {
         ]);
         setData(resData.data || resData);
         setStats(resStats.data || resStats);
+        
+        // Initialize selectedRole to current role
+        if (resData && resData.data && resData.data.employee && resData.data.employee.role) {
+            setSelectedRole(resData.data.employee.role);
+        } else if (resData && resData.employee && resData.employee.role) {
+            setSelectedRole(resData.employee.role);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -27,6 +47,22 @@ export default function EmployeeDetails({ employee, onClose }) {
     };
     fetchData();
   }, [employee]);
+
+  const handleAssignRole = async () => {
+    if (!selectedRole) return;
+    setIsUpdatingRole(true);
+    try {
+      await assignRoleToEmployee(employee.id, selectedRole);
+      toast.success("Rol asignado correctamente");
+      await fetchEmployeeData();
+    } catch (err) {
+      toast.error("Error al asignar rol");
+    } finally {
+      setIsUpdatingRole(false);
+    }
+  };
+
+
 
   if (loading || !data || !stats) {
     return (
@@ -37,8 +73,13 @@ export default function EmployeeDetails({ employee, onClose }) {
       </div>
     );
   }
+  const employeeData = data.employee;
+  const directPermissions = data.direct_permissions || [];
+  const rolePermissions = data.role_permissions || [];
+  const allPermissions = data.all_permissions || [];
+  const payments = data.payments || [];
 
-  const profile = data.user?.profile || {};
+  const profile = employeeData.user?.profile || {};
   const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''} ${profile.last_name_maternal || ''}`.trim() || 'Sin Nombre';
 
   // Chart calculation
@@ -46,7 +87,7 @@ export default function EmployeeDetails({ employee, onClose }) {
 
   return (
     <div className="modal-overlay" style={{ display: 'flex', justifyContent: 'flex-end', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999 }}>
-      <div className="slide-panel slide-in-right" style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-main)', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '-5px 0 30px rgba(0,0,0,0.3)' }}>
+      <div className="slide-panel slide-in-right" style={{ width: '100%', maxWidth: '650px', background: 'var(--bg-main)', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '-5px 0 30px rgba(0,0,0,0.3)' }}>
         
         {/* HEADER */}
         <div style={{ padding: '24px 24px 0 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
@@ -56,25 +97,37 @@ export default function EmployeeDetails({ employee, onClose }) {
                 <User size={24} color="var(--color-primary)" />
                 Expediente de Empleado
               </h2>
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Código: {data.employee_code}</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Código: {employeeData.employee_code}</span>
             </div>
             <button onClick={onClose} style={{ background: 'var(--bg-overlay)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', display: 'flex', padding: '8px', borderRadius: '50%' }}>
               <X size={20} />
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '24px' }}>
+          <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '1px' }} className="hide-scrollbar">
             <button 
               onClick={() => setActiveTab("profile")}
-              style={{ padding: '10px 4px', background: 'transparent', border: 'none', borderBottom: activeTab === 'profile' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'profile' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: activeTab === 'profile' ? 600 : 500, cursor: 'pointer', transition: '0.2s', fontSize: '14px' }}
+              style={{ padding: '10px 4px', whiteSpace: 'nowrap', background: 'transparent', border: 'none', borderBottom: activeTab === 'profile' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'profile' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: activeTab === 'profile' ? 600 : 500, cursor: 'pointer', transition: '0.2s', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              Perfil Laboral
+              <User size={16} /> Perfil Laboral
             </button>
             <button 
               onClick={() => setActiveTab("performance")}
-              style={{ padding: '10px 4px', background: 'transparent', border: 'none', borderBottom: activeTab === 'performance' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'performance' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: activeTab === 'performance' ? 600 : 500, cursor: 'pointer', transition: '0.2s', fontSize: '14px' }}
+              style={{ padding: '10px 4px', whiteSpace: 'nowrap', background: 'transparent', border: 'none', borderBottom: activeTab === 'performance' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'performance' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: activeTab === 'performance' ? 600 : 500, cursor: 'pointer', transition: '0.2s', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              Rendimiento y Ventas
+              <TrendingUp size={16} /> Rendimiento
+            </button>
+            <button 
+              onClick={() => setActiveTab("finances")}
+              style={{ padding: '10px 4px', whiteSpace: 'nowrap', background: 'transparent', border: 'none', borderBottom: activeTab === 'finances' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'finances' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: activeTab === 'finances' ? 600 : 500, cursor: 'pointer', transition: '0.2s', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Wallet size={16} /> Finanzas y Pagos
+            </button>
+            <button 
+              onClick={() => setActiveTab("permissions")}
+              style={{ padding: '10px 4px', whiteSpace: 'nowrap', background: 'transparent', border: 'none', borderBottom: activeTab === 'permissions' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'permissions' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: activeTab === 'permissions' ? 600 : 500, cursor: 'pointer', transition: '0.2s', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <ShieldCheck size={16} /> Accesos
             </button>
           </div>
         </div>
@@ -89,8 +142,8 @@ export default function EmployeeDetails({ employee, onClose }) {
                   {fullName.charAt(0).toUpperCase()}
                 </div>
                 <h3 style={{ fontSize: '1.5rem', margin: '0 0 8px 0', color: 'var(--text-main)' }}>{fullName}</h3>
-                <span style={{ background: data.is_active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: data.is_active ? '#10b981' : '#ef4444', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', border: `1px solid ${data.is_active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}` }}>
-                  {data.is_active ? 'Activo en el sistema' : 'Inactivo / Baja'}
+                <span style={{ background: employeeData.is_active ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: employeeData.is_active ? '#10b981' : '#ef4444', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', border: `1px solid ${employeeData.is_active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}` }}>
+                  {employeeData.is_active ? 'Activo en el sistema' : 'Inactivo / Baja'}
                 </span>
               </div>
 
@@ -104,11 +157,11 @@ export default function EmployeeDetails({ employee, onClose }) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <Mail size={18} color="var(--color-primary)" />
-                      <span style={{ color: 'var(--text-main)', fontSize: '14px' }}>{data.user?.email || 'N/A'}</span>
+                      <span style={{ color: 'var(--text-main)', fontSize: '14px' }}>{employeeData.user?.email || 'N/A'}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <Phone size={18} color="var(--color-primary)" />
-                      <span style={{ color: 'var(--text-main)', fontSize: '14px' }}>{data.phone || profile.phone || 'N/A'}</span>
+                      <span style={{ color: 'var(--text-main)', fontSize: '14px' }}>{employeeData.phone || profile.phone || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -124,7 +177,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                       <Building size={18} color="var(--color-primary)" />
                       <div>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Sucursal</span>
-                        <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500 }}>{data.branch?.name || 'Sin Asignar'}</span>
+                        <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500 }}>{employeeData.branch?.name || 'Sin Asignar'}</span>
                       </div>
                     </div>
 
@@ -132,7 +185,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                       <Briefcase size={18} color="var(--color-primary)" />
                       <div>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Rol / Cargo</span>
-                        <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500, textTransform: 'capitalize' }}>{data.role || 'N/A'}</span>
+                        <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500, textTransform: 'capitalize' }}>{employeeData.role || 'N/A'}</span>
                       </div>
                     </div>
 
@@ -140,7 +193,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                       <Calendar size={18} color="var(--color-primary)" />
                       <div>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Fecha de Contratación</span>
-                        <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500 }}>{data.hire_date ? new Date(data.hire_date).toLocaleDateString() : 'N/A'}</span>
+                        <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500 }}>{employeeData.hire_date ? new Date(employeeData.hire_date).toLocaleDateString() : 'N/A'}</span>
                       </div>
                     </div>
 
@@ -158,7 +211,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                       <DollarSign size={18} color="var(--color-primary)" style={{ marginTop: '2px' }} />
                       <div>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Sueldo Base</span>
-                        <span style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: 'bold' }}>Bs. {Number(data.base_salary).toFixed(2)}</span>
+                        <span style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: 'bold' }}>Bs. {Number(employeeData.base_salary).toFixed(2)}</span>
                       </div>
                     </div>
 
@@ -166,7 +219,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                       <Percent size={18} color="var(--color-primary)" style={{ marginTop: '2px' }} />
                       <div>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Comisión Base</span>
-                        <span style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: 'bold' }}>{Number(data.commission_percentage).toFixed(2)}%</span>
+                        <span style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: 'bold' }}>{Number(employeeData.commission_percentage).toFixed(2)}%</span>
                       </div>
                     </div>
 
@@ -261,6 +314,119 @@ export default function EmployeeDetails({ employee, onClose }) {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+
+          {activeTab === 'finances' && (
+            <div className="fade-in">
+              <h3 style={{ fontSize: '16px', color: 'var(--text-main)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Wallet size={20} color="var(--color-primary)" />
+                Historial de Pagos y Finanzas
+              </h3>
+
+              <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(20,184,166,0.1) 100%)', border: '1px solid rgba(16,185,129,0.2)', padding: '20px', borderRadius: '16px', marginBottom: '24px' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '13px', display: 'block', marginBottom: '8px', fontWeight: 500 }}>Comisiones Generadas (Mes Actual)</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>Bs. {Number(stats.current_month.estimated_commissions).toFixed(2)}</span>
+                </div>
+                <span style={{ fontSize: '12px', color: '#059669', display: 'block', marginTop: '8px' }}>
+                  Pendiente de pago junto con sueldo base.
+                </span>
+              </div>
+
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px' }}>
+                <h4 style={{ fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Banknote size={16} /> Últimos Pagos Registrados
+                </h4>
+                
+                {payments.length === 0 ? (
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No hay historial de pagos registrados para este empleado.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {payments.map(payment => (
+                      <div key={payment.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                        <div>
+                          <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500, display: 'block' }}>Pago de Nómina</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{new Date(payment.payment_date).toLocaleDateString()}</span>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 'bold', display: 'block' }}>Bs. {Number(payment.total_paid).toFixed(2)}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 500 }}>Base: {Number(payment.base_salary).toFixed(2)} | Com: {Number(payment.commissions).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'permissions' && (
+            <div className="fade-in">
+              <h3 style={{ fontSize: '16px', color: 'var(--text-main)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldCheck size={20} color="var(--color-primary)" />
+                Gestión de Roles y Permisos
+              </h3>
+
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h4 style={{ fontSize: '14px', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Rol del Empleado</h4>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
+                  El rol define el conjunto de permisos y accesos que el empleado tiene en el sistema.
+                </p>
+
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                  <select 
+                    style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    disabled={isUpdatingRole}
+                  >
+                    <option value="">Selecciona un rol...</option>
+                    {(data.all_roles || []).map(r => (
+                      <option key={r.name} value={r.name}>{r.name}</option>
+                    ))}
+                  </select>
+                  <button 
+                    onClick={handleAssignRole}
+                    disabled={!selectedRole || selectedRole === employeeData.role || isUpdatingRole}
+                    className="btn-primary" 
+                    style={{ padding: '0 20px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', opacity: (!selectedRole || selectedRole === employeeData.role || isUpdatingRole) ? 0.5 : 1, cursor: (!selectedRole || selectedRole === employeeData.role || isUpdatingRole) ? 'not-allowed' : 'pointer', border: 'none' }}
+                  >
+                    {isUpdatingRole ? <Spinner size={16} color="#ffffff" /> : <><Save size={16} /> Guardar</>}
+                  </button>
+                </div>
+
+                {selectedRole && (
+                  <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px dashed var(--border-color)' }}>
+                    <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                      Permisos incluidos en el rol <strong>{selectedRole}</strong>:
+                    </h4>
+                    
+                    {(() => {
+                      const roleObj = (data.all_roles || []).find(r => r.name === selectedRole);
+                      const perms = roleObj ? roleObj.permissions : [];
+                      
+                      if (perms.length === 0) {
+                        return <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Este rol no tiene permisos asignados.</span>;
+                      }
+
+                      return (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {perms.map((perm, idx) => (
+                            <span key={idx} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--text-muted)' }}></div>
+                              {perm}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

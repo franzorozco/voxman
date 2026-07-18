@@ -1,16 +1,21 @@
 import { useState, useEffect } from "react";
-import { Search, DollarSign, RefreshCw, FileText, CheckCircle } from "lucide-react";
+import { Search, DollarSign, RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2, Printer } from "lucide-react";
 import { getEmployees } from "../../../../api/admin/employees";
-import { calculatePayroll, payPayroll } from "../../../../api/admin/payroll";
+import { calculatePayroll, payPayroll, getPayrollHistory, deletePayroll } from "../../../../api/admin/payroll";
 import Spinner from "../../components/Spinner/Spinner";
 import toast from "react-hot-toast";
-import "../Employees/Employees.css"; // Reuse the styling
+import PayslipModal from "./PayslipModal";
+import "../Employees/Employees.css";
 
 export default function Payroll() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
+  const [activeTab, setActiveTab] = useState("procesar"); // procesar | historial
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [payrollData, setPayrollData] = useState(null);
   const [payrollLoading, setPayrollLoading] = useState(false);
@@ -20,20 +25,49 @@ export default function Payroll() {
 
   const [deductions, setDeductions] = useState(0);
   const [bonuses, setBonuses] = useState(0);
+  
+  const [autoDeduct, setAutoDeduct] = useState(false);
+  
+  const [selectedPayslip, setSelectedPayslip] = useState(null);
 
   useEffect(() => {
-    fetchEmployees();
-  }, []);
+    fetchData();
+  }, [month, year, activeTab]);
 
-  const fetchEmployees = async () => {
+  const fetchData = async () => {
+    if (activeTab === "procesar") {
+      fetchEmployeesAndStatus();
+    } else {
+      fetchHistory();
+    }
+  };
+
+  const fetchEmployeesAndStatus = async () => {
     try {
       setLoading(true);
-      const res = await getEmployees({ status: 'active' });
-      setEmployees(res.data || res);
+      const [empRes, histRes] = await Promise.all([
+        getEmployees({ status: 'active' }),
+        getPayrollHistory({ month, year })
+      ]);
+      const activeEmps = (empRes.data || empRes).filter(e => e.is_active);
+      setEmployees(activeEmps);
+      setHistory(histRes.data || histRes);
     } catch (err) {
-      toast.error("Error al cargar empleados");
+      toast.error("Error al cargar datos");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const res = await getPayrollHistory({ month, year });
+      setHistory(res.data || res);
+    } catch (err) {
+      toast.error("Error al cargar historial");
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -41,10 +75,18 @@ export default function Payroll() {
     setSelectedEmployee(emp);
     setDeductions(0);
     setBonuses(0);
+    setAutoDeduct(false);
+    
     try {
       setPayrollLoading(true);
       const res = await calculatePayroll(emp.id, month, year);
-      setPayrollData(res.data || res);
+      const data = res.data || res;
+      setPayrollData(data);
+      
+      // Auto deductions? Just suggestion
+      if (data.absences_count > 0 || data.lates_count > 0) {
+          // No auto deduct, user has to click checkbox
+      }
     } catch (err) {
       toast.error("Error al calcular nómina");
       setSelectedEmployee(null);
@@ -52,6 +94,15 @@ export default function Payroll() {
       setPayrollLoading(false);
     }
   };
+
+  useEffect(() => {
+      if (payrollData && autoDeduct) {
+          const discount = (payrollData.absences_count * payrollData.salary_per_day) + (payrollData.lates_count * (payrollData.salary_per_day / 2));
+          setDeductions(parseFloat(discount.toFixed(2)));
+      } else if (payrollData && !autoDeduct) {
+          setDeductions(0);
+      }
+  }, [autoDeduct, payrollData]);
 
   const handlePay = async () => {
     if (!payrollData) return;
@@ -63,15 +114,27 @@ export default function Payroll() {
         commissions: payrollData.commissions,
         bonuses: bonuses,
         deductions: deductions,
-        payment_date: new Date().toISOString()
+        payment_date: new Date(year, month - 1, new Date().getDate()).toISOString()
       });
       toast.success("Pago registrado exitosamente");
       setSelectedEmployee(null);
       setPayrollData(null);
+      fetchData(); // Refresh to update badge
     } catch (err) {
       toast.error("Error al registrar el pago");
     } finally {
       setPayrollLoading(false);
+    }
+  };
+
+  const handleDeletePayment = async (id) => {
+    if (!window.confirm("¿Seguro que deseas anular este pago?")) return;
+    try {
+      await deletePayroll(id);
+      toast.success("Pago anulado");
+      fetchHistory();
+    } catch (err) {
+      toast.error("Error al anular pago");
     }
   };
 
@@ -80,6 +143,10 @@ export default function Payroll() {
     const searchString = `${emp.employee_code} ${profile.first_name} ${profile.last_name_paternal}`.toLowerCase();
     return searchString.includes(searchTerm.toLowerCase());
   });
+
+  const getPaymentStatus = (empId) => {
+    return history.some(h => h.employee_id === empId);
+  };
 
   return (
     <div className="products-container fade-in">
@@ -105,77 +172,176 @@ export default function Payroll() {
         </div>
       </div>
 
-      <div className="table-container fade-in" style={{ marginTop: '20px' }}>
-        <div className="filters-container" style={{ marginBottom: '20px' }}>
-          <div className="filters-container-inner">
-            <div style={{ flex: 1, position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text" 
-                style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-                placeholder="Buscar por nombre o código..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)' }}>
+        <button 
+          className={`tab-btn ${activeTab === 'procesar' ? 'active' : ''}`}
+          onClick={() => setActiveTab('procesar')}
+          style={{ padding: '12px 24px', background: 'transparent', border: 'none', borderBottom: activeTab === 'procesar' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'procesar' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', fontSize: '15px' }}
+        >
+          Procesar Pagos
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'historial' ? 'active' : ''}`}
+          onClick={() => setActiveTab('historial')}
+          style={{ padding: '12px 24px', background: 'transparent', border: 'none', borderBottom: activeTab === 'historial' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'historial' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', fontSize: '15px' }}
+        >
+          Historial del Mes
+        </button>
+      </div>
+
+      {activeTab === 'procesar' && (
+        <div className="table-container fade-in">
+          <div className="filters-container" style={{ marginBottom: '20px' }}>
+            <div className="filters-container-inner">
+              <div style={{ flex: 1, position: 'relative' }}>
+                <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input 
+                  type="text" 
+                  style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+                  placeholder="Buscar empleado..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <button className="btn-secondary" onClick={fetchEmployeesAndStatus} disabled={loading} style={{ padding: '10px' }}>
+                <RefreshCw size={18} className={loading ? "spin" : ""} />
+              </button>
             </div>
-            <button className="btn-secondary" onClick={fetchEmployees} disabled={loading} style={{ padding: '10px' }}>
-              <RefreshCw size={18} className={loading ? "spin" : ""} />
-            </button>
+          </div>
+
+          <div className="table-wrapper">
+            <table className="products-table">
+              <thead>
+                <tr>
+                  <th>CÓDIGO</th>
+                  <th>EMPLEADO</th>
+                  <th>DÍA DE PAGO</th>
+                  <th>SUELDO BASE</th>
+                  <th className="text-right">ACCIÓN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" className="text-center" style={{ padding: '40px' }}>
+                      <Spinner size={30} color="var(--color-primary)" />
+                    </td>
+                  </tr>
+                ) : filteredEmployees.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center" style={{ padding: '40px', color: 'var(--text-muted)' }}>
+                      No se encontraron empleados activos.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEmployees.map(emp => {
+                    const profile = emp.user?.profile || {};
+                    const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
+                    const isPaid = getPaymentStatus(emp.id);
+                    const hireDay = emp.hire_date ? parseInt(emp.hire_date.split('-')[2]) : 1;
+                    
+                    return (
+                      <tr key={emp.id} className="fade-in">
+                        <td><span className="customer-code">{emp.employee_code}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 600 }}>{fullName}</span>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{emp.role}</span>
+                          </div>
+                        </td>
+                        <td>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--bg-input)', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', border: '1px solid var(--border-color)' }}>
+                                <Clock size={14} color="var(--text-muted)" />
+                                Día {hireDay} de cada mes
+                            </span>
+                        </td>
+                        <td>Bs. {Number(emp.base_salary).toFixed(2)}</td>
+                        <td className="text-right">
+                          {isPaid ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: 600, padding: '8px 16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>
+                                <CheckCircle size={16} /> Pagado
+                            </span>
+                          ) : (
+                            <button className="btn-primary" onClick={() => handleCalculate(emp)}>
+                              <DollarSign size={16} /> Procesar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
+      )}
 
-        <div className="table-wrapper">
-          <table className="products-table">
-            <thead>
-              <tr>
-                <th>CÓDIGO</th>
-                <th>EMPLEADO</th>
-                <th>SUELDO BASE</th>
-                <th>% COMISIÓN</th>
-                <th className="text-right">ACCIÓN</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+      {activeTab === 'historial' && (
+        <div className="table-container fade-in">
+          <div className="table-wrapper">
+            <table className="products-table">
+              <thead>
                 <tr>
-                  <td colSpan="5" className="text-center" style={{ padding: '40px' }}>
-                    <Spinner size={30} color="var(--color-primary)" />
-                  </td>
+                  <th>FECHA DE PAGO</th>
+                  <th>EMPLEADO</th>
+                  <th>SUELDO BASE</th>
+                  <th>COMISIONES</th>
+                  <th>DESCUENTOS</th>
+                  <th>TOTAL PAGADO</th>
+                  <th className="text-right">ACCIONES</th>
                 </tr>
-              ) : filteredEmployees.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="text-center" style={{ padding: '40px', color: 'var(--text-muted)' }}>
-                    No se encontraron empleados activos.
-                  </td>
-                </tr>
-              ) : (
-                filteredEmployees.map(emp => {
-                  const profile = emp.user?.profile || {};
-                  const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
-                  return (
-                    <tr key={emp.id} className="fade-in">
-                      <td><span className="customer-code">{emp.employee_code}</span></td>
-                      <td>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 600 }}>{fullName}</span>
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{emp.role}</span>
-                        </div>
-                      </td>
-                      <td>Bs. {Number(emp.base_salary).toFixed(2)}</td>
-                      <td>{Number(emp.commission_percentage).toFixed(2)}%</td>
-                      <td className="text-right">
-                        <button className="btn-primary" onClick={() => handleCalculate(emp)}>
-                          <DollarSign size={16} /> Procesar
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {historyLoading ? (
+                  <tr>
+                    <td colSpan="7" className="text-center" style={{ padding: '40px' }}>
+                      <Spinner size={30} color="var(--color-primary)" />
+                    </td>
+                  </tr>
+                ) : history.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="text-center" style={{ padding: '40px', color: 'var(--text-muted)' }}>
+                      No hay pagos registrados para este mes.
+                    </td>
+                  </tr>
+                ) : (
+                  history.map(pay => {
+                    const profile = pay.employee?.user?.profile || {};
+                    const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
+                    
+                    return (
+                      <tr key={pay.id} className="fade-in">
+                        <td>{new Date(pay.payment_date).toLocaleDateString()}</td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 600 }}>{fullName}</span>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{pay.employee?.employee_code}</span>
+                          </div>
+                        </td>
+                        <td>Bs. {Number(pay.base_salary).toFixed(2)}</td>
+                        <td>Bs. {Number(pay.commissions).toFixed(2)}</td>
+                        <td style={{ color: '#ef4444' }}>Bs. {Number(pay.deductions).toFixed(2)}</td>
+                        <td><strong style={{ color: '#10b981' }}>Bs. {Number(pay.total_paid).toFixed(2)}</strong></td>
+                        <td className="text-right">
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                              <button className="icon-btn" onClick={() => setSelectedPayslip(pay)} title="Ver Recibo">
+                                <FileText size={18} color="var(--color-primary)" />
+                              </button>
+                              <button className="icon-btn" onClick={() => handleDeletePayment(pay.id)} title="Anular Pago">
+                                <Trash2 size={18} color="#ef4444" />
+                              </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* PAYROLL MODAL */}
       {selectedEmployee && (
@@ -193,11 +359,31 @@ export default function Payroll() {
                 </div>
               ) : (
                 <>
-                  {payrollData.already_paid && (
-                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '12px', borderRadius: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <CheckCircle size={18} />
-                      <span style={{ fontSize: '14px', fontWeight: 500 }}>Este empleado ya tiene un pago registrado este mes.</span>
-                    </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                          <strong>Ciclo a pagar:</strong> {payrollData.start_cycle} al {payrollData.end_cycle}
+                      </span>
+                  </div>
+
+                  {(payrollData.absences_count > 0 || payrollData.lates_count > 0) && (
+                      <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', padding: '16px', borderRadius: '12px' }}>
+                          <h4 style={{ color: '#d97706', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <XCircle size={18} /> Alerta de Asistencia
+                          </h4>
+                          <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-main)' }}>
+                              En este ciclo, el empleado tuvo <strong>{payrollData.absences_count} faltas</strong> y <strong>{payrollData.lates_count} atrasos</strong>.
+                              <br />(Sueldo por día aprox: Bs. {payrollData.salary_per_day.toFixed(2)})
+                          </p>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 500 }}>
+                              <input 
+                                  type="checkbox" 
+                                  checked={autoDeduct}
+                                  onChange={(e) => setAutoDeduct(e.target.checked)}
+                                  style={{ width: '18px', height: '18px', accentColor: '#f59e0b' }}
+                              />
+                              Aplicar descuento automáticamente
+                          </label>
+                      </div>
                   )}
 
                   <div style={{ background: 'var(--bg-input)', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -206,46 +392,46 @@ export default function Payroll() {
                       <span style={{ fontWeight: 600 }}>Bs. {Number(payrollData.base_salary).toFixed(2)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-main)', fontSize: '14px' }}>
-                      <span>Comisiones ({payrollData.sales_count} ventas)</span>
+                      <span>Comisiones ({payrollData.sales_count} ventas en el ciclo)</span>
                       <span style={{ fontWeight: 600, color: '#10b981' }}>+ Bs. {Number(payrollData.commissions).toFixed(2)}</span>
                     </div>
                     
                     <hr style={{ borderColor: 'var(--border-color)', margin: '4px 0' }} />
                     
-                    <div className="form-group">
-                      <label>Bonos Extra (Bs.)</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bonos Extra (Bs.)</label>
                       <input 
                         type="number" 
                         value={bonuses} 
                         onChange={(e) => setBonuses(parseFloat(e.target.value) || 0)}
                         min="0"
                         step="0.1"
+                        style={{ padding: '12px 16px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '15px', width: '100%', outline: 'none' }}
                       />
                     </div>
                     
-                    <div className="form-group">
-                      <label>Deducciones / Faltas (Bs.)</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                      <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deducciones / Faltas (Bs.)</label>
                       <input 
                         type="number" 
                         value={deductions} 
                         onChange={(e) => setDeductions(parseFloat(e.target.value) || 0)}
                         min="0"
                         step="0.1"
+                        style={{ padding: '12px 16px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '15px', width: '100%', outline: 'none' }}
                       />
                     </div>
 
-                    <div style={{ background: 'var(--color-primary)', padding: '16px', borderRadius: '8px', color: 'white', marginTop: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 'bold' }}>
-                        <span>TOTAL A PAGAR:</span>
-                        <span>Bs. {(Number(payrollData.base_salary) + Number(payrollData.commissions) + Number(bonuses) - Number(deductions)).toFixed(2)}</span>
-                      </div>
+                    <div style={{ background: 'var(--color-primary)', padding: '16px', borderRadius: '8px', color: 'var(--color-primary-text)', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>TOTAL A PAGAR:</span>
+                      <span style={{ fontSize: '20px', fontWeight: 800 }}>Bs. {(Number(payrollData.base_salary) + Number(payrollData.commissions) + Number(bonuses) - Number(deductions)).toFixed(2)}</span>
                     </div>
                   </div>
                 </>
               )}
             </div>
 
-            <div className="modal-footer">
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
               <button type="button" className="btn-secondary" onClick={() => setSelectedEmployee(null)}>
                 Cancelar
               </button>
@@ -260,6 +446,10 @@ export default function Payroll() {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedPayslip && (
+          <PayslipModal payment={selectedPayslip} onClose={() => setSelectedPayslip(null)} />
       )}
     </div>
   );

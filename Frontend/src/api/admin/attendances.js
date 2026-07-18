@@ -13,3 +13,12 @@ export const checkOut = (employeeId) =>
 
 export const getAttendanceStatus = (employeeId) => 
     api.get(`${BASE_URL}/status/${employeeId}`);
+
+export const createAttendance = (data) =>
+    api.post(BASE_URL, data);
+
+export const updateAttendance = (id, data) =>
+    api.put(`${BASE_URL}/${id}`, data);
+
+export const deleteAttendance = (id) =>
+    api.delete(`${BASE_URL}/${id}`);

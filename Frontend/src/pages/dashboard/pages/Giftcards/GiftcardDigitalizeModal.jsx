@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { X } from "lucide-react";
-import { createGiftcard, reloadGiftcard } from "../../../../api/admin/giftcards";
+import { X, Smartphone } from "lucide-react";
+import { digitalizeGiftcard } from "../../../../api/admin/giftcards";
 import api from "../../../../api/client";
 import toast from "react-hot-toast";
 import AsyncSelect from "react-select/async";
@@ -35,41 +35,31 @@ const customStyles = {
   })
 };
 
-export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftcard }) {
-  const [amount, setAmount] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
+export default function GiftcardDigitalizeModal({ isOpen, onClose, onSuccess, giftcard }) {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
-
-  const isReload = mode === "reload";
+  if (!isOpen || !giftcard) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (parseFloat(amount) < (isReload ? 1 : 50)) {
-      toast.error(`El monto mínimo es ${isReload ? '1Bs' : '50Bs'}`);
+    if (!selectedCustomer) {
+      toast.error(`Debes seleccionar un cliente`);
       return;
     }
 
     setLoading(true);
     try {
-      if (isReload) {
-        await reloadGiftcard(giftcard.id, { amount: parseFloat(amount) });
-        toast.success("Giftcard recargada exitosamente");
-      } else {
-        await createGiftcard({ 
-          amount: parseFloat(amount),
-          expires_at: expiresAt ? expiresAt : null,
-          purchaser_id: selectedCustomer ? selectedCustomer.value : null
-        });
-        toast.success("Giftcard emitida exitosamente");
-      }
+      await digitalizeGiftcard({ 
+        code: giftcard.code,
+        customer_id: selectedCustomer.value
+      });
+      toast.success("Giftcard digitalizada y asignada exitosamente");
       onSuccess();
       onClose();
     } catch (error) {
-      toast.error("Ocurrió un error al procesar la operación");
+      toast.error(error.response?.data?.message || "Ocurrió un error al procesar la operación");
     } finally {
       setLoading(false);
     }
@@ -90,7 +80,10 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
     <div className="modal-overlay">
       <div className="modal" style={{ maxWidth: '500px' }}>
         <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, padding: '24px 30px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '20px', fontWeight: '600' }}>
-          {isReload ? `Recargar Giftcard: ${giftcard?.code}` : "Emitir Nueva Giftcard"}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Smartphone size={24} className="text-primary" />
+            Digitalizar Giftcard
+          </div>
           <button type="button" className="btn-secondary" style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer' }} onClick={onClose}>
             <X size={20} />
           </button>
@@ -99,49 +92,31 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '24px', flex: 1 }}>
             
-            <div className="form-group">
-              <label>Monto a {isReload ? 'recargar' : 'cargar'} (Bs) *</label>
-              <input
-                type="number"
-                step="0.01"
-                min={isReload ? "1" : "50"}
-                required
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={`Ej. ${isReload ? '20' : '100'}`}
-              />
+            <div style={{ marginBottom: '20px', padding: '16px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--text-muted)' }}>
+                    Al digitalizar la giftcard <strong>{giftcard.code}</strong>, quedará vinculada permanentemente al cliente seleccionado (propietario digital). El comprador original seguirá registrado para auditoría.
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '13px' }}>
+                    <span><strong>Comprador:</strong> {giftcard.purchaser?.user?.profile?.first_name || 'Anónimo'}</span>
+                    <span><strong>Saldo Actual:</strong> {giftcard.current_balance} Bs</span>
+                </div>
             </div>
 
-            {!isReload && (
-              <>
-                <div className="form-group" style={{ marginTop: '16px' }}>
-                  <label>Asignar Comprador (Búsqueda Asyncrona)</label>
-                  <AsyncSelect
-                    isClearable
-                    cacheOptions
-                    loadOptions={loadCustomers}
-                    value={selectedCustomer}
-                    onChange={setSelectedCustomer}
-                    placeholder="Escribe para buscar un cliente..."
-                    noOptionsMessage={() => "Escribe para buscar..."}
-                    styles={customStyles}
-                    menuPosition="fixed"
-                  />
-                  <small style={{ color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
-                    Opcional. Deja vacío si se vende de forma anónima.
-                  </small>
-                </div>
-
-                <div className="form-group" style={{ marginTop: '16px' }}>
-                  <label>Fecha de expiración (Opcional)</label>
-                  <input
-                    type="date"
-                    value={expiresAt}
-                    onChange={(e) => setExpiresAt(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
+            <div className="form-group">
+              <label>Seleccionar Propietario Digital *</label>
+              <AsyncSelect
+                isClearable
+                cacheOptions
+                defaultOptions
+                loadOptions={loadCustomers}
+                value={selectedCustomer}
+                onChange={setSelectedCustomer}
+                placeholder="Busca por nombre o código..."
+                noOptionsMessage={() => "Escribe para buscar..."}
+                styles={customStyles}
+                menuPosition="fixed"
+              />
+            </div>
           </div>
 
           <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--bg-card)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
@@ -149,7 +124,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
               Cancelar
             </button>
             <button type="submit" className="btn-primary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '160px' }} disabled={loading}>
-              {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : (isReload ? "Recargar Saldo" : "Emitir Giftcard")}
+              {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Digitalizar"}
             </button>
           </div>
         </form>

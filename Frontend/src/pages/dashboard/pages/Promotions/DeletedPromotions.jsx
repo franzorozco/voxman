@@ -92,20 +92,61 @@ export default function DeletedPromotions() {
                 <th>Código</th>
                 <th>Tipo</th>
                 <th>Valor</th>
+                <th>Alcance</th>
                 <th>Eliminación</th>
                 <th width="150">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length > 0 ? (
-                filtered.map((promo) => (
+                filtered.map((promo) => {
+                  // Calculate target count
+                  let targetLabels = [];
+                  if (promo.brands?.length) targetLabels.push(`${promo.brands.length} Marcas`);
+                  if (promo.categories?.length || promo.discount_categories?.length) targetLabels.push(`${(promo.categories || promo.discount_categories).length} Categorías`);
+                  if (promo.products?.length) targetLabels.push(`${promo.products.length} Productos`);
+                  if (promo.variants?.length) targetLabels.push(`${promo.variants.length} Variantes`);
+                  if (promo.branches?.length) targetLabels.push(`${promo.branches.length} Sucursales`);
+                  if (promo.customers?.length) targetLabels.push(`${promo.customers.length} Clientes`);
+                  if (promo.employees?.length) targetLabels.push(`${promo.employees.length} Empleados`);
+
+                  return (
                   <tr key={promo.id}>
                     <td>
                       <span style={{ fontWeight: 500 }}>{promo.name}</span>
                     </td>
                     <td>{promo.code || 'Automático'}</td>
                     <td>{promo.type === 'percentage' ? 'Porcentaje' : 'Fijo'}</td>
-                    <td>{promo.type === 'percentage' ? `${promo.value}%` : `$${promo.value}`}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span>{promo.type === 'percentage' ? `${promo.value}%` : `Bs. ${promo.value}`}</span>
+                        {promo.type === 'percentage' && promo.max_discount_amount && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                            Max: Bs. {promo.max_discount_amount}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      {targetLabels.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '180px' }}>
+                          {targetLabels.slice(0, 3).map((lbl, idx) => (
+                            <span key={idx} style={{ fontSize: '11px', background: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
+                              {lbl}
+                            </span>
+                          ))}
+                          {targetLabels.length > 3 && (
+                            <span style={{ fontSize: '11px', background: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-main)' }}>
+                              +{targetLabels.length - 3} más
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '12px', color: 'var(--color-primary)', background: 'rgba(37, 99, 235, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                          Global (Todo)
+                        </span>
+                      )}
+                    </td>
                     <td>{new Date(promo.deleted_at).toLocaleDateString()}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -128,10 +169,11 @@ export default function DeletedPromotions() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                  <td colSpan="7" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
                     La papelera está vacía
                   </td>
                 </tr>

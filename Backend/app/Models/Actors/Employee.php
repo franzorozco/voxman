@@ -22,7 +22,9 @@ class Employee extends BaseEmployee
         'status',
         'is_active',
         'last_promotion_date',
-        'notes'
+        'notes',
+        'shift_start_time',
+        'shift_end_time'
     ];
 
     public function user()

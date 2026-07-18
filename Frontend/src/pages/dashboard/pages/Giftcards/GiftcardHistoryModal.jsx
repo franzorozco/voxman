@@ -60,44 +60,67 @@ export default function GiftcardHistoryModal({ isOpen, onClose, giftcard }) {
         <div className="modal-body" style={{ maxHeight: '400px', overflowY: 'auto', padding: '20px 0' }}>
           {giftcard.transactions && giftcard.transactions.length > 0 ? (
             <div className="timeline">
-              {giftcard.transactions.map((t, index) => (
-                <div key={t.id} style={{ display: 'flex', gap: '16px', marginBottom: '20px', padding: '0 20px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ 
-                      width: '32px', height: '32px', borderRadius: '50%', 
-                      background: `${getTypeColor(t.type)}20`, 
-                      color: getTypeColor(t.type),
-                      display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                    }}>
-                      <Activity size={16} />
-                    </div>
-                    {index !== giftcard.transactions.length - 1 && (
-                      <div style={{ width: '2px', height: '100%', background: 'var(--border-color)', margin: '4px 0' }}></div>
-                    )}
-                  </div>
-                  <div style={{ flex: 1, background: 'var(--bg-overlay)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <strong style={{ color: getTypeColor(t.type) }}>{translateType(t.type)}</strong>
-                      <span style={{ fontWeight: 'bold', color: t.type === 'payment' ? 'var(--danger-color)' : 'var(--text-main)' }}>
-                        {t.type === 'payment' ? '-' : '+'}{formatCurrency(t.amount)}
-                      </span>
-                    </div>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '0 0 8px 0' }}>
-                      {t.notes || "Sin descripción"}
-                    </p>
-                    <div style={{ display: 'flex', gap: '15px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Calendar size={12} /> {formatDate(t.created_at)}
-                      </span>
-                      {t.sale_id && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <DollarSign size={12} /> Venta: {t.sale_id}
-                        </span>
+              {giftcard.transactions.map((t, index) => {
+                let title = translateType(t.type);
+                let description = t.notes || "Sin descripción adicional";
+
+                if (t.type === 'issue') {
+                    if (giftcard.purchaser) {
+                        description = `Adquirida originalmente por ${giftcard.purchaser.user?.profile?.first_name || ''} ${giftcard.purchaser.user?.profile?.last_name || ''}. ${t.notes || ''}`;
+                    } else {
+                        description = `Emisión de tarjeta anónima. ${t.notes || ''}`;
+                    }
+                } else if (t.type === 'payment') {
+                    if (t.sale) {
+                        description = `Descuento automático por pago en la Factura/Venta #${t.sale.invoice_number || t.sale.id}. ${t.notes || ''}`;
+                    } else {
+                        description = `Pago realizado. ${t.notes || ''}`;
+                    }
+                } else if (t.type === 'reload') {
+                    description = `Aumento de saldo manual. ${t.notes || ''}`;
+                } else if (t.type === 'refund') {
+                    description = `Devolución o anulación procesada. ${t.notes || ''}`;
+                }
+
+                return (
+                  <div key={t.id} style={{ display: 'flex', gap: '16px', marginBottom: '20px', padding: '0 20px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{ 
+                        width: '32px', height: '32px', borderRadius: '50%', 
+                        background: `${getTypeColor(t.type)}20`, 
+                        color: getTypeColor(t.type),
+                        display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                      }}>
+                        <Activity size={16} />
+                      </div>
+                      {index !== giftcard.transactions.length - 1 && (
+                        <div style={{ width: '2px', height: '100%', background: 'var(--border-color)', margin: '4px 0' }}></div>
                       )}
                     </div>
+                    <div style={{ flex: 1, background: 'var(--bg-overlay)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <strong style={{ color: getTypeColor(t.type) }}>{title}</strong>
+                        <span style={{ fontWeight: 'bold', color: t.type === 'payment' || t.type === 'refund' && t.amount < 0 ? 'var(--danger-color)' : 'var(--text-main)' }}>
+                          {t.type === 'payment' || (t.type === 'refund' && t.amount < 0) ? '-' : '+'}{formatCurrency(Math.abs(t.amount))}
+                        </span>
+                      </div>
+                      <p style={{ color: 'var(--text-main)', fontSize: '13px', margin: '0 0 8px 0', lineHeight: '1.4' }}>
+                        {description}
+                      </p>
+                      <div style={{ display: 'flex', gap: '15px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Calendar size={12} /> {formatDate(t.created_at)}
+                        </span>
+                        {t.sale && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary-color)', fontWeight: 500 }}>
+                            <DollarSign size={12} /> Venta #{t.sale.invoice_number || t.sale.id}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>

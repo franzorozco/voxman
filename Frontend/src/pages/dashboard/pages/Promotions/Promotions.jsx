@@ -11,6 +11,7 @@ export default function Promotions() {
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState(null);
@@ -60,10 +61,24 @@ export default function Promotions() {
     }
   };
 
-  const filteredPromotions = promotions.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.code && p.code.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredPromotions = promotions.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.code && p.code.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    // Status calc
+    const now = new Date();
+    const start = new Date(p.start_date);
+    const end = p.end_date ? new Date(p.end_date) : null;
+    
+    let calculatedStatus = 'active';
+    if (!p.is_active) calculatedStatus = 'inactive';
+    else if (now < start) calculatedStatus = 'scheduled';
+    else if (end && now > end) calculatedStatus = 'expired';
+    else if (p.usage_limit && p.times_used >= p.usage_limit) calculatedStatus = 'exhausted';
+
+    const matchesStatus = filterStatus === 'all' || filterStatus === calculatedStatus;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="products-container">
@@ -81,6 +96,19 @@ export default function Promotions() {
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
             />
           </div>
+
+          <select 
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+          >
+            <option value="all">Todos los Estados</option>
+            <option value="active">Activas</option>
+            <option value="scheduled">Programadas (Futuras)</option>
+            <option value="expired">Expiradas</option>
+            <option value="exhausted">Agotadas (Límite de usos)</option>
+            <option value="inactive">Inactivas</option>
+          </select>
           
           <Link to="/dashboard/promotions/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
              <Trash2 size={16}/> Papelera
@@ -106,6 +134,7 @@ export default function Promotions() {
                 <th>Código</th>
                 <th>Tipo</th>
                 <th>Valor</th>
+                <th>Alcance (Targets)</th>
                 <th>Límites</th>
                 <th>Vigencia</th>
                 <th>Estado</th>
@@ -114,7 +143,34 @@ export default function Promotions() {
             </thead>
             <tbody>
               {filteredPromotions.length > 0 ? (
-                filteredPromotions.map((promo) => (
+                filteredPromotions.map((promo) => {
+                  
+                  // Calculate target count
+                  let targetLabels = [];
+                  if (promo.brands?.length) targetLabels.push(`${promo.brands.length} Marcas`);
+                  if (promo.categories?.length || promo.discount_categories?.length) targetLabels.push(`${(promo.categories || promo.discount_categories).length} Categorías`);
+                  if (promo.products?.length) targetLabels.push(`${promo.products.length} Productos`);
+                  if (promo.variants?.length) targetLabels.push(`${promo.variants.length} Variantes`);
+                  if (promo.branches?.length) targetLabels.push(`${promo.branches.length} Sucursales`);
+                  if (promo.customers?.length) targetLabels.push(`${promo.customers.length} Clientes`);
+                  if (promo.employees?.length) targetLabels.push(`${promo.employees.length} Empleados`);
+
+                  // Smart Status Logic
+                  let statusText = 'Activo';
+                  let statusClass = 'status-active';
+                  
+                  if (!promo.active) {
+                    statusText = 'Inactivo';
+                    statusClass = 'status-inactive';
+                  } else if (promo.usage_limit && promo.used_count >= promo.usage_limit) {
+                    statusText = 'Agotado';
+                    statusClass = 'status-inactive'; // Podríamos usar un gris
+                  } else if (promo.end_date && new Date(promo.end_date).setHours(23,59,59,999) < new Date().getTime()) {
+                    statusText = 'Expirado';
+                    statusClass = 'status-inactive';
+                  }
+
+                  return (
                   <tr key={promo.id}>
                     <td>
                       <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{promo.name}</span>
@@ -130,7 +186,34 @@ export default function Promotions() {
                     </td>
                     <td>{promo.type === 'percentage' ? 'Porcentaje' : 'Monto Fijo'}</td>
                     <td style={{ fontWeight: 600 }}>
-                      {promo.type === 'percentage' ? `${promo.value}%` : `$${promo.value}`}
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span>{promo.type === 'percentage' ? `${promo.value}%` : `Bs. ${promo.value}`}</span>
+                        {promo.type === 'percentage' && promo.max_discount_amount && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                            Max: Bs. {promo.max_discount_amount}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      {targetLabels.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '180px' }}>
+                          {targetLabels.slice(0, 3).map((lbl, idx) => (
+                            <span key={idx} style={{ fontSize: '11px', background: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
+                              {lbl}
+                            </span>
+                          ))}
+                          {targetLabels.length > 3 && (
+                            <span style={{ fontSize: '11px', background: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-main)' }}>
+                              +{targetLabels.length - 3} más
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '12px', color: 'var(--color-primary)', background: 'rgba(37, 99, 235, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                          Global (Todo)
+                        </span>
+                      )}
                     </td>
                     <td>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -144,8 +227,8 @@ export default function Promotions() {
                       </div>
                     </td>
                     <td>
-                      <span className={`status-badge ${promo.active ? 'status-active' : 'status-inactive'}`}>
-                        {promo.active ? 'Activo' : 'Inactivo'}
+                      <span className={`status-badge ${statusClass}`}>
+                        {statusText}
                       </span>
                     </td>
                     <td>
@@ -173,7 +256,8 @@ export default function Promotions() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="8" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>

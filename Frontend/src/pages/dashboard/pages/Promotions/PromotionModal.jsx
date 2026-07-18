@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
+import AsyncSelect from "react-select/async";
 import { createPromotion, updatePromotion } from "../../../../api/admin/discounts";
 import { getBrands } from "../../../../api/admin/brands";
 import api from "../../../../api/client";
@@ -58,11 +59,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
 
   const [brandsList, setBrands] = useState([]);
   const [categoriesList, setCategories] = useState([]);
-  const [productsList, setProducts] = useState([]);
-  const [variantsList, setVariants] = useState([]);
   const [branchesList, setBranches] = useState([]);
-  const [customersList, setCustomers] = useState([]);
-  const [employeesList, setEmployees] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -103,11 +100,19 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
         active: promotion.active !== undefined ? promotion.active : true,
         brands: promotion.brands ? promotion.brands.map(b => b.id) : [],
         categories: promotion.categories ? promotion.categories.map(c => c.id) : (promotion.discount_categories ? promotion.discount_categories.map(dc => dc.category_id) : []),
-        products: promotion.products ? promotion.products.map(p => p.id) : [],
-        variants: promotion.variants ? promotion.variants.map(v => v.id) : [],
         branches: promotion.branches ? promotion.branches.map(b => b.id) : [],
-        customers: promotion.customers ? promotion.customers.map(c => c.id) : [],
-        employees: promotion.employees ? promotion.employees.map(e => e.id) : []
+        
+        // These are now handled by AsyncSelect, so we store the {value, label} object array directly
+        products: promotion.products ? promotion.products.map(p => ({ value: p.id, label: `${p.name} (${p.slug})` })) : [],
+        variants: promotion.variants ? promotion.variants.map(v => ({ value: v.id, label: `${v.product?.name} - ${v.sku}` })) : [],
+        customers: promotion.customers ? promotion.customers.map(c => {
+          const profile = c.user?.profile || {};
+          return { value: c.id, label: `${profile.first_name || ''} ${profile.last_name_paternal || ''} (${c.customer_code || 'S/C'})`.trim() };
+        }) : [],
+        employees: promotion.employees ? promotion.employees.map(e => {
+          const profile = e.user?.profile || {};
+          return { value: e.id, label: `${profile.first_name || ''} ${profile.last_name_paternal || ''} (${e.employee_code || 'S/C'})`.trim() };
+        }) : [],
       });
     }
     fetchData();
@@ -116,24 +121,16 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
   const fetchData = async () => {
     setDataLoading(true);
     try {
-      const [resBrands, resCat, resProd, resVar, resBranch, resCust, resEmp] = await Promise.all([
+      const [resBrands, resCat, resBranch] = await Promise.all([
         getBrands(),
         api.get("/v1/admin/categories"),
-        api.get("/v1/admin/products"),
-        api.get("/v1/admin/variants"),
-        api.get("/v1/admin/branches"),
-        api.get("/v1/admin/customers"),
-        api.get("/v1/admin/employees")
+        api.get("/v1/admin/branches")
       ]);
       setBrands(Array.isArray(resBrands.data) ? resBrands.data.filter(b => b.is_active !== false) : (resBrands.data.data || []).filter(b => b.is_active !== false));
       setCategories(Array.isArray(resCat.data) ? resCat.data.filter(c => c.is_active !== false) : (resCat.data.data || []).filter(c => c.is_active !== false));
-      setProducts(Array.isArray(resProd.data) ? resProd.data : resProd.data.data || []);
-      setVariants(Array.isArray(resVar.data) ? resVar.data : resVar.data.data || []);
       setBranches(Array.isArray(resBranch.data) ? resBranch.data.filter(b => b.is_active !== false) : (resBranch.data.data || []).filter(b => b.is_active !== false));
-      setCustomers(Array.isArray(resCust.data) ? resCust.data : resCust.data.data || []);
-      setEmployees(Array.isArray(resEmp.data) ? resEmp.data : resEmp.data.data || []);
     } catch (error) {
-      toast.error("Error al cargar datos");
+      toast.error("Error al cargar datos base");
     } finally {
       setDataLoading(false);
     }
@@ -162,6 +159,11 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
         code: formData.is_automatic ? null : formData.code,
+        // Map AsyncSelect arrays of {value, label} back to array of IDs
+        products: formData.products.map(p => p.value),
+        variants: formData.variants.map(v => v.value),
+        customers: formData.customers.map(c => c.value),
+        employees: formData.employees.map(emp => emp.value),
       };
 
       if (promotion) {
@@ -177,6 +179,45 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Debounced loaders for AsyncSelect
+  const loadProducts = (inputValue, callback) => {
+    if (!inputValue) return callback([]);
+    api.get(`/v1/admin/products?search=${inputValue}`).then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+      callback(data.map(p => ({ value: p.id, label: `${p.name} (${p.slug})` })));
+    }).catch(() => callback([]));
+  };
+
+  const loadVariants = (inputValue, callback) => {
+    if (!inputValue) return callback([]);
+    api.get(`/v1/admin/variants?search=${inputValue}`).then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+      callback(data.map(v => ({ value: v.id, label: `${v.product?.name} - ${v.sku}` })));
+    }).catch(() => callback([]));
+  };
+
+  const loadCustomers = (inputValue, callback) => {
+    if (!inputValue) return callback([]);
+    api.get(`/v1/admin/customers?search=${inputValue}`).then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+      callback(data.map(c => {
+        const profile = c.user?.profile || {};
+        return { value: c.id, label: `${profile.first_name || ''} ${profile.last_name_paternal || ''} (${c.customer_code || 'S/C'})`.trim() };
+      }));
+    }).catch(() => callback([]));
+  };
+
+  const loadEmployees = (inputValue, callback) => {
+    if (!inputValue) return callback([]);
+    api.get(`/v1/admin/employees?search=${inputValue}`).then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+      callback(data.map(e => {
+        const profile = e.user?.profile || {};
+        return { value: e.id, label: `${profile.first_name || ''} ${profile.last_name_paternal || ''} (${e.employee_code || 'S/C'})`.trim() };
+      }));
+    }).catch(() => callback([]));
   };
 
   return (
@@ -245,6 +286,25 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                 />
               </div>
             </div>
+
+            {formData.type === 'percentage' && (
+              <div className="form-grid">
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Límite de Descuento (Monto Máximo en Bs.)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    name="max_discount_amount" 
+                    value={formData.max_discount_amount} 
+                    onChange={handleChange} 
+                    placeholder="Ej: 100 (Dejar vacío para no tener límite)"
+                  />
+                  <small style={{ color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                    Establece un tope monetario máximo. Si el 50% de descuento de un producto de 1000 Bs es 500 Bs, pero el límite es 100 Bs, el descuento final será 100 Bs.
+                  </small>
+                </div>
+              </div>
+            )}
 
             <p style={{ margin: '24px 0 16px 0', fontSize: '16px', fontWeight: 600, color: 'var(--primary-color)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Código y Automatización</p>
             <div className="form-grid">
@@ -375,64 +435,64 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label>Productos</label>
-                <Select
+                <label>Productos (Búsqueda Asyncrona)</label>
+                <AsyncSelect
                   isMulti
-                  options={productsList.map(p => ({ value: p.id, label: `${p.name} (${p.slug})` }))}
-                  value={productsList.filter(p => formData.products.includes(p.id)).map(p => ({ value: p.id, label: `${p.name} (${p.slug})` }))}
-                  onChange={(selected) => setFormData({...formData, products: selected ? selected.map(s => s.value) : []})}
-                  placeholder="Selecciona productos..."
+                  cacheOptions
+                  defaultOptions={formData.products}
+                  loadOptions={loadProducts}
+                  value={formData.products}
+                  onChange={(selected) => setFormData({...formData, products: selected || []})}
+                  placeholder="Escribe para buscar productos..."
+                  noOptionsMessage={() => "Escribe para buscar..."}
                   styles={customStyles}
                   menuPosition="fixed"
                 />
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label>Variantes (SKUs específicos)</label>
-                <Select
+                <label>Variantes o SKUs (Búsqueda Asyncrona)</label>
+                <AsyncSelect
                   isMulti
-                  options={variantsList.map(v => ({ value: v.id, label: `${v.product?.name} - ${v.sku}` }))}
-                  value={variantsList.filter(v => formData.variants.includes(v.id)).map(v => ({ value: v.id, label: `${v.product?.name} - ${v.sku}` }))}
-                  onChange={(selected) => setFormData({...formData, variants: selected ? selected.map(s => s.value) : []})}
-                  placeholder="Selecciona variantes..."
+                  cacheOptions
+                  defaultOptions={formData.variants}
+                  loadOptions={loadVariants}
+                  value={formData.variants}
+                  onChange={(selected) => setFormData({...formData, variants: selected || []})}
+                  placeholder="Escribe para buscar variantes..."
+                  noOptionsMessage={() => "Escribe para buscar..."}
                   styles={customStyles}
                   menuPosition="fixed"
                 />
               </div>
 
               <div className="form-group">
-                <label>Clientes</label>
-                <Select
+                <label>Clientes (Búsqueda Asyncrona)</label>
+                <AsyncSelect
                   isMulti
-                  options={customersList.map(c => {
-                    const profile = c.user?.profile || {};
-                    return { value: c.id, label: `${profile.first_name || ''} ${profile.last_name_paternal || ''} (${c.customer_code || 'S/C'})`.trim() };
-                  })}
-                  value={customersList.filter(c => formData.customers.includes(c.id)).map(c => {
-                    const profile = c.user?.profile || {};
-                    return { value: c.id, label: `${profile.first_name || ''} ${profile.last_name_paternal || ''} (${c.customer_code || 'S/C'})`.trim() };
-                  })}
-                  onChange={(selected) => setFormData({...formData, customers: selected ? selected.map(s => s.value) : []})}
-                  placeholder="Selecciona clientes..."
+                  cacheOptions
+                  defaultOptions={formData.customers}
+                  loadOptions={loadCustomers}
+                  value={formData.customers}
+                  onChange={(selected) => setFormData({...formData, customers: selected || []})}
+                  placeholder="Escribe para buscar clientes..."
+                  noOptionsMessage={() => "Escribe para buscar..."}
                   styles={customStyles}
                   menuPosition="fixed"
                 />
               </div>
 
               <div className="form-group">
-                <label>Empleados</label>
-                <Select
+                <label>Empleados (Búsqueda Asyncrona)</label>
+                <AsyncSelect
                   isMulti
-                  options={employeesList.map(e => {
-                    const profile = e.user?.profile || {};
-                    return { value: e.id, label: `${profile.first_name || ''} ${profile.last_name_paternal || ''} (${e.employee_code || 'S/C'})`.trim() };
-                  })}
-                  value={employeesList.filter(e => formData.employees.includes(e.id)).map(e => {
-                    const profile = e.user?.profile || {};
-                    return { value: e.id, label: `${profile.first_name || ''} ${profile.last_name_paternal || ''} (${e.employee_code || 'S/C'})`.trim() };
-                  })}
-                  onChange={(selected) => setFormData({...formData, employees: selected ? selected.map(s => s.value) : []})}
-                  placeholder="Selecciona empleados..."
+                  cacheOptions
+                  defaultOptions={formData.employees}
+                  loadOptions={loadEmployees}
+                  value={formData.employees}
+                  onChange={(selected) => setFormData({...formData, employees: selected || []})}
+                  placeholder="Escribe para buscar empleados..."
+                  noOptionsMessage={() => "Escribe para buscar..."}
                   styles={customStyles}
                   menuPosition="fixed"
                 />

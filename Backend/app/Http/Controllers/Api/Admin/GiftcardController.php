@@ -14,7 +14,7 @@ class GiftcardController extends Controller
     // List all giftcards (with search)
     public function index(Request $request)
     {
-        $query = Giftcard::with(['customer', 'purchaser', 'transactions']);
+        $query = Giftcard::with(['customer.user.profile', 'purchaser.user.profile', 'transactions.sale']);
         
         if ($request->filled('search')) {
             $query->where('code', 'LIKE', "%{$request->search}%");

@@ -27,7 +27,9 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
     commission_percentage: 0,
     hire_date: "",
     contract_type: "",
-    is_active: true
+    is_active: true,
+    shift_start_time: "09:00",
+    shift_end_time: "18:00"
   });
 
   useEffect(() => {
@@ -66,7 +68,9 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
         commission_percentage: employee.commission_percentage || 0,
         hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : "",
         contract_type: employee.contract_type || "",
-        is_active: employee.is_active !== undefined ? employee.is_active : true
+        is_active: employee.is_active !== undefined ? employee.is_active : true,
+        shift_start_time: employee.shift_start_time ? employee.shift_start_time.substring(0, 5) : "09:00",
+        shift_end_time: employee.shift_end_time ? employee.shift_end_time.substring(0, 5) : "18:00"
       });
 
       setCreateWebAccount(!userEmail.includes('@guest'));
@@ -297,6 +301,27 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
                     style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                     value={formData.contract_type}
                     onChange={(e) => setFormData({...formData, contract_type: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-form-grid">
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Hora de Entrada</label>
+                  <input 
+                    type="time" 
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.shift_start_time}
+                    onChange={(e) => setFormData({...formData, shift_start_time: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Hora de Salida</label>
+                  <input 
+                    type="time" 
+                    style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                    value={formData.shift_end_time}
+                    onChange={(e) => setFormData({...formData, shift_end_time: e.target.value})}
                   />
                 </div>
               </div>

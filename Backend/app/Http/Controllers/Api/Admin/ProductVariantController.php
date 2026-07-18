@@ -7,9 +7,24 @@ use App\Models\Catalog\ProductVariant;
 
 class ProductVariantController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        return response()->json(ProductVariant::with(['product', 'variant_attribute_values.attribute_value.attribute'])->where('is_active', true)->get());
+        $query = ProductVariant::with(['product', 'variant_attribute_values.attribute_value.attribute'])
+                    ->where('is_active', true);
+                    
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('sku', 'ILIKE', "%{$search}%")
+                  ->orWhere('barcode', 'ILIKE', "%{$search}%")
+                  ->orWhereHas('product', function ($q2) use ($search) {
+                      $q2->where('name', 'ILIKE', "%{$search}%");
+                  });
+            });
+        }
+        
+        $variants = $query->paginate($request->per_page ?? 50);
+        return response()->json($variants);
     }
 
     public function deleted()
