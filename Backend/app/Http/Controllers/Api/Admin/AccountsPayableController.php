@@ -13,6 +13,61 @@ use App\Models\Purchase\Purchase;
 class AccountsPayableController extends Controller
 {
     /**
+     * Get a paginated list of accounts payable.
+     */
+    public function index(Request $request)
+    {
+        $query = AccountsPayable::with(['supplier', 'purchase.branch']);
+
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->whereHas('supplier', function ($q) use ($search) {
+                $q->where('name', 'ilike', '%' . $search . '%')
+                  ->orWhere('contact_name', 'ilike', '%' . $search . '%');
+            });
+        }
+
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        // Default order: nearest due date first for pending/partial
+        $query->orderByRaw("
+            CASE 
+                WHEN status IN ('pending', 'partial') THEN 1 
+                ELSE 2 
+            END
+        ")->orderBy('due_date', 'asc');
+
+        $perPage = $request->input('per_page', 15);
+        $accounts = $query->paginate($perPage);
+
+        return response()->json($accounts);
+    }
+
+    /**
+     * Get KPIs for Accounts Payable.
+     */
+    public function stats()
+    {
+        $totalDebt = AccountsPayable::sum('balance');
+        
+        $totalPaidHistorical = AccountsPayable::sum('paid_amount');
+        
+        $overdueCount = AccountsPayable::whereIn('status', ['pending', 'partial'])
+            ->where('due_date', '<', now()->toDateString())
+            ->count();
+
+        $pendingInvoices = AccountsPayable::whereIn('status', ['pending', 'partial'])->count();
+
+        return response()->json([
+            'total_debt' => (float) $totalDebt,
+            'total_paid_historical' => (float) $totalPaidHistorical,
+            'overdue_count' => $overdueCount,
+            'pending_invoices' => $pendingInvoices
+        ]);
+    }
+    /**
      * Store a new payment for a purchase.
      *
      * @param  \Illuminate\Http\Request  $request

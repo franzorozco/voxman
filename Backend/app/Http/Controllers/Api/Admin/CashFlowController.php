@@ -56,14 +56,7 @@ class CashFlowController extends Controller
             ]
         ];
 
-        $totalBankSales = 0;
-        
-        $bankExpensesQuery = Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank');
-        if ($startDate && $endDate) {
-            $bankExpensesQuery->whereBetween('created_at', [$startDate, $endDate]);
-        }
-        $totalBankExpenses = $bankExpensesQuery->sum('amount');
-        
+        // --- Bank Operations ---
         $bankQuery = Payment::where('payment_method_id', '!=', $cashMethodId);
         if (!empty($giftcardMethodIds)) {
             $bankQuery->whereNotIn('payment_method_id', $giftcardMethodIds);
@@ -72,6 +65,14 @@ class CashFlowController extends Controller
             $bankQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
         $totalBankSales = $bankQuery->sum('amount');
+        
+        $bankExpensesQuery = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])
+            ->where('fund_source', 'bank')
+            ->where('deducted_from_wallet', true);
+        if ($startDate && $endDate) {
+            $bankExpensesQuery->whereBetween('paid_at', [$startDate, $endDate]);
+        }
+        $totalBankExpenses = $bankExpensesQuery->sum('amount');
 
         $transfersInQuery = CashTransfer::where('status', 'completed')->whereNull('to_branch_id');
         $transfersOutQuery = CashTransfer::where('status', 'completed')->whereNull('from_branch_id');
@@ -81,13 +82,21 @@ class CashFlowController extends Controller
         }
         $bankTransfersIn = $transfersInQuery->sum('amount');
         $bankTransfersOut = $transfersOutQuery->sum('amount');
+        
+        // Owner Payments to Bank
+        $ownerBankDepositsQuery = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank')->where('type', 'deposit');
+        $ownerBankWithdrawalsQuery = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank')->where('type', 'withdrawal');
+        if ($startDate && $endDate) {
+            $ownerBankDepositsQuery->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+            $ownerBankWithdrawalsQuery->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+        }
+        $ownerBankDeposits = $ownerBankDepositsQuery->sum('total_amount');
+        $ownerBankWithdrawals = $ownerBankWithdrawalsQuery->sum('total_amount');
 
-        // Deposits to bank from owners are tracked via OwnerPayments in Finance dashboard,
-        // For pure liquidity, we could include them, but for this operational view we focus on Sales & Expenses.
-        $data['bank_balance'] = $totalBankSales - $totalBankExpenses + $bankTransfersIn - $bankTransfersOut;
+        $data['bank_balance'] = $totalBankSales - $totalBankExpenses + $bankTransfersIn - $bankTransfersOut + $ownerBankDeposits - $ownerBankWithdrawals;
         $data['summary']['total_bank'] = $data['bank_balance'];
 
-        // Daily Flow calculation
+        // --- Daily Flow calculation ---
         $dailyFlow = [];
         $currentDate = $startDate->copy();
         while ($currentDate->lte($endDate)) {
@@ -109,11 +118,19 @@ class CashFlowController extends Controller
         foreach ($dailyMovementsIn as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['income'] += $total;
         }
+        $dailyOwnerDeposits = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'deposit')
+            ->selectRaw('DATE(payment_date) as date, SUM(total_amount) as total')
+            ->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->groupBy('date')->pluck('total', 'date');
+        foreach ($dailyOwnerDeposits as $date => $total) {
+            if (isset($dailyFlow[$date])) $dailyFlow[$date]['income'] += $total;
+        }
 
         // Fill expenses
-        $dailyExpenses = Expense::whereIn('status', ['paid', 'archived'])
-            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
-            ->whereBetween('created_at', [$startDate, $endDate])
+        $dailyExpenses = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])
+            ->where('deducted_from_wallet', true)
+            ->selectRaw('DATE(paid_at) as date, SUM(amount) as total')
+            ->whereBetween('paid_at', [$startDate, $endDate])
             ->groupBy('date')->pluck('total', 'date');
         foreach ($dailyExpenses as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['expense'] += $total;
@@ -124,6 +141,13 @@ class CashFlowController extends Controller
         foreach ($dailyMovementsOut as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['expense'] += $total;
         }
+        $dailyOwnerWithdrawals = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'withdrawal')
+            ->selectRaw('DATE(payment_date) as date, SUM(total_amount) as total')
+            ->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->groupBy('date')->pluck('total', 'date');
+        foreach ($dailyOwnerWithdrawals as $date => $total) {
+            if (isset($dailyFlow[$date])) $dailyFlow[$date]['expense'] += $total;
+        }
 
         $cumulativeBalance = 0;
         foreach ($dailyFlow as $date => &$flow) {
@@ -132,6 +156,7 @@ class CashFlowController extends Controller
         }
         $data['daily_flow'] = array_values($dailyFlow);
 
+        // --- Branch Operations ---
         foreach ($branches as $branch) {
             $branchSalesQuery = Payment::where('payment_method_id', $cashMethodId)
                 ->whereHas('sale', function($q) use ($branch) {
@@ -142,39 +167,49 @@ class CashFlowController extends Controller
             }
             $branchCashSales = $branchSalesQuery->sum('amount');
             
-            $branchExpensesQuery = Expense::whereIn('status', ['paid', 'archived'])
+            $branchExpensesQuery = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])
                 ->where('fund_source', 'cash')
-                ->where('branch_id', $branch->id);
+                ->where('deducted_from_wallet', true)
+                ->whereHas('expense', function($q) use ($branch) {
+                    $q->where('branch_id', $branch->id);
+                });
             if ($startDate && $endDate) {
-                $branchExpensesQuery->whereBetween('created_at', [$startDate, $endDate]);
+                $branchExpensesQuery->whereBetween('paid_at', [$startDate, $endDate]);
             }
             $branchCashExpenses = $branchExpensesQuery->sum('amount');
                 
             $transfersInBranchQuery = CashTransfer::where('status', 'completed')->where('to_branch_id', $branch->id);
             $transfersOutBranchQuery = CashTransfer::where('status', 'completed')->where('from_branch_id', $branch->id);
             
-            // Adjustments via CashMovement (only for cash registers of this branch)
             $movementsInQuery = CashMovement::where('movement_type', 'income')->whereHas('cash_register', function($q) use ($branch) { $q->where('branch_id', $branch->id); });
             $movementsOutQuery = CashMovement::where('movement_type', 'expense')->whereHas('cash_register', function($q) use ($branch) { $q->where('branch_id', $branch->id); });
+            
+            $ownerCashDepositsQuery = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('fund_source', 'cash')->where('type', 'deposit')->where('branch_id', $branch->id);
+            $ownerCashWithdrawalsQuery = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('fund_source', 'cash')->where('type', 'withdrawal')->where('branch_id', $branch->id);
 
             if ($startDate && $endDate) {
                 $transfersInBranchQuery->whereBetween('transfer_date', [$startDate, $endDate->format('Y-m-d')]);
                 $transfersOutBranchQuery->whereBetween('transfer_date', [$startDate, $endDate->format('Y-m-d')]);
                 $movementsInQuery->whereBetween('created_at', [$startDate, $endDate]);
                 $movementsOutQuery->whereBetween('created_at', [$startDate, $endDate]);
+                $ownerCashDepositsQuery->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+                $ownerCashWithdrawalsQuery->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
             }
+            
             $branchTransfersIn = $transfersInBranchQuery->sum('amount');
             $branchTransfersOut = $transfersOutBranchQuery->sum('amount');
             $movementsIn = $movementsInQuery->sum('amount');
             $movementsOut = $movementsOutQuery->sum('amount');
+            $ownerCashDeposits = $ownerCashDepositsQuery->sum('total_amount');
+            $ownerCashWithdrawals = $ownerCashWithdrawalsQuery->sum('total_amount');
                 
-            $cashBalance = $branchCashSales - $branchCashExpenses + $branchTransfersIn - $branchTransfersOut + $movementsIn - $movementsOut;
+            $cashBalance = $branchCashSales - $branchCashExpenses + $branchTransfersIn - $branchTransfersOut + $movementsIn - $movementsOut + $ownerCashDeposits - $ownerCashWithdrawals;
             
             $data['branches'][] = [
                 'id' => $branch->id,
                 'name' => $branch->name,
-                'cash_sales' => $branchCashSales,
-                'cash_expenses' => $branchCashExpenses,
+                'cash_sales' => $branchCashSales + $ownerCashDeposits,
+                'cash_expenses' => $branchCashExpenses + $ownerCashWithdrawals,
                 'transfers_in' => $branchTransfersIn,
                 'transfers_out' => $branchTransfersOut,
                 'cash_balance' => $cashBalance,
@@ -194,7 +229,7 @@ class CashFlowController extends Controller
             ->with(['sale.branch', 'sale.client'])
             ->get()->map(function($p) {
                 return [
-                    'id' => $p->id,
+                    'id' => 'pay_'.$p->id,
                     'date' => $p->created_at,
                     'type' => 'Ingreso (Venta)',
                     'amount' => (float)$p->amount,
@@ -205,39 +240,41 @@ class CashFlowController extends Controller
             });
         $history = $history->concat($payments);
 
-        // 2. Expenses (Egresos Operativos)
-        $expenses = Expense::whereBetween('created_at', [$startDate, $endDate])
+        // 2. Expenses (Egresos Operativos via Splits)
+        $expenses = \App\Models\Finance\ExpenseSplit::whereBetween('paid_at', [$startDate, $endDate])
             ->where('fund_source', 'cash')
+            ->where('deducted_from_wallet', true)
             ->whereIn('status', ['paid', 'archived'])
-            ->with(['branch', 'category'])
-            ->get()->map(function($e) {
+            ->with(['expense.branch', 'expense.category', 'owner.user.profile'])
+            ->get()->map(function($es) {
+                $ownerName = $es->owner ? ($es->owner->user->profile->first_name ?? '') : '';
                 return [
-                    'id' => $e->id,
-                    'date' => $e->created_at,
+                    'id' => 'exp_'.$es->id,
+                    'date' => $es->paid_at ?? $es->expense->expense_date,
                     'type' => 'Egreso (Gasto)',
-                    'amount' => (float)$e->amount,
-                    'branch' => $e->branch->name ?? 'N/A',
-                    'description' => ($e->category->name ?? 'Gasto') . ' - ' . $e->description,
+                    'amount' => (float)$es->amount,
+                    'branch' => $es->expense->branch->name ?? 'N/A',
+                    'description' => ($es->expense->category->name ?? 'Gasto') . ' - ' . $es->expense->description . ($ownerName ? " (Cuota de $ownerName)" : ''),
                     'is_positive' => false
                 ];
             });
         $history = $history->concat($expenses);
 
         // 3. Cash Transfers
-        $transfers = CashTransfer::whereBetween('transfer_date', [$startDate, $endDate->format('Y-m-d')])
+        $transfers = CashTransfer::whereBetween('transfer_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->where('status', 'completed')
             ->with(['fromBranch', 'toBranch'])
             ->get()->map(function($t) {
                 $from = $t->fromBranch ? $t->fromBranch->name : 'Banco';
                 $to = $t->toBranch ? $t->toBranch->name : 'Banco';
                 return [
-                    'id' => $t->id,
-                    'date' => $t->created_at,
+                    'id' => 'trans_'.$t->id,
+                    'date' => $t->transfer_date,
                     'type' => 'Transferencia',
                     'amount' => (float)$t->amount,
                     'branch' => "$from -> $to",
                     'description' => 'Transferencia de fondos. ' . $t->notes,
-                    'is_positive' => null // neutral color
+                    'is_positive' => null 
                 ];
             });
         $history = $history->concat($transfers);
@@ -248,7 +285,7 @@ class CashFlowController extends Controller
             ->get()->map(function($m) {
                 $isIncome = $m->movement_type === 'income';
                 return [
-                    'id' => $m->id,
+                    'id' => 'mov_'.$m->id,
                     'date' => $m->created_at,
                     'type' => $m->reference_type === 'discrepancy' ? 'Arqueo de Caja' : 'Ajuste Extraordinario',
                     'amount' => (float)$m->amount,
@@ -258,8 +295,28 @@ class CashFlowController extends Controller
                 ];
             });
         $history = $history->concat($movements);
+        
+        // 5. Owner Payments (Aportes/Retiros de Socios)
+        $ownerPayments = \App\Models\Finance\OwnerPayment::whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->where('fund_source', 'cash')
+            ->whereIn('status', ['paid', 'archived'])
+            ->with(['branch', 'owner.user.profile'])
+            ->get()->map(function($op) {
+                $ownerName = $op->owner ? ($op->owner->user->profile->first_name ?? '') : 'Socio';
+                $isDeposit = $op->type === 'deposit';
+                return [
+                    'id' => 'op_'.$op->id,
+                    'date' => $op->payment_date,
+                    'type' => $isDeposit ? 'Aporte de Capital' : 'Retiro de Capital',
+                    'amount' => (float)$op->total_amount,
+                    'branch' => $op->branch->name ?? 'N/A',
+                    'description' => ($isDeposit ? 'Depósito de ' : 'Retiro de ') . $ownerName . ' - ' . $op->notes,
+                    'is_positive' => $isDeposit
+                ];
+            });
+        $history = $history->concat($ownerPayments);
 
-        // 5. Aperturas y Cierres de Caja
+        // 6. Aperturas y Cierres de Caja
         $registers = CashRegister::whereBetween('opened_at', [$startDate, $endDate])
             ->orWhereBetween('closed_at', [$startDate, $endDate])
             ->with('branch')

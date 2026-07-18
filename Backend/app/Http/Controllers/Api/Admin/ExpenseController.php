@@ -17,9 +17,6 @@ class ExpenseController extends Controller
     {
         $this->processRecurringExpenses();
         
-        // Dynamically recalculate proportional splits before fetching
-        Expense::with('expense_splits')->where('status', 'pending')->where('split_type', 'proportional')->get()->each->recalculateProportionalSplits();
-        
         $query = Expense::with(['expense_splits.owner.user.profile', 'branch'])->orderBy('expense_date', 'desc');
         
         if ($request->has('branch_id') && $request->branch_id !== 'all' && $request->branch_id !== '') {

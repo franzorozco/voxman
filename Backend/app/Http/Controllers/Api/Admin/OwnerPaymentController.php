@@ -22,7 +22,7 @@ class OwnerPaymentController extends Controller
     {
         $request->validate([
             'owner_id' => 'required|uuid',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:99999999.99',
             'payment_date' => 'required|date',
             'type' => 'required|in:withdrawal,deposit',
             'fund_source' => 'required|string|in:cash,bank',
@@ -30,6 +30,20 @@ class OwnerPaymentController extends Controller
             'reference_number' => 'nullable|string',
             'payment_method' => 'nullable|string'
         ]);
+
+        if ($request->type === 'withdrawal') {
+            $owner = \App\Models\Actors\Owner::with('owner_payments')->findOrFail($request->owner_id);
+            $deposits = $owner->owner_payments->where('type', 'deposit')->whereIn('status', ['paid', 'archived'])->sum('total_amount');
+            $withdrawals = $owner->owner_payments->where('type', 'withdrawal')->whereIn('status', ['paid', 'archived'])->sum('total_amount');
+            $available = $deposits - $withdrawals;
+
+            if ($request->amount > $available) {
+                return response()->json([
+                    'message' => 'Error de validación',
+                    'error' => 'Saldo insuficiente. El capital disponible del socio es Bs. ' . number_format($available, 2)
+                ], 400);
+            }
+        }
 
         $data = $request->all();
         $data['total_amount'] = $request->amount;

@@ -215,6 +215,7 @@ Route::middleware([
 
     Route::prefix('owners')->group(function () {
         Route::get('/', [OwnerController::class, 'index'])->middleware('permission:view_owners');
+        Route::get('/{id}/profile', [OwnerController::class, 'profile'])->middleware('permission:view_owners');
         Route::get('/{id}', [OwnerController::class, 'show'])->middleware('permission:view_owners');
         Route::post('/', [OwnerController::class, 'store'])->middleware('permission:manage_owners');
         Route::put('/{id}', [OwnerController::class, 'update'])->middleware('permission:manage_owners');
@@ -306,6 +307,11 @@ Route::middleware([
         Route::put('/{id}/update-costs', [PurchaseController::class, 'updateCosts'])->middleware('permission:edit_purchases');
         Route::post('/{id}/pay', [\App\Http\Controllers\Api\Admin\AccountsPayableController::class, 'storePayment'])->middleware('permission:create_purchases');
         Route::post('/reception', [\App\Http\Controllers\Api\Admin\PurchaseReceptionController::class, 'store'])->middleware('permission:receive_inventory');
+    });
+
+    Route::prefix('accounts-payable')->group(function () {
+        Route::get('/stats', [\App\Http\Controllers\Api\Admin\AccountsPayableController::class, 'stats'])->middleware('permission:view_purchases');
+        Route::get('/', [\App\Http\Controllers\Api\Admin\AccountsPayableController::class, 'index'])->middleware('permission:view_purchases');
     });
 
     Route::prefix('quarantine')->group(function () {

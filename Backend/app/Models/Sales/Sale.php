@@ -7,6 +7,16 @@ use App\Models\Base\Sale as BaseSale;
 class Sale extends BaseSale
 {
     use \App\Traits\Auditable;
+
+    protected static function booted()
+    {
+        static::created(function ($sale) {
+            \App\Models\Finance\Expense::with('expense_splits')
+                ->where('status', 'pending')
+                ->where('split_type', 'proportional')
+                ->get()->each->recalculateProportionalSplits();
+        });
+    }
     
 	protected $fillable = [
 		'customer_id',

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getOwners, deleteOwner } from "../../../../api/admin/owners";
 import OwnerModal from "./OwnerModal";
@@ -102,6 +102,7 @@ export default function Owners() {
                 <th>Socio</th>
                 <th>Contacto</th>
                 <th>Rol</th>
+                <th>Capital Invertido</th>
                 <th>Productos</th>
                 <th>Fecha Registro</th>
                 <th>Estado</th>
@@ -136,6 +137,11 @@ export default function Owners() {
                           {owner.user?.roles?.[0]?.name || 'Owner'}
                         </span>
                       </td>
+                      <td data-label="Capital Invertido">
+                        <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '15px' }}>
+                          Bs. {(owner.total_capital || 0).toFixed(2)}
+                        </span>
+                      </td>
                       <td data-label="Productos">
                         <span style={{ fontSize: '14px', color: 'var(--text-main)' }}>
                           {owner.products_count || 0}
@@ -152,21 +158,27 @@ export default function Owners() {
                         </span>
                       </td>
                       <td data-label="Acciones">
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                        <div style={{ display: "flex", gap: "8px", justifyContent: "center", alignItems: 'center' }}>
+                          <button 
+                            className="btn-icon" 
+                            title="Ver Perfil y Finanzas"
+                            onClick={() => window.location.href = `/dashboard/owners/${owner.id}`}
+                            style={{ background: 'var(--bg-overlay)', color: 'var(--text-main)' }}
+                          >
+                            <Eye size={16} />
+                          </button>
                           <CanAccess permission="manage_owners">
                             <button 
-                              className="btn-secondary"
+                              className="btn-icon btn-edit" 
+                              title="Editar Datos"
                               onClick={() => handleEdit(owner)}
-                              title="Editar"
-                              style={{ padding: '6px' }}
                             >
                               <Edit size={16} />
                             </button>
                             <button 
-                              className="btn-danger"
-                              onClick={() => handleDelete(owner.id)}
+                              className="btn-icon btn-delete" 
                               title="Eliminar"
-                              style={{ padding: '6px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}
+                              onClick={() => handleDelete(owner.id)}
                             >
                               <Trash2 size={16} />
                             </button>

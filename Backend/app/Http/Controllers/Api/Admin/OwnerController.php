@@ -10,20 +10,163 @@ class OwnerController extends Controller
 {
     public function index()
     {
-        return Owner::with(['user.profile', 'user.roles'])
+        $owners = Owner::with(['user.profile', 'user.roles', 'owner_payments' => function($q) {
+            $q->whereIn('status', ['paid', 'archived']);
+        }])
             ->withCount(['products'])
             ->where('is_active', true)
             ->whereHas('user', function ($q) {
                 $q->where('is_active', true);
             })
             ->get();
+
+        $owners->each(function($owner) {
+            $deposits = $owner->owner_payments->where('type', 'deposit')->sum('total_amount');
+            $withdrawals = $owner->owner_payments->where('type', 'withdrawal')->sum('total_amount');
+            $owner->total_capital = $deposits - $withdrawals;
+            unset($owner->owner_payments); // Don't send all payments in index
+        });
+
+        return $owners;
     }
 
     public function show($id)
     {
         $owner = Owner::with('user')->findOrFail($id);
-
         return response()->json($owner);
+    }
+
+    public function profile($id)
+    {
+        $owner = Owner::with(['user.profile', 'user.roles', 'owner_payments' => function($q) {
+            $q->orderBy('payment_date', 'DESC');
+        }])->findOrFail($id);
+
+        $deposits = $owner->owner_payments->where('type', 'deposit')->whereIn('status', ['paid', 'archived'])->sum('total_amount');
+        $withdrawals = $owner->owner_payments->where('type', 'withdrawal')->whereIn('status', ['paid', 'archived'])->sum('total_amount');
+        $totalCapital = $deposits - $withdrawals;
+
+        $inventoryItems = \App\Models\Inventory\Inventory::with(['variant.product'])
+            ->whereHas('variant.product', function($q) use ($id) {
+                $q->where('owner_id', $id);
+            })->get();
+
+        $totalInventoryValue = 0;
+        $totalStock = 0;
+        foreach($inventoryItems as $inv) {
+            $stock = (int)$inv->stock;
+            $totalStock += $stock;
+            if ($inv->variant) {
+                $totalInventoryValue += (float)$inv->variant->cost * $stock;
+            }
+        }
+
+        $totalSales = \App\Models\Sales\SaleDetail::where('owner_id', $id)
+            ->whereHas('sale', function($q) {
+                $q->where('status', 'paid');
+            })->sum('subtotal');
+
+        $itemsSold = \App\Models\Sales\SaleDetail::where('owner_id', $id)
+            ->whereHas('sale', function($q) {
+                $q->where('status', 'paid');
+            })->sum('quantity');
+
+        $totalExpenses = \App\Models\Finance\ExpenseSplit::where('owner_id', $id)
+            ->whereIn('status', ['paid', 'archived'])
+            ->sum('amount');
+
+        $products = \App\Models\Catalog\Product::with(['product_variants.size', 'product_variants.fit'])
+            ->where('owner_id', $id)
+            ->get();
+
+        // --- FUND BREAKDOWN LOGIC ---
+        $branches = \App\Models\Branch\Branch::all();
+        $fund_breakdown = [];
+
+        foreach ($branches as $branch) {
+            // Capital (OwnerPayments)
+            $branchPayments = $owner->owner_payments->where('branch_id', $branch->id)->whereIn('status', ['paid', 'archived']);
+            $cashDeposits = $branchPayments->where('type', 'deposit')->where('fund_source', 'cash')->sum('total_amount');
+            $cashWithdrawals = $branchPayments->where('type', 'withdrawal')->where('fund_source', 'cash')->sum('total_amount');
+            $bankDeposits = $branchPayments->where('type', 'deposit')->where('fund_source', 'bank')->sum('total_amount');
+            $bankWithdrawals = $branchPayments->where('type', 'withdrawal')->where('fund_source', 'bank')->sum('total_amount');
+
+            $capitalCash = $cashDeposits - $cashWithdrawals;
+            $capitalBank = $bankDeposits - $bankWithdrawals;
+
+            // Sales (Ventas netas del socio)
+            $salesCash = \App\Models\Sales\SaleDetail::join('sales', 'sale_details.sale_id', '=', 'sales.id')
+                ->join('payments', 'payments.sale_id', '=', 'sales.id')
+                ->join('payment_methods', 'payments.payment_method_id', '=', 'payment_methods.id')
+                ->where('sale_details.owner_id', $id)
+                ->where('sales.branch_id', $branch->id)
+                ->where('sales.status', 'paid')
+                ->where('payment_methods.name', 'Efectivo')
+                ->sum('sale_details.subtotal');
+
+            $salesBank = \App\Models\Sales\SaleDetail::join('sales', 'sale_details.sale_id', '=', 'sales.id')
+                ->join('payments', 'payments.sale_id', '=', 'sales.id')
+                ->join('payment_methods', 'payments.payment_method_id', '=', 'payment_methods.id')
+                ->where('sale_details.owner_id', $id)
+                ->where('sales.branch_id', $branch->id)
+                ->where('sales.status', 'paid')
+                ->where('payment_methods.name', '!=', 'Efectivo')
+                ->sum('sale_details.subtotal');
+
+            // Expenses (Gastos asignados al socio)
+            $expensesCash = \App\Models\Finance\ExpenseSplit::join('expenses', 'expense_splits.expense_id', '=', 'expenses.id')
+                ->where('expense_splits.owner_id', $id)
+                ->where('expenses.branch_id', $branch->id)
+                ->whereIn('expense_splits.status', ['paid', 'archived'])
+                ->where('expenses.fund_source', 'cash')
+                ->sum('expense_splits.amount');
+
+            $expensesBank = \App\Models\Finance\ExpenseSplit::join('expenses', 'expense_splits.expense_id', '=', 'expenses.id')
+                ->where('expense_splits.owner_id', $id)
+                ->where('expenses.branch_id', $branch->id)
+                ->whereIn('expense_splits.status', ['paid', 'archived'])
+                ->where('expenses.fund_source', 'bank')
+                ->sum('expense_splits.amount');
+
+            $netCash = $capitalCash + $salesCash - $expensesCash;
+            $netBank = $capitalBank + $salesBank - $expensesBank;
+
+            // Solo agregamos sucursales donde el socio tenga algún tipo de liquidez o movimiento
+            if ($netCash != 0 || $netBank != 0 || $capitalCash != 0 || $capitalBank != 0 || $salesCash != 0 || $salesBank != 0 || $expensesCash != 0 || $expensesBank != 0) {
+                $fund_breakdown[] = [
+                    'branch_name' => $branch->name,
+                    'branch_id' => $branch->id,
+                    'cash' => [
+                        'capital' => (float)$capitalCash,
+                        'sales' => (float)$salesCash,
+                        'expenses' => (float)$expensesCash,
+                        'net_liquidity' => (float)$netCash
+                    ],
+                    'bank' => [
+                        'capital' => (float)$capitalBank,
+                        'sales' => (float)$salesBank,
+                        'expenses' => (float)$expensesBank,
+                        'net_liquidity' => (float)$netBank
+                    ]
+                ];
+            }
+        }
+
+        return response()->json([
+            'owner' => $owner,
+            'kpis' => [
+                'total_capital' => $totalCapital,
+                'inventory_value' => $totalInventoryValue,
+                'total_stock' => $totalStock,
+                'items_sold' => (int)$itemsSold,
+                'gross_sales' => (float)$totalSales,
+                'assigned_expenses' => (float)$totalExpenses,
+                'net_profit' => (float)$totalSales - (float)$totalExpenses,
+                'available_liquidity' => (float)$totalCapital + ((float)$totalSales - (float)$totalExpenses)
+            ],
+            'products' => $products,
+            'fund_breakdown' => $fund_breakdown
+        ]);
     }
 
     public function store(Request $request)

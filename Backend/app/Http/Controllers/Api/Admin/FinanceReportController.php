@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Sales\Sale;
 use App\Models\Finance\Expense;
+use App\Models\Finance\ExpenseSplit;
+use App\Models\Finance\CashMovement;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +21,7 @@ class FinanceReportController extends Controller
 
         // Fetch Sales
         $salesQuery = Sale::whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled'); // Assuming 'cancelled' is ignored, change if VOXman uses different status
+            ->where('status', 'paid');
             
         if ($branchId) {
             $salesQuery->where('branch_id', $branchId);
@@ -30,18 +32,47 @@ class FinanceReportController extends Controller
             ->orderBy('date', 'ASC')
             ->get();
 
-        // Fetch Expenses
-        $expensesQuery = Expense::whereBetween('expense_date', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled');
-
+        // Fetch Incomes from CashMovements (Adjustments/Surpluses)
+        $movementsInQuery = CashMovement::whereBetween('created_at', [$startDate, $endDate])
+            ->where('movement_type', 'income');
         if ($branchId) {
-            $expensesQuery->where('branch_id', $branchId);
+            $movementsInQuery->whereHas('cash_register', function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
         }
-
-        $expensesData = $expensesQuery->select(DB::raw('DATE(expense_date) as date'), DB::raw('SUM(amount) as amount'))
+        $movementsInData = $movementsInQuery->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(amount) as amount'))
             ->groupBy('date')
             ->orderBy('date', 'ASC')
             ->get();
+
+        // Fetch Expenses
+        $expensesQuery = ExpenseSplit::join('expenses', 'expense_splits.expense_id', '=', 'expenses.id')
+            ->whereBetween('expense_splits.paid_at', [$startDate, $endDate])
+            ->whereIn('expense_splits.status', ['paid', 'archived'])
+            ->where('expense_splits.deducted_from_wallet', true);
+
+        if ($branchId) {
+            $expensesQuery->where('expenses.branch_id', $branchId);
+        }
+
+        $expensesData = $expensesQuery->select(DB::raw('DATE(expense_splits.paid_at) as date'), DB::raw('SUM(expense_splits.amount) as amount'))
+            ->groupBy('date')
+            ->orderBy('date', 'ASC')
+            ->get();
+
+        // Fetch Expenses from CashMovements (Adjustments/Shortages)
+        $movementsOutQuery = CashMovement::whereBetween('created_at', [$startDate, $endDate])
+            ->where('movement_type', 'expense');
+        if ($branchId) {
+            $movementsOutQuery->whereHas('cash_register', function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+        }
+        $movementsOutData = $movementsOutQuery->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(amount) as amount'))
+            ->groupBy('date')
+            ->orderBy('date', 'ASC')
+            ->get();
+
 
         // Aggregate into timeline array
         $timelineMap = [];
@@ -68,6 +99,15 @@ class FinanceReportController extends Controller
             }
             $totalSales += (float)$sale->amount;
         }
+        
+        foreach ($movementsInData as $movIn) {
+            $dateStr = $movIn->date;
+            if (isset($timelineMap[$dateStr])) {
+                $timelineMap[$dateStr]['sales'] += (float)$movIn->amount;
+                $timelineMap[$dateStr]['profit'] += (float)$movIn->amount;
+            }
+            $totalSales += (float)$movIn->amount;
+        }
 
         foreach ($expensesData as $exp) {
             $dateStr = $exp->date;
@@ -77,17 +117,28 @@ class FinanceReportController extends Controller
             }
             $totalExpenses += (float)$exp->amount;
         }
-
-        // Expenses Breakdown by Category
-        $expensesByCategoryQuery = Expense::whereBetween('expense_date', [$startDate, $endDate])
-            ->where('status', '!=', 'cancelled');
         
-        if ($branchId) {
-            $expensesByCategoryQuery->where('branch_id', $branchId);
+        foreach ($movementsOutData as $movOut) {
+            $dateStr = $movOut->date;
+            if (isset($timelineMap[$dateStr])) {
+                $timelineMap[$dateStr]['expenses'] += (float)$movOut->amount;
+                $timelineMap[$dateStr]['profit'] -= (float)$movOut->amount;
+            }
+            $totalExpenses += (float)$movOut->amount;
         }
 
-        $expensesByCategory = $expensesByCategoryQuery->select('category', DB::raw('SUM(amount) as amount'))
-            ->groupBy('category')
+        // Expenses Breakdown by Category
+        $expensesByCategoryQuery = ExpenseSplit::join('expenses', 'expense_splits.expense_id', '=', 'expenses.id')
+            ->whereBetween('expense_splits.paid_at', [$startDate, $endDate])
+            ->whereIn('expense_splits.status', ['paid', 'archived'])
+            ->where('expense_splits.deducted_from_wallet', true);
+        
+        if ($branchId) {
+            $expensesByCategoryQuery->where('expenses.branch_id', $branchId);
+        }
+
+        $expensesByCategory = $expensesByCategoryQuery->select('expenses.category', DB::raw('SUM(expense_splits.amount) as amount'))
+            ->groupBy('expenses.category')
             ->orderBy('amount', 'DESC')
             ->get()
             ->map(function ($item) {
@@ -103,14 +154,34 @@ class FinanceReportController extends Controller
         $prevStartDate = $prevEndDate->copy()->subDays($daysDiff)->startOfDay();
 
         $prevSalesQuery = Sale::whereBetween('created_at', [$prevStartDate, $prevEndDate])
-            ->where('status', '!=', 'cancelled');
+            ->where('status', 'paid');
         if ($branchId) $prevSalesQuery->where('branch_id', $branchId);
         $prevTotalSales = (float) $prevSalesQuery->sum('total');
+        
+        $prevMovementsInQuery = CashMovement::whereBetween('created_at', [$prevStartDate, $prevEndDate])
+            ->where('movement_type', 'income');
+        if ($branchId) {
+            $prevMovementsInQuery->whereHas('cash_register', function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+        }
+        $prevTotalSales += (float) $prevMovementsInQuery->sum('amount');
 
-        $prevExpensesQuery = Expense::whereBetween('expense_date', [$prevStartDate, $prevEndDate])
-            ->where('status', '!=', 'cancelled');
-        if ($branchId) $prevExpensesQuery->where('branch_id', $branchId);
-        $prevTotalExpenses = (float) $prevExpensesQuery->sum('amount');
+        $prevExpensesQuery = ExpenseSplit::join('expenses', 'expense_splits.expense_id', '=', 'expenses.id')
+            ->whereBetween('expense_splits.paid_at', [$prevStartDate, $prevEndDate])
+            ->whereIn('expense_splits.status', ['paid', 'archived'])
+            ->where('expense_splits.deducted_from_wallet', true);
+        if ($branchId) $prevExpensesQuery->where('expenses.branch_id', $branchId);
+        $prevTotalExpenses = (float) $prevExpensesQuery->sum('expense_splits.amount');
+        
+        $prevMovementsOutQuery = CashMovement::whereBetween('created_at', [$prevStartDate, $prevEndDate])
+            ->where('movement_type', 'expense');
+        if ($branchId) {
+            $prevMovementsOutQuery->whereHas('cash_register', function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+        }
+        $prevTotalExpenses += (float) $prevMovementsOutQuery->sum('amount');
         
         $prevNetProfit = $prevTotalSales - $prevTotalExpenses;
 

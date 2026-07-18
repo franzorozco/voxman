@@ -8,6 +8,9 @@ export const getOwners = () =>
 export const getOwner = (id) =>
   api.get(`${BASE_URL}/${id}`);
 
+export const getOwnerProfile = (id) =>
+  api.get(`${BASE_URL}/${id}/profile`);
+
 export const createOwner = (data) =>
   api.post(BASE_URL, data);
 

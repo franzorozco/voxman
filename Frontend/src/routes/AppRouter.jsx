@@ -41,6 +41,7 @@ import SupplierProfile from "../pages/dashboard/pages/Suppliers/SupplierProfile.
 import DeletedSuppliers from "../pages/dashboard/pages/Suppliers/DeletedSuppliers.jsx";
 import SupplierReturns from "../pages/dashboard/pages/Suppliers/SupplierReturns.jsx";
 import PurchasesList from "../pages/dashboard/pages/Purchases/PurchasesList.jsx";
+import AccountsPayableList from "../pages/dashboard/pages/Purchases/AccountsPayable/AccountsPayableList.jsx";
 import CreatePurchase from "../pages/dashboard/pages/Purchases/CreatePurchase.jsx";
 import ReceivePurchase from "../pages/dashboard/pages/Purchases/ReceivePurchase.jsx";
 import QuarantineList from "../pages/dashboard/pages/inventory/QuarantineList";
@@ -48,6 +49,7 @@ import Customers from "../pages/dashboard/pages/Customers/Customers.jsx";
 import DeletedCustomers from "../pages/dashboard/pages/Customers/DeletedCustomers.jsx";
 import Employees from "../pages/dashboard/pages/Employees/Employees.jsx";
 import Owners from "../pages/dashboard/pages/Owners/Owners.jsx";
+import OwnerProfile from "../pages/dashboard/pages/Owners/OwnerProfile.jsx";
 import DeletedEmployees from "../pages/dashboard/pages/Employees/DeletedEmployees.jsx";
 import Payroll from "../pages/dashboard/pages/Payroll/Payroll.jsx";
 import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
@@ -119,11 +121,13 @@ export default function AppRouter() {
             <Route path="purchases" element={<ProtectedRoute permissions={["view_purchases"]}><PurchasesList /></ProtectedRoute>} />
             <Route path="purchases/create" element={<ProtectedRoute permissions={["create_purchases"]}><CreatePurchase /></ProtectedRoute>} />
             <Route path="purchases/receive/:id" element={<ProtectedRoute permissions={["receive_inventory"]}><ReceivePurchase /></ProtectedRoute>} />
+            <Route path="purchases/accounts-payable" element={<ProtectedRoute permissions={["view_purchases"]}><AccountsPayableList /></ProtectedRoute>} />
             <Route path="inventory/quarantine" element={<ProtectedRoute permissions={["manage_inventory"]}><QuarantineList /></ProtectedRoute>} />
             <Route path="clients" element={<ProtectedRoute permissions={["view_customers"]}><Customers /></ProtectedRoute>} />
             <Route path="clients/deleted" element={<ProtectedRoute permissions={["view_customers"]}><DeletedCustomers /></ProtectedRoute>} />
             <Route path="employees" element={<ProtectedRoute permissions={["manage_executives"]}><Employees /></ProtectedRoute>} />
             <Route path="owners" element={<ProtectedRoute permissions={["view_owners"]}><Owners /></ProtectedRoute>} />
+            <Route path="owners/:id" element={<ProtectedRoute permissions={["view_owners"]}><OwnerProfile /></ProtectedRoute>} />
             <Route path="employees/deleted" element={<ProtectedRoute permissions={["manage_executives"]}><DeletedEmployees /></ProtectedRoute>} />
             <Route path="payroll" element={<ProtectedRoute permissions={["manage_user_salaries"]}><Payroll /></ProtectedRoute>} />
             <Route path="attendances" element={<ProtectedRoute permissions={["manage_executives"]}><Attendances /></ProtectedRoute>} />

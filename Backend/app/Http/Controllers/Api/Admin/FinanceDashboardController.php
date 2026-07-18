@@ -26,13 +26,6 @@ class FinanceDashboardController extends Controller
             $endDate = \Carbon\Carbon::parse($endDate)->endOfDay();
         }
 
-        // Dynamically recalculate proportional splits before fetching
-        $pendingExpensesQuery = \App\Models\Finance\Expense::with('expense_splits')->where('status', 'pending')->where('split_type', 'proportional');
-        if ($startDate && $endDate) {
-            $pendingExpensesQuery->whereBetween('expense_date', [$startDate, $endDate]);
-        }
-        $pendingExpensesQuery->get()->each->recalculateProportionalSplits();
-        
         $branchIdFilter = $request->query('branch_id', 'all');
         $owners = Owner::with('user.profile')->where('is_active', true)->get();
         $allBranches = Branch::where('is_active', true)->get();
