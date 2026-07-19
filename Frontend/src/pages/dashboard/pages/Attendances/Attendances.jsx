@@ -141,65 +141,66 @@ export default function Attendances() {
         </div>
       )}
 
-      <div className="table-container fade-in">
-        <div className="filters-container" style={{ marginBottom: '20px' }}>
-          <div className="filters-container-inner" style={{ flexWrap: 'wrap' }}>
-            
-            {viewMode === 'daily' ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Fecha:</span>
-                <input 
-                  type="date" 
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
-                  style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
-                />
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Mes:</span>
-                  <input 
-                    type="month" 
-                    value={filterMonth}
-                    onChange={(e) => setFilterMonth(e.target.value)}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Empleado:</span>
-                  <select 
-                    value={selectedEmployeeForMonth}
-                    onChange={(e) => setSelectedEmployeeForMonth(e.target.value)}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', minWidth: '200px' }}
-                  >
-                    <option value="">Selecciona un empleado...</option>
-                    {employees.map(emp => {
-                      const profile = emp.user?.profile || {};
-                      const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
-                      return <option key={emp.id} value={emp.id}>{fullName}</option>;
-                    })}
-                  </select>
-                </div>
-              </div>
-            )}
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div className="filters-container-inner" style={{ flexWrap: 'wrap', gap: '12px' }}>
+          
+          <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              placeholder="Buscar por nombre, código o notas..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-            <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          {viewMode === 'daily' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Fecha:</span>
               <input 
-                type="text" 
-                style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-                placeholder="Buscar por nombre, código o notas..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                type="date" 
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
               />
             </div>
-            <button className="btn-secondary" onClick={fetchData} disabled={loading} style={{ padding: '10px' }}>
-              <RefreshCw size={18} className={loading ? "spin" : ""} />
-            </button>
-          </div>
-        </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Mes:</span>
+                <input 
+                  type="month" 
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(e.target.value)}
+                  style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Empleado:</span>
+                <select 
+                  value={selectedEmployeeForMonth}
+                  onChange={(e) => setSelectedEmployeeForMonth(e.target.value)}
+                  style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none', minWidth: '200px' }}
+                >
+                  <option value="">Todos los empleados...</option>
+                  {employees.map(emp => {
+                    const profile = emp.user?.profile || {};
+                    const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
+                    return <option key={emp.id} value={emp.id}>{fullName}</option>;
+                  })}
+                </select>
+              </div>
+            </div>
+          )}
 
+          <button className="btn-secondary" onClick={fetchData} disabled={loading} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', cursor: 'pointer' }}>
+            <RefreshCw size={18} className={loading ? "spin" : ""} />
+          </button>
+        </div>
+      </div>
+
+      <div className="table-container fade-in">
         <div className="table-wrapper">
           <table className="products-table">
             <thead>

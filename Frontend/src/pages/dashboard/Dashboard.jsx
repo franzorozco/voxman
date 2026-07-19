@@ -217,7 +217,7 @@ export default function DashboardLayout() {
                   <NavItem to="/dashboard/purchases" icon={FileText} label="Órdenes de Compra" />
                 </CanAccess>
                 <CanAccess permission="manage_expenses">
-                  <NavItem to="/dashboard/purchases/accounts-payable" icon={DollarSign} label="Cuentas por Pagar (Próx.)" />
+                  <NavItem to="/dashboard/purchases/accounts-payable" icon={DollarSign} label="Cuentas por Pagar" />
                 </CanAccess>
               </div>
             </CanAccess>
