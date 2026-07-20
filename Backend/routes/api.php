@@ -29,9 +29,16 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrandController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Logistics\OrderNetworkController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
+
+// Public Order Network routes (for customers to confirm delivery via link)
+Route::prefix('v1/delivery')->group(function () {
+    Route::get('/{id}', [OrderNetworkController::class, 'getDeliveryDetails']);
+    Route::post('/{id}/confirm', [OrderNetworkController::class, 'confirmDelivery']);
+});
 
 Route::middleware([
     'auth:sanctum',
@@ -390,6 +397,13 @@ Route::middleware([
             Route::post('/{id}/archive', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'archive']);
             Route::post('/{id}/annul', [\App\Http\Controllers\Api\Admin\OwnerPaymentController::class, 'annul']);
         });
+    });
+
+    // Order Network Admin Routes
+    Route::prefix('order-network')->group(function () {
+        Route::post('/convert', [OrderNetworkController::class, 'convertToOrder']);
+        Route::post('/{id}/status', [OrderNetworkController::class, 'updateStatus']);
+        Route::post('/{id}/driver', [OrderNetworkController::class, 'assignDriver']);
     });
 
 });

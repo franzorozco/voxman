@@ -17,10 +17,16 @@ class Cart extends BaseCart
 		'expires_at',
 		'updated_at',
 		'discount_id',
-		'total_discount'
+		'total_discount',
+        'guest_id'
 	];
 
 	protected $appends = ['total_amount'];
+
+	public function guest()
+	{
+		return $this->belongsTo(\App\Models\Base\Guest::class, 'guest_id');
+	}
 
 	public function discount()
 	{

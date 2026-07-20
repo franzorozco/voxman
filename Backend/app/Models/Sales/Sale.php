@@ -31,8 +31,14 @@ class Sale extends BaseSale
 		'total',
 		'invoice_number',
 		'notes',
-		'discount_id'
+		'discount_id',
+        'guest_id'
 	];
+
+	public function guest()
+	{
+		return $this->belongsTo(\App\Models\Base\Guest::class, 'guest_id');
+	}
 
 	public function discount()
 	{

@@ -14,4 +14,9 @@ class Shipment extends BaseShipment
 		'shipped_at',
 		'delivered_at'
 	];
+
+    public function delivery_schedule()
+    {
+        return $this->hasOne(\App\Models\Logistics\DeliverySchedule::class, 'shipment_id');
+    }
 }
