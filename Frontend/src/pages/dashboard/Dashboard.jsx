@@ -160,7 +160,7 @@ export default function DashboardLayout() {
                   {!collapsed && "VENTAS Y COMERCIAL"}
                 </p>
                 <CanAccess permission="manage_sales">
-                  <NavItem to="/dashboard/orders" icon={ShoppingCart} label="Punto de Venta" />
+                  <NavItem to="/dashboard/orders" icon={ShoppingCart} label="Entregas (Redes)" />
                 </CanAccess>
                 <CanAccess permission="view_sales">
                   <NavItem to="/dashboard/sales" icon={BarChart3} label="Historial de Ventas" />

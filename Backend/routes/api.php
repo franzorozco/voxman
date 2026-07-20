@@ -401,6 +401,8 @@ Route::middleware([
 
     // Order Network Admin Routes
     Route::prefix('order-network')->group(function () {
+        Route::get('/', [OrderNetworkController::class, 'index']);
+        Route::get('/drivers', [OrderNetworkController::class, 'getDrivers']);
         Route::post('/convert', [OrderNetworkController::class, 'convertToOrder']);
         Route::post('/{id}/status', [OrderNetworkController::class, 'updateStatus']);
         Route::post('/{id}/driver', [OrderNetworkController::class, 'assignDriver']);

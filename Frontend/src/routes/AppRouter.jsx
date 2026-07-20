@@ -56,6 +56,7 @@ import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
 import Sales from "../pages/dashboard/pages/Sales/Sales.jsx";
 import Finance from "../pages/dashboard/pages/Finance/Finance.jsx";
 import Carts from "../pages/dashboard/pages/Carts/Carts.jsx";
+import Orders from "../pages/dashboard/pages/Orders/Orders.jsx";
 import Returns from "../pages/dashboard/pages/Returns/Returns.jsx";
 import CashFlow from "../pages/dashboard/pages/Finance/CashFlow/CashFlow.jsx";
 import FinanceReports from "../pages/dashboard/pages/Finance/Reports/Reports.jsx";
@@ -132,6 +133,7 @@ export default function AppRouter() {
             <Route path="payroll" element={<ProtectedRoute permissions={["manage_user_salaries"]}><Payroll /></ProtectedRoute>} />
             <Route path="attendances" element={<ProtectedRoute permissions={["manage_executives"]}><Attendances /></ProtectedRoute>} />
             <Route path="sales" element={<ProtectedRoute permissions={["view_sales"]}><Sales /></ProtectedRoute>} />
+            <Route path="orders" element={<ProtectedRoute permissions={["manage_sales"]}><Orders /></ProtectedRoute>} />
             <Route path="finance" element={<ProtectedRoute permissions={["view_finance"]}><Finance /></ProtectedRoute>} />
             <Route path="finance/cashflow" element={<ProtectedRoute permissions={["view_cashflow"]}><CashFlow /></ProtectedRoute>} />
             <Route path="finance/reports" element={<ProtectedRoute permissions={["view_finance_reports"]}><FinanceReports /></ProtectedRoute>} />

@@ -16,6 +16,55 @@ use App\Models\Inventory\StockReservation;
 class OrderNetworkController extends Controller
 {
     /**
+     * List delivery schedules for the admin dashboard.
+     */
+    public function index(Request $request)
+    {
+        $query = DeliverySchedule::with([
+            'shipment.sale.guest',
+            'shipment.sale.customer.user',
+            'driver',
+            'zone'
+        ])->orderBy('created_at', 'desc');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('shipment', function($q) use ($search) {
+                $q->where('tracking_code', 'like', "%{$search}%")
+                  ->orWhereHas('sale', function($q2) use ($search) {
+                      $q2->whereHas('guest', function($q3) use ($search) {
+                          $q3->where('name', 'like', "%{$search}%");
+                      });
+                  });
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('delivery_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('delivery_date', '<=', $request->date_to);
+        }
+
+        $schedules = $query->paginate($request->get('per_page', 15));
+        return response()->json($schedules);
+    }
+
+    /**
+     * List delivery drivers.
+     */
+    public function getDrivers()
+    {
+        $drivers = \App\Models\Logistics\DeliveryDriver::with('user')->get();
+        return response()->json($drivers);
+    }
+
+    /**
      * Converts a Cart to an Order Network Sale (pending) and schedules the delivery.
      */
     public function convertToOrder(Request $request)
