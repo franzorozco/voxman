@@ -3,9 +3,11 @@
 namespace App\Models\Sales;
 
 use App\Models\Base\SaleDetail as BaseSaleDetail;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class SaleDetail extends BaseSaleDetail
 {
+    use HasUuids;
 	protected $fillable = [
 		'sale_id',
 		'variant_id',

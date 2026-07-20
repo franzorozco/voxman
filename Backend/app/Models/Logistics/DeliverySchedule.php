@@ -21,6 +21,8 @@ class DeliverySchedule extends Model
         'status',
         'driver_id',
         'meeting_point',
+        'latitude',
+        'longitude',
         'created_at'
     ];
 
@@ -31,6 +33,6 @@ class DeliverySchedule extends Model
 
     public function driver()
     {
-        return $this->belongsTo(\App\Models\Logistics\DeliveryDriver::class, 'driver_id');
+        return $this->belongsTo(\App\Models\Actors\Employee::class, 'driver_id');
     }
 }

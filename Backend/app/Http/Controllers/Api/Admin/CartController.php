@@ -152,7 +152,7 @@ class CartController extends Controller
         $cart->customer_id = $request->customer_id;
         $cart->reference_number = 'PROF-' . strtoupper(Str::random(6));
         $cart->status = 'proforma';
-        $cart->source = 'store';
+        $cart->source = $request->input('source', 'store');
         $cart->discount_id = $request->discount_id;
         $cart->save();
 

@@ -402,9 +402,12 @@ Route::middleware([
     // Order Network Admin Routes
     Route::prefix('order-network')->group(function () {
         Route::get('/', [OrderNetworkController::class, 'index']);
+        Route::get('/delivery-zones', [OrderNetworkController::class, 'getDeliveryZones']);
         Route::get('/drivers', [OrderNetworkController::class, 'getDrivers']);
         Route::post('/convert', [OrderNetworkController::class, 'convertToOrder']);
         Route::post('/{id}/status', [OrderNetworkController::class, 'updateStatus']);
+        Route::put('/{id}/details', [OrderNetworkController::class, 'updateDeliveryDetails']);
+        Route::put('/{id}/order', [OrderNetworkController::class, 'updateOrder']);
         Route::post('/{id}/driver', [OrderNetworkController::class, 'assignDriver']);
     });
 

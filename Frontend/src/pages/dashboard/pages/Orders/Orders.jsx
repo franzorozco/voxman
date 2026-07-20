@@ -1,23 +1,23 @@
 import { useState, useEffect } from "react";
 import { getCarts } from "../../../../api/admin/carts";
 import { getDeliverySchedules } from "../../../../api/admin/orderNetwork";
-import { ShoppingCart, Truck, Calendar, MapPin, Search, Filter, RefreshCw, User } from "lucide-react";
+import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus } from "lucide-react";
 import { toast } from "react-hot-toast";
 
-import ScheduleDeliveryModal from "./ScheduleDeliveryModal";
-import DeliveryStatusModal from "./DeliveryStatusModal";
+
+import DeliveryDetailsModal from "./DeliveryDetailsModal";
+import NewOrderModal from "./NewOrderModal";
 import "./Orders.css";
 
 export default function Orders() {
-  const [activeTab, setActiveTab] = useState("proformas"); // 'proformas' | 'schedules'
-  
-  const [proformas, setProformas] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Modals state
-  const [scheduleModalCart, setScheduleModalCart] = useState(null);
+
   const [statusModalSchedule, setStatusModalSchedule] = useState(null);
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
 
   // Filters state
   const [search, setSearch] = useState("");
@@ -27,18 +27,6 @@ export default function Orders() {
     date_from: "",
     date_to: ""
   });
-
-  const fetchProformas = async () => {
-    setLoading(true);
-    try {
-      const { data } = await getCarts({ source: 'order_network', status: 'proforma' });
-      setProformas(data.data.data);
-    } catch (error) {
-      toast.error("Error al cargar proformas de redes");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchSchedules = async () => {
     setLoading(true);
@@ -60,14 +48,10 @@ export default function Orders() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (activeTab === "proformas") {
-        fetchProformas();
-      } else {
-        fetchSchedules();
-      }
+      fetchSchedules();
     }, 300);
     return () => clearTimeout(delayDebounceFn);
-  }, [activeTab, search, filters]);
+  }, [search, filters]);
 
   const getStatusLabel = (status) => {
     const labels = {
@@ -88,27 +72,43 @@ export default function Orders() {
           <Truck size={24} className="text-primary" />
           Pedidos de Redes Sociales
         </h1>
-        <button 
-          className="action-btn primary" 
-          style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', color: 'var(--color-primary-text)', background: 'var(--color-primary)', cursor: 'pointer' }}
-          onClick={() => activeTab === "proformas" ? fetchProformas() : fetchSchedules()}
-        >
-          <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-          <span className="hide-on-mobile">Actualizar</span>
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            className="action-btn" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', background: 'transparent', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => {
+              setEditData(null);
+              setIsNewOrderModalOpen(true);
+            }}
+          >
+            <Plus size={18} />
+            <span className="hide-on-mobile">Nueva Entrega</span>
+          </button>
+          
+          <button 
+            className="action-btn primary" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', color: 'var(--color-primary-text)', background: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => fetchSchedules()}
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            <span className="hide-on-mobile">Actualizar</span>
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
         <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.3s ease' }}>
-          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Proformas Pendientes</span>
-          <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>{proformas.length || 0}</span>
-        </div>
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.4s ease' }}>
-          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Envíos (Página Actual)</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total de Envíos</span>
           <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>{schedules.length || 0}</span>
         </div>
+        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.4s ease' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pendientes / Agendados</span>
+          <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>
+            {schedules.filter(s => ['pending', 'assigned'].includes(s.status)).length || 0}
+          </span>
+        </div>
         <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.5s ease' }}>
-          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Completados (Página Actual)</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Completados</span>
           <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>
             {schedules.filter(s => s.status === 'completed').length || 0}
           </span>
@@ -188,22 +188,6 @@ export default function Orders() {
           </div>
         )}
       </div>
-
-      <div className="tabs-container">
-        <button 
-          className={`tab-button ${activeTab === "proformas" ? "active" : ""}`}
-          onClick={() => setActiveTab("proformas")}
-        >
-          <ShoppingCart size={18} /> Proformas Pendientes
-        </button>
-        <button 
-          className={`tab-button ${activeTab === "schedules" ? "active" : ""}`}
-          onClick={() => setActiveTab("schedules")}
-        >
-          <Calendar size={18} /> Envíos Programados
-        </button>
-      </div>
-
       <div className="table-container">
         {loading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -211,50 +195,6 @@ export default function Orders() {
           </div>
         ) : (
           <table className="orders-table">
-            {activeTab === "proformas" ? (
-              <>
-                <thead>
-                  <tr>
-                    <th>Referencia</th>
-                    <th>Cliente / Invitado</th>
-                    <th>Total</th>
-                    <th>Fecha Creación</th>
-                    <th style={{ textAlign: 'right' }}>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {proformas.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-                        No hay proformas de redes sociales pendientes de agendar.
-                      </td>
-                    </tr>
-                  ) : (
-                    proformas.map(cart => (
-                      <tr key={cart.id}>
-                        <td style={{ fontWeight: 600 }}>{cart.reference_number}</td>
-                        <td>
-                          {cart.customer 
-                            ? (cart.customer.user?.profile?.first_name || "Cliente Registrado")
-                            : "Anónimo (Invitado)"}
-                        </td>
-                        <td style={{ fontWeight: 600 }}>Bs. {Number(cart.total_amount).toFixed(2)}</td>
-                        <td>{new Date(cart.created_at).toLocaleDateString()}</td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button 
-                            className="action-btn success"
-                            onClick={() => setScheduleModalCart(cart)}
-                          >
-                            <Calendar size={16} /> Agendar Entrega
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </>
-            ) : (
-              <>
                 <thead>
                   <tr>
                     <th>Ref. Envío / Venta</th>
@@ -262,6 +202,7 @@ export default function Orders() {
                     <th>Repartidor</th>
                     <th>Punto de Encuentro</th>
                     <th>Fecha y Hora</th>
+                    <th>Monto Total</th>
                     <th>Estado</th>
                     <th style={{ textAlign: 'right' }}>Acciones</th>
                   </tr>
@@ -277,14 +218,23 @@ export default function Orders() {
                     schedules.map(schedule => {
                       const guestName = schedule.shipment?.sale?.guest?.name;
                       const customerName = schedule.shipment?.sale?.customer?.user?.name;
+                      const guestPhone = schedule.shipment?.sale?.guest?.whatsapp_phone;
+                      const customerPhone = schedule.shipment?.sale?.customer?.phone;
+                      
+                      const nameToDisplay = guestName || customerName || "Anónimo";
+                      const phoneToDisplay = guestPhone || customerPhone || "N/A";
+                      const totalAmount = schedule.shipment?.sale?.total || 0;
                       
                       return (
                         <tr key={schedule.id}>
                           <td style={{ fontWeight: 600 }}>{schedule.shipment?.tracking_code || schedule.id.slice(0,8)}</td>
                           <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <User size={14} style={{ color: 'var(--text-muted)' }} />
-                              {guestName || customerName || "Anónimo"}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
+                                <User size={14} style={{ color: 'var(--text-muted)' }} />
+                                {nameToDisplay}
+                              </div>
+                              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Tel: {phoneToDisplay}</span>
                             </div>
                           </td>
                           <td>
@@ -301,52 +251,74 @@ export default function Orders() {
                             </div>
                           </td>
                           <td>
-                            {schedule.delivery_date} <br/>
-                            <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{schedule.delivery_time_window}</span>
+                            {schedule.scheduled_date} <br/>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{schedule.time_window}</span>
                           </td>
+                          <td style={{ fontWeight: 600 }}>Bs. {Number(totalAmount).toFixed(2)}</td>
                           <td>
                             <span className={`status-badge status-${schedule.status}`}>
                               {getStatusLabel(schedule.status)}
                             </span>
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            <button 
-                              className="action-btn"
-                              onClick={() => setStatusModalSchedule(schedule)}
-                              disabled={schedule.status === 'completed' || schedule.status === 'cancelled'}
-                            >
-                              Gestionar
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button 
+                                className="action-btn" 
+                                style={{ padding: '6px 12px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                                onClick={() => {
+                                  const trackingUrl = `${window.location.origin}/tracking/${schedule.id}`;
+                                  navigator.clipboard.writeText(trackingUrl);
+                                  toast.success("Enlace copiado");
+                                }}
+                                title="Copiar enlace de seguimiento"
+                              >
+                                <LinkIcon size={14} />
+                              </button>
+                              <button 
+                                className="action-btn"
+                                style={{ padding: '6px 12px' }}
+                                onClick={() => setStatusModalSchedule(schedule)}
+                              >
+                                Ver Detalles
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
                     })
                   )}
                 </tbody>
-              </>
-            )}
           </table>
         )}
       </div>
 
-      {scheduleModalCart && (
-        <ScheduleDeliveryModal 
-          cart={scheduleModalCart}
-          onClose={() => setScheduleModalCart(null)}
-          onSuccess={() => {
-            setScheduleModalCart(null);
-            fetchProformas();
+
+
+      {statusModalSchedule && (
+        <DeliveryDetailsModal 
+          scheduleId={statusModalSchedule.id}
+          onClose={() => setStatusModalSchedule(null)}
+          onStatusChange={() => {
+            fetchSchedules();
+          }}
+          onEditRequest={(data) => {
+            setEditData(data);
+            setStatusModalSchedule(null);
+            setIsNewOrderModalOpen(true);
           }}
         />
       )}
 
-      {statusModalSchedule && (
-        <DeliveryStatusModal 
-          schedule={statusModalSchedule}
-          onClose={() => setStatusModalSchedule(null)}
+      {isNewOrderModalOpen && (
+        <NewOrderModal 
+          editData={editData}
+          onClose={() => {
+            setIsNewOrderModalOpen(false);
+            setEditData(null);
+          }}
           onSuccess={() => {
-            setStatusModalSchedule(null);
             fetchSchedules();
+            setEditData(null);
           }}
         />
       )}

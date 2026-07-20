@@ -19,6 +19,8 @@ class DeliveryZone extends Model
         'city',
         'base_cost',
         'extra_cost_per_km',
+        'latitude',
+        'longitude',
         'created_at'
     ];
 }

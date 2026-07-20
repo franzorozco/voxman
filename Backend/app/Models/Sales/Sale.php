@@ -3,10 +3,11 @@
 namespace App\Models\Sales;
 
 use App\Models\Base\Sale as BaseSale;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Sale extends BaseSale
 {
-    use \App\Traits\Auditable;
+    use \App\Traits\Auditable, HasUuids;
 
     protected static function booted()
     {

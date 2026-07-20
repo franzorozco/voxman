@@ -101,7 +101,7 @@ class PosSaleController extends Controller
                 $movement->variant_id = $variant->id;
                 $movement->branch_id = $request->branch_id;
                 $movement->movement_type = 'sale';
-                $movement->quantity = -$item['quantity'];
+                $movement->quantity = (int) $item['quantity'];
                 $movement->stock_before = $stockBefore;
                 $movement->stock_after = $inventory->stock;
                 $movement->reference_type = 'sale';

@@ -5,6 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 /* PÁGINAS PÚBLICAS */
 import Home from "../pages/home/Home";
 import Nosotros from "../pages/nosotros/Nosotros";
+import Tracking from "../pages/public/Tracking/Tracking";
 
 /* AUTH */
 import Login from "../pages/auth/Login";
@@ -84,6 +85,7 @@ export default function AppRouter() {
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/tracking/:id" element={<Tracking />} />
           {/* fallback opcional */}
           <Route path="*" element={<Home />} />
         </Route>

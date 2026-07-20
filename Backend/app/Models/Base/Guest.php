@@ -3,9 +3,12 @@
 namespace App\Models\Base;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Guest extends Model
 {
+    use HasUuids;
+
     protected $table = 'guests';
     protected $keyType = 'string';
     public $incrementing = false;

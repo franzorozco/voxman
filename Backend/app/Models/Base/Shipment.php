@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\Address;
-use App\Models\Sale;
+use App\Models\Core\Address;
+use App\Models\Sales\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

@@ -3,16 +3,20 @@
 namespace App\Models\Logistics;
 
 use App\Models\Base\Shipment as BaseShipment;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Shipment extends BaseShipment
 {
+    use HasUuids;
 	protected $fillable = [
 		'sale_id',
 		'address_id',
 		'status',
 		'tracking_code',
 		'shipped_at',
-		'delivered_at'
+		'delivered_at',
+		'delivery_code',
+		'delivery_type'
 	];
 
     public function delivery_schedule()

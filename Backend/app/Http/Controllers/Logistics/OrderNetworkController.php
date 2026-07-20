@@ -11,7 +11,10 @@ use App\Models\Sales\SaleDetail;
 use App\Models\Base\Guest;
 use App\Models\Logistics\Shipment;
 use App\Models\Logistics\DeliverySchedule;
+use App\Models\Logistics\DeliveryZone;
 use App\Models\Inventory\StockReservation;
+use App\Models\Inventory\Inventory;
+use App\Models\Inventory\InventoryMovement;
 
 class OrderNetworkController extends Controller
 {
@@ -23,8 +26,7 @@ class OrderNetworkController extends Controller
         $query = DeliverySchedule::with([
             'shipment.sale.guest',
             'shipment.sale.customer.user',
-            'driver',
-            'zone'
+            'driver.user.profile'
         ])->orderBy('created_at', 'desc');
 
         if ($request->filled('status')) {
@@ -60,8 +62,17 @@ class OrderNetworkController extends Controller
      */
     public function getDrivers()
     {
-        $drivers = \App\Models\Logistics\DeliveryDriver::with('user')->get();
-        return response()->json($drivers);
+        $employees = \App\Models\Actors\Employee::with('user.profile')->where('is_active', true)->get();
+        return response()->json($employees);
+    }
+
+    /**
+     * List predefined delivery zones.
+     */
+    public function getDeliveryZones()
+    {
+        $zones = DeliveryZone::orderBy('name', 'asc')->get();
+        return response()->json($zones);
     }
 
     /**
@@ -72,12 +83,19 @@ class OrderNetworkController extends Controller
         $request->validate([
             'cart_id' => 'required|uuid|exists:carts,id',
             'branch_id' => 'required|uuid|exists:branches,id',
+            'items_branches' => 'nullable|array',
+            'items_branches.*.variant_id' => 'required_with:items_branches|uuid|exists:product_variants,id',
+            'items_branches.*.branch_id' => 'required_with:items_branches|uuid|exists:branches,id',
             'meeting_point' => 'required|string',
             'scheduled_date' => 'required|date',
             'time_window' => 'required|string',
             'guest_name' => 'nullable|string',
             'guest_phone' => 'nullable|string',
-            'customer_id' => 'nullable|uuid|exists:customers,id'
+            'customer_id' => 'nullable|uuid|exists:customers,id',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'driver_id' => 'nullable|uuid|exists:employees,id',
+            'save_as_draft' => 'nullable|boolean'
         ]);
 
         try {
@@ -115,9 +133,14 @@ class OrderNetworkController extends Controller
 
             $subtotal = 0;
 
+            $itemsBranches = collect($request->input('items_branches', []))->keyBy('variant_id');
+
             foreach ($cart->items as $item) {
                 $price = $item->product_variant->price ?? 0;
-                $lineTotal = $price * $item->quantity;
+                $discountAmount = $item->discount_amount ?? 0;
+                $finalPrice = max(0, $price - $discountAmount);
+                $lineTotal = $finalPrice * $item->quantity;
+                
                 $subtotal += $lineTotal;
 
                 // Create Sale Detail
@@ -126,13 +149,48 @@ class OrderNetworkController extends Controller
                     'variant_id' => $item->variant_id,
                     'quantity' => $item->quantity,
                     'unit_price' => $price,
+                    'discount' => 0,
+                    'discount_amount' => $discountAmount,
+                    'final_price' => $finalPrice,
                     'subtotal' => $lineTotal
                 ]);
 
-                // Create Stock Reservation (from this specific branch)
+                // Determine branch to reserve from (per item fallback to main branch)
+                $reserveBranchId = $request->branch_id;
+                if ($itemsBranches->has($item->variant_id)) {
+                    $reserveBranchId = $itemsBranches->get($item->variant_id)['branch_id'];
+                }
+
+                // Deduct stock for reservation
+                $inventory = Inventory::where('branch_id', $reserveBranchId)
+                    ->where('variant_id', $item->variant_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$inventory || $inventory->stock < $item->quantity) {
+                    throw new \Exception("Stock insuficiente para el producto.");
+                }
+
+                $stockBefore = $inventory->stock;
+                $inventory->stock -= $item->quantity;
+                $inventory->save();
+
+                InventoryMovement::create([
+                    'variant_id' => $item->variant_id,
+                    'branch_id' => $reserveBranchId,
+                    'movement_type' => 'sale',
+                    'quantity' => (int) $item->quantity,
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $inventory->stock,
+                    'reference_type' => 'sale',
+                    'reference_id' => $sale->id,
+                    'created_by' => auth()->id() ?? null,
+                ]);
+
+                // Create Stock Reservation
                 StockReservation::create([
                     'variant_id' => $item->variant_id,
-                    'branch_id' => $request->branch_id,
+                    'branch_id' => $reserveBranchId,
                     'sale_id' => $sale->id,
                     'quantity' => $item->quantity,
                     'status' => 'reserved'
@@ -148,6 +206,7 @@ class OrderNetworkController extends Controller
             $shipment = Shipment::create([
                 'sale_id' => $sale->id,
                 'status' => 'pending',
+                'delivery_code' => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(6))
             ]);
 
             // Create Delivery Schedule
@@ -156,7 +215,10 @@ class OrderNetworkController extends Controller
                 'scheduled_date' => $request->scheduled_date,
                 'time_window' => $request->time_window,
                 'meeting_point' => $request->meeting_point,
-                'status' => 'pending'
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'driver_id' => $request->driver_id,
+                'status' => $request->boolean('save_as_draft') ? 'pending' : 'assigned'
             ]);
 
             // Clear Cart (or delete it)
@@ -173,6 +235,7 @@ class OrderNetworkController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('OrderNetwork Convert Error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -183,9 +246,14 @@ class OrderNetworkController extends Controller
     public function getDeliveryDetails($id)
     {
         $schedule = DeliverySchedule::with([
-            'shipment.sale.sale_details.variant.product', 
+            'shipment.sale.sale_details.product_variant.product', 
+            'shipment.sale.sale_details.product_variant.variant_images',
+            'shipment.sale.sale_details.product_variant.size',
+            'shipment.sale.sale_details.product_variant.fit',
+            'shipment.sale.sale_details.product_variant.variant_attribute_values.attribute_value.attribute',
             'shipment.sale.guest', 
-            'shipment.sale.customer'
+            'shipment.sale.customer',
+            'driver.user.profile'
         ])->findOrFail($id);
 
         return response()->json([
@@ -250,9 +318,35 @@ class OrderNetworkController extends Controller
                 $sale->status = 'cancelled';
                 $sale->save();
 
-                // Release stock reservations
-                StockReservation::where('sale_id', $sale->id)
-                    ->update(['status' => 'released']); // or deleted
+                // Release stock reservations and refund stock
+                $reservations = StockReservation::where('sale_id', $sale->id)->get();
+                foreach ($reservations as $res) {
+                    if ($res->status === 'released') continue;
+                    
+                    $inv = Inventory::where('branch_id', $res->branch_id)
+                        ->where('variant_id', $res->variant_id)
+                        ->lockForUpdate()
+                        ->first();
+                    
+                    if ($inv) {
+                        $stockBefore = $inv->stock;
+                        $inv->stock += $res->quantity;
+                        $inv->save();
+
+                        InventoryMovement::create([
+                            'variant_id' => $res->variant_id,
+                            'branch_id' => $res->branch_id,
+                            'movement_type' => 'return',
+                            'quantity' => (int) $res->quantity,
+                            'stock_before' => $stockBefore,
+                            'stock_after' => $inv->stock,
+                            'reference_type' => 'sale',
+                            'reference_id' => $sale->id,
+                            'created_by' => auth()->id() ?? null,
+                        ]);
+                    }
+                    $res->update(['status' => 'released']);
+                }
             } else {
                 // For on_the_way or at_the_meeting_point
                 $shipment = $schedule->shipment;
@@ -291,5 +385,226 @@ class OrderNetworkController extends Controller
             'message' => 'Driver assigned successfully.',
             'schedule' => $schedule
         ]);
+    }
+    /**
+     * Update delivery schedule details (editable fields).
+     */
+    public function updateDeliveryDetails(Request $request, $id)
+    {
+        $request->validate([
+            'meeting_point' => 'nullable|string',
+            'scheduled_date' => 'nullable|date',
+            'time_window' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'driver_id' => 'nullable|uuid|exists:employees,id',
+            'guest_name' => 'nullable|string',
+            'guest_phone' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $schedule = DeliverySchedule::with('shipment.sale')->findOrFail($id);
+
+            // Don't allow editing if already on_the_way or beyond
+            if (in_array($schedule->status, ['on_the_way', 'at_the_meeting_point', 'completed', 'cancelled'])) {
+                return response()->json(['error' => 'No se puede editar una entrega en este estado.'], 400);
+            }
+
+            // Update schedule fields
+            if ($request->has('meeting_point')) $schedule->meeting_point = $request->meeting_point;
+            if ($request->has('scheduled_date')) $schedule->scheduled_date = $request->scheduled_date;
+            if ($request->has('time_window')) $schedule->time_window = $request->time_window;
+            if ($request->has('latitude')) $schedule->latitude = $request->latitude;
+            if ($request->has('longitude')) $schedule->longitude = $request->longitude;
+            if ($request->has('driver_id')) $schedule->driver_id = $request->driver_id;
+            $schedule->save();
+
+            // Update guest info if provided
+            if ($request->has('guest_name') || $request->has('guest_phone')) {
+                $sale = $schedule->shipment->sale;
+                if ($sale && $sale->guest_id) {
+                    $guest = Guest::find($sale->guest_id);
+                    if ($guest) {
+                        if ($request->has('guest_name')) $guest->name = $request->guest_name;
+                        if ($request->has('guest_phone')) $guest->whatsapp_phone = $request->guest_phone;
+                        $guest->save();
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Delivery details updated successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Full update of an order-network delivery (items + logistics).
+     */
+    public function updateOrder(Request $request, $id)
+    {
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.variant_id' => 'required|uuid|exists:product_variants,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.branch_id' => 'required|uuid|exists:branches,id',
+            'meeting_point' => 'required|string',
+            'scheduled_date' => 'required|date',
+            'time_window' => 'required|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'driver_id' => 'nullable|uuid|exists:employees,id',
+            'guest_name' => 'nullable|string',
+            'guest_phone' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $schedule = DeliverySchedule::with('shipment.sale')->findOrFail($id);
+
+            if (in_array($schedule->status, ['on_the_way', 'at_the_meeting_point', 'completed', 'cancelled'])) {
+                return response()->json(['error' => 'No se puede editar una entrega en este estado.'], 400);
+            }
+
+            $sale = $schedule->shipment->sale;
+
+            // Refund old stock reservations
+            $oldReservations = StockReservation::where('sale_id', $sale->id)->get();
+            foreach ($oldReservations as $res) {
+                $inv = Inventory::where('branch_id', $res->branch_id)
+                    ->where('variant_id', $res->variant_id)
+                    ->lockForUpdate()
+                    ->first();
+                
+                if ($inv) {
+                    $stockBefore = $inv->stock;
+                    $inv->stock += $res->quantity;
+                    $inv->save();
+
+                    InventoryMovement::create([
+                        'variant_id' => $res->variant_id,
+                        'branch_id' => $res->branch_id,
+                        'movement_type' => 'return',
+                        'quantity' => (int) $res->quantity,
+                        'stock_before' => $stockBefore,
+                        'stock_after' => $inv->stock,
+                        'reference_type' => 'sale',
+                        'reference_id' => $sale->id,
+                        'created_by' => auth()->id() ?? null,
+                    ]);
+                }
+            }
+
+            // Delete old sale details and stock reservations
+            SaleDetail::where('sale_id', $sale->id)->delete();
+            StockReservation::where('sale_id', $sale->id)->delete();
+
+            // Recreate sale details and stock reservations
+            $subtotal = 0;
+            foreach ($request->items as $item) {
+                $variant = \App\Models\Catalog\ProductVariant::findOrFail($item['variant_id']);
+                $price = $variant->price ?? 0;
+                $lineTotal = $price * $item['quantity'];
+                $subtotal += $lineTotal;
+
+                SaleDetail::create([
+                    'sale_id' => $sale->id,
+                    'variant_id' => $item['variant_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $price,
+                    'discount' => 0,
+                    'discount_amount' => 0,
+                    'final_price' => $price,
+                    'subtotal' => $lineTotal
+                ]);
+
+                // Deduct new stock for reservation
+                $inventory = Inventory::where('branch_id', $item['branch_id'])
+                    ->where('variant_id', $item['variant_id'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$inventory || $inventory->stock < $item['quantity']) {
+                    throw new \Exception("Stock insuficiente para el producto.");
+                }
+
+                $stockBefore = $inventory->stock;
+                $inventory->stock -= $item['quantity'];
+                $inventory->save();
+
+                InventoryMovement::create([
+                    'variant_id' => $item['variant_id'],
+                    'branch_id' => $item['branch_id'],
+                    'movement_type' => 'sale',
+                    'quantity' => (int) $item['quantity'],
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $inventory->stock,
+                    'reference_type' => 'delivery_schedule',
+                    'reference_id' => $schedule->id,
+                    'created_by' => auth()->id() ?? null,
+                ]);
+
+                StockReservation::create([
+                    'variant_id' => $item['variant_id'],
+                    'branch_id' => $item['branch_id'],
+                    'sale_id' => $sale->id,
+                    'quantity' => $item['quantity'],
+                    'status' => 'reserved'
+                ]);
+            }
+
+            $sale->subtotal = $subtotal;
+            $sale->total = max(0, $subtotal - ($sale->total_discount ?? 0));
+            $sale->save();
+
+            // Update schedule
+            $schedule->meeting_point = $request->meeting_point;
+            $schedule->scheduled_date = $request->scheduled_date;
+            $schedule->time_window = $request->time_window;
+            $schedule->latitude = $request->latitude;
+            $schedule->longitude = $request->longitude;
+            $schedule->driver_id = $request->driver_id;
+            $schedule->save();
+
+            // Update guest
+            if ($request->guest_name || $request->guest_phone) {
+                if ($sale->guest_id) {
+                    $guest = Guest::find($sale->guest_id);
+                    if ($guest) {
+                        if ($request->guest_name) $guest->name = $request->guest_name;
+                        if ($request->guest_phone) $guest->whatsapp_phone = $request->guest_phone;
+                        $guest->save();
+                    }
+                } else {
+                    $guest = Guest::firstOrCreate(
+                        ['whatsapp_phone' => $request->guest_phone],
+                        ['name' => $request->guest_name]
+                    );
+                    $sale->guest_id = $guest->id;
+                    $sale->save();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Entrega actualizada exitosamente.',
+                'schedule_id' => $schedule->id,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('OrderNetwork Update Error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
