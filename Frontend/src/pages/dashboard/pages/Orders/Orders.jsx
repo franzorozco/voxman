@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 
 import DeliveryDetailsModal from "./DeliveryDetailsModal";
 import NewOrderModal from "./NewOrderModal";
+import DeliveryZonesModal from "./DeliveryZonesModal";
 import "./Orders.css";
 
 export default function Orders() {
@@ -17,6 +18,7 @@ export default function Orders() {
 
   const [statusModalSchedule, setStatusModalSchedule] = useState(null);
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [isZonesModalOpen, setIsZonesModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
 
   // Filters state
@@ -83,6 +85,14 @@ export default function Orders() {
           >
             <Plus size={18} />
             <span className="hide-on-mobile">Nueva Entrega</span>
+          </button>
+          <button 
+            className="action-btn" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => setIsZonesModalOpen(true)}
+          >
+            <MapPin size={18} />
+            <span className="hide-on-mobile">Puntos de Entrega</span>
           </button>
           
           <button 
@@ -227,7 +237,7 @@ export default function Orders() {
                       
                       return (
                         <tr key={schedule.id}>
-                          <td style={{ fontWeight: 600 }}>{schedule.shipment?.tracking_code || schedule.id.slice(0,8)}</td>
+                          <td style={{ fontWeight: 600 }}>{schedule.shipment?.delivery_code || schedule.id.slice(0,8)}</td>
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
@@ -247,7 +257,7 @@ export default function Orders() {
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <MapPin size={14} style={{ color: 'var(--text-muted)' }} />
-                              {schedule.meeting_point_details || "No especificado"}
+                              {schedule.meeting_point || "No especificado"}
                             </div>
                           </td>
                           <td>
@@ -320,6 +330,12 @@ export default function Orders() {
             fetchSchedules();
             setEditData(null);
           }}
+        />
+      )}
+
+      {isZonesModalOpen && (
+        <DeliveryZonesModal 
+          onClose={() => setIsZonesModalOpen(false)}
         />
       )}
     </div>

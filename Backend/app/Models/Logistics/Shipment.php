@@ -16,7 +16,8 @@ class Shipment extends BaseShipment
 		'shipped_at',
 		'delivered_at',
 		'delivery_code',
-		'delivery_type'
+		'delivery_type',
+		'shipping_cost'
 	];
 
     public function delivery_schedule()

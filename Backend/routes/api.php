@@ -403,6 +403,8 @@ Route::middleware([
     Route::prefix('order-network')->group(function () {
         Route::get('/', [OrderNetworkController::class, 'index']);
         Route::get('/delivery-zones', [OrderNetworkController::class, 'getDeliveryZones']);
+        Route::post('/delivery-zones', [OrderNetworkController::class, 'createDeliveryZone']);
+        Route::put('/delivery-zones/{id}', [OrderNetworkController::class, 'updateDeliveryZone']);
         Route::get('/drivers', [OrderNetworkController::class, 'getDrivers']);
         Route::post('/convert', [OrderNetworkController::class, 'convertToOrder']);
         Route::post('/{id}/status', [OrderNetworkController::class, 'updateStatus']);

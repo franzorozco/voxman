@@ -16,6 +16,14 @@ export const getDeliveryZones = () => {
   return api.get('/v1/admin/order-network/delivery-zones');
 };
 
+export const createDeliveryZone = (data) => {
+  return api.post('/v1/admin/order-network/delivery-zones', data);
+};
+
+export const updateDeliveryZone = (id, data) => {
+  return api.put(`/v1/admin/order-network/delivery-zones/${id}`, data);
+};
+
 export const convertToOrder = (data) => {
   return api.post('/v1/admin/order-network/convert', data);
 };

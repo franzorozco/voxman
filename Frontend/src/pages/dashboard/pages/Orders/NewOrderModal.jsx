@@ -26,6 +26,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     meeting_point: "",
     latitude: null,
     longitude: null,
+    shipping_cost: 0,
     scheduled_date: "",
     time_window: "",
     guest_name: "",
@@ -99,6 +100,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
         meeting_point: editData.meeting_point || "",
         latitude: editData.latitude || null,
         longitude: editData.longitude || null,
+        shipping_cost: editData.shipment?.shipping_cost || 0,
         scheduled_date: editData.scheduled_date || "",
         time_window: editData.time_window || "",
         guest_name: sale?.guest?.name || "",
@@ -267,7 +269,9 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     addItem(variant, product);
   };
 
-  const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const shippingAmount = Number(deliveryData.shipping_cost || 0);
+  const totalAmount = subtotalAmount + shippingAmount;
 
   const handleNextStep = () => {
     if (cartItems.length === 0) {
@@ -301,6 +305,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
           time_window: deliveryData.time_window,
           latitude: deliveryData.latitude,
           longitude: deliveryData.longitude,
+          shipping_cost: deliveryData.shipping_cost,
           driver_id: deliveryData.driver_id,
           guest_name: deliveryData.guest_name,
           guest_phone: deliveryData.guest_phone,
@@ -342,6 +347,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
         time_window: deliveryData.time_window,
         latitude: deliveryData.latitude,
         longitude: deliveryData.longitude,
+        shipping_cost: deliveryData.shipping_cost,
       };
       
       if (deliveryData.driver_id) orderPayload.driver_id = deliveryData.driver_id;
@@ -500,7 +506,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                             className={`type-btn ${meetingPointType === 'predefined' ? 'active' : ''}`}
                             onClick={() => {
                               setMeetingPointType('predefined');
-                              setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null});
+                              setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0});
                             }}
                             style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: meetingPointType === 'predefined' ? 'var(--color-primary)' : 'var(--bg-card)', color: meetingPointType === 'predefined' ? 'var(--color-primary-text)' : 'var(--text-main)', cursor: 'pointer', transition: '0.2s' }}
                           >
@@ -511,7 +517,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                             className={`type-btn ${meetingPointType === 'manual' ? 'active' : ''}`}
                             onClick={() => {
                               setMeetingPointType('manual');
-                              setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null});
+                              setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0});
                             }}
                             style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: meetingPointType === 'manual' ? 'var(--color-primary)' : 'var(--bg-card)', color: meetingPointType === 'manual' ? 'var(--color-primary-text)' : 'var(--text-main)', cursor: 'pointer', transition: '0.2s' }}
                           >
@@ -531,13 +537,16 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                                 ...deliveryData, 
                                 meeting_point: selectedName,
                                 latitude: zone?.latitude || null,
-                                longitude: zone?.longitude || null
+                                longitude: zone?.longitude || null,
+                                shipping_cost: zone ? Number(zone.base_cost) : 0
                               });
                             }}
                           >
                             <option value="">-- Selecciona un punto de encuentro --</option>
                             {predefinedMeetingPoints.map(point => (
-                              <option key={point.id} value={point.name}>{point.name} {point.city ? `(${point.city})` : ''}</option>
+                              <option key={point.id} value={point.name}>
+                                {point.name} {point.city ? `(${point.city})` : ''} - Bs. {Number(point.base_cost).toFixed(2)}
+                              </option>
                             ))}
                           </select>
                         ) : (
@@ -686,9 +695,20 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
             </div>
 
             <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '18px', fontWeight: 700 }}>
-                <span>Total:</span>
-                <span style={{ color: 'var(--color-primary)' }}>Bs. {totalAmount.toFixed(2)}</span>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
+                  <span>Subtotal:</span>
+                  <span>Bs. {subtotalAmount.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
+                  <span>Costo de Envío:</span>
+                  <span>Bs. {shippingAmount.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-color)' }}>
+                  <span>Total:</span>
+                  <span style={{ color: 'var(--color-primary)' }}>Bs. {totalAmount.toFixed(2)}</span>
+                </div>
               </div>
               
               {step === 1 ? (

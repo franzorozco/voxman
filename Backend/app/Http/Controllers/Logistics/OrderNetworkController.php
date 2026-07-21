@@ -71,8 +71,65 @@ class OrderNetworkController extends Controller
      */
     public function getDeliveryZones()
     {
-        $zones = DeliveryZone::orderBy('name', 'asc')->get();
+        $zones = DeliveryZone::all();
         return response()->json($zones);
+    }
+
+    /**
+     * Create a new delivery zone.
+     */
+    public function createDeliveryZone(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'base_cost' => 'required|numeric|min:0',
+            'extra_cost_per_km' => 'required|numeric|min:0',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        try {
+            $zone = DeliveryZone::create($request->only([
+                'name', 'city', 'base_cost', 'extra_cost_per_km', 'latitude', 'longitude'
+            ]));
+
+            return response()->json([
+                'message' => 'Zona de entrega creada exitosamente',
+                'zone' => $zone
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update an existing delivery zone.
+     */
+    public function updateDeliveryZone(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'base_cost' => 'required|numeric|min:0',
+            'extra_cost_per_km' => 'required|numeric|min:0',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        try {
+            $zone = DeliveryZone::findOrFail($id);
+            $zone->update($request->only([
+                'name', 'city', 'base_cost', 'extra_cost_per_km', 'latitude', 'longitude'
+            ]));
+
+            return response()->json([
+                'message' => 'Zona de entrega actualizada exitosamente',
+                'zone' => $zone
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -95,7 +152,8 @@ class OrderNetworkController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'driver_id' => 'nullable|uuid|exists:employees,id',
-            'save_as_draft' => 'nullable|boolean'
+            'save_as_draft' => 'nullable|boolean',
+            'shipping_cost' => 'nullable|numeric|min:0'
         ]);
 
         try {
@@ -198,15 +256,17 @@ class OrderNetworkController extends Controller
             }
 
             // Update sale totals
+            $shippingCost = $request->input('shipping_cost', 0);
             $sale->subtotal = $subtotal;
-            $sale->total = max(0, $subtotal - $sale->total_discount);
+            $sale->total = max(0, $subtotal + $shippingCost - $sale->total_discount);
             $sale->save();
 
             // Create Shipment
             $shipment = Shipment::create([
                 'sale_id' => $sale->id,
                 'status' => 'pending',
-                'delivery_code' => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(6))
+                'shipping_cost' => $shippingCost,
+                'delivery_code' => str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT)
             ]);
 
             // Create Delivery Schedule
@@ -464,6 +524,7 @@ class OrderNetworkController extends Controller
             'driver_id' => 'nullable|uuid|exists:employees,id',
             'guest_name' => 'nullable|string',
             'guest_phone' => 'nullable|string',
+            'shipping_cost' => 'nullable|numeric|min:0'
         ]);
 
         try {
@@ -562,9 +623,15 @@ class OrderNetworkController extends Controller
                 ]);
             }
 
+            $shippingCost = $request->input('shipping_cost', 0);
             $sale->subtotal = $subtotal;
-            $sale->total = max(0, $subtotal - ($sale->total_discount ?? 0));
+            $sale->total = max(0, $subtotal + $shippingCost - ($sale->total_discount ?? 0));
             $sale->save();
+
+            if ($schedule->shipment) {
+                $schedule->shipment->shipping_cost = $shippingCost;
+                $schedule->shipment->save();
+            }
 
             // Update schedule
             $schedule->meeting_point = $request->meeting_point;

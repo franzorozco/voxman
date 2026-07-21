@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers } from "../../../../api/admin/orderNetwork";
 import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
@@ -120,30 +120,33 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const isFinal = isCancelled || isCompleted;
   const canEdit = !isOnTheWay && !isFinal;
 
-  // Dynamic styles based on status
-  let accentColor = '#8b5cf6';
+  const statusTheme = {
+    pending: { color: '#eab308', rgb: '234, 179, 8', title: 'ENTREGA PENDIENTE', icon: <Clock size={24} />, pulse: false },
+    assigned: { color: '#3b82f6', rgb: '59, 130, 246', title: 'ENTREGA AGENDADA', icon: <CalendarClock size={24} />, pulse: false },
+    on_the_way: { color: '#8b5cf6', rgb: '139, 92, 246', title: '¡EL PEDIDO ESTÁ EN CAMINO!', icon: <Truck size={28} className="pulse-anim" />, pulse: true },
+    at_the_meeting_point: { color: '#f97316', rgb: '249, 115, 22', title: '¡REPARTIDOR EN EL PUNTO!', icon: <MapPin size={28} className="pulse-anim" />, pulse: true },
+    completed: { color: '#10b981', rgb: '16, 185, 129', title: 'ENTREGA COMPLETADA', icon: <CheckCircle size={28} />, pulse: false },
+    cancelled: { color: '#ef4444', rgb: '239, 68, 68', title: 'ENTREGA CANCELADA', icon: <Ban size={28} className="pulse-anim" />, pulse: true }
+  };
+
+  const currentTheme = statusTheme[details.status] || statusTheme.pending;
+  const accentColor = currentTheme.color;
+  const rgb = currentTheme.rgb;
+
   let overlayBg = {};
   let contentStyle = { maxWidth: '800px', width: '95%', transition: 'all 0.4s ease' };
-  let headerStyle = {};
+  let headerStyle = { background: 'var(--bg-main)', borderBottomColor: 'var(--border-color)' };
 
-  if (isCancelled) {
-    accentColor = '#ef4444';
-    overlayBg = { background: 'rgba(239, 68, 68, 0.2)', backdropFilter: 'blur(4px)' };
-    contentStyle = { ...contentStyle, boxShadow: '0 0 50px rgba(239, 68, 68, 0.3)', border: '2px solid #ef4444' };
-    headerStyle = { background: 'rgba(239, 68, 68, 0.08)', borderBottomColor: '#ef4444' };
-  } else if (isOnTheWay) {
-    overlayBg = { background: 'rgba(139, 92, 246, 0.3)', backdropFilter: 'blur(4px)' };
-    contentStyle = { ...contentStyle, boxShadow: '0 0 50px rgba(139, 92, 246, 0.4)', border: '2px solid #8b5cf6' };
-    headerStyle = { background: 'rgba(139, 92, 246, 0.1)', borderBottomColor: '#8b5cf6' };
+  if (currentTheme.pulse) {
+    overlayBg = { background: `rgba(${rgb}, 0.2)`, backdropFilter: 'blur(4px)' };
+    contentStyle = { ...contentStyle, boxShadow: `0 0 50px rgba(${rgb}, 0.3)`, border: `2px solid ${accentColor}` };
+    headerStyle = { background: `rgba(${rgb}, 0.08)`, borderBottomColor: accentColor };
+  } else {
+    contentStyle = { ...contentStyle, borderTop: `4px solid ${accentColor}` };
   }
 
-  const headerTitle = isCancelled ? "ENTREGA CANCELADA" 
-    : isOnTheWay ? "¡EL PEDIDO ESTÁ EN CAMINO!" 
-    : "Detalles de Entrega";
-
-  const headerIcon = isCancelled ? <Ban className="pulse-anim" size={28} /> 
-    : isOnTheWay ? <Truck className="pulse-anim" size={28} /> 
-    : <Truck size={24} />;
+  const headerTitle = currentTheme.title;
+  const headerIcon = currentTheme.icon;
 
   const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '14px' };
 
@@ -152,11 +155,11 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       <div className="modal-content" style={contentStyle}>
         <div className="modal-header" style={headerStyle}>
           <div>
-            <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: isCancelled ? '#ef4444' : (isOnTheWay ? '#8b5cf6' : 'inherit') }}>
+            <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: accentColor }}>
               {headerIcon} {headerTitle}
             </h2>
             <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-              Ref: {details.shipment?.tracking_code || details.id.slice(0,8)}
+              Ref: {details.shipment?.delivery_code || details.id.slice(0,8)}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -192,24 +195,24 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div style={{ position: 'absolute', top: '36px', left: '40px', right: '40px', height: '4px', background: 'var(--border-color)', zIndex: 1, borderRadius: '2px' }}>
               <div style={{ 
                 height: '100%', 
-                background: isCancelled ? '#ef4444' : '#8b5cf6', 
+                background: isCancelled ? '#ef4444' : accentColor, 
                 width: isCancelled ? '100%' : `${(currentStepIndex / (STEPS.length - 1)) * 100}%`,
-                transition: 'width 0.5s ease',
+                transition: 'width 0.5s ease, background 0.5s ease',
                 borderRadius: '2px'
               }} />
             </div>
             {STEPS.map((step, idx) => {
               const isStepCompleted = idx <= currentStepIndex;
               const isCurrent = idx === currentStepIndex;
-              const stepColor = isCancelled ? '#ef4444' : (isStepCompleted ? '#8b5cf6' : 'var(--text-muted)');
-              const stepBg = isCancelled ? '#ef4444' : (isStepCompleted ? '#8b5cf6' : 'var(--bg-body)');
+              const stepColor = isCancelled ? '#ef4444' : (isStepCompleted ? accentColor : 'var(--text-muted)');
+              const stepBg = isCancelled ? '#ef4444' : (isStepCompleted ? accentColor : 'var(--bg-body)');
               
               return (
                 <div key={step.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 2, width: '80px' }}>
                   <div style={{ 
                     width: '28px', height: '28px', borderRadius: '50%', background: stepBg, border: `3px solid ${isStepCompleted ? 'transparent' : 'var(--border-color)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: isCurrent && !isCancelled ? '0 0 0 4px rgba(139, 92, 246, 0.2)' : 'none',
+                    boxShadow: isCurrent && !isCancelled ? `0 0 0 4px rgba(${rgb}, 0.2)` : 'none',
                     transition: 'all 0.3s ease'
                   }}>
                     {isStepCompleted && <div style={{ width: '8px', height: '8px', background: '#fff', borderRadius: '50%' }} />}
@@ -288,9 +291,19 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       </div>
                     );
                   })}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '15px', fontWeight: 700, textDecoration: isCancelled ? 'line-through' : 'none', opacity: isCancelled ? 0.5 : 1 }}>
-                    <span>TOTAL:</span>
-                    <span>Bs. {Number(sale?.total || 0).toFixed(2)}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', textDecoration: isCancelled ? 'line-through' : 'none', opacity: isCancelled ? 0.5 : 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)' }}>
+                      <span>Subtotal:</span>
+                      <span>Bs. {Number(sale?.subtotal || 0).toFixed(2)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)' }}>
+                      <span>Costo de Envío:</span>
+                      <span>Bs. {Number(details.shipment?.shipping_cost || 0).toFixed(2)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '15px', fontWeight: 700 }}>
+                      <span>TOTAL:</span>
+                      <span style={{ color: 'var(--color-primary)' }}>Bs. {Number(sale?.total || 0).toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
