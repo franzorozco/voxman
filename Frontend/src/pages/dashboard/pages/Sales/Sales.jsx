@@ -178,10 +178,10 @@ export default function Sales() {
                 value={filters.source}
                 onChange={(e) => setFilters({ ...filters, source: e.target.value })}
               >
-                <option value="">Todos (Web/Tienda/Móvil)</option>
+                <option value="">Todos (Web/Tienda/Entregas)</option>
                 <option value="store">Tienda Física</option>
                 <option value="web">Tienda Web</option>
-                <option value="mobile">App Móvil</option>
+                <option value="order_network">Entregas Agendadas</option>
               </select>
             </div>
 
@@ -284,6 +284,7 @@ export default function Sales() {
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {sale.source === 'store' ? <span style={{color: 'var(--color-warning)'}}>• Tienda Física</span> : 
                        sale.source === 'web' ? <span style={{color: 'var(--color-primary)'}}>• Tienda Web</span> : 
+                       sale.source === 'order_network' ? <span style={{color: '#10b981'}}>• Entrega Agendada</span> :
                        `• ${sale.source || 'Tienda'}`}
                     </div>
                   </td>
@@ -319,6 +320,14 @@ export default function Sales() {
                           <div style={{ color: 'var(--text-muted)' }}>Cliente sin perfil</div>
                         )}
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Cód: {sale.customer.customer_code}</div>
+                      </div>
+                    ) : sale.guest ? (
+                      <div>
+                        <div style={{ fontWeight: 500 }}>
+                          {sale.guest.name}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 500 }}>Cliente de Entrega</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sale.guest.whatsapp_phone}</div>
                       </div>
                     ) : (
                       <div style={{ color: 'var(--text-muted)' }}>Cliente Ocasional</div>
@@ -375,6 +384,13 @@ export default function Sales() {
                   </td>
                   <td>
                     {renderStatusBadge(sale.status)}
+                    {sale.source === 'order_network' && sale.shipments?.[0]?.delivery_schedule && (
+                      <div style={{ marginTop: '4px' }}>
+                        <span className={`status-badge ${sale.shipments[0].delivery_schedule.status === 'completed' ? 'status-success' : 'status-warning'}`} style={{ fontSize: '10px', padding: '2px 4px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}>
+                          Envíos: {sale.shipments[0].delivery_schedule.status === 'at_the_meeting_point' ? 'En el punto' : sale.shipments[0].delivery_schedule.status === 'on_the_way' ? 'En camino' : sale.shipments[0].delivery_schedule.status === 'completed' ? 'Completado' : sale.shipments[0].delivery_schedule.status === 'cancelled' ? 'Cancelado' : sale.shipments[0].delivery_schedule.status === 'pending' ? 'Pendiente' : sale.shipments[0].delivery_schedule.status === 'assigned' ? 'Asignado' : sale.shipments[0].delivery_schedule.status}
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td style={{ textAlign: 'right' }}>
                       <button

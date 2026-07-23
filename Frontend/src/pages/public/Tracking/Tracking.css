@@ -3,114 +3,171 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  background-color: #f3f4f6;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 40px 20px;
+  background: #f3f4f6;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #111827;
+  background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 40%),
+                    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.05), transparent 40%);
 }
 
 .tracking-card {
-  background: white;
+  background: #ffffff;
   width: 100%;
-  max-width: 600px;
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  max-width: 680px;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.02);
   overflow: hidden;
+  position: relative;
+  border: 1px solid #e5e7eb;
 }
 
 .tracking-header {
-  padding: 24px;
+  padding: 30px;
   text-align: center;
   border-bottom: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
 }
 
 .tracking-header h1 {
   margin: 0 0 8px 0;
-  font-size: 24px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
   color: #111827;
 }
 
 .tracking-ref {
   margin: 0;
   color: #6b7280;
+  font-size: 15px;
+}
+
+.tracking-ref strong {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: monospace;
   font-size: 14px;
 }
 
 .tracking-status-hero {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   padding: 24px;
-  margin: 24px;
-  border-radius: 12px;
+  margin: 24px 30px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
 }
 
 .status-icon {
   background: white;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.status-text {
+  z-index: 2;
+  position: relative;
 }
 
 .status-text h2 {
-  margin: 0 0 4px 0;
-  font-size: 18px;
-  color: #111827;
+  margin: 0 0 6px 0;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .status-text p {
   margin: 0;
-  font-size: 14px;
-  color: #4b5563;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #374151;
 }
 
 .tracking-timeline {
   display: flex;
   justify-content: space-between;
   padding: 0 40px;
-  margin-bottom: 32px;
+  margin: 40px 0;
   position: relative;
 }
 
 .tracking-timeline::before {
   content: '';
   position: absolute;
-  top: 10px;
-  left: 50px;
-  right: 50px;
-  height: 2px;
+  top: 14px;
+  left: 60px;
+  right: 60px;
+  height: 4px;
   background: #e5e7eb;
+  border-radius: 2px;
   z-index: 1;
+}
+
+.timeline-progress {
+  position: absolute;
+  top: 14px;
+  left: 60px;
+  height: 4px;
+  background: #4f46e5;
+  border-radius: 2px;
+  z-index: 1;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .timeline-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   position: relative;
   z-index: 2;
   width: 60px;
 }
 
-.step-dot {
-  width: 20px;
-  height: 20px;
+.step-icon {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: white;
   border: 3px solid #e5e7eb;
-  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.timeline-step.active .step-dot {
-  border-color: #3b82f6;
-  background: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+.timeline-step.active .step-icon {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+  transform: scale(1.1);
+}
+
+.timeline-step.current .step-icon {
+  animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
 }
 
 .timeline-step p {
@@ -119,79 +176,251 @@
   font-weight: 600;
   color: #9ca3af;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .timeline-step.active p {
   color: #111827;
 }
 
-.tracking-details, .tracking-products {
-  padding: 0 24px 24px 24px;
+.tracking-section {
+  padding: 0 30px 30px 30px;
 }
 
-.tracking-details h3, .tracking-products h3 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 700;
   color: #111827;
 }
 
 .details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
 }
 
 .detail-item {
   background: #f9fafb;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  border: 1px solid #f3f4f6;
 }
 
 .detail-label {
   font-size: 12px;
   color: #6b7280;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .detail-value {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #111827;
+  line-height: 1.4;
+}
+
+.driver-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  margin-top: 16px;
+}
+
+.driver-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.driver-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.driver-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.driver-details h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.driver-details p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.whatsapp-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #25D366;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: 0.2s;
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+}
+
+.whatsapp-btn:hover {
+  background: #128C7E;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(37, 211, 102, 0.4);
 }
 
 .products-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .product-item {
   background: white;
   border: 1px solid #e5e7eb;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
-  align-items: center;
+  gap: 16px;
+  transition: 0.2s;
 }
 
-.product-info {
+.product-item:hover {
+  border-color: #4f46e5;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.product-image {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.product-image-placeholder {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  border: 1px solid #e5e7eb;
+}
+
+.product-details {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+}
+
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
 }
 
 .product-name {
   font-weight: 600;
   color: #111827;
+  font-size: 15px;
+  margin-right: 16px;
+}
+
+.product-price-block {
+  text-align: right;
+}
+
+.product-subtotal {
+  font-weight: 700;
+  color: #111827;
+  font-size: 15px;
+  display: block;
 }
 
 .product-qty {
   font-size: 13px;
   color: #6b7280;
+}
+
+.product-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.product-badge {
+  background: #f3f4f6;
+  color: #4b5563;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+}
+
+.financial-summary {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px dashed #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.summary-row.total {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .tracking-footer {
@@ -200,7 +429,8 @@
   background: #f9fafb;
   border-top: 1px solid #e5e7eb;
   color: #6b7280;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .tracking-container.loading, .tracking-container.error {
@@ -211,16 +441,17 @@
   justify-content: center;
   background: #f3f4f6;
   color: #4b5563;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(59, 130, 246, 0.2);
-  border-left-color: #3b82f6;
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(79, 70, 229, 0.2);
+  border-left-color: #4f46e5;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 @keyframes spin {
@@ -229,20 +460,60 @@
 
 .error-icon {
   color: #ef4444;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .tracking-container.error h2 {
   color: #111827;
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
+  font-size: 24px;
 }
 
 @media (max-width: 600px) {
-  .tracking-timeline {
-    padding: 0 10px;
+  .tracking-wrapper {
+    padding: 20px 16px;
   }
-  .tracking-timeline::before {
-    left: 20px;
-    right: 20px;
+  
+  .tracking-header, .tracking-status-hero {
+    padding: 20px;
+    margin: 20px 16px;
+  }
+  
+  .tracking-timeline {
+    padding: 0 20px;
+  }
+  
+  .tracking-timeline::before, .timeline-progress {
+    left: 36px;
+    right: 36px;
+  }
+  
+  .timeline-step p {
+    font-size: 10px;
+  }
+  
+  .step-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .status-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .tracking-section {
+    padding: 0 20px 24px 20px;
+  }
+  
+  .driver-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .whatsapp-btn {
+    width: 100%;
+    justify-content: center;
   }
 }

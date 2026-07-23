@@ -3,9 +3,10 @@ import { getProducts } from "../../../../api/admin/products";
 import { getBranches } from "../../../../api/admin/branches";
 import { createCart } from "../../../../api/admin/carts";
 import { convertToOrder, getDeliveryZones, getDeliveryDrivers, updateOrder } from "../../../../api/admin/orderNetwork";
+import { getCustomers } from "../../../../api/admin/customers";
 import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
-import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X, MapPin, Map, User, UserCheck, CheckCircle2 } from "lucide-react";
 import useScanner from "../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../store/useScannerStore";
 import "../Carts/Carts.css";
@@ -21,15 +22,27 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
   const [cartItems, setCartItems] = useState([]); // { variant, quantity, price }
   const [branches, setBranches] = useState([]);
   
+  const getDefaultDate = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const getDefaultTime = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
   // Step 2 State
   const [deliveryData, setDeliveryData] = useState({
     meeting_point: "",
     latitude: null,
     longitude: null,
     shipping_cost: 0,
-    scheduled_date: "",
-    time_window: "",
+    scheduled_date: getDefaultDate(),
+    time_window: getDefaultTime(),
     guest_name: "",
+    guest_country_code: "+591",
     guest_phone: "",
     customer_id: "",
     driver_id: ""
@@ -39,6 +52,23 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
   const [predefinedMeetingPoints, setPredefinedMeetingPoints] = useState([]);
   const [deliveryDrivers, setDeliveryDrivers] = useState([]);
   const [mapCenter, setMapCenter] = useState({ lat: -17.3895, lng: -66.1568 }); // Cochabamba
+  
+  // Customer Search State
+  const [customerSearchType, setCustomerSearchType] = useState("guest"); // "guest" | "registered"
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [customersList, setCustomersList] = useState([]);
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  
+  // Driver Search State
+  const [driverSearchQuery, setDriverSearchQuery] = useState("");
+  const [isDriverDropdownOpen, setIsDriverDropdownOpen] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  
+  // Loading States
+  const [isSearchingProduct, setIsSearchingProduct] = useState(false);
+  const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
+  const [isSearchingDriver, setIsSearchingDriver] = useState(false);
   
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -67,18 +97,8 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
       }
     };
     
-    const fetchDrivers = async () => {
-      try {
-        const data = await getDeliveryDrivers();
-        setDeliveryDrivers(data.data || data);
-      } catch (error) {
-        console.error("Error al cargar empleados");
-      }
-    };
-    
     fetchBranches();
     fetchZones();
-    fetchDrivers();
   }, []);
 
   // Initialize with editData if provided
@@ -96,18 +116,41 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
         setCartItems(items);
       }
       
-      setDeliveryData({
-        meeting_point: editData.meeting_point || "",
-        latitude: editData.latitude || null,
-        longitude: editData.longitude || null,
-        shipping_cost: editData.shipment?.shipping_cost || 0,
-        scheduled_date: editData.scheduled_date || "",
-        time_window: editData.time_window || "",
-        guest_name: sale?.guest?.name || "",
-        guest_phone: sale?.guest?.whatsapp_phone || "",
-        customer_id: sale?.customer_id || "",
-        driver_id: editData.driver_id || ""
-      });
+        let p_code = "+591";
+        let p_num = sale?.guest?.whatsapp_phone || "";
+        if (p_num.startsWith("+") && p_num.includes(" ")) {
+          const parts = p_num.split(" ");
+          p_code = parts[0];
+          p_num = parts.slice(1).join(" ");
+        }
+
+        setDeliveryData({
+          meeting_point: editData.meeting_point || "",
+          latitude: editData.latitude || null,
+          longitude: editData.longitude || null,
+          shipping_cost: editData.shipment?.shipping_cost || 0,
+          scheduled_date: editData.scheduled_date || "",
+          time_window: editData.time_window || "",
+          guest_name: sale?.guest?.name || "",
+          guest_country_code: p_code,
+          guest_phone: p_num,
+          customer_id: sale?.customer_id || "",
+          driver_id: editData.driver_id || ""
+        });
+      
+      if (sale?.customer_id) {
+        setCustomerSearchType("registered");
+        if (sale.customer) {
+          const c = sale.customer;
+          const name = c.posProfile ? `${c.posProfile.first_name} ${c.posProfile.last_name_paternal || ''}` :
+                      (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` : 
+                      (c.user?.username || c.customer_code));
+          setSelectedCustomer({ id: c.id, name: name.trim() });
+          setCustomerSearchQuery(name.trim());
+        }
+      } else {
+        setCustomerSearchType("guest");
+      }
       
       if (editData.latitude && editData.longitude) {
         setMapCenter({ lat: Number(editData.latitude), lng: Number(editData.longitude) });
@@ -120,13 +163,17 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     const fetchProducts = async () => {
       if (!searchProduct.trim()) {
         setProducts([]);
+        setIsSearchingProduct(false);
         return;
       }
+      setIsSearchingProduct(true);
       try {
         const response = await getProducts({ search: searchProduct, per_page: 5 });
         setProducts(response.data?.data || response.data || []);
       } catch (error) {
         console.error('Error fetching products:', error);
+      } finally {
+        setIsSearchingProduct(false);
       }
     };
     
@@ -135,6 +182,60 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     }, 300);
     return () => clearTimeout(timeoutId);
   }, [searchProduct]);
+
+  // Handle Customer Search
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      if (!customerSearchQuery.trim()) {
+        setCustomersList([]);
+        setIsSearchingCustomer(false);
+        return;
+      }
+      setIsSearchingCustomer(true);
+      try {
+        const response = await getCustomers({ search: customerSearchQuery });
+        setCustomersList(response.data || []);
+      } catch (error) {
+        console.error('Error fetching customers:', error);
+      } finally {
+        setIsSearchingCustomer(false);
+      }
+    };
+    
+    if (customerSearchType === 'registered' && !selectedCustomer) {
+      const timeoutId = setTimeout(() => {
+        fetchCustomers();
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [customerSearchQuery, customerSearchType, selectedCustomer]);
+
+  // Handle Driver Search
+  useEffect(() => {
+    const fetchDrivers = async () => {
+      if (!driverSearchQuery.trim()) {
+        setDeliveryDrivers([]);
+        setIsSearchingDriver(false);
+        return;
+      }
+      setIsSearchingDriver(true);
+      try {
+        const response = await getDeliveryDrivers({ search: driverSearchQuery });
+        setDeliveryDrivers(response.data || response || []);
+      } catch (error) {
+        console.error('Error fetching drivers:', error);
+      } finally {
+        setIsSearchingDriver(false);
+      }
+    };
+    
+    if (!selectedDriver) {
+      const timeoutId = setTimeout(() => {
+        fetchDrivers();
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [driverSearchQuery, selectedDriver]);
 
   const openScanner = useScannerStore(state => state.openScanner);
 
@@ -307,8 +408,11 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
           longitude: deliveryData.longitude,
           shipping_cost: deliveryData.shipping_cost,
           driver_id: deliveryData.driver_id,
+          customer_id: deliveryData.customer_id,
           guest_name: deliveryData.guest_name,
-          guest_phone: deliveryData.guest_phone,
+          guest_phone: (deliveryData.guest_country_code && deliveryData.guest_phone) 
+                        ? `${deliveryData.guest_country_code.trim()} ${deliveryData.guest_phone.trim()}` 
+                        : deliveryData.guest_phone,
         };
         await updateOrder(editData.id, updatePayload);
         toast.success("Entrega actualizada correctamente");
@@ -352,7 +456,11 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
       
       if (deliveryData.driver_id) orderPayload.driver_id = deliveryData.driver_id;
       if (deliveryData.guest_name) orderPayload.guest_name = deliveryData.guest_name;
-      if (deliveryData.guest_phone) orderPayload.guest_phone = deliveryData.guest_phone;
+      if (deliveryData.guest_phone) {
+        orderPayload.guest_phone = (deliveryData.guest_country_code) 
+            ? `${deliveryData.guest_country_code.trim()} ${deliveryData.guest_phone.trim()}`
+            : deliveryData.guest_phone;
+      }
       if (deliveryData.customer_id) orderPayload.customer_id = deliveryData.customer_id;
       
       const orderRes = await convertToOrder({ ...orderPayload, save_as_draft: isDraft });
@@ -443,8 +551,14 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                     
                     {isProductDropdownOpen && searchProduct && (
                       <div className="dropdown-menu cart-form-dropdown-menu" style={{ top: '100%', left: 0, right: 0, marginTop: '8px', zIndex: 100 }}>
-                        {products.length === 0 ? (
-                          <div className="dropdown-item cart-form-dropdown-item">No se encontraron productos</div>
+                        {isSearchingProduct ? (
+                          <div className="dropdown-item cart-form-dropdown-item" style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            Buscando productos...
+                          </div>
+                        ) : products.length === 0 ? (
+                          <div className="dropdown-item cart-form-dropdown-item" style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            No se encontraron productos
+                          </div>
                         ) : (
                           products.map(product => (
                             <div key={product.id} className="dropdown-product-group cart-form-dropdown-group">
@@ -493,36 +607,42 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                 </div>
               </>
             ) : (
-              <form id="delivery-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h3 style={{ margin: '0 0 8px 0', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Datos de Logística</h3>
+              <form id="delivery-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '8px 0' }}>
+                <h3 style={{ margin: '0 0 8px 0', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', fontSize: '1.25rem', fontWeight: 600 }}>Datos de Logística</h3>
                 {step === 2 ? (
                   <>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-                      <div className="form-group">
-                        <label>Punto de Encuentro / Dirección *</label>
-                        <div className="meeting-point-type-selector" style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                          <button 
-                            type="button" 
-                            className={`type-btn ${meetingPointType === 'predefined' ? 'active' : ''}`}
-                            onClick={() => {
-                              setMeetingPointType('predefined');
-                              setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0});
-                            }}
-                            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: meetingPointType === 'predefined' ? 'var(--color-primary)' : 'var(--bg-card)', color: meetingPointType === 'predefined' ? 'var(--color-primary-text)' : 'var(--text-main)', cursor: 'pointer', transition: '0.2s' }}
-                          >
-                            Seleccionar
-                          </button>
-                          <button 
-                            type="button" 
-                            className={`type-btn ${meetingPointType === 'manual' ? 'active' : ''}`}
-                            onClick={() => {
-                              setMeetingPointType('manual');
-                              setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0});
-                            }}
-                            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: meetingPointType === 'manual' ? 'var(--color-primary)' : 'var(--bg-card)', color: meetingPointType === 'manual' ? 'var(--color-primary-text)' : 'var(--text-main)', cursor: 'pointer', transition: '0.2s' }}
-                          >
-                            Manual (Mapa)
-                          </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      
+                      {/* CARD 1: Lugar de Entrega */}
+                      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '12px', display: 'block' }}>Lugar de Entrega *</label>
+                          <div style={{ display: 'inline-flex', background: 'var(--bg-input)', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                setMeetingPointType('predefined');
+                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0});
+                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: meetingPointType === 'predefined' ? '1px solid var(--color-primary)' : '1px solid transparent', background: meetingPointType === 'predefined' ? 'var(--bg-card)' : 'transparent', color: meetingPointType === 'predefined' ? 'var(--color-primary)' : 'var(--text-muted)', boxShadow: meetingPointType === 'predefined' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', fontWeight: meetingPointType === 'predefined' ? '600' : '500', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                            >
+                              <MapPin size={16} />
+                              <span>Punto Fijo</span>
+                              {meetingPointType === 'predefined' && <CheckCircle2 size={14} />}
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                setMeetingPointType('manual');
+                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0});
+                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: meetingPointType === 'manual' ? '1px solid var(--color-primary)' : '1px solid transparent', background: meetingPointType === 'manual' ? 'var(--bg-card)' : 'transparent', color: meetingPointType === 'manual' ? 'var(--color-primary)' : 'var(--text-muted)', boxShadow: meetingPointType === 'manual' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', fontWeight: meetingPointType === 'manual' ? '600' : '500', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                            >
+                              <Map size={16} />
+                              <span>Manual (Mapa)</span>
+                              {meetingPointType === 'manual' && <CheckCircle2 size={14} />}
+                            </button>
+                          </div>
                         </div>
                         
                         {meetingPointType === 'predefined' ? (
@@ -551,14 +671,48 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                           </select>
                         ) : (
                           <div className="manual-location-container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <input 
-                              type="text" 
-                              required
-                              className="form-control"
-                              placeholder="Ej: Casa de Pedro (Av. América #123)"
-                              value={deliveryData.meeting_point}
-                              onChange={(e) => setDeliveryData({...deliveryData, meeting_point: e.target.value})}
-                            />
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pegar Link de Google Maps o Coordenadas (Opcional)</label>
+                              <input 
+                                type="text" 
+                                className="form-control"
+                                placeholder="Pega el enlace largo de Google Maps o coordenadas (ej: -17.38, -66.15)"
+                                onChange={(e) => {
+                                  const url = e.target.value;
+                                  if (!url) return;
+                                  
+                                  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                                  const dMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+                                  const simpleMatch = url.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+                                  
+                                  let lat = null, lng = null;
+                                  
+                                  if (atMatch) { lat = parseFloat(atMatch[1]); lng = parseFloat(atMatch[2]); }
+                                  else if (dMatch) { lat = parseFloat(dMatch[1]); lng = parseFloat(dMatch[2]); }
+                                  else if (simpleMatch) { lat = parseFloat(simpleMatch[1]); lng = parseFloat(simpleMatch[2]); }
+                                  
+                                  if (lat !== null && lng !== null) {
+                                    setMapCenter({ lat, lng });
+                                    setDeliveryData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+                                    toast.success("Ubicación detectada correctamente");
+                                    e.target.value = '';
+                                  } else if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
+                                    toast.error("Por favor abre el link corto en tu navegador y pega el enlace completo que aparece en la barra de direcciones.");
+                                  }
+                                }}
+                                style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', marginTop: '4px', marginBottom: '12px' }}
+                              />
+                              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Especifica la Dirección o Lugar *</label>
+                              <input 
+                                type="text" 
+                                required
+                                className="form-control"
+                                placeholder="Ej: Av. Las Américas, Edificio Los Pinos Piso 4..."
+                                value={deliveryData.meeting_point}
+                                onChange={(e) => setDeliveryData({...deliveryData, meeting_point: e.target.value})}
+                                style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', marginTop: '4px' }}
+                              />
+                            </div>
                             
                             <div className="map-container" style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
                               {isLoaded ? (
@@ -589,43 +743,227 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                           </div>
                         )}
                       </div>
-                      
-                      <div style={{ display: 'flex', gap: '16px' }}>
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label>Encargado de la Entrega (Opcional)</label>
-                          <select 
-                            className="form-control"
-                            value={deliveryData.driver_id}
-                            onChange={(e) => setDeliveryData({...deliveryData, driver_id: e.target.value})}
-                          >
-                            <option value="">-- Sin asignar --</option>
-                            {deliveryDrivers.map(employee => (
-                              <option key={employee.id} value={employee.id}>
-                                {employee.user?.profile?.first_name} {employee.user?.profile?.last_name_paternal} - Cod: {employee.employee_code} - Tel: {employee.phone}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
 
-                      <div style={{ display: 'flex', gap: '16px' }}>
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label>Nombre del Cliente *</label>
-                          <input type="text" required className="form-control" value={deliveryData.guest_name} onChange={(e) => setDeliveryData({...deliveryData, guest_name: e.target.value})} />
-                        </div>
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label>WhatsApp *</label>
-                          <input type="text" required className="form-control" value={deliveryData.guest_phone} onChange={(e) => setDeliveryData({...deliveryData, guest_phone: e.target.value})} />
+                      {/* CARD 2: Datos del Cliente */}
+                      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '12px', display: 'block' }}>Datos del Cliente *</label>
+                          <div style={{ display: 'inline-flex', background: 'var(--bg-input)', padding: '4px', borderRadius: '10px', gap: '4px', marginBottom: '16px' }}>
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                setCustomerSearchType('guest');
+                                setDeliveryData({...deliveryData, customer_id: ""});
+                                setSelectedCustomer(null);
+                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: customerSearchType === 'guest' ? '1px solid var(--color-primary)' : '1px solid transparent', background: customerSearchType === 'guest' ? 'var(--bg-card)' : 'transparent', color: customerSearchType === 'guest' ? 'var(--color-primary)' : 'var(--text-muted)', boxShadow: customerSearchType === 'guest' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', fontWeight: customerSearchType === 'guest' ? '600' : '500', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                            >
+                              <User size={16} />
+                              <span>Invitado / Nuevo</span>
+                              {customerSearchType === 'guest' && <CheckCircle2 size={14} />}
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                setCustomerSearchType('registered');
+                                setDeliveryData({...deliveryData, guest_name: "", guest_phone: ""});
+                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: customerSearchType === 'registered' ? '1px solid var(--color-primary)' : '1px solid transparent', background: customerSearchType === 'registered' ? 'var(--bg-card)' : 'transparent', color: customerSearchType === 'registered' ? 'var(--color-primary)' : 'var(--text-muted)', boxShadow: customerSearchType === 'registered' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', fontWeight: customerSearchType === 'registered' ? '600' : '500', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                            >
+                              <UserCheck size={16} />
+                              <span>Cliente Registrado</span>
+                              {customerSearchType === 'registered' && <CheckCircle2 size={14} />}
+                            </button>
+                          </div>
+
+                          {customerSearchType === 'guest' ? (
+                            <div style={{ display: 'flex', gap: '16px' }}>
+                              <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Nombre Completo *</label>
+                                <input type="text" required={customerSearchType === 'guest'} className="form-control" value={deliveryData.guest_name} onChange={(e) => setDeliveryData({...deliveryData, guest_name: e.target.value})} />
+                              </div>
+                              <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Teléfono (WhatsApp) *</label>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <input 
+                                    type="text" 
+                                    required={customerSearchType === 'guest'} 
+                                    className="form-control" 
+                                    style={{ width: '80px', textAlign: 'center' }}
+                                    placeholder="+591"
+                                    value={deliveryData.guest_country_code} 
+                                    onChange={(e) => setDeliveryData({...deliveryData, guest_country_code: e.target.value})} 
+                                  />
+                                  <input 
+                                    type="text" 
+                                    required={customerSearchType === 'guest'} 
+                                    className="form-control" 
+                                    style={{ flex: 1 }}
+                                    placeholder="Ej: 63194677"
+                                    value={deliveryData.guest_phone} 
+                                    onChange={(e) => setDeliveryData({...deliveryData, guest_phone: e.target.value})} 
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="form-group" style={{ position: 'relative', marginBottom: 0 }}>
+                              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Buscar Cliente Registrado *</label>
+                              {selectedCustomer ? (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontWeight: 600 }}>{selectedCustomer.name}</span>
+                                  </div>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => { 
+                                      setSelectedCustomer(null); 
+                                      setDeliveryData({...deliveryData, customer_id: ""}); 
+                                      setCustomerSearchQuery(""); 
+                                    }} 
+                                    style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '4px' }}
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    placeholder="Buscar por nombre, teléfono o código..." 
+                                    value={customerSearchQuery} 
+                                    onChange={(e) => {
+                                      setCustomerSearchQuery(e.target.value);
+                                      setIsCustomerDropdownOpen(true);
+                                    }} 
+                                    onFocus={() => setIsCustomerDropdownOpen(true)}
+                                  />
+                                  {isCustomerDropdownOpen && customerSearchQuery.trim() && (
+                                    <div className="dropdown-menu" style={{ display: 'block', maxHeight: '200px', overflowY: 'auto', zIndex: 10, position: 'absolute', width: '100%', top: '100%', left: 0, marginTop: '4px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                                      {isSearchingCustomer ? (
+                                        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
+                                          Buscando cliente...
+                                        </div>
+                                      ) : customersList.length === 0 ? (
+                                        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
+                                          No se encontraron clientes con esa búsqueda.
+                                        </div>
+                                      ) : (
+                                        customersList.map(c => {
+                                          const name = c.posProfile ? `${c.posProfile.first_name} ${c.posProfile.last_name_paternal || ''}` :
+                                                      (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` : 
+                                                      (c.user?.username || c.customer_code));
+                                          const phone = c.posProfile?.phone || c.user?.profile?.phone || "Sin Teléfono";
+                                          
+                                          return (
+                                            <div 
+                                              key={c.id} 
+                                              className="dropdown-item cart-form-variant-item" 
+                                              style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)' }}
+                                              onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                setSelectedCustomer({ id: c.id, name: name.trim() });
+                                                setDeliveryData({...deliveryData, customer_id: c.id});
+                                                setIsCustomerDropdownOpen(false);
+                                              }}
+                                            >
+                                              <div style={{ fontWeight: 600 }}>{name.trim()}</div>
+                                              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Tel: {phone} | Cód: {c.customer_code}</div>
+                                            </div>
+                                          );
+                                        })
+                                      )}
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '16px' }}>
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label>Fecha de Entrega *</label>
-                          <input type="date" required className="form-control" value={deliveryData.scheduled_date} onChange={(e) => setDeliveryData({...deliveryData, scheduled_date: e.target.value})} />
+                      {/* CARD 3: Detalles de Envío */}
+                      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                        <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Detalles de Envío</h4>
+                        
+                        <div className="form-group" style={{ position: 'relative', marginBottom: 0 }}>
+                          <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Encargado de la Entrega (Opcional)</label>
+                          {selectedDriver ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontWeight: 600 }}>{selectedDriver.name}</span>
+                              </div>
+                              <button 
+                                type="button" 
+                                onClick={() => { 
+                                  setSelectedDriver(null); 
+                                  setDeliveryData({...deliveryData, driver_id: ""}); 
+                                  setDriverSearchQuery(""); 
+                                }} 
+                                style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '4px' }}
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <input 
+                                type="text" 
+                                className="form-control" 
+                                placeholder="Buscar repartidor por nombre, teléfono o código..." 
+                                value={driverSearchQuery} 
+                                onChange={(e) => {
+                                  setDriverSearchQuery(e.target.value);
+                                  setIsDriverDropdownOpen(true);
+                                }} 
+                                onFocus={() => setIsDriverDropdownOpen(true)}
+                              />
+                              {isDriverDropdownOpen && (
+                                <div className="dropdown-menu" style={{ display: 'block', maxHeight: '200px', overflowY: 'auto', zIndex: 10, position: 'absolute', width: '100%', top: '100%', left: 0, marginTop: '4px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                                  {isSearchingDriver ? (
+                                    <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
+                                      Buscando encargado...
+                                    </div>
+                                  ) : deliveryDrivers.length === 0 ? (
+                                    <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
+                                      No se encontraron repartidores con ese nombre.
+                                    </div>
+                                  ) : (
+                                    deliveryDrivers.map(employee => {
+                                      const name = `${employee.user?.profile?.first_name || ''} ${employee.user?.profile?.last_name_paternal || ''}`.trim();
+                                      return (
+                                        <div 
+                                          key={employee.id} 
+                                          className="dropdown-item cart-form-variant-item" 
+                                          style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)' }}
+                                          onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            setSelectedDriver({ id: employee.id, name });
+                                            setDeliveryData({...deliveryData, driver_id: employee.id});
+                                            setIsDriverDropdownOpen(false);
+                                          }}
+                                        >
+                                          <div style={{ fontWeight: 600 }}>{name || `Empleado ${employee.employee_code}`}</div>
+                                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Tel: {employee.phone} | Cód: {employee.employee_code}</div>
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          )}
                         </div>
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label>Hora *</label>
-                          <input type="time" required className="form-control" value={deliveryData.time_window} onChange={(e) => setDeliveryData({...deliveryData, time_window: e.target.value})} />
+
+                        <div style={{ display: 'flex', gap: '16px' }}>
+                          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                            <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Fecha de Programación *</label>
+                            <input type="date" required className="form-control" value={deliveryData.scheduled_date} onChange={(e) => setDeliveryData({...deliveryData, scheduled_date: e.target.value})} />
+                          </div>
+                          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                            <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Hora (Estimada) *</label>
+                            <input type="time" required className="form-control" value={deliveryData.time_window} onChange={(e) => setDeliveryData({...deliveryData, time_window: e.target.value})} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -726,31 +1064,34 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                     type="submit"
                     form="delivery-form"
                     className="action-btn success" 
-                    style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: 'none', background: 'var(--color-success)', color: 'white', cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
+                    style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: 'none', background: 'var(--color-success)', color: 'white', cursor: 'pointer', opacity: loading ? 0.7 : 1, fontWeight: 600, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
                     disabled={loading}
                   >
                     {loading ? "Procesando..." : (editData ? "Guardar Cambios" : "Finalizar Entrega")}
                   </button>
-                  <button 
-                    type="button"
-                    className="btn-cancel" 
-                    style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer' }}
-                    onClick={() => setStep(1)}
-                    disabled={loading}
-                  >
-                    Volver al Carrito
-                  </button>
-                  {!editData && (
+                  
+                  <div style={{ display: 'flex', gap: '10px' }}>
                     <button 
                       type="button"
                       className="btn-cancel" 
-                      style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', border: '1px dashed var(--border-color)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
-                      onClick={() => handleSubmit(null, true)}
+                      style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                      onClick={() => setStep(1)}
                       disabled={loading}
                     >
-                      Guardar como Borrador
+                      Volver
                     </button>
-                  )}
+                    {!editData && (
+                      <button 
+                        type="button"
+                        className="btn-cancel" 
+                        style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px dashed var(--border-color)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                        onClick={() => handleSubmit(null, true)}
+                        disabled={loading}
+                      >
+                        Borrador
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

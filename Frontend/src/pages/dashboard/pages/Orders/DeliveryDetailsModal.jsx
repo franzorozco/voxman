@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle } from "lucide-react";
-import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers } from "../../../../api/admin/orderNetwork";
+import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem } from "../../../../api/admin/orderNetwork";
 import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
 
@@ -31,32 +31,80 @@ const getStepIndex = (status) => {
 export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChange, onEditRequest }) {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('efectivo');
+  const [qrAmount, setQrAmount] = useState('');
+  const [cashAmount, setCashAmount] = useState('');
+  const [montoReal, setMontoReal] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  const { isLoaded } = useJsApiLoader({
+  useEffect(() => {
+    if (showPaymentModal && details) {
+      setMontoReal(details.shipment?.sale?.total || '');
+    }
+  }, [showPaymentModal, details]);
+
+  const { isLoaded: googleMapsLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M"
   });
 
+  const fetchDetails = async () => {
+    try {
+      setLoading(true);
+      const res = await getDeliveryDetails(scheduleId);
+      setDetails(res.data.schedule || res.data);
+    } catch (err) {
+      toast.error("Error al cargar detalles de la entrega");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveItem = async (detailId) => {
+    const activeItemsCount = details?.shipment?.sale?.sale_details?.filter(i => !i.deleted_at).length || 0;
+    if (activeItemsCount <= 1) {
+      toast.error('No puedes quitar la única prenda. Si el cliente no desea nada, cancela la entrega completa.');
+      return;
+    }
+    if (!confirm('¿Seguro que deseas quitar esta prenda de la venta? Se devolverá al stock disponible.')) return;
+    try {
+      setLoading(true);
+      await removeDeliveryItem(details.id, detailId);
+      toast.success('Prenda quitada y stock devuelto');
+      fetchDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al quitar la prenda');
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
+  const handleRestoreItem = async (detailId) => {
+    try {
+      setLoading(true);
+      await restoreDeliveryItem(details.id, detailId);
+      toast.success('Prenda reintegrada a la entrega');
+      fetchDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al reintegrar la prenda');
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadDetails = async () => {
-      try {
-        const { data } = await getDeliveryDetails(scheduleId);
-        setDetails(data.schedule);
-      } catch (error) {
-        toast.error("Error al cargar los detalles de la entrega");
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (scheduleId) loadDetails();
+    if (scheduleId) fetchDetails();
   }, [scheduleId]);
 
-  const handleUpdateStatus = async (newStatus) => {
+  const handleUpdateStatus = async (newStatus, paymentData = null) => {
     if (newStatus === 'cancelled' && !window.confirm('¿Estás seguro de cancelar esta entrega? Esta acción no se puede deshacer.')) return;
     setUpdating(true);
     try {
-      await updateDeliveryStatus(scheduleId, newStatus);
+      const payload = paymentData ? { status: newStatus, ...paymentData } : newStatus;
+      await updateDeliveryStatus(scheduleId, payload);
       const { data } = await getDeliveryDetails(scheduleId);
       setDetails(data.schedule);
       toast.success(newStatus === 'cancelled' ? "Entrega cancelada" : "Estado actualizado exitosamente");
@@ -258,13 +306,26 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {sale?.sale_details?.map(item => {
+                    const activeItemsCount = sale?.sale_details?.filter(i => !i.deleted_at).length || 0;
                     const variant = item.product_variant;
-                    const imageUrl = variant?.variant_images?.[0]?.image_path 
-                      ? `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${variant.variant_images[0].image_path}`
-                      : null;
-                      
+                    const product = variant?.product;
+                    const colorId = variant?.variant_attribute_values?.[0]?.attribute_value_id;
+                    const colorImg = product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
+                    
+                    let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
+                    
+                    if (!imageUrl) {
+                      const fallbackPath = variant?.variant_images?.[0]?.image_path || colorImg?.image_path || product?.product_images?.[0]?.image_path;
+                      if (fallbackPath) {
+                        imageUrl = `/storage/${fallbackPath}`;
+                      }
+                    }
+
+                    if (imageUrl && !imageUrl.startsWith('http')) {
+                      imageUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${imageUrl}`;
+                    }
                     return (
-                      <div key={item.id} style={{ display: 'flex', gap: '12px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', alignItems: 'flex-start', opacity: isCancelled ? 0.6 : 1 }}>
+                      <div key={item.id} style={{ display: 'flex', gap: '12px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', alignItems: 'flex-start', opacity: isCancelled || item.deleted_at ? 0.6 : 1 }}>
                         {imageUrl ? (
                           <img src={imageUrl} alt="Variant" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
                         ) : (
@@ -273,7 +334,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                           </div>
                         )}
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>
+                          <span style={{ color: 'var(--text-main)', fontWeight: 500, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
                             {item.quantity}x {variant?.product?.name} {variant?.name && `(${variant.name})`}
                           </span>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -287,23 +348,75 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                             ))}
                           </div>
                         </div>
-                        <span style={{ fontWeight: 600 }}>Bs. {Number(item.subtotal).toFixed(2)}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                          <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>Bs. {Number(item.subtotal).toFixed(2)}</span>
+                          {isCompleted && item.discount_amount > 0 && (
+                            <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                              - Bs. {Number(item.discount_amount).toFixed(2)} dto.
+                            </span>
+                          )}
+                          {item.deleted_at ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                              <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none' }}>
+                                Rechazado
+                              </span>
+                              {['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
+                                <button
+                                  onClick={() => handleRestoreItem(item.id)}
+                                  style={{ background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
+                                >
+                                  Reintegrar ↩
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            ['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
+                              <button
+                                onClick={() => handleRemoveItem(item.id)}
+                                style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '4px 0', marginTop: '4px' }}
+                              >
+                                <XCircle size={14} /> Quitar
+                              </button>
+                            )
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', textDecoration: isCancelled ? 'line-through' : 'none', opacity: isCancelled ? 0.5 : 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)' }}>
-                      <span>Subtotal:</span>
+                      <span>Subtotal Productos:</span>
                       <span>Bs. {Number(sale?.subtotal || 0).toFixed(2)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)' }}>
                       <span>Costo de Envío:</span>
                       <span>Bs. {Number(details.shipment?.shipping_cost || 0).toFixed(2)}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '15px', fontWeight: 700 }}>
-                      <span>TOTAL:</span>
+                    {isCompleted && sale?.total_discount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--color-danger)', fontWeight: 600 }}>
+                        <span>Descuento Aplicado:</span>
+                        <span>- Bs. {Number(sale.total_discount).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '15px', fontWeight: 700, paddingBottom: isCompleted ? '12px' : '0', borderBottom: isCompleted ? '1px dashed var(--border-color)' : 'none' }}>
+                      <span>{isCompleted ? 'MONTO FINAL COBRADO:' : 'TOTAL:'}</span>
                       <span style={{ color: 'var(--color-primary)' }}>Bs. {Number(sale?.total || 0).toFixed(2)}</span>
                     </div>
+                    
+                    {isCompleted && sale?.payments && sale.payments.length > 0 && (
+                      <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Desglose de Pago</span>
+                        {sale.payments.map((payment, idx) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-main)', background: 'var(--bg-input)', padding: '6px 10px', borderRadius: '6px' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {payment.payment_method?.name === 'QR' ? <span style={{ background: '#10b981', width: '8px', height: '8px', borderRadius: '50%' }}></span> : <span style={{ background: '#f59e0b', width: '8px', height: '8px', borderRadius: '50%' }}></span>}
+                              Pago en {payment.payment_method?.name}
+                            </span>
+                            <span style={{ fontWeight: 600 }}>Bs. {Number(payment.amount).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -359,7 +472,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               </div>
 
               <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', overflow: 'hidden' }}>
-                {isLoaded ? (
+                {googleMapsLoaded ? (
                   <GoogleMap
                     mapContainerStyle={mapContainerStyle}
                     center={mapCenter}
@@ -405,7 +518,12 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     let next = 'on_the_way';
                     if(details.status === 'on_the_way') next = 'at_the_meeting_point';
                     if(details.status === 'at_the_meeting_point') next = 'completed';
-                    handleUpdateStatus(next);
+                    
+                    if (next === 'completed') {
+                      setShowPaymentModal(true);
+                    } else {
+                      handleUpdateStatus(next);
+                    }
                   }}
                   disabled={updating}
                 >
@@ -429,6 +547,143 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
           <button className="action-btn" style={{ padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', background: 'var(--bg-input)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }} onClick={onClose} disabled={updating}>Cerrar</button>
         </div>
       </div>
+
+      {showPaymentModal && (
+        <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ maxWidth: '500px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
+              <CheckCircle size={20} style={{ color: 'var(--color-success)' }} /> Completar Entrega
+            </h3>
+            
+            <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Total Original:</span>
+                <strong style={{ color: 'var(--text-muted)', textDecoration: Number(montoReal) < Number(details.shipment?.sale?.total) ? 'line-through' : 'none' }}>Bs. {Number(details.shipment?.sale?.total || 0).toFixed(2)}</strong>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: 600 }}>Monto Real a Cobrar:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Bs.</span>
+                  <input 
+                    type="number"
+                    value={montoReal}
+                    onChange={(e) => {
+                      setMontoReal(e.target.value);
+                      if (paymentMethod === 'ambos') {
+                        setCashAmount(''); setQrAmount('');
+                      }
+                    }}
+                    style={{ width: '90px', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: '#fff', color: 'var(--color-primary)', fontWeight: 700, fontSize: '15px', textAlign: 'right' }}
+                  />
+                </div>
+              </div>
+              
+              {Number(montoReal) < Number(details.shipment?.sale?.total) && (
+                <div style={{ marginTop: '8px', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, textAlign: 'right' }}>
+                  Descuento aplicado: Bs. {(Number(details.shipment?.sale?.total) - Number(montoReal)).toFixed(2)}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+              <button 
+                onClick={() => setPaymentMethod('efectivo')}
+                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: `1px solid ${paymentMethod === 'efectivo' ? 'var(--color-primary)' : 'var(--border-color)'}`, background: paymentMethod === 'efectivo' ? 'var(--color-primary-alpha)' : 'transparent', color: paymentMethod === 'efectivo' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Efectivo
+              </button>
+              <button 
+                onClick={() => setPaymentMethod('qr')}
+                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: `1px solid ${paymentMethod === 'qr' ? 'var(--color-primary)' : 'var(--border-color)'}`, background: paymentMethod === 'qr' ? 'var(--color-primary-alpha)' : 'transparent', color: paymentMethod === 'qr' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: 600, cursor: 'pointer' }}
+              >
+                QR
+              </button>
+              <button 
+                onClick={() => { setPaymentMethod('ambos'); setCashAmount(''); setQrAmount(''); }}
+                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: `1px solid ${paymentMethod === 'ambos' ? 'var(--color-primary)' : 'var(--border-color)'}`, background: paymentMethod === 'ambos' ? 'var(--color-primary-alpha)' : 'transparent', color: paymentMethod === 'ambos' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Ambos
+              </button>
+            </div>
+
+            {paymentMethod === 'ambos' && (
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Monto Efectivo</label>
+                  <input 
+                    type="number" 
+                    placeholder="0.00"
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    value={cashAmount}
+                    onChange={(e) => {
+                      setCashAmount(e.target.value);
+                      const total = Number(montoReal || details.shipment?.sale?.total || 0);
+                      const cash = Number(e.target.value);
+                      if (cash <= total) {
+                        setQrAmount((total - cash).toFixed(2));
+                      }
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Monto QR</label>
+                  <input 
+                    type="number" 
+                    placeholder="0.00"
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    value={qrAmount}
+                    onChange={(e) => {
+                      setQrAmount(e.target.value);
+                      const total = Number(montoReal || details.shipment?.sale?.total || 0);
+                      const qr = Number(e.target.value);
+                      if (qr <= total) {
+                        setCashAmount((total - qr).toFixed(2));
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {(paymentMethod === 'qr' || paymentMethod === 'ambos') && (
+              <div style={{ textAlign: 'center', marginBottom: '20px', padding: '16px', background: 'var(--bg-input)', borderRadius: '12px' }}>
+                <p style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>
+                  Escanea para pagar {paymentMethod === 'ambos' && qrAmount ? `Bs. ${Number(qrAmount).toFixed(2)}` : ''}
+                </p>
+                <img 
+                  src={`${(import.meta.env.VITE_API_URL || 'http://localhost:8000').replace('/api', '')}/storage/payments/QRBCP.jpeg`} 
+                  alt="QR de Pago" 
+                  style={{ maxWidth: '200px', borderRadius: '8px', border: '2px solid var(--border-color)' }}
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  handleUpdateStatus('completed', {
+                    monto_real: montoReal,
+                    payment_method: paymentMethod,
+                    amount_cash: cashAmount,
+                    amount_qr: qrAmount
+                  });
+                }}
+                style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-success)', color: '#fff', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <CheckCircle size={18} /> Confirmar Pago y Entrega
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

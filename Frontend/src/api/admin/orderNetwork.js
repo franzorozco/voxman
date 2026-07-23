@@ -8,8 +8,8 @@ export const getDeliveryDetails = (id) => {
   return api.get(`/v1/delivery/${id}`);
 };
 
-export const getDeliveryDrivers = () => {
-  return api.get('/v1/admin/order-network/drivers');
+export const getDeliveryDrivers = (params = {}) => {
+  return api.get('/v1/admin/order-network/drivers', { params });
 };
 
 export const getDeliveryZones = () => {
@@ -28,8 +28,9 @@ export const convertToOrder = (data) => {
   return api.post('/v1/admin/order-network/convert', data);
 };
 
-export const updateDeliveryStatus = (id, status) => {
-  return api.post(`/v1/admin/order-network/${id}/status`, { status });
+export const updateDeliveryStatus = (id, data) => {
+  const payload = typeof data === 'string' ? { status: data } : data;
+  return api.post(`/v1/admin/order-network/${id}/status`, payload);
 };
 
 export const updateDeliveryDetails = (id, data) => {
@@ -38,6 +39,14 @@ export const updateDeliveryDetails = (id, data) => {
 
 export const updateOrder = (id, data) => {
   return api.put(`/v1/admin/order-network/${id}/order`, data);
+};
+
+export const removeDeliveryItem = (id, detailId) => {
+  return api.delete(`/v1/admin/order-network/${id}/item/${detailId}`);
+};
+
+export const restoreDeliveryItem = (id, detailId) => {
+  return api.post(`/v1/admin/order-network/${id}/item/${detailId}/restore`);
 };
 
 export const assignDriver = (id, driver_id) => {

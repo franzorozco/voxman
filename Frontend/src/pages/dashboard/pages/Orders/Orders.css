@@ -276,3 +276,221 @@
 .btn-cancel:hover {
   background: var(--bg-input);
 }
+
+/* NEW BUBBLE/TIMELINE LAYOUT */
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.date-group-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.date-badge {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, var(--border-color) 0%, transparent 100%);
+  border-radius: 2px;
+}
+
+.bubble-row {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  padding: 20px;
+  gap: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bubble-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.bubble-row.is-completed {
+  opacity: 0.7;
+  background: var(--bg-body);
+}
+
+.bubble-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-right: 20px;
+  border-right: 2px dashed var(--border-color);
+  min-width: 120px;
+}
+
+.bubble-time {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.bubble-ref {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  background: var(--bg-input);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.bubble-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bubble-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bubble-customer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.bubble-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.info-item .icon {
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.info-item strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.bubble-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-width: 150px;
+}
+
+.bubble-total {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.bubble-actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .bubble-row {
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+  }
+  .bubble-left {
+    border-right: none;
+    border-bottom: 2px dashed var(--border-color);
+    padding-right: 0;
+    padding-bottom: 16px;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .bubble-right {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .bubble-total {
+    align-self: flex-end;
+  }
+}
+
+/* Custom status bubble backgrounds */
+.bubble-status-pending {
+  background: rgba(100, 116, 139, 0.08);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-left: 6px solid #64748b;
+}
+.bubble-status-assigned {
+  background: rgba(33, 150, 243, 0.08);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-left: 6px solid #2196f3;
+}
+.bubble-status-on_the_way {
+  background: rgba(156, 39, 176, 0.08);
+  border: 1px solid rgba(156, 39, 176, 0.2);
+  border-left: 6px solid #9c27b0;
+}
+.bubble-status-at_the_meeting_point {
+  background: rgba(255, 152, 0, 0.08);
+  border: 1px solid rgba(255, 152, 0, 0.2);
+  border-left: 6px solid #ff9800;
+}
+.bubble-status-completed {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-left: 6px solid #10b981;
+}
+.bubble-status-cancelled {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-left: 6px solid #ef4444;
+}

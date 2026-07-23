@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle, Printer } from "lucide-react";
+import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle, Printer, CalendarClock, StickyNote } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSale, updateSaleStatus, cancelSale } from "../../../../api/admin/sales";
 import Spinner from "../../components/Spinner/Spinner";
@@ -89,6 +89,11 @@ export default function SaleDetailsModal({ saleId, onClose }) {
             <span className={`status-badge ${sale.status === 'completed' ? 'status-success' : sale.status === 'cancelled' ? 'status-danger' : 'status-warning'}`} style={{ marginLeft: '10px' }}>
               {sale.status}
             </span>
+            {sale.shipments?.[0]?.delivery_schedule && (
+              <span className={`status-badge ${sale.shipments[0].delivery_schedule.status === 'completed' ? 'status-success' : 'status-warning'}`} style={{ marginLeft: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}>
+                Entrega: {sale.shipments[0].delivery_schedule.status === 'at_the_meeting_point' ? 'En el punto' : sale.shipments[0].delivery_schedule.status === 'on_the_way' ? 'En camino' : sale.shipments[0].delivery_schedule.status === 'completed' ? 'Completado' : sale.shipments[0].delivery_schedule.status === 'cancelled' ? 'Cancelado' : sale.shipments[0].delivery_schedule.status === 'pending' ? 'Pendiente' : sale.shipments[0].delivery_schedule.status === 'assigned' ? 'Asignado' : sale.shipments[0].delivery_schedule.status}
+              </span>
+            )}
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={24} />
@@ -137,12 +142,27 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                     </div>
                   </CanAccess>
                 </div>
+              ) : sale.guest ? (
+                <div>
+                  <div style={{ fontWeight: 600 }}>
+                    {sale.guest.name}
+                    <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 600, background: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px' }}>
+                      • Entrega Agendada
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Teléfono: {sale.guest.whatsapp_phone || 'N/A'}</div>
+                  {sale.guest.email && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Email: {sale.guest.email}</div>}
+                  {sale.guest.social_media_platform && (
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Contacto por: {sale.guest.social_media_platform}</div>
+                  )}
+                </div>
               ) : (
                 <div style={{ color: 'var(--text-muted)' }}>Cliente Ocasional / Sin Registrar</div>
               )}
             </div>
 
             {/* Sucursal Info */}
+            {sale.source !== 'order_network' && (
             <div className="sale-detail-section">
               <div className="sale-detail-title">
                 <Store size={18} /> Sucursal / Atendido por
@@ -160,6 +180,30 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 </div>
               )}
             </div>
+            )}
+
+            {/* Lugar de Entrega Info */}
+            {sale.shipments && sale.shipments.length > 0 && sale.shipments[0].delivery_schedule && (
+              <div className="sale-detail-section">
+                <div className="sale-detail-title">
+                  <MapPin size={18} /> Lugar de Encuentro
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontWeight: 600 }}>{sale.shipments[0].delivery_schedule.meeting_point || 'Punto a convenir'}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                    <CalendarClock size={12} /> {new Date(sale.shipments[0].delivery_schedule.scheduled_date + 'T00:00:00').toLocaleDateString('es-ES')} ({sale.shipments[0].delivery_schedule.time_window})
+                  </div>
+                </div>
+                {sale.shipments[0].delivery_schedule.driver && (
+                  <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Repartidor asignado:</span>
+                    <div style={{ fontWeight: 500 }}>
+                      {sale.shipments[0].delivery_schedule.driver.user?.profile?.first_name} {sale.shipments[0].delivery_schedule.driver.user?.profile?.last_name_paternal}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Detalles de los productos */}
@@ -180,26 +224,62 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {sale.sale_details && sale.sale_details.map((detail) => (
-                    <tr key={detail.id}>
+                  {sale.sale_details && sale.sale_details.map((detail) => {
+                    const variant = detail.product_variant;
+                    const product = variant?.product;
+                    const colorId = variant?.variant_attribute_values?.[0]?.attribute_value_id;
+                    const colorImg = product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
+                    
+                    let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
+                    
+                    if (!imageUrl) {
+                      const fallbackPath = variant?.variant_images?.[0]?.image_path || colorImg?.image_path || product?.product_images?.[0]?.image_path;
+                      if (fallbackPath) {
+                        imageUrl = `/storage/${fallbackPath}`;
+                      }
+                    }
+
+                    if (imageUrl && !imageUrl.startsWith('http')) {
+                      imageUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${imageUrl}`;
+                    }
+
+                    return (
+                    <tr key={detail.id} style={{ opacity: detail.deleted_at ? 0.6 : 1 }}>
                       <td>
-                        <div style={{ fontWeight: 500 }}>
-                          {detail.giftcard ? `Giftcard ${detail.giftcard.code || ''}` : 
-                           detail.bundle ? `Conjunto: ${detail.bundle.name}` :
-                           (detail.product_variant?.product?.name || 'Producto Desconocido')}
-                        </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                          {detail.giftcard ? 'Tarjeta de Regalo' : 
-                           detail.bundle ? 'Conjunto Promocional' :
-                           (detail.product_variant?.sku || '')}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          {imageUrl && (
+                            <img src={imageUrl} alt="Variant" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
+                          )}
+                          <div>
+                            <div style={{ fontWeight: 500, textDecoration: detail.deleted_at ? 'line-through' : 'none' }}>
+                              {detail.giftcard ? `Giftcard ${detail.giftcard.code || ''}` : 
+                              detail.bundle ? `Conjunto: ${detail.bundle.name}` :
+                              (variant?.product?.name || 'Producto Desconocido')}
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {detail.giftcard ? 'Tarjeta de Regalo' : 
+                              detail.bundle ? 'Conjunto Promocional' :
+                              (variant?.sku || '')}
+                              {!detail.giftcard && !detail.bundle && sale.stock_reservations && sale.stock_reservations.find(sr => sr.variant_id === detail.variant_id) && (
+                                <span style={{ fontSize: '10px', background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px', marginLeft: '4px' }}>
+                                  Sucursal: {sale.stock_reservations.find(sr => sr.variant_id === detail.variant_id).branch?.name || 'Desconocida'}
+                                </span>
+                              )}
+                              {detail.deleted_at && (
+                                <span style={{ fontSize: '10px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                  Rechazado
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </td>
-                      <td style={{textAlign: 'center'}}>{detail.quantity}</td>
-                      <td style={{textAlign: 'right'}}>Bs. {parseFloat(detail.unit_price).toFixed(2)}</td>
-                      <td style={{textAlign: 'right', color: parseFloat(detail.discount) > 0 ? 'var(--status-danger)' : 'var(--text-muted)'}}>
-                        {parseFloat(detail.discount) > 0 ? (
+                      <td style={{textAlign: 'center', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>{detail.quantity}</td>
+                      <td style={{textAlign: 'right', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>Bs. {parseFloat(detail.unit_price).toFixed(2)}</td>
+                      <td style={{textAlign: 'right', color: parseFloat(detail.discount || 0) > 0 ? 'var(--status-danger)' : 'var(--text-muted)', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>
+                        {parseFloat(detail.discount || 0) > 0 ? (
                           <>
-                            <div style={{ fontWeight: 600 }}>-Bs. {parseFloat(detail.discount).toFixed(2)}</div>
+                            <div style={{ fontWeight: 600 }}>-Bs. {(parseFloat(detail.discount || 0) * detail.quantity).toFixed(2)}</div>
                             <div style={{ fontSize: '11px', opacity: 0.8 }}>
                               {sale.sale_applied_discounts?.find(d => d.sale_detail_id === detail.id)?.discount?.code 
                                 ? `Promo: ${sale.sale_applied_discounts.find(d => d.sale_detail_id === detail.id).discount.code}`
@@ -208,9 +288,9 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                           </>
                         ) : '-'}
                       </td>
-                      <td style={{textAlign: 'right', fontWeight: 600}}>Bs. {parseFloat(detail.subtotal).toFixed(2)}</td>
+                      <td style={{textAlign: 'right', fontWeight: 600, textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>Bs. {parseFloat(detail.subtotal).toFixed(2)}</td>
                       <td style={{textAlign: 'center'}}>
-                        {detail.quantity > 0 && !detail.giftcard ? (
+                        {detail.quantity > 0 && !detail.giftcard && !detail.deleted_at ? (
                           <CanAccess permission="create_returns" fallback={<span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>-</span>}>
                             <button
                               onClick={() => setReturnDetail(detail)}
@@ -226,15 +306,22 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                         )}
                       </td>
                     </tr>
-                  ))}
+                  )})}
                   {sale.giftcard_transactions && sale.giftcard_transactions.map((transaction) => (
                     <tr key={transaction.id}>
                       <td>
-                        <div style={{ fontWeight: 500 }}>
-                          Giftcard {transaction.giftcard?.code || ''}
-                        </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                          Tarjeta de Regalo ({transaction.type === 'issue' ? 'Emisión' : transaction.type === 'reload' ? 'Recarga' : transaction.type})
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ width: '40px', height: '40px', background: 'var(--bg-input)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <CreditCard size={18} style={{ color: 'var(--text-muted)' }} />
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 500 }}>
+                              Giftcard {transaction.giftcard?.code || ''}
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                              Tarjeta de Regalo ({transaction.type === 'issue' ? 'Emisión' : transaction.type === 'reload' ? 'Recarga' : transaction.type})
+                            </div>
+                          </div>
                         </div>
                       </td>
                       <td style={{textAlign: 'center'}}>1</td>
@@ -293,13 +380,13 @@ export default function SaleDetailsModal({ saleId, onClose }) {
           {sale.shipments && sale.shipments.length > 0 && (
             <div className="sale-detail-section">
               <div className="sale-detail-title">
-                <Truck size={18} /> Envíos
+                <Truck size={18} /> Detalles de Entrega
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                 {sale.shipments.map((shipment) => (
                   <div key={shipment.id} style={{ padding: '12px', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ fontWeight: 500 }}>Tracking: {shipment.tracking_code || 'N/A'}</div>
+                      <div style={{ fontWeight: 500 }}>Código de Entrega: {shipment.delivery_code || 'N/A'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '8px' }}>(Tracking: {shipment.tracking_code || 'N/A'})</span></div>
                       <span className={`status-badge ${shipment.status === 'delivered' ? 'status-success' : 'status-warning'}`}>
                         {shipment.status}
                       </span>
@@ -319,7 +406,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
           {/* Notas */}
           <div className="sale-detail-section" style={{ marginBottom: '20px' }}>
             <div className="sale-detail-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div><FileText size={18} /> Notas Internas de la Venta</div>
+              <div><StickyNote size={18} /> Notas Internas de la Venta</div>
               {!isEditingNotes && (
                 <CanAccess permission="edit_sale_notes">
                   <button onClick={() => setIsEditingNotes(true)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>
@@ -390,21 +477,28 @@ export default function SaleDetailsModal({ saleId, onClose }) {
         {/* Footer actions */}
         <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', background: 'var(--bg-main)' }}>
           <div>
+            <CanAccess permission="print_sale_receipt">
+              <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowReceipt(true)}>
+                <Printer size={16} /> Imprimir Ticket
+              </button>
+            </CanAccess>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <CanAccess permission="manage_sales">
               {sale.status !== 'cancelled' && sale.status !== 'refunded' && (
                 <button 
-                  className="btn-secondary" 
-                  style={{ color: 'var(--status-danger)', borderColor: 'var(--status-danger)' }}
+                  className="btn" 
+                  style={{ backgroundColor: 'var(--color-danger)', color: 'white', display: 'flex', alignItems: 'center', gap: '6px', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}
                   onClick={() => handleStatusChange('cancelled')}
                   disabled={actionLoading}
                 >
-                  <RotateCcw size={16} /> Cancelar Venta
+                  <X size={16} /> Cancelar Venta
                 </button>
               )}
               {sale.status === 'pending' && (
                 <button 
-                  className="btn-primary" 
-                  style={{ marginLeft: '10px' }}
+                  className="btn" 
+                  style={{ backgroundColor: 'var(--color-success)', color: 'white', display: 'flex', alignItems: 'center', gap: '6px', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}
                   onClick={() => handleStatusChange('completed')}
                   disabled={actionLoading}
                 >
@@ -412,14 +506,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 </button>
               )}
             </CanAccess>
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <CanAccess permission="print_sale_receipt">
-              <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowReceipt(true)}>
-                <Printer size={16} /> Imprimir Ticket
-              </button>
-            </CanAccess>
-            <button className="btn-secondary" onClick={onClose} disabled={actionLoading}>
+            <button className="btn-secondary" onClick={onClose} disabled={actionLoading} style={{ padding: '8px 16px' }}>
               Cerrar
             </button>
           </div>

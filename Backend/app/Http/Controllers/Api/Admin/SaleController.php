@@ -19,7 +19,9 @@ class SaleController extends Controller
             'sale_details.product_variant.product',
             'sale_details.giftcard',
             'payments.payment_method',
-            'giftcard_transactions.giftcard'
+            'giftcard_transactions.giftcard',
+            'guest',
+            'shipments.delivery_schedule'
         ]);
 
         if (auth()->check() && !auth()->user()->can('view_sales_all_branches')) {
@@ -104,13 +106,25 @@ class SaleController extends Controller
             'customer.posProfile',
             'user.profile', 
             'branch',
-            'sale_details.product_variant.product',
+            'sale_details' => function($q) { 
+                $q->withTrashed()->with([
+                    'product_variant.product.product_images', 
+                    'product_variant.product.attribute_value_images',
+                    'product_variant.variant_images',
+                    'product_variant.size',
+                    'product_variant.fit',
+                    'product_variant.variant_attribute_values.attribute_value.attribute'
+                ]); 
+            },
             'sale_details.giftcard',
             'sale_details.owner.user.profile',
             'payments.payment_method',
             'shipments.address',
+            'shipments.delivery_schedule.driver.user.profile',
             'giftcard_transactions.giftcard',
-            'sale_applied_discounts.discount'
+            'sale_applied_discounts.discount',
+            'guest',
+            'stockReservations.branch'
         ])->findOrFail($id);
 
         if (auth()->check() && !auth()->user()->can('view_sales_all_branches')) {

@@ -180,13 +180,14 @@ class OrderNetworkController extends Controller
                 'guest_id' => $guestId,
                 'branch_id' => $request->branch_id,
                 'user_id' => auth()->id() ?? null,
+                'invoice_number' => 'DLV-' . strtoupper(\Illuminate\Support\Str::random(6)),
                 'sale_type' => 'online', // Or perhaps 'delivery'
                 'status' => 'pending',
                 'source' => 'order_network',
                 'subtotal' => 0, // Will calculate below
                 'discount_total' => $cart->total_discount,
-                'total_discount' => $cart->total_discount,
                 'total' => 0,
+                'notes' => 'Proviene de Carrito/Proforma: ' . $cart->reference_number
             ]);
 
             $subtotal = 0;
@@ -207,8 +208,7 @@ class OrderNetworkController extends Controller
                     'variant_id' => $item->variant_id,
                     'quantity' => $item->quantity,
                     'unit_price' => $price,
-                    'discount' => 0,
-                    'discount_amount' => $discountAmount,
+                    'discount' => $discountAmount,
                     'final_price' => $finalPrice,
                     'subtotal' => $lineTotal
                 ]);
@@ -306,13 +306,19 @@ class OrderNetworkController extends Controller
     public function getDeliveryDetails($id)
     {
         $schedule = DeliverySchedule::with([
-            'shipment.sale.sale_details.product_variant.product', 
-            'shipment.sale.sale_details.product_variant.variant_images',
-            'shipment.sale.sale_details.product_variant.size',
-            'shipment.sale.sale_details.product_variant.fit',
-            'shipment.sale.sale_details.product_variant.variant_attribute_values.attribute_value.attribute',
+            'shipment.sale.sale_details' => function($q) { 
+                $q->withTrashed()->with([
+                    'product_variant.product.product_images', 
+                    'product_variant.product.attribute_value_images',
+                    'product_variant.variant_images',
+                    'product_variant.size',
+                    'product_variant.fit',
+                    'product_variant.variant_attribute_values.attribute_value.attribute'
+                ]); 
+            },
             'shipment.sale.guest', 
             'shipment.sale.customer',
+            'shipment.sale.payments.payment_method',
             'driver.user.profile'
         ])->findOrFail($id);
 
@@ -364,7 +370,88 @@ class OrderNetworkController extends Controller
 
                 $sale = $shipment->sale;
                 $sale->status = 'paid';
+                
+                // --- PAYMENT AND DISCOUNT LOGIC ---
+                $amountPaid = $request->input('monto_real');
+                if ($amountPaid !== null) {
+                    $amountPaid = (float) $amountPaid;
+                    $discountDiff = max(0, $sale->total - $amountPaid);
+
+                    if ($discountDiff > 0) {
+                        // Apply proportional discount to items
+                        $details = $sale->sale_details()->whereNull('deleted_at')->get();
+                        $totalPriceBeforeDiff = $details->sum('subtotal');
+
+                        foreach ($details as $detail) {
+                            $ratio = $totalPriceBeforeDiff > 0 ? ($detail->subtotal / $totalPriceBeforeDiff) : 0;
+                            $detailDiscount = $discountDiff * $ratio;
+                            
+                            $unitDiscount = $detailDiscount / $detail->quantity;
+                            
+                            // User asked to use 'discount' column specifically, though we'll update both for compatibility
+                            $detail->discount = ($detail->discount ?? 0) + $unitDiscount;
+                            $detail->final_price = max(0, $detail->unit_price - $detail->discount);
+                            $detail->subtotal = $detail->final_price * $detail->quantity;
+                            $detail->save();
+                        }
+
+                        $sale->discount_total = ($sale->discount_total ?? 0) + $discountDiff;
+                        $sale->total = $amountPaid;
+                    }
+
+                    // Create Payment Records
+                    $paymentMethodType = $request->input('payment_method'); // 'efectivo', 'qr', 'ambos'
+                    
+                    if ($paymentMethodType) {
+                        $cashMethodId = \App\Models\Finance\PaymentMethod::whereRaw('LOWER(name) = ?', ['efectivo'])->value('id');
+                        $qrMethodId = \App\Models\Finance\PaymentMethod::whereRaw('LOWER(name) = ?', ['qr'])->value('id');
+                        
+                        // Default to cash register of the branch, if available
+                        $cashRegisterId = \App\Models\Finance\CashRegister::where('branch_id', $sale->branch_id)->where('status', 'open')->value('id');
+                        
+                        if ($paymentMethodType === 'efectivo' && $cashMethodId) {
+                            \App\Models\Finance\Payment::create([
+                                'sale_id' => $sale->id,
+                                'payment_method_id' => $cashMethodId,
+                                'cash_register_id' => $cashRegisterId,
+                                'amount' => $amountPaid,
+                                'status' => 'completed'
+                            ]);
+                        } elseif ($paymentMethodType === 'qr' && $qrMethodId) {
+                            \App\Models\Finance\Payment::create([
+                                'sale_id' => $sale->id,
+                                'payment_method_id' => $qrMethodId,
+                                'cash_register_id' => $cashRegisterId,
+                                'amount' => $amountPaid,
+                                'status' => 'completed'
+                            ]);
+                        } elseif ($paymentMethodType === 'ambos') {
+                            $cashAmount = (float) $request->input('amount_cash', 0);
+                            $qrAmount = (float) $request->input('amount_qr', 0);
+                            
+                            if ($cashAmount > 0 && $cashMethodId) {
+                                \App\Models\Finance\Payment::create([
+                                    'sale_id' => $sale->id,
+                                    'payment_method_id' => $cashMethodId,
+                                    'cash_register_id' => $cashRegisterId,
+                                    'amount' => $cashAmount,
+                                    'status' => 'completed'
+                                ]);
+                            }
+                            if ($qrAmount > 0 && $qrMethodId) {
+                                \App\Models\Finance\Payment::create([
+                                    'sale_id' => $sale->id,
+                                    'payment_method_id' => $qrMethodId,
+                                    'cash_register_id' => $cashRegisterId,
+                                    'amount' => $qrAmount,
+                                    'status' => 'completed'
+                                ]);
+                            }
+                        }
+                    }
+                }
                 $sale->save();
+                // ----------------------------------
 
                 // Confirm stock reservations
                 StockReservation::where('sale_id', $sale->id)
@@ -671,6 +758,163 @@ class OrderNetworkController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error('OrderNetwork Update Error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Remove an item from the delivery and restore stock.
+     */
+    public function removeItem(Request $request, $id, $detailId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $schedule = DeliverySchedule::with('shipment.sale.sale_details')->findOrFail($id);
+            if (in_array($schedule->status, ['completed', 'cancelled'])) {
+                return response()->json(['error' => 'No se puede quitar prendas en este estado.'], 400);
+            }
+
+            $sale = $schedule->shipment->sale;
+            if ($sale->sale_details()->count() <= 1) {
+                return response()->json(['error' => 'No puedes quitar la única prenda. Mejor cancela la entrega.'], 400);
+            }
+
+            $detail = $sale->sale_details()->findOrFail($detailId);
+
+            // Restore stock
+            $res = StockReservation::where('sale_id', $sale->id)->where('variant_id', $detail->variant_id)->first();
+            if ($res && $res->status !== 'released') {
+                $inv = Inventory::where('branch_id', $res->branch_id)
+                    ->where('variant_id', $res->variant_id)
+                    ->lockForUpdate()
+                    ->first();
+                
+                if ($inv) {
+                    $stockBefore = $inv->stock;
+                    $inv->stock += $res->quantity;
+                    $inv->save();
+
+                    InventoryMovement::create([
+                        'variant_id' => $res->variant_id,
+                        'branch_id' => $res->branch_id,
+                        'movement_type' => 'return',
+                        'quantity' => (int) $res->quantity,
+                        'stock_before' => $stockBefore,
+                        'stock_after' => $inv->stock,
+                        'reference_type' => 'sale',
+                        'reference_id' => $sale->id,
+                        'created_by' => auth()->id() ?? null,
+                    ]);
+                }
+                $res->update(['status' => 'released']);
+            }
+
+            // Update Sale totals
+            $sale->subtotal -= $detail->subtotal;
+            $sale->total -= $detail->subtotal; // Subtotal and Total are generally the same before discount
+            $sale->total_discount -= $detail->discount_amount;
+            if ($sale->total < 0) $sale->total = 0;
+            if ($sale->subtotal < 0) $sale->subtotal = 0;
+            if ($sale->total_discount < 0) $sale->total_discount = 0;
+            $sale->save();
+
+            // Soft delete detail
+            $detail->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Prenda quitada y devuelta al stock correctamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Restore a previously removed item to the delivery.
+     */
+    public function restoreItem(Request $request, $id, $detailId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $schedule = DeliverySchedule::with(['shipment.sale.sale_details' => function($q) {
+                $q->withTrashed();
+            }])->findOrFail($id);
+
+            if (in_array($schedule->status, ['completed', 'cancelled'])) {
+                return response()->json(['error' => 'No se puede reintegrar prendas en este estado.'], 400);
+            }
+
+            $sale = $schedule->shipment->sale;
+            $detail = $sale->sale_details()->withTrashed()->findOrFail($detailId);
+
+            if (!$detail->trashed()) {
+                return response()->json(['error' => 'La prenda no está eliminada.'], 400);
+            }
+
+            // Check stock and reserve again
+            $res = StockReservation::where('sale_id', $sale->id)->where('variant_id', $detail->variant_id)->first();
+            $branchId = $res ? $res->branch_id : env('MAIN_BRANCH_ID', 1);
+
+            $inv = Inventory::where('branch_id', $branchId)
+                ->where('variant_id', $detail->variant_id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$inv || $inv->stock < $detail->quantity) {
+                return response()->json(['error' => 'No hay stock suficiente para reintegrar esta prenda.'], 400);
+            }
+
+            $stockBefore = $inv->stock;
+            $inv->stock -= $detail->quantity;
+            $inv->save();
+
+            InventoryMovement::create([
+                'variant_id' => $detail->variant_id,
+                'branch_id' => $branchId,
+                'movement_type' => 'sale',
+                'quantity' => (int) $detail->quantity,
+                'stock_before' => $stockBefore,
+                'stock_after' => $inv->stock,
+                'reference_type' => 'sale',
+                'reference_id' => $sale->id,
+                'created_by' => auth()->id() ?? null,
+            ]);
+
+            if ($res) {
+                $res->update(['status' => 'reserved']);
+            } else {
+                StockReservation::create([
+                    'variant_id' => $detail->variant_id,
+                    'branch_id' => $branchId,
+                    'sale_id' => $sale->id,
+                    'quantity' => $detail->quantity,
+                    'status' => 'reserved'
+                ]);
+            }
+
+            // Update Sale totals
+            $sale->subtotal += $detail->subtotal;
+            $sale->total += $detail->subtotal; // Assuming total matches subtotal before global discounts
+            $sale->total_discount += $detail->discount_amount;
+            $sale->save();
+
+            // Restore the soft-deleted detail
+            $detail->restore();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Prenda reintegrada a la entrega exitosamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }

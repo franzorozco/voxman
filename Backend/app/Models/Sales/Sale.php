@@ -55,4 +55,9 @@ class Sale extends BaseSale
 	{
 		return $this->hasMany(\App\Models\Sales\SaleAppliedDiscount::class, 'sale_id');
 	}
+
+	public function stockReservations()
+	{
+		return $this->hasMany(\App\Models\Inventory\StockReservation::class, 'sale_id');
+	}
 }
