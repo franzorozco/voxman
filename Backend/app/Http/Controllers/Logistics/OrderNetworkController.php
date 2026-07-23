@@ -178,16 +178,16 @@ class OrderNetworkController extends Controller
             $sale = Sale::create([
                 'customer_id' => $customerId,
                 'guest_id' => $guestId,
-                'branch_id' => $request->branch_id,
+                'branch_id' => null,
                 'user_id' => auth()->id() ?? null,
                 'invoice_number' => 'DLV-' . strtoupper(\Illuminate\Support\Str::random(6)),
-                'sale_type' => 'online', // Or perhaps 'delivery'
+                'sale_type' => 'delivery',
                 'status' => 'pending',
                 'source' => 'order_network',
                 'subtotal' => 0, // Will calculate below
                 'discount_total' => $cart->total_discount,
                 'total' => 0,
-                'notes' => 'Proviene de Carrito/Proforma: ' . $cart->reference_number
+                'notes' => null
             ]);
 
             $subtotal = 0;
@@ -318,7 +318,9 @@ class OrderNetworkController extends Controller
             },
             'shipment.sale.guest', 
             'shipment.sale.customer',
+            'shipment.sale.discount',
             'shipment.sale.payments.payment_method',
+            'shipment.sale.giftcard_transactions.giftcard',
             'driver.user.profile'
         ])->findOrFail($id);
 
@@ -376,6 +378,43 @@ class OrderNetworkController extends Controller
                 if ($amountPaid !== null) {
                     $amountPaid = (float) $amountPaid;
                     $discountDiff = max(0, $sale->total - $amountPaid);
+
+                    $appliedCode = $request->input('applied_code');
+                    if ($appliedCode) {
+                        $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+                        $validationResult = $discountService->validateCode(
+                            $appliedCode,
+                            $sale->total,
+                            $sale->sale_details()->whereNull('deleted_at')->get(),
+                            $sale->customer_id,
+                            $sale->branch_id
+                        );
+
+                        if ($validationResult['valid']) {
+                            if ($validationResult['type'] === 'giftcard') {
+                                $giftcard = \App\Models\Finance\Giftcard::find($validationResult['id']);
+                                if ($giftcard) {
+                                    $giftcard->current_balance -= $validationResult['discount_amount'];
+                                    $giftcard->save();
+
+                                    \App\Models\Finance\GiftcardTransaction::create([
+                                        'id' => \Illuminate\Support\Str::uuid(),
+                                        'giftcard_id' => $giftcard->id,
+                                        'type' => 'use',
+                                        'amount' => $validationResult['discount_amount'],
+                                        'notes' => 'Usado en pago de entrega (Venta: ' . $sale->id . ')'
+                                    ]);
+                                }
+                            } elseif ($validationResult['type'] === 'discount') {
+                                $discount = \App\Models\Discount\Discount::find($validationResult['id']);
+                                if ($discount) {
+                                    $discount->used_count += 1;
+                                    $discount->save();
+                                    $sale->discount_id = $discount->id;
+                                }
+                            }
+                        }
+                    }
 
                     if ($discountDiff > 0) {
                         // Apply proportional discount to items
@@ -501,6 +540,7 @@ class OrderNetworkController extends Controller
                 $shipment->save();
             }
 
+            event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
             DB::commit();
 
             return response()->json([

@@ -8,6 +8,7 @@ import { toast } from "react-hot-toast";
 import DeliveryDetailsModal from "./DeliveryDetailsModal";
 import NewOrderModal from "./NewOrderModal";
 import DeliveryZonesModal from "./DeliveryZonesModal";
+import echo from "../../../../echo";
 import "./Orders.css";
 
 export default function Orders() {
@@ -53,6 +54,18 @@ export default function Orders() {
       fetchSchedules();
     }, 300);
     return () => clearTimeout(delayDebounceFn);
+  }, [search, filters]);
+
+  useEffect(() => {
+    const channel = echo.channel('deliveries.global');
+    channel.listen('.delivery.status.updated', (data) => {
+      fetchSchedules();
+    });
+
+    return () => {
+      channel.stopListening('.delivery.status.updated');
+      echo.leaveChannel('deliveries.global');
+    };
   }, [search, filters]);
 
   const getStatusLabel = (status) => {

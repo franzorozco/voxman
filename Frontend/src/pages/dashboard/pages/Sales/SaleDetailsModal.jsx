@@ -86,6 +86,9 @@ export default function SaleDetailsModal({ saleId, onClose }) {
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
             <FileText size={20} className="text-primary"/>
             Detalle de Venta: {sale.invoice_number || sale.id.split('-')[0]}
+            {sale.shipments?.[0]?.delivery_code && (
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '8px', fontWeight: 500 }}>| Entrega: {sale.shipments[0].delivery_code}</span>
+            )}
             <span className={`status-badge ${sale.status === 'completed' ? 'status-success' : sale.status === 'cancelled' ? 'status-danger' : 'status-warning'}`} style={{ marginLeft: '10px' }}>
               {sale.status}
             </span>
@@ -454,14 +457,17 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 <span>Bs. {parseFloat(sale.subtotal).toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Descuento Global:</span>
+                <span style={{ color: 'var(--text-muted)' }}>Descuento / Giftcard:</span>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat(sale.discount_total || 0).toFixed(2)}</span>
                   {parseFloat(sale.discount_total) > 0 && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      {sale.sale_applied_discounts?.filter(d => !d.sale_detail_id).map(d => d.discount?.code).filter(Boolean).join(', ') 
-                       ? `Cupones: ${sale.sale_applied_discounts.filter(d => !d.sale_detail_id).map(d => d.discount?.code).filter(Boolean).join(', ')}`
-                       : 'Descuento Manual / Giftcard'}
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'right' }}>
+                        {sale?.discount && (
+                            <div style={{ marginBottom: '2px', fontWeight: 600 }}>Cupón aplicado: {sale.discount.code} ({sale.discount.name})</div>
+                        )}
+                        {sale?.giftcard_transactions?.map(tx => (
+                            <div key={tx.id} style={{ marginBottom: '2px', fontWeight: 600 }}>Giftcard usada: {tx.giftcard?.code} (-Bs. {Number(tx.amount).toFixed(2)})</div>
+                        ))}
                     </div>
                   )}
                 </div>

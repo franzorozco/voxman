@@ -123,6 +123,7 @@ class SaleController extends Controller
             'shipments.delivery_schedule.driver.user.profile',
             'giftcard_transactions.giftcard',
             'sale_applied_discounts.discount',
+            'discount',
             'guest',
             'stockReservations.branch'
         ])->findOrFail($id);

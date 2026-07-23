@@ -3,6 +3,7 @@ import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem } from "../../../../api/admin/orderNetwork";
 import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
+import DiscountInput from '../../components/DiscountInput';
 
 const mapContainerStyle = {
   width: '100%',
@@ -37,6 +38,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const [qrAmount, setQrAmount] = useState('');
   const [cashAmount, setCashAmount] = useState('');
   const [montoReal, setMontoReal] = useState('');
+  const [appliedCode, setAppliedCode] = useState(null);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -207,7 +209,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               {headerIcon} {headerTitle}
             </h2>
             <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-              Ref: {details.shipment?.delivery_code || details.id.slice(0,8)}
+              Ref: {details.shipment?.delivery_code || details.id.slice(0,8)} {sale?.invoice_number ? `| Venta: ${sale.invoice_number}` : ''}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -393,9 +395,23 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       <span>Bs. {Number(details.shipment?.shipping_cost || 0).toFixed(2)}</span>
                     </div>
                     {isCompleted && sale?.total_discount > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--color-danger)', fontWeight: 600 }}>
-                        <span>Descuento Aplicado:</span>
-                        <span>- Bs. {Number(sale.total_discount).toFixed(2)}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'var(--bg-input)', padding: '8px', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--color-danger)', fontWeight: 600 }}>
+                          <span>Descuento / Giftcard:</span>
+                          <span>- Bs. {Number(sale.total_discount).toFixed(2)}</span>
+                        </div>
+                        {sale?.discount && (
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Cupón aplicado:</span>
+                            <span style={{ fontWeight: 600 }}>{sale.discount.code} ({sale.discount.name})</span>
+                          </div>
+                        )}
+                        {sale?.giftcard_transactions?.map(tx => (
+                          <div key={tx.id} style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Giftcard usada:</span>
+                            <span style={{ fontWeight: 600 }}>{tx.giftcard?.code} (-Bs. {Number(tx.amount).toFixed(2)})</span>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '15px', fontWeight: 700, paddingBottom: isCompleted ? '12px' : '0', borderBottom: isCompleted ? '1px dashed var(--border-color)' : 'none' }}>
@@ -586,7 +602,27 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+            <DiscountInput 
+              subtotal={details.shipment?.sale?.total}
+              items={details.shipment?.sale?.sale_details || []}
+              customerId={details.shipment?.sale?.customer_id}
+              branchId={details.shipment?.sale?.branch_id}
+              disabled={paymentMethod === 'ambos'}
+              onValidated={(res) => {
+                if (res && res.valid) {
+                  setMontoReal(res.new_total);
+                  setAppliedCode(res.code);
+                  if (paymentMethod === 'ambos') {
+                    setCashAmount(''); setQrAmount('');
+                  }
+                } else {
+                  setMontoReal(details.shipment?.sale?.total);
+                  setAppliedCode(null);
+                }
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', marginTop: '16px' }}>
               <button 
                 onClick={() => setPaymentMethod('efectivo')}
                 style={{ flex: 1, padding: '12px', borderRadius: '8px', border: `1px solid ${paymentMethod === 'efectivo' ? 'var(--color-primary)' : 'var(--border-color)'}`, background: paymentMethod === 'efectivo' ? 'var(--color-primary-alpha)' : 'transparent', color: paymentMethod === 'efectivo' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: 600, cursor: 'pointer' }}
@@ -673,7 +709,8 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     monto_real: montoReal,
                     payment_method: paymentMethod,
                     amount_cash: cashAmount,
-                    amount_qr: qrAmount
+                    amount_qr: qrAmount,
+                    applied_code: appliedCode
                   });
                 }}
                 style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-success)', color: '#fff', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}

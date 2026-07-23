@@ -1,0 +1,187 @@
+<?php
+
+namespace App\Services\Finance;
+
+use App\Models\Discount\Discount;
+use App\Models\Finance\Giftcard;
+use Illuminate\Support\Facades\DB;
+
+class DiscountValidationService
+{
+    /**
+     * Validates a code (Giftcard or Discount) against a set of items.
+     * Returns an array with the validation result.
+     * 
+     * @param string $code
+     * @param float $subtotal
+     * @param \Illuminate\Support\Collection|array $items Must contain 'variant_id' and 'line_subtotal'
+     * @param string|null $customerId
+     * @param string|null $branchId
+     * @return array
+     */
+    public function validateCode($code, $subtotal, $items, $customerId = null, $branchId = null)
+    {
+        if (!$code) {
+            return ['valid' => false, 'message' => 'Código no proporcionado.'];
+        }
+
+        // 1. Check if it's a Giftcard format
+        if (preg_match('/^VOX-\d{6}$/', $code)) {
+            return $this->validateGiftcard($code, $subtotal);
+        }
+
+        // 2. Otherwise, treat as Discount
+        return $this->validateDiscount($code, $subtotal, $items, $customerId, $branchId);
+    }
+
+    protected function validateGiftcard($code, $subtotal)
+    {
+        $giftcard = Giftcard::where('code', $code)->first();
+
+        if (!$giftcard) {
+            return ['valid' => false, 'message' => 'La Giftcard no existe.'];
+        }
+
+        if (!$giftcard->is_active) {
+            return ['valid' => false, 'message' => 'La Giftcard está inactiva.'];
+        }
+
+        if ($giftcard->expires_at && $giftcard->expires_at->isPast()) {
+            return ['valid' => false, 'message' => 'La Giftcard ha expirado.'];
+        }
+
+        if ($giftcard->current_balance <= 0) {
+            return ['valid' => false, 'message' => 'La Giftcard no tiene saldo disponible.'];
+        }
+
+        $applicableAmount = min($subtotal, $giftcard->current_balance);
+        $newTotal = max(0, $subtotal - $applicableAmount);
+
+        return [
+            'valid' => true,
+            'type' => 'giftcard',
+            'id' => $giftcard->id,
+            'code' => $giftcard->code,
+            'original_total' => $subtotal,
+            'discount_amount' => $applicableAmount,
+            'new_total' => $newTotal,
+            'message' => 'Giftcard aplicada correctamente.',
+            'remaining_balance' => $giftcard->current_balance - $applicableAmount
+        ];
+    }
+
+    protected function validateDiscount($code, $subtotal, $items, $customerId, $branchId)
+    {
+        $discount = Discount::where('code', $code)
+            ->where('active', true)
+            ->first();
+
+        if (!$discount) {
+            return ['valid' => false, 'message' => 'Cupón de descuento no válido o inactivo.'];
+        }
+
+        // Check expiration
+        if ($discount->end_date && $discount->end_date->isPast()) {
+            return ['valid' => false, 'message' => 'El cupón ha expirado.'];
+        }
+
+        if ($discount->start_date && $discount->start_date->isFuture()) {
+            return ['valid' => false, 'message' => 'El cupón aún no es válido.'];
+        }
+
+        // Check usage limit
+        if ($discount->usage_limit && $discount->used_count >= $discount->usage_limit) {
+            return ['valid' => false, 'message' => 'El cupón ha alcanzado su límite de usos.'];
+        }
+
+        // Validate Branch
+        if ($branchId && $discount->branches()->exists()) {
+            if (!$discount->branches()->where('branches.id', $branchId)->exists()) {
+                return ['valid' => false, 'message' => 'El cupón no es válido para esta sucursal.'];
+            }
+        }
+
+        // Validate Customer
+        if ($customerId && $discount->customers()->exists()) {
+            if (!$discount->customers()->where('customers.id', $customerId)->exists()) {
+                return ['valid' => false, 'message' => 'El cupón no aplica para este cliente.'];
+            }
+        }
+
+        // Retrieve valid item variations
+        $validItemsSubtotal = 0;
+        
+        $discountCategories = $discount->categories()->pluck('categories.id')->toArray();
+        $discountBrands = $discount->brands()->pluck('brands.id')->toArray();
+        $discountProducts = $discount->products()->pluck('products.id')->toArray();
+        $discountVariants = $discount->variants()->pluck('product_variants.id')->toArray();
+        
+        $hasItemRestrictions = !empty($discountCategories) || !empty($discountBrands) || !empty($discountProducts) || !empty($discountVariants);
+
+        foreach ($items as $item) {
+            // Support arrays or objects
+            $variantId = is_array($item) ? $item['variant_id'] : $item->variant_id;
+            $lineSubtotal = is_array($item) ? $item['line_subtotal'] : $item->subtotal; // In Cart it's line_subtotal, in SaleDetail it's subtotal
+            
+            $variant = \App\Models\Catalog\ProductVariant::with('product')->find($variantId);
+            if (!$variant) continue;
+            
+            $itemValid = true;
+            
+            if ($hasItemRestrictions) {
+                $itemValid = false;
+                
+                if (in_array($variant->id, $discountVariants)) {
+                    $itemValid = true;
+                } elseif (in_array($variant->product_id, $discountProducts)) {
+                    $itemValid = true;
+                } elseif (in_array($variant->product->brand_id, $discountBrands)) {
+                    $itemValid = true;
+                } elseif (in_array($variant->product->category_id, $discountCategories)) {
+                    $itemValid = true;
+                }
+            }
+
+            if ($itemValid) {
+                $validItemsSubtotal += $lineSubtotal;
+            }
+        }
+
+        if ($validItemsSubtotal <= 0) {
+            return ['valid' => false, 'message' => 'El cupón no aplica para los productos seleccionados.'];
+        }
+
+        // Check minimum purchase amount
+        if ($discount->min_purchase_amount && $validItemsSubtotal < $discount->min_purchase_amount) {
+            return ['valid' => false, 'message' => 'No se alcanzó el monto mínimo ('. $discount->min_purchase_amount .' Bs) para este cupón.'];
+        }
+
+        // Calculate discount amount based on VALID items
+        $discountAmount = 0;
+        if ($discount->type === 'percentage') {
+            $discountAmount = $validItemsSubtotal * ($discount->value / 100);
+        } else {
+            // Fixed discount is applied entirely as long as it does not exceed the valid subtotal
+            $discountAmount = $discount->value;
+        }
+
+        if ($discount->max_discount_amount) {
+            $discountAmount = min($discountAmount, $discount->max_discount_amount);
+        }
+
+        $discountAmount = min($discountAmount, $validItemsSubtotal); // Can't discount more than what the valid items cost
+        
+        $newTotal = max(0, $subtotal - $discountAmount);
+
+        return [
+            'valid' => true,
+            'type' => 'discount',
+            'id' => $discount->id,
+            'code' => $discount->code,
+            'original_total' => $subtotal,
+            'discount_amount' => $discountAmount,
+            'new_total' => $newTotal,
+            'message' => 'Cupón de descuento aplicado correctamente.',
+        ];
+    }
+}

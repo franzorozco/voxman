@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Package, Truck, MapPin, CheckCircle, Clock, AlertCircle, ShoppingBag, User, Phone, Map, Box } from "lucide-react";
+import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
+import echo from "../../../echo";
 import "./Tracking.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
@@ -12,6 +14,11 @@ export default function Tracking() {
   const [schedule, setSchedule] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M"
+  });
 
   useEffect(() => {
     const fetchTracking = async () => {
@@ -25,6 +32,19 @@ export default function Tracking() {
       }
     };
     fetchTracking();
+
+    const channel = echo.channel(`deliveries.global`);
+    channel.listen('.delivery.status.updated', (data) => {
+      // In a real app we'd filter by id or fetch again. Since the tracking page uses ID:
+      // Actually we just refetch if we get any update, or just use `deliveries.${id}` if we had private channels.
+      // We will just refetch for simplicity since it's an isolated view.
+      fetchTracking();
+    });
+
+    return () => {
+      channel.stopListening('.delivery.status.updated');
+      echo.leaveChannel(`deliveries.global`);
+    };
   }, [id]);
 
   if (loading) {
@@ -152,6 +172,18 @@ export default function Tracking() {
               <span className="detail-value">{schedule.time_window || "A convenir"}</span>
             </div>
           </div>
+          {schedule.latitude && schedule.longitude && isLoaded && (
+            <div style={{ marginTop: '20px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', height: '250px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%' }}
+                center={{ lat: Number(schedule.latitude), lng: Number(schedule.longitude) }}
+                zoom={16}
+                options={{ disableDefaultUI: true, gestureHandling: 'greedy' }}
+              >
+                <MarkerF position={{ lat: Number(schedule.latitude), lng: Number(schedule.longitude) }} />
+              </GoogleMap>
+            </div>
+          )}
 
           {/* Repartidor Info Oculto temporalmente a petición del usuario
           {driver && statusInfo.activeStep >= 2 && statusInfo.activeStep < 5 && (

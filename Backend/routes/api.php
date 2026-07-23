@@ -132,6 +132,10 @@ Route::middleware([
         Route::delete('/{id}/force', [DiscountController::class, 'forceDestroy']);
     });
 
+    Route::prefix('checkout')->group(function () {
+        Route::post('/validate-code', [\App\Http\Controllers\Api\Admin\CheckoutValidationController::class, 'validateCode']);
+    });
+
     Route::prefix('brands')->group(function () {
         Route::get('/', [BrandController::class, 'index']);
         Route::post('/', [BrandController::class, 'store']);

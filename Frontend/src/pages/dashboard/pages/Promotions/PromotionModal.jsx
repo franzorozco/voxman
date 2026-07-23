@@ -252,16 +252,30 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   placeholder="Ej: Oferta de Verano"
                 />
               </div>
-              <div className="form-group" style={{justifyContent: 'center'}}>
-                <label className="checkbox-group">
-                  <input 
-                    type="checkbox" 
-                    name="active" 
-                    checked={formData.active} 
-                    onChange={handleChange} 
-                  />
-                  Promoción Activa
-                </label>
+              <div className="form-group" style={{justifyContent: 'center', display: 'flex', flexDirection: 'column'}}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 'auto', marginBottom: 'auto' }}>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0, margin: 0 }}>
+                    <input 
+                      type="checkbox" 
+                      name="active" 
+                      checked={formData.active} 
+                      onChange={handleChange} 
+                      style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                    />
+                    <span style={{ 
+                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
+                      backgroundColor: formData.active ? 'var(--color-primary)' : 'var(--border-color)', 
+                      transition: '.4s', borderRadius: '34px' 
+                    }}>
+                      <span style={{
+                        position: 'absolute', content: '""', height: '16px', width: '16px', 
+                        left: formData.active ? '24px' : '4px', bottom: '4px', 
+                        backgroundColor: 'var(--bg-main)', transition: '.4s', borderRadius: '50%'
+                      }}></span>
+                    </span>
+                  </label>
+                  <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '14px' }}>Promoción Activa</span>
+                </div>
               </div>
             </div>
 
@@ -309,15 +323,29 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
             <p style={{ margin: '24px 0 16px 0', fontSize: '16px', fontWeight: 600, color: 'var(--primary-color)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Código y Automatización</p>
             <div className="form-grid">
               <div className="form-group">
-                <label className="checkbox-group" style={{marginTop: '0'}}>
-                  <input 
-                    type="checkbox" 
-                    name="is_automatic" 
-                    checked={formData.is_automatic} 
-                    onChange={handleChange} 
-                  />
-                  Aplicar Automáticamente (No requiere código)
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '28px' }}>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0, margin: 0 }}>
+                    <input 
+                      type="checkbox" 
+                      name="is_automatic" 
+                      checked={formData.is_automatic} 
+                      onChange={handleChange} 
+                      style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                    />
+                    <span style={{ 
+                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
+                      backgroundColor: formData.is_automatic ? 'var(--color-primary)' : 'var(--border-color)', 
+                      transition: '.4s', borderRadius: '34px' 
+                    }}>
+                      <span style={{
+                        position: 'absolute', content: '""', height: '16px', width: '16px', 
+                        left: formData.is_automatic ? '24px' : '4px', bottom: '4px', 
+                        backgroundColor: 'var(--bg-main)', transition: '.4s', borderRadius: '50%'
+                      }}></span>
+                    </span>
+                  </label>
+                  <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '14px' }}>Aplicar Automáticamente</span>
+                </div>
               </div>
               {!formData.is_automatic && (
                 <div className="form-group">
@@ -327,8 +355,12 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                     name="code" 
                     required={!formData.is_automatic}
                     value={formData.code} 
-                    onChange={handleChange} 
-                    placeholder="Ej: VERANO20"
+                    maxLength={6}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                      setFormData({...formData, code: val});
+                    }} 
+                    placeholder="Ej: VRN20X (Max 6)"
                     style={{ textTransform: 'uppercase' }}
                   />
                 </div>

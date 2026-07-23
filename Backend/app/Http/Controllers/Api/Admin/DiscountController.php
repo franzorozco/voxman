@@ -31,7 +31,7 @@ class DiscountController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'code' => 'nullable|string|max:50|unique:discounts,code',
+            'code' => 'nullable|string|max:6|alpha_num|unique:discounts,code',
             'type' => 'required|string|in:percentage,fixed',
             'value' => 'required|numeric|min:0',
             'is_automatic' => 'boolean',
@@ -90,7 +90,7 @@ class DiscountController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'code' => 'nullable|string|max:50|unique:discounts,code,' . $id,
+            'code' => 'nullable|string|max:6|alpha_num|unique:discounts,code,' . $id,
             'type' => 'required|string|in:percentage,fixed',
             'value' => 'required|numeric|min:0',
             'is_automatic' => 'boolean',

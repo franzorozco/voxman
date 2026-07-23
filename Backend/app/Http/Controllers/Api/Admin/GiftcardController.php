@@ -31,6 +31,7 @@ class GiftcardController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'code' => ['required', 'regex:/^VOX-\d{6}$/', 'unique:giftcards,code'],
             'amount' => 'required|numeric|min:50',
             'purchaser_id' => 'nullable|uuid|exists:customers,id',
             'expires_at' => 'nullable|date',
@@ -38,11 +39,9 @@ class GiftcardController extends Controller
 
         DB::beginTransaction();
         try {
-            $code = 'GFT-' . strtoupper(Str::random(8));
-
             $giftcard = Giftcard::create([
                 'id' => Str::uuid(),
-                'code' => $code,
+                'code' => $request->code,
                 'initial_balance' => $request->amount,
                 'current_balance' => $request->amount,
                 'purchaser_id' => $request->purchaser_id,

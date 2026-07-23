@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { createGiftcard, reloadGiftcard } from "../../../../api/admin/giftcards";
 import api from "../../../../api/client";
@@ -36,10 +36,29 @@ const customStyles = {
 };
 
 export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftcard }) {
+  const generateRandomCode = () => {
+    return 'VOX-' + Math.floor(100000 + Math.random() * 900000);
+  };
+  const addMonths = (months) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + months);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const [code, setCode] = useState(generateRandomCode());
   const [amount, setAmount] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [presetDuration, setPresetDuration] = useState("1m");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && mode !== "reload") {
+      setCode(generateRandomCode());
+      setExpiresAt(addMonths(1));
+      setPresetDuration("1m");
+    }
+  }, [isOpen, mode]);
 
   if (!isOpen) return null;
 
@@ -60,6 +79,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
         toast.success("Giftcard recargada exitosamente");
       } else {
         await createGiftcard({ 
+          code: code,
           amount: parseFloat(amount),
           expires_at: expiresAt ? expiresAt : null,
           purchaser_id: selectedCustomer ? selectedCustomer.value : null
@@ -114,6 +134,29 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
 
             {!isReload && (
               <>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label>Código de Giftcard *</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      required
+                      value={code}
+                      maxLength={10}
+                      onChange={(e) => {
+                        let val = e.target.value.toUpperCase();
+                        if (!val.startsWith('VOX-')) val = 'VOX-';
+                        const rest = val.substring(4).replace(/[^0-9]/g, '');
+                        setCode('VOX-' + rest.substring(0, 6));
+                      }}
+                      placeholder="VOX-123456"
+                      style={{ flex: 1, letterSpacing: '1px', fontWeight: 'bold' }}
+                    />
+                    <button type="button" className="btn-secondary" onClick={() => setCode(generateRandomCode())} style={{ padding: '0 16px', borderRadius: '8px', cursor: 'pointer', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}>
+                      Generar
+                    </button>
+                  </div>
+                </div>
+
                 <div className="form-group" style={{ marginTop: '16px' }}>
                   <label>Asignar Comprador (Búsqueda Asyncrona)</label>
                   <AsyncSelect
@@ -134,10 +177,47 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
 
                 <div className="form-group" style={{ marginTop: '16px' }}>
                   <label>Fecha de expiración (Opcional)</label>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      style={{ flex: 1, padding: '6px', fontSize: '0.85rem', borderRadius: '6px', border: presetDuration === '1m' ? '1px solid var(--color-primary)' : '1px solid var(--border-color)', background: presetDuration === '1m' ? 'var(--bg-overlay)' : 'transparent', color: presetDuration === '1m' ? 'var(--color-primary)' : 'var(--text-muted)' }}
+                      onClick={() => { setPresetDuration('1m'); setExpiresAt(addMonths(1)); }}
+                    >
+                      1 Mes
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      style={{ flex: 1, padding: '6px', fontSize: '0.85rem', borderRadius: '6px', border: presetDuration === '1y' ? '1px solid var(--color-primary)' : '1px solid var(--border-color)', background: presetDuration === '1y' ? 'var(--bg-overlay)' : 'transparent', color: presetDuration === '1y' ? 'var(--color-primary)' : 'var(--text-muted)' }}
+                      onClick={() => { setPresetDuration('1y'); setExpiresAt(addMonths(12)); }}
+                    >
+                      1 Año
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      style={{ flex: 1, padding: '6px', fontSize: '0.85rem', borderRadius: '6px', border: presetDuration === '5y' ? '1px solid var(--color-primary)' : '1px solid var(--border-color)', background: presetDuration === '5y' ? 'var(--bg-overlay)' : 'transparent', color: presetDuration === '5y' ? 'var(--color-primary)' : 'var(--text-muted)' }}
+                      onClick={() => { setPresetDuration('5y'); setExpiresAt(addMonths(60)); }}
+                    >
+                      5 Años
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-secondary" 
+                      style={{ flex: 1, padding: '6px', fontSize: '0.85rem', borderRadius: '6px', border: presetDuration === 'custom' ? '1px solid var(--color-primary)' : '1px solid var(--border-color)', background: presetDuration === 'custom' ? 'var(--bg-overlay)' : 'transparent', color: presetDuration === 'custom' ? 'var(--color-primary)' : 'var(--text-muted)' }}
+                      onClick={() => { setPresetDuration('custom'); }}
+                    >
+                      Otra
+                    </button>
+                  </div>
                   <input
                     type="date"
                     value={expiresAt}
-                    onChange={(e) => setExpiresAt(e.target.value)}
+                    onChange={(e) => {
+                      setExpiresAt(e.target.value);
+                      setPresetDuration('custom');
+                    }}
                   />
                 </div>
               </>
