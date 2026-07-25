@@ -23,7 +23,12 @@ class DeliverySchedule extends Model
         'meeting_point',
         'latitude',
         'longitude',
+        'checkout_session',
         'created_at'
+    ];
+
+    protected $casts = [
+        'checkout_session' => 'array',
     ];
 
     public function shipment()

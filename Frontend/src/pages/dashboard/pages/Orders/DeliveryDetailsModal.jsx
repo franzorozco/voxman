@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2 } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem } from "../../../../api/admin/orderNetwork";
+import api from "../../../../api/client";
+import echo from "../../../../echo";
 import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
 import DiscountInput from '../../components/DiscountInput';
@@ -100,6 +102,58 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   useEffect(() => {
     if (scheduleId) fetchDetails();
   }, [scheduleId]);
+
+  useEffect(() => {
+    if (!scheduleId) return;
+
+    const channel = echo.channel(`deliveries.${scheduleId}`);
+    channel.listen('.delivery.discount.applied', (data) => {
+      toast.success(`Descuento aplicado: Bs. ${data.discountData?.amount || 0}`);
+      fetchDetails(); 
+    });
+    channel.listen('.delivery.discount.removed', () => {
+      toast.error(`Descuento removido`);
+      fetchDetails();
+    });
+
+    return () => {
+      channel.stopListening('.delivery.discount.applied');
+      channel.stopListening('.delivery.discount.removed');
+      echo.leaveChannel(`deliveries.${scheduleId}`);
+    };
+  }, [scheduleId]);
+
+  const handleRemoveDiscount = async () => {
+    setUpdating(true);
+    try {
+      await api.post(`/v1/admin/order-network/${scheduleId}/remove-discount`);
+      toast.success("Descuento removido exitosamente");
+      setAppliedCode(null);
+      fetchDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Error al remover descuento");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleShareCheckout = async () => {
+    try {
+      setUpdating(true);
+      await api.post(`/v1/admin/order-network/${scheduleId}/share-checkout`, {
+        payment_method: paymentMethod,
+        monto_real: montoReal,
+        cash_amount: cashAmount || null,
+        qr_amount: qrAmount || null,
+        sale_total: details?.shipment?.sale?.total
+      });
+      toast.success("Detalles de cobro compartidos con el cliente");
+    } catch (err) {
+      toast.error("Error al compartir detalles");
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const handleUpdateStatus = async (newStatus, paymentData = null) => {
     if (newStatus === 'cancelled' && !window.confirm('¿Estás seguro de cancelar esta entrega? Esta acción no se puede deshacer.')) return;
@@ -595,32 +649,53 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </div>
               </div>
               
-              {Number(montoReal) < Number(details.shipment?.sale?.total) && (
+              {Number(montoReal) < Number(details.shipment?.sale?.total + details.shipment?.sale?.total_discount) && (
                 <div style={{ marginTop: '8px', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, textAlign: 'right' }}>
-                  Descuento aplicado: Bs. {(Number(details.shipment?.sale?.total) - Number(montoReal)).toFixed(2)}
+                  Descuento manual aplicado
                 </div>
               )}
             </div>
 
-            <DiscountInput 
-              subtotal={details.shipment?.sale?.total}
-              items={details.shipment?.sale?.sale_details || []}
-              customerId={details.shipment?.sale?.customer_id}
-              branchId={details.shipment?.sale?.branch_id}
-              disabled={paymentMethod === 'ambos'}
-              onValidated={(res) => {
-                if (res && res.valid) {
-                  setMontoReal(res.new_total);
-                  setAppliedCode(res.code);
-                  if (paymentMethod === 'ambos') {
-                    setCashAmount(''); setQrAmount('');
+            {(details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? (
+              <div style={{ padding: '16px', background: 'var(--color-success-alpha)', borderRadius: '8px', border: '1px solid var(--color-success)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+                <div>
+                  <span style={{ fontWeight: 600, color: 'var(--color-success)', display: 'block', marginBottom: '4px' }}>Descuento Guardado</span>
+                  <div style={{ color: 'var(--color-success)', fontWeight: 800, fontSize: '16px' }}>- Bs. {Number(details.shipment.sale.total_discount).toFixed(2)}</div>
+                </div>
+                <button 
+                  onClick={handleRemoveDiscount} 
+                  disabled={updating} 
+                  style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-danger)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Quitar
+                </button>
+              </div>
+            ) : (
+              <DiscountInput 
+                subtotal={details.shipment?.sale?.total}
+                items={details.shipment?.sale?.sale_details || []}
+                customerId={details.shipment?.sale?.customer_id}
+                branchId={details.shipment?.sale?.branch_id}
+                disabled={paymentMethod === 'ambos'}
+                onValidated={async (res) => {
+                  if (res && res.valid) {
+                    try {
+                      setUpdating(true);
+                      await api.post(`/v1/admin/order-network/${scheduleId}/apply-discount`, { code: res.code });
+                      toast.success("Descuento guardado y compartido");
+                      fetchDetails();
+                    } catch (err) {
+                      toast.error("Error al aplicar descuento");
+                    } finally {
+                      setUpdating(false);
+                    }
+                  } else {
+                    setMontoReal(details.shipment?.sale?.total);
+                    setAppliedCode(null);
                   }
-                } else {
-                  setMontoReal(details.shipment?.sale?.total);
-                  setAppliedCode(null);
-                }
-              }}
-            />
+                }}
+              />
+            )}
 
             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', marginTop: '16px' }}>
               <button 
@@ -695,14 +770,23 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
               <button 
-                onClick={() => setShowPaymentModal(false)}
-                style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+                onClick={handleShareCheckout}
+                style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-primary)', background: 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+                disabled={updating}
               >
-                Cancelar
+                <Share2 size={18} /> Compartir
               </button>
-              <button 
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={() => setShowPaymentModal(false)}
+                  style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+                  disabled={updating}
+                >
+                  Cancelar
+                </button>
+                <button  
                 onClick={() => {
                   setShowPaymentModal(false);
                   handleUpdateStatus('completed', {
@@ -717,6 +801,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               >
                 <CheckCircle size={18} /> Confirmar Pago y Entrega
               </button>
+              </div>
             </div>
           </div>
         </div>

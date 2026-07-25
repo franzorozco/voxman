@@ -38,6 +38,8 @@ Route::post('/login', LoginController::class);
 Route::prefix('v1/delivery')->group(function () {
     Route::get('/{id}', [OrderNetworkController::class, 'getDeliveryDetails']);
     Route::post('/{id}/confirm', [OrderNetworkController::class, 'confirmDelivery']);
+    Route::post('/{id}/apply-discount', [OrderNetworkController::class, 'applyDiscount']);
+    Route::post('/{id}/remove-discount', [OrderNetworkController::class, 'removeDiscount']);
 });
 
 Route::middleware([
@@ -412,9 +414,12 @@ Route::middleware([
         Route::get('/drivers', [OrderNetworkController::class, 'getDrivers']);
         Route::post('/convert', [OrderNetworkController::class, 'convertToOrder']);
         Route::post('/{id}/status', [OrderNetworkController::class, 'updateStatus']);
+        Route::post('/{id}/share-checkout', [OrderNetworkController::class, 'shareCheckoutSession']);
+        Route::post('/{id}/apply-discount', [OrderNetworkController::class, 'applyDiscount']);
         Route::put('/{id}/details', [OrderNetworkController::class, 'updateDeliveryDetails']);
         Route::put('/{id}/order', [OrderNetworkController::class, 'updateOrder']);
         Route::post('/{id}/driver', [OrderNetworkController::class, 'assignDriver']);
+        Route::post('/{id}/remove-discount', [OrderNetworkController::class, 'removeDiscount']);
         Route::delete('/{id}/item/{detailId}', [OrderNetworkController::class, 'removeItem']);
         Route::post('/{id}/item/{detailId}/restore', [OrderNetworkController::class, 'restoreItem']);
         Route::delete('/{id}', [OrderNetworkController::class, 'cancelOrder']);

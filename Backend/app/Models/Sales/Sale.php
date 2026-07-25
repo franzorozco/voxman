@@ -33,6 +33,7 @@ class Sale extends BaseSale
 		'invoice_number',
 		'notes',
 		'discount_id',
+        'giftcard_id',
         'guest_id'
 	];
 
@@ -44,6 +45,11 @@ class Sale extends BaseSale
 	public function discount()
 	{
 		return $this->belongsTo(\App\Models\Discount\Discount::class, 'discount_id');
+	}
+
+	public function giftcard()
+	{
+		return $this->belongsTo(\App\Models\Finance\Giftcard::class, 'giftcard_id');
 	}
 
 	public function giftcard_transactions()

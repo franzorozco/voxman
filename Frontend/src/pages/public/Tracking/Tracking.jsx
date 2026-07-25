@@ -15,6 +15,12 @@ export default function Tracking() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Checkout Session State
+  const [checkoutSession, setCheckoutSession] = useState(null);
+  const [discountCode, setDiscountCode] = useState('');
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
+  const [discountMessage, setDiscountMessage] = useState(null);
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M"
@@ -24,7 +30,18 @@ export default function Tracking() {
     const fetchTracking = async () => {
       try {
         const response = await axios.get(`${API_URL}/v1/delivery/${id}`);
-        setSchedule(response.data.schedule);
+        const fetchedSchedule = response.data.schedule;
+        setSchedule(fetchedSchedule);
+        
+        if (fetchedSchedule.checkout_session) {
+          setCheckoutSession({
+            paymentMethod: fetchedSchedule.checkout_session.payment_method,
+            montoReal: fetchedSchedule.checkout_session.monto_real,
+            cashAmount: fetchedSchedule.checkout_session.cash_amount,
+            qrAmount: fetchedSchedule.checkout_session.qr_amount,
+            saleTotal: fetchedSchedule.checkout_session.sale_total
+          });
+        }
       } catch (err) {
         setError("No se pudo encontrar la información de este envío. Verifica que el enlace sea correcto.");
       } finally {
@@ -33,19 +50,67 @@ export default function Tracking() {
     };
     fetchTracking();
 
-    const channel = echo.channel(`deliveries.global`);
-    channel.listen('.delivery.status.updated', (data) => {
-      // In a real app we'd filter by id or fetch again. Since the tracking page uses ID:
-      // Actually we just refetch if we get any update, or just use `deliveries.${id}` if we had private channels.
-      // We will just refetch for simplicity since it's an isolated view.
+    const globalChannel = echo.channel(`deliveries.global`);
+    globalChannel.listen('.delivery.status.updated', () => {
       fetchTracking();
     });
 
+    const privateChannel = echo.channel(`deliveries.${id}`);
+    privateChannel.listen('.delivery.status.updated', () => {
+      fetchTracking();
+    });
+    privateChannel.listen('.checkout.session.shared', (data) => {
+      setCheckoutSession(data);
+    });
+    privateChannel.listen('.delivery.discount.applied', (data) => {
+      fetchTracking();
+      // Update local checkout session total if we had one active
+      setCheckoutSession(prev => prev ? { ...prev, montoReal: data.sale.total } : null);
+    });
+    privateChannel.listen('.delivery.discount.removed', (data) => {
+      fetchTracking();
+      setCheckoutSession(prev => prev ? { ...prev, montoReal: data.sale.total } : null);
+      setDiscountMessage(null);
+    });
+
     return () => {
-      channel.stopListening('.delivery.status.updated');
+      globalChannel.stopListening('.delivery.status.updated');
       echo.leaveChannel(`deliveries.global`);
+      privateChannel.stopListening('.delivery.status.updated');
+      privateChannel.stopListening('.checkout.session.shared');
+      privateChannel.stopListening('.delivery.discount.applied');
+      privateChannel.stopListening('.delivery.discount.removed');
+      echo.leaveChannel(`deliveries.${id}`);
     };
   }, [id]);
+
+  const handleRemoveDiscount = async () => {
+    setApplyingDiscount(true);
+    try {
+      await axios.post(`${API_URL}/v1/delivery/${id}/remove-discount`);
+      setDiscountMessage(null);
+      setDiscountCode('');
+    } catch (err) {
+      setDiscountMessage({ type: 'error', text: err.response?.data?.error || "Error al quitar el descuento" });
+    } finally {
+      setApplyingDiscount(false);
+    }
+  };
+
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) return;
+    setApplyingDiscount(true);
+    setDiscountMessage(null);
+    try {
+      const res = await axios.post(`${API_URL}/v1/delivery/${id}/apply-discount`, { code: discountCode });
+      setDiscountMessage({ type: 'success', text: `Descuento aplicado: Bs. ${res.data.discount_amount}` });
+      setDiscountCode('');
+    } catch (err) {
+      setDiscountMessage({ type: 'error', text: err.response?.data?.error || "Error al aplicar el código" });
+    } finally {
+      setApplyingDiscount(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -129,6 +194,7 @@ export default function Tracking() {
           </div>
         </div>
 
+
         {schedule.status !== 'cancelled' && (
           <div className="tracking-timeline">
             <div className="timeline-progress" style={{ width: `${progressWidth}%`, background: statusInfo.color }}></div>
@@ -156,7 +222,8 @@ export default function Tracking() {
           </div>
         )}
 
-        <div className="tracking-section">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
+          <div className="tracking-section" style={{ margin: 0 }}>
           <h3 className="section-title"><Map size={20} /> Detalles Logísticos</h3>
           <div className="details-grid">
             <div className="detail-item">
@@ -211,10 +278,10 @@ export default function Tracking() {
             </div>
           )}
           */}
-        </div>
+          </div>
 
-        <div className="tracking-section">
-          <h3 className="section-title"><ShoppingBag size={20} /> Detalle del Pedido</h3>
+          <div className="tracking-section" style={{ margin: 0 }}>
+            <h3 className="section-title"><ShoppingBag size={20} /> Detalle del Pedido</h3>
           <div className="products-list">
             {details.map((item, idx) => {
               const variant = item.product_variant;
@@ -262,10 +329,95 @@ export default function Tracking() {
               <span>Costo de Envío</span>
               <span>Bs. {Number(shipment?.shipping_cost || 0).toFixed(2)}</span>
             </div>
-            <div className="summary-row total">
-              <span>Total a Pagar</span>
-              <span>Bs. {(Number(sale?.subtotal || 0) + Number(shipment?.shipping_cost || 0)).toFixed(2)}</span>
+            
+            {(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) && (
+              <div className="summary-row" style={{ color: '#10b981', fontWeight: 600 }}>
+                <span>Descuento Aplicado</span>
+                <span>- Bs. {Number(schedule.shipment.sale.total_discount).toFixed(2)}</span>
+              </div>
+            )}
+
+            {checkoutSession && Number(checkoutSession.montoReal) < Number(sale?.total || 0) && !(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) && (
+              <div className="summary-row" style={{ color: '#f59e0b', fontWeight: 600 }}>
+                <span>Ajuste Especial</span>
+                <span>- Bs. {(Number(sale?.total || 0) - Number(checkoutSession.montoReal)).toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="summary-row total" style={{ borderTop: '2px solid #e5e7eb', paddingTop: '16px', marginTop: '8px' }}>
+              <span style={{ fontSize: '18px' }}>Total a Pagar</span>
+              <span style={{ fontSize: '22px', color: checkoutSession ? '#4f46e5' : '#111827' }}>
+                Bs. {checkoutSession ? Number(checkoutSession.montoReal).toFixed(2) : Number(sale?.total || 0).toFixed(2)}
+              </span>
             </div>
+          </div>
+
+          {checkoutSession && statusInfo.activeStep === 4 && (
+            <div className="checkout-session-card" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #e5e7eb' }}>
+              
+              {checkoutSession.paymentMethod === 'ambos' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '15px', padding: '12px', background: '#f9fafb', borderRadius: '10px', border: '1px solid #e5e7eb' }}>
+                  <span style={{ color: '#4b5563', fontWeight: 600 }}>Efectivo: Bs. {checkoutSession.cashAmount}</span>
+                  <span style={{ color: '#4b5563', fontWeight: 600 }}>QR: Bs. {checkoutSession.qrAmount}</span>
+                </div>
+              )}
+
+              {(checkoutSession.paymentMethod === 'qr' || checkoutSession.paymentMethod === 'ambos') && (
+                <div style={{ textAlign: 'center', marginBottom: '24px', background: '#f9fafb', padding: '20px', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
+                  <p style={{ margin: '0 0 12px 0', fontWeight: 700, color: '#111827', fontSize: '16px' }}>Escanea este QR para pagar</p>
+                  <img 
+                    src={`${BASE_URL}/storage/payments/QRBCP.jpeg`} 
+                    alt="QR de Pago" 
+                    style={{ maxWidth: '200px', borderRadius: '12px', border: '2px solid #e5e7eb' }}
+                  />
+                </div>
+              )}
+
+              <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
+                {(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontWeight: 700, color: '#10b981', display: 'block' }}>¡Cupón aplicado con éxito!</span>
+                      <span style={{ fontSize: '13px', color: '#6b7280' }}>El descuento ya se refleja en tu total.</span>
+                    </div>
+                    <button 
+                      onClick={handleRemoveDiscount} 
+                      disabled={applyingDiscount} 
+                      style={{ padding: '8px 16px', borderRadius: '8px', background: '#ef4444', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', opacity: applyingDiscount ? 0.7 : 1 }}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 700, color: '#374151' }}>¿Tienes un código de descuento o Giftcard?</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        type="text" 
+                        placeholder="VOX-XXXXXX o CÓDIGO" 
+                        value={discountCode}
+                        onChange={(e) => setDiscountCode(e.target.value)}
+                        style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: '2px solid #e5e7eb', background: '#ffffff', color: '#111827', fontSize: '15px', fontWeight: 600 }}
+                        disabled={applyingDiscount}
+                      />
+                      <button 
+                        onClick={handleApplyDiscount}
+                        disabled={applyingDiscount || !discountCode.trim()}
+                        style={{ padding: '12px 24px', borderRadius: '12px', background: '#4f46e5', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '15px' }}
+                      >
+                        {applyingDiscount ? '...' : 'Aplicar'}
+                      </button>
+                    </div>
+                    {discountMessage && (
+                      <p style={{ margin: '12px 0 0 0', fontSize: '14px', fontWeight: 700, padding: '10px', borderRadius: '8px', background: discountMessage.type === 'error' ? '#fef2f2' : '#f0fdf4', color: discountMessage.type === 'error' ? '#ef4444' : '#10b981', border: `1px solid ${discountMessage.type === 'error' ? '#fecaca' : '#bbf7d0'}` }}>
+                        {discountMessage.text}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           </div>
         </div>
         

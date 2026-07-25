@@ -958,4 +958,131 @@ class OrderNetworkController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function shareCheckoutSession(Request $request, $id)
+    {
+        $request->validate([
+            'payment_method' => 'required|string',
+            'monto_real' => 'required|numeric',
+            'cash_amount' => 'nullable|numeric',
+            'qr_amount' => 'nullable|numeric',
+            'sale_total' => 'nullable|numeric'
+        ]);
+
+        $schedule = DeliverySchedule::findOrFail($id);
+        
+        $schedule->checkout_session = $request->all();
+        $schedule->save();
+
+        event(new \App\Events\CheckoutSessionShared($id, $request->all()));
+
+        return response()->json(['message' => 'Sesión de cobro compartida exitosamente.']);
+    }
+
+    public function applyDiscount(Request $request, $id, \App\Services\Finance\DiscountValidationService $discountService)
+    {
+        $request->validate([
+            'code' => 'required|string'
+        ]);
+
+        $schedule = DeliverySchedule::with(['shipment.sale.sale_details'])->findOrFail($id);
+        $sale = $schedule->shipment->sale;
+
+        if (!$sale) {
+            return response()->json(['error' => 'No se encontró la venta asociada a esta entrega.'], 404);
+        }
+
+        // Rule: Solo uno (Only one discount/giftcard per sale)
+        if ($sale->discount_id || $sale->giftcard_id) {
+            return response()->json(['error' => 'Esta venta ya tiene un descuento o giftcard aplicado.'], 400);
+        }
+
+        $code = trim($request->code);
+
+        // Build items for validation service
+        $items = $sale->sale_details->map(function($detail) {
+            return [
+                'variant_id' => $detail->variant_id,
+                'line_subtotal' => $detail->subtotal
+            ];
+        })->toArray();
+
+        // Validate using the shared service
+        $result = $discountService->validateCode(
+            $code,
+            $sale->subtotal,
+            $items,
+            $sale->customer_id,
+            $sale->branch_id
+        );
+
+        if (!$result['valid']) {
+            return response()->json(['error' => $result['message']], 400);
+        }
+
+        $discountAmount = $result['discount_amount'];
+        $discountData = [
+            'type' => $result['type'],
+            'code' => $code,
+            'amount' => $discountAmount
+        ];
+
+        if ($result['type'] === 'giftcard') {
+            $sale->giftcard_id = $result['id'];
+        } else {
+            $sale->discount_id = $result['id'];
+        }
+
+        $sale->total_discount += $discountAmount;
+        $sale->total = max(0, $sale->total - $discountAmount);
+        $sale->save();
+
+        if ($schedule->checkout_session) {
+            $session = $schedule->checkout_session;
+            $session['monto_real'] = $sale->total;
+            $schedule->checkout_session = $session;
+            $schedule->save();
+        }
+
+        // Broadcast back to admin
+        event(new \App\Events\DeliveryDiscountApplied($id, $sale, $discountData));
+
+        return response()->json([
+            'message' => 'Descuento aplicado correctamente',
+            'discount_amount' => $discountAmount,
+            'new_total' => $sale->total
+        ]);
+    }
+
+    public function removeDiscount($id)
+    {
+        $schedule = DeliverySchedule::with('shipment.sale')->findOrFail($id);
+        $sale = $schedule->shipment->sale;
+
+        if (!$sale || (!$sale->discount_id && !$sale->giftcard_id)) {
+            return response()->json(['error' => 'No hay descuento para quitar.'], 400);
+        }
+
+        // Revert total
+        $sale->total += $sale->total_discount;
+        $sale->total_discount = 0;
+        $sale->discount_id = null;
+        $sale->giftcard_id = null;
+        $sale->save();
+
+        if ($schedule->checkout_session) {
+            $session = $schedule->checkout_session;
+            $session['monto_real'] = $sale->total;
+            $schedule->checkout_session = $session;
+            $schedule->save();
+        }
+
+        // Broadcast to clients
+        event(new \App\Events\DeliveryDiscountRemoved($id, $sale));
+
+        return response()->json([
+            'message' => 'Descuento eliminado correctamente',
+            'new_total' => $sale->total
+        ]);
+    }
 }
