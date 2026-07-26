@@ -18,7 +18,7 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Customer::with(['user.profile', 'posProfile']);
+        $query = Customer::with(['user.profile', 'posProfile', 'addresses']);
         $status = $request->query('status');
         if (empty($status)) {
             $status = 'active'; // Default to active if empty

@@ -24,8 +24,10 @@ class OrderNetworkController extends Controller
     public function index(Request $request)
     {
         $query = DeliverySchedule::with([
+            'shipment.address',
             'shipment.sale.guest',
-            'shipment.sale.customer.user',
+            'shipment.sale.customer.user.profile',
+            'shipment.sale.customer.posProfile',
             'driver.user.profile'
         ])->orderBy('created_at', 'desc');
 
@@ -153,7 +155,9 @@ class OrderNetworkController extends Controller
             'longitude' => 'nullable|numeric',
             'driver_id' => 'nullable|uuid|exists:employees,id',
             'save_as_draft' => 'nullable|boolean',
-            'shipping_cost' => 'nullable|numeric|min:0'
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'delivery_type' => 'nullable|string|in:home_delivery,scheduled_point,pickup,external',
+            'address_id' => 'nullable|uuid|exists:addresses,id'
         ]);
 
         try {
@@ -185,12 +189,14 @@ class OrderNetworkController extends Controller
                 'status' => 'pending',
                 'source' => 'order_network',
                 'subtotal' => 0, // Will calculate below
-                'discount_total' => $cart->total_discount,
+                'discount_total' => $cart->total_discount ?? 0,
+                'discount_id' => $cart->discount_id ?? null,
                 'total' => 0,
                 'notes' => null
             ]);
 
             $subtotal = 0;
+            $itemsForDiscount = [];
 
             $itemsBranches = collect($request->input('items_branches', []))->keyBy('variant_id');
 
@@ -251,14 +257,35 @@ class OrderNetworkController extends Controller
                     'branch_id' => $reserveBranchId,
                     'sale_id' => $sale->id,
                     'quantity' => $item->quantity,
-                    'status' => 'reserved'
+                    'subtotal' => $lineSubtotal
                 ]);
+
+                $itemsForDiscount[] = [
+                    'variant_id' => $item->variant_id,
+                    'line_subtotal' => $lineSubtotal
+                ];
+            }
+
+            // Apply automatic discount if cart didn't have one
+            if (!$sale->discount_id) {
+                $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+                $bestDiscountResult = $discountService->getBestAutomaticDiscount(
+                    $subtotal, 
+                    $itemsForDiscount, 
+                    $sale->customer_id, 
+                    $sale->branch_id
+                );
+
+                if ($bestDiscountResult && $bestDiscountResult['valid']) {
+                    $sale->discount_id = $bestDiscountResult['id'];
+                    $sale->discount_total += $bestDiscountResult['discount_amount'];
+                }
             }
 
             // Update sale totals
             $shippingCost = $request->input('shipping_cost', 0);
             $sale->subtotal = $subtotal;
-            $sale->total = max(0, $subtotal + $shippingCost - $sale->total_discount);
+            $sale->total = max(0, $subtotal + $shippingCost - ($sale->discount_total ?? 0));
             $sale->save();
 
             // Create Shipment
@@ -266,7 +293,9 @@ class OrderNetworkController extends Controller
                 'sale_id' => $sale->id,
                 'status' => 'pending',
                 'shipping_cost' => $shippingCost,
-                'delivery_code' => str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT)
+                'delivery_code' => str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT),
+                'delivery_type' => $request->input('delivery_type', 'scheduled_point'),
+                'address_id' => $request->input('address_id', null)
             ]);
 
             // Create Delivery Schedule
@@ -306,6 +335,7 @@ class OrderNetworkController extends Controller
     public function getDeliveryDetails($id)
     {
         $schedule = DeliverySchedule::with([
+            'shipment.address',
             'shipment.sale.sale_details' => function($q) { 
                 $q->withTrashed()->with([
                     'product_variant.product.product_images', 
@@ -651,7 +681,9 @@ class OrderNetworkController extends Controller
             'driver_id' => 'nullable|uuid|exists:employees,id',
             'guest_name' => 'nullable|string',
             'guest_phone' => 'nullable|string',
-            'shipping_cost' => 'nullable|numeric|min:0'
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'delivery_type' => 'nullable|string|in:home_delivery,scheduled_point,pickup,external',
+            'address_id' => 'nullable|uuid|exists:addresses,id'
         ]);
 
         try {
@@ -752,11 +784,17 @@ class OrderNetworkController extends Controller
 
             $shippingCost = $request->input('shipping_cost', 0);
             $sale->subtotal = $subtotal;
-            $sale->total = max(0, $subtotal + $shippingCost - ($sale->total_discount ?? 0));
+            $sale->total = max(0, $subtotal + $shippingCost - ($sale->discount_total ?? 0));
             $sale->save();
 
             if ($schedule->shipment) {
                 $schedule->shipment->shipping_cost = $shippingCost;
+                if ($request->has('delivery_type')) {
+                    $schedule->shipment->delivery_type = $request->delivery_type;
+                }
+                if ($request->has('address_id')) {
+                    $schedule->shipment->address_id = $request->address_id;
+                }
                 $schedule->shipment->save();
             }
 
@@ -853,10 +891,10 @@ class OrderNetworkController extends Controller
             // Update Sale totals
             $sale->subtotal -= $detail->subtotal;
             $sale->total -= $detail->subtotal; // Subtotal and Total are generally the same before discount
-            $sale->total_discount -= $detail->discount_amount;
+            $sale->discount_total -= $detail->discount_amount;
             if ($sale->total < 0) $sale->total = 0;
             if ($sale->subtotal < 0) $sale->subtotal = 0;
-            if ($sale->total_discount < 0) $sale->total_discount = 0;
+            if ($sale->discount_total < 0) $sale->discount_total = 0;
             $sale->save();
 
             // Soft delete detail
@@ -941,7 +979,7 @@ class OrderNetworkController extends Controller
             // Update Sale totals
             $sale->subtotal += $detail->subtotal;
             $sale->total += $detail->subtotal; // Assuming total matches subtotal before global discounts
-            $sale->total_discount += $detail->discount_amount;
+            $sale->discount_total += $detail->discount_amount;
             $sale->save();
 
             // Restore the soft-deleted detail
@@ -1033,7 +1071,7 @@ class OrderNetworkController extends Controller
             $sale->discount_id = $result['id'];
         }
 
-        $sale->total_discount += $discountAmount;
+        $sale->discount_total += $discountAmount;
         $sale->total = max(0, $sale->total - $discountAmount);
         $sale->save();
 
@@ -1064,8 +1102,8 @@ class OrderNetworkController extends Controller
         }
 
         // Revert total
-        $sale->total += $sale->total_discount;
-        $sale->total_discount = 0;
+        $sale->total += $sale->discount_total;
+        $sale->discount_total = 0;
         $sale->discount_id = null;
         $sale->giftcard_id = null;
         $sale->save();

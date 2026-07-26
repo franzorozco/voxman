@@ -227,8 +227,12 @@ export default function Tracking() {
           <h3 className="section-title"><Map size={20} /> Detalles Logísticos</h3>
           <div className="details-grid">
             <div className="detail-item">
-              <span className="detail-label">Lugar de Entrega</span>
-              <span className="detail-value">{schedule.meeting_point}</span>
+              <span className="detail-label">{schedule.shipment?.delivery_type === 'home_delivery' ? 'Dirección de Entrega' : 'Lugar de Entrega'}</span>
+              <span className="detail-value">
+                {schedule.shipment?.delivery_type === 'home_delivery' && schedule.shipment?.address 
+                  ? `${schedule.shipment.address.street}, ${schedule.shipment.address.zone}` 
+                  : schedule.meeting_point}
+              </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Fecha Programada</span>
@@ -333,7 +337,7 @@ export default function Tracking() {
             {(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) && (
               <div className="summary-row" style={{ color: '#10b981', fontWeight: 600 }}>
                 <span>Descuento Aplicado</span>
-                <span>- Bs. {Number(schedule.shipment.sale.total_discount).toFixed(2)}</span>
+                <span>- Bs. {Number(schedule.shipment.sale.discount_total).toFixed(2)}</span>
               </div>
             )}
 

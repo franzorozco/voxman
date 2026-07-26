@@ -45,7 +45,9 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     guest_country_code: "+591",
     guest_phone: "",
     customer_id: "",
-    driver_id: ""
+    driver_id: "",
+    delivery_type: "scheduled_point",
+    address_id: ""
   });
   
   const [meetingPointType, setMeetingPointType] = useState("predefined");
@@ -142,7 +144,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
         setCustomerSearchType("registered");
         if (sale.customer) {
           const c = sale.customer;
-          const name = c.posProfile ? `${c.posProfile.first_name} ${c.posProfile.last_name_paternal || ''}` :
+          const name = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}` :
                       (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` : 
                       (c.user?.username || c.customer_code));
           setSelectedCustomer({ id: c.id, name: name.trim() });
@@ -446,6 +448,8 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
           variant_id: item.variant.id,
           branch_id: item.branch_id
         })),
+        delivery_type: deliveryData.delivery_type,
+        address_id: deliveryData.address_id || null,
         meeting_point: deliveryData.meeting_point,
         scheduled_date: deliveryData.scheduled_date,
         time_window: deliveryData.time_window,
@@ -622,7 +626,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               type="button" 
                               onClick={() => {
                                 setMeetingPointType('predefined');
-                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0});
+                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
                               }}
                               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: meetingPointType === 'predefined' ? '1px solid var(--color-primary)' : '1px solid transparent', background: meetingPointType === 'predefined' ? 'var(--bg-card)' : 'transparent', color: meetingPointType === 'predefined' ? 'var(--color-primary)' : 'var(--text-muted)', boxShadow: meetingPointType === 'predefined' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', fontWeight: meetingPointType === 'predefined' ? '600' : '500', cursor: 'pointer', transition: 'all 0.2s ease' }}
                             >
@@ -634,13 +638,25 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               type="button" 
                               onClick={() => {
                                 setMeetingPointType('manual');
-                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0});
+                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
                               }}
                               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: meetingPointType === 'manual' ? '1px solid var(--color-primary)' : '1px solid transparent', background: meetingPointType === 'manual' ? 'var(--bg-card)' : 'transparent', color: meetingPointType === 'manual' ? 'var(--color-primary)' : 'var(--text-muted)', boxShadow: meetingPointType === 'manual' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', fontWeight: meetingPointType === 'manual' ? '600' : '500', cursor: 'pointer', transition: 'all 0.2s ease' }}
                             >
                               <Map size={16} />
                               <span>Manual (Mapa)</span>
                               {meetingPointType === 'manual' && <CheckCircle2 size={14} />}
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                setMeetingPointType('delivery');
+                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'home_delivery', address_id: ""});
+                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: meetingPointType === 'delivery' ? '1px solid var(--color-primary)' : '1px solid transparent', background: meetingPointType === 'delivery' ? 'var(--bg-card)' : 'transparent', color: meetingPointType === 'delivery' ? 'var(--color-primary)' : 'var(--text-muted)', boxShadow: meetingPointType === 'delivery' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', fontWeight: meetingPointType === 'delivery' ? '600' : '500', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                            >
+                              <MapPin size={16} />
+                              <span>A Domicilio</span>
+                              {meetingPointType === 'delivery' && <CheckCircle2 size={14} />}
                             </button>
                           </div>
                         </div>
@@ -669,6 +685,48 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               </option>
                             ))}
                           </select>
+                        ) : meetingPointType === 'delivery' && selectedCustomer?.addresses?.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <select
+                              className="form-control"
+                              value={deliveryData.address_id}
+                              onChange={(e) => {
+                                const addressId = e.target.value;
+                                const address = selectedCustomer.addresses.find(a => a.id === addressId);
+                                if (address) {
+                                  setDeliveryData({
+                                    ...deliveryData,
+                                    address_id: address.id,
+                                    meeting_point: `${address.street}, ${address.zone}`,
+                                    latitude: address.latitude || null,
+                                    longitude: address.longitude || null
+                                  });
+                                  if (address.latitude && address.longitude) {
+                                    setMapCenter({ lat: Number(address.latitude), lng: Number(address.longitude) });
+                                  }
+                                } else {
+                                  setDeliveryData({
+                                    ...deliveryData,
+                                    address_id: "",
+                                    meeting_point: "",
+                                    latitude: null,
+                                    longitude: null
+                                  });
+                                }
+                              }}
+                            >
+                              <option value="">-- Selecciona una dirección guardada --</option>
+                              {selectedCustomer.addresses.map(a => (
+                                <option key={a.id} value={a.id}>
+                                  {a.street}, {a.zone} {a.reference ? `(${a.reference})` : ''}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Costo de Envío (Bs) *</label>
+                              <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({...deliveryData, shipping_cost: e.target.value})} />
+                            </div>
+                          </div>
                         ) : (
                           <div className="manual-location-container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -740,6 +798,10 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               * Haz clic en el mapa para marcar el punto exacto de entrega. 
                               {deliveryData.latitude && ` (Lat: ${Number(deliveryData.latitude).toFixed(5)}, Lng: ${Number(deliveryData.longitude).toFixed(5)})`}
                             </small>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Costo de Envío (Bs) *</label>
+                              <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({...deliveryData, shipping_cost: e.target.value})} />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -851,10 +913,10 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                                         </div>
                                       ) : (
                                         customersList.map(c => {
-                                          const name = c.posProfile ? `${c.posProfile.first_name} ${c.posProfile.last_name_paternal || ''}` :
+                                          const name = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}` :
                                                       (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` : 
                                                       (c.user?.username || c.customer_code));
-                                          const phone = c.posProfile?.phone || c.user?.profile?.phone || "Sin Teléfono";
+                                          const phone = c.pos_profile?.phone || c.user?.profile?.phone || "Sin Teléfono";
                                           
                                           return (
                                             <div 
@@ -863,7 +925,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                                               style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)' }}
                                               onMouseDown={(e) => {
                                                 e.preventDefault();
-                                                setSelectedCustomer({ id: c.id, name: name.trim() });
+                                                setSelectedCustomer({ id: c.id, name: name.trim(), addresses: c.addresses || [] });
                                                 setDeliveryData({...deliveryData, customer_id: c.id});
                                                 setIsCustomerDropdownOpen(false);
                                               }}

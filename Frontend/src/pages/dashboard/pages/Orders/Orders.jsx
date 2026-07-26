@@ -166,15 +166,19 @@ export default function Orders() {
     const trackingUrl = `${window.location.origin}/tracking/${schedule.id}`;
     let message = "";
     
+    const isDelivery = schedule.shipment?.delivery_type === 'home_delivery';
+    const placeText = isDelivery ? "tu domicilio" : "el punto de encuentro";
+    const agreedPlaceText = isDelivery ? "tu domicilio" : "el punto acordado";
+    
     switch (schedule.status) {
       case "assigned":
-        message = `${greeting}, te escribimos de VOXman para confirmarte ${productDetails}, para hacerte la entrega el día ${schedule.scheduled_date} a las ${schedule.time_window || "una hora a convenir"} en ${schedule.meeting_point || "el punto acordado"}. ¿Me confirmas esto por favor? \n\nPuedes ver el estado de tu entrega aquí: ${trackingUrl}`;
+        message = `${greeting}, te escribimos de VOXman para confirmarte ${productDetails}, para hacerte la entrega el día ${schedule.scheduled_date} a las ${schedule.time_window || "una hora a convenir"} en ${schedule.meeting_point || agreedPlaceText}. ¿Me confirmas esto por favor? \n\nPuedes ver el estado de tu entrega aquí: ${trackingUrl}`;
         break;
       case "on_the_way":
         message = `${greeting}, te comento que ya estamos en camino a realizar tu entrega amigo.`;
         break;
       case "at_the_meeting_point":
-        message = `${greeting}, ya nos encontramos en el punto de encuentro (${schedule.meeting_point || ""}). Te esperamos.`;
+        message = `${greeting}, ya nos encontramos en ${placeText} (${schedule.meeting_point || ""}). Te esperamos.`;
         break;
       case "completed":
         message = `${greeting}, muchas gracias por tu compra de ${productDetails}. ¡Esperamos que lo disfrutes!`;
@@ -345,9 +349,9 @@ export default function Orders() {
                   let phoneToDisplay = "N/A";
                   
                   if (customer) {
-                    if (customer.posProfile) {
-                      nameToDisplay = `${customer.posProfile.first_name} ${customer.posProfile.last_name_paternal || ''}`.trim();
-                      phoneToDisplay = customer.posProfile.phone || "N/A";
+                    if (customer.pos_profile) {
+                      nameToDisplay = `${customer.pos_profile.first_name} ${customer.pos_profile.last_name_paternal || ''}`.trim();
+                      phoneToDisplay = customer.pos_profile.phone || "N/A";
                     } else if (customer.user?.profile) {
                       nameToDisplay = `${customer.user.profile.first_name} ${customer.user.profile.last_name_paternal || ''}`.trim();
                       phoneToDisplay = customer.user.profile.phone || "N/A";
@@ -391,17 +395,40 @@ export default function Orders() {
                               </span>
                             )}
                           </div>
-                          <span className={`status-badge status-${schedule.status}`}>
-                            {getStatusLabel(schedule.status)}
-                          </span>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                {schedule.shipment?.delivery_type === 'home_delivery' && (
+                                  <span style={{ 
+                                    background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)', 
+                                    color: 'white', 
+                                    padding: '4px 12px', 
+                                    borderRadius: '20px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    boxShadow: '0 4px 10px rgba(255, 107, 107, 0.3)'
+                                  }}>
+                                    <Truck size={14} /> A Domicilio
+                                  </span>
+                                )}
+                              <span className={`status-badge status-${schedule.status}`}>
+                                {getStatusLabel(schedule.status)}
+                              </span>
+                            </div>
                         </div>
                         
                         <div className="bubble-info-grid">
                           <div className="info-item">
                             <MapPin size={16} className="icon" />
                             <div>
-                              <span>Punto de Encuentro</span>
-                              <strong>{schedule.meeting_point || "No especificado"}</strong>
+                              <span>{schedule.shipment?.delivery_type === 'home_delivery' ? 'Dirección de Entrega' : 'Punto de Encuentro'}</span>
+                              <strong>
+                                {schedule.shipment?.delivery_type === 'home_delivery' && schedule.shipment?.address 
+                                  ? `${schedule.shipment.address.street}, ${schedule.shipment.address.zone}` 
+                                  : (schedule.meeting_point || "No especificado")}
+                              </strong>
                             </div>
                           </div>
                           <div className="info-item">

@@ -226,7 +226,7 @@ class CashFlowController extends Controller
         // 1. Payments (Ingresos por Ventas)
         $payments = Payment::whereBetween('created_at', [$startDate, $endDate])
             ->where('payment_method_id', $cashMethodId)
-            ->with(['sale.branch', 'sale.client'])
+            ->with(['sale.branch', 'sale.customer.user.profile', 'sale.customer.posProfile', 'sale.guest'])
             ->get()->map(function($p) {
                 return [
                     'id' => 'pay_'.$p->id,
@@ -234,7 +234,7 @@ class CashFlowController extends Controller
                     'type' => 'Ingreso (Venta)',
                     'amount' => (float)$p->amount,
                     'branch' => $p->sale->branch->name ?? 'N/A',
-                    'description' => 'Venta ' . ($p->sale->invoice_number ?? '#' . substr($p->sale->id, 0, 5)) . ' - ' . ($p->sale->client->name ?? 'Cliente General'),
+                    'description' => 'Venta ' . ($p->sale->invoice_number ?? '#' . substr($p->sale->id, 0, 5)) . ' - ' . ($p->sale->guest->name ?? ($p->sale->customer->posProfile->first_name ?? ($p->sale->customer->user->profile->first_name ?? 'Cliente General'))),
                     'is_positive' => true
                 ];
             });

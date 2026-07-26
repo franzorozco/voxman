@@ -9,6 +9,44 @@ use Illuminate\Support\Facades\DB;
 class DiscountValidationService
 {
     /**
+     * Finds and applies the best automatic discount for a set of items.
+     * Returns the validation result if a valid automatic discount is found.
+     * 
+     * @param float $subtotal
+     * @param \Illuminate\Support\Collection|array $items
+     * @param string|null $customerId
+     * @param string|null $branchId
+     * @return array|null
+     */
+    public function getBestAutomaticDiscount($subtotal, $items, $customerId = null, $branchId = null)
+    {
+        $automaticDiscounts = Discount::where('is_automatic', true)
+            ->where('active', true)
+            ->where(function($q) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+            })
+            ->where(function($q) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+            })
+            ->get();
+
+        $bestDiscount = null;
+        $bestDiscountAmount = 0;
+        $bestResult = null;
+
+        foreach ($automaticDiscounts as $discount) {
+            $result = $this->validateDiscount($discount->code, $subtotal, $items, $customerId, $branchId);
+            if ($result['valid'] && $result['discount_amount'] > $bestDiscountAmount) {
+                $bestDiscountAmount = $result['discount_amount'];
+                $bestDiscount = $discount;
+                $bestResult = $result;
+            }
+        }
+
+        return $bestResult;
+    }
+
+    /**
      * Validates a code (Giftcard or Discount) against a set of items.
      * Returns an array with the validation result.
      * 

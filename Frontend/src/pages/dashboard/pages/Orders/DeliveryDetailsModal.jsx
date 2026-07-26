@@ -261,6 +261,11 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
           <div>
             <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: accentColor }}>
               {headerIcon} {headerTitle}
+              {details.shipment?.delivery_type === 'home_delivery' && (
+                <span style={{ fontSize: '12px', background: 'var(--color-secondary)', color: 'white', padding: '2px 8px', borderRadius: '12px', marginLeft: '8px', textTransform: 'uppercase' }}>
+                  A Domicilio
+                </span>
+              )}
             </h2>
             <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
               Ref: {details.shipment?.delivery_code || details.id.slice(0,8)} {sale?.invoice_number ? `| Venta: ${sale.invoice_number}` : ''}
@@ -448,11 +453,11 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       <span>Costo de Envío:</span>
                       <span>Bs. {Number(details.shipment?.shipping_cost || 0).toFixed(2)}</span>
                     </div>
-                    {isCompleted && sale?.total_discount > 0 && (
+                    {isCompleted && sale?.discount_total > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'var(--bg-input)', padding: '8px', borderRadius: '6px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--color-danger)', fontWeight: 600 }}>
                           <span>Descuento / Giftcard:</span>
-                          <span>- Bs. {Number(sale.total_discount).toFixed(2)}</span>
+                          <span>- Bs. {Number(sale.discount_total).toFixed(2)}</span>
                         </div>
                         {sale?.discount && (
                           <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
@@ -536,7 +541,11 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   </div>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                     <MapPin size={16} style={{ color: 'var(--text-muted)', marginTop: '2px' }} />
-                    <div style={{ fontWeight: 500 }}>{details.meeting_point}</div>
+                    <div style={{ fontWeight: 500 }}>
+                      {details.shipment?.delivery_type === 'home_delivery' && details.shipment?.address 
+                        ? `${details.shipment.address.street}, ${details.shipment.address.zone}` 
+                        : details.meeting_point}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -649,7 +658,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </div>
               </div>
               
-              {Number(montoReal) < Number(details.shipment?.sale?.total + details.shipment?.sale?.total_discount) && (
+              {Number(montoReal) < Number(details.shipment?.sale?.total + details.shipment?.sale?.discount_total) && (
                 <div style={{ marginTop: '8px', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, textAlign: 'right' }}>
                   Descuento manual aplicado
                 </div>
@@ -660,7 +669,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               <div style={{ padding: '16px', background: 'var(--color-success-alpha)', borderRadius: '8px', border: '1px solid var(--color-success)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                 <div>
                   <span style={{ fontWeight: 600, color: 'var(--color-success)', display: 'block', marginBottom: '4px' }}>Descuento Guardado</span>
-                  <div style={{ color: 'var(--color-success)', fontWeight: 800, fontSize: '16px' }}>- Bs. {Number(details.shipment.sale.total_discount).toFixed(2)}</div>
+                  <div style={{ color: 'var(--color-success)', fontWeight: 800, fontSize: '16px' }}>- Bs. {Number(details.shipment.sale.discount_total).toFixed(2)}</div>
                 </div>
                 <button 
                   onClick={handleRemoveDiscount} 
