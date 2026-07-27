@@ -38,6 +38,7 @@ Route::post('/login', LoginController::class);
 Route::prefix('v1/delivery')->group(function () {
     Route::get('/{id}', [OrderNetworkController::class, 'getDeliveryDetails']);
     Route::post('/{id}/confirm', [OrderNetworkController::class, 'confirmDelivery']);
+    Route::post('/{id}/notes', [OrderNetworkController::class, 'updateNotes']);
     Route::post('/{id}/apply-discount', [OrderNetworkController::class, 'applyDiscount']);
     Route::post('/{id}/remove-discount', [OrderNetworkController::class, 'removeDiscount']);
 });

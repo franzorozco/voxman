@@ -12,6 +12,9 @@ use App\Models\Base\Guest;
 use App\Models\Logistics\Shipment;
 use App\Models\Logistics\DeliverySchedule;
 use App\Models\Logistics\DeliveryZone;
+use App\Models\Logistics\ShipmentCostDetail;
+use App\Models\Logistics\ShipmentLocation;
+use App\Models\Logistics\ShipmentTracking;
 use App\Models\Inventory\StockReservation;
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\InventoryMovement;
@@ -257,12 +260,12 @@ class OrderNetworkController extends Controller
                     'branch_id' => $reserveBranchId,
                     'sale_id' => $sale->id,
                     'quantity' => $item->quantity,
-                    'subtotal' => $lineSubtotal
+                    'subtotal' => $lineTotal
                 ]);
 
                 $itemsForDiscount[] = [
                     'variant_id' => $item->variant_id,
-                    'line_subtotal' => $lineSubtotal
+                    'line_subtotal' => $lineTotal
                 ];
             }
 
@@ -347,11 +350,13 @@ class OrderNetworkController extends Controller
                 ]); 
             },
             'shipment.sale.guest', 
-            'shipment.sale.customer',
+            'shipment.sale.customer.user.profile',
+            'shipment.sale.customer.posProfile',
             'shipment.sale.discount',
             'shipment.sale.payments.payment_method',
             'shipment.sale.giftcard_transactions.giftcard',
-            'driver.user.profile'
+            'driver.user.profile',
+            'shipment.tracking_history'
         ])->findOrFail($id);
 
         return response()->json([
@@ -367,14 +372,41 @@ class OrderNetworkController extends Controller
         $schedule = DeliverySchedule::findOrFail($id);
         
         if ($schedule->status !== 'pending') {
-            return response()->json(['error' => 'Schedule is not pending'], 400);
+            return response()->json(['error' => 'Solo se pueden confirmar entregas en estado pendiente.'], 400);
         }
 
-        $schedule->status = 'assigned'; // Assuming 'assigned' means ready to be delivered / confirmed
+        $schedule->status = 'confirmed';
         $schedule->save();
 
         return response()->json([
-            'message' => 'Delivery confirmed successfully'
+            'message' => 'Horario confirmado exitosamente.',
+            'schedule' => $schedule
+        ]);
+    }
+
+    /**
+     * Customer updates delivery notes from the public link.
+     */
+    public function updateNotes(Request $request, $id)
+    {
+        $request->validate([
+            'notes' => 'nullable|string'
+        ]);
+
+        $schedule = DeliverySchedule::with('shipment')->findOrFail($id);
+        
+        if (!$schedule->shipment) {
+            return response()->json(['error' => 'Entrega no encontrada.'], 404);
+        }
+
+        $schedule->shipment->notes = $request->notes;
+        $schedule->shipment->save();
+
+        event(new \App\Events\DeliveryNotesUpdated($id, $schedule->shipment->notes));
+
+        return response()->json([
+            'message' => 'Notas guardadas exitosamente.',
+            'notes' => $schedule->shipment->notes
         ]);
     }
 
@@ -384,7 +416,7 @@ class OrderNetworkController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:on_the_way,at_the_meeting_point,completed,cancelled'
+            'status' => 'required|in:on_the_way,at_the_meeting_point,completed,cancelled,prepared,packaged,shipped'
         ]);
 
         try {
@@ -394,18 +426,85 @@ class OrderNetworkController extends Controller
             $schedule->status = $request->status;
             $schedule->save();
 
+            // Track the status change
+            if ($schedule->shipment) {
+                $description = 'El estado de la entrega cambió a ' . $request->status;
+                if ($request->status === 'prepared') $description = 'Pedido preparado y listo para empaque.';
+                if ($request->status === 'packaged') $description = 'Pedido empaquetado y listo para envío.';
+                if ($request->status === 'shipped') {
+                    $company = $request->input('external_company', 'Agencia');
+                    $guide = $request->input('external_guide', 'S/N');
+                    $description = "Pedido remitido a la transportadora {$company} (Guía: {$guide}).";
+                }
+                if ($request->status === 'completed') $description = 'Pedido entregado exitosamente al cliente.';
+                if ($request->status === 'on_the_way') $description = 'El pedido está en camino.';
+                if ($request->status === 'at_the_meeting_point') $description = 'El repartidor llegó al punto de encuentro.';
+                
+                \App\Models\Logistics\ShipmentTracking::create([
+                    'shipment_id' => $schedule->shipment->id,
+                    'status' => $request->status,
+                    'description' => $description
+                ]);
+            }
+if ($request->status === 'shipped') {
+                $shipment = $schedule->shipment;
+                $shipment->status = 'shipped';
+                $shipment->shipped_at = now();
+                if ($request->has('external_company')) $shipment->external_company = $request->input('external_company');
+                if ($request->has('external_guide')) $shipment->external_guide = $request->input('external_guide');
+                if ($request->has('shipping_payment_type')) $shipment->shipping_payment_type = $request->input('shipping_payment_type');
+                if ($request->has('notes')) {
+                    $shipment->notes = $request->input('notes');
+                    event(new \App\Events\DeliveryNotesUpdated($schedule->id, $shipment->notes));
+                }
+                $shipment->shipping_cost = $request->input('shipping_cost', 0);
+                $shipment->save();
+
+                // Populate shipment_cost_details
+                if ($request->filled('shipping_cost')) {
+                    \App\Models\Logistics\ShipmentCostDetail::updateOrCreate(
+                        ['shipment_id' => $shipment->id],
+                        [
+                            'base_cost' => $request->input('shipping_cost'),
+                            'distance_cost' => 0,
+                            'extra_cost' => 0,
+                            'total' => $request->input('shipping_cost')
+                        ]
+                    );
+                }
+
+                // Populate shipment_locations using the branch coordinates of the shipment's origin (sale->branch)
+                $branch = $schedule->shipment->sale->branch ?? null;
+                if ($branch && $branch->latitude && $branch->longitude) {
+                    \Illuminate\Support\Facades\DB::table('shipment_locations')->insert([
+                        'shipment_id' => $shipment->id,
+                        'latitude' => $branch->latitude,
+                        'longitude' => $branch->longitude,
+                        'created_at' => now()
+                    ]);
+                }
+            }
+
             if ($request->status === 'completed') {
                 $shipment = $schedule->shipment;
                 $shipment->status = 'delivered';
                 $shipment->delivered_at = now();
                 $shipment->save();
+            }
 
+            $shipment = $schedule->shipment;
+            $isExternal = $shipment->delivery_type === 'external';
+            $isPaymentStage = ($request->status === 'completed' && !$isExternal) || 
+                              ($request->status === 'prepared' && $isExternal);
+
+            if ($isPaymentStage) {
                 $sale = $shipment->sale;
-                $sale->status = 'paid';
                 
                 // --- PAYMENT AND DISCOUNT LOGIC ---
                 $amountPaid = $request->input('monto_real');
-                if ($amountPaid !== null) {
+                if ($amountPaid !== null && $sale->status !== 'paid') {
+                    $sale->status = 'paid';
+                    
                     $amountPaid = (float) $amountPaid;
                     $discountDiff = max(0, $sale->total - $amountPaid);
 
@@ -518,14 +617,17 @@ class OrderNetworkController extends Controller
                             }
                         }
                     }
+                    
+                    $sale->save();
+                    // ----------------------------------
+                    
+                    // Confirm stock reservations
+                    StockReservation::where('sale_id', $sale->id)
+                        ->update(['status' => 'confirmed']);
                 }
-                $sale->save();
-                // ----------------------------------
+            }
 
-                // Confirm stock reservations
-                StockReservation::where('sale_id', $sale->id)
-                    ->update(['status' => 'confirmed']);
-            } elseif ($request->status === 'cancelled') {
+            if ($request->status === 'cancelled') {
                 $shipment = $schedule->shipment;
                 $shipment->status = 'cancelled';
                 $shipment->save();
@@ -580,7 +682,8 @@ class OrderNetworkController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            \Log::error("UpdateStatus Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return response()->json(['error' => $e->getMessage(), 'line' => $e->getLine()], 500);
         }
     }
 
@@ -617,6 +720,7 @@ class OrderNetworkController extends Controller
             'driver_id' => 'nullable|uuid|exists:employees,id',
             'guest_name' => 'nullable|string',
             'guest_phone' => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         try {
@@ -637,6 +741,12 @@ class OrderNetworkController extends Controller
             if ($request->has('longitude')) $schedule->longitude = $request->longitude;
             if ($request->has('driver_id')) $schedule->driver_id = $request->driver_id;
             $schedule->save();
+            
+            if ($request->has('notes')) {
+                $schedule->shipment->notes = $request->notes;
+                $schedule->shipment->save();
+                event(new \App\Events\DeliveryNotesUpdated($schedule->id, $schedule->shipment->notes));
+            }
 
             // Update guest info if provided
             if ($request->has('guest_name') || $request->has('guest_phone')) {

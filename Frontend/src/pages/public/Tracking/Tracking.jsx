@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { Package, Truck, MapPin, CheckCircle, Clock, AlertCircle, ShoppingBag, User, Phone, Map, Box } from "lucide-react";
+import { Package, Truck, MapPin, CheckCircle, Clock, AlertCircle, ShoppingBag, User, Phone, Map, Box, StickyNote, Check } from "lucide-react";
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
 import echo from "../../../echo";
 import "./Tracking.css";
@@ -20,11 +20,32 @@ export default function Tracking() {
   const [discountCode, setDiscountCode] = useState('');
   const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [discountMessage, setDiscountMessage] = useState(null);
+  
+  // Notes State
+  const [notes, setNotes] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [notesSuccess, setNotesSuccess] = useState(false);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M"
   });
+
+  const handleSaveNotes = async () => {
+    setSavingNotes(true);
+    setNotesSuccess(false);
+    setError(null);
+    try {
+      await axios.post(`${API_URL}/v1/delivery/${id}/notes`, { notes });
+      setNotesSuccess(true);
+      setTimeout(() => setNotesSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+      setError("Error al guardar las notas. Intenta de nuevo.");
+    } finally {
+      setSavingNotes(false);
+    }
+  };
 
   useEffect(() => {
     const fetchTracking = async () => {
@@ -32,6 +53,7 @@ export default function Tracking() {
         const response = await axios.get(`${API_URL}/v1/delivery/${id}`);
         const fetchedSchedule = response.data.schedule;
         setSchedule(fetchedSchedule);
+        setNotes(fetchedSchedule.shipment?.notes || '');
         
         if (fetchedSchedule.checkout_session) {
           setCheckoutSession({
@@ -71,6 +93,19 @@ export default function Tracking() {
       fetchTracking();
       setCheckoutSession(prev => prev ? { ...prev, montoReal: data.sale.total } : null);
       setDiscountMessage(null);
+    });
+    privateChannel.listen('.DeliveryNotesUpdated', (data) => {
+      setNotes(data.notes || '');
+      setSchedule(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          shipment: {
+            ...prev.shipment,
+            notes: data.notes
+          }
+        };
+      });
     });
 
     return () => {
@@ -135,17 +170,49 @@ export default function Tracking() {
   const sale = shipment?.sale;
   const details = sale?.sale_details || [];
   
-  const customerName = sale?.guest?.name || sale?.customer?.user?.profile?.first_name || sale?.customer?.posProfile?.first_name || "Cliente";
+  const customer = sale?.customer;
+  const guest = sale?.guest;
+
+  let customerName = "Cliente";
+  if (customer) {
+    if (customer.pos_profile) {
+      customerName = `${customer.pos_profile.first_name || ''} ${customer.pos_profile.last_name_paternal || ''}`.trim() || "Cliente";
+    } else if (customer.user?.profile) {
+      customerName = `${customer.user.profile.first_name || ''} ${customer.user.profile.last_name_paternal || ''}`.trim() || "Cliente";
+    } else if (customer.user) {
+      customerName = customer.user.username || customer.user.email || "Cliente";
+    } else {
+      customerName = `Cliente ${customer.customer_code}`;
+    }
+  } else if (guest) {
+    customerName = guest.name || "Invitado";
+  }
+
+  const isExternal = schedule?.shipment?.delivery_type === 'external';
 
   const getStatusInfo = (status) => {
-    switch (status) {
-      case 'pending': return { label: 'Preparando', icon: <Package size={28} />, color: '#64748b', activeStep: 1 };
-      case 'assigned': return { label: 'Agendado', icon: <Clock size={28} />, color: '#4f46e5', activeStep: 2 };
-      case 'on_the_way': return { label: 'En Camino', icon: <Truck size={28} />, color: '#3b82f6', activeStep: 3 };
-      case 'at_the_meeting_point': return { label: 'En el Punto', icon: <MapPin size={28} />, color: '#8b5cf6', activeStep: 4 };
-      case 'completed': return { label: 'Entregado', icon: <CheckCircle size={28} />, color: '#10b981', activeStep: 5 };
-      case 'cancelled': return { label: 'Cancelado', icon: <AlertCircle size={28} />, color: '#ef4444', activeStep: 0 };
-      default: return { label: 'Desconocido', icon: <Package size={28} />, color: '#6b7280', activeStep: 0 };
+    if (isExternal) {
+      switch (status) {
+        case 'pending': 
+        case 'assigned': 
+          return { label: 'Pendiente', icon: <Package size={28} />, color: '#64748b', activeStep: 1 };
+        case 'prepared': return { label: 'Preparando paquete', icon: <Box size={28} />, color: '#f97316', activeStep: 2 };
+        case 'packaged': return { label: 'Empaquetado', icon: <Package size={28} />, color: '#0ea5e9', activeStep: 3 };
+        case 'shipped': return { label: 'Remitido', icon: <Truck size={28} />, color: '#3b82f6', activeStep: 4 };
+        case 'completed': return { label: 'Completado', icon: <CheckCircle size={28} />, color: '#10b981', activeStep: 5 };
+        case 'cancelled': return { label: 'Cancelado', icon: <AlertCircle size={28} />, color: '#ef4444', activeStep: 0 };
+        default: return { label: 'Desconocido', icon: <Package size={28} />, color: '#6b7280', activeStep: 0 };
+      }
+    } else {
+      switch (status) {
+        case 'pending': return { label: 'Preparando', icon: <Package size={28} />, color: '#64748b', activeStep: 1 };
+        case 'assigned': return { label: 'Agendado', icon: <Clock size={28} />, color: '#4f46e5', activeStep: 2 };
+        case 'on_the_way': return { label: 'En Camino', icon: <Truck size={28} />, color: '#3b82f6', activeStep: 3 };
+        case 'at_the_meeting_point': return { label: 'En el Punto', icon: <MapPin size={28} />, color: '#8b5cf6', activeStep: 4 };
+        case 'completed': return { label: 'Entregado', icon: <CheckCircle size={28} />, color: '#10b981', activeStep: 5 };
+        case 'cancelled': return { label: 'Cancelado', icon: <AlertCircle size={28} />, color: '#ef4444', activeStep: 0 };
+        default: return { label: 'Desconocido', icon: <Package size={28} />, color: '#6b7280', activeStep: 0 };
+      }
     }
   };
 
@@ -199,26 +266,53 @@ export default function Tracking() {
           <div className="tracking-timeline">
             <div className="timeline-progress" style={{ width: `${progressWidth}%`, background: statusInfo.color }}></div>
             
-            <div className={`timeline-step ${statusInfo.activeStep >= 1 ? 'active' : ''} ${statusInfo.activeStep === 1 ? 'current' : ''}`}>
-              <div className="step-icon"><Package size={16} /></div>
-              <p>Preparando</p>
-            </div>
-            <div className={`timeline-step ${statusInfo.activeStep >= 2 ? 'active' : ''} ${statusInfo.activeStep === 2 ? 'current' : ''}`}>
-              <div className="step-icon"><Clock size={16} /></div>
-              <p>Agendado</p>
-            </div>
-            <div className={`timeline-step ${statusInfo.activeStep >= 3 ? 'active' : ''} ${statusInfo.activeStep === 3 ? 'current' : ''}`}>
-              <div className="step-icon"><Truck size={16} /></div>
-              <p>En Camino</p>
-            </div>
-            <div className={`timeline-step ${statusInfo.activeStep >= 4 ? 'active' : ''} ${statusInfo.activeStep === 4 ? 'current' : ''}`}>
-              <div className="step-icon"><MapPin size={16} /></div>
-              <p>En el Punto</p>
-            </div>
-            <div className={`timeline-step ${statusInfo.activeStep >= 5 ? 'active' : ''} ${statusInfo.activeStep === 5 ? 'current' : ''}`}>
-              <div className="step-icon"><CheckCircle size={16} /></div>
-              <p>Entregado</p>
-            </div>
+            {isExternal ? (
+              <>
+                <div className={`timeline-step ${statusInfo.activeStep >= 1 ? 'active' : ''} ${statusInfo.activeStep === 1 ? 'current' : ''}`}>
+                  <div className="step-icon"><Package size={16} /></div>
+                  <p>Pendiente</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 2 ? 'active' : ''} ${statusInfo.activeStep === 2 ? 'current' : ''}`}>
+                  <div className="step-icon"><Box size={16} /></div>
+                  <p>Preparando paquete</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 3 ? 'active' : ''} ${statusInfo.activeStep === 3 ? 'current' : ''}`}>
+                  <div className="step-icon"><Package size={16} /></div>
+                  <p>Empaquetado</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 4 ? 'active' : ''} ${statusInfo.activeStep === 4 ? 'current' : ''}`}>
+                  <div className="step-icon"><Truck size={16} /></div>
+                  <p>Remitido</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 5 ? 'active' : ''} ${statusInfo.activeStep === 5 ? 'current' : ''}`}>
+                  <div className="step-icon"><CheckCircle size={16} /></div>
+                  <p>Completado</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={`timeline-step ${statusInfo.activeStep >= 1 ? 'active' : ''} ${statusInfo.activeStep === 1 ? 'current' : ''}`}>
+                  <div className="step-icon"><Package size={16} /></div>
+                  <p>Preparando</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 2 ? 'active' : ''} ${statusInfo.activeStep === 2 ? 'current' : ''}`}>
+                  <div className="step-icon"><Clock size={16} /></div>
+                  <p>Agendado</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 3 ? 'active' : ''} ${statusInfo.activeStep === 3 ? 'current' : ''}`}>
+                  <div className="step-icon"><Truck size={16} /></div>
+                  <p>En Camino</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 4 ? 'active' : ''} ${statusInfo.activeStep === 4 ? 'current' : ''}`}>
+                  <div className="step-icon"><MapPin size={16} /></div>
+                  <p>En el Punto</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 5 ? 'active' : ''} ${statusInfo.activeStep === 5 ? 'current' : ''}`}>
+                  <div className="step-icon"><CheckCircle size={16} /></div>
+                  <p>Entregado</p>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -243,7 +337,7 @@ export default function Tracking() {
               <span className="detail-value">{schedule.time_window || "A convenir"}</span>
             </div>
           </div>
-          {schedule.latitude && schedule.longitude && isLoaded && (
+          {schedule.latitude && schedule.longitude && isLoaded && !isExternal && (
             <div style={{ marginTop: '20px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', height: '250px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
               <GoogleMap
                 mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -255,6 +349,84 @@ export default function Tracking() {
               </GoogleMap>
             </div>
           )}
+
+          {isExternal && (
+            <div style={{ marginTop: '20px', padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0', color: '#0f172a', fontSize: '16px' }}>
+                <Truck size={18} style={{ color: '#0ea5e9' }} /> Información de Transportadora
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Agencia:</span>
+                  <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment?.external_company || 'Pendiente'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Nro. Guía:</span>
+                  <span style={{ color: '#0ea5e9', fontSize: '15px', fontWeight: 800, background: schedule.shipment?.external_guide ? '#e0f2fe' : '#f1f5f9', padding: '4px 10px', borderRadius: '6px' }}>{schedule.shipment?.external_guide || 'Pendiente'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Tipo de Pago:</span>
+                  <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: 600 }}>{schedule.shipment?.shipping_payment_type === 'collect' ? 'Pago en Destino' : (schedule.shipment?.shipping_payment_type === 'paid' ? 'Pagado en Origen' : 'Pendiente')}</span>
+                </div>
+                {schedule.shipment?.shipping_payment_type === 'collect' && (
+                  <div style={{ marginTop: '8px', padding: '10px', background: '#fffbeb', color: '#b45309', borderRadius: '8px', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center', border: '1px solid #fef3c7' }}>
+                    <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                    <p style={{ margin: 0, lineHeight: 1.4 }}>Recuerda que debes pagar el costo de envío directamente a la agencia de transporte al recoger tu paquete.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {isExternal && schedule.shipment?.tracking_history?.length > 0 && (
+            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0', color: '#1f2937', fontSize: '15px' }}>
+                <Clock size={16} /> Historial de Seguimiento
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '7px', top: '8px', bottom: '8px', width: '2px', background: '#e5e7eb' }}></div>
+                {schedule.shipment.tracking_history.map((track, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '16px', position: 'relative', zIndex: 1 }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: i === schedule.shipment.tracking_history.length - 1 ? '#4f46e5' : '#9ca3af', border: '4px solid #fff', boxShadow: '0 0 0 1px #e5e7eb', flexShrink: 0, marginTop: '2px' }}></div>
+                    <div>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#111827', fontWeight: 500, lineHeight: 1.4 }}>{track.description}</p>
+                      <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                        {new Date(track.created_at).toLocaleString('es-BO', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Notas de Entrega Editable */}
+          <div style={{ marginTop: '20px', padding: '16px', background: '#fffbeb', borderRadius: '12px', border: '1px solid #fef3c7' }}>
+            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 12px 0', color: '#b45309', fontSize: '15px' }}>
+              <StickyNote size={16} /> Notas de Entrega
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <textarea 
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Añade instrucciones especiales, referencias o indicaciones para la entrega..."
+                style={{ width: '100%', minHeight: '80px', padding: '12px', borderRadius: '8px', border: '1px solid #fcd34d', background: '#fff', color: '#92400e', fontSize: '14px', resize: 'vertical', fontFamily: 'inherit' }}
+                disabled={statusInfo.activeStep >= 5} // Disable if completed
+              />
+              {statusInfo.activeStep < 5 && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
+                  {notesSuccess && <span style={{ fontSize: '13px', color: '#059669', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={14} /> Guardado</span>}
+                  <button 
+                    onClick={handleSaveNotes}
+                    disabled={savingNotes}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#d97706', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: savingNotes ? 'not-allowed' : 'pointer', opacity: savingNotes ? 0.7 : 1 }}
+                  >
+                    {savingNotes ? 'Guardando...' : 'Guardar Notas'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Repartidor Info Oculto temporalmente a petición del usuario
           {driver && statusInfo.activeStep >= 2 && statusInfo.activeStep < 5 && (
@@ -356,7 +528,7 @@ export default function Tracking() {
             </div>
           </div>
 
-          {checkoutSession && statusInfo.activeStep === 4 && (
+          {checkoutSession && ((!isExternal && statusInfo.activeStep === 4) || (isExternal && statusInfo.activeStep === 1)) && (
             <div className="checkout-session-card" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #e5e7eb' }}>
               
               {checkoutSession.paymentMethod === 'ambos' && (

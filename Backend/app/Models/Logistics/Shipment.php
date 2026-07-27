@@ -17,11 +17,20 @@ class Shipment extends BaseShipment
 		'delivered_at',
 		'delivery_code',
 		'delivery_type',
-		'shipping_cost'
+		'shipping_cost',
+        'external_company',
+        'external_guide',
+        'shipping_payment_type',
+        'notes'
 	];
 
     public function delivery_schedule()
     {
         return $this->hasOne(\App\Models\Logistics\DeliverySchedule::class, 'shipment_id');
+    }
+
+    public function tracking_history()
+    {
+        return $this->hasMany(\App\Models\Logistics\ShipmentTracking::class, 'shipment_id')->orderBy('created_at', 'asc');
     }
 }

@@ -132,6 +132,21 @@
   color: var(--color-danger);
 }
 
+.status-prepared {
+  background: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+}
+
+.status-packaged {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+}
+
+.status-shipped {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
 .action-btn {
   background: var(--color-secondary);
   color: var(--text-main);
@@ -493,4 +508,19 @@
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
   border-left: 6px solid #ef4444;
+}
+.bubble-status-prepared {
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-left: 6px solid #f97316;
+}
+.bubble-status-packaged {
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-left: 6px solid #0ea5e9;
+}
+.bubble-status-shipped {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-left: 6px solid #3b82f6;
 }

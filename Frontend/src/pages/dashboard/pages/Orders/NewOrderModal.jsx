@@ -658,6 +658,18 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               <span>A Domicilio</span>
                               {meetingPointType === 'delivery' && <CheckCircle2 size={14} />}
                             </button>
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                setMeetingPointType('external');
+                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'external', address_id: ""});
+                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', border: meetingPointType === 'external' ? '1px solid var(--color-primary)' : '1px solid transparent', background: meetingPointType === 'external' ? 'var(--bg-card)' : 'transparent', color: meetingPointType === 'external' ? 'var(--color-primary)' : 'var(--text-muted)', boxShadow: meetingPointType === 'external' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', fontWeight: meetingPointType === 'external' ? '600' : '500', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                            >
+                              <MapPin size={16} />
+                              <span>Nacional</span>
+                              {meetingPointType === 'external' && <CheckCircle2 size={14} />}
+                            </button>
                           </div>
                         </div>
                         
@@ -726,6 +738,19 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Costo de Envío (Bs) *</label>
                               <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({...deliveryData, shipping_cost: e.target.value})} />
                             </div>
+                          </div>
+                        ) : meetingPointType === 'external' ? (
+                          <div className="form-group">
+                            <label>Ciudad / Departamento de Destino</label>
+                            <input 
+                              type="text"
+                              className="form-control"
+                              placeholder="Ej: Santa Cruz, Cochabamba, Sucre..."
+                              required
+                              value={deliveryData.meeting_point}
+                              onChange={e => setDeliveryData({...deliveryData, meeting_point: e.target.value})}
+                            />
+                            {/* Costo de Envío se pedirá al momento de Remitir */}
                           </div>
                         ) : (
                           <div className="manual-location-container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -1103,7 +1128,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
                   <span>Costo de Envío:</span>
-                  <span>Bs. {shippingAmount.toFixed(2)}</span>
+                  <span>{meetingPointType === 'external' ? 'Se define al remitir' : `Bs. ${shippingAmount.toFixed(2)}`}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-color)' }}>
                   <span>Total:</span>

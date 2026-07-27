@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2 } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem } from "../../../../api/admin/orderNetwork";
 import api from "../../../../api/client";
 import echo from "../../../../echo";
@@ -18,7 +18,7 @@ const defaultCenter = {
   lng: -66.1568
 };
 
-const STEPS = [
+const STEPS_LOCAL = [
   { key: 'pending', label: 'Pendiente' },
   { key: 'assigned', label: 'Agendado' },
   { key: 'on_the_way', label: 'En Camino' },
@@ -26,8 +26,32 @@ const STEPS = [
   { key: 'completed', label: 'Entregado' }
 ];
 
-const getStepIndex = (status) => {
-  const idx = STEPS.findIndex(s => s.key === status);
+const STEPS_EXTERNAL = [
+  { key: 'pending', label: 'Pendiente' },
+  { key: 'prepared', label: 'Preparado' },
+  { key: 'packaged', label: 'Empaquetado' },
+  { key: 'shipped', label: 'Remitido' },
+  { key: 'completed', label: 'Entregado' }
+];
+
+const TRANSPORT_COMPANIES = [
+  { name: 'BoA (Boliviana de Aviación)', type: 'Avión' },
+  { name: 'EcoJet', type: 'Avión' },
+  { name: 'Trans Copacabana S.A.', type: 'Bus' },
+  { name: 'Flota Copacabana MEM 1', type: 'Bus' },
+  { name: 'Bolívar', type: 'Bus' },
+  { name: 'El Dorado', type: 'Bus' },
+  { name: 'Cosmos', type: 'Bus' },
+  { name: 'Naser', type: 'Bus' },
+  { name: 'Danubio', type: 'Bus' },
+  { name: 'Transzela', type: 'Bus' },
+  { name: 'Urus', type: 'Bus' },
+  { name: 'Trans Azul', type: 'Bus' },
+  { name: 'Otro', type: 'Otro' }
+];
+
+const getStepIndex = (status, stepsArr = STEPS_LOCAL) => {
+  const idx = stepsArr.findIndex(s => s.key === status);
   return idx === -1 ? 0 : idx;
 };
 
@@ -36,12 +60,22 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const [loading, setLoading] = useState(true);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentNextStatus, setPaymentNextStatus] = useState('completed');
+  const [showShippedModal, setShowShippedModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
+  const [shippingCost, setShippingCost] = useState('');
+  const [externalCompany, setExternalCompany] = useState('');
+  const [customExternalCompany, setCustomExternalCompany] = useState('');
+  const [externalGuide, setExternalGuide] = useState('');
+  const [shippingPaymentType, setShippingPaymentType] = useState('collect');
   const [qrAmount, setQrAmount] = useState('');
   const [cashAmount, setCashAmount] = useState('');
   const [montoReal, setMontoReal] = useState('');
   const [appliedCode, setAppliedCode] = useState(null);
   const [updating, setUpdating] = useState(false);
+  
+  const [notes, setNotes] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
 
   useEffect(() => {
     if (showPaymentModal && details) {
@@ -58,12 +92,28 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     try {
       setLoading(true);
       const res = await getDeliveryDetails(scheduleId);
-      setDetails(res.data.schedule || res.data);
+      const data = res.data.schedule || res.data;
+      setDetails(data);
+      setNotes(data.notes || '');
     } catch (err) {
       toast.error("Error al cargar detalles de la entrega");
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!details) return;
+    setSavingNotes(true);
+    try {
+      await updateDeliveryDetails(details.id, { notes: notes });
+      toast.success("Notas guardadas correctamente");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al guardar notas");
+    } finally {
+      setSavingNotes(false);
     }
   };
 
@@ -114,6 +164,20 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     channel.listen('.delivery.discount.removed', () => {
       toast.error(`Descuento removido`);
       fetchDetails();
+    });
+    channel.listen('.DeliveryNotesUpdated', (data) => {
+      setNotes(data.notes || '');
+      // No need to fetch all details, just update notes in state to reflect what other clients are seeing.
+      setDetails(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          shipment: {
+            ...prev.shipment,
+            notes: data.notes
+          }
+        };
+      });
     });
 
     return () => {
@@ -172,6 +236,28 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     }
   };
 
+  const handleNextStatus = async () => {
+    const isExternal = details?.shipment?.delivery_type === 'external';
+    const currentSteps = isExternal ? STEPS_EXTERNAL : STEPS_LOCAL;
+    const nextStepIndex = getStepIndex(details.status, currentSteps) + 1;
+    if (nextStepIndex < currentSteps.length) {
+      const nextStatus = currentSteps[nextStepIndex].key;
+      
+      const isSalePaid = details?.shipment?.sale?.status === 'paid';
+      const isLocalPaymentStage = !isExternal && nextStatus === 'completed';
+      const isExternalPaymentStage = isExternal && nextStatus === 'prepared';
+      
+      if ((isLocalPaymentStage || isExternalPaymentStage) && !isSalePaid) {
+        setPaymentNextStatus(nextStatus);
+        setShowPaymentModal(true);
+      } else if (isExternal && nextStatus === 'shipped') {
+        setShowShippedModal(true);
+      } else {
+        handleUpdateStatus(nextStatus);
+      }
+    }
+  };
+
   const startEditing = () => {
     if (onEditRequest) {
       onEditRequest(details);
@@ -205,19 +291,36 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   }
 
   const sale = details.shipment?.sale;
-  const guestName = sale?.guest?.name;
-  const customerName = sale?.customer?.user?.name;
-  const guestPhone = sale?.guest?.whatsapp_phone;
-  const customerPhone = sale?.customer?.phone;
-  
-  const clientName = guestName || customerName || "Anónimo";
-  const clientPhone = guestPhone || customerPhone || "No especificado";
+  const customer = sale?.customer;
+  const guest = sale?.guest;
+
+  let clientName = "Anónimo";
+  let clientPhone = "No especificado";
+
+  if (customer) {
+    if (customer.pos_profile) {
+      clientName = `${customer.pos_profile.first_name || ''} ${customer.pos_profile.last_name_paternal || ''}`.trim();
+      clientPhone = customer.pos_profile.phone || "No especificado";
+    } else if (customer.user?.profile) {
+      clientName = `${customer.user.profile.first_name || ''} ${customer.user.profile.last_name_paternal || ''}`.trim();
+      clientPhone = customer.user.profile.phone || "No especificado";
+    } else if (customer.user) {
+      clientName = customer.user.username || customer.user.email;
+    } else {
+      clientName = `Cliente ${customer.customer_code}`;
+    }
+  } else if (guest) {
+    clientName = guest.name || "Invitado";
+    clientPhone = guest.phone || guest.whatsapp_phone || "No especificado";
+  }
 
   const mapCenter = details.latitude && details.longitude 
     ? { lat: parseFloat(details.latitude), lng: parseFloat(details.longitude) } 
     : defaultCenter;
 
-  const currentStepIndex = getStepIndex(details.status);
+  const isExternal = details?.shipment?.delivery_type === 'external';
+  const currentSteps = isExternal ? STEPS_EXTERNAL : STEPS_LOCAL;
+  const currentStepIndex = getStepIndex(details.status, currentSteps);
   const isOnTheWay = details.status === 'on_the_way' || details.status === 'at_the_meeting_point';
   const isCancelled = details.status === 'cancelled';
   const isCompleted = details.status === 'completed';
@@ -230,7 +333,11 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     on_the_way: { color: '#8b5cf6', rgb: '139, 92, 246', title: '¡EL PEDIDO ESTÁ EN CAMINO!', icon: <Truck size={28} className="pulse-anim" />, pulse: true },
     at_the_meeting_point: { color: '#f97316', rgb: '249, 115, 22', title: '¡REPARTIDOR EN EL PUNTO!', icon: <MapPin size={28} className="pulse-anim" />, pulse: true },
     completed: { color: '#10b981', rgb: '16, 185, 129', title: 'ENTREGA COMPLETADA', icon: <CheckCircle size={28} />, pulse: false },
-    cancelled: { color: '#ef4444', rgb: '239, 68, 68', title: 'ENTREGA CANCELADA', icon: <Ban size={28} className="pulse-anim" />, pulse: true }
+    cancelled: { color: '#ef4444', rgb: '239, 68, 68', title: 'ENTREGA CANCELADA', icon: <Ban size={28} className="pulse-anim" />, pulse: true },
+    // External states
+    prepared: { color: '#f97316', rgb: '249, 115, 22', title: 'PEDIDO PREPARADO', icon: <Package size={24} />, pulse: false },
+    packaged: { color: '#0ea5e9', rgb: '14, 165, 233', title: 'PEDIDO EMPAQUETADO', icon: <Package size={24} />, pulse: false },
+    shipped: { color: '#3b82f6', rgb: '59, 130, 246', title: '¡PEDIDO REMITIDO!', icon: <Truck size={28} className="pulse-anim" />, pulse: true }
   };
 
   const currentTheme = statusTheme[details.status] || statusTheme.pending;
@@ -305,12 +412,12 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               <div style={{ 
                 height: '100%', 
                 background: isCancelled ? '#ef4444' : accentColor, 
-                width: isCancelled ? '100%' : `${(currentStepIndex / (STEPS.length - 1)) * 100}%`,
+                width: isCancelled ? '100%' : `${(currentStepIndex / (currentSteps.length - 1)) * 100}%`,
                 transition: 'width 0.5s ease, background 0.5s ease',
                 borderRadius: '2px'
               }} />
             </div>
-            {STEPS.map((step, idx) => {
+            {currentSteps.map((step, idx) => {
               const isStepCompleted = idx <= currentStepIndex;
               const isCurrent = idx === currentStepIndex;
               const stepColor = isCancelled ? '#ef4444' : (isStepCompleted ? accentColor : 'var(--text-muted)');
@@ -367,7 +474,6 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {sale?.sale_details?.map(item => {
-                    const activeItemsCount = sale?.sale_details?.filter(i => !i.deleted_at).length || 0;
                     const variant = item.product_variant;
                     const product = variant?.product;
                     const colorId = variant?.variant_attribute_values?.[0]?.attribute_value_id;
@@ -398,24 +504,9 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                           <span style={{ color: 'var(--text-main)', fontWeight: 500, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
                             {item.quantity}x {variant?.product?.name} {variant?.name && `(${variant.name})`}
                           </span>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                            {variant?.sku && <span style={{ background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px' }}>SKU: {variant.sku}</span>}
-                            {variant?.size && <span style={{ background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px' }}>Talla: {variant.size.name}</span>}
-                            {variant?.fit && <span style={{ background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px' }}>Fit: {variant.fit.name}</span>}
-                            {variant?.variant_attribute_values?.map(attrVal => (
-                              <span key={attrVal.variant_id + '-' + attrVal.attribute_value_id} style={{ background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px' }}>
-                                {attrVal.attribute_value?.attribute?.name}: {attrVal.attribute_value?.value}
-                              </span>
-                            ))}
-                          </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                           <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>Bs. {Number(item.subtotal).toFixed(2)}</span>
-                          {isCompleted && item.discount_amount > 0 && (
-                            <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                              - Bs. {Number(item.discount_amount).toFixed(2)} dto.
-                            </span>
-                          )}
                           {item.deleted_at ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                               <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none' }}>
@@ -444,58 +535,37 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       </div>
                     );
                   })}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', textDecoration: isCancelled ? 'line-through' : 'none', opacity: isCancelled ? 0.5 : 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)' }}>
-                      <span>Subtotal Productos:</span>
-                      <span>Bs. {Number(sale?.subtotal || 0).toFixed(2)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)' }}>
-                      <span>Costo de Envío:</span>
-                      <span>Bs. {Number(details.shipment?.shipping_cost || 0).toFixed(2)}</span>
-                    </div>
-                    {isCompleted && sale?.discount_total > 0 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'var(--bg-input)', padding: '8px', borderRadius: '6px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--color-danger)', fontWeight: 600 }}>
-                          <span>Descuento / Giftcard:</span>
-                          <span>- Bs. {Number(sale.discount_total).toFixed(2)}</span>
-                        </div>
-                        {sale?.discount && (
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Cupón aplicado:</span>
-                            <span style={{ fontWeight: 600 }}>{sale.discount.code} ({sale.discount.name})</span>
-                          </div>
-                        )}
-                        {sale?.giftcard_transactions?.map(tx => (
-                          <div key={tx.id} style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Giftcard usada:</span>
-                            <span style={{ fontWeight: 600 }}>{tx.giftcard?.code} (-Bs. {Number(tx.amount).toFixed(2)})</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '15px', fontWeight: 700, paddingBottom: isCompleted ? '12px' : '0', borderBottom: isCompleted ? '1px dashed var(--border-color)' : 'none' }}>
-                      <span>{isCompleted ? 'MONTO FINAL COBRADO:' : 'TOTAL:'}</span>
-                      <span style={{ color: 'var(--color-primary)' }}>Bs. {Number(sale?.total || 0).toFixed(2)}</span>
-                    </div>
-                    
-                    {isCompleted && sale?.payments && sale.payments.length > 0 && (
-                      <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Desglose de Pago</span>
-                        {sale.payments.map((payment, idx) => (
-                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-main)', background: 'var(--bg-input)', padding: '6px 10px', borderRadius: '6px' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              {payment.payment_method?.name === 'QR' ? <span style={{ background: '#10b981', width: '8px', height: '8px', borderRadius: '50%' }}></span> : <span style={{ background: '#f59e0b', width: '8px', height: '8px', borderRadius: '50%' }}></span>}
-                              Pago en {payment.payment_method?.name}
-                            </span>
-                            <span style={{ fontWeight: 600 }}>Bs. {Number(payment.amount).toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', padding: '16px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <StickyNote size={16} /> Notas de Entrega
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <textarea 
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Añade notas para la entrega, instrucciones especiales, etc."
+                    style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '13px', resize: 'vertical' }}
+                    disabled={isCancelled}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button 
+                      onClick={handleSaveNotes}
+                      disabled={savingNotes || isCancelled}
+                      style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      {savingNotes ? 'Guardando...' : 'Guardar Notas'}
+                    </button>
                   </div>
                 </div>
               </div>
 
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', padding: '16px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Truck size={16} /> Estado y Repartidor
@@ -523,10 +593,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* RIGHT COLUMN */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', padding: '16px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <CalendarClock size={16} /> Horario y Lugar
@@ -548,21 +615,22 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', overflow: 'hidden' }}>
-                {googleMapsLoaded ? (
-                  <GoogleMap
-                    mapContainerStyle={mapContainerStyle}
-                    center={mapCenter}
-                    zoom={15}
-                    options={{ disableDefaultUI: true, zoomControl: true }}
-                  >
-                    <MarkerF position={mapCenter} />
-                  </GoogleMap>
-                ) : (
-                  <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Cargando mapa...</span>
+                {!isExternal && (
+                  <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', overflow: 'hidden', marginTop: '12px' }}>
+                    {googleMapsLoaded ? (
+                      <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        center={mapCenter}
+                        zoom={15}
+                        options={{ disableDefaultUI: true, zoomControl: true }}
+                      >
+                        <MarkerF position={mapCenter} />
+                      </GoogleMap>
+                    ) : (
+                      <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Cargando mapa...</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -593,22 +661,13 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     boxShadow: isOnTheWay ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
                     transition: 'all 0.2s ease'
                   }}
-                  onClick={() => {
-                    let next = 'on_the_way';
-                    if(details.status === 'on_the_way') next = 'at_the_meeting_point';
-                    if(details.status === 'at_the_meeting_point') next = 'completed';
-                    
-                    if (next === 'completed') {
-                      setShowPaymentModal(true);
-                    } else {
-                      handleUpdateStatus(next);
-                    }
-                  }}
+                  onClick={handleNextStatus}
                   disabled={updating}
                 >
                   <Truck size={20} />
-                  {details.status === 'pending' || details.status === 'assigned' ? 'Marcar En Camino' : 
-                   (details.status === 'on_the_way' ? 'Marcar En el Punto' : 'Marcar Completado')}
+                  {updating ? 'Actualizando...' : 
+                    (isExternal && currentSteps[currentStepIndex + 1]?.key === 'shipped') ? 'Remitir a Transportadora' : 
+                    `Marcar como ${currentSteps[currentStepIndex + 1]?.label || 'Completado'}`}
                 </button>
                 
                 <button 
@@ -627,11 +686,140 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         </div>
       </div>
 
+      {showShippedModal && (
+        <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ maxWidth: '400px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
+              <Truck size={20} style={{ color: 'var(--color-primary)' }} /> Remitir a Transportadora
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Empresa de Transporte *</label>
+                <select 
+                  className="form-control"
+                  value={externalCompany}
+                  onChange={(e) => {
+                    setExternalCompany(e.target.value);
+                    if (e.target.value !== 'Otro') {
+                      setCustomExternalCompany('');
+                    }
+                  }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                >
+                  <option value="">Seleccione una empresa...</option>
+                  {TRANSPORT_COMPANIES.map(company => (
+                    <option key={company.name} value={company.name}>
+                      {company.name} {company.type !== 'Otro' && `(${company.type})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {externalCompany === 'Otro' && (
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Nombre de la Empresa *</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="Ingrese el nombre de la empresa manualmente"
+                    required
+                    value={customExternalCompany}
+                    onChange={(e) => setCustomExternalCompany(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Nro. de Guía / Tracking *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="Ej: 12345678"
+                  required
+                  value={externalGuide}
+                  onChange={(e) => setExternalGuide(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Costo de Envío (Bs) *</label>
+                <input 
+                  type="number" 
+                  min="0"
+                  step="0.5"
+                  className="form-control" 
+                  placeholder="0.00"
+                  required
+                  value={shippingCost}
+                  onChange={(e) => setShippingCost(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Tipo de Pago de Envío</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => setShippingPaymentType('paid')}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${shippingPaymentType === 'paid' ? 'var(--color-primary)' : 'var(--border-color)'}`, background: shippingPaymentType === 'paid' ? 'var(--color-primary-alpha)' : 'transparent', color: shippingPaymentType === 'paid' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Pagado
+                  </button>
+                  <button 
+                    onClick={() => setShippingPaymentType('collect')}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${shippingPaymentType === 'collect' ? 'var(--color-primary)' : 'var(--border-color)'}`, background: shippingPaymentType === 'collect' ? 'var(--color-primary-alpha)' : 'transparent', color: shippingPaymentType === 'collect' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Por Pagar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                onClick={() => setShowShippedModal(false)}
+                style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+                disabled={updating}
+              >
+                Cancelar
+              </button>
+              <button  
+                onClick={() => {
+                  if (!externalCompany) {
+                    toast.error('La empresa de transporte es requerida');
+                    return;
+                  }
+                  if (externalCompany === 'Otro' && !customExternalCompany) {
+                    toast.error('Debe ingresar el nombre de la empresa');
+                    return;
+                  }
+                  if (!externalGuide || shippingCost === '') {
+                    toast.error('Completa los datos de guía y costo');
+                    return;
+                  }
+                  setShowShippedModal(false);
+                  handleUpdateStatus('shipped', {
+                    external_company: externalCompany === 'Otro' ? customExternalCompany : externalCompany,
+                    external_guide: externalGuide,
+                    shipping_cost: shippingCost,
+                    shipping_payment_type: shippingPaymentType
+                  });
+                }}
+                style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+                disabled={updating}
+              >
+                Remitir Paquete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPaymentModal && (
         <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="modal-content" style={{ maxWidth: '500px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
-              <CheckCircle size={20} style={{ color: 'var(--color-success)' }} /> Completar Entrega
+              <CheckCircle size={20} style={{ color: 'var(--color-success)' }} /> {paymentNextStatus === 'prepared' ? 'Cobrar y Preparar Pedido' : 'Completar Entrega'}
             </h3>
             
             <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
@@ -796,20 +984,20 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   Cancelar
                 </button>
                 <button  
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  handleUpdateStatus('completed', {
-                    monto_real: montoReal,
-                    payment_method: paymentMethod,
-                    amount_cash: cashAmount,
-                    amount_qr: qrAmount,
-                    applied_code: appliedCode
-                  });
-                }}
-                style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-success)', color: '#fff', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <CheckCircle size={18} /> Confirmar Pago y Entrega
-              </button>
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    handleUpdateStatus(paymentNextStatus, {
+                      monto_real: montoReal,
+                      payment_method: paymentMethod,
+                      amount_cash: cashAmount,
+                      amount_qr: qrAmount,
+                      applied_code: appliedCode
+                    });
+                  }}
+                  style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-success)', color: '#fff', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <CheckCircle size={18} /> {paymentNextStatus === 'prepared' ? 'Cobrar y Preparar' : 'Confirmar Pago y Entrega'}
+                </button>
               </div>
             </div>
           </div>

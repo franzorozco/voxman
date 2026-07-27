@@ -75,7 +75,10 @@ export default function Orders() {
       on_the_way: "En Camino",
       at_the_meeting_point: "En el Punto",
       completed: "Entregado",
-      cancelled: "Cancelado"
+      cancelled: "Cancelado",
+      prepared: "Preparado",
+      packaged: "Empaquetado",
+      shipped: "Remitido (Transporte)"
     };
     return labels[status] || status;
   };
@@ -413,6 +416,23 @@ export default function Orders() {
                                     <Truck size={14} /> A Domicilio
                                   </span>
                                 )}
+                                {schedule.shipment?.delivery_type === 'external' && (
+                                  <span style={{ 
+                                    background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)', 
+                                    color: 'white', 
+                                    padding: '4px 12px', 
+                                    borderRadius: '20px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    boxShadow: '0 4px 10px rgba(14, 165, 233, 0.3)'
+                                  }}>
+                                    <MapPin size={14} /> Nacional
+                                  </span>
+                                )}
                               <span className={`status-badge status-${schedule.status}`}>
                                 {getStatusLabel(schedule.status)}
                               </span>
@@ -423,7 +443,7 @@ export default function Orders() {
                           <div className="info-item">
                             <MapPin size={16} className="icon" />
                             <div>
-                              <span>{schedule.shipment?.delivery_type === 'home_delivery' ? 'Dirección de Entrega' : 'Punto de Encuentro'}</span>
+                              <span>{schedule.shipment?.delivery_type === 'home_delivery' ? 'Dirección de Entrega' : (schedule.shipment?.delivery_type === 'external' ? 'Destino' : 'Punto de Encuentro')}</span>
                               <strong>
                                 {schedule.shipment?.delivery_type === 'home_delivery' && schedule.shipment?.address 
                                   ? `${schedule.shipment.address.street}, ${schedule.shipment.address.zone}` 
@@ -431,13 +451,15 @@ export default function Orders() {
                               </strong>
                             </div>
                           </div>
-                          <div className="info-item">
-                            <Truck size={16} className="icon" />
-                            <div>
-                              <span>Repartidor</span>
-                              <strong>{schedule.driver?.user?.profile?.first_name || 'Sin asignar'}</strong>
+                          {schedule.shipment?.delivery_type !== 'external' && (
+                            <div className="info-item">
+                              <Truck size={16} className="icon" />
+                              <div>
+                                <span>Repartidor</span>
+                                <strong>{schedule.driver?.user?.profile?.first_name || 'Sin asignar'}</strong>
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                       
