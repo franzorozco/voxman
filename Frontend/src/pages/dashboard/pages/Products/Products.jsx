@@ -30,6 +30,7 @@ import ProductsTable from "./ProductsTable";
 import ProductForm from "./ProductForm";
 import ProductViewModal from "./ProductViewModal";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Products() {
   const [loadingData, setLoadingData] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -454,7 +455,7 @@ export default function Products() {
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Categoría</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.category}
                 onChange={(e) =>
@@ -476,12 +477,12 @@ export default function Products() {
                     {c}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) =>
@@ -494,12 +495,12 @@ export default function Products() {
                 <option value="">Todos</option>
                 <option value="active">Activo</option>
                 <option value="inactive">Inactivo</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Propietario</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.owner}
                 onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
@@ -512,12 +513,12 @@ export default function Products() {
                       : o.user?.email || 'Desconocido'}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Inventario</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.stockStatus}
                 onChange={(e) => setFilters({ ...filters, stockStatus: e.target.value })}
@@ -526,12 +527,12 @@ export default function Products() {
                 <option value="in_stock">En Stock</option>
                 <option value="low_stock">Stock Bajo (Crítico)</option>
                 <option value="out_of_stock">Sin Stock</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Etiqueta</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.tag}
                 onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
@@ -540,7 +541,7 @@ export default function Products() {
                 {[...new Set(products.flatMap(p => p.tags || []))].map(tag => (
                   <option key={tag} value={tag}>{tag}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -656,27 +657,27 @@ export default function Products() {
             <div className="modal-body">
               <div className="form-group" style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Propietario</label>
-                <select
-                  className="form-control"
+                <CustomSelect
+                  
                   style={{ width: '100%', padding: '12px', background: 'var(--bg-secondary)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
                   value={bulkEditForm.owner_id}
                   onChange={(e) => setBulkEditForm({ ...bulkEditForm, owner_id: e.target.value })}
                 >
                   <option value="">-- No modificar --</option>
                   {owners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-                </select>
+                </CustomSelect>
               </div>
               <div className="form-group" style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Categoría</label>
-                <select
-                  className="form-control"
+                <CustomSelect
+                  
                   style={{ width: '100%', padding: '12px', background: 'var(--bg-secondary)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
                   value={bulkEditForm.category_id}
                   onChange={(e) => setBulkEditForm({ ...bulkEditForm, category_id: e.target.value })}
                 >
                   <option value="">-- No modificar --</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                </CustomSelect>
               </div>
             </div>
             <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>

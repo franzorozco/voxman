@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { X, Printer } from "lucide-react";
 
+import CustomSelect from '../../../../../components/ui/CustomSelect';
 export default function QrPrintModal({ isOpen, onClose, selectedProducts = [] }) {
   const [printFormat, setPrintFormat] = useState("a4"); // a4 | thermal
   const printRef = useRef(null);
@@ -85,14 +86,14 @@ export default function QrPrintModal({ isOpen, onClose, selectedProducts = [] })
           <div className="qr-config-panel" style={{ flex: "0 0 250px", borderRight: "1px solid var(--border-color)", paddingRight: "20px" }}>
             <div className="form-group">
               <label>Formato de Impresión</label>
-              <select 
-                className="form-control" 
+              <CustomSelect 
+                 
                 value={printFormat} 
                 onChange={(e) => setPrintFormat(e.target.value)}
               >
                 <option value="a4">Hoja A4 (Cuadrícula)</option>
                 <option value="thermal">Rollo Térmico (Continua)</option>
-              </select>
+              </CustomSelect>
             </div>
             
             <div className="info-box" style={{ marginTop: "20px", padding: "10px", background: "var(--bg-input)", borderRadius: "8px", fontSize: "13px" }}>

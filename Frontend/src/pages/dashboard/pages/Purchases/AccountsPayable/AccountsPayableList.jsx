@@ -8,6 +8,7 @@ import ViewPurchaseModal from "../ViewPurchaseModal";
 import "../Purchases.css";
 import "./AccountsPayable.css";
 
+import CustomSelect from '../../../../../components/ui/CustomSelect';
 export default function AccountsPayableList() {
   const [accounts, setAccounts] = useState([]);
   const [stats, setStats] = useState(null);
@@ -99,7 +100,7 @@ export default function AccountsPayableList() {
             className="purchases-search-input"
           />
         </div>
-        <select 
+        <CustomSelect 
           className="purchase-form-select" 
           style={{ width: '200px' }}
           value={statusFilter}
@@ -109,7 +110,7 @@ export default function AccountsPayableList() {
           <option value="pending">Por Pagar</option>
           <option value="partial">Pago Parcial</option>
           <option value="paid">Pagado Completo</option>
-        </select>
+        </CustomSelect>
         <button className="btn-secondary" onClick={fetchAccounts} title="Actualizar" style={{ padding: '10px' }}>
           <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
         </button>

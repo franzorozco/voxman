@@ -12,6 +12,7 @@ import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, L
 import { es } from "date-fns/locale";
 import { useAuthStore } from "../../../../store/authStore";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function ExpensesTab() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -262,7 +263,7 @@ export default function ExpensesTab() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Building size={20} style={{ color: 'var(--text-muted)' }} />
-            <select 
+            <CustomSelect 
               value={selectedBranch} 
               onChange={(e) => setSelectedBranch(e.target.value)} 
               className="form-control"
@@ -272,7 +273,7 @@ export default function ExpensesTab() {
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
           <CanAccess permission="manage_expenses">
             <button 

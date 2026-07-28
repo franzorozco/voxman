@@ -5,6 +5,7 @@ import { getReturns } from "../../../../api/admin/returns";
 import ReturnDetailsModal from "./ReturnDetailsModal";
 import "./Returns.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Returns() {
   const [returnsList, setReturnsList] = useState([]);
   const [summary, setSummary] = useState({
@@ -119,7 +120,7 @@ export default function Returns() {
           <div className="filters-panel">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -129,7 +130,7 @@ export default function Returns() {
                 <option value="inspection">En Inspección</option>
                 <option value="approved">Aprobado / Reembolsado</option>
                 <option value="rejected">Rechazado</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

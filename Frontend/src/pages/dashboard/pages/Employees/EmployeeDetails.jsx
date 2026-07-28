@@ -4,6 +4,7 @@ import { getEmployeeById, getEmployeeStats, assignRoleToEmployee } from "../../.
 import { toast } from "react-hot-toast";
 import Spinner from "../../components/Spinner/Spinner";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function EmployeeDetails({ employee, onClose }) {
   const [data, setData] = useState(null);
   const [stats, setStats] = useState(null);
@@ -381,7 +382,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                 </p>
 
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                  <select 
+                  <CustomSelect 
                     style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                     value={selectedRole}
                     onChange={(e) => setSelectedRole(e.target.value)}
@@ -391,7 +392,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                     {(data.all_roles || []).map(r => (
                       <option key={r.name} value={r.name}>{r.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                   <button 
                     onClick={handleAssignRole}
                     disabled={!selectedRole || selectedRole === employeeData.role || isUpdatingRole}

@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { createSupplier, updateSupplier } from "../../../../api/admin/suppliers";
 import "./Suppliers.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function SupplierModal({ supplier, onClose }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -131,14 +132,14 @@ export default function SupplierModal({ supplier, onClose }) {
 
             <div className="suppliers-form-group full-width">
               <label>Estado</label>
-              <select
+              <CustomSelect
                 className="suppliers-form-input"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               >
                 <option value="active">Activo</option>
                 <option value="inactive">Inactivo</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
 

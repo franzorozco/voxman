@@ -4,6 +4,7 @@ import { resolveQuarantineItem } from "../../../../api/admin/quarantine";
 import { getProducts } from "../../../../api/admin/products";
 import { X, ArrowRightLeft, Trash2, RotateCcw } from "lucide-react";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function ResolveQuarantineModal({ isOpen, onClose, item, onSuccess }) {
   const [action, setAction] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -156,7 +157,7 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
 
                 <div className="form-group" style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500 }}>Producto Base</label>
-                  <select 
+                  <CustomSelect 
                     className="purchase-form-select"
                     value={selectedProductId}
                     onChange={(e) => {
@@ -170,13 +171,13 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
                     {products.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 {!createQuickVariant && selectedProductObj && (
                   <div className="form-group">
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500 }}>Variante Destino</label>
-                    <select 
+                    <CustomSelect 
                       className="purchase-form-select"
                       value={selectedVariantId}
                       onChange={(e) => setSelectedVariantId(e.target.value)}
@@ -187,7 +188,7 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
                       {selectedProductObj.product_variants?.map(v => (
                         <option key={v.id} value={v.id}>{v.sku} - ${v.price}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </div>
                 )}
               </div>

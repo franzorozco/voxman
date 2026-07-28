@@ -12,6 +12,7 @@ import { API_BASE_URL } from "../../../../config/api";
 import Spinner from "../../components/Spinner/Spinner";
 import "./Purchases.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function CreatePurchase() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -356,7 +357,7 @@ export default function CreatePurchase() {
 
           <div className="purchase-form-group">
             <label>Proveedor *</label>
-            <select 
+            <CustomSelect 
               className="purchase-form-select"
               value={formData.supplier_id}
               onChange={e => setFormData({...formData, supplier_id: e.target.value})}
@@ -365,12 +366,12 @@ export default function CreatePurchase() {
               {suppliers.map(s => (
                 <option key={s.id} value={s.id}>{s.name} {s.tax_id ? `(${s.tax_id})` : ''}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div className="purchase-form-group">
             <label>Sucursal Destino *</label>
-            <select 
+            <CustomSelect 
               className="purchase-form-select"
               value={formData.branch_id}
               onChange={e => setFormData({...formData, branch_id: e.target.value})}
@@ -379,12 +380,12 @@ export default function CreatePurchase() {
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div className="purchase-form-group">
             <label>Comprador / Empleado *</label>
-            <select 
+            <CustomSelect 
               className="purchase-form-select"
               value={formData.employee_id}
               onChange={e => setFormData({...formData, employee_id: e.target.value})}
@@ -395,7 +396,7 @@ export default function CreatePurchase() {
                 const name = `${profile.first_name || 'Empleado'} ${profile.last_name_paternal || ''}`.trim();
                 return <option key={e.id} value={e.id}>{name}</option>;
               })}
-            </select>
+            </CustomSelect>
           </div>
 
           <div className="purchase-form-group">

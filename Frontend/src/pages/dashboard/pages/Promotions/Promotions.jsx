@@ -7,6 +7,7 @@ import PromotionCoupon from "./PromotionCoupon";
 import "../Products/Products.css";
 import { Link } from "react-router-dom";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Promotions() {
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +98,7 @@ export default function Promotions() {
             />
           </div>
 
-          <select 
+          <CustomSelect 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
@@ -108,7 +109,7 @@ export default function Promotions() {
             <option value="expired">Expiradas</option>
             <option value="exhausted">Agotadas (Límite de usos)</option>
             <option value="inactive">Inactivas</option>
-          </select>
+          </CustomSelect>
           
           <Link to="/dashboard/promotions/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
              <Trash2 size={16}/> Papelera

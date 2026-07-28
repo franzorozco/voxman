@@ -6,6 +6,7 @@ import { getOwners } from "../../../../api/admin/owners";
 import { getBranches } from "../../../../api/admin/branches";
 import { useAuthStore } from "../../../../store/authStore";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     owner_id: "",
@@ -129,40 +130,40 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div className="form-group">
                 <label>Tipo de Movimiento</label>
-                <select name="type" value={formData.type} onChange={handleChange}>
+                <CustomSelect name="type" value={formData.type} onChange={handleChange}>
                   <option value="withdrawal">Retiro de Capital</option>
                   <option value="deposit">Inyección de Capital</option>
-                </select>
+                </CustomSelect>
               </div>
 
               <div className="form-group">
                 <label>Socio</label>
-                <select name="owner_id" value={formData.owner_id} onChange={handleChange} required disabled>
+                <CustomSelect name="owner_id" value={formData.owner_id} onChange={handleChange} required disabled>
                   <option value="">Seleccione un socio</option>
                   {owners.map(o => (
                     <option key={o.id} value={o.id}>{o.user?.profile?.first_name} {o.user?.profile?.last_name_paternal}</option>
                   ))}
-                </select>
+                </CustomSelect>
                 <span style={{ fontSize: '11px', color: 'var(--color-primary)' }}>Por seguridad, solo puedes operar tu cuenta.</span>
               </div>
             </div>
 
             <div className="form-group">
               <label>Sucursal</label>
-              <select name="branch_id" value={formData.branch_id} onChange={handleChange} required>
+              <CustomSelect name="branch_id" value={formData.branch_id} onChange={handleChange} required>
                 <option value="">Seleccione una sucursal</option>
                 {branches.map(b => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div className="form-group">
               <label style={{ color: 'var(--color-primary)' }}>Origen / Destino de Fondos</label>
-              <select name="fund_source" value={formData.fund_source} onChange={handleChange}>
+              <CustomSelect name="fund_source" value={formData.fund_source} onChange={handleChange}>
                 <option value="cash">Caja Física (Tienda)</option>
                 <option value="bank">Cuenta Bancaria (Marca)</option>
-              </select>
+              </CustomSelect>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '5px' }}>
                 {formData.type === 'withdrawal' 
                   ? "⚠️ El dinero se restará del saldo de esta cuenta en la sucursal elegida." 
@@ -178,13 +179,13 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div className="form-group">
                 <label>Método de Pago</label>
-                <select name="payment_method" value={formData.payment_method} onChange={handleChange}>
+                <CustomSelect name="payment_method" value={formData.payment_method} onChange={handleChange}>
                   <option value="Efectivo">Efectivo</option>
                   <option value="Transferencia">Transferencia</option>
                   <option value="QR">QR</option>
                   <option value="Tarjeta">Tarjeta</option>
                   <option value="Otro">Otro</option>
-                </select>
+                </CustomSelect>
               </div>
 
               <div className="form-group">

@@ -20,6 +20,7 @@ import CanAccess from "../../../../components/ui/CanAccess";
 import { useAuthStore } from "../../../../store/authStore";
 import "./Settings.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 function LoadingRow({ colSpan = 3, message = "Cargando..." }) {
   return (
     <tr>
@@ -267,12 +268,12 @@ function TabCategories() {
               </div>
               <div className="form-group">
                 <label>Categoría Padre (Opcional)</label>
-                <select className="form-control" value={formData.parent_id} onChange={e => setFormData({ ...formData, parent_id: e.target.value })}>
+                <CustomSelect  value={formData.parent_id} onChange={e => setFormData({ ...formData, parent_id: e.target.value })}>
                   <option value="">Ninguno (Categoría Principal)</option>
                   {categories.filter(c => c.id !== formData.id).map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>

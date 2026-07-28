@@ -10,6 +10,7 @@ import ImageGalleryModal from "./ImageGalleryModal";
 import { X } from "lucide-react";
 import { useAuthStore } from "../../../../store/authStore";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 function CustomDropdown({ buttonText, options, onSelect }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -956,23 +957,23 @@ const getAttributeValueName = (valueId) => {
 
                 <div className="form-group">
                   <label>Categoría</label>
-                  <select name="category_id" value={form.category_id} onChange={handleChange}>
+                  <CustomSelect name="category_id" value={form.category_id} onChange={handleChange}>
                     <option value="">Seleccionar</option>
                     {categories.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
                 
                 <div className="form-group">
                   <label>Marca (Opcional)</label>
                   <div className="custom-brand-select" style={{ position: 'relative' }}>
-                    <select name="brand_id" value={form.brand_id} onChange={handleChange} className="form-control" style={{ paddingLeft: form.brand_id && brands.find(b => b.id == form.brand_id)?.logo_url ? '40px' : '10px' }}>
+                    <CustomSelect name="brand_id" value={form.brand_id} onChange={handleChange}  style={{ paddingLeft: form.brand_id && brands.find(b => b.id == form.brand_id)?.logo_url ? '40px' : '10px' }}>
                       <option value="">Ninguna</option>
                       {brands.map(b => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                     {form.brand_id && brands.find(b => b.id == form.brand_id)?.logo_url && (
                       <img 
                         src={brands.find(b => b.id == form.brand_id).logo_url} 
@@ -985,24 +986,24 @@ const getAttributeValueName = (valueId) => {
 
                 <div className="form-group">
                   <label>Tipo Producto</label>
-                  <select name="product_type_id" value={form.product_type_id} onChange={handleChange}>
+                  <CustomSelect name="product_type_id" value={form.product_type_id} onChange={handleChange}>
                     <option value="">Seleccionar</option>
                     {productTypes.map(t => (
                       <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div className="form-group">
                   <label>Propietario</label>
-                  <select name="owner_id" value={form.owner_id} onChange={handleChange}>
+                  <CustomSelect name="owner_id" value={form.owner_id} onChange={handleChange}>
                     <option value="">Seleccionar</option>
                     {owners.map(o => (
                       <option key={o.id} value={o.id}>
                         {getOwnerName(o)}
                       </option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div className="form-group">
@@ -1404,8 +1405,8 @@ const getAttributeValueName = (valueId) => {
                         <div style={{ width: '150px' }}>
                           <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>{attr?.name || "Atributo"}</span>
                         </div>
-                        <select
-                          className="form-control"
+                        <CustomSelect
+                          
                           style={{ flex: 1, padding: "10px", background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "8px", color: "white" }}
                           value={sa.valueId || ""}
                           onChange={(e) => {
@@ -1418,7 +1419,7 @@ const getAttributeValueName = (valueId) => {
                           {attr?.attribute_values?.map(val => (
                             <option key={val.id} value={val.id}>{val.value || val.name}</option>
                           ))}
-                        </select>
+                        </CustomSelect>
                         <button type="button" onClick={() => {
                           const newShared = [...simpleConfig.sharedAttributes];
                           newShared.splice(idx, 1);

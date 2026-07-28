@@ -7,6 +7,7 @@ import OwnerPaymentModal from "./OwnerPaymentModal";
 import OwnerPaymentDetailModal from "./OwnerPaymentDetailModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function OwnerPaymentsTab() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,7 +157,7 @@ export default function OwnerPaymentsTab() {
         </div>
 
         <div className="responsive-filters" style={{ gap: '15px' }}>
-          <select 
+          <CustomSelect 
             value={selectedBranchId} 
             onChange={(e) => setSelectedBranchId(e.target.value)} 
             className="form-control"
@@ -166,7 +167,7 @@ export default function OwnerPaymentsTab() {
             {branches.map(b => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
-          </select>
+          </CustomSelect>
           <CanAccess permission="manage_owner_payments">
             <button 
               className="btn-primary" 

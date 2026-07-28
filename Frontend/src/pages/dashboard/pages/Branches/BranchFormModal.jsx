@@ -4,6 +4,7 @@ import { getEmployees } from "../../../../api/admin/employees";
 import { API_BASE_URL } from "../../../../config/api";
 import toast from "react-hot-toast";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function BranchFormModal({ branch, onClose, onSave }) {
   const [loading, setLoading] = useState(false);
   const [employees, setEmployees] = useState([]);
@@ -217,7 +218,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
 
             <div className="form-group full-width">
               <label>Encargado / Gerente</label>
-              <select name="manager_id" value={formData.manager_id} onChange={handleInputChange}>
+              <CustomSelect name="manager_id" value={formData.manager_id} onChange={handleInputChange}>
                 <option value="">-- Sin asignar --</option>
                 {employees.map(emp => {
                   const firstName = emp.user?.profile?.first_name || '';
@@ -229,7 +230,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
                     <option key={emp.id} value={emp.id}>{name} ({typeof emp.role === 'object' ? emp.role?.name || '' : emp.role})</option>
                   );
                 })}
-              </select>
+              </CustomSelect>
             </div>
 
             <div className="form-group full-width">

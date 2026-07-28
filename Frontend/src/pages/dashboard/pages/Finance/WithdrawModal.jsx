@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { createOwnerPayment } from "../../../../api/admin/finance";
 import { toast } from "react-hot-toast";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData }) {
   const [formData, setFormData] = useState({
     owner_id: "",
@@ -105,8 +106,8 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Sucursal de Origen <span className="text-danger">*</span>
               </label>
-              <select 
-                className="form-control" 
+              <CustomSelect 
+                 
                 value={formData.branch_id}
                 onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
                 required
@@ -115,22 +116,22 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
                 {availableBranches.map(b => (
                   <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div className="form-group" style={{ margin: 0 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Fondo a Retirar <span className="text-danger">*</span>
               </label>
-              <select 
-                className="form-control" 
+              <CustomSelect 
+                 
                 value={formData.fund_source}
                 onChange={(e) => setFormData({ ...formData, fund_source: e.target.value })}
                 required
               >
                 <option value="cash">Caja Física (Tienda)</option>
                 <option value="bank">Cuenta Bancaria</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ background: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
@@ -162,8 +163,8 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div className="form-group" style={{ margin: 0 }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Método de Pago</label>
-                <select 
-                  className="form-control" 
+                <CustomSelect 
+                   
                   value={formData.payment_method} 
                   onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
                 >
@@ -172,7 +173,7 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
                   <option value="QR">QR</option>
                   <option value="Tarjeta">Tarjeta</option>
                   <option value="Otro">Otro</option>
-                </select>
+                </CustomSelect>
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>

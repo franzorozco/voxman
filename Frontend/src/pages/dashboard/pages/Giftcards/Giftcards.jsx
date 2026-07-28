@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 
 import "../Products/Products.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Giftcards() {
   const [giftcards, setGiftcards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +109,7 @@ export default function Giftcards() {
             />
           </div>
           
-          <select 
+          <CustomSelect 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
@@ -118,7 +119,7 @@ export default function Giftcards() {
             <option value="exhausted">Agotadas (Saldo 0)</option>
             <option value="expired">Expiradas</option>
             <option value="inactive">Inactivas</option>
-          </select>
+          </CustomSelect>
           
           <Link to="/dashboard/giftcards/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
              <Trash2 size={16}/> Papelera

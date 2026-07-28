@@ -5,6 +5,7 @@ import { approveReturn, rejectReturn } from "../../../../api/admin/returns";
 import CanAccess from "../../../../components/ui/CanAccess";
 import "./Returns.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function ReturnDetailsModal({ returnItem, onClose }) {
   if (!returnItem) return null;
 
@@ -103,20 +104,20 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Destino Logístico (Restock)</label>
-                  <select 
+                  <CustomSelect 
                     style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                     value={formData.restock_destination}
                     onChange={(e) => setFormData({...formData, restock_destination: e.target.value})}
                   >
                     <option value="inventory">Devolver al Inventario Normal (Vender de nuevo)</option>
                     <option value="quarantine">Enviar a Cuarentena (Prenda defectuosa)</option>
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Método de Reembolso</label>
-                    <select 
+                    <CustomSelect 
                       style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                       value={formData.refund_method}
                       onChange={(e) => setFormData({...formData, refund_method: e.target.value})}
@@ -124,7 +125,7 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
                       <option value="cash">Efectivo</option>
                       <option value="credit">Crédito en Tienda / Giftcard</option>
                       <option value="transfer">Transferencia / Tarjeta</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                   <div>
                     <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Monto a Devolver (Bs.)</label>

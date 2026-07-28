@@ -3,6 +3,7 @@ import { addTreasuryAdjustment } from '../../../../../api/admin/finance';
 import { toast } from 'react-hot-toast';
 import { X, Save, TrendingUp, TrendingDown } from 'lucide-react';
 
+import CustomSelect from '../../../../../components/ui/CustomSelect';
 const TreasuryAdjustmentModal = ({ isOpen, onClose, onSuccess, branches }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -53,7 +54,7 @@ const TreasuryAdjustmentModal = ({ isOpen, onClose, onSuccess, branches }) => {
         <form onSubmit={handleSubmit} style={{ padding: '20px', overflowY: 'auto' }}>
           <div className="form-group" style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '6px' }}>Sucursal</label>
-            <select 
+            <CustomSelect 
               value={formData.branch_id} 
               onChange={e => setFormData({...formData, branch_id: e.target.value})}
               required
@@ -63,7 +64,7 @@ const TreasuryAdjustmentModal = ({ isOpen, onClose, onSuccess, branches }) => {
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-            </select>
+            </CustomSelect>
             <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '6px', fontSize: '12px' }}>
               El ajuste se aplicará a la caja física de esta sucursal (debe estar abierta).
             </small>

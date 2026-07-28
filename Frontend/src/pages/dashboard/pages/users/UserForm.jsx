@@ -3,6 +3,7 @@ import { getRoles } from "../../../../api/admin/roles";
 import { restoreUser } from "../../../../api/admin/users";
 import { useAuthStore } from "../../../../store/authStore";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function UserForm({ user, onClose, onSubmit }) {
   const authUser = useAuthStore((state) => state.user);
   const canManageRoles = authUser?.permissions?.includes("manage_user_roles") || authUser?.roles?.includes("Owner");
@@ -381,9 +382,9 @@ const handleSubmit = async (e) => {
             <div className="form-group">
               <label>Teléfono</label>
               <div style={{ display: "flex", gap: "5px" }}>
-                <select disabled value="+591">
+                <CustomSelect disabled value="+591">
                   <option value="+591">🇧🇴 +591</option>
-                </select>
+                </CustomSelect>
 
                 <input
                   name="phone"
@@ -409,12 +410,12 @@ const handleSubmit = async (e) => {
 
             <div className="form-group">
               <label>Género</label>
-              <select name="gender" value={form.gender} onChange={handleChange}>
+              <CustomSelect name="gender" value={form.gender} onChange={handleChange}>
                 <option value="">Seleccione</option>
                 <option value="male">Masculino</option>
                 <option value="female">Femenino</option>
                 <option value="other">Otro</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
         </div>
@@ -534,7 +535,7 @@ const handleSubmit = async (e) => {
 
               <div className="form-group">
                 <label>Rol</label>
-                <select
+                <CustomSelect
                   name="employee_role"
                   value={form.employee_role}
                   onChange={handleChange}
@@ -544,7 +545,7 @@ const handleSubmit = async (e) => {
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
                   <option value="cashier">Cajero</option>
-                </select>
+                </CustomSelect>
               </div>
 
               {canManageSalaries && (

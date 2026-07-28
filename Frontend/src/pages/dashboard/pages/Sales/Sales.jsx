@@ -10,6 +10,7 @@ import CanAccess from "../../../../components/ui/CanAccess";
 import "../Customers/Customers.css";
 import "./Sales.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Sales() {
   const [sales, setSales] = useState([]);
   const [summary, setSummary] = useState({
@@ -158,7 +159,7 @@ export default function Sales() {
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -168,12 +169,12 @@ export default function Sales() {
                 <option value="pending">Pendientes</option>
                 <option value="cancelled">Canceladas</option>
                 <option value="refunded">Reembolsadas</option>
-              </select>
+              </CustomSelect>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Origen</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.source}
                 onChange={(e) => setFilters({ ...filters, source: e.target.value })}
@@ -182,7 +183,7 @@ export default function Sales() {
                 <option value="store">Tienda Física</option>
                 <option value="web">Tienda Web</option>
                 <option value="order_network">Entregas Agendadas</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -207,7 +208,7 @@ export default function Sales() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Sucursal</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.branch_id}
                 onChange={(e) => setFilters({ ...filters, branch_id: e.target.value })}
@@ -216,12 +217,12 @@ export default function Sales() {
                 {Array.isArray(branches) && branches.map(b => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Vendedor</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.user_id}
                 onChange={(e) => setFilters({ ...filters, user_id: e.target.value })}
@@ -235,7 +236,7 @@ export default function Sales() {
                     </option>
                   );
                 })}
-              </select>
+              </CustomSelect>
             </div>
             
             {(filters.status !== "" || filters.source !== "" || filters.date_from !== "" || filters.date_to !== "" || filters.branch_id !== "" || filters.user_id !== "") && (

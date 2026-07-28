@@ -11,6 +11,7 @@ import useScanner from "../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../store/useScannerStore";
 import "../Carts/Carts.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function NewOrderModal({ editData, onClose, onSuccess }) {
   const [step, setStep] = useState(1); // 1: Products, 2: Delivery Details
   const [loading, setLoading] = useState(false);
@@ -674,9 +675,9 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                         </div>
                         
                         {meetingPointType === 'predefined' ? (
-                          <select 
+                          <CustomSelect 
                             required
-                            className="form-control"
+                            
                             value={deliveryData.meeting_point}
                             onChange={(e) => {
                               const selectedName = e.target.value;
@@ -696,11 +697,11 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                                 {point.name} {point.city ? `(${point.city})` : ''} - Bs. {Number(point.base_cost).toFixed(2)}
                               </option>
                             ))}
-                          </select>
+                          </CustomSelect>
                         ) : meetingPointType === 'delivery' && selectedCustomer?.addresses?.length > 0 ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <select
-                              className="form-control"
+                            <CustomSelect
+                              
                               value={deliveryData.address_id}
                               onChange={(e) => {
                                 const addressId = e.target.value;
@@ -733,7 +734,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                                   {a.street}, {a.zone} {a.reference ? `(${a.reference})` : ''}
                                 </option>
                               ))}
-                            </select>
+                            </CustomSelect>
                             <div className="form-group" style={{ marginBottom: 0 }}>
                               <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Costo de Envío (Bs) *</label>
                               <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({...deliveryData, shipping_cost: e.target.value})} />
@@ -1092,8 +1093,8 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Extraer stock de:</label>
-                        <select 
-                          className="form-control" 
+                        <CustomSelect 
+                           
                           style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '6px' }}
                           value={item.branch_id || ''}
                           onChange={(e) => updateItemBranch(item.variant.id, e.target.value)}
@@ -1104,7 +1105,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               {inv.branch?.name} (Stock: {inv.stock || inv.quantity})
                             </option>
                           ))}
-                        </select>
+                        </CustomSelect>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-main)', borderRadius: '6px', padding: '4px', alignSelf: 'flex-start', marginTop: '8px' }}>

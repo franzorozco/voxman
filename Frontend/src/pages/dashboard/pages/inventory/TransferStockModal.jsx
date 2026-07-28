@@ -3,6 +3,7 @@ import { transferStock } from "../../../../api/admin/inventory";
 import toast from "react-hot-toast";
 import { X, ArrowRight, ArrowLeft } from "lucide-react";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function TransferStockModal({ item, branches, onClose, onSuccess, onBack }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -84,7 +85,7 @@ export default function TransferStockModal({ item, branches, onClose, onSuccess,
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-main)' }}>
               Sucursal de Destino
             </label>
-            <select
+            <CustomSelect
               required
               style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
               value={formData.to_branch_id}
@@ -94,7 +95,7 @@ export default function TransferStockModal({ item, branches, onClose, onSuccess,
               {availableBranches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div style={{ marginBottom: '16px' }}>

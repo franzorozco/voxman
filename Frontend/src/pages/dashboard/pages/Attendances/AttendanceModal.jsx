@@ -5,6 +5,7 @@ import { createAttendance, updateAttendance } from "../../../../api/admin/attend
 import { getEmployees } from "../../../../api/admin/employees";
 import Spinner from "../../components/Spinner/Spinner";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function AttendanceModal({ attendance, onClose, onSuccess, initialDate }) {
   const isEditing = !!attendance;
   const [loading, setLoading] = useState(false);
@@ -82,7 +83,7 @@ export default function AttendanceModal({ attendance, onClose, onSuccess, initia
             
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Empleado</label>
-              <select 
+              <CustomSelect 
                 required
                 disabled={isEditing || loadingEmployees}
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
@@ -99,7 +100,7 @@ export default function AttendanceModal({ attendance, onClose, onSuccess, initia
                     </option>
                   )
                 })}
-              </select>
+              </CustomSelect>
             </div>
 
             <div className="modal-form-grid">
@@ -116,7 +117,7 @@ export default function AttendanceModal({ attendance, onClose, onSuccess, initia
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-                <select 
+                <CustomSelect 
                   required
                   style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                   value={formData.status}
@@ -126,7 +127,7 @@ export default function AttendanceModal({ attendance, onClose, onSuccess, initia
                   <option value="late">Atraso</option>
                   <option value="absent">Ausente / Falta</option>
                   <option value="excused">Licencia / Permiso</option>
-                </select>
+                </CustomSelect>
               </div>
             </div>
 

@@ -8,6 +8,7 @@ import CanAccess from "../../../../components/ui/CanAccess";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import "./Carts.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Carts() {
   const [carts, setCarts] = useState([]);
   const [summary, setSummary] = useState({
@@ -230,7 +231,7 @@ export default function Carts() {
           <div className="filters-panel">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -240,12 +241,12 @@ export default function Carts() {
                 <option value="abandoned">Abandonado</option>
                 <option value="proforma">Proforma</option>
                 <option value="converted">Convertido</option>
-              </select>
+              </CustomSelect>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Origen</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.source}
                 onChange={(e) => setFilters({ ...filters, source: e.target.value })}
@@ -254,7 +255,7 @@ export default function Carts() {
                 <option value="store">Tienda Física</option>
                 <option value="web">Tienda Web</option>
                 <option value="mobile">App Móvil</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -278,7 +279,7 @@ export default function Carts() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ordenar por</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sortBy}
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
@@ -286,18 +287,18 @@ export default function Carts() {
                 <option value="created_at">Fecha de Creación</option>
                 <option value="status">Estado</option>
                 <option value="source">Origen</option>
-              </select>
+              </CustomSelect>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Dirección</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sortDir}
                 onChange={(e) => setFilters({ ...filters, sortDir: e.target.value })}
               >
                 <option value="desc">Descendente</option>
                 <option value="asc">Ascendente</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
         )}

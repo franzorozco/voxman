@@ -5,6 +5,7 @@ import { createExpense, updateExpense, payExpenseSplit } from "../../../../api/a
 import { getOwners } from "../../../../api/admin/owners";
 import { useAuthStore } from "../../../../store/authStore";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay = false }) {
   const [formData, setFormData] = useState({
     name: "",
@@ -284,8 +285,8 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                                       <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
                                         ¿De qué sucursal se hará el descuento?
                                       </label>
-                                      <select 
-                                        className="form-control"
+                                      <CustomSelect 
+                                        
                                         value={formData.branch_id || ""}
                                         onChange={(e) => setFormData({...formData, branch_id: e.target.value})}
                                       >
@@ -293,7 +294,7 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                                         {branches.map(b => (
                                           <option key={b.id} value={b.id}>{b.name}</option>
                                         ))}
-                                      </select>
+                                      </CustomSelect>
                                     </div>
                                   </div>
                                 )}
@@ -332,12 +333,12 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                   <div className="form-group">
                     <label>Sucursal</label>
-                    <select name="branch_id" value={formData.branch_id} onChange={handleChange} required>
+                    <CustomSelect name="branch_id" value={formData.branch_id} onChange={handleChange} required>
                       <option value="">Seleccione una sucursal</option>
                       {branches.map(b => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </div>
                   
                   <div className="form-group">
@@ -354,34 +355,34 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
 
                   <div className="form-group">
                     <label>Categoría</label>
-                    <select name="category" value={formData.category} onChange={handleChange}>
+                    <CustomSelect name="category" value={formData.category} onChange={handleChange}>
                       <option value="General">General</option>
                       <option value="Alquiler">Alquiler</option>
                       <option value="Servicios">Servicios (Luz, Agua, Internet)</option>
                       <option value="Marketing">Marketing / Publicidad</option>
                       <option value="Insumos">Insumos de Tienda</option>
                       <option value="Planilla">Planilla / Sueldos</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                   <div className="form-group">
                     <label>Estado de Pago</label>
-                    <select name="status" value={formData.status} onChange={handleChange}>
+                    <CustomSelect name="status" value={formData.status} onChange={handleChange}>
                       <option value="pending">Pendiente</option>
                       <option value="paid">Pagado</option>
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   {formData.status === 'paid' && (
                     <div className="form-group">
                       <label style={{ color: 'var(--color-primary)' }}>Origen de Fondos <span className="text-danger">*</span></label>
-                      <select name="fund_source" value={formData.fund_source} onChange={handleChange} required>
+                      <CustomSelect name="fund_source" value={formData.fund_source} onChange={handleChange} required>
                         <option value="">Selecciona de dónde salió el dinero</option>
                         <option value="cash">Caja Física (Dinero en Tienda)</option>
                         <option value="bank">Cuenta Bancaria (Transferencia)</option>
-                      </select>
+                      </CustomSelect>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
                         Para mantener el saldo real cuadrando con el sistema.
                       </span>
@@ -400,11 +401,11 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                     {formData.is_recurring && (
                       <div className="form-group" style={{ margin: 0 }}>
                         <label>Frecuencia de Recurrencia</label>
-                        <select name="recurrence_interval" value={formData.recurrence_interval} onChange={handleChange}>
+                        <CustomSelect name="recurrence_interval" value={formData.recurrence_interval} onChange={handleChange}>
                           <option value="weekly">Semanal</option>
                           <option value="monthly">Mensual</option>
                           <option value="yearly">Anual</option>
-                        </select>
+                        </CustomSelect>
                       </div>
                     )}
                   </div>
@@ -436,22 +437,22 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                 <div style={{ background: 'var(--bg-overlay)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <div className="form-group">
                     <label style={{ color: 'var(--color-primary)' }}>¿Cómo se divide este gasto entre los socios?</label>
-                    <select name="split_type" value={formData.split_type} onChange={handleChange}>
+                    <CustomSelect name="split_type" value={formData.split_type} onChange={handleChange}>
                       <option value="equal">Dividir en partes iguales (50/50)</option>
                       <option value="proportional">Dividir proporcional a las ventas del mes</option>
                       <option value="single_owner">Lo asume un solo socio al 100%</option>
                       <option value="custom">Personalizado (Monto exacto por socio)</option>
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   {formData.split_type === 'single_owner' && (
                     <div className="form-group" style={{ marginTop: '15px' }}>
                       <label>Seleccionar Socio que asume el gasto</label>
-                      <select name="owner_id" value={formData.owner_id} onChange={handleChange} required>
+                      <CustomSelect name="owner_id" value={formData.owner_id} onChange={handleChange} required>
                         {owners.map(o => (
                           <option key={o.id} value={o.id}>{o.user?.profile?.first_name} {o.user?.profile?.last_name_paternal}</option>
                         ))}
-                      </select>
+                      </CustomSelect>
                     </div>
                   )}
 

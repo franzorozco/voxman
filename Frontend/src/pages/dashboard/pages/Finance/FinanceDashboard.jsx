@@ -12,6 +12,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { es } from "date-fns/locale";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function FinanceDashboard() {
   const [data, setDashboardData] = useState({ owners: [], summary: {} });
   const [loading, setLoading] = useState(true);
@@ -125,7 +126,7 @@ export default function FinanceDashboard() {
                   dateFormat="dd/MM/yyyy"
                 />
             </div>
-            <select 
+            <CustomSelect 
               value={selectedBranchId} 
               onChange={(e) => setSelectedBranchId(e.target.value)} 
               className="form-control"
@@ -135,7 +136,7 @@ export default function FinanceDashboard() {
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-            </select>
+            </CustomSelect>
         </div>
       </div>
 

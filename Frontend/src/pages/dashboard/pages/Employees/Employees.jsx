@@ -7,6 +7,7 @@ import EmployeeDetails from "./EmployeeDetails";
 import "./Employees.css"; 
 import { Link } from "react-router-dom";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Employees() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -104,7 +105,7 @@ export default function Employees() {
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -112,12 +113,12 @@ export default function Employees() {
                 <option value="active">Activos (Por defecto)</option>
                 <option value="all">Todos</option>
                 <option value="inactive">Inactivos</option>
-              </select>
+              </CustomSelect>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ordenar Por</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sortBy}
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
@@ -125,7 +126,7 @@ export default function Employees() {
                 <option value="created_at">Más recientes</option>
                 <option value="base_salary">Sueldo Base</option>
                 <option value="hire_date">Fecha Contratación</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
         )}

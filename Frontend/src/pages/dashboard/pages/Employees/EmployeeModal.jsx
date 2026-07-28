@@ -6,6 +6,7 @@ import { getBranches } from "../../../../api/admin/branches";
 import { getRoles } from "../../../../api/admin/roles";
 import Spinner from "../../components/Spinner/Spinner";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function EmployeeModal({ employee, onClose, onSuccess }) {
   const isEditing = !!employee;
   const [loading, setLoading] = useState(false);
@@ -230,7 +231,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
               <div className="modal-form-grid">
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Rol del Empleado *</label>
-                  <select
+                  <CustomSelect
                     style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                     value={formData.role}
                     onChange={(e) => setFormData({...formData, role: e.target.value})}
@@ -240,11 +241,11 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
                     {roles.map(r => (
                       <option key={r.id} value={r.name}>{r.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Sucursal Asignada</label>
-                  <select
+                  <CustomSelect
                     style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                     value={formData.branch_id}
                     onChange={(e) => setFormData({...formData, branch_id: e.target.value})}
@@ -253,7 +254,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
                     {Array.isArray(branches) && branches.map(b => (
                       <option key={b.id} value={b.id}>{b.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
               </div>
 

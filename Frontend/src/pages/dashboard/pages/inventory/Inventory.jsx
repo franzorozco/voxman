@@ -19,6 +19,7 @@ import { useAuthStore } from "../../../../store/authStore";
 import { Camera } from "lucide-react";
 import toast from "react-hot-toast";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Inventory() {
   const [inventories, setInventories] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -412,7 +413,7 @@ export default function Inventory() {
               <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado de Stock</label>
-                  <select
+                  <CustomSelect
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', transition: 'border 0.2s' }}
                     value={filters.status}
                     onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
@@ -421,12 +422,12 @@ export default function Inventory() {
                     <option value="in_stock">En Stock</option>
                     <option value="low_stock">Bajo Stock</option>
                     <option value="out_of_stock">Agotado</option>
-                  </select>
+                  </CustomSelect>
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Categoría</label>
-                  <select
+                  <CustomSelect
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', transition: 'border 0.2s' }}
                     value={filters.category_id}
                     onChange={(e) => setFilters({ ...filters, category_id: e.target.value, page: 1 })}
@@ -435,12 +436,12 @@ export default function Inventory() {
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Marca</label>
-                  <select
+                  <CustomSelect
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', transition: 'border 0.2s' }}
                     value={filters.brand_id}
                     onChange={(e) => setFilters({ ...filters, brand_id: e.target.value, page: 1 })}
@@ -449,7 +450,7 @@ export default function Inventory() {
                     {brands.map(brand => (
                       <option key={brand.id} value={brand.id}>{brand.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

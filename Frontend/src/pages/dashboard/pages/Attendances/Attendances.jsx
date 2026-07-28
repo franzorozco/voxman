@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import AttendanceModal from "./AttendanceModal";
 import "../Employees/Employees.css"; 
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Attendances() {
   const [attendances, setAttendances] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -178,7 +179,7 @@ export default function Attendances() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Empleado:</span>
-                <select 
+                <CustomSelect 
                   value={selectedEmployeeForMonth}
                   onChange={(e) => setSelectedEmployeeForMonth(e.target.value)}
                   style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none', minWidth: '200px' }}
@@ -189,7 +190,7 @@ export default function Attendances() {
                     const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
                     return <option key={emp.id} value={emp.id}>{fullName}</option>;
                   })}
-                </select>
+                </CustomSelect>
               </div>
             </div>
           )}

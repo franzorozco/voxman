@@ -9,6 +9,7 @@ import "./Branches.css";
 import { API_BASE_URL } from "../../../../config/api";
 import toast from "react-hot-toast";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Branches() {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +121,7 @@ export default function Branches() {
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) =>
@@ -130,7 +131,7 @@ export default function Branches() {
                 <option value="all">Todas</option>
                 <option value="active">Activas</option>
                 <option value="inactive">Inactivas</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
         )}

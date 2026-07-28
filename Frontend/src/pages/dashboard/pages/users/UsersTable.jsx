@@ -3,6 +3,7 @@ import { Filter, Search } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import UserViewModal from "./UserViewModal";
 import CanAccess from "../../../../components/ui/CanAccess";
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function UsersTable({
   users,
   onEdit,
@@ -178,7 +179,7 @@ export default function UsersTable({
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) =>
@@ -188,12 +189,12 @@ export default function UsersTable({
                 <option value="all">Todos</option>
                 <option value="active">Activos</option>
                 <option value="inactive">Inactivos</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Tipo de cuenta</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.type}
                 onChange={(e) =>
@@ -204,12 +205,12 @@ export default function UsersTable({
                 <option value="owner">Owner</option>
                 <option value="customer">Customer</option>
                 <option value="employee">Employee</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ordenar por</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sort}
                 onChange={(e) =>
@@ -220,7 +221,7 @@ export default function UsersTable({
                 <option value="created_at_asc">Más antiguos</option>
                 <option value="points_desc">Más puntos</option>
                 <option value="points_asc">Menos puntos</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -251,7 +252,7 @@ export default function UsersTable({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Agrupar tabla por</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.groupBy}
                 onChange={(e) =>
@@ -261,7 +262,7 @@ export default function UsersTable({
                 <option value="none">Sin agrupar</option>
                 <option value="type">Por tipo</option>
                 <option value="role">Por rol</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
         )}

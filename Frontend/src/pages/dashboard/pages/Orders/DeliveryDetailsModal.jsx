@@ -6,6 +6,7 @@ import echo from "../../../../echo";
 import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
 import DiscountInput from '../../components/DiscountInput';
+import CustomSelect from '../../../../components/ui/CustomSelect';
 
 const mapContainerStyle = {
   width: '100%',
@@ -696,8 +697,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
               <div className="form-group" style={{ margin: 0 }}>
                 <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Empresa de Transporte *</label>
-                <select 
-                  className="form-control"
+                <CustomSelect 
                   value={externalCompany}
                   onChange={(e) => {
                     setExternalCompany(e.target.value);
@@ -705,7 +705,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       setCustomExternalCompany('');
                     }
                   }}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                  placeholder="Seleccione una empresa..."
                 >
                   <option value="">Seleccione una empresa...</option>
                   {TRANSPORT_COMPANIES.map(company => (
@@ -713,7 +713,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       {company.name} {company.type !== 'Otro' && `(${company.type})`}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
 
               {externalCompany === 'Otro' && (

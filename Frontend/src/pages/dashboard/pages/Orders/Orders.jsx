@@ -11,6 +11,7 @@ import DeliveryZonesModal from "./DeliveryZonesModal";
 import echo from "../../../../echo";
 import "./Orders.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Orders() {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -277,7 +278,7 @@ export default function Orders() {
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select 
+              <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -288,7 +289,7 @@ export default function Orders() {
                 <option value="at_the_meeting_point">En el Punto</option>
                 <option value="completed">Entregados</option>
                 <option value="cancelled">Cancelados</option>
-              </select>
+              </CustomSelect>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

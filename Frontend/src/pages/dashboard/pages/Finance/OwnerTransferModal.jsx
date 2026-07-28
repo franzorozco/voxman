@@ -3,6 +3,7 @@ import { X, ArrowRight } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { transferOwnerFunds } from "../../../../api/admin/finance";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function OwnerTransferModal({ transferData, onClose, onSuccess }) {
   // transferData should contain { owner_id, branches: [{branch_id, branch_name}] }
   const [formData, setFormData] = useState({
@@ -87,21 +88,21 @@ export default function OwnerTransferModal({ transferData, onClose, onSuccess })
           
           <div className="form-group" style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '6px' }}>Sucursal</label>
-            <select name="branch_id" value={formData.branch_id} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
+            <CustomSelect name="branch_id" value={formData.branch_id} onChange={handleChange}  required style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
               {transferData?.branches?.map(b => (
                 <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginBottom: '20px' }}>
             {/* ORIGEN */}
             <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>ORIGEN</label>
-                <select name="from_fund" value={formData.from_fund} onChange={handleChange} className="form-control" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
+                <CustomSelect name="from_fund" value={formData.from_fund} onChange={handleChange}  style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
                     <option value="cash">Caja Física (Tienda)</option>
                     <option value="bank">Cuenta Bancaria (Marca)</option>
-                </select>
+                </CustomSelect>
             </div>
 
             <ArrowRight size={24} style={{ color: 'var(--text-muted)' }} />
@@ -109,10 +110,10 @@ export default function OwnerTransferModal({ transferData, onClose, onSuccess })
             {/* DESTINO */}
             <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>DESTINO</label>
-                <select name="to_fund" value={formData.to_fund} onChange={handleChange} className="form-control" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
+                <CustomSelect name="to_fund" value={formData.to_fund} onChange={handleChange}  style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
                     <option value="bank">Cuenta Bancaria (Marca)</option>
                     <option value="cash">Caja Física (Tienda)</option>
-                </select>
+                </CustomSelect>
             </div>
           </div>
 

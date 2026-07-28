@@ -10,6 +10,7 @@ import useScanner from "../../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../../store/useScannerStore";
 import { Camera } from "lucide-react";
 
+import CustomSelect from '../../../../../components/ui/CustomSelect';
 export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess }) {
   const { user } = useAuthStore();
   const hasPermission = user?.permissions?.includes("inventory_mass_entry") || user?.roles?.includes("Owner");
@@ -276,7 +277,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               1. Sucursal de Destino
             </label>
-            <select
+            <CustomSelect
               style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: defaultBranchId ? 'var(--bg-main)' : 'var(--bg-input)', color: 'var(--text-main)', fontSize: '15px', outline: 'none', cursor: defaultBranchId ? 'not-allowed' : 'pointer', opacity: defaultBranchId ? 0.8 : 1 }}
               value={selectedBranchId}
               onChange={(e) => setSelectedBranchId(e.target.value)}
@@ -287,7 +288,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-            </select>
+            </CustomSelect>
             {!!defaultBranchId && (
               <small style={{ color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
                 * Has ingresado desde una sucursal específica. El ingreso está bloqueado a esta sucursal por seguridad.

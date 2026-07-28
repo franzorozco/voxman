@@ -3,6 +3,7 @@ import { X, ArrowRight } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { transferCash } from "../../../../../api/admin/finance";
 
+import CustomSelect from '../../../../../components/ui/CustomSelect';
 export default function TransferModal({ branches, bankBalance, onClose }) {
   const [formData, setFormData] = useState({
     from_type: "branch",
@@ -89,15 +90,15 @@ export default function TransferModal({ branches, bankBalance, onClose }) {
             {/* ORIGEN */}
             <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>ORIGEN</label>
-                <select name="from_type" value={formData.from_type} onChange={handleChange} className="form-control" style={{ marginBottom: '10px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
+                <CustomSelect name="from_type" value={formData.from_type} onChange={handleChange}  style={{ marginBottom: '10px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
                     <option value="branch">Caja Sucursal</option>
                     <option value="bank">Cuenta Bancaria</option>
-                </select>
+                </CustomSelect>
                 {formData.from_type === 'branch' && (
-                    <select name="from_branch_id" value={formData.from_branch_id} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
+                    <CustomSelect name="from_branch_id" value={formData.from_branch_id} onChange={handleChange}  required style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
                         <option value="">Seleccione Sucursal</option>
                         {branches?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    </select>
+                    </CustomSelect>
                 )}
             </div>
 
@@ -106,15 +107,15 @@ export default function TransferModal({ branches, bankBalance, onClose }) {
             {/* DESTINO */}
             <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>DESTINO</label>
-                <select name="to_type" value={formData.to_type} onChange={handleChange} className="form-control" style={{ marginBottom: '10px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
+                <CustomSelect name="to_type" value={formData.to_type} onChange={handleChange}  style={{ marginBottom: '10px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
                     <option value="bank">Cuenta Bancaria</option>
                     <option value="branch">Caja Sucursal</option>
-                </select>
+                </CustomSelect>
                 {formData.to_type === 'branch' && (
-                    <select name="to_branch_id" value={formData.to_branch_id} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
+                    <CustomSelect name="to_branch_id" value={formData.to_branch_id} onChange={handleChange}  required style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
                         <option value="">Seleccione Sucursal</option>
                         {branches?.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    </select>
+                    </CustomSelect>
                 )}
             </div>
           </div>

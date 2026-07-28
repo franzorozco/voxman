@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import PayslipModal from "./PayslipModal";
 import "../Employees/Employees.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Payroll() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -154,7 +155,7 @@ export default function Payroll() {
         <h1 className="products-title">Nómina y Pagos</h1>
         
         <div style={{ display: 'flex', gap: '16px' }}>
-          <select 
+          <CustomSelect 
             value={month} 
             onChange={(e) => setMonth(e.target.value)}
             style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
@@ -162,7 +163,7 @@ export default function Payroll() {
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('es', { month: 'long' }).toUpperCase()}</option>
             ))}
-          </select>
+          </CustomSelect>
           <input 
             type="number" 
             value={year} 

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Printer, RefreshCw } from "lucide-react";
 
+import CustomSelect from '../../../../../components/ui/CustomSelect';
 const LABEL_SIZES = {
   small:  { name: "Pequeño",  qr: 50,  width: 120, fontSize: { title: 8, attr: 7, price: 9, sku: 7 }, pad: 6 },
   medium: { name: "Mediano",  qr: 80,  width: 170, fontSize: { title: 10, attr: 9, price: 12, sku: 8 }, pad: 10 },
@@ -180,21 +181,21 @@ export default function QrPrintTab({ product }) {
 
         <div className="form-group">
           <label>Sucursal / Almacén</label>
-          <select className="form-control" value={selectedWarehouseId} onChange={(e) => setSelectedWarehouseId(e.target.value)}>
+          <CustomSelect  value={selectedWarehouseId} onChange={(e) => setSelectedWarehouseId(e.target.value)}>
             <option value="">Seleccionar Sucursal...</option>
             {branches.map(br => (
               <option key={br.id} value={br.id}>{br.name}</option>
             ))}
-          </select>
+          </CustomSelect>
         </div>
 
         <div className="form-group">
           <label>Formato de Papel</label>
-          <select className="form-control" value={paperFormat} onChange={(e) => setPaperFormat(e.target.value)}>
+          <CustomSelect  value={paperFormat} onChange={(e) => setPaperFormat(e.target.value)}>
             {Object.entries(PAPER_FORMATS).map(([k, v]) => (
               <option key={k} value={k}>{v.name}</option>
             ))}
-          </select>
+          </CustomSelect>
         </div>
 
         <div className="form-group">

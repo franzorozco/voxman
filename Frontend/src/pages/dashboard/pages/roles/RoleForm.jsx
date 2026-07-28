@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getPermissions } from "../../../../api/admin/permissions";
 import { X, Check } from "lucide-react";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function RoleForm({ role, onClose, onSubmit }) {
   const [name, setName] = useState("");
   const [roleType, setRoleType] = useState("none");
@@ -120,7 +121,7 @@ export default function RoleForm({ role, onClose, onSubmit }) {
 
             <div className="form-group" style={{ margin: 0 }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: 'var(--text-main)', fontSize: '14px' }}>Asignable a</label>
-              <select 
+              <CustomSelect 
                 value={roleType} 
                 onChange={(e) => setRoleType(e.target.value)}
                 style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s', appearance: 'none', cursor: 'pointer' }}
@@ -128,7 +129,7 @@ export default function RoleForm({ role, onClose, onSubmit }) {
                 <option value="none">Sin asignación específica (General)</option>
                 <option value="employee">Empleados (Staff del sistema)</option>
                 <option value="customer">Clientes</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
 

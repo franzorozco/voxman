@@ -5,6 +5,7 @@ import api from "../../../../api/client";
 import { updateVariant, updateProductMeasurements } from "../../../../api/admin/products";
 import toast from "react-hot-toast";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 const formatMoney = (amount) => {
   return new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount);
 };
@@ -248,9 +249,9 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Talla (Size)</span>
                       {isEditingInfo ? (
-                        <select className="simple-input" value={infoState.size_id} onChange={e => setInfoState({...infoState, size_id: e.target.value})} style={{ width: '150px', padding: '4px 8px' }}>
+                        <CustomSelect className="simple-input" value={infoState.size_id} onChange={e => setInfoState({...infoState, size_id: e.target.value})} style={{ width: '150px', padding: '4px 8px' }}>
                           {sizes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
+                        </CustomSelect>
                       ) : (
                         <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.size.name}</span>
                       )}
@@ -261,9 +262,9 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Corte (Fit)</span>
                       {isEditingInfo ? (
-                        <select className="simple-input" value={infoState.fit_id} onChange={e => setInfoState({...infoState, fit_id: e.target.value})} style={{ width: '150px', padding: '4px 8px' }}>
+                        <CustomSelect className="simple-input" value={infoState.fit_id} onChange={e => setInfoState({...infoState, fit_id: e.target.value})} style={{ width: '150px', padding: '4px 8px' }}>
                           {fits.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                        </select>
+                        </CustomSelect>
                       ) : (
                         <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.fit.name}</span>
                       )}
@@ -277,7 +278,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                       <div key={vav.attribute_value_id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ color: 'var(--text-muted)', fontSize: '14px', textTransform: 'capitalize' }}>{attrName}</span>
                         {(isEditingInfo && attr) ? (
-                          <select 
+                          <CustomSelect 
                             className="simple-input" 
                             style={{ width: '150px', padding: '4px 8px' }}
                             value={infoState.attribute_value_ids.find(id => (attr.attribute_values || []).some(v => String(v.id) === String(id))) || vav.attribute_value_id}
@@ -288,7 +289,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                             }}
                           >
                             {(attr.attribute_values || []).map(val => <option key={val.id} value={val.id}>{val.value}</option>)}
-                          </select>
+                          </CustomSelect>
                         ) : (
                           <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{getAttributeValue(vav)}</span>
                         )}

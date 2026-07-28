@@ -6,6 +6,7 @@ import { API_BASE_URL } from "../../../../config/api";
 import { Search, Filter, ArrowLeft, ArrowUpRight, ArrowDownRight, RefreshCcw } from "lucide-react";
 import "./Inventory.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function InventoryMovements() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -108,7 +109,7 @@ export default function InventoryMovements() {
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Sucursal</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.branch_id}
                 onChange={(e) => setFilters({ ...filters, branch_id: e.target.value })}
@@ -117,12 +118,12 @@ export default function InventoryMovements() {
                 {branches.map(b => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Tipo de Movimiento</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.type}
                 onChange={(e) => setFilters({ ...filters, type: e.target.value })}
@@ -134,7 +135,7 @@ export default function InventoryMovements() {
                 <option value="transfer_in">Ingreso por Transferencia</option>
                 <option value="transfer_out">Salida por Transferencia</option>
                 <option value="adjustment">Ajustes</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
         )}

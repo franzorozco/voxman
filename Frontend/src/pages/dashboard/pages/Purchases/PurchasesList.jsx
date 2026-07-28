@@ -9,6 +9,7 @@ import ViewPurchaseModal from "./ViewPurchaseModal";
 import "./Purchases.css";
 import { DollarSign, Clock, CheckCircle } from "lucide-react";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function PurchasesList() {
   const [purchases, setPurchases] = useState([]);
   const [stats, setStats] = useState(null);
@@ -115,7 +116,7 @@ export default function PurchasesList() {
             className="purchases-search-input"
           />
         </div>
-        <select 
+        <CustomSelect 
           className="purchase-form-select" 
           style={{ width: '200px' }}
           value={statusFilter}
@@ -125,7 +126,7 @@ export default function PurchasesList() {
           <option value="pending">Pendientes</option>
           <option value="received">Recepcionados</option>
           <option value="cancelled">Cancelados</option>
-        </select>
+        </CustomSelect>
         <button className="btn-secondary" onClick={fetchPurchases} title="Actualizar" style={{ padding: '10px' }}>
           <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
         </button>

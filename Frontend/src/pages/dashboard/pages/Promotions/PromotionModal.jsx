@@ -8,6 +8,7 @@ import { getBrands } from "../../../../api/admin/brands";
 import api from "../../../../api/client";
 import Spinner from "../../components/Spinner/Spinner";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 const customStyles = {
   menuPortal: base => ({ ...base, zIndex: 99999 }),
   control: (base) => ({
@@ -282,10 +283,10 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
             <div className="form-grid">
               <div className="form-group">
                 <label>Tipo de Descuento *</label>
-                <select name="type" value={formData.type} onChange={handleChange}>
+                <CustomSelect name="type" value={formData.type} onChange={handleChange}>
                   <option value="percentage">Porcentaje (%)</option>
                   <option value="fixed">Monto Fijo (Bs)</option>
-                </select>
+                </CustomSelect>
               </div>
               <div className="form-group">
                 <label>Valor *</label>

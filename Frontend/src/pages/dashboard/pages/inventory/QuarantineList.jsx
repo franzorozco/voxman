@@ -7,6 +7,7 @@ import { PackageX, AlertTriangle, CheckCircle, PackageOpen } from "lucide-react"
 import "../Purchases/Purchases.css";
 import { API_BASE_URL } from "../../../../config/api";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 const QuarantineList = () => {
   const [items, setItems] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -93,7 +94,7 @@ const QuarantineList = () => {
       </div>
 
       <div className="filters-container" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <select 
+        <CustomSelect 
           className="purchase-form-select"
           value={selectedBranch}
           onChange={(e) => setSelectedBranch(e.target.value)}
@@ -103,7 +104,7 @@ const QuarantineList = () => {
           {branches.map(b => (
             <option key={b.id} value={b.id}>{b.name}</option>
           ))}
-        </select>
+        </CustomSelect>
         <button className="btn-secondary" onClick={loadData}>
           Actualizar
         </button>

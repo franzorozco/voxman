@@ -8,6 +8,7 @@ import Spinner from "../../components/Spinner/Spinner";
 import { useAuthStore } from "../../../../store/authStore";
 import "./Purchases.css";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
 
 export default function ReceivePurchase() {
@@ -196,7 +197,7 @@ export default function ReceivePurchase() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label>Almacenista / Recepcionista</label>
-              <select 
+              <CustomSelect 
                 className="purchase-form-select"
                 value={formData.employee_id}
                 onChange={(e) => setFormData({...formData, employee_id: e.target.value})}
@@ -207,7 +208,7 @@ export default function ReceivePurchase() {
                     {emp.user?.user_profiles?.[0]?.first_name} {emp.user?.user_profiles?.[0]?.last_name} ({emp.employee_code || emp.role})
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label>Notas u Observaciones Generales</label>

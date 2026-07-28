@@ -9,6 +9,7 @@ import { API_BASE_URL } from "../../../../config/api";
 import useScanner from "../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../store/useScannerStore";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function BundleForm({ bundle, categories, owners, productTypes, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
@@ -517,18 +518,18 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label>Categoría <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 'normal' }}>(Opcional)</span></label>
-                  <select className="form-control" value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
+                  <CustomSelect  value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
                     <option value="">Seleccione...</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div className="form-group">
                   <label>Tipo de Prod.</label>
-                  <select className="form-control" value={formData.product_type_id} onChange={(e) => setFormData({ ...formData, product_type_id: e.target.value })}>
+                  <CustomSelect  value={formData.product_type_id} onChange={(e) => setFormData({ ...formData, product_type_id: e.target.value })}>
                     <option value="">Seleccione...</option>
                     {productTypes.map(pt => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
-                  </select>
+                  </CustomSelect>
                 </div>
               </div>
 

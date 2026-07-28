@@ -16,6 +16,7 @@ import BundlesTable from "./BundlesTable";
 import BundleForm from "./BundleForm";
 import BundleViewModal from "./BundleViewModal";
 
+import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Bundles() {
   const [loadingData, setLoadingData] = useState(true);
   const [loadingBundles, setLoadingBundles] = useState(true);
@@ -270,7 +271,7 @@ export default function Bundles() {
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Categoría</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.category}
                 onChange={(e) => setFilters({ ...filters, category: e.target.value })}
@@ -279,12 +280,12 @@ export default function Bundles() {
                 {[...new Set(bundles.filter(p => p.category?.name).map(p => p.category?.name))].map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Propietario</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.owner}
                 onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
@@ -293,12 +294,12 @@ export default function Bundles() {
                 {[...new Set(bundles.filter(p => p.owner?.name).map(p => p.owner?.name))].map((o) => (
                   <option key={o} value={o}>{o}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -306,12 +307,12 @@ export default function Bundles() {
                 <option value="">Todos</option>
                 <option value="active">Activo</option>
                 <option value="inactive">Inactivo</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Stock Virtual</label>
-              <select
+              <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.stockStatus}
                 onChange={(e) => setFilters({ ...filters, stockStatus: e.target.value })}
@@ -319,7 +320,7 @@ export default function Bundles() {
                 <option value="">Todos</option>
                 <option value="in_stock">En Stock (&gt; 0)</option>
                 <option value="out_of_stock">Sin Stock (0)</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>

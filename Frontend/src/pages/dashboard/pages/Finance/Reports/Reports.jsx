@@ -9,6 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { es } from "date-fns/locale";
 import "./Reports.css";
 
+import CustomSelect from '../../../../../components/ui/CustomSelect';
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b'];
 
 export default function FinanceReports() {
@@ -97,7 +98,7 @@ export default function FinanceReports() {
         <div className="reports-filters">
           <div className="date-picker-wrapper">
             <Building size={18} className="date-picker-icon" />
-            <select
+            <CustomSelect
               className="date-picker-input"
               value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
@@ -107,7 +108,7 @@ export default function FinanceReports() {
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
           
           <div className="date-picker-wrapper">
