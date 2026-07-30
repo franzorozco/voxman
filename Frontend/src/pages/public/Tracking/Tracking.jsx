@@ -316,7 +316,7 @@ export default function Tracking() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', alignItems: 'start' }}>
           <div className="tracking-section" style={{ margin: 0 }}>
           <h3 className="section-title"><Map size={20} /> Detalles Logísticos</h3>
           <div className="details-grid">

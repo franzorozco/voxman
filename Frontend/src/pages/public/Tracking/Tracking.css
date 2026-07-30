@@ -469,41 +469,59 @@
   font-size: 24px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .tracking-wrapper {
-    padding: 20px 16px;
+    padding: 12px;
   }
   
   .tracking-header, .tracking-status-hero {
-    padding: 20px;
-    margin: 20px 16px;
+    padding: 16px;
+    margin: 16px 12px;
   }
   
   .tracking-timeline {
-    padding: 0 20px;
+    padding: 0 12px;
   }
   
   .tracking-timeline::before, .timeline-progress {
-    left: 36px;
-    right: 36px;
+    left: 20px;
+    right: 20px;
+    top: 12px;
+  }
+  
+  .timeline-step {
+    flex: 1;
+    width: auto;
   }
   
   .timeline-step p {
     font-size: 10px;
+    letter-spacing: -0.3px;
+    white-space: normal;
+    line-height: 1.1;
   }
   
   .step-icon {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
+  }
+  
+  .step-icon svg {
+    width: 12px !important;
+    height: 12px !important;
   }
   
   .status-icon {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .status-text h2 {
+    font-size: 20px;
   }
   
   .tracking-section {
-    padding: 0 20px 24px 20px;
+    padding: 0 16px 20px 16px;
   }
   
   .driver-card {

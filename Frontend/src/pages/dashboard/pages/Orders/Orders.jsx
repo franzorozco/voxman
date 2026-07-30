@@ -380,26 +380,34 @@ export default function Orders() {
                       
                       <div className="bubble-main">
                         <div className="bubble-main-header">
-                          <div className="bubble-customer" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', flexWrap: 'wrap' }}>
-                            <User size={16} style={{ color: 'var(--text-muted)' }} />
-                            {nameToDisplay}
-                            <span style={{ color: 'var(--border-color)', margin: '0 4px' }}>|</span>
-                            <Phone size={16} style={{ color: 'var(--text-muted)' }} />
-                            <span style={{ fontWeight: 600 }}>{phoneToDisplay}</span>
-                            
-                            {schedule.shipment?.sale?.customer?.user?.email && (
-                              <>
-                                <span style={{ color: 'var(--border-color)', margin: '0 4px' }}>|</span>
-                                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{schedule.shipment.sale.customer.user.email}</span>
-                              </>
-                            )}
-                            {schedule.shipment?.sale?.customer?.customer_code && (
-                              <span style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '2px 8px', borderRadius: '12px', color: 'var(--text-muted)', fontWeight: 600, marginLeft: '4px' }}>
-                                Cód: {schedule.shipment.sale.customer.customer_code}
-                              </span>
-                            )}
-                          </div>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div className="bubble-customer" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <User size={16} style={{ color: 'var(--text-muted)' }} />
+                                <span style={{ fontWeight: 600 }}>{nameToDisplay}</span>
+                              </div>
+                              <span className="separator-pipe" style={{ color: 'var(--border-color)', margin: '0 4px' }}>|</span>
+                              
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Phone size={16} style={{ color: 'var(--text-muted)' }} />
+                                <span style={{ fontWeight: 600 }}>{phoneToDisplay}</span>
+                              </div>
+                              
+                              {schedule.shipment?.sale?.customer?.user?.email && (
+                                <>
+                                  <span className="separator-pipe" style={{ color: 'var(--border-color)', margin: '0 4px' }}>|</span>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{schedule.shipment.sale.customer.user.email}</span>
+                                  </div>
+                                </>
+                              )}
+                              
+                              {schedule.shipment?.sale?.customer?.customer_code && (
+                                <span style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '2px 8px', borderRadius: '12px', color: 'var(--text-muted)', fontWeight: 600, marginLeft: '4px' }}>
+                                  Cód: {schedule.shipment.sale.customer.customer_code}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 {schedule.shipment?.delivery_type === 'home_delivery' && (
                                   <span style={{ 
                                     background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)', 

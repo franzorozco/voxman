@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
 export default function CustomSelect({ 
@@ -11,18 +12,60 @@ export default function CustomSelect({
   placeholder = "Seleccionar..."
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0, direction: 'down' });
   const containerRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      // Check if click is outside both container and dropdown portal
+      if (
+        containerRef.current && !containerRef.current.contains(event.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
+    
+    const handleScroll = (e) => {
+      // Close on scroll unless scrolling inside the dropdown itself
+      if (isOpen && dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isOpen) {
+      window.addEventListener('scroll', handleScroll, true); // true = capture phase to catch all scrolls
+      window.addEventListener('resize', () => setIsOpen(false));
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', () => setIsOpen(false));
+    };
+  }, [isOpen]);
+
+  const toggleDropdown = () => {
+    if (disabled) return;
+    if (!isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      // If less than 200px below and more space above, open upwards
+      const direction = (spaceBelow < 250 && spaceAbove > spaceBelow) ? 'up' : 'down';
+      
+      setDropdownPos({
+        top: direction === 'down' ? rect.bottom + window.scrollY : rect.top + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        direction
+      });
+    }
+    setIsOpen(!isOpen);
+  };
 
   // Parse children to extract options
   const options = [];
@@ -62,6 +105,9 @@ export default function CustomSelect({
   // Remove global input classes that cause double-borders when applied to the container
   const safeClassName = className.replace(/\b(form-control|form-select|simple-input)\b/g, '').trim();
 
+  // Find the current theme node so CSS variables are inherited
+  const portalNode = typeof document !== 'undefined' ? (document.querySelector('.admin-theme') || document.querySelector('.admin-theme-dark') || document.querySelector('.pos-theme') || document.querySelector('.pos-theme-dark') || document.body) : null;
+
   return (
     <div 
       ref={containerRef} 
@@ -69,7 +115,7 @@ export default function CustomSelect({
       style={{ position: 'relative', width: '100%', ...containerStyle }}
     >
       <div 
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={toggleDropdown}
         style={{
           width: '100%',
           padding: '10px 14px',
@@ -106,18 +152,21 @@ export default function CustomSelect({
         />
       </div>
 
-      {isOpen && !disabled && (
+      {isOpen && !disabled && createPortal(
         <div 
+          ref={dropdownRef}
+          className="custom-select-dropdown"
           style={{
             position: 'absolute',
-            top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
+            top: dropdownPos.direction === 'down' ? `${dropdownPos.top + 4}px` : 'auto',
+            bottom: dropdownPos.direction === 'up' ? `${window.innerHeight - dropdownPos.top + 4}px` : 'auto',
+            left: `${dropdownPos.left}px`,
+            width: `${dropdownPos.width}px`,
             background: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
             borderRadius: '8px',
             boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
-            zIndex: 9999,
+            zIndex: 999999,
             maxHeight: '260px',
             overflowY: 'auto',
             padding: '6px'
@@ -157,7 +206,8 @@ export default function CustomSelect({
               </div>
             );
           })}
-        </div>
+        </div>,
+        portalNode
       )}
     </div>
   );

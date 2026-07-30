@@ -405,48 +405,52 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
           </div>
         </div>
 
-        <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', padding: '0' }}>
           
-          {/* TIMELINE */}
-          <div style={{ padding: '24px', background: isCancelled ? 'rgba(239, 68, 68, 0.04)' : 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '36px', left: '40px', right: '40px', height: '4px', background: 'var(--border-color)', zIndex: 1, borderRadius: '2px' }}>
-              <div style={{ 
-                height: '100%', 
-                background: isCancelled ? '#ef4444' : accentColor, 
-                width: isCancelled ? '100%' : `${(currentStepIndex / (currentSteps.length - 1)) * 100}%`,
-                transition: 'width 0.5s ease, background 0.5s ease',
-                borderRadius: '2px'
-              }} />
-            </div>
-            {currentSteps.map((step, idx) => {
-              const isStepCompleted = idx <= currentStepIndex;
-              const isCurrent = idx === currentStepIndex;
-              const stepColor = isCancelled ? '#ef4444' : (isStepCompleted ? accentColor : 'var(--text-muted)');
-              const stepBg = isCancelled ? '#ef4444' : (isStepCompleted ? accentColor : 'var(--bg-body)');
-              
-              return (
-                <div key={step.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 2, width: '80px' }}>
-                  <div style={{ 
-                    width: '28px', height: '28px', borderRadius: '50%', background: stepBg, border: `3px solid ${isStepCompleted ? 'transparent' : 'var(--border-color)'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: isCurrent && !isCancelled ? `0 0 0 4px rgba(${rgb}, 0.2)` : 'none',
-                    transition: 'all 0.3s ease'
-                  }}>
-                    {isStepCompleted && <div style={{ width: '8px', height: '8px', background: '#fff', borderRadius: '50%' }} />}
-                  </div>
-                  <span style={{ fontSize: '12px', fontWeight: isCurrent ? 700 : 500, color: stepColor, textAlign: 'center', lineHeight: 1.2 }}>
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
-            {isCancelled && (
-              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(239, 68, 68, 0.9)', color: '#fff', padding: '6px 20px', borderRadius: '20px', fontSize: '13px', fontWeight: 700, letterSpacing: '1px', zIndex: 10 }}>
-                CANCELADO
+          {/* TIMELINE - STICKY TOP */}
+          <div className="modal-timeline-wrapper" style={{ background: isCancelled ? 'rgba(239, 68, 68, 0.04)' : 'var(--bg-card)', borderBottom: '1px solid var(--border-color)' }}>
+            <div className="modal-timeline-inner" style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
+              <div className="timeline-line-bg" style={{ position: 'absolute', top: '36px', left: '40px', right: '40px', height: '4px', background: 'var(--border-color)', zIndex: 1, borderRadius: '2px' }}>
+                <div className="timeline-line-progress" style={{ 
+                  height: '100%', 
+                  background: isCancelled ? '#ef4444' : accentColor, 
+                  width: isCancelled ? '100%' : `${(currentStepIndex / (currentSteps.length - 1)) * 100}%`,
+                  '--progress-height': isCancelled ? '100%' : `${(currentStepIndex / (currentSteps.length - 1)) * 100}%`,
+                  transition: 'all 0.5s ease',
+                  borderRadius: '2px'
+                }} />
               </div>
-            )}
+              {currentSteps.map((step, idx) => {
+                const isStepCompleted = idx <= currentStepIndex;
+                const isCurrent = idx === currentStepIndex;
+                const stepColor = isCancelled ? '#ef4444' : (isStepCompleted ? accentColor : 'var(--text-muted)');
+                const stepBg = isCancelled ? '#ef4444' : (isStepCompleted ? accentColor : 'var(--bg-body)');
+                
+                return (
+                  <div className="timeline-step" key={step.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 2, width: '80px' }}>
+                    <div className="timeline-step-circle" style={{ 
+                      width: '28px', height: '28px', borderRadius: '50%', background: stepBg, border: `3px solid ${isStepCompleted ? 'transparent' : 'var(--border-color)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: isCurrent && !isCancelled ? `0 0 0 4px rgba(${rgb}, 0.2)` : 'none',
+                      transition: 'all 0.3s ease'
+                    }}>
+                      {isStepCompleted && <div className="timeline-step-inner-circle" style={{ width: '8px', height: '8px', background: '#fff', borderRadius: '50%' }} />}
+                    </div>
+                    <span className="timeline-step-text" style={{ fontSize: '12px', fontWeight: isCurrent ? 700 : 500, color: stepColor, textAlign: 'center', lineHeight: 1.2 }}>
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+              {isCancelled && (
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(239, 68, 68, 0.9)', color: '#fff', padding: '6px 20px', borderRadius: '20px', fontSize: '13px', fontWeight: 700, letterSpacing: '1px', zIndex: 10 }}>
+                  CANCELADO
+                </div>
+              )}
+            </div>
           </div>
 
+          <div className="modal-body" style={{ maxHeight: 'calc(75vh - 120px)', overflowY: 'auto', padding: '0' }}>
+          
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', padding: '20px' }}>
             
             {/* LEFT COLUMN */}
@@ -643,7 +647,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         {/* FOOTER */}
         <div className="modal-footer" style={{ borderTop: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: isCancelled ? 'rgba(239, 68, 68, 0.04)' : (isOnTheWay ? 'rgba(139, 92, 246, 0.05)' : 'transparent') }}>
           
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div className="modal-footer-left" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             {isCancelled ? (
               <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <XCircle size={20} /> Entrega Cancelada
@@ -653,7 +657,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             ) : (
               <>
                 <button 
-                  className="action-btn"
+                  className="action-btn btn-marcar"
                   style={{ 
                     padding: '12px 24px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', border: 'none',
                     display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px',
@@ -672,7 +676,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </button>
                 
                 <button 
-                  className="action-btn"
+                  className="action-btn btn-cancelar"
                   style={{ padding: '12px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', transition: 'all 0.2s ease' }}
                   onClick={() => handleUpdateStatus('cancelled')}
                   disabled={updating}
@@ -683,7 +687,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             )}
           </div>
 
-          <button className="action-btn" style={{ padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', background: 'var(--bg-input)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }} onClick={onClose} disabled={updating}>Cerrar</button>
+          <button className="action-btn btn-cerrar" style={{ padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', background: 'var(--bg-input)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }} onClick={onClose} disabled={updating}>Cerrar</button>
         </div>
       </div>
 
@@ -775,7 +779,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <div className="modal-actions-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', flexWrap: 'wrap' }}>
               <button 
                 onClick={() => setShowShippedModal(false)}
                 style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
@@ -967,18 +971,18 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+            <div className="payment-modal-footer">
               <button 
                 onClick={handleShareCheckout}
-                style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-primary)', background: 'transparent', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+                className="btn-share"
                 disabled={updating}
               >
                 <Share2 size={18} /> Compartir
               </button>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="payment-modal-footer-actions">
                 <button 
                   onClick={() => setShowPaymentModal(false)}
-                  style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+                  className="btn-cancel-payment"
                   disabled={updating}
                 >
                   Cancelar
@@ -994,9 +998,10 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       applied_code: appliedCode
                     });
                   }}
-                  style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-success)', color: '#fff', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+                  className="btn-confirm-payment"
+                  disabled={updating}
                 >
-                  <CheckCircle size={18} /> {paymentNextStatus === 'prepared' ? 'Cobrar y Preparar' : 'Confirmar Pago y Entrega'}
+                  <CheckCircle size={18} /> {paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega'}
                 </button>
               </div>
             </div>

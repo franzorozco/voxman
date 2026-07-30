@@ -64,33 +64,34 @@ export default function DiscountInput({
         Código de Descuento o Giftcard
       </label>
       
-      <div style={{ display: 'flex', gap: '8px' }}>
+      <div className="discount-input-row">
         <input
           type="text"
+          className="form-control"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="Ej. VOX-123456 o VERANO20"
+          placeholder="Ej. VOX-123456"
           disabled={disabled || validationResult !== null}
-          style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '1px' }}
+          style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '1px', minWidth: 0 }}
         />
         
         {validationResult ? (
           <button
             type="button"
-            className="btn-danger"
+            className="btn-cancel-payment"
             onClick={clearCode}
             disabled={disabled}
-            style={{ padding: '0 16px', borderRadius: '6px', cursor: disabled ? 'not-allowed' : 'pointer' }}
+            style={{ padding: '10px 16px', borderRadius: '6px', cursor: disabled ? 'not-allowed' : 'pointer' }}
           >
             Quitar
           </button>
         ) : (
           <button
             type="button"
-            className="btn-primary"
+            className="btn-confirm-payment"
             onClick={handleValidate}
             disabled={disabled || loading || !code.trim()}
-            style={{ padding: '0 16px', borderRadius: '6px', cursor: (disabled || loading || !code.trim()) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}
+            style={{ padding: '10px 16px', borderRadius: '6px', cursor: (disabled || loading || !code.trim()) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}
           >
             {loading ? <Spinner size={16} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : 'Aplicar'}
           </button>
