@@ -31,6 +31,9 @@ class OrderNetworkController extends Controller
             'shipment.sale.guest',
             'shipment.sale.customer.user.profile',
             'shipment.sale.customer.posProfile',
+            'shipment.sale.sale_details.product_variant.product',
+            'shipment.sale.sale_details.product_variant.inventories.branch',
+            'shipment.sale.stock_reservations',
             'driver.user.profile'
         ])->orderBy('created_at', 'desc');
 
@@ -173,11 +176,24 @@ class OrderNetworkController extends Controller
             $customerId = $request->customer_id;
 
             if (!$customerId && $request->guest_name) {
-                // If it's a guest, create or find guest record (by phone to avoid duplicates if possible, or just create)
-                $guest = Guest::firstOrCreate(
-                    ['whatsapp_phone' => $request->guest_phone],
-                    ['name' => $request->guest_name]
-                );
+                $phone = trim($request->guest_phone);
+                
+                if (!empty($phone)) {
+                    $guest = Guest::firstOrCreate(
+                        ['whatsapp_phone' => $phone],
+                        ['name' => $request->guest_name]
+                    );
+                    
+                    if ($guest->name !== $request->guest_name) {
+                        $guest->update(['name' => $request->guest_name]);
+                    }
+                } else {
+                    $guest = Guest::create([
+                        'name' => $request->guest_name,
+                        'whatsapp_phone' => null
+                    ]);
+                }
+                
                 $guestId = $guest->id;
             }
 
@@ -325,7 +341,8 @@ class OrderNetworkController extends Controller
                     'product_variant.variant_images',
                     'product_variant.size',
                     'product_variant.fit',
-                    'product_variant.variant_attribute_values.attribute_value.attribute'
+                    'product_variant.variant_attribute_values.attribute_value.attribute',
+                    'product_variant.inventories.branch'
                 ]); 
             },
             'shipment.sale.guest', 
@@ -814,11 +831,15 @@ if ($request->status === 'shipped') {
                 }
             }
 
-            // Delete old sale details and stock reservations
-            SaleDetail::where('sale_id', $sale->id)->delete();
+            // Delete old stock reservations, we will recreate them
             StockReservation::where('sale_id', $sale->id)->delete();
 
-            // Recreate sale details and stock reservations
+            $newVariantIds = collect($request->items)->pluck('variant_id')->toArray();
+            
+            // Soft delete details that were removed
+            SaleDetail::where('sale_id', $sale->id)->whereNotIn('variant_id', $newVariantIds)->delete();
+
+            // Recreate or update sale details and recreate stock reservations
             $subtotal = 0;
             foreach ($request->items as $item) {
                 $variant = \App\Models\Catalog\ProductVariant::findOrFail($item['variant_id']);
@@ -826,16 +847,27 @@ if ($request->status === 'shipped') {
                 $lineTotal = $price * $item['quantity'];
                 $subtotal += $lineTotal;
 
-                SaleDetail::create([
-                    'sale_id' => $sale->id,
-                    'variant_id' => $item['variant_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $price,
-                    'discount' => 0,
-                    'discount_amount' => 0,
-                    'final_price' => $price,
-                    'subtotal' => $lineTotal
-                ]);
+                $detail = SaleDetail::withTrashed()->where('sale_id', $sale->id)->where('variant_id', $item['variant_id'])->first();
+                if ($detail) {
+                    $detail->update([
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $price,
+                        'final_price' => $price,
+                        'subtotal' => $lineTotal,
+                        'deleted_at' => null
+                    ]);
+                } else {
+                    SaleDetail::create([
+                        'sale_id' => $sale->id,
+                        'variant_id' => $item['variant_id'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $price,
+                        'discount' => 0,
+                        'discount_amount' => 0,
+                        'final_price' => $price,
+                        'subtotal' => $lineTotal
+                    ]);
+                }
 
                 // Deduct new stock for reservation
                 $inventory = Inventory::where('branch_id', $item['branch_id'])

@@ -109,13 +109,17 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     if (editData && branches.length > 0) {
       const sale = editData.shipment?.sale;
       if (sale && sale.sale_details && cartItems.length === 0) {
-        const items = sale.sale_details.map(detail => ({
-          variant: detail.product_variant,
-          product: detail.product_variant?.product,
-          price: Number(detail.unit_price) || detail.product_variant?.price || 0,
-          quantity: detail.quantity,
-          branch_id: branches[0]?.id // Default to first branch for existing items
-        }));
+        const activeDetails = sale.sale_details.filter(d => !d.deleted_at);
+        const items = activeDetails.map(detail => {
+          const reservation = sale.stock_reservations?.find(res => res.variant_id === detail.variant_id && res.status !== 'released');
+          return {
+            variant: detail.product_variant,
+            product: detail.product_variant?.product,
+            price: Number(detail.unit_price) || detail.product_variant?.price || 0,
+            quantity: detail.quantity,
+            branch_id: reservation ? reservation.branch_id : (branches[0]?.id || "")
+          };
+        });
         setCartItems(items);
       }
       
@@ -126,6 +130,15 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
           p_code = parts[0];
           p_num = parts.slice(1).join(" ");
         }
+
+        let initialMeetingPointType = 'predefined';
+        const dType = editData.shipment?.delivery_type;
+        if (dType === 'home_delivery') initialMeetingPointType = 'delivery';
+        else if (dType === 'external') initialMeetingPointType = 'external';
+        else if (!editData.meeting_point && !editData.latitude && !editData.longitude) initialMeetingPointType = 'predefined';
+        else if (editData.latitude && editData.longitude && dType !== 'home_delivery') initialMeetingPointType = 'manual';
+        
+        setMeetingPointType(initialMeetingPointType);
 
         setDeliveryData({
           meeting_point: editData.meeting_point || "",
@@ -138,8 +151,17 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
           guest_country_code: p_code,
           guest_phone: p_num,
           customer_id: sale?.customer_id || "",
-          driver_id: editData.driver_id || ""
+          driver_id: editData.driver_id || "",
+          delivery_type: dType || "scheduled_point",
+          address_id: editData.shipment?.address_id || ""
         });
+        
+        if (editData.driver_id && editData.driver) {
+          const d = editData.driver;
+          const name = d.user?.profile ? `${d.user.profile.first_name} ${d.user.profile.last_name_paternal || ''}` : (d.user?.username || d.employee_code || "Repartidor");
+          setSelectedDriver({ id: d.id, name: name.trim() });
+          setDriverSearchQuery(name.trim());
+        }
       
       if (sale?.customer_id) {
         setCustomerSearchType("registered");

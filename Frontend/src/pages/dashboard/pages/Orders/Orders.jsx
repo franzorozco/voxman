@@ -31,11 +31,16 @@ export default function Orders() {
     date_from: "",
     date_to: ""
   });
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    total: 0
+  });
 
   const fetchSchedules = async () => {
     setLoading(true);
     try {
-      const params = {};
+      const params = { page: pagination.current_page };
       if (search) params.search = search;
       if (filters.status) params.status = filters.status;
       if (filters.date_from) params.date_from = filters.date_from;
@@ -43,6 +48,14 @@ export default function Orders() {
       
       const { data } = await getDeliverySchedules(params);
       setSchedules(data.data);
+      if (data.current_page) {
+        setPagination(prev => ({
+          ...prev,
+          current_page: data.current_page,
+          last_page: data.last_page,
+          total: data.total
+        }));
+      }
     } catch (error) {
       toast.error("Error al cargar entregas programadas");
     } finally {
@@ -55,7 +68,7 @@ export default function Orders() {
       fetchSchedules();
     }, 300);
     return () => clearTimeout(delayDebounceFn);
-  }, [search, filters]);
+  }, [search, filters, pagination.current_page]);
 
   useEffect(() => {
     const channel = echo.channel('deliveries.global');
@@ -519,7 +532,29 @@ export default function Orders() {
         )}
       </div>
 
-
+      {pagination.last_page > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '20px', padding: '15px 0' }}>
+          <button
+            className="btn-secondary"
+            disabled={pagination.current_page === 1}
+            onClick={() => setPagination(prev => ({ ...prev, current_page: prev.current_page - 1 }))}
+            style={{ padding: '8px 16px', borderRadius: '8px' }}
+          >
+            Anterior
+          </button>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-main)' }}>
+            Página {pagination.current_page} de {pagination.last_page}
+          </span>
+          <button
+            className="btn-secondary"
+            disabled={pagination.current_page === pagination.last_page}
+            onClick={() => setPagination(prev => ({ ...prev, current_page: prev.current_page + 1 }))}
+            style={{ padding: '8px 16px', borderRadius: '8px' }}
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
 
       {statusModalSchedule && (
         <DeliveryDetailsModal 

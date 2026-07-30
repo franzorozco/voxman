@@ -138,7 +138,11 @@ class DiscountValidationService
         }
 
         // Check per-user usage limit
-        if ($customerId && $discount->usage_limit_per_customer) {
+        if ($discount->usage_limit_per_customer) {
+            if (!$customerId) {
+                return ['valid' => false, 'message' => 'Este cupón es exclusivo para clientes registrados.'];
+            }
+
             $userUsageCount = \App\Models\Sales\Sale::where('discount_id', $discount->id)
                 ->where('customer_id', $customerId)
                 ->whereNotIn('status', ['cancelled'])
@@ -157,7 +161,10 @@ class DiscountValidationService
         }
 
         // Validate Customer
-        if ($customerId && $discount->customers()->exists()) {
+        if ($discount->customers()->exists()) {
+            if (!$customerId) {
+                return ['valid' => false, 'message' => 'Este cupón es exclusivo para clientes registrados.'];
+            }
             if (!$discount->customers()->where('customers.id', $customerId)->exists()) {
                 return ['valid' => false, 'message' => 'El cupón no aplica para este cliente.'];
             }
