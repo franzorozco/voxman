@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote } from "lucide-react";
-import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem } from "../../../../api/admin/orderNetwork";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus } from "lucide-react";
+import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
+import AddProductToDeliveryModal from "./components/AddProductToDeliveryModal";
 import api from "../../../../api/client";
 import echo from "../../../../echo";
 import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
 import DiscountInput from '../../components/DiscountInput';
 import CustomSelect from '../../../../components/ui/CustomSelect';
+import { API_BASE_URL } from "../../../../config/api";
 
 const mapContainerStyle = {
   width: '100%',
@@ -59,6 +61,7 @@ const getStepIndex = (status, stepsArr = STEPS_LOCAL) => {
 export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChange, onEditRequest }) {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showAddProduct, setShowAddProduct] = useState(false);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentNextStatus, setPaymentNextStatus] = useState('completed');
@@ -73,6 +76,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const [cashAmount, setCashAmount] = useState('');
   const [montoReal, setMontoReal] = useState('');
   const [appliedCode, setAppliedCode] = useState(null);
+  const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [updating, setUpdating] = useState(false);
   
   const [notes, setNotes] = useState('');
@@ -119,12 +123,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   };
 
   const handleRemoveItem = async (detailId) => {
-    const activeItemsCount = details?.shipment?.sale?.sale_details?.filter(i => !i.deleted_at).length || 0;
-    if (activeItemsCount <= 1) {
-      toast.error('No puedes quitar la única prenda. Si el cliente no desea nada, cancela la entrega completa.');
-      return;
-    }
-    if (!confirm('¿Seguro que deseas quitar esta prenda de la venta? Se devolverá al stock disponible.')) return;
+    if (!confirm('¿Seguro que deseas quitar UNA unidad de esta prenda de la venta? Se devolverá al stock disponible.')) return;
     try {
       setLoading(true);
       await removeDeliveryItem(details.id, detailId);
@@ -132,6 +131,20 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       fetchDetails();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al quitar la prenda');
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
+  const handleAddProduct = async (variant, branchId) => {
+    try {
+      setLoading(true);
+      await addDeliveryItem(details.id, variant.id, branchId);
+      toast.success('Prenda agregada exitosamente');
+      setShowAddProduct(false);
+      fetchDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al agregar la prenda');
       console.error(err);
       setLoading(false);
     }
@@ -297,21 +310,29 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
 
   let clientName = "Anónimo";
   let clientPhone = "No especificado";
+  let clientType = "Desconocido";
+  let clientCode = "N/A";
 
   if (customer) {
+    clientCode = customer.customer_code || "N/A";
     if (customer.pos_profile) {
-      clientName = `${customer.pos_profile.first_name || ''} ${customer.pos_profile.last_name_paternal || ''}`.trim();
+      clientType = "POS";
+      clientName = `${customer.pos_profile.first_name || ''} ${customer.pos_profile.last_name_paternal || ''} ${customer.pos_profile.last_name_maternal || ''}`.trim() || 'Sin Nombre';
       clientPhone = customer.pos_profile.phone || "No especificado";
     } else if (customer.user?.profile) {
-      clientName = `${customer.user.profile.first_name || ''} ${customer.user.profile.last_name_paternal || ''}`.trim();
-      clientPhone = customer.user.profile.phone || "No especificado";
+      clientType = "WEB";
+      clientName = `${customer.user.profile.first_name || ''} ${customer.user.profile.last_name_paternal || ''} ${customer.user.profile.last_name_maternal || ''}`.trim() || 'Sin Nombre';
+      clientPhone = customer.user.profile.phone || customer.user.profile.whatsapp_number || "No especificado";
     } else if (customer.user) {
+      clientType = "WEB";
       clientName = customer.user.username || customer.user.email;
     } else {
+      clientType = "POS";
       clientName = `Cliente ${customer.customer_code}`;
     }
   } else if (guest) {
-    clientName = guest.name || "Invitado";
+    clientType = "Invitado";
+    clientName = guest.name || guest.first_name || "Invitado";
     clientPhone = guest.phone || guest.whatsapp_phone || "No especificado";
   }
 
@@ -346,7 +367,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const rgb = currentTheme.rgb;
 
   let overlayBg = {};
-  let contentStyle = { maxWidth: '800px', width: '95%', transition: 'all 0.4s ease' };
+  let contentStyle = { maxWidth: '800px', width: '95%', transition: 'all 0.4s ease', padding: 0, overflow: 'hidden' };
   let headerStyle = { background: 'var(--bg-main)', borderBottomColor: 'var(--border-color)' };
 
   if (currentTheme.pulse) {
@@ -364,8 +385,12 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
 
   return (
     <div className="modal-overlay fade-in" style={overlayBg}>
-      <div className="modal-content" style={contentStyle}>
-        <div className="modal-header" style={headerStyle}>
+      <style>{`
+        .delivery-details-modal-content { padding: 0 !important; overflow: hidden !important; }
+        .delivery-details-modal-header { margin: 0 !important; width: 100% !important; border-radius: 0 !important; }
+      `}</style>
+      <div className="modal-content delivery-details-modal-content" style={contentStyle}>
+        <div className="modal-header delivery-details-modal-header" style={headerStyle}>
           <div>
             <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: accentColor }}>
               {headerIcon} {headerTitle}
@@ -451,7 +476,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
 
           <div className="modal-body" style={{ maxHeight: 'calc(75vh - 120px)', overflowY: 'auto', padding: '0' }}>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', padding: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '16px', padding: '16px' }}>
             
             {/* LEFT COLUMN */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -461,11 +486,21 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: 'var(--text-main)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Nombre:</span>
-                    <span style={{ fontWeight: 500 }}>{clientName}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>Tipo de Cliente:</span>
+                    <span style={{ fontWeight: 500 }}>{clientType}</span>
+                  </div>
+                  {clientCode !== 'N/A' && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Cód. Cliente:</span>
+                      <span style={{ fontWeight: 500 }}>{clientCode}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Nombre Completo:</span>
+                    <span style={{ fontWeight: 500, textAlign: 'right', wordBreak: 'break-word', paddingLeft: '12px' }}>{clientName}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Teléfono:</span>
+                    <span style={{ color: 'var(--text-muted)' }}>WhatsApp / Tel:</span>
                     <span style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <Phone size={12} /> {clientPhone}
                     </span>
@@ -474,11 +509,21 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               </div>
 
               <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', padding: '16px' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Package size={16} /> Detalle de Productos
+                <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Package size={16} /> Detalle de Productos
+                  </div>
+                  {details.status === 'at_the_meeting_point' && (
+                    <button 
+                      onClick={() => setShowAddProduct(true)}
+                      style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <Plus size={14} /> Agregar
+                    </button>
+                  )}
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {sale?.sale_details?.map(item => {
+                  {sale?.sale_details?.flatMap(item => {
                     const variant = item.product_variant;
                     const product = variant?.product;
                     const colorId = variant?.variant_attribute_values?.[0]?.attribute_value_id;
@@ -493,53 +538,111 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       }
                     }
 
-                    if (imageUrl && !imageUrl.startsWith('http')) {
-                      imageUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${imageUrl}`;
+                    if (!imageUrl.startsWith('http')) {
+                      imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl}`;
                     }
-                    return (
-                      <div key={item.id} style={{ display: 'flex', gap: '12px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', alignItems: 'flex-start', opacity: isCancelled || item.deleted_at ? 0.6 : 1 }}>
-                        {imageUrl ? (
-                          <img src={imageUrl} alt="Variant" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
-                        ) : (
-                          <div style={{ width: '50px', height: '50px', background: 'var(--bg-input)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
-                            <Package size={20} style={{ color: 'var(--text-muted)' }} />
-                          </div>
-                        )}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ color: 'var(--text-main)', fontWeight: 500, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
-                            {item.quantity}x {variant?.product?.name} {variant?.name && `(${variant.name})`}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                          <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>Bs. {Number(item.subtotal).toFixed(2)}</span>
-                          {item.deleted_at ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                              <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none' }}>
-                                Rechazado
+
+                    const allReservations = sale?.stock_reservations || sale?.stockReservations || [];
+                    const variantReservations = allReservations.filter(res => res.variant_id === item.variant_id);
+                    
+                    const relevantStatuses = item.deleted_at ? ['released'] : ['reserved', 'confirmed'];
+                    let relevantReservations = variantReservations.filter(res => relevantStatuses.includes(res.status) || (!item.deleted_at && !res.status));
+                    
+                    if (relevantReservations.length === 0) {
+                        relevantReservations = [{ id: item.id, quantity: item.quantity, branch: null, subtotal: item.subtotal }];
+                    }
+
+                    return relevantReservations.map((res, index) => {
+                      const branchName = res.branch?.name || "Sin Sucursal asignada";
+                      const qty = res.quantity;
+                      const subtotal = (item.unit_price || item.final_price) * qty;
+
+                      return (
+                        <div key={`${item.id}-${index}`} style={{ display: 'flex', gap: '12px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', alignItems: 'flex-start', opacity: isCancelled || item.deleted_at ? 0.6 : 1 }}>
+                          {imageUrl ? (
+                            <img src={imageUrl} alt="Variant" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
+                          ) : (
+                            <div style={{ width: '50px', height: '50px', background: 'var(--bg-input)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
+                              <Package size={20} style={{ color: 'var(--text-muted)' }} />
+                            </div>
+                          )}
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ color: 'var(--text-main)', fontWeight: 500, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                              {qty}x {variant?.product?.name} {variant?.name && `(${variant.name})`}
+                            </span>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: '4px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                              <span>SKU: <strong>{variant?.sku || 'N/A'}</strong></span>
+                              {variant?.size?.name && <span>• Talla: {variant.size.name}</span>}
+                              {variant?.fit?.name && <span>• Fit: {variant.fit.name}</span>}
+                              {variant?.variant_attribute_values?.map((attr, idx) => (
+                                <span key={idx}>
+                                  • {attr.attribute_value?.attribute?.name}: {attr.attribute_value?.value}
+                                </span>
+                              ))}
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                              <span style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                                Extraído de: <strong>{branchName}</strong>
                               </span>
-                              {['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
-                                <button
-                                  onClick={() => handleRestoreItem(item.id)}
-                                  style={{ background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
-                                >
-                                  Reintegrar ↩
-                                </button>
+                              {item.notes && (
+                                <span style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#ca8a04', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                                  {item.notes}
+                                </span>
                               )}
                             </div>
-                          ) : (
-                            ['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
-                              <button
-                                onClick={() => handleRemoveItem(item.id)}
-                                style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '4px 0', marginTop: '4px' }}
-                              >
-                                <XCircle size={14} /> Quitar
-                              </button>
-                            )
-                          )}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                            <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>Bs. {Number(subtotal).toFixed(2)}</span>
+                            {item.deleted_at ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none' }}>
+                                  Rechazado
+                                </span>
+                                {['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
+                                  <button
+                                    onClick={() => handleRestoreItem(res.id)}
+                                    style={{ background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
+                                  >
+                                    Reintegrar ↩
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              ['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
+                                <button
+                                  onClick={() => handleRemoveItem(res.id)}
+                                  style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '4px 0', marginTop: '4px' }}
+                                >
+                                  <XCircle size={14} /> Quitar
+                                </button>
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
+                      );
+                    });
                   })}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
+                    <span>Subtotal:</span>
+                    <span>Bs. {Number(sale?.subtotal || 0).toFixed(2)}</span>
+                  </div>
+                  {Number(sale?.discount_total || 0) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--color-danger)' }}>
+                      <span>Descuento Aplicado:</span>
+                      <span>- Bs. {Number(sale?.discount_total || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
+                    <span>Costo de Envío:</span>
+                    <span>Bs. {Number(details?.shipment?.shipping_cost || 0).toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+                    <span>Total:</span>
+                    <span style={{ color: 'var(--color-primary)' }}>Bs. {Number(sale?.total || 0).toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
 
@@ -584,17 +687,27 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>Repartidor:</span>
-                    <span style={{ fontWeight: 500 }}>
-                      {details.driver ? `${details.driver.user?.profile?.first_name} ${details.driver.user?.profile?.last_name_paternal}` : 'Sin Asignar'}
+                    <span style={{ fontWeight: 500, textAlign: 'right', wordBreak: 'break-word', paddingLeft: '12px' }}>
+                      {details.driver ? `${details.driver.user?.profile?.first_name || ''} ${details.driver.user?.profile?.last_name_paternal || ''} ${details.driver.user?.profile?.last_name_maternal || ''}`.trim() || 'Sin Nombre' : 'Sin Asignar'}
                     </span>
                   </div>
-                  {details.driver && details.driver.phone && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Tel. Repartidor:</span>
-                      <span style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Phone size={12} /> {details.driver.phone}
-                      </span>
-                    </div>
+                  {details.driver && (
+                    <>
+                      {details.driver.user?.employee?.employee_code && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Cód. Empleado:</span>
+                          <span style={{ fontWeight: 500 }}>{details.driver.user.employee.employee_code}</span>
+                        </div>
+                      )}
+                      {(details.driver.phone || details.driver.user?.profile?.whatsapp_number || details.driver.user?.profile?.phone) && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>WhatsApp / Tel:</span>
+                          <span style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Phone size={12} /> {details.driver.phone || details.driver.user?.profile?.whatsapp_number || details.driver.user?.profile?.phone}
+                          </span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -819,6 +932,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         </div>
       )}
 
+      {/* MODAL PARA AGREGAR PRODUCTO */}
+      {showAddProduct && (
+        <AddProductToDeliveryModal 
+          onClose={() => setShowAddProduct(false)}
+          onAddProduct={handleAddProduct}
+        />
+      )}
+
+      {/* CONFIRMATION MODALS */}
       {showPaymentModal && (
         <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="modal-content" style={{ maxWidth: '500px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)' }}>
@@ -829,7 +951,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Total Original:</span>
-                <strong style={{ color: 'var(--text-muted)', textDecoration: Number(montoReal) < Number(details.shipment?.sale?.total) ? 'line-through' : 'none' }}>Bs. {Number(details.shipment?.sale?.total || 0).toFixed(2)}</strong>
+                <strong style={{ color: 'var(--text-muted)', textDecoration: Number(montoReal) < Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) ? 'line-through' : 'none' }}>Bs. {Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)).toFixed(2)}</strong>
               </div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -839,20 +961,32 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   <input 
                     type="number"
                     value={montoReal}
+                    disabled={!!(details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)}
                     onChange={(e) => {
                       setMontoReal(e.target.value);
                       if (paymentMethod === 'ambos') {
                         setCashAmount(''); setQrAmount('');
                       }
                     }}
-                    style={{ width: '90px', padding: '6px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: '#fff', color: 'var(--color-primary)', fontWeight: 700, fontSize: '15px', textAlign: 'right' }}
+                    style={{ 
+                      width: '90px', 
+                      padding: '6px 8px', 
+                      borderRadius: '6px', 
+                      border: '1px solid var(--border-color)', 
+                      background: (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? 'var(--bg-card)' : '#fff', 
+                      color: (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? 'var(--text-muted)' : 'var(--color-primary)', 
+                      fontWeight: 700, 
+                      fontSize: '15px', 
+                      textAlign: 'right',
+                      cursor: (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? 'not-allowed' : 'text'
+                    }}
                   />
                 </div>
               </div>
               
-              {Number(montoReal) < Number(details.shipment?.sale?.total + details.shipment?.sale?.discount_total) && (
+              {Number(montoReal) < Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
                 <div style={{ marginTop: '8px', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, textAlign: 'right' }}>
-                  Descuento manual aplicado
+                  Descuento manual aplicado: -Bs. {(Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) - Number(montoReal)).toFixed(2)}
                 </div>
               )}
             </div>
@@ -872,30 +1006,67 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </button>
               </div>
             ) : (
-              <DiscountInput 
-                subtotal={details.shipment?.sale?.total}
-                items={details.shipment?.sale?.sale_details || []}
-                customerId={details.shipment?.sale?.customer_id}
-                branchId={details.shipment?.sale?.branch_id}
-                disabled={paymentMethod === 'ambos'}
-                onValidated={async (res) => {
-                  if (res && res.valid) {
-                    try {
-                      setUpdating(true);
-                      await api.post(`/v1/admin/order-network/${scheduleId}/apply-discount`, { code: res.code });
-                      toast.success("Descuento guardado y compartido");
-                      fetchDetails();
-                    } catch (err) {
-                      toast.error("Error al aplicar descuento");
-                    } finally {
-                      setUpdating(false);
-                    }
-                  } else {
-                    setMontoReal(details.shipment?.sale?.total);
-                    setAppliedCode(null);
-                  }
-                }}
-              />
+              <div style={{ marginTop: '16px' }}>
+                {!showDiscountInput ? (
+                  <button
+                    onClick={() => setShowDiscountInput(true)}
+                    disabled={updating || paymentMethod === 'ambos'}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      background: 'transparent',
+                      border: '1px dashed var(--color-primary)',
+                      color: 'var(--color-primary)',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <Plus size={18} /> Agregar descuento
+                  </button>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>Código de Descuento o Giftcard</label>
+                      <button 
+                        onClick={() => setShowDiscountInput(false)}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '12px' }}
+                      >
+                        <X size={14} style={{ marginRight: '4px' }}/> Cancelar
+                      </button>
+                    </div>
+                    <DiscountInput 
+                      subtotal={details.shipment?.sale?.total}
+                      items={details.shipment?.sale?.sale_details || []}
+                      customerId={details.shipment?.sale?.customer_id}
+                      branchId={details.shipment?.sale?.branch_id}
+                      disabled={paymentMethod === 'ambos'}
+                      onValidated={async (res) => {
+                        if (res && res.valid) {
+                          try {
+                            setUpdating(true);
+                            await api.post(`/v1/admin/order-network/${scheduleId}/apply-discount`, { code: res.code });
+                            toast.success("Descuento guardado y compartido");
+                            fetchDetails();
+                            setShowDiscountInput(false);
+                          } catch (err) {
+                            toast.error("Error al aplicar descuento");
+                          } finally {
+                            setUpdating(false);
+                          }
+                        } else {
+                          setMontoReal(details.shipment?.sale?.total);
+                          setAppliedCode(null);
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
             )}
 
             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', marginTop: '16px' }}>
@@ -964,7 +1135,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   Escanea para pagar {paymentMethod === 'ambos' && qrAmount ? `Bs. ${Number(qrAmount).toFixed(2)}` : ''}
                 </p>
                 <img 
-                  src={`${(import.meta.env.VITE_API_URL || 'http://localhost:8000').replace('/api', '')}/storage/payments/QRBCP.jpeg`} 
+                  src={`${(import.meta.env.VITE_API_URL || API_BASE_URL).replace('/api', '').replace('/v1', '')}/storage/payments/QRBCP.jpeg`} 
                   alt="QR de Pago" 
                   style={{ maxWidth: '200px', borderRadius: '8px', border: '2px solid var(--border-color)' }}
                 />

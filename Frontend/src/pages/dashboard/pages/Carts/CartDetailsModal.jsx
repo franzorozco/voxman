@@ -1,5 +1,6 @@
 import { X, CheckCircle, Package } from "lucide-react";
 import "./Carts.css";
+import { API_BASE_URL } from "../../../../config/api";
 
 export default function CartDetailsModal({ cart, onClose }) {
   if (!cart) return null;
@@ -7,7 +8,7 @@ export default function CartDetailsModal({ cart, onClose }) {
   const getImageUrl = (path) => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
-    return `http://localhost:8000${path.startsWith('/') ? '' : '/'}${path}`;
+    return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
   };
 
   const getVariantImage = (variant) => {

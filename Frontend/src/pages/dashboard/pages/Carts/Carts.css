@@ -297,6 +297,7 @@
 }
 .cart-form-dropdown-wrapper {
   position: relative;
+  margin-bottom: 80px;
 }
 .cart-form-input {
   width: 100%;
@@ -314,7 +315,7 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   z-index: 100;
-  max-height: 200px;
+  max-height: 600px;
   overflow-y: auto;
   border-radius: 6px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);

@@ -16,6 +16,7 @@ class Discount extends BaseDiscount
 		'min_quantity',
 		'max_discount_amount',
 		'usage_limit',
+		'usage_limit_per_customer',
 		'used_count',
 		'start_date',
 		'end_date',

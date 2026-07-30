@@ -6,6 +6,8 @@ import CanAccess from "../../../../components/ui/CanAccess";
 import "./Returns.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
+import { API_BASE_URL } from '../../../../config/api';
+
 export default function ReturnDetailsModal({ returnItem, onClose }) {
   if (!returnItem) return null;
 
@@ -77,8 +79,8 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
             {returnItem.sale_detail?.product_variant?.product?.images?.[0] ? (
               <img 
-                src={`http://localhost:8000/storage/${returnItem.sale_detail.product_variant.product.images[0].image_path}`} 
-                alt="product" 
+                src={`${API_BASE_URL}/storage/${returnItem.sale_detail.product_variant.product.images[0].image_path}`} 
+                alt="Producto" 
                 style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
               />
             ) : (

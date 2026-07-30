@@ -41,6 +41,10 @@ export const updateOrder = (id, data) => {
   return api.put(`/v1/admin/order-network/${id}/order`, data);
 };
 
+export const addDeliveryItem = (id, variant_id, branch_id) => {
+  return api.post(`/v1/admin/order-network/${id}/item`, { variant_id, branch_id });
+};
+
 export const removeDeliveryItem = (id, detailId) => {
   return api.delete(`/v1/admin/order-network/${id}/item/${detailId}`);
 };

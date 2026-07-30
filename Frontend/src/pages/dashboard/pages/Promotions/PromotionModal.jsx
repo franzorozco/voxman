@@ -72,6 +72,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
     min_quantity: "",
     max_discount_amount: "",
     usage_limit: "",
+    usage_limit_per_customer: "",
     start_date: "",
     end_date: "",
     active: true,
@@ -96,6 +97,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
         min_quantity: promotion.min_quantity || "",
         max_discount_amount: promotion.max_discount_amount || "",
         usage_limit: promotion.usage_limit || "",
+        usage_limit_per_customer: promotion.usage_limit_per_customer || "",
         start_date: promotion.start_date ? promotion.start_date.split("T")[0] : "",
         end_date: promotion.end_date ? promotion.end_date.split("T")[0] : "",
         active: promotion.active !== undefined ? promotion.active : true,
@@ -157,6 +159,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
         min_quantity: formData.min_quantity ? parseInt(formData.min_quantity) : null,
         max_discount_amount: formData.max_discount_amount ? parseFloat(formData.max_discount_amount) : null,
         usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
+        usage_limit_per_customer: formData.usage_limit_per_customer ? parseInt(formData.usage_limit_per_customer) : null,
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
         code: formData.is_automatic ? null : formData.code,
@@ -401,6 +404,17 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   value={formData.usage_limit} 
                   onChange={handleChange}
                   placeholder="Ej: 100 primeros clientes"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Límite de Uso por Cliente (Opcional)</label>
+                <input 
+                  type="number" 
+                  name="usage_limit_per_customer" 
+                  value={formData.usage_limit_per_customer} 
+                  onChange={handleChange}
+                  placeholder="Ej: 1 (Para 1 solo uso)"
                 />
               </div>
 

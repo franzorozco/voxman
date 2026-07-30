@@ -68,7 +68,7 @@ export default function QrPrintModal({ isOpen, onClose, selectedProducts = [] })
     name: prod.name,
     price: prod.price || prod.base_price,
     sku: prod.sku || prod.reference_number || prod.id.substring(0,8),
-    url: `http://localhost:5173/p/${prod.sku || prod.id}`
+    url: `${window.location.origin}/p/${prod.sku || prod.id}`
   }));
 
   return (
@@ -99,7 +99,7 @@ export default function QrPrintModal({ isOpen, onClose, selectedProducts = [] })
             <div className="info-box" style={{ marginTop: "20px", padding: "10px", background: "var(--bg-input)", borderRadius: "8px", fontSize: "13px" }}>
               <p style={{ margin: "0 0 10px 0", fontWeight: "bold" }}>URL Base</p>
               <p style={{ margin: 0, color: "var(--text-muted)", wordBreak: "break-all" }}>
-                http://localhost:5173/p/
+                {window.location.origin}/p/
               </p>
             </div>
             

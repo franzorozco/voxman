@@ -260,29 +260,8 @@ class OrderNetworkController extends Controller
                     'branch_id' => $reserveBranchId,
                     'sale_id' => $sale->id,
                     'quantity' => $item->quantity,
-                    'subtotal' => $lineTotal
+                    'status' => 'reserved'
                 ]);
-
-                $itemsForDiscount[] = [
-                    'variant_id' => $item->variant_id,
-                    'line_subtotal' => $lineTotal
-                ];
-            }
-
-            // Apply automatic discount if cart didn't have one
-            if (!$sale->discount_id) {
-                $discountService = app(\App\Services\Finance\DiscountValidationService::class);
-                $bestDiscountResult = $discountService->getBestAutomaticDiscount(
-                    $subtotal, 
-                    $itemsForDiscount, 
-                    $sale->customer_id, 
-                    $sale->branch_id
-                );
-
-                if ($bestDiscountResult && $bestDiscountResult['valid']) {
-                    $sale->discount_id = $bestDiscountResult['id'];
-                    $sale->discount_total += $bestDiscountResult['discount_amount'];
-                }
             }
 
             // Update sale totals
@@ -355,6 +334,7 @@ class OrderNetworkController extends Controller
             'shipment.sale.discount',
             'shipment.sale.payments.payment_method',
             'shipment.sale.giftcard_transactions.giftcard',
+            'shipment.sale.stockReservations.branch',
             'driver.user.profile',
             'shipment.tracking_history'
         ])->findOrFail($id);
@@ -653,7 +633,7 @@ if ($request->status === 'shipped') {
 
                         InventoryMovement::create([
                             'variant_id' => $res->variant_id,
-                            'branch_id' => $res->branch_id,
+                            'branch_id' => $branchId,
                             'movement_type' => 'return',
                             'quantity' => (int) $res->quantity,
                             'stock_before' => $stockBefore,
@@ -951,9 +931,132 @@ if ($request->status === 'shipped') {
     }
 
     /**
+     * Add an item to the delivery.
+     */
+    public function addItem(Request $request, $id)
+    {
+        $request->validate([
+            'variant_id' => 'required|uuid'
+        ]);
+
+        try {
+            DB::beginTransaction();
+            $schedule = DeliverySchedule::with('shipment.sale.sale_details')->findOrFail($id);
+
+            if ($schedule->status !== 'at_the_meeting_point') {
+                return response()->json(['error' => 'Solo puedes agregar prendas cuando el pedido está en el punto de encuentro.'], 400);
+            }
+
+            $sale = $schedule->shipment->sale;
+            $variant = \App\Models\Catalog\ProductVariant::with('product')->findOrFail($request->variant_id);
+
+            // Determine branch_id: from request, from existing StockReservation, or default
+            $branchId = $request->branch_id;
+            if (!$branchId) {
+                $existingRes = StockReservation::where('sale_id', $sale->id)->first();
+                $branchId = $existingRes ? $existingRes->branch_id : env('MAIN_BRANCH_ID', 1);
+            }
+
+            // Check inventory
+            $inv = Inventory::where('branch_id', $branchId)
+                ->where('variant_id', $variant->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$inv || $inv->stock < 1) {
+                return response()->json(['error' => 'No hay stock suficiente para agregar esta prenda.'], 400);
+            }
+
+            // Deduct stock
+            $stockBefore = $inv->stock;
+            $inv->stock -= 1;
+            $inv->save();
+
+            InventoryMovement::create([
+                'variant_id' => $variant->id,
+                'branch_id' => $branchId,
+                'movement_type' => 'sale',
+                'quantity' => 1,
+                'stock_before' => $stockBefore,
+                'stock_after' => $inv->stock,
+                'reference_type' => 'sale',
+                'reference_id' => $sale->id,
+                'created_by' => auth()->id() ?? null,
+            ]);
+
+            // Revival logic: check if there's an existing released reservation for this variant & branch
+            $res = StockReservation::where('sale_id', $sale->id)
+                ->where('variant_id', $variant->id)
+                ->where('branch_id', $branchId)
+                ->first();
+
+            if ($res) {
+                if ($res->status === 'released') {
+                    $res->update(['status' => 'confirmed', 'quantity' => 1]);
+                } else {
+                    $res->increment('quantity');
+                }
+            } else {
+                StockReservation::create([
+                    'sale_id' => $sale->id,
+                    'variant_id' => $variant->id,
+                    'branch_id' => $branchId,
+                    'quantity' => 1,
+                    'status' => 'confirmed'
+                ]);
+            }
+
+            $price = $variant->price ?? $variant->product->base_price ?? 0;
+
+            // Check if there is an existing SaleDetail for this variant
+            $detail = $sale->sale_details()->where('variant_id', $variant->id)->first();
+            if ($detail) {
+                $detail->quantity += 1;
+                $detail->subtotal += $price;
+                $detail->final_price += $price;
+                $detail->save();
+            } else {
+                $sale->sale_details()->create([
+                    'variant_id' => $variant->id,
+                    'quantity' => 1,
+                    'unit_price' => $price,
+                    'subtotal' => $price,
+                    'final_price' => $price,
+                    'discount_amount' => 0,
+                    'notes' => 'Agregado en el punto de entrega'
+                ]);
+            }
+
+            // Update Sale totals
+            $sale->subtotal += $price;
+            $sale->total += $price;
+            $sale->save();
+
+            if ($schedule->checkout_session) {
+                $session = $schedule->checkout_session;
+                $session['monto_real'] = $sale->total;
+                $schedule->checkout_session = $session;
+                $schedule->save();
+            }
+
+            event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Prenda agregada correctamente al pedido.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Remove an item from the delivery and restore stock.
      */
-    public function removeItem(Request $request, $id, $detailId)
+    public function removeItem(Request $request, $id, $reservationId)
     {
         try {
             DB::beginTransaction();
@@ -964,30 +1067,56 @@ if ($request->status === 'shipped') {
             }
 
             $sale = $schedule->shipment->sale;
-            if ($sale->sale_details()->count() <= 1) {
-                return response()->json(['error' => 'No puedes quitar la única prenda. Mejor cancela la entrega.'], 400);
+            $res = StockReservation::where('sale_id', $sale->id)->find($reservationId);
+            
+            // Fallback: If the frontend passed a SaleDetail ID because the StockReservation wasn't available in the UI state
+            if (!$res) {
+                $detailFallback = $sale->sale_details()->find($reservationId);
+                if ($detailFallback) {
+                    $res = StockReservation::where('sale_id', $sale->id)->where('variant_id', $detailFallback->variant_id)->first();
+                }
             }
 
-            $detail = $sale->sale_details()->findOrFail($detailId);
+            if (!$res) {
+                return response()->json(['error' => 'Reserva de stock no encontrada.'], 404);
+            }
+            
+            $detail = $sale->sale_details()->where('variant_id', $res->variant_id)->first();
+            if (!$detail) {
+                return response()->json(['error' => 'Detalle de venta no encontrado.'], 404);
+            }
 
-            // Restore stock
-            $res = StockReservation::where('sale_id', $sale->id)->where('variant_id', $detail->variant_id)->first();
-            if ($res && $res->status !== 'released') {
-                $inv = Inventory::where('branch_id', $res->branch_id)
+            // Check if it's the ONLY active item left
+            $totalActiveQty = StockReservation::where('sale_id', $sale->id)->whereIn('status', ['reserved', 'confirmed'])->sum('quantity');
+            if ($totalActiveQty <= 1) {
+                return response()->json(['error' => 'No puedes quitar la única prenda de la entrega. Si el cliente no desea nada, cancela la entrega completa.'], 400);
+            }
+
+            $branchId = $res->branch_id;
+            if (!$branchId) {
+                $branchId = $schedule->shipment->origin_branch_id ?? $sale->branch_id;
+                if (!$branchId) {
+                    $branchId = \App\Models\Company\Branch::where('is_active', true)->first()->id ?? null;
+                }
+            }
+
+            // Restore stock (1 unit)
+            if ($res->status !== 'released') {
+                $inv = Inventory::where('branch_id', $branchId)
                     ->where('variant_id', $res->variant_id)
                     ->lockForUpdate()
                     ->first();
                 
                 if ($inv) {
                     $stockBefore = $inv->stock;
-                    $inv->stock += $res->quantity;
+                    $inv->stock += 1; // Return 1 unit
                     $inv->save();
 
                     InventoryMovement::create([
                         'variant_id' => $res->variant_id,
                         'branch_id' => $res->branch_id,
                         'movement_type' => 'return',
-                        'quantity' => (int) $res->quantity,
+                        'quantity' => 1, // 1 unit
                         'stock_before' => $stockBefore,
                         'stock_after' => $inv->stock,
                         'reference_type' => 'sale',
@@ -995,25 +1124,45 @@ if ($request->status === 'shipped') {
                         'created_by' => auth()->id() ?? null,
                     ]);
                 }
-                $res->update(['status' => 'released']);
+                
+                if ($res->quantity > 1) {
+                    $res->quantity -= 1;
+                    $res->save();
+                } else {
+                    $res->update(['status' => 'released']);
+                }
+            }
+
+            // Decrement SaleDetail or Delete if it was the last unit
+            if ($detail->quantity > 1) {
+                $detail->quantity -= 1;
+                $detail->subtotal -= $detail->unit_price;
+                $detail->final_price -= $detail->unit_price;
+                $detail->save();
+            } else {
+                $detail->delete();
             }
 
             // Update Sale totals
-            $sale->subtotal -= $detail->subtotal;
-            $sale->total -= $detail->subtotal; // Subtotal and Total are generally the same before discount
-            $sale->discount_total -= $detail->discount_amount;
+            $sale->subtotal -= $detail->unit_price;
+            $sale->total -= $detail->unit_price; 
             if ($sale->total < 0) $sale->total = 0;
             if ($sale->subtotal < 0) $sale->subtotal = 0;
-            if ($sale->discount_total < 0) $sale->discount_total = 0;
             $sale->save();
 
-            // Soft delete detail
-            $detail->delete();
+            if ($schedule->checkout_session) {
+                $session = $schedule->checkout_session;
+                $session['monto_real'] = $sale->total;
+                $schedule->checkout_session = $session;
+                $schedule->save();
+            }
+
+            event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Prenda quitada y devuelta al stock correctamente.'
+                'message' => 'Prenda quitada y stock devuelto exitosamente.'
             ]);
 
         } catch (\Exception $e) {
@@ -1025,7 +1174,7 @@ if ($request->status === 'shipped') {
     /**
      * Restore a previously removed item to the delivery.
      */
-    public function restoreItem(Request $request, $id, $detailId)
+    public function restoreItem(Request $request, $id, $reservationId)
     {
         try {
             DB::beginTransaction();
@@ -1039,34 +1188,53 @@ if ($request->status === 'shipped') {
             }
 
             $sale = $schedule->shipment->sale;
-            $detail = $sale->sale_details()->withTrashed()->findOrFail($detailId);
+            $res = StockReservation::where('sale_id', $sale->id)->find($reservationId);
 
-            if (!$detail->trashed()) {
+            // Fallback: If the frontend passed a SaleDetail ID because the StockReservation wasn't available in the UI state
+            if (!$res) {
+                $detailFallback = $sale->sale_details()->withTrashed()->find($reservationId);
+                if ($detailFallback) {
+                    $res = StockReservation::where('sale_id', $sale->id)->where('variant_id', $detailFallback->variant_id)->first();
+                }
+            }
+
+            if (!$res) {
+                return response()->json(['error' => 'Reserva de stock no encontrada.'], 404);
+            }
+            
+            $detail = $sale->sale_details()->withTrashed()->where('variant_id', $res->variant_id)->first();
+
+            if (!$detail || !$detail->trashed()) {
                 return response()->json(['error' => 'La prenda no está eliminada.'], 400);
             }
 
-            // Check stock and reserve again
-            $res = StockReservation::where('sale_id', $sale->id)->where('variant_id', $detail->variant_id)->first();
-            $branchId = $res ? $res->branch_id : env('MAIN_BRANCH_ID', 1);
+            $branchId = $res->branch_id;
+            if (!$branchId) {
+                $branchId = $schedule->shipment->origin_branch_id ?? $sale->branch_id;
+                if (!$branchId) {
+                    $branchId = \App\Models\Company\Branch::where('is_active', true)->first()->id ?? null;
+                }
+                $res->branch_id = $branchId;
+            }
 
             $inv = Inventory::where('branch_id', $branchId)
                 ->where('variant_id', $detail->variant_id)
                 ->lockForUpdate()
                 ->first();
 
-            if (!$inv || $inv->stock < $detail->quantity) {
+            if (!$inv || $inv->stock < 1) { // Restoring 1 unit
                 return response()->json(['error' => 'No hay stock suficiente para reintegrar esta prenda.'], 400);
             }
 
             $stockBefore = $inv->stock;
-            $inv->stock -= $detail->quantity;
+            $inv->stock -= 1; // 1 unit
             $inv->save();
 
             InventoryMovement::create([
                 'variant_id' => $detail->variant_id,
                 'branch_id' => $branchId,
                 'movement_type' => 'sale',
-                'quantity' => (int) $detail->quantity,
+                'quantity' => 1,
                 'stock_before' => $stockBefore,
                 'stock_after' => $inv->stock,
                 'reference_type' => 'sale',
@@ -1074,26 +1242,24 @@ if ($request->status === 'shipped') {
                 'created_by' => auth()->id() ?? null,
             ]);
 
-            if ($res) {
-                $res->update(['status' => 'reserved']);
-            } else {
-                StockReservation::create([
-                    'variant_id' => $detail->variant_id,
-                    'branch_id' => $branchId,
-                    'sale_id' => $sale->id,
-                    'quantity' => $detail->quantity,
-                    'status' => 'reserved'
-                ]);
-            }
+            $res->update(['status' => 'reserved']); // It was released, quantity is 1
 
             // Update Sale totals
-            $sale->subtotal += $detail->subtotal;
-            $sale->total += $detail->subtotal; // Assuming total matches subtotal before global discounts
-            $sale->discount_total += $detail->discount_amount;
+            $sale->subtotal += $detail->unit_price;
+            $sale->total += $detail->unit_price;
             $sale->save();
+
+            if ($schedule->checkout_session) {
+                $session = $schedule->checkout_session;
+                $session['monto_real'] = $sale->total;
+                $schedule->checkout_session = $session;
+                $schedule->save();
+            }
 
             // Restore the soft-deleted detail
             $detail->restore();
+
+            event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
 
             DB::commit();
 

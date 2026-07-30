@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../../api/client';
 import toast from 'react-hot-toast';
 import Spinner from './Spinner/Spinner';
@@ -14,9 +14,32 @@ export default function DiscountInput({
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
+  const [autoDiscounts, setAutoDiscounts] = useState([]);
+  const [loadingAuto, setLoadingAuto] = useState(false);
 
-  const handleValidate = async () => {
-    if (!code.trim()) {
+  useEffect(() => {
+    const fetchAutoDiscounts = async () => {
+      try {
+        setLoadingAuto(true);
+        const res = await api.get('/v1/admin/discounts');
+        const discounts = res.data.filter(d => d.is_automatic && d.active);
+        setAutoDiscounts(discounts);
+      } catch (err) {
+        console.error("Error fetching discounts", err);
+      } finally {
+        setLoadingAuto(false);
+      }
+    };
+    fetchAutoDiscounts();
+  }, []);
+
+  const handleValidate = async (customCode = null) => {
+    // If a customCode is provided (like when clicking an auto discount chip), use it.
+    // Otherwise fallback to the `code` state.
+    const rawCode = customCode ?? code;
+    const codeToValidate = (rawCode || '').toString().trim();
+    
+    if (!codeToValidate) {
       toast.error('Por favor, ingresa un código.');
       return;
     }
@@ -29,7 +52,7 @@ export default function DiscountInput({
       }));
 
       const response = await api.post('/v1/admin/checkout/validate-code', {
-        code: code.trim(),
+        code: codeToValidate,
         subtotal: parseFloat(subtotal),
         items: mappedItems,
         customer_id: customerId,
@@ -64,6 +87,40 @@ export default function DiscountInput({
         Código de Descuento o Giftcard
       </label>
       
+      {autoDiscounts.length > 0 && !validationResult && (
+        <div style={{ marginBottom: '16px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Descuentos Automáticos Disponibles:</span>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {autoDiscounts.map(d => {
+              const codeOrId = d.code || d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => {
+                    setCode(codeOrId);
+                    handleValidate(codeOrId);
+                  }}
+                  disabled={disabled || loading}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '16px',
+                    border: '1px solid var(--color-primary)',
+                    background: 'var(--color-primary-alpha)',
+                    color: 'var(--color-primary)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: disabled || loading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {d.name} {d.code ? `(${d.code})` : ''}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="discount-input-row">
         <input
           type="text"
@@ -72,7 +129,15 @@ export default function DiscountInput({
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           placeholder="Ej. VOX-123456"
           disabled={disabled || validationResult !== null}
-          style={{ flex: 1, textTransform: 'uppercase', letterSpacing: '1px', minWidth: 0 }}
+          style={{ 
+            flex: 1, 
+            textTransform: 'uppercase', 
+            letterSpacing: '1px', 
+            minWidth: 0,
+            background: 'var(--bg-input)',
+            color: 'var(--text-main)',
+            border: '1px solid var(--border-color)'
+          }}
         />
         
         {validationResult ? (
@@ -89,7 +154,7 @@ export default function DiscountInput({
           <button
             type="button"
             className="btn-confirm-payment"
-            onClick={handleValidate}
+            onClick={() => handleValidate()}
             disabled={disabled || loading || !code.trim()}
             style={{ padding: '10px 16px', borderRadius: '6px', cursor: (disabled || loading || !code.trim()) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '100px' }}
           >

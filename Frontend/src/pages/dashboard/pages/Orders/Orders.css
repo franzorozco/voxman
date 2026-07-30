@@ -393,7 +393,9 @@
 .bubble-main-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .bubble-customer {
@@ -403,6 +405,16 @@
   font-size: 16px;
   font-weight: 700;
   color: var(--text-main);
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.bubble-customer > div,
+.bubble-customer > span,
+.bubble-customer > div > span,
+.bubble-customer > p {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .bubble-info-grid {
@@ -859,11 +871,38 @@
   margin-left: 4px;
 }
 
+/* Fix for scanner button in NewOrderModal */
+.cart-form-dropdown-wrapper .cart-form-input {
+  padding-right: 44px; /* Make room for the absolute button */
+}
+
+.scanner-btn {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-btn:hover {
+  color: var(--color-primary);
+}
+
 @media (max-width: 768px) {
   .new-order-modal-body {
     flex-direction: column;
     padding: 16px;
     gap: 16px;
+  }
+  .new-order-left-panel {
+    margin-bottom: 80px; /* Provide space for the dropdown menu */
   }
   .new-order-left-panel,
   .new-order-right-panel {

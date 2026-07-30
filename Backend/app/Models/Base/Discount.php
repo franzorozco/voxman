@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $min_quantity
  * @property float|null $max_discount_amount
  * @property int|null $usage_limit
+ * @property int|null $usage_limit_per_customer
  * @property int|null $used_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -57,6 +58,7 @@ class Discount extends Model
 		'min_quantity' => 'int',
 		'max_discount_amount' => 'float',
 		'usage_limit' => 'int',
+		'usage_limit_per_customer' => 'int',
 		'used_count' => 'int',
 		'start_date' => 'datetime',
 		'end_date' => 'datetime',

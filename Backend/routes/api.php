@@ -421,6 +421,7 @@ Route::middleware([
         Route::put('/{id}/order', [OrderNetworkController::class, 'updateOrder']);
         Route::post('/{id}/driver', [OrderNetworkController::class, 'assignDriver']);
         Route::post('/{id}/remove-discount', [OrderNetworkController::class, 'removeDiscount']);
+        Route::post('/{id}/item', [OrderNetworkController::class, 'addItem']);
         Route::delete('/{id}/item/{detailId}', [OrderNetworkController::class, 'removeItem']);
         Route::post('/{id}/item/{detailId}/restore', [OrderNetworkController::class, 'restoreItem']);
         Route::delete('/{id}', [OrderNetworkController::class, 'cancelOrder']);

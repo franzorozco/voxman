@@ -110,7 +110,12 @@ class DiscountValidationService
 
     protected function validateDiscount($code, $subtotal, $items, $customerId, $branchId)
     {
-        $discount = Discount::where('code', $code)
+        $discount = Discount::where(function($q) use ($code) {
+                $q->where('code', $code);
+                if (\Illuminate\Support\Str::isUuid($code)) {
+                    $q->orWhere('id', $code);
+                }
+            })
             ->where('active', true)
             ->first();
 
@@ -130,6 +135,18 @@ class DiscountValidationService
         // Check usage limit
         if ($discount->usage_limit && $discount->used_count >= $discount->usage_limit) {
             return ['valid' => false, 'message' => 'El cupón ha alcanzado su límite de usos.'];
+        }
+
+        // Check per-user usage limit
+        if ($customerId && $discount->usage_limit_per_customer) {
+            $userUsageCount = \App\Models\Sales\Sale::where('discount_id', $discount->id)
+                ->where('customer_id', $customerId)
+                ->whereNotIn('status', ['cancelled'])
+                ->count();
+                
+            if ($userUsageCount >= $discount->usage_limit_per_customer) {
+                return ['valid' => false, 'message' => 'Has alcanzado el límite de usos permitidos para este cupón.'];
+            }
         }
 
         // Validate Branch
@@ -213,13 +230,13 @@ class DiscountValidationService
 
         return [
             'valid' => true,
+            'message' => 'Descuento aplicado exitosamente.',
             'type' => 'discount',
             'id' => $discount->id,
-            'code' => $discount->code,
-            'original_total' => $subtotal,
+            'code' => $discount->code ?: $discount->id,
             'discount_amount' => $discountAmount,
-            'new_total' => $newTotal,
-            'message' => 'Cupón de descuento aplicado correctamente.',
+            'original_total' => $subtotal,
+            'new_total' => $newTotal
         ];
     }
 }

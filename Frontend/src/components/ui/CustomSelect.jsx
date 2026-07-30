@@ -135,9 +135,8 @@ export default function CustomSelect({
         }}
       >
         <span style={{ 
-          whiteSpace: 'nowrap', 
-          overflow: 'hidden', 
-          textOverflow: 'ellipsis',
+          whiteSpace: 'normal', 
+          wordBreak: 'break-word',
           opacity: selectedOption ? 1 : 0.6
         }}>
           {selectedOption ? selectedOption.label : placeholder}
@@ -199,7 +198,7 @@ export default function CustomSelect({
                   marginBottom: '2px'
                 }}
               >
-                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span style={{ whiteSpace: 'normal', wordBreak: 'break-word', paddingRight: '8px' }}>
                   {opt.label}
                 </span>
                 {isSelected && <Check size={16} style={{ flexShrink: 0 }} />}

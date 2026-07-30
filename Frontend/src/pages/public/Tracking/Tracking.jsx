@@ -5,9 +5,7 @@ import { Package, Truck, MapPin, CheckCircle, Clock, AlertCircle, ShoppingBag, U
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
 import echo from "../../../echo";
 import "./Tracking.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace('/api', '');
+import { API_BASE_URL as BASE_URL, API_URL } from "../../../config/api";
 
 export default function Tracking() {
   const { id } = useParams();
@@ -463,7 +461,15 @@ export default function Tracking() {
               const variant = item.product_variant;
               const imgUrl = resolveImageUrl(variant);
               return (
-                <div key={idx} className="product-item">
+                <div 
+                  key={idx} 
+                  className="product-item"
+                  style={{
+                    opacity: item.deleted_at ? 0.6 : 1,
+                    filter: item.deleted_at ? 'grayscale(100%)' : 'none',
+                    background: item.deleted_at ? '#f9fafb' : '#fff'
+                  }}
+                >
                   {imgUrl ? (
                     <img src={imgUrl} alt="Producto" className="product-image" />
                   ) : (
@@ -472,23 +478,34 @@ export default function Tracking() {
                     </div>
                   )}
                   
-                  <div className="product-details">
-                    <div className="product-header">
-                      <div className="product-name">{variant?.product?.name || 'Producto'}</div>
-                      <div className="product-price-block">
-                        <span className="product-qty">{item.quantity}x Bs. {Number(item.unit_price).toFixed(2)}</span>
-                        <span className="product-subtotal">Bs. {Number(item.subtotal).toFixed(2)}</span>
+                  <div className="product-details" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div className="product-left-col" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div className="product-name" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                        {variant?.product?.name || 'Producto'}
+                      </div>
+                      <div className="product-badges">
+                        {variant?.size && <span className="product-badge">Talla: {variant.size.name}</span>}
+                        {variant?.fit && <span className="product-badge">Fit: {variant.fit.name}</span>}
+                        {variant?.variant_attribute_values?.map(attrVal => (
+                          <span key={attrVal.attribute_value_id} className="product-badge">
+                            {attrVal.attribute_value?.attribute?.name}: {attrVal.attribute_value?.value}
+                          </span>
+                        ))}
                       </div>
                     </div>
                     
-                    <div className="product-badges">
-                      {variant?.size && <span className="product-badge">Talla: {variant.size.name}</span>}
-                      {variant?.fit && <span className="product-badge">Fit: {variant.fit.name}</span>}
-                      {variant?.variant_attribute_values?.map(attrVal => (
-                        <span key={attrVal.attribute_value_id} className="product-badge">
-                          {attrVal.attribute_value?.attribute?.name}: {attrVal.attribute_value?.value}
+                    <div className="product-price-block" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span className="product-qty" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                        {item.quantity}x Bs. {Number(item.unit_price).toFixed(2)}
+                      </span>
+                      <span className="product-subtotal" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                        Bs. {Number(item.subtotal).toFixed(2)}
+                      </span>
+                      {item.deleted_at && (
+                        <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 600, display: 'block' }}>
+                          Rechazado
                         </span>
-                      ))}
+                      )}
                     </div>
                   </div>
                 </div>
@@ -506,7 +523,7 @@ export default function Tracking() {
               <span>Bs. {Number(shipment?.shipping_cost || 0).toFixed(2)}</span>
             </div>
             
-            {(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) && (
+            {Number(schedule?.shipment?.sale?.discount_total) > 0 && (
               <div className="summary-row" style={{ color: '#10b981', fontWeight: 600 }}>
                 <span>Descuento Aplicado</span>
                 <span>- Bs. {Number(schedule.shipment.sale.discount_total).toFixed(2)}</span>
@@ -521,7 +538,9 @@ export default function Tracking() {
             )}
 
             <div className="summary-row total" style={{ borderTop: '2px solid #e5e7eb', paddingTop: '16px', marginTop: '8px' }}>
-              <span style={{ fontSize: '18px' }}>Total a Pagar</span>
+              <span style={{ fontSize: '18px' }}>
+                {schedule.status === 'completed' ? 'Total Pagado' : 'Total a Pagar'}
+              </span>
               <span style={{ fontSize: '22px', color: checkoutSession ? '#4f46e5' : '#111827' }}>
                 Bs. {checkoutSession ? Number(checkoutSession.montoReal).toFixed(2) : Number(sale?.total || 0).toFixed(2)}
               </span>

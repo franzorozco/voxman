@@ -9,7 +9,8 @@ import { useAuthStore } from "../../../../store/authStore";
 import "./Purchases.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
-const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+import { API_BASE_URL as CONFIG_API_BASE_URL } from '../../../../config/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || CONFIG_API_BASE_URL;
 
 export default function ReceivePurchase() {
   const { id } = useParams();

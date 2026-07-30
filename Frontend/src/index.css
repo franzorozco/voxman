@@ -64,6 +64,15 @@ p {
   .hide-on-mobile {
     display: none !important;
   }
+  
+  /* NORMALIZAR TODOS LOS MODALES A 95% EN CELULARES */
+  .modal-content, 
+  [class*="modal-content"] {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
 }
 
 /* Fix global para dropdowns (options heredan el color del select para evitar bug en Chromium) */

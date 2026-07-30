@@ -6,6 +6,7 @@ import Spinner from "../../components/Spinner/Spinner";
 import ThermalReceiptModal from "./ThermalReceiptModal";
 import SaleReturnModal from "./SaleReturnModal";
 import CanAccess from "../../../../components/ui/CanAccess";
+import { API_BASE_URL } from "../../../../config/api";
 
 export default function SaleDetailsModal({ saleId, onClose }) {
   const [sale, setSale] = useState(null);
@@ -242,8 +243,8 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                       }
                     }
 
-                    if (imageUrl && !imageUrl.startsWith('http')) {
-                      imageUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${imageUrl}`;
+                    if (!imageUrl.startsWith('http')) {
+                      imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl}`;
                     }
 
                     return (

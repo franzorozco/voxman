@@ -153,7 +153,7 @@ export default function QrPrintTab({ product }) {
         });
 
         const skuStr = variant.barcode || variant.sku || variant.id.substring(0, 8);
-        const urlStr = `http://localhost:5173/p/${skuStr}`;
+        const urlStr = `${window.location.origin}/p/${skuStr}`;
         const price = variant.price || product.base_price;
 
         for (let i = 0; i < qty; i++) {
