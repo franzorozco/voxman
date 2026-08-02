@@ -43,14 +43,48 @@ class OrderNetworkController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('shipment', function($q) use ($search) {
-                $q->where('tracking_code', 'like', "%{$search}%")
-                  ->orWhereHas('sale', function($q2) use ($search) {
-                      $q2->whereHas('guest', function($q3) use ($search) {
-                          $q3->where('name', 'like', "%{$search}%");
-                      });
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhereHas('shipment', function($q2) use ($search) {
+                      $q2->where('tracking_code', 'like', "%{$search}%")
+                         ->orWhere('delivery_code', 'like', "%{$search}%")
+                         ->orWhereHas('sale', function($q3) use ($search) {
+                             $q3->where('reference_number', 'like', "%{$search}%")
+                                ->orWhere('invoice_number', 'like', "%{$search}%")
+                                ->orWhereHas('guest', function($q4) use ($search) {
+                                    $q4->where('name', 'like', "%{$search}%")
+                                       ->orWhere('phone', 'like', "%{$search}%");
+                                })
+                                ->orWhereHas('customer', function($q4) use ($search) {
+                                    $q4->where('customer_code', 'like', "%{$search}%")
+                                       ->orWhereHas('posProfile', function($q5) use ($search) {
+                                           $q5->where('first_name', 'like', "%{$search}%")
+                                              ->orWhere('last_name_paternal', 'like', "%{$search}%")
+                                              ->orWhere('phone', 'like', "%{$search}%");
+                                       })
+                                       ->orWhereHas('user.profile', function($q5) use ($search) {
+                                           $q5->where('first_name', 'like', "%{$search}%")
+                                              ->orWhere('last_name_paternal', 'like', "%{$search}%")
+                                              ->orWhere('phone', 'like', "%{$search}%");
+                                       });
+                                });
+                         });
+                  })
+                  ->orWhereHas('driver.user.profile', function($q2) use ($search) {
+                      $q2->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name_paternal', 'like', "%{$search}%");
                   });
             });
+        }
+
+        if ($request->filled('delivery_type')) {
+            $query->whereHas('shipment', function($q) use ($request) {
+                $q->where('delivery_type', $request->delivery_type);
+            });
+        }
+
+        if ($request->filled('driver_id')) {
+            $query->where('driver_id', $request->driver_id);
         }
 
         if ($request->filled('date_from')) {
@@ -141,6 +175,42 @@ class OrderNetworkController extends Controller
     }
 
     /**
+     * Get historical destination cities for a customer or guest.
+     */
+    public function getDestinations(Request $request)
+    {
+        $customerId = $request->query('customer_id');
+        $guestPhone = $request->query('guest_phone');
+        
+        $query = \App\Models\Logistics\Shipment::where('delivery_type', 'external');
+        
+        if ($customerId) {
+            $query->whereHas('sale', function($q) use ($customerId) {
+                $q->where('customer_id', $customerId);
+            });
+        } else if ($guestPhone) {
+            $query->whereHas('sale.guest', function($q) use ($guestPhone) {
+                $q->where('whatsapp_phone', 'like', "%$guestPhone%");
+            });
+        } else {
+            return response()->json([]);
+        }
+
+        $shipments = $query->with('delivery_schedule')->get();
+        $destinations = collect();
+
+        foreach ($shipments as $shipment) {
+            if (!empty($shipment->destination_city)) {
+                $destinations->push($shipment->destination_city);
+            } else if ($shipment->delivery_schedule && !empty($shipment->delivery_schedule->meeting_point)) {
+                $destinations->push($shipment->delivery_schedule->meeting_point);
+            }
+        }
+
+        return response()->json($destinations->unique()->values());
+    }
+
+    /**
      * Converts a Cart to an Order Network Sale (pending) and schedules the delivery.
      */
     public function convertToOrder(Request $request)
@@ -159,11 +229,17 @@ class OrderNetworkController extends Controller
             'customer_id' => 'nullable|uuid|exists:customers,id',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
+            'city' => 'nullable|string',
+            'original_delivery_zone_id' => 'nullable|integer',
             'driver_id' => 'nullable|uuid|exists:employees,id',
             'save_as_draft' => 'nullable|boolean',
             'shipping_cost' => 'nullable|numeric|min:0',
             'delivery_type' => 'nullable|string|in:home_delivery,scheduled_point,pickup,external',
-            'address_id' => 'nullable|uuid|exists:addresses,id'
+            'address_id' => 'nullable|uuid|exists:addresses,id',
+            'recipient_name' => 'nullable|string|max:150',
+            'recipient_ci' => 'nullable|string|max:50',
+            'recipient_phone' => 'nullable|string|max:50',
+            'destination_city' => 'nullable|string|max:150'
         ]);
 
         try {
@@ -245,7 +321,7 @@ class OrderNetworkController extends Controller
                 }
 
                 // Deduct stock for reservation
-                $inventory = Inventory::where('branch_id', $reserveBranchId)
+                $inventory = \App\Models\Inventory\Inventory::where('branch_id', $reserveBranchId)
                     ->where('variant_id', $item->variant_id)
                     ->lockForUpdate()
                     ->first();
@@ -271,7 +347,7 @@ class OrderNetworkController extends Controller
                 ]);
 
                 // Create Stock Reservation
-                StockReservation::create([
+                \App\Models\Inventory\StockReservation::create([
                     'variant_id' => $item->variant_id,
                     'branch_id' => $reserveBranchId,
                     'sale_id' => $sale->id,
@@ -281,9 +357,10 @@ class OrderNetworkController extends Controller
             }
 
             // Update sale totals
-            $shippingCost = $request->input('shipping_cost', 0);
+            $shippingCost = (float)$request->input('shipping_cost', 0);
+            $agencyDispatchCost = (float)$request->input('agency_dispatch_cost', 0);
             $sale->subtotal = $subtotal;
-            $sale->total = max(0, $subtotal + $shippingCost - ($sale->discount_total ?? 0));
+            $sale->total = max(0, $subtotal + $shippingCost + $agencyDispatchCost - ($sale->discount_total ?? 0));
             $sale->save();
 
             // Create Shipment
@@ -291,9 +368,14 @@ class OrderNetworkController extends Controller
                 'sale_id' => $sale->id,
                 'status' => 'pending',
                 'shipping_cost' => $shippingCost,
+                'agency_dispatch_cost' => $request->input('agency_dispatch_cost', null),
                 'delivery_code' => str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT),
                 'delivery_type' => $request->input('delivery_type', 'scheduled_point'),
-                'address_id' => $request->input('address_id', null)
+                'address_id' => $request->input('address_id', null),
+                'recipient_name' => $request->input('recipient_name', null),
+                'recipient_ci' => $request->input('recipient_ci', null),
+                'recipient_phone' => $request->input('recipient_phone', null),
+                'destination_city' => $request->input('destination_city', null)
             ]);
 
             // Create Delivery Schedule
@@ -302,8 +384,10 @@ class OrderNetworkController extends Controller
                 'scheduled_date' => $request->scheduled_date,
                 'time_window' => $request->time_window,
                 'meeting_point' => $request->meeting_point,
+                'city' => $request->city,
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
+                'original_delivery_zone_id' => $request->original_delivery_zone_id,
                 'driver_id' => $request->driver_id,
                 'status' => $request->boolean('save_as_draft') ? 'pending' : 'assigned'
             ]);
@@ -449,12 +533,26 @@ if ($request->status === 'shipped') {
                 $shipment->shipped_at = now();
                 if ($request->has('external_company')) $shipment->external_company = $request->input('external_company');
                 if ($request->has('external_guide')) $shipment->external_guide = $request->input('external_guide');
-                if ($request->has('shipping_payment_type')) $shipment->shipping_payment_type = $request->input('shipping_payment_type');
+                if ($request->has('shipping_payment_type')) {
+                    $shipment->shipping_payment_type = $request->input('shipping_payment_type');
+                }
                 if ($request->has('notes')) {
                     $shipment->notes = $request->input('notes');
                     event(new \App\Events\DeliveryNotesUpdated($schedule->id, $shipment->notes));
                 }
-                $shipment->shipping_cost = $request->input('shipping_cost', 0);
+                
+                $shippingCost = (float) $request->input('shipping_cost', 0);
+                $shipment->shipping_cost = $shippingCost;
+                
+                // If it is "paid", add it to the sale total
+                if ($request->input('shipping_payment_type') === 'paid' && $shippingCost > 0) {
+                    $sale = $shipment->sale;
+                    if ($sale) {
+                        $sale->total += $shippingCost;
+                        $sale->save();
+                    }
+                }
+
                 $shipment->save();
 
                 // Populate shipment_cost_details
@@ -619,7 +717,7 @@ if ($request->status === 'shipped') {
                     // ----------------------------------
                     
                     // Confirm stock reservations
-                    StockReservation::where('sale_id', $sale->id)
+                    \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)
                         ->update(['status' => 'confirmed']);
                 }
             }
@@ -634,11 +732,11 @@ if ($request->status === 'shipped') {
                 $sale->save();
 
                 // Release stock reservations and refund stock
-                $reservations = StockReservation::where('sale_id', $sale->id)->get();
+                $reservations = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->get();
                 foreach ($reservations as $res) {
                     if ($res->status === 'released') continue;
                     
-                    $inv = Inventory::where('branch_id', $res->branch_id)
+                    $inv = \App\Models\Inventory\Inventory::where('branch_id', $res->branch_id)
                         ->where('variant_id', $res->variant_id)
                         ->lockForUpdate()
                         ->first();
@@ -648,9 +746,9 @@ if ($request->status === 'shipped') {
                         $inv->stock += $res->quantity;
                         $inv->save();
 
-                        InventoryMovement::create([
+                        \App\Models\Inventory\InventoryMovement::create([
                             'variant_id' => $res->variant_id,
-                            'branch_id' => $branchId,
+                            'branch_id' => $res->branch_id,
                             'movement_type' => 'return',
                             'quantity' => (int) $res->quantity,
                             'stock_before' => $stockBefore,
@@ -669,7 +767,11 @@ if ($request->status === 'shipped') {
                 $shipment->save();
             }
 
-            event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
+            try {
+                event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
+            } catch (\Throwable $eventError) {
+                \Log::warning("DeliveryStatusUpdated Event failed to broadcast: " . $eventError->getMessage());
+            }
             DB::commit();
 
             return response()->json([
@@ -677,10 +779,10 @@ if ($request->status === 'shipped') {
                 'status' => $schedule->status
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            \Log::error("UpdateStatus Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
-            return response()->json(['error' => $e->getMessage(), 'line' => $e->getLine()], 500);
+            \Log::error("UpdateStatus Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n" . $e->getTraceAsString());
+            return response()->json(['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()], 500);
         }
     }
 
@@ -790,7 +892,11 @@ if ($request->status === 'shipped') {
             'guest_phone' => 'nullable|string',
             'shipping_cost' => 'nullable|numeric|min:0',
             'delivery_type' => 'nullable|string|in:home_delivery,scheduled_point,pickup,external',
-            'address_id' => 'nullable|uuid|exists:addresses,id'
+            'address_id' => 'nullable|uuid|exists:addresses,id',
+            'recipient_name' => 'nullable|string|max:150',
+            'recipient_ci' => 'nullable|string|max:50',
+            'recipient_phone' => 'nullable|string|max:50',
+            'destination_city' => 'nullable|string|max:150'
         ]);
 
         try {
@@ -805,9 +911,9 @@ if ($request->status === 'shipped') {
             $sale = $schedule->shipment->sale;
 
             // Refund old stock reservations
-            $oldReservations = StockReservation::where('sale_id', $sale->id)->get();
+            $oldReservations = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->get();
             foreach ($oldReservations as $res) {
-                $inv = Inventory::where('branch_id', $res->branch_id)
+                $inv = \App\Models\Inventory\Inventory::where('branch_id', $res->branch_id)
                     ->where('variant_id', $res->variant_id)
                     ->lockForUpdate()
                     ->first();
@@ -832,7 +938,7 @@ if ($request->status === 'shipped') {
             }
 
             // Delete old stock reservations, we will recreate them
-            StockReservation::where('sale_id', $sale->id)->delete();
+            \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->delete();
 
             $newVariantIds = collect($request->items)->pluck('variant_id')->toArray();
             
@@ -870,7 +976,7 @@ if ($request->status === 'shipped') {
                 }
 
                 // Deduct new stock for reservation
-                $inventory = Inventory::where('branch_id', $item['branch_id'])
+                $inventory = \App\Models\Inventory\Inventory::where('branch_id', $item['branch_id'])
                     ->where('variant_id', $item['variant_id'])
                     ->lockForUpdate()
                     ->first();
@@ -895,7 +1001,7 @@ if ($request->status === 'shipped') {
                     'created_by' => auth()->id() ?? null,
                 ]);
 
-                StockReservation::create([
+                \App\Models\Inventory\StockReservation::create([
                     'variant_id' => $item['variant_id'],
                     'branch_id' => $item['branch_id'],
                     'sale_id' => $sale->id,
@@ -904,18 +1010,34 @@ if ($request->status === 'shipped') {
                 ]);
             }
 
-            $shippingCost = $request->input('shipping_cost', 0);
+            $shippingCost = (float)$request->input('shipping_cost', 0);
+            $agencyDispatchCost = (float)$request->input('agency_dispatch_cost', 0);
             $sale->subtotal = $subtotal;
-            $sale->total = max(0, $subtotal + $shippingCost - ($sale->discount_total ?? 0));
+            $sale->total = max(0, $subtotal + $shippingCost + $agencyDispatchCost - ($sale->discount_total ?? 0));
             $sale->save();
 
             if ($schedule->shipment) {
                 $schedule->shipment->shipping_cost = $shippingCost;
+                if ($request->has('agency_dispatch_cost')) {
+                    $schedule->shipment->agency_dispatch_cost = $request->input('agency_dispatch_cost');
+                }
                 if ($request->has('delivery_type')) {
                     $schedule->shipment->delivery_type = $request->delivery_type;
                 }
                 if ($request->has('address_id')) {
                     $schedule->shipment->address_id = $request->address_id;
+                }
+                if ($request->has('recipient_name')) {
+                    $schedule->shipment->recipient_name = $request->recipient_name;
+                }
+                if ($request->has('recipient_ci')) {
+                    $schedule->shipment->recipient_ci = $request->recipient_ci;
+                }
+                if ($request->has('recipient_phone')) {
+                    $schedule->shipment->recipient_phone = $request->recipient_phone;
+                }
+                if ($request->has('destination_city')) {
+                    $schedule->shipment->destination_city = $request->destination_city;
                 }
                 $schedule->shipment->save();
             }
@@ -985,12 +1107,12 @@ if ($request->status === 'shipped') {
             // Determine branch_id: from request, from existing StockReservation, or default
             $branchId = $request->branch_id;
             if (!$branchId) {
-                $existingRes = StockReservation::where('sale_id', $sale->id)->first();
+                $existingRes = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->first();
                 $branchId = $existingRes ? $existingRes->branch_id : env('MAIN_BRANCH_ID', 1);
             }
 
             // Check inventory
-            $inv = Inventory::where('branch_id', $branchId)
+            $inv = \App\Models\Inventory\Inventory::where('branch_id', $branchId)
                 ->where('variant_id', $variant->id)
                 ->lockForUpdate()
                 ->first();
@@ -1017,7 +1139,7 @@ if ($request->status === 'shipped') {
             ]);
 
             // Revival logic: check if there's an existing released reservation for this variant & branch
-            $res = StockReservation::where('sale_id', $sale->id)
+            $res = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)
                 ->where('variant_id', $variant->id)
                 ->where('branch_id', $branchId)
                 ->first();
@@ -1029,7 +1151,7 @@ if ($request->status === 'shipped') {
                     $res->increment('quantity');
                 }
             } else {
-                StockReservation::create([
+                \App\Models\Inventory\StockReservation::create([
                     'sale_id' => $sale->id,
                     'variant_id' => $variant->id,
                     'branch_id' => $branchId,
@@ -1099,13 +1221,13 @@ if ($request->status === 'shipped') {
             }
 
             $sale = $schedule->shipment->sale;
-            $res = StockReservation::where('sale_id', $sale->id)->find($reservationId);
+            $res = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->find($reservationId);
             
             // Fallback: If the frontend passed a SaleDetail ID because the StockReservation wasn't available in the UI state
             if (!$res) {
                 $detailFallback = $sale->sale_details()->find($reservationId);
                 if ($detailFallback) {
-                    $res = StockReservation::where('sale_id', $sale->id)->where('variant_id', $detailFallback->variant_id)->first();
+                    $res = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->where('variant_id', $detailFallback->variant_id)->first();
                 }
             }
 
@@ -1119,7 +1241,7 @@ if ($request->status === 'shipped') {
             }
 
             // Check if it's the ONLY active item left
-            $totalActiveQty = StockReservation::where('sale_id', $sale->id)->whereIn('status', ['reserved', 'confirmed'])->sum('quantity');
+            $totalActiveQty = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->whereIn('status', ['reserved', 'confirmed'])->sum('quantity');
             if ($totalActiveQty <= 1) {
                 return response()->json(['error' => 'No puedes quitar la única prenda de la entrega. Si el cliente no desea nada, cancela la entrega completa.'], 400);
             }
@@ -1134,7 +1256,7 @@ if ($request->status === 'shipped') {
 
             // Restore stock (1 unit)
             if ($res->status !== 'released') {
-                $inv = Inventory::where('branch_id', $branchId)
+                $inv = \App\Models\Inventory\Inventory::where('branch_id', $branchId)
                     ->where('variant_id', $res->variant_id)
                     ->lockForUpdate()
                     ->first();
@@ -1220,13 +1342,13 @@ if ($request->status === 'shipped') {
             }
 
             $sale = $schedule->shipment->sale;
-            $res = StockReservation::where('sale_id', $sale->id)->find($reservationId);
+            $res = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->find($reservationId);
 
             // Fallback: If the frontend passed a SaleDetail ID because the StockReservation wasn't available in the UI state
             if (!$res) {
                 $detailFallback = $sale->sale_details()->withTrashed()->find($reservationId);
                 if ($detailFallback) {
-                    $res = StockReservation::where('sale_id', $sale->id)->where('variant_id', $detailFallback->variant_id)->first();
+                    $res = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->where('variant_id', $detailFallback->variant_id)->first();
                 }
             }
 
@@ -1249,7 +1371,7 @@ if ($request->status === 'shipped') {
                 $res->branch_id = $branchId;
             }
 
-            $inv = Inventory::where('branch_id', $branchId)
+            $inv = \App\Models\Inventory\Inventory::where('branch_id', $branchId)
                 ->where('variant_id', $detail->variant_id)
                 ->lockForUpdate()
                 ->first();
@@ -1262,7 +1384,7 @@ if ($request->status === 'shipped') {
             $inv->stock -= 1; // 1 unit
             $inv->save();
 
-            InventoryMovement::create([
+            \App\Models\Inventory\InventoryMovement::create([
                 'variant_id' => $detail->variant_id,
                 'branch_id' => $branchId,
                 'movement_type' => 'sale',
@@ -1429,6 +1551,71 @@ if ($request->status === 'shipped') {
         return response()->json([
             'message' => 'Descuento eliminado correctamente',
             'new_total' => $sale->total
+        ]);
+    }
+    public function toggleRecipientEdit(Request $request, $id)
+    {
+        $schedule = DeliverySchedule::with('shipment')->findOrFail($id);
+        
+        if (!$schedule->shipment) {
+            return response()->json(['error' => 'No se encontró el envío.'], 404);
+        }
+
+        $session = $schedule->shipment->recipient_edit_session ?: [];
+        $session['is_shared'] = $request->boolean('is_shared');
+        $session['shared_at'] = now()->toIso8601String();
+
+        $schedule->shipment->update([
+            'recipient_edit_session' => $session
+        ]);
+
+        // Broadcast a websocket event if we want the tracking page to update in real time
+        // Alternatively, the tracking page just reloads.
+        event(new \App\Events\DeliveryUpdated($schedule->id, 'recipient_edit_toggled'));
+
+        return response()->json([
+            'message' => $session['is_shared'] ? 'Edición compartida habilitada' : 'Edición deshabilitada',
+            'shipment' => $schedule->shipment
+        ]);
+    }
+
+    public function updateRecipientInfo(Request $request, $id)
+    {
+        $schedule = DeliverySchedule::with('shipment')->findOrFail($id);
+        
+        if (!$schedule->shipment) {
+            return response()->json(['error' => 'No se encontró el envío.'], 404);
+        }
+
+        $session = $schedule->shipment->recipient_edit_session;
+        if (empty($session) || empty($session['is_shared'])) {
+            return response()->json(['error' => 'La edición no está habilitada para este envío.'], 403);
+        }
+
+        $request->validate([
+            'recipient_name' => 'nullable|string|max:255',
+            'recipient_ci' => 'nullable|string|max:50',
+            'recipient_phone' => 'nullable|string|max:50',
+            'destination_city' => 'nullable|string|max:100',
+        ]);
+
+        $schedule->shipment->update([
+            'recipient_name' => $request->recipient_name,
+            'recipient_ci' => $request->recipient_ci,
+            'recipient_phone' => $request->recipient_phone,
+            'destination_city' => $request->destination_city,
+        ]);
+
+        // Disable edit session automatically after save if desired, or keep it open.
+        // The prompt says: "si le doy a 'dejar de compartir' entonces el modo de edicion ya no esta accsible". 
+        // It implies the admin controls when to stop sharing. So we leave it open.
+
+        // Broadcast so admin dashboard updates
+        event(new \App\Events\DeliveryUpdated($schedule->id, 'recipient_info_updated'));
+
+        return response()->json([
+            'message' => 'Información actualizada correctamente',
+            'shipment' => $schedule->shipment
         ]);
     }
 }

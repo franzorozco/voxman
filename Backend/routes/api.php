@@ -41,6 +41,7 @@ Route::prefix('v1/delivery')->group(function () {
     Route::post('/{id}/notes', [OrderNetworkController::class, 'updateNotes']);
     Route::post('/{id}/apply-discount', [OrderNetworkController::class, 'applyDiscount']);
     Route::post('/{id}/remove-discount', [OrderNetworkController::class, 'removeDiscount']);
+    Route::put('/{id}/recipient', [OrderNetworkController::class, 'updateRecipientInfo']);
 });
 
 Route::middleware([
@@ -410,6 +411,7 @@ Route::middleware([
     Route::prefix('order-network')->group(function () {
         Route::get('/', [OrderNetworkController::class, 'index']);
         Route::get('/delivery-zones', [OrderNetworkController::class, 'getDeliveryZones']);
+        Route::get('/destinations', [OrderNetworkController::class, 'getDestinations']);
         Route::post('/delivery-zones', [OrderNetworkController::class, 'createDeliveryZone']);
         Route::put('/delivery-zones/{id}', [OrderNetworkController::class, 'updateDeliveryZone']);
         Route::get('/drivers', [OrderNetworkController::class, 'getDrivers']);
@@ -424,6 +426,7 @@ Route::middleware([
         Route::post('/{id}/item', [OrderNetworkController::class, 'addItem']);
         Route::delete('/{id}/item/{detailId}', [OrderNetworkController::class, 'removeItem']);
         Route::post('/{id}/item/{detailId}/restore', [OrderNetworkController::class, 'restoreItem']);
+        Route::post('/{id}/toggle-recipient-edit', [OrderNetworkController::class, 'toggleRecipientEdit']);
         Route::delete('/{id}', [OrderNetworkController::class, 'cancelOrder']);
     });
 

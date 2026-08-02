@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getProducts } from "../../../../api/admin/products";
 import { getBranches } from "../../../../api/admin/branches";
 import { createCart } from "../../../../api/admin/carts";
-import { convertToOrder, getDeliveryZones, getDeliveryDrivers, updateOrder } from "../../../../api/admin/orderNetwork";
+import { convertToOrder, getDeliveryZones, getDeliveryDrivers, updateOrder, getHistoricalDestinations } from "../../../../api/admin/orderNetwork";
 import { getCustomers } from "../../../../api/admin/customers";
 import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
@@ -37,6 +37,8 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
   // Step 2 State
   const [deliveryData, setDeliveryData] = useState({
     meeting_point: "",
+    city: "",
+    original_delivery_zone_id: "",
     latitude: null,
     longitude: null,
     shipping_cost: 0,
@@ -48,7 +50,11 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     customer_id: "",
     driver_id: "",
     delivery_type: "scheduled_point",
-    address_id: ""
+    address_id: "",
+    recipient_name: "",
+    recipient_ci: "",
+    recipient_phone: "",
+    destination_city: ""
   });
   
   const [meetingPointType, setMeetingPointType] = useState("predefined");
@@ -72,6 +78,8 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
   const [isSearchingDriver, setIsSearchingDriver] = useState(false);
+  const [historicalDestinations, setHistoricalDestinations] = useState([]);
+  const [isDestinationsDropdownOpen, setIsDestinationsDropdownOpen] = useState(false);
   
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -153,7 +161,11 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
           customer_id: sale?.customer_id || "",
           driver_id: editData.driver_id || "",
           delivery_type: dType || "scheduled_point",
-          address_id: editData.shipment?.address_id || ""
+          address_id: editData.shipment?.address_id || "",
+          recipient_name: editData.shipment?.recipient_name || "",
+          recipient_ci: editData.shipment?.recipient_ci || "",
+          recipient_phone: editData.shipment?.recipient_phone || "",
+          destination_city: editData.shipment?.destination_city || ""
         });
         
         if (editData.driver_id && editData.driver) {
@@ -246,7 +258,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
       setIsSearchingDriver(true);
       try {
         const response = await getDeliveryDrivers({ search: driverSearchQuery });
-        setDeliveryDrivers(response.data || response || []);
+        setDeliveryDrivers(response.data || []);
       } catch (error) {
         console.error('Error fetching drivers:', error);
       } finally {
@@ -261,6 +273,26 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
       return () => clearTimeout(timeoutId);
     }
   }, [driverSearchQuery, selectedDriver]);
+
+  // Fetch Historical Destinations
+  useEffect(() => {
+    if (meetingPointType === 'external') {
+      const params = {};
+      if (customerSearchType === 'registered' && selectedCustomer) {
+        params.customer_id = selectedCustomer.id;
+      } else if (customerSearchType === 'guest' && deliveryData.guest_phone) {
+        params.guest_phone = deliveryData.guest_phone;
+      }
+      
+      if (params.customer_id || (params.guest_phone && params.guest_phone.length > 5)) {
+        getHistoricalDestinations(params).then(res => {
+          setHistoricalDestinations(res.data || res || []);
+        }).catch(err => console.error("Error fetching destinations:", err));
+      } else {
+        setHistoricalDestinations([]);
+      }
+    }
+  }, [meetingPointType, customerSearchType, selectedCustomer, deliveryData.guest_phone]);
 
   const openScanner = useScannerStore(state => state.openScanner);
 
@@ -431,13 +463,18 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
           time_window: deliveryData.time_window,
           latitude: deliveryData.latitude,
           longitude: deliveryData.longitude,
-          shipping_cost: deliveryData.shipping_cost,
+          shipping_cost: deliveryData.delivery_type === 'external' ? null : deliveryData.shipping_cost,
+          agency_dispatch_cost: deliveryData.delivery_type === 'external' ? deliveryData.agency_dispatch_cost : null,
           driver_id: deliveryData.driver_id,
           customer_id: deliveryData.customer_id,
           guest_name: deliveryData.guest_name,
           guest_phone: (deliveryData.guest_country_code && deliveryData.guest_phone) 
                         ? `${deliveryData.guest_country_code.trim()} ${deliveryData.guest_phone.trim()}` 
                         : deliveryData.guest_phone,
+          recipient_name: deliveryData.recipient_name,
+          recipient_ci: deliveryData.recipient_ci,
+          recipient_phone: deliveryData.recipient_phone,
+          destination_city: deliveryData.destination_city
         };
         await updateOrder(editData.id, updatePayload);
         toast.success("Entrega actualizada correctamente");
@@ -478,7 +515,12 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
         time_window: deliveryData.time_window,
         latitude: deliveryData.latitude,
         longitude: deliveryData.longitude,
-        shipping_cost: deliveryData.shipping_cost,
+        shipping_cost: deliveryData.delivery_type === 'external' ? null : deliveryData.shipping_cost,
+        agency_dispatch_cost: deliveryData.delivery_type === 'external' ? deliveryData.agency_dispatch_cost : null,
+        recipient_name: deliveryData.recipient_name,
+        recipient_ci: deliveryData.recipient_ci,
+        recipient_phone: deliveryData.recipient_phone,
+        destination_city: deliveryData.destination_city
       };
       
       if (deliveryData.driver_id) orderPayload.driver_id = deliveryData.driver_id;
@@ -684,7 +726,37 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               type="button" 
                               onClick={() => {
                                 setMeetingPointType('external');
-                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'external', address_id: ""});
+                                let recName = "";
+                                let recPhone = "";
+                                let recCi = "";
+                                if (customerSearchType === 'guest') {
+                                  recName = deliveryData.guest_name;
+                                  recPhone = (deliveryData.guest_country_code || "") + " " + (deliveryData.guest_phone || "");
+                                  recPhone = recPhone.trim();
+                                } else if (selectedCustomer) {
+                                  const c = customersList.find(x => x.id === selectedCustomer.id);
+                                  if (c) {
+                                    recName = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}`.trim() :
+                                                (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}`.trim() : 
+                                                (c.user?.username || c.customer_code));
+                                    recPhone = c.pos_profile?.whatsapp_phone || c.user?.profile?.phone || "";
+                                    recCi = c.customer_code || "";
+                                  } else {
+                                    recName = selectedCustomer.name;
+                                  }
+                                }
+                                setDeliveryData({
+                                  ...deliveryData, 
+                                  meeting_point: "", 
+                                  latitude: null, 
+                                  longitude: null, 
+                                  shipping_cost: 0, 
+                                  delivery_type: 'external', 
+                                  address_id: "",
+                                  recipient_name: recName,
+                                  recipient_phone: recPhone,
+                                  recipient_ci: recCi
+                                });
                               }}
                               className={`tab-btn ${meetingPointType === 'external' ? 'active' : ''}`}
                             >
@@ -705,6 +777,8 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                               setDeliveryData({
                                 ...deliveryData, 
                                 meeting_point: selectedName,
+                                city: zone?.city || "",
+                                original_delivery_zone_id: zone?.id || "",
                                 latitude: zone?.latitude || null,
                                 longitude: zone?.longitude || null,
                                 shipping_cost: zone ? Number(zone.base_cost) : 0
@@ -760,16 +834,9 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                             </div>
                           </div>
                         ) : meetingPointType === 'external' ? (
-                          <div className="form-group">
-                            <label>Ciudad / Departamento de Destino</label>
-                            <input 
-                              type="text"
-                              className="form-control"
-                              placeholder="Ej: Santa Cruz, Cochabamba, Sucre..."
-                              required
-                              value={deliveryData.meeting_point}
-                              onChange={e => setDeliveryData({...deliveryData, meeting_point: e.target.value})}
-                            />
+                          <div className="form-group" style={{ margin: 0, padding: '10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '8px', fontSize: '13px' }}>
+                            <MapPin size={16} style={{ display: 'inline', marginRight: '6px' }} />
+                            Para envíos a Nivel Nacional, por favor llena los detalles de destino y la persona que recibe en la sección inferior.
                           </div>
                         ) : (
                           <div className="manual-location-container">
@@ -976,6 +1043,110 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                           )}
                         </div>
                       </div>
+
+
+                      {/* CARD 2.5: Destino y Destinatario (Solo para Nivel Nacional) */}
+                      {meetingPointType === 'external' && (
+                        <div className="delivery-card">
+                          <h4 style={{ margin: 0, marginBottom: '15px' }}>Destino y Persona que Recibe</h4>
+                          <div className="external-location-container" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <div className="form-group" style={{ margin: 0 }}>
+                              <label>Ciudad / Departamento de Destino *</label>
+                              <input 
+                                type="text"
+                                className="form-control"
+                                placeholder="Ej: Santa Cruz, Cochabamba, Sucre..."
+                                required
+                                value={deliveryData.meeting_point}
+                                onFocus={() => setIsDestinationsDropdownOpen(true)}
+                                onBlur={() => setIsDestinationsDropdownOpen(false)}
+                                onChange={e => {
+                                  setDeliveryData({...deliveryData, meeting_point: e.target.value, destination_city: e.target.value});
+                                  setIsDestinationsDropdownOpen(true);
+                                }}
+                              />
+                              {isDestinationsDropdownOpen && historicalDestinations.length > 0 && (
+                                <div style={{ marginTop: '8px', padding: '12px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '500' }}>Destinos anteriores registrados para este número/cliente:</div>
+                                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {historicalDestinations.map((dest, idx) => (
+                                      <button
+                                        key={idx}
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                          e.preventDefault(); // Prevent onBlur from firing before click
+                                          setDeliveryData({...deliveryData, meeting_point: dest, destination_city: dest});
+                                          setIsDestinationsDropdownOpen(false);
+                                        }}
+                                        style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '16px', background: 'var(--color-primary-alpha)', border: '1px solid rgba(139, 92, 246, 0.3)', cursor: 'pointer', color: 'var(--color-primary)', fontWeight: '500' }}
+                                      >
+                                        <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                                        {dest}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div style={{ padding: '15px', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-main)' }}>Datos de Quien Recibe el Paquete</h4>
+                                <button 
+                                  type="button"
+                                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', background: 'var(--color-primary-alpha)', color: 'var(--color-primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                  onClick={() => {
+                                    let recName = "";
+                                    let recPhone = "";
+                                    let recCi = "";
+                                    if (customerSearchType === 'guest') {
+                                      recName = deliveryData.guest_name;
+                                      recPhone = (deliveryData.guest_country_code || "") + " " + (deliveryData.guest_phone || "");
+                                      recPhone = recPhone.trim();
+                                    } else if (selectedCustomer) {
+                                      const c = customersList.find(x => x.id === selectedCustomer.id);
+                                      if (c) {
+                                        recName = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}`.trim() :
+                                                    (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}`.trim() : 
+                                                    (c.user?.username || c.customer_code));
+                                        recPhone = c.pos_profile?.whatsapp_phone || c.user?.profile?.phone || "";
+                                        recCi = c.customer_code || "";
+                                      } else {
+                                        recName = selectedCustomer.name;
+                                      }
+                                    }
+                                    setDeliveryData(prev => ({ ...prev, recipient_name: recName, recipient_phone: recPhone, recipient_ci: recCi }));
+                                    toast.success("Datos copiados del comprador");
+                                  }}
+                                >
+                                  <UserCheck size={14} /> Usar datos del comprador
+                                </button>
+                              </div>
+
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div className="form-group" style={{ margin: 0 }}>
+                                  <label>Nombre Completo *</label>
+                                  <input type="text" className="form-control" required value={deliveryData.recipient_name} onChange={e => setDeliveryData({...deliveryData, recipient_name: e.target.value})} placeholder="Nombre de quien recoge" />
+                                </div>
+                                <div className="form-group" style={{ margin: 0 }}>
+                                  <label>Carnet de Identidad (CI) *</label>
+                                  <input type="text" className="form-control" required value={deliveryData.recipient_ci} onChange={e => setDeliveryData({...deliveryData, recipient_ci: e.target.value})} placeholder="Nro de CI" />
+                                </div>
+                                <div className="form-group" style={{ margin: 0, gridColumn: '1 / -1' }}>
+                                  <label>Teléfono de Contacto *</label>
+                                  <input type="text" className="form-control" required value={deliveryData.recipient_phone} onChange={e => setDeliveryData({...deliveryData, recipient_phone: e.target.value})} placeholder="Número de celular" />
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="form-group" style={{ margin: 0, marginTop: '5px' }}>
+                              <label>Costo de Envío a Agencia (Bs) *</label>
+                              <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.agency_dispatch_cost || ''} onChange={(e) => setDeliveryData({...deliveryData, agency_dispatch_cost: e.target.value})} />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* CARD 3: Detalles de Envío */}
                       <div className="delivery-card">
                         <h4 style={{ margin: 0 }}>Detalles de Envío</h4>

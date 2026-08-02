@@ -18,11 +18,21 @@ class Shipment extends BaseShipment
 		'delivery_code',
 		'delivery_type',
 		'shipping_cost',
+        'agency_dispatch_cost',
         'external_company',
         'external_guide',
         'shipping_payment_type',
-        'notes'
+        'notes',
+        'recipient_name',
+        'recipient_ci',
+        'recipient_phone',
+        'destination_city',
+        'recipient_edit_session'
 	];
+
+    protected $casts = [
+        'recipient_edit_session' => 'array',
+    ];
 
     public function delivery_schedule()
     {

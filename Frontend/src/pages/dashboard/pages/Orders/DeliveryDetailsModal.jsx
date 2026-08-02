@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
 import AddProductToDeliveryModal from "./components/AddProductToDeliveryModal";
 import api from "../../../../api/client";
@@ -66,6 +66,8 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentNextStatus, setPaymentNextStatus] = useState('completed');
   const [showShippedModal, setShowShippedModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('efectivo');
   const [shippingCost, setShippingCost] = useState('');
   const [externalCompany, setExternalCompany] = useState('');
@@ -122,17 +124,23 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     }
   };
 
-  const handleRemoveItem = async (detailId) => {
-    if (!confirm('¿Seguro que deseas quitar UNA unidad de esta prenda de la venta? Se devolverá al stock disponible.')) return;
+  const handleRemoveItem = (detailId) => {
+    setItemToRemove(detailId);
+  };
+
+  const handleConfirmRemoveItem = async () => {
+    if (!itemToRemove) return;
     try {
       setLoading(true);
-      await removeDeliveryItem(details.id, detailId);
+      await removeDeliveryItem(details.id, itemToRemove);
       toast.success('Prenda quitada y stock devuelto');
       fetchDetails();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al quitar la prenda');
       console.error(err);
       setLoading(false);
+    } finally {
+      setItemToRemove(null);
     }
   };
 
@@ -193,10 +201,17 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         };
       });
     });
+    channel.listen('.DeliveryUpdated', (data) => {
+      if (data.type === 'recipient_info_updated' || data.type === 'recipient_edit_toggled') {
+        fetchDetails();
+      }
+    });
 
     return () => {
       channel.stopListening('.delivery.discount.applied');
       channel.stopListening('.delivery.discount.removed');
+      channel.stopListening('.DeliveryNotesUpdated');
+      channel.stopListening('.DeliveryUpdated');
       echo.leaveChannel(`deliveries.${scheduleId}`);
     };
   }, [scheduleId]);
@@ -233,8 +248,25 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     }
   };
 
+  const [togglingEdit, setTogglingEdit] = useState(false);
+  const handleToggleRecipientEdit = async () => {
+    try {
+      setTogglingEdit(true);
+      const isShared = !details?.shipment?.recipient_edit_session?.is_shared;
+      const res = await api.post(`/v1/admin/order-network/${scheduleId}/toggle-recipient-edit`, {
+        is_shared: isShared
+      });
+      toast.success(res.data.message);
+      fetchDetails();
+    } catch (err) {
+      toast.error("Error al cambiar estado de edición");
+      console.error(err);
+    } finally {
+      setTogglingEdit(false);
+    }
+  };
+
   const handleUpdateStatus = async (newStatus, paymentData = null) => {
-    if (newStatus === 'cancelled' && !window.confirm('¿Estás seguro de cancelar esta entrega? Esta acción no se puede deshacer.')) return;
     setUpdating(true);
     try {
       const payload = paymentData ? { status: newStatus, ...paymentData } : newStatus;
@@ -558,43 +590,53 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       const subtotal = (item.unit_price || item.final_price) * qty;
 
                       return (
-                        <div key={`${item.id}-${index}`} style={{ display: 'flex', gap: '12px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', alignItems: 'flex-start', opacity: isCancelled || item.deleted_at ? 0.6 : 1 }}>
-                          {imageUrl ? (
-                            <img src={imageUrl} alt="Variant" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
-                          ) : (
-                            <div style={{ width: '50px', height: '50px', background: 'var(--bg-input)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
-                              <Package size={20} style={{ color: 'var(--text-muted)' }} />
-                            </div>
-                          )}
-                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ color: 'var(--text-main)', fontWeight: 500, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
-                              {qty}x {variant?.product?.name} {variant?.name && `(${variant.name})`}
-                            </span>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: '4px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
-                              <span>SKU: <strong>{variant?.sku || 'N/A'}</strong></span>
-                              {variant?.size?.name && <span>• Talla: {variant.size.name}</span>}
-                              {variant?.fit?.name && <span>• Fit: {variant.fit.name}</span>}
-                              {variant?.variant_attribute_values?.map((attr, idx) => (
-                                <span key={idx}>
-                                  • {attr.attribute_value?.attribute?.name}: {attr.attribute_value?.value}
-                                </span>
-                              ))}
-                            </div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
-                              <span style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                                Extraído de: <strong>{branchName}</strong>
+                        <div key={`${item.id}-${index}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', opacity: isCancelled || item.deleted_at ? 0.6 : 1 }}>
+                          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                            {imageUrl ? (
+                              <img src={imageUrl} alt="Variant" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
+                            ) : (
+                              <div style={{ width: '50px', height: '50px', background: 'var(--bg-input)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
+                                <Package size={20} style={{ color: 'var(--text-muted)' }} />
+                              </div>
+                            )}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <span style={{ color: 'var(--text-main)', fontWeight: 500, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                                {qty}x {variant?.product?.name} {variant?.name && `(${variant.name})`}
                               </span>
-                              {item.notes && (
-                                <span style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#ca8a04', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                                  {item.notes}
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: '4px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                                <span>SKU: <strong>{variant?.sku || 'N/A'}</strong></span>
+                                {variant?.size?.name && <span>• Talla: {variant.size.name}</span>}
+                                {variant?.fit?.name && <span>• Fit: {variant.fit.name}</span>}
+                                {variant?.variant_attribute_values?.map((attr, idx) => (
+                                  <span key={idx}>
+                                    • {attr.attribute_value?.attribute?.name}: {attr.attribute_value?.value}
+                                  </span>
+                                ))}
+                              </div>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                                <span style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                                  Extraído de: <strong>{branchName}</strong>
                                 </span>
-                              )}
+                                {item.notes && (
+                                  <span style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#ca8a04', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                                    {item.notes}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                            <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>Bs. {Number(subtotal).toFixed(2)}</span>
+                          
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>{qty}x Bs. {Number(item.unit_price || item.final_price).toFixed(2)}</span>
+                            {Number(item.discount) > 0 && !item.deleted_at && (
+                              <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                -Bs. {Number(item.discount).toFixed(2)}
+                              </span>
+                            )}
+                            <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '14px' }}>Bs. {Number(subtotal).toFixed(2)}</span>
+                            
                             {item.deleted_at ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none' }}>
                                   Rechazado
                                 </span>
@@ -611,7 +653,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                               ['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
                                 <button
                                   onClick={() => handleRemoveItem(res.id)}
-                                  style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '4px 0', marginTop: '4px' }}
+                                  style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
                                 >
                                   <XCircle size={14} /> Quitar
                                 </button>
@@ -635,12 +677,20 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       <span>- Bs. {Number(sale?.discount_total || 0).toFixed(2)}</span>
                     </div>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
-                    <span>Costo de Envío:</span>
-                    <span>Bs. {Number(details?.shipment?.shipping_cost || 0).toFixed(2)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
-                    <span>Total:</span>
+                  {Number(details?.shipment?.agency_dispatch_cost) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
+                      <span>Costo de Envío a Agencia:</span>
+                      <span>Bs. {Number(details?.shipment?.agency_dispatch_cost).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {details?.shipment?.shipping_payment_type !== 'collect' && Number(details?.shipment?.shipping_cost) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
+                      <span>Costo de Envío:</span>
+                      <span>Bs. {Number(details?.shipment?.shipping_cost || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)', textTransform: 'uppercase' }}>
+                    <span>{details?.status === 'completed' || details?.shipment?.shipping_payment_type === 'paid' ? 'Total Pagado:' : 'Total a Pagar:'}</span>
                     <span style={{ color: 'var(--color-primary)' }}>Bs. {Number(sale?.total || 0).toFixed(2)}</span>
                   </div>
                 </div>
@@ -733,6 +783,98 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     </div>
                   </div>
                 </div>
+                
+                {(isExternal || details.shipment?.recipient_name || details.shipment?.recipient_phone || details.shipment?.recipient_ci) && (
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <UserCheck size={14} /> Persona que Recibe
+                      </h4>
+                      {isExternal && (
+                        <button
+                          onClick={handleToggleRecipientEdit}
+                          disabled={togglingEdit}
+                          style={{
+                            background: details.shipment?.recipient_edit_session?.is_shared ? '#fef2f2' : '#f0fdf4',
+                            color: details.shipment?.recipient_edit_session?.is_shared ? '#ef4444' : '#10b981',
+                            border: `1px solid ${details.shipment?.recipient_edit_session?.is_shared ? '#fca5a5' : '#86efac'}`,
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          {togglingEdit ? '...' : (details.shipment?.recipient_edit_session?.is_shared ? <><Lock size={12} /> Dejar de Compartir</> : <><Unlock size={12} /> Compartir Edición</>)}
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                      {details.shipment?.recipient_name && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Nombre:</span>
+                          <span style={{ fontWeight: 500 }}>{details.shipment.recipient_name}</span>
+                        </div>
+                      )}
+                      {details.shipment?.recipient_ci && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>CI:</span>
+                          <span style={{ fontWeight: 500 }}>{details.shipment.recipient_ci}</span>
+                        </div>
+                      )}
+                      {details.shipment?.recipient_phone && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Teléfono:</span>
+                          <span style={{ fontWeight: 500 }}>{details.shipment.recipient_phone}</span>
+                        </div>
+                      )}
+                      {details.shipment?.destination_city && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Destino:</span>
+                          <span style={{ fontWeight: 500 }}>{details.shipment.destination_city}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {(details.shipment?.external_company || details.shipment?.external_guide) && (
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
+                    <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Truck size={14} /> Información de Transportadora
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                      {details.shipment?.external_company && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Agencia:</span>
+                          <span style={{ fontWeight: 500 }}>{details.shipment.external_company}</span>
+                        </div>
+                      )}
+                      {details.shipment?.external_guide && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Nro. de Guía:</span>
+                          <span style={{ fontWeight: 500, color: 'var(--color-primary)' }}>{details.shipment.external_guide}</span>
+                        </div>
+                      )}
+                      {details.shipment?.shipping_payment_type && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Pago de Envío:</span>
+                          <span style={{ fontWeight: 500 }}>{details.shipment.shipping_payment_type === 'collect' ? 'Por Pagar (En Destino)' : 'Pagado (En Origen)'}</span>
+                        </div>
+                      )}
+                      {details.shipment?.shipping_payment_type === 'collect' && Number(details.shipment.shipping_cost) > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Costo de Envío:</span>
+                          <span style={{ fontWeight: 600 }}>Bs. {Number(details.shipment.shipping_cost).toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 {!isExternal && (
                   <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', overflow: 'hidden', marginTop: '12px' }}>
                     {googleMapsLoaded ? (
@@ -791,7 +933,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 <button 
                   className="action-btn btn-cancelar"
                   style={{ padding: '12px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', transition: 'all 0.2s ease' }}
-                  onClick={() => handleUpdateStatus('cancelled')}
+                  onClick={() => setShowCancelModal(true)}
                   disabled={updating}
                 >
                   <XCircle size={16} /> Cancelar Entrega
@@ -941,6 +1083,65 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       )}
 
       {/* CONFIRMATION MODALS */}
+      {itemToRemove && (
+        <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ maxWidth: '400px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: '#f59e0b' }}>
+              <AlertTriangle size={48} />
+            </div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: 'var(--text-main)' }}>Quitar Producto</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '24px', lineHeight: '1.5' }}>
+              ¿Seguro que deseas quitar UNA unidad de esta prenda de la venta? <br/><strong>Se devolverá al stock disponible.</strong>
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setItemToRemove(null)}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleConfirmRemoveItem}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#f59e0b', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Sí, Quitar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showCancelModal && (
+        <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ maxWidth: '400px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: '#ef4444' }}>
+              <XCircle size={48} />
+            </div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: 'var(--text-main)' }}>Cancelar Entrega</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '24px', lineHeight: '1.5' }}>
+              ¿Estás seguro de que deseas cancelar esta entrega? <br/><strong>Esta acción no se puede deshacer.</strong>
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setShowCancelModal(false)}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+                disabled={updating}
+              >
+                Cerrar
+              </button>
+              <button 
+                onClick={() => {
+                  setShowCancelModal(false);
+                  handleUpdateStatus('cancelled');
+                }}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+                disabled={updating}
+              >
+                Sí, Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showPaymentModal && (
         <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="modal-content" style={{ maxWidth: '500px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)' }}>

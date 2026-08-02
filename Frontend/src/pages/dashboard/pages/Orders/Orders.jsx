@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getCarts } from "../../../../api/admin/carts";
-import { getDeliverySchedules } from "../../../../api/admin/orderNetwork";
+import { getDeliverySchedules, getDeliveryDrivers } from "../../../../api/admin/orderNetwork";
 import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -23,11 +23,27 @@ export default function Orders() {
   const [isZonesModalOpen, setIsZonesModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
 
+  const [drivers, setDrivers] = useState([]);
+
+  useEffect(() => {
+    const fetchDrivers = async () => {
+      try {
+        const { data } = await getDeliveryDrivers();
+        setDrivers(data);
+      } catch (error) {
+        console.error("Error fetching drivers", error);
+      }
+    };
+    fetchDrivers();
+  }, []);
+
   // Filters state
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
+    delivery_type: "",
+    driver_id: "",
     date_from: "",
     date_to: ""
   });
@@ -43,6 +59,8 @@ export default function Orders() {
       const params = { page: pagination.current_page };
       if (search) params.search = search;
       if (filters.status) params.status = filters.status;
+      if (filters.delivery_type) params.delivery_type = filters.delivery_type;
+      if (filters.driver_id) params.driver_id = filters.driver_id;
       if (filters.date_from) params.date_from = filters.date_from;
       if (filters.date_to) params.date_to = filters.date_to;
       
@@ -305,6 +323,35 @@ export default function Orders() {
               </CustomSelect>
             </div>
             
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Tipo de Entrega</label>
+              <CustomSelect 
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.delivery_type}
+                onChange={(e) => setFilters({ ...filters, delivery_type: e.target.value })}
+              >
+                <option value="">Todos los Tipos</option>
+                <option value="home_delivery">Reparto Local</option>
+                <option value="external">Transportadora (Externa)</option>
+              </CustomSelect>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Repartidor</label>
+              <CustomSelect 
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={filters.driver_id}
+                onChange={(e) => setFilters({ ...filters, driver_id: e.target.value })}
+              >
+                <option value="">Cualquier Repartidor</option>
+                {drivers.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.user?.profile?.first_name} {d.user?.profile?.last_name_paternal || ''}
+                  </option>
+                ))}
+              </CustomSelect>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Desde (Fecha Entrega)</label>
               <input 

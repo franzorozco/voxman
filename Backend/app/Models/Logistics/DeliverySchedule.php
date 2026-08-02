@@ -21,8 +21,10 @@ class DeliverySchedule extends Model
         'status',
         'driver_id',
         'meeting_point',
+        'city',
         'latitude',
         'longitude',
+        'original_delivery_zone_id',
         'checkout_session',
         'created_at'
     ];

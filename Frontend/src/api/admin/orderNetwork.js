@@ -56,3 +56,7 @@ export const restoreDeliveryItem = (id, detailId) => {
 export const assignDriver = (id, driver_id) => {
   return api.post(`/v1/admin/order-network/${id}/driver`, { driver_id });
 };
+
+export const getHistoricalDestinations = (params = {}) => {
+  return api.get('/v1/admin/order-network/destinations', { params });
+};

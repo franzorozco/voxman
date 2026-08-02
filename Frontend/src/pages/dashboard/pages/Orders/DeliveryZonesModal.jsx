@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getDeliveryZones, createDeliveryZone, updateDeliveryZone } from '../../../../api/admin/orderNetwork';
 import { toast } from 'react-hot-toast';
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
-import { X, MapPin, Plus, ArrowLeft, Edit3, Globe } from 'lucide-react';
+import { X, MapPin, Plus, ArrowLeft, Edit3, Globe, Share2, CheckSquare, Square, Copy } from 'lucide-react';
+import CustomSelect from '../../../../components/ui/CustomSelect';
 import '../Carts/Carts.css';
 
 export default function DeliveryZonesModal({ onClose }) {
@@ -11,18 +12,41 @@ export default function DeliveryZonesModal({ onClose }) {
   const [view, setView] = useState('list'); // 'list' | 'add'
   const [editMode, setEditMode] = useState(false);
   const [currentEditId, setCurrentEditId] = useState(null);
+  const [selectedCities, setSelectedCities] = useState([]);
   
   // Add form state
   const [formData, setFormData] = useState({
     name: '',
     city: '',
     base_cost: '',
-    extra_cost_per_km: '',
+    extra_cost_per_km: 0,
     latitude: null,
     longitude: null
   });
   
   const [mapCenter, setMapCenter] = useState({ lat: -17.3895, lng: -66.1568 }); // Cochabamba default
+
+  const cityCoordinates = {
+    "El Alto": { lat: -16.5000, lng: -68.1500 },
+    "Centro": { lat: -16.4897, lng: -68.1193 },
+    "Cochabamba": { lat: -17.3895, lng: -66.1568 },
+    "Santa Cruz": { lat: -17.7833, lng: -63.1821 },
+    "La Paz": { lat: -16.4897, lng: -68.1193 },
+    "Oruro": { lat: -17.9833, lng: -67.1500 },
+    "Potosí": { lat: -19.5836, lng: -65.7531 },
+    "Tarija": { lat: -21.5355, lng: -64.7296 },
+    "Sucre": { lat: -19.0333, lng: -65.2627 },
+    "Beni": { lat: -14.8333, lng: -64.9000 },
+    "Pando": { lat: -11.0267, lng: -68.7692 } // Cobija
+  };
+
+  const handleCityChange = (e) => {
+    const selectedCity = e.target.value;
+    setFormData({ ...formData, city: selectedCity });
+    if (cityCoordinates[selectedCity]) {
+      setMapCenter(cityCoordinates[selectedCity]);
+    }
+  };
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -33,7 +57,10 @@ export default function DeliveryZonesModal({ onClose }) {
     setLoading(true);
     try {
       const res = await getDeliveryZones();
-      setZones(res.data || res);
+      const fetchedZones = res.data || res;
+      setZones(fetchedZones);
+      const uniqueCities = [...new Set(fetchedZones.map(z => z.city))];
+      setSelectedCities(uniqueCities);
     } catch (error) {
       toast.error('Error al cargar puntos de entrega');
     } finally {
@@ -72,7 +99,7 @@ export default function DeliveryZonesModal({ onClose }) {
       setCurrentEditId(null);
       fetchZones();
       setFormData({
-        name: '', city: '', base_cost: '', extra_cost_per_km: '', latitude: null, longitude: null
+        name: '', city: '', base_cost: '', extra_cost_per_km: 0, latitude: null, longitude: null
       });
     } catch (error) {
       toast.error(error.response?.data?.message || error.response?.data?.error || "Error al guardar punto de entrega");
@@ -86,7 +113,7 @@ export default function DeliveryZonesModal({ onClose }) {
       name: zone.name || '',
       city: zone.city || '',
       base_cost: zone.base_cost || '',
-      extra_cost_per_km: zone.extra_cost_per_km || '',
+      extra_cost_per_km: 0,
       latitude: parseFloat(zone.latitude) || null,
       longitude: parseFloat(zone.longitude) || null
     });
@@ -102,7 +129,41 @@ export default function DeliveryZonesModal({ onClose }) {
     setView('list');
     setEditMode(false);
     setCurrentEditId(null);
-    setFormData({ name: '', city: '', base_cost: '', extra_cost_per_km: '', latitude: null, longitude: null });
+    setFormData({ name: '', city: '', base_cost: '', extra_cost_per_km: 0, latitude: null, longitude: null });
+  };
+
+  const generateShareText = () => {
+    let text = "🌟 📍 *PUNTOS DE ENTREGA DISPONIBLES* 📍 🌟\n\n";
+    
+    const grouped = zones.reduce((acc, zone) => {
+      if (!acc[zone.city]) acc[zone.city] = [];
+      acc[zone.city].push(zone);
+      return acc;
+    }, {});
+
+    selectedCities.forEach(city => {
+      if (grouped[city] && grouped[city].length > 0) {
+        text += `🏙️ *${city.toUpperCase()}:*\n`;
+        grouped[city].forEach(zone => {
+          const costStr = Number(zone.base_cost) > 0 ? ` (Bs. ${Number(zone.base_cost).toFixed(2)} 💵)` : ' (Gratis 🆓)';
+          text += `✨ 🔸 ${zone.name}${costStr}\n`;
+        });
+        text += "\n";
+      }
+    });
+    
+    text += "📦 🛵 _¡Hacemos envíos a todos estos puntos!_\n💬 *Escríbenos para coordinar tu entrega.* 👇";
+    return text;
+  };
+
+  const handleCopyShare = () => {
+    navigator.clipboard.writeText(generateShareText());
+    toast.success("¡Texto copiado al portapapeles!");
+  };
+  
+  const handleWhatsAppShare = () => {
+    const text = encodeURIComponent(generateShareText());
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   return (
@@ -112,14 +173,14 @@ export default function DeliveryZonesModal({ onClose }) {
         {/* Header */}
         <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-main)', borderRadius: '16px 16px 0 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {view === 'add' && (
+            {view !== 'list' && (
               <button onClick={handleBackToList} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-main)', display: 'flex', alignItems: 'center' }}>
                 <ArrowLeft size={20} />
               </button>
             )}
             <h2 style={{ margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <MapPin size={22} color="var(--color-primary)" />
-              {view === 'list' ? 'Puntos de Entrega' : (editMode ? 'Editar Punto de Entrega' : 'Nuevo Punto de Entrega')}
+              {view === 'list' ? 'Puntos de Entrega' : (view === 'share' ? 'Compartir Puntos' : (editMode ? 'Editar Punto de Entrega' : 'Nuevo Punto de Entrega'))}
             </h2>
           </div>
           <button onClick={onClose} style={{ background: 'var(--bg-input)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-main)' }}>
@@ -132,7 +193,14 @@ export default function DeliveryZonesModal({ onClose }) {
           
           {view === 'list' && (
             <>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
+                <button 
+                  className="action-btn" 
+                  onClick={() => setView('share')}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', border: '1px solid var(--color-primary)', background: 'transparent', color: 'var(--color-primary)' }}
+                >
+                  <Share2 size={16} /> Compartir
+                </button>
                 <button 
                   className="btn-primary" 
                   onClick={() => setView('add')}
@@ -163,7 +231,6 @@ export default function DeliveryZonesModal({ onClose }) {
                         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                           <div>
                             <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-primary)' }}>Bs. {Number(zone.base_cost).toFixed(2)}</div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>+ Bs. {Number(zone.extra_cost_per_km).toFixed(2)}/km</div>
                           </div>
                           <button 
                             onClick={() => handleEditClick(zone)}
@@ -192,24 +259,33 @@ export default function DeliveryZonesModal({ onClose }) {
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     required
-                    style={{ padding: '12px', borderRadius: '8px' }}
+                    style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Ciudad</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="Ej: Cochabamba"
+                  <CustomSelect 
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                     value={formData.city}
-                    onChange={(e) => setFormData({...formData, city: e.target.value})}
+                    onChange={handleCityChange}
                     required
-                    style={{ padding: '12px', borderRadius: '8px' }}
-                  />
+                  >
+                    <option value="">Selecciona una ciudad</option>
+                    <option value="La Paz">La Paz</option>
+                    <option value="El Alto">El Alto</option>
+                    <option value="Cochabamba">Cochabamba</option>
+                    <option value="Santa Cruz">Santa Cruz</option>
+                    <option value="Oruro">Oruro</option>
+                    <option value="Potosí">Potosí</option>
+                    <option value="Tarija">Tarija</option>
+                    <option value="Sucre">Sucre</option>
+                    <option value="Beni">Beni</option>
+                    <option value="Pando">Pando</option>
+                  </CustomSelect>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Costo Base (Bs.)</label>
                   <input 
@@ -220,20 +296,7 @@ export default function DeliveryZonesModal({ onClose }) {
                     value={formData.base_cost}
                     onChange={(e) => setFormData({...formData, base_cost: e.target.value})}
                     required
-                    style={{ padding: '12px', borderRadius: '8px' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Costo Extra por Km (Bs.)</label>
-                  <input 
-                    type="number" 
-                    step="0.1"
-                    min="0"
-                    className="form-control" 
-                    value={formData.extra_cost_per_km}
-                    onChange={(e) => setFormData({...formData, extra_cost_per_km: e.target.value})}
-                    required
-                    style={{ padding: '12px', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                   />
                 </div>
               </div>
@@ -283,6 +346,62 @@ export default function DeliveryZonesModal({ onClose }) {
                 </button>
               </div>
             </form>
+          )}
+
+          {view === 'share' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ margin: '0 0 12px 0', color: 'var(--text-main)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <MapPin size={16} /> Selecciona las ciudades a incluir:
+                </h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  {[...new Set(zones.map(z => z.city))].map(city => {
+                    const isSelected = selectedCities.includes(city);
+                    return (
+                      <button
+                        key={city}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedCities(selectedCities.filter(c => c !== city));
+                          } else {
+                            setSelectedCities([...selectedCities, city]);
+                          }
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', borderRadius: '8px', border: `1px solid ${isSelected ? 'var(--color-primary)' : 'var(--border-color)'}`, background: isSelected ? 'rgba(79, 70, 229, 0.1)' : 'var(--bg-card)', color: isSelected ? 'var(--color-primary)' : 'var(--text-muted)', cursor: 'pointer', fontSize: '13px', fontWeight: 500, transition: 'all 0.2s' }}
+                      >
+                        {isSelected ? <CheckSquare size={14} /> : <Square size={14} />}
+                        {city}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Previsualización del Mensaje:</label>
+                <textarea 
+                  readOnly
+                  value={generateShareText()}
+                  style={{ width: '100%', height: '220px', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '14px', resize: 'vertical', outline: 'none', lineHeight: '1.5' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button 
+                  onClick={handleCopyShare}
+                  className="btn-primary"
+                  style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                >
+                  <Copy size={16} /> Copiar para Redes
+                </button>
+                <button 
+                  onClick={handleWhatsAppShare}
+                  style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: '#25D366', color: '#fff' }}
+                >
+                  <Share2 size={16} /> Enviar por WhatsApp
+                </button>
+              </div>
+            </div>
           )}
 
         </div>

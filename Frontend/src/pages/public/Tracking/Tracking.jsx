@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { Package, Truck, MapPin, CheckCircle, Clock, AlertCircle, ShoppingBag, User, Phone, Map, Box, StickyNote, Check } from "lucide-react";
+import { Package, Truck, MapPin, CheckCircle, Clock, AlertCircle, ShoppingBag, User, Phone, Map, Box, StickyNote, Check, Edit2, X as XIcon, Save } from "lucide-react";
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
 import echo from "../../../echo";
 import "./Tracking.css";
@@ -24,6 +24,16 @@ export default function Tracking() {
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSuccess, setNotesSuccess] = useState(false);
 
+  // Recipient Edit State
+  const [isEditingRecipient, setIsEditingRecipient] = useState(false);
+  const [recipientForm, setRecipientForm] = useState({
+    recipient_name: '',
+    recipient_ci: '',
+    recipient_phone: '',
+    destination_city: ''
+  });
+  const [savingRecipient, setSavingRecipient] = useState(false);
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M"
@@ -42,6 +52,40 @@ export default function Tracking() {
       setError("Error al guardar las notas. Intenta de nuevo.");
     } finally {
       setSavingNotes(false);
+    }
+  };
+
+  useEffect(() => {
+    if (schedule?.shipment) {
+      setRecipientForm({
+        recipient_name: schedule.shipment.recipient_name || '',
+        recipient_ci: schedule.shipment.recipient_ci || '',
+        recipient_phone: schedule.shipment.recipient_phone || '',
+        destination_city: schedule.shipment.destination_city || ''
+      });
+      if (!schedule.shipment.recipient_edit_session?.is_shared) {
+        setIsEditingRecipient(false);
+      }
+    }
+  }, [schedule]);
+
+  const handleSaveRecipient = async () => {
+    setSavingRecipient(true);
+    try {
+      await axios.put(`${API_URL}/v1/delivery/${id}/recipient`, recipientForm);
+      setSchedule(prev => ({
+        ...prev,
+        shipment: {
+          ...prev.shipment,
+          ...recipientForm
+        }
+      }));
+      setIsEditingRecipient(false);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || "Error al guardar información");
+    } finally {
+      setSavingRecipient(false);
     }
   };
 
@@ -105,6 +149,11 @@ export default function Tracking() {
         };
       });
     });
+    privateChannel.listen('.DeliveryUpdated', (data) => {
+      if (data.type === 'recipient_info_updated' || data.type === 'recipient_edit_toggled') {
+        fetchTracking();
+      }
+    });
 
     return () => {
       globalChannel.stopListening('.delivery.status.updated');
@@ -113,6 +162,8 @@ export default function Tracking() {
       privateChannel.stopListening('.checkout.session.shared');
       privateChannel.stopListening('.delivery.discount.applied');
       privateChannel.stopListening('.delivery.discount.removed');
+      privateChannel.stopListening('.DeliveryNotesUpdated');
+      privateChannel.stopListening('.DeliveryUpdated');
       echo.leaveChannel(`deliveries.${id}`);
     };
   }, [id]);
@@ -172,11 +223,17 @@ export default function Tracking() {
   const guest = sale?.guest;
 
   let customerName = "Cliente";
+  let customerPhone = null;
+  let customerCode = null;
+
   if (customer) {
+    customerCode = customer.customer_code;
     if (customer.pos_profile) {
       customerName = `${customer.pos_profile.first_name || ''} ${customer.pos_profile.last_name_paternal || ''}`.trim() || "Cliente";
+      customerPhone = customer.pos_profile.phone;
     } else if (customer.user?.profile) {
       customerName = `${customer.user.profile.first_name || ''} ${customer.user.profile.last_name_paternal || ''}`.trim() || "Cliente";
+      customerPhone = customer.user.profile.phone;
     } else if (customer.user) {
       customerName = customer.user.username || customer.user.email || "Cliente";
     } else {
@@ -184,6 +241,7 @@ export default function Tracking() {
     }
   } else if (guest) {
     customerName = guest.name || "Invitado";
+    customerPhone = guest.phone;
   }
 
   const isExternal = schedule?.shipment?.delivery_type === 'external';
@@ -246,7 +304,7 @@ export default function Tracking() {
       <div className="tracking-card">
         <div className="tracking-header">
           <h1>Seguimiento de Envío</h1>
-          <p className="tracking-ref">Ref: <strong>{sale?.reference_number || schedule.id.split('-')[0].toUpperCase()}</strong></p>
+          <p className="tracking-ref"><strong>Ref: {schedule.shipment?.delivery_code || schedule.id.slice(0,8)} {sale?.invoice_number ? `| Venta: ${sale.invoice_number}` : ''}</strong></p>
         </div>
 
         <div className="tracking-status-hero" style={{ background: `linear-gradient(135deg, ${statusInfo.color}15 0%, transparent 100%)`, borderLeft: `4px solid ${statusInfo.color}` }}>
@@ -319,6 +377,16 @@ export default function Tracking() {
           <h3 className="section-title"><Map size={20} /> Detalles Logísticos</h3>
           <div className="details-grid">
             <div className="detail-item">
+              <span className="detail-label">Cliente</span>
+              <span className="detail-value">{customerName} {customerCode ? `(Cód: ${customerCode})` : ''}</span>
+            </div>
+            {customerPhone && (
+              <div className="detail-item">
+                <span className="detail-label">WhatsApp</span>
+                <span className="detail-value">{customerPhone}</span>
+              </div>
+            )}
+            <div className="detail-item">
               <span className="detail-label">{schedule.shipment?.delivery_type === 'home_delivery' ? 'Dirección de Entrega' : 'Lugar de Entrega'}</span>
               <span className="detail-value">
                 {schedule.shipment?.delivery_type === 'home_delivery' && schedule.shipment?.address 
@@ -348,6 +416,99 @@ export default function Tracking() {
             </div>
           )}
 
+          {(schedule.shipment?.recipient_name || schedule.shipment?.recipient_ci || schedule.shipment?.recipient_edit_session?.is_shared) && (
+            <div style={{ marginTop: '20px', padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#0f172a', fontSize: '16px' }}>
+                  <User size={18} style={{ color: '#0ea5e9' }} /> Persona que Recibe
+                </h4>
+                {schedule.shipment?.recipient_edit_session?.is_shared && !isEditingRecipient && (
+                  <button 
+                    onClick={() => setIsEditingRecipient(true)}
+                    style={{ background: '#f0f9ff', color: '#0ea5e9', border: '1px solid #bae6fd', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Edit2 size={14} /> Editar
+                  </button>
+                )}
+              </div>
+              
+              {isEditingRecipient ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Nombre</label>
+                    <input type="text" value={recipientForm.recipient_name} onChange={(e) => setRecipientForm({...recipientForm, recipient_name: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b' }} placeholder="Nombre completo" />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>C.I.</label>
+                    <input type="text" value={recipientForm.recipient_ci} onChange={(e) => setRecipientForm({...recipientForm, recipient_ci: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b' }} placeholder="Carnet de Identidad" />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Teléfono / WhatsApp</label>
+                    <input type="text" value={recipientForm.recipient_phone} onChange={(e) => setRecipientForm({...recipientForm, recipient_phone: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b' }} placeholder="Número de contacto" />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Destino (Ciudad / Depto)</label>
+                    <input type="text" value={recipientForm.destination_city} onChange={(e) => setRecipientForm({...recipientForm, destination_city: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b' }} placeholder="Ej: La Paz" />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+                    <button 
+                      onClick={() => {
+                        setIsEditingRecipient(false);
+                        setRecipientForm({
+                          recipient_name: schedule.shipment.recipient_name || '',
+                          recipient_ci: schedule.shipment.recipient_ci || '',
+                          recipient_phone: schedule.shipment.recipient_phone || '',
+                          destination_city: schedule.shipment.destination_city || ''
+                        });
+                      }} 
+                      disabled={savingRecipient}
+                      style={{ padding: '10px 16px', borderRadius: '8px', background: 'transparent', color: '#64748b', border: '1px solid #cbd5e1', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={handleSaveRecipient}
+                      disabled={savingRecipient}
+                      style={{ padding: '10px 16px', borderRadius: '8px', background: '#0ea5e9', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      {savingRecipient ? 'Guardando...' : <><Save size={14} /> Guardar</>}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {schedule.shipment?.recipient_name && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Nombre:</span>
+                      <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment.recipient_name}</span>
+                    </div>
+                  )}
+                  {schedule.shipment?.recipient_ci && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>CI:</span>
+                      <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment.recipient_ci}</span>
+                    </div>
+                  )}
+                  {schedule.shipment?.recipient_phone && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Teléfono:</span>
+                      <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment.recipient_phone}</span>
+                    </div>
+                  )}
+                  {schedule.shipment?.destination_city && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Destino:</span>
+                      <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment.destination_city}</span>
+                    </div>
+                  )}
+                  {!schedule.shipment?.recipient_name && !schedule.shipment?.recipient_ci && (
+                    <span style={{ color: '#94a3b8', fontSize: '14px', fontStyle: 'italic' }}>Sin datos registrados. Haz clic en Editar para agregarlos.</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {isExternal && (
             <div style={{ marginTop: '20px', padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
               <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0', color: '#0f172a', fontSize: '16px' }}>
@@ -367,10 +528,16 @@ export default function Tracking() {
                   <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: 600 }}>{schedule.shipment?.shipping_payment_type === 'collect' ? 'Pago en Destino' : (schedule.shipment?.shipping_payment_type === 'paid' ? 'Pagado en Origen' : 'Pendiente')}</span>
                 </div>
                 {schedule.shipment?.shipping_payment_type === 'collect' && (
-                  <div style={{ marginTop: '8px', padding: '10px', background: '#fffbeb', color: '#b45309', borderRadius: '8px', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center', border: '1px solid #fef3c7' }}>
-                    <AlertCircle size={16} style={{ flexShrink: 0 }} />
-                    <p style={{ margin: 0, lineHeight: 1.4 }}>Recuerda que debes pagar el costo de envío directamente a la agencia de transporte al recoger tu paquete.</p>
-                  </div>
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Costo de Envío:</span>
+                      <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: 600 }}>Bs. {Number(schedule.shipment.shipping_cost || 0).toFixed(2)}</span>
+                    </div>
+                    <div style={{ marginTop: '8px', padding: '10px', background: '#fffbeb', color: '#b45309', borderRadius: '8px', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center', border: '1px solid #fef3c7' }}>
+                      <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                      <p style={{ margin: 0, lineHeight: 1.4 }}>Recuerda que debes pagar el costo de envío directamente a la agencia de transporte al recoger tu paquete.</p>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -478,12 +645,12 @@ export default function Tracking() {
                     </div>
                   )}
                   
-                  <div className="product-details" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div className="product-details" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flex: 1, gap: '12px', width: '100%' }}>
                     <div className="product-left-col" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div className="product-name" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                      <div className="product-name" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none', fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>
                         {variant?.product?.name || 'Producto'}
                       </div>
-                      <div className="product-badges">
+                      <div className="product-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                         {variant?.size && <span className="product-badge">Talla: {variant.size.name}</span>}
                         {variant?.fit && <span className="product-badge">Fit: {variant.fit.name}</span>}
                         {variant?.variant_attribute_values?.map(attrVal => (
@@ -494,15 +661,20 @@ export default function Tracking() {
                       </div>
                     </div>
                     
-                    <div className="product-price-block" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span className="product-qty" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                    <div className="product-price-block" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+                      <span className="product-qty" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '13px', color: '#64748b' }}>
                         {item.quantity}x Bs. {Number(item.unit_price).toFixed(2)}
                       </span>
-                      <span className="product-subtotal" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
+                      {Number(item.discount) > 0 && !item.deleted_at && (
+                        <span style={{ fontSize: '13px', color: '#059669', fontWeight: 600, background: '#d1fae5', padding: '2px 8px', borderRadius: '12px' }}>
+                          Desc: -Bs. {Number(item.discount).toFixed(2)}
+                        </span>
+                      )}
+                      <span className="product-subtotal" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>
                         Bs. {Number(item.subtotal).toFixed(2)}
                       </span>
                       {item.deleted_at && (
-                        <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 600, display: 'block' }}>
+                        <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, display: 'block' }}>
                           Rechazado
                         </span>
                       )}
@@ -518,10 +690,19 @@ export default function Tracking() {
               <span>Subtotal del Pedido</span>
               <span>Bs. {Number(sale?.subtotal || 0).toFixed(2)}</span>
             </div>
-            <div className="summary-row">
-              <span>Costo de Envío</span>
-              <span>Bs. {Number(shipment?.shipping_cost || 0).toFixed(2)}</span>
-            </div>
+            {Number(shipment?.agency_dispatch_cost) > 0 && (
+              <div className="summary-row">
+                <span>Costo de Envío a Agencia</span>
+                <span>Bs. {Number(shipment?.agency_dispatch_cost).toFixed(2)}</span>
+              </div>
+            )}
+            
+            {shipment?.shipping_payment_type !== 'collect' && Number(shipment?.shipping_cost) > 0 && (
+              <div className="summary-row">
+                <span>Costo de Envío</span>
+                <span>Bs. {Number(shipment?.shipping_cost || 0).toFixed(2)}</span>
+              </div>
+            )}
             
             {Number(schedule?.shipment?.sale?.discount_total) > 0 && (
               <div className="summary-row" style={{ color: '#10b981', fontWeight: 600 }}>
@@ -537,9 +718,9 @@ export default function Tracking() {
               </div>
             )}
 
-            <div className="summary-row total" style={{ borderTop: '2px solid #e5e7eb', paddingTop: '16px', marginTop: '8px' }}>
+            <div className="summary-row total" style={{ borderTop: '2px solid #e5e7eb', paddingTop: '16px', marginTop: '8px', textTransform: 'uppercase' }}>
               <span style={{ fontSize: '18px' }}>
-                {schedule.status === 'completed' ? 'Total Pagado' : 'Total a Pagar'}
+                {schedule.status === 'completed' || shipment?.shipping_payment_type === 'paid' ? 'TOTAL PAGADO' : 'TOTAL A PAGAR'}
               </span>
               <span style={{ fontSize: '22px', color: checkoutSession ? '#4f46e5' : '#111827' }}>
                 Bs. {checkoutSession ? Number(checkoutSession.montoReal).toFixed(2) : Number(sale?.total || 0).toFixed(2)}

@@ -820,7 +820,7 @@
 
 .dropdown-menu {
   display: block;
-  max-height: 200px;
+  max-height: 450px;
   overflow-y: auto;
   z-index: 10;
   position: absolute;
