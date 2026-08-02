@@ -8,6 +8,7 @@ import { toast } from "react-hot-toast";
 import DeliveryDetailsModal from "./DeliveryDetailsModal";
 import NewOrderModal from "./NewOrderModal";
 import DeliveryZonesModal from "./DeliveryZonesModal";
+import GuestHistorySearchModal from "./GuestHistorySearchModal";
 import echo from "../../../../echo";
 import "./Orders.css";
 
@@ -21,6 +22,7 @@ export default function Orders() {
   const [statusModalSchedule, setStatusModalSchedule] = useState(null);
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [isZonesModalOpen, setIsZonesModalOpen] = useState(false);
+  const [isGuestHistoryModalOpen, setIsGuestHistoryModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
 
   const [drivers, setDrivers] = useState([]);
@@ -243,6 +245,14 @@ export default function Orders() {
           >
             <Plus size={18} />
             <span className="hide-on-mobile">Nueva Entrega</span>
+          </button>
+          <button 
+            className="action-btn" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => setIsGuestHistoryModalOpen(true)}
+          >
+            <Search size={18} />
+            <span className="hide-on-mobile">Historial Cliente</span>
           </button>
           <button 
             className="action-btn" 
@@ -636,6 +646,10 @@ export default function Orders() {
         <DeliveryZonesModal 
           onClose={() => setIsZonesModalOpen(false)}
         />
+      )}
+
+      {isGuestHistoryModalOpen && (
+        <GuestHistorySearchModal onClose={() => setIsGuestHistoryModalOpen(false)} />
       )}
     </div>
   );

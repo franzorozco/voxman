@@ -416,7 +416,7 @@ export default function Tracking() {
             </div>
           )}
 
-          {(schedule.shipment?.recipient_name || schedule.shipment?.recipient_ci || schedule.shipment?.recipient_edit_session?.is_shared) && (
+          {(schedule.shipment?.delivery_type === 'external' || schedule.shipment?.recipient_name || schedule.shipment?.recipient_ci || schedule.shipment?.recipient_edit_session?.is_shared) && (
             <div style={{ marginTop: '20px', padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#0f172a', fontSize: '16px' }}>
@@ -444,7 +444,26 @@ export default function Tracking() {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Teléfono / WhatsApp</label>
-                    <input type="text" value={recipientForm.recipient_phone} onChange={(e) => setRecipientForm({...recipientForm, recipient_phone: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b' }} placeholder="Número de contacto" />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input type="text" placeholder="+591" 
+                        value={(recipientForm.recipient_phone || '').includes(' ') ? (recipientForm.recipient_phone || '').split(' ')[0] : '+591'} 
+                        onChange={(e) => {
+                          const code = e.target.value;
+                          const num = (recipientForm.recipient_phone || '').includes(' ') ? (recipientForm.recipient_phone || '').split(' ').slice(1).join(' ') : (recipientForm.recipient_phone || '');
+                          setRecipientForm({...recipientForm, recipient_phone: `${code} ${num}`.trim()});
+                        }} 
+                        style={{ width: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b', textAlign: 'center' }} 
+                      />
+                      <input type="text" placeholder="Número de contacto" 
+                        value={(recipientForm.recipient_phone || '').includes(' ') ? (recipientForm.recipient_phone || '').split(' ').slice(1).join(' ') : (recipientForm.recipient_phone || '')} 
+                        onChange={(e) => {
+                          const num = e.target.value;
+                          const code = (recipientForm.recipient_phone || '').includes(' ') ? (recipientForm.recipient_phone || '').split(' ')[0] : '+591';
+                          setRecipientForm({...recipientForm, recipient_phone: `${code} ${num}`.trim()});
+                        }} 
+                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b' }} 
+                      />
+                    </div>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Destino (Ciudad / Depto)</label>
@@ -477,33 +496,22 @@ export default function Tracking() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {schedule.shipment?.recipient_name && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Nombre:</span>
-                      <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment.recipient_name}</span>
-                    </div>
-                  )}
-                  {schedule.shipment?.recipient_ci && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>CI:</span>
-                      <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment.recipient_ci}</span>
-                    </div>
-                  )}
-                  {schedule.shipment?.recipient_phone && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Teléfono:</span>
-                      <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment.recipient_phone}</span>
-                    </div>
-                  )}
-                  {schedule.shipment?.destination_city && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Destino:</span>
-                      <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment.destination_city}</span>
-                    </div>
-                  )}
-                  {!schedule.shipment?.recipient_name && !schedule.shipment?.recipient_ci && (
-                    <span style={{ color: '#94a3b8', fontSize: '14px', fontStyle: 'italic' }}>Sin datos registrados. Haz clic en Editar para agregarlos.</span>
-                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Nombre:</span>
+                    <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment?.recipient_name || <span style={{ color: '#94a3b8', fontWeight: 400, fontStyle: 'italic' }}>No especificado</span>}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>CI:</span>
+                    <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment?.recipient_ci || <span style={{ color: '#94a3b8', fontWeight: 400, fontStyle: 'italic' }}>No especificado</span>}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Teléfono:</span>
+                    <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment?.recipient_phone || <span style={{ color: '#94a3b8', fontWeight: 400, fontStyle: 'italic' }}>No especificado</span>}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Destino:</span>
+                    <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment?.destination_city || <span style={{ color: '#94a3b8', fontWeight: 400, fontStyle: 'italic' }}>No especificado</span>}</span>
+                  </div>
                 </div>
               )}
             </div>

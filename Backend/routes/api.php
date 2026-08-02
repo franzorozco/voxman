@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Admin\DiscountController;
 use App\Http\Controllers\Api\Admin\EmployeeController;
 use App\Http\Controllers\Api\Admin\FitController;
 use App\Http\Controllers\Api\Admin\GiftcardController;
+use App\Http\Controllers\Api\Admin\GuestController;
 use App\Http\Controllers\Api\Admin\InventoryController;
 use App\Http\Controllers\Api\Admin\MeasurementTypeController;
 use App\Http\Controllers\Api\Admin\OwnerController;
@@ -260,6 +261,11 @@ Route::middleware([
         Route::post('/', [CustomerController::class, 'store']);
         Route::put('/{id}', [CustomerController::class, 'update']);
         Route::delete('/{id}', [CustomerController::class, 'destroy']);
+    });
+
+    Route::prefix('guests')->group(function () {
+        Route::get('/search', [GuestController::class, 'search']);
+        Route::get('/{id}/history', [GuestController::class, 'history']);
     });
 
     Route::prefix('employees')->group(function () {

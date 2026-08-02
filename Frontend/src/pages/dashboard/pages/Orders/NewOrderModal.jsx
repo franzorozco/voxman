@@ -1134,7 +1134,24 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                                 </div>
                                 <div className="form-group" style={{ margin: 0, gridColumn: '1 / -1' }}>
                                   <label>Teléfono de Contacto *</label>
-                                  <input type="text" className="form-control" required value={deliveryData.recipient_phone} onChange={e => setDeliveryData({...deliveryData, recipient_phone: e.target.value})} placeholder="Número de celular" />
+                                  <div className="phone-fields">
+                                    <input type="text" className="form-control" placeholder="+591" 
+                                      value={(deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ')[0] : '+591'} 
+                                      onChange={e => {
+                                        const code = e.target.value;
+                                        const num = (deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ').slice(1).join(' ') : (deliveryData.recipient_phone || '');
+                                        setDeliveryData({...deliveryData, recipient_phone: `${code} ${num}`.trim()});
+                                      }} 
+                                    />
+                                    <input type="text" className="form-control" required placeholder="Número de celular" 
+                                      value={(deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ').slice(1).join(' ') : (deliveryData.recipient_phone || '')} 
+                                      onChange={e => {
+                                        const num = e.target.value;
+                                        const code = (deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ')[0] : '+591';
+                                        setDeliveryData({...deliveryData, recipient_phone: `${code} ${num}`.trim()});
+                                      }} 
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             </div>
