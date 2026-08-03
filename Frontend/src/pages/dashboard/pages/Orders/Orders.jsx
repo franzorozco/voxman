@@ -13,6 +13,8 @@ import echo from "../../../../echo";
 import "./Orders.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
+import CanAccess from '../../../../components/ui/CanAccess';
+
 export default function Orders() {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -228,40 +230,49 @@ export default function Orders() {
   };
 
   return (
-    <div className="products-container fade-in">
-      <div className="products-header">
+    <CanAccess permission={['view_orders', 'view_orders_own_branch', 'view_orders_all_branches']}>
+      <div className="products-container fade-in">
+        <div className="products-header">
         <h1 className="products-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Truck size={24} className="text-primary" />
           Pedidos de Redes Sociales
         </h1>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            className="action-btn" 
-            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', background: 'transparent', cursor: 'pointer', fontWeight: 600 }}
-            onClick={() => {
-              setEditData(null);
-              setIsNewOrderModalOpen(true);
-            }}
-          >
-            <Plus size={18} />
-            <span className="hide-on-mobile">Nueva Entrega</span>
-          </button>
-          <button 
-            className="action-btn" 
-            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
-            onClick={() => setIsGuestHistoryModalOpen(true)}
-          >
-            <Search size={18} />
-            <span className="hide-on-mobile">Historial Cliente</span>
-          </button>
-          <button 
-            className="action-btn" 
-            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
-            onClick={() => setIsZonesModalOpen(true)}
-          >
-            <MapPin size={18} />
-            <span className="hide-on-mobile">Puntos de Entrega</span>
-          </button>
+          <CanAccess permission="create_orders">
+            <button 
+              className="action-btn" 
+              style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', background: 'transparent', cursor: 'pointer', fontWeight: 600 }}
+              onClick={() => {
+                setEditData(null);
+                setIsNewOrderModalOpen(true);
+              }}
+            >
+              <Plus size={18} />
+              <span className="hide-on-mobile">Nueva Entrega</span>
+            </button>
+          </CanAccess>
+          
+          <CanAccess permission={['view_orders', 'view_orders_own_branch', 'view_orders_all_branches']}>
+            <button 
+              className="action-btn" 
+              style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+              onClick={() => setIsGuestHistoryModalOpen(true)}
+            >
+              <Search size={18} />
+              <span className="hide-on-mobile">Historial Cliente</span>
+            </button>
+          </CanAccess>
+
+          <CanAccess permission="manage_settings">
+            <button 
+              className="action-btn" 
+              style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+              onClick={() => setIsZonesModalOpen(true)}
+            >
+              <MapPin size={18} />
+              <span className="hide-on-mobile">Puntos de Entrega</span>
+            </button>
+          </CanAccess>
           
           <button 
             className="action-btn primary" 
@@ -651,6 +662,7 @@ export default function Orders() {
       {isGuestHistoryModalOpen && (
         <GuestHistorySearchModal onClose={() => setIsGuestHistoryModalOpen(false)} />
       )}
-    </div>
+      </div>
+    </CanAccess>
   );
 }

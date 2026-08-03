@@ -43,28 +43,54 @@ class FinanceDashboardController extends Controller
         }
         $totalStoreExpenses = $expensesQuery->sum('amount');
         
-        $cashSalesQuery = Payment::where('payment_method_id', $cashMethodId);
-        $bankSalesQuery = Payment::where('payment_method_id', '!=', $cashMethodId);
-        if (!empty($giftcardMethodIds)) {
-            $bankSalesQuery->whereNotIn('payment_method_id', $giftcardMethodIds);
-        }
-        $giftcardSalesQuery = Payment::whereIn('payment_method_id', $giftcardMethodIds);
+        $globalSalesQuery = SaleDetail::with('sale.payments')
+            ->whereHas('sale', function($q) use ($branchIdFilter, $startDate, $endDate) {
+                $q->where('status', 'paid');
+                if ($branchIdFilter !== 'all') {
+                    $q->where('branch_id', $branchIdFilter);
+                }
+                if ($startDate && $endDate) {
+                    $q->whereBetween('created_at', [$startDate, $endDate]);
+                }
+            });
         
-        if ($branchIdFilter !== 'all') {
-            $cashSalesQuery->whereHas('sale', function($q) use ($branchIdFilter) {
-                $q->where('branch_id', $branchIdFilter);
-            });
-            $bankSalesQuery->whereHas('sale', function($q) use ($branchIdFilter) {
-                $q->where('branch_id', $branchIdFilter);
-            });
-            $giftcardSalesQuery->whereHas('sale', function($q) use ($branchIdFilter) {
-                $q->where('branch_id', $branchIdFilter);
-            });
-        }
+        $globalSalesDetails = $globalSalesQuery->get();
         
-        $cashSales = $cashSalesQuery->sum('amount');
-        $bankSales = $bankSalesQuery->sum('amount');
-        $giftcardSales = $giftcardSalesQuery->sum('amount');
+        $cashSales = 0;
+        $bankSales = 0;
+        $giftcardSales = 0;
+
+        foreach ($globalSalesDetails as $detail) {
+            $detailTotal = $detail->subtotal - $detail->discount;
+            $sale = $detail->sale;
+            $saleTotal = $sale->total;
+            
+            if ($saleTotal > 0 && $sale->payments->count() > 0) {
+                $saleCash = 0;
+                $saleGiftcard = 0;
+                $saleBank = 0;
+                
+                foreach ($sale->payments as $p) {
+                    if ($p->payment_method_id === $cashMethodId) {
+                        $saleCash += $p->amount;
+                    } elseif (in_array($p->payment_method_id, $giftcardMethodIds)) {
+                        $saleGiftcard += $p->amount;
+                    } else {
+                        $saleBank += $p->amount;
+                    }
+                }
+                
+                $cashRatio = $saleCash / $saleTotal;
+                $giftcardRatio = $saleGiftcard / $saleTotal;
+                $bankRatio = 1 - $cashRatio - $giftcardRatio;
+                
+                $cashSales += ($detailTotal * $cashRatio);
+                $giftcardSales += ($detailTotal * $giftcardRatio);
+                $bankSales += ($detailTotal * $bankRatio);
+            } else {
+                $bankSales += $detailTotal;
+            }
+        }
 
         $cashExpensesQuery = Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'cash');
         $bankExpensesQuery = Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank');
@@ -271,6 +297,7 @@ class FinanceDashboardController extends Controller
                     'branch_name' => 'Sin Sucursal (Legado)',
                     'sales_revenue' => 0,
                     'expenses_assumed' => 0,
+                    'pending_debts' => 0,
                     'withdrawals' => $withdrawalsCashGlobal + $withdrawalsBankGlobal,
                     'deposits' => $depositsCashGlobal + $depositsBankGlobal,
                     'cash_balance' => -$withdrawalsCashGlobal + $depositsCashGlobal,
@@ -341,7 +368,7 @@ class FinanceDashboardController extends Controller
         $ledger = [];
 
         // 1. Sales
-        $salesQuery = SaleDetail::with('sale.payments', 'sale.branch')->whereHas('sale', function($q) use ($startDate, $endDate) {
+        $salesQuery = SaleDetail::with(['sale.payments', 'sale.branch', 'sale.shipments'])->whereHas('sale', function($q) use ($startDate, $endDate) {
             $q->where('status', 'paid');
             if ($startDate && $endDate) {
                 $q->whereBetween('created_at', [$startDate, $endDate]);
@@ -374,10 +401,18 @@ class FinanceDashboardController extends Controller
                 }
             }
 
+            $deliveryType = '';
+            $shipment = $sale->shipments->first();
+            if ($shipment) {
+                if ($shipment->delivery_type === 'home_delivery') $deliveryType = ' [Delivery]';
+                elseif ($shipment->delivery_type === 'external') $deliveryType = ' [Envío Nacional]';
+                elseif ($shipment->delivery_type === 'scheduled_point') $deliveryType = ' [Entrega en Punto]';
+            }
+
             $ledger[] = [
                 'date' => Carbon::parse($sale->created_at)->toIso8601String(),
                 'branch_name' => $branchName,
-                'description' => 'Ingreso por venta (' . $fundStr . '): ' . $saleDetail->product_name,
+                'description' => 'Ingreso por venta (' . $fundStr . ')' . $deliveryType . ': ' . $saleDetail->product_name,
                 'type' => 'sale',
                 'amount' => $detailTotal
             ];

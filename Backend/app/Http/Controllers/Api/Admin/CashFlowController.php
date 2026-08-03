@@ -37,8 +37,8 @@ class CashFlowController extends Controller
                 $startDate = now()->startOfMonth();
             }
         } else {
-            $startDate = now()->startOfMonth();
-            $endDate = now()->endOfDay();
+            $startDate = null;
+            $endDate = null;
         }
 
         $cashMethod = PaymentMethod::where('name', 'Efectivo')->first();
@@ -56,15 +56,60 @@ class CashFlowController extends Controller
             ]
         ];
 
-        // --- Bank Operations ---
-        $bankQuery = Payment::where('payment_method_id', '!=', $cashMethodId);
-        if (!empty($giftcardMethodIds)) {
-            $bankQuery->whereNotIn('payment_method_id', $giftcardMethodIds);
+        // --- Bank Operations & Global Cash Sales via SaleDetail ---
+        $globalSalesQuery = \App\Models\Sales\SaleDetail::with('sale.payments')
+            ->whereHas('sale', function($q) use ($startDate, $endDate) {
+                $q->where('status', 'paid');
+                if ($startDate && $endDate) {
+                    $q->whereBetween('created_at', [$startDate, $endDate]);
+                }
+            });
+        
+        $globalSalesDetails = $globalSalesQuery->get();
+        
+        $totalBankSales = 0;
+        $branchCashSalesMap = [];
+        $dailyIncomeMap = [];
+        
+        foreach ($globalSalesDetails as $detail) {
+            $detailTotal = $detail->subtotal - $detail->discount;
+            $sale = $detail->sale;
+            $saleTotal = $sale->total;
+            
+            // Map daily total income (clothes only)
+            $dateStr = \Carbon\Carbon::parse($sale->created_at)->format('Y-m-d');
+            if (!isset($dailyIncomeMap[$dateStr])) $dailyIncomeMap[$dateStr] = 0;
+            $dailyIncomeMap[$dateStr] += $detailTotal;
+
+            if ($saleTotal > 0 && $sale->payments->count() > 0) {
+                $saleCash = 0;
+                $saleGiftcard = 0;
+                
+                foreach ($sale->payments as $p) {
+                    if ($p->payment_method_id === $cashMethodId) {
+                        $saleCash += $p->amount;
+                    } elseif (in_array($p->payment_method_id, $giftcardMethodIds)) {
+                        $saleGiftcard += $p->amount;
+                    }
+                }
+                
+                $cashRatio = $saleCash / $saleTotal;
+                $giftcardRatio = $saleGiftcard / $saleTotal;
+                $bankRatio = 1 - $cashRatio - $giftcardRatio;
+                
+                $totalBankSales += ($detailTotal * $bankRatio);
+                $cashAmount = ($detailTotal * $cashRatio);
+                
+                // Track cash sales by branch
+                $branchId = $sale->branch_id;
+                if ($branchId) {
+                    if (!isset($branchCashSalesMap[$branchId])) $branchCashSalesMap[$branchId] = 0;
+                    $branchCashSalesMap[$branchId] += $cashAmount;
+                }
+            } else {
+                $totalBankSales += $detailTotal;
+            }
         }
-        if ($startDate && $endDate) {
-            $bankQuery->whereBetween('created_at', [$startDate, $endDate]);
-        }
-        $totalBankSales = $bankQuery->sum('amount');
         
         $bankExpensesQuery = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])
             ->where('fund_source', 'bank')
@@ -98,53 +143,63 @@ class CashFlowController extends Controller
 
         // --- Daily Flow calculation ---
         $dailyFlow = [];
-        $currentDate = $startDate->copy();
-        while ($currentDate->lte($endDate)) {
+        if ($startDate && $endDate) {
+            $currentDate = $startDate->copy();
+            $iterEndDate = $endDate;
+        } else {
+            // If no dates provided, fallback to showing last 30 days or similar for the chart, 
+            // or compute min/max dates from data. Since it's a chart, it needs boundaries.
+            // Let's use 30 days as fallback for the chart.
+            $currentDate = now()->subDays(30)->startOfDay();
+            $iterEndDate = now()->endOfDay();
+        }
+        
+        while ($currentDate->lte($iterEndDate)) {
             $dateStr = $currentDate->format('Y-m-d');
             $dailyFlow[$dateStr] = ['date' => $dateStr, 'income' => 0, 'expense' => 0, 'balance' => 0];
             $currentDate->addDay();
         }
 
         // Fill incomes
-        $dailyIncomes = Payment::selectRaw('DATE(created_at) as date, SUM(amount) as total')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy('date')->pluck('total', 'date');
-        foreach ($dailyIncomes as $date => $total) {
+        foreach ($dailyIncomeMap as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['income'] += $total;
         }
-        $dailyMovementsIn = CashMovement::where('movement_type', 'income')->selectRaw('DATE(created_at) as date, SUM(amount) as total')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy('date')->pluck('total', 'date');
+        $dailyMovementsInQuery = CashMovement::where('movement_type', 'income')->selectRaw('DATE(created_at) as date, SUM(amount) as total');
+        if ($startDate && $endDate) $dailyMovementsInQuery->whereBetween('created_at', [$startDate, $endDate]);
+        $dailyMovementsIn = $dailyMovementsInQuery->groupBy('date')->pluck('total', 'date');
         foreach ($dailyMovementsIn as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['income'] += $total;
         }
-        $dailyOwnerDeposits = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'deposit')
-            ->selectRaw('DATE(payment_date) as date, SUM(total_amount) as total')
-            ->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->groupBy('date')->pluck('total', 'date');
+        
+        $dailyOwnerDepositsQuery = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'deposit')
+            ->selectRaw('DATE(payment_date) as date, SUM(total_amount) as total');
+        if ($startDate && $endDate) $dailyOwnerDepositsQuery->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+        $dailyOwnerDeposits = $dailyOwnerDepositsQuery->groupBy('date')->pluck('total', 'date');
         foreach ($dailyOwnerDeposits as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['income'] += $total;
         }
 
         // Fill expenses
-        $dailyExpenses = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])
+        $dailyExpensesQuery = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])
             ->where('deducted_from_wallet', true)
-            ->selectRaw('DATE(paid_at) as date, SUM(amount) as total')
-            ->whereBetween('paid_at', [$startDate, $endDate])
-            ->groupBy('date')->pluck('total', 'date');
+            ->selectRaw('DATE(paid_at) as date, SUM(amount) as total');
+        if ($startDate && $endDate) $dailyExpensesQuery->whereBetween('paid_at', [$startDate, $endDate]);
+        $dailyExpenses = $dailyExpensesQuery->groupBy('date')->pluck('total', 'date');
         foreach ($dailyExpenses as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['expense'] += $total;
         }
-        $dailyMovementsOut = CashMovement::where('movement_type', 'expense')->selectRaw('DATE(created_at) as date, SUM(amount) as total')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy('date')->pluck('total', 'date');
+        
+        $dailyMovementsOutQuery = CashMovement::where('movement_type', 'expense')->selectRaw('DATE(created_at) as date, SUM(amount) as total');
+        if ($startDate && $endDate) $dailyMovementsOutQuery->whereBetween('created_at', [$startDate, $endDate]);
+        $dailyMovementsOut = $dailyMovementsOutQuery->groupBy('date')->pluck('total', 'date');
         foreach ($dailyMovementsOut as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['expense'] += $total;
         }
-        $dailyOwnerWithdrawals = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'withdrawal')
-            ->selectRaw('DATE(payment_date) as date, SUM(total_amount) as total')
-            ->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->groupBy('date')->pluck('total', 'date');
+        
+        $dailyOwnerWithdrawalsQuery = \App\Models\Finance\OwnerPayment::whereIn('status', ['paid', 'archived'])->where('type', 'withdrawal')
+            ->selectRaw('DATE(payment_date) as date, SUM(total_amount) as total');
+        if ($startDate && $endDate) $dailyOwnerWithdrawalsQuery->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+        $dailyOwnerWithdrawals = $dailyOwnerWithdrawalsQuery->groupBy('date')->pluck('total', 'date');
         foreach ($dailyOwnerWithdrawals as $date => $total) {
             if (isset($dailyFlow[$date])) $dailyFlow[$date]['expense'] += $total;
         }
@@ -158,14 +213,7 @@ class CashFlowController extends Controller
 
         // --- Branch Operations ---
         foreach ($branches as $branch) {
-            $branchSalesQuery = Payment::where('payment_method_id', $cashMethodId)
-                ->whereHas('sale', function($q) use ($branch) {
-                    $q->where('branch_id', $branch->id);
-                });
-            if ($startDate && $endDate) {
-                $branchSalesQuery->whereBetween('created_at', [$startDate, $endDate]);
-            }
-            $branchCashSales = $branchSalesQuery->sum('amount');
+            $branchCashSales = $branchCashSalesMap[$branch->id] ?? 0;
             
             $branchExpensesQuery = \App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])
                 ->where('fund_source', 'cash')
@@ -224,28 +272,66 @@ class CashFlowController extends Controller
         $history = collect();
 
         // 1. Payments (Ingresos por Ventas)
-        $payments = Payment::whereBetween('created_at', [$startDate, $endDate])
-            ->where('payment_method_id', $cashMethodId)
-            ->with(['sale.branch', 'sale.customer.user.profile', 'sale.customer.posProfile', 'sale.guest'])
-            ->get()->map(function($p) {
+        $salesHistoryQuery = \App\Models\Sales\Sale::where('status', 'paid')
+            ->whereHas('payments', function($q) use ($cashMethodId) {
+                $q->where('payment_method_id', $cashMethodId);
+            });
+            
+        if ($startDate && $endDate) {
+            $salesHistoryQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        $salesHistory = $salesHistoryQuery->with(['sale_details', 'payments', 'branch', 'customer.user.profile', 'customer.posProfile', 'guest', 'shipments'])
+            ->get()->map(function($sale) use ($cashMethodId, $giftcardMethodIds) {
+                
+                $saleCash = 0;
+                $saleGiftcard = 0;
+                foreach ($sale->payments as $p) {
+                    if ($p->payment_method_id === $cashMethodId) $saleCash += $p->amount;
+                    elseif (in_array($p->payment_method_id, $giftcardMethodIds)) $saleGiftcard += $p->amount;
+                }
+                $saleTotal = $sale->total;
+                $cashRatio = ($saleTotal > 0) ? ($saleCash / $saleTotal) : 0;
+                
+                $productTotal = 0;
+                foreach ($sale->sale_details as $detail) {
+                    $productTotal += ($detail->subtotal - $detail->discount);
+                }
+                
+                $cashAmount = $productTotal * $cashRatio;
+                
+                $deliveryType = '';
+                $shipment = $sale->shipments->first();
+                if ($shipment) {
+                    if ($shipment->delivery_type === 'home_delivery') $deliveryType = ' [Delivery]';
+                    elseif ($shipment->delivery_type === 'external') $deliveryType = ' [Envío Nacional]';
+                    elseif ($shipment->delivery_type === 'scheduled_point') $deliveryType = ' [Entrega en Punto]';
+                }
+                
                 return [
-                    'id' => 'pay_'.$p->id,
-                    'date' => $p->created_at,
+                    'id' => 'sale_'.$sale->id,
+                    'date' => $sale->created_at,
                     'type' => 'Ingreso (Venta)',
-                    'amount' => (float)$p->amount,
-                    'branch' => $p->sale->branch->name ?? 'N/A',
-                    'description' => 'Venta ' . ($p->sale->invoice_number ?? '#' . substr($p->sale->id, 0, 5)) . ' - ' . ($p->sale->guest->name ?? ($p->sale->customer->posProfile->first_name ?? ($p->sale->customer->user->profile->first_name ?? 'Cliente General'))),
+                    'amount' => (float)$cashAmount,
+                    'branch' => $sale->branch->name ?? 'N/A',
+                    'description' => 'Venta ' . ($sale->invoice_number ?? '#' . substr($sale->id, 0, 5)) . $deliveryType . ' - ' . ($sale->guest->name ?? ($sale->customer->posProfile->first_name ?? ($sale->customer->user->profile->first_name ?? 'Cliente General'))),
                     'is_positive' => true
                 ];
+            })->filter(function($item) {
+                return $item['amount'] > 0;
             });
-        $history = $history->concat($payments);
+        $history = $history->concat($salesHistory);
 
         // 2. Expenses (Egresos Operativos via Splits)
-        $expenses = \App\Models\Finance\ExpenseSplit::whereBetween('paid_at', [$startDate, $endDate])
-            ->where('fund_source', 'cash')
+        $expensesQuery = \App\Models\Finance\ExpenseSplit::where('fund_source', 'cash')
             ->where('deducted_from_wallet', true)
-            ->whereIn('status', ['paid', 'archived'])
-            ->with(['expense.branch', 'expense.category', 'owner.user.profile'])
+            ->whereIn('status', ['paid', 'archived']);
+            
+        if ($startDate && $endDate) {
+            $expensesQuery->whereBetween('paid_at', [$startDate, $endDate]);
+        }
+        
+        $expenses = $expensesQuery->with(['expense.branch', 'expense.category', 'owner.user.profile'])
             ->get()->map(function($es) {
                 $ownerName = $es->owner ? ($es->owner->user->profile->first_name ?? '') : '';
                 return [
@@ -261,9 +347,12 @@ class CashFlowController extends Controller
         $history = $history->concat($expenses);
 
         // 3. Cash Transfers
-        $transfers = CashTransfer::whereBetween('transfer_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->where('status', 'completed')
-            ->with(['fromBranch', 'toBranch'])
+        $transfersQuery = CashTransfer::where('status', 'completed');
+        if ($startDate && $endDate) {
+            $transfersQuery->whereBetween('transfer_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+        }
+        
+        $transfers = $transfersQuery->with(['fromBranch', 'toBranch'])
             ->get()->map(function($t) {
                 $from = $t->fromBranch ? $t->fromBranch->name : 'Banco';
                 $to = $t->toBranch ? $t->toBranch->name : 'Banco';
@@ -280,8 +369,12 @@ class CashFlowController extends Controller
         $history = $history->concat($transfers);
 
         // 4. Cash Movements (Adjustments/Discrepancies)
-        $movements = CashMovement::whereBetween('created_at', [$startDate, $endDate])
-            ->with(['cash_register.branch'])
+        $movementsQuery = CashMovement::query();
+        if ($startDate && $endDate) {
+            $movementsQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        $movements = $movementsQuery->with(['cash_register.branch'])
             ->get()->map(function($m) {
                 $isIncome = $m->movement_type === 'income';
                 return [
@@ -297,10 +390,14 @@ class CashFlowController extends Controller
         $history = $history->concat($movements);
         
         // 5. Owner Payments (Aportes/Retiros de Socios)
-        $ownerPayments = \App\Models\Finance\OwnerPayment::whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->where('fund_source', 'cash')
-            ->whereIn('status', ['paid', 'archived'])
-            ->with(['branch', 'owner.user.profile'])
+        $ownerPaymentsQuery = \App\Models\Finance\OwnerPayment::where('fund_source', 'cash')
+            ->whereIn('status', ['paid', 'archived']);
+            
+        if ($startDate && $endDate) {
+            $ownerPaymentsQuery->whereBetween('payment_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+        }
+        
+        $ownerPayments = $ownerPaymentsQuery->with(['branch', 'owner.user.profile'])
             ->get()->map(function($op) {
                 $ownerName = $op->owner ? ($op->owner->user->profile->first_name ?? '') : 'Socio';
                 $isDeposit = $op->type === 'deposit';
@@ -317,13 +414,18 @@ class CashFlowController extends Controller
         $history = $history->concat($ownerPayments);
 
         // 6. Aperturas y Cierres de Caja
-        $registers = CashRegister::whereBetween('opened_at', [$startDate, $endDate])
-            ->orWhereBetween('closed_at', [$startDate, $endDate])
-            ->with('branch')
-            ->get();
+        $registersQuery = CashRegister::query();
+        if ($startDate && $endDate) {
+            $registersQuery->where(function($q) use ($startDate, $endDate) {
+                $q->whereBetween('opened_at', [$startDate, $endDate])
+                  ->orWhereBetween('closed_at', [$startDate, $endDate]);
+            });
+        }
+        
+        $registers = $registersQuery->with('branch')->get();
             
         foreach ($registers as $reg) {
-            if ($reg->opened_at && $reg->opened_at->between($startDate, $endDate)) {
+            if ($reg->opened_at && (!$startDate || $reg->opened_at->between($startDate, $endDate))) {
                 $history->push([
                     'id' => $reg->id . '_open',
                     'date' => $reg->opened_at,
@@ -334,7 +436,7 @@ class CashFlowController extends Controller
                     'is_positive' => null
                 ]);
             }
-            if ($reg->closed_at && $reg->closed_at->between($startDate, $endDate)) {
+            if ($reg->closed_at && (!$startDate || $reg->closed_at->between($startDate, $endDate))) {
                 $history->push([
                     'id' => $reg->id . '_close',
                     'date' => $reg->closed_at,

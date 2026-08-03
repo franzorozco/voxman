@@ -156,6 +156,19 @@ class RolePermissionSeeder extends Seeder
             'send_cart_reminders',
             'apply_cart_discounts',
 
+            // Pedidos y Envíos
+            'view_orders',
+            'view_orders_own_branch',
+            'view_orders_all_branches',
+            'create_orders',
+            'edit_orders',
+            'cancel_orders',
+            'assign_orders',
+            'update_order_status',
+            'manage_order_items',
+            'print_order_labels',
+            'manage_order_discounts',
+
             // Configuraciones Generales
             'manage_settings',
 
@@ -221,6 +234,18 @@ class RolePermissionSeeder extends Seeder
             'convert_carts',
             'send_cart_reminders',
             'apply_cart_discounts',
+            
+            // Pedidos
+            'view_orders',
+            'view_orders_own_branch',
+            'create_orders',
+            'edit_orders',
+            'cancel_orders',
+            'assign_orders',
+            'update_order_status',
+            'manage_order_items',
+            'print_order_labels',
+            'manage_order_discounts',
         ]);
 
         $warehouseRole->syncPermissions([
@@ -259,11 +284,25 @@ class RolePermissionSeeder extends Seeder
             'convert_carts',
             'send_cart_reminders',
             'apply_cart_discounts',
+
+            // Pedidos
+            'view_orders',
+            'view_orders_own_branch',
+            'create_orders',
+            'edit_orders',
+            'assign_orders',
+            'update_order_status',
+            'manage_order_items',
+            'print_order_labels',
+            'manage_order_discounts',
         ]);
 
         // Repartidor
         $deliveryRole->syncPermissions([
             'view_inventory_own_branch',
+            'view_orders',
+            'view_orders_own_branch',
+            'update_order_status',
         ]);
 
         // Asignar rol Owner explícitamente a franzorozco0@gmail.com

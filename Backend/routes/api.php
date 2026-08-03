@@ -415,25 +415,25 @@ Route::middleware([
 
     // Order Network Admin Routes
     Route::prefix('order-network')->group(function () {
-        Route::get('/', [OrderNetworkController::class, 'index']);
-        Route::get('/delivery-zones', [OrderNetworkController::class, 'getDeliveryZones']);
-        Route::get('/destinations', [OrderNetworkController::class, 'getDestinations']);
-        Route::post('/delivery-zones', [OrderNetworkController::class, 'createDeliveryZone']);
-        Route::put('/delivery-zones/{id}', [OrderNetworkController::class, 'updateDeliveryZone']);
-        Route::get('/drivers', [OrderNetworkController::class, 'getDrivers']);
-        Route::post('/convert', [OrderNetworkController::class, 'convertToOrder']);
-        Route::post('/{id}/status', [OrderNetworkController::class, 'updateStatus']);
-        Route::post('/{id}/share-checkout', [OrderNetworkController::class, 'shareCheckoutSession']);
-        Route::post('/{id}/apply-discount', [OrderNetworkController::class, 'applyDiscount']);
-        Route::put('/{id}/details', [OrderNetworkController::class, 'updateDeliveryDetails']);
-        Route::put('/{id}/order', [OrderNetworkController::class, 'updateOrder']);
-        Route::post('/{id}/driver', [OrderNetworkController::class, 'assignDriver']);
-        Route::post('/{id}/remove-discount', [OrderNetworkController::class, 'removeDiscount']);
-        Route::post('/{id}/item', [OrderNetworkController::class, 'addItem']);
-        Route::delete('/{id}/item/{detailId}', [OrderNetworkController::class, 'removeItem']);
-        Route::post('/{id}/item/{detailId}/restore', [OrderNetworkController::class, 'restoreItem']);
-        Route::post('/{id}/toggle-recipient-edit', [OrderNetworkController::class, 'toggleRecipientEdit']);
-        Route::delete('/{id}', [OrderNetworkController::class, 'cancelOrder']);
+        Route::get('/', [OrderNetworkController::class, 'index'])->middleware('permission:view_orders|view_orders_own_branch|view_orders_all_branches');
+        Route::get('/delivery-zones', [OrderNetworkController::class, 'getDeliveryZones'])->middleware('permission:view_orders|view_orders_own_branch|view_orders_all_branches');
+        Route::get('/destinations', [OrderNetworkController::class, 'getDestinations'])->middleware('permission:view_orders|view_orders_own_branch|view_orders_all_branches');
+        Route::post('/delivery-zones', [OrderNetworkController::class, 'createDeliveryZone'])->middleware('permission:manage_settings');
+        Route::put('/delivery-zones/{id}', [OrderNetworkController::class, 'updateDeliveryZone'])->middleware('permission:manage_settings');
+        Route::get('/drivers', [OrderNetworkController::class, 'getDrivers'])->middleware('permission:view_orders|view_orders_own_branch|view_orders_all_branches');
+        Route::post('/convert', [OrderNetworkController::class, 'convertToOrder'])->middleware('permission:create_orders');
+        Route::post('/{id}/status', [OrderNetworkController::class, 'updateStatus'])->middleware('permission:update_order_status');
+        Route::post('/{id}/share-checkout', [OrderNetworkController::class, 'shareCheckoutSession'])->middleware('permission:edit_orders');
+        Route::post('/{id}/apply-discount', [OrderNetworkController::class, 'applyDiscount'])->middleware('permission:manage_order_discounts');
+        Route::put('/{id}/details', [OrderNetworkController::class, 'updateDeliveryDetails'])->middleware('permission:edit_orders');
+        Route::put('/{id}/order', [OrderNetworkController::class, 'updateOrder'])->middleware('permission:edit_orders');
+        Route::post('/{id}/driver', [OrderNetworkController::class, 'assignDriver'])->middleware('permission:assign_orders');
+        Route::post('/{id}/remove-discount', [OrderNetworkController::class, 'removeDiscount'])->middleware('permission:manage_order_discounts');
+        Route::post('/{id}/item', [OrderNetworkController::class, 'addItem'])->middleware('permission:manage_order_items');
+        Route::delete('/{id}/item/{detailId}', [OrderNetworkController::class, 'removeItem'])->middleware('permission:manage_order_items');
+        Route::post('/{id}/item/{detailId}/restore', [OrderNetworkController::class, 'restoreItem'])->middleware('permission:manage_order_items');
+        Route::post('/{id}/toggle-recipient-edit', [OrderNetworkController::class, 'toggleRecipientEdit'])->middleware('permission:edit_orders');
+        Route::delete('/{id}', [OrderNetworkController::class, 'cancelOrder'])->middleware('permission:cancel_orders');
     });
 
 });

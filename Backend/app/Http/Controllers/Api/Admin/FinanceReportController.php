@@ -20,14 +20,15 @@ class FinanceReportController extends Controller
         $branchId = $request->query('branch_id');
 
         // Fetch Sales
-        $salesQuery = Sale::whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', 'paid');
+        $salesQuery = \App\Models\Sales\SaleDetail::join('sales', 'sale_details.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.created_at', [$startDate, $endDate])
+            ->where('sales.status', 'paid');
             
         if ($branchId) {
-            $salesQuery->where('branch_id', $branchId);
+            $salesQuery->where('sales.branch_id', $branchId);
         }
 
-        $salesData = $salesQuery->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total) as amount'))
+        $salesData = $salesQuery->select(DB::raw('DATE(sales.created_at) as date'), DB::raw('SUM(sale_details.subtotal - sale_details.discount) as amount'))
             ->groupBy('date')
             ->orderBy('date', 'ASC')
             ->get();
@@ -153,10 +154,11 @@ class FinanceReportController extends Controller
         $prevEndDate = $startDate->copy()->subSecond();
         $prevStartDate = $prevEndDate->copy()->subDays($daysDiff)->startOfDay();
 
-        $prevSalesQuery = Sale::whereBetween('created_at', [$prevStartDate, $prevEndDate])
-            ->where('status', 'paid');
-        if ($branchId) $prevSalesQuery->where('branch_id', $branchId);
-        $prevTotalSales = (float) $prevSalesQuery->sum('total');
+        $prevSalesQuery = \App\Models\Sales\SaleDetail::join('sales', 'sale_details.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.created_at', [$prevStartDate, $prevEndDate])
+            ->where('sales.status', 'paid');
+        if ($branchId) $prevSalesQuery->where('sales.branch_id', $branchId);
+        $prevTotalSales = (float) $prevSalesQuery->sum(DB::raw('sale_details.subtotal - sale_details.discount'));
         
         $prevMovementsInQuery = CashMovement::whereBetween('created_at', [$prevStartDate, $prevEndDate])
             ->where('movement_type', 'income');

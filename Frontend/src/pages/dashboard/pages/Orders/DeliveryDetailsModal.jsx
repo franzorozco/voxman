@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
 import AddProductToDeliveryModal from "./components/AddProductToDeliveryModal";
 import api from "../../../../api/client";
@@ -8,7 +8,9 @@ import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
 import DiscountInput from '../../components/DiscountInput';
 import CustomSelect from '../../../../components/ui/CustomSelect';
+import CanAccess from '../../../../components/ui/CanAccess';
 import { API_BASE_URL } from "../../../../config/api";
+import logo from "../../../../assets/global/logo_white.png";
 
 const mapContainerStyle = {
   width: '100%',
@@ -415,6 +417,159 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
 
   const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '14px' };
 
+    const handlePrintLabel = () => {
+    const sale = details.shipment?.sale;
+    const items = sale?.sale_details || [];
+    const recipientName = details.shipment?.recipient_name || 'Sin nombre';
+    const recipientPhone = details.shipment?.recipient_phone || 'Sin teléfono';
+    const recipientCI = details.shipment?.recipient_ci || 'Sin CI';
+    const destination = details.shipment?.destination_city || 'Sin destino';
+    const total = parseFloat(sale?.total || 0).toFixed(2);
+    const discount = parseFloat(sale?.discount || 0);
+    const deliveryCode = details.shipment?.delivery_code || details.id.slice(0,8);
+    const saleCode = sale?.invoice_number ? sale.invoice_number : (sale?.id?.slice(0,8) || '');
+    
+    // Si la imagen es una URL relativa local, necesitamos origin
+    const logoUrl = logo.startsWith('http') ? logo : window.location.origin + logo;
+
+    const itemsHtml = items.map(item => {
+      const variant = item.product_variant;
+      const name = variant?.product?.name || 'Producto';
+      
+      const attrs = [];
+      if (variant?.size?.name) attrs.push(`Talla: ${variant.size.name}`);
+      if (variant?.fit?.name) attrs.push(`Fit: ${variant.fit.name}`);
+      if (variant?.variant_attribute_values) {
+        variant.variant_attribute_values.forEach(attr => {
+          if (attr.attribute_value) {
+            attrs.push(`${attr.attribute_value.attribute?.name || 'Attr'}: ${attr.attribute_value.value}`);
+          }
+        });
+      }
+      const attrsString = attrs.length > 0 ? attrs.join(' | ') : '';
+
+      return `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px dashed #ccc; padding-bottom: 6px;">
+          <span style="flex: 1; padding-right: 8px;">
+            <strong>${item.quantity}x ${name}</strong>
+            ${attrsString ? `<br/><span style="color: #444; font-size: 9px; line-height: 1.2; display: inline-block; margin-top: 2px;">${attrsString}</span>` : ''}
+          </span>
+          <span style="white-space: nowrap;">Bs. ${parseFloat(item.subtotal).toFixed(2)}</span>
+        </div>
+      `;
+    }).join('');
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Etiqueta de Envío - ${deliveryCode}</title>
+          <style>
+            @page { size: 8.5in 5.5in; margin: 0; }
+            @media print {
+              html, body {
+                width: 8.5in;
+                height: 5.5in;
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 0;
+              width: 8.5in; 
+              height: 5.5in; 
+              display: flex; 
+              box-sizing: border-box;
+              overflow: hidden;
+            }
+            .left-col { 
+              width: 75%; 
+              height: 100%;
+              padding: 30px 40px; 
+              box-sizing: border-box;
+              display: flex; 
+              flex-direction: column; 
+              justify-content: center;
+              background: #fff;
+              border-right: 2px dashed #000;
+            }
+            .right-col { 
+              width: 25%; 
+              height: 100%;
+              background: #fff; 
+              color: #000; 
+              padding: 20px; 
+              box-sizing: border-box;
+              display: flex; 
+              flex-direction: column; 
+            }
+            .dest-title { font-size: 16px; color: #666; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
+            .dest-value { font-size: 42px; font-weight: 900; text-transform: uppercase; margin-bottom: 25px; line-height: 1; color: #000; }
+            .info-label { font-size: 14px; color: #666; margin-top: 15px; margin-bottom: 4px; font-weight: bold; text-transform: uppercase; }
+            .info-value { font-size: 24px; font-weight: bold; color: #000; }
+            .logo-container { text-align: center; margin-bottom: 15px; }
+            .logo { max-width: 120px; }
+            .order-title { font-size: 13px; font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 4px; text-transform: uppercase; text-align: center; letter-spacing: 1px; }
+            .ref-info { font-size: 11px; text-align: center; margin-bottom: 12px; color: #333; line-height: 1.4; }
+            .items-container { flex: 1; font-size: 11px; overflow: hidden; line-height: 1.3; }
+            .total-container { margin-top: 10px; font-size: 15px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; text-align: right; }
+          </style>
+        </head>
+        <body>
+          <div class="left-col">
+            <div class="dest-title">Ciudad / Destino</div>
+            <div class="dest-value">${destination}</div>
+            
+            <div class="info-label">Datos de quien recibe</div>
+            <div class="info-value">${recipientName}</div>
+            
+            <div class="info-label">Carnet de Identidad (CI)</div>
+            <div class="info-value">${recipientCI}</div>
+            
+            <div class="info-label">Teléfono de Contacto</div>
+            <div class="info-value">${recipientPhone}</div>
+          </div>
+          <div class="right-col">
+            <div class="logo-container">
+              <img src="${logoUrl}" class="logo" alt="Logo" onerror="this.style.display='none'" />
+            </div>
+            <div class="order-title">Detalle Envío</div>
+            <div class="ref-info">
+              Ref Envío: <strong>${deliveryCode}</strong><br/>
+              ${saleCode ? `Ref Venta: <strong>${saleCode}</strong>` : ''}
+            </div>
+            <div class="items-container">
+              ${itemsHtml}
+            </div>
+            ${discount > 0 ? `<div style="text-align: right; margin-top: 5px; font-size: 11px;">Desc: -Bs. ${discount.toFixed(2)}</div>` : ''}
+            <div class="total-container">
+              TOTAL: Bs. ${total}
+            </div>
+          </div>
+          <script>
+            window.onload = () => {
+              setTimeout(() => {
+                window.print();
+              }, 600);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+    } else {
+      toast.error("Por favor permite las ventanas emergentes (pop-ups) para imprimir.");
+    }
+  };
+
   return (
     <div className="modal-overlay fade-in" style={overlayBg}>
       <style>{`
@@ -450,13 +605,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               <LinkIcon size={14} /> Copiar Enlace
             </button>
             {canEdit && (
-              <button 
-                className="action-btn" 
-                style={{ padding: '6px 12px', background: 'var(--bg-input)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
-                onClick={startEditing}
-              >
-                <Edit3 size={14} /> Editar
-              </button>
+              <CanAccess permission="edit_orders">
+                <button 
+                  className="action-btn" 
+                  style={{ padding: '6px 12px', background: 'var(--bg-input)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                  onClick={startEditing}
+                >
+                  <Edit3 size={14} /> Editar
+                </button>
+              </CanAccess>
             )}
             <button className="close-btn" onClick={onClose}><X size={20} /></button>
           </div>
@@ -546,12 +703,14 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     <Package size={16} /> Detalle de Productos
                   </div>
                   {details.status === 'at_the_meeting_point' && (
-                    <button 
-                      onClick={() => setShowAddProduct(true)}
-                      style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    >
-                      <Plus size={14} /> Agregar
-                    </button>
+                    <CanAccess permission="manage_order_items">
+                      <button 
+                        onClick={() => setShowAddProduct(true)}
+                        style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Plus size={14} /> Agregar
+                      </button>
+                    </CanAccess>
                   )}
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -641,22 +800,26 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                                   Rechazado
                                 </span>
                                 {['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
-                                  <button
-                                    onClick={() => handleRestoreItem(res.id)}
-                                    style={{ background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
-                                  >
-                                    Reintegrar ↩
-                                  </button>
+                                  <CanAccess permission="manage_order_items">
+                                    <button
+                                      onClick={() => handleRestoreItem(res.id)}
+                                      style={{ background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
+                                    >
+                                      Reintegrar ↩
+                                    </button>
+                                  </CanAccess>
                                 )}
                               </div>
                             ) : (
                               ['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
-                                <button
-                                  onClick={() => handleRemoveItem(res.id)}
-                                  style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
-                                >
-                                  <XCircle size={14} /> Quitar
-                                </button>
+                                <CanAccess permission="manage_order_items">
+                                  <button
+                                    onClick={() => handleRemoveItem(res.id)}
+                                    style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
+                                  >
+                                    <XCircle size={14} /> Quitar
+                                  </button>
+                                </CanAccess>
                               )
                             )}
                           </div>
@@ -709,13 +872,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     disabled={isCancelled}
                   />
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button 
-                      onClick={handleSaveNotes}
-                      disabled={savingNotes || isCancelled}
-                      style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
-                    >
-                      {savingNotes ? 'Guardando...' : 'Guardar Notas'}
-                    </button>
+                    <CanAccess permission="edit_orders">
+                      <button 
+                        onClick={handleSaveNotes}
+                        disabled={savingNotes || isCancelled}
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        {savingNotes ? 'Guardando...' : 'Guardar Notas'}
+                      </button>
+                    </CanAccess>
                   </div>
                 </div>
               </div>
@@ -791,25 +956,49 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                         <UserCheck size={14} /> Persona que Recibe
                       </h4>
                       {isExternal && (
-                        <button
-                          onClick={handleToggleRecipientEdit}
-                          disabled={togglingEdit}
-                          style={{
-                            background: details.shipment?.recipient_edit_session?.is_shared ? '#fef2f2' : '#f0fdf4',
-                            color: details.shipment?.recipient_edit_session?.is_shared ? '#ef4444' : '#10b981',
-                            border: `1px solid ${details.shipment?.recipient_edit_session?.is_shared ? '#fca5a5' : '#86efac'}`,
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          {togglingEdit ? '...' : (details.shipment?.recipient_edit_session?.is_shared ? <><Lock size={12} /> Dejar de Compartir</> : <><Unlock size={12} /> Compartir Edición</>)}
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <CanAccess permission="print_order_labels">
+                            <button
+                              onClick={handlePrintLabel}
+                              style={{
+                                background: '#f1f5f9',
+                                color: '#334155',
+                                border: '1px solid #cbd5e1',
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <Printer size={12} /> Imprimir Etiqueta
+                            </button>
+                          </CanAccess>
+                          <CanAccess permission="edit_orders">
+                            <button
+                              onClick={handleToggleRecipientEdit}
+                              disabled={togglingEdit}
+                              style={{
+                                background: details.shipment?.recipient_edit_session?.is_shared ? '#fef2f2' : '#f0fdf4',
+                                color: details.shipment?.recipient_edit_session?.is_shared ? '#ef4444' : '#10b981',
+                                border: `1px solid ${details.shipment?.recipient_edit_session?.is_shared ? '#fca5a5' : '#86efac'}`,
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              {togglingEdit ? '...' : (details.shipment?.recipient_edit_session?.is_shared ? <><Lock size={12} /> Dejar de Compartir</> : <><Unlock size={12} /> Compartir Edición</>)}
+                            </button>
+                          </CanAccess>
+                        </div>
                       )}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
@@ -911,33 +1100,37 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>Entrega Completada</span>
             ) : (
               <>
-                <button 
-                  className="action-btn btn-marcar"
-                  style={{ 
-                    padding: '12px 24px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', border: 'none',
-                    display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px',
-                    background: details.status === 'pending' || details.status === 'assigned' ? '#8b5cf6' : (details.status === 'on_the_way' ? '#f97316' : 'var(--color-success)'),
-                    color: '#fff',
-                    boxShadow: isOnTheWay ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onClick={handleNextStatus}
-                  disabled={updating}
-                >
-                  <Truck size={20} />
-                  {updating ? 'Actualizando...' : 
-                    (isExternal && currentSteps[currentStepIndex + 1]?.key === 'shipped') ? 'Remitir a Transportadora' : 
-                    `Marcar como ${currentSteps[currentStepIndex + 1]?.label || 'Completado'}`}
-                </button>
+                <CanAccess permission="update_order_status">
+                  <button 
+                    className="action-btn btn-marcar"
+                    style={{ 
+                      padding: '12px 24px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', border: 'none',
+                      display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px',
+                      background: details.status === 'pending' || details.status === 'assigned' ? '#8b5cf6' : (details.status === 'on_the_way' ? '#f97316' : 'var(--color-success)'),
+                      color: '#fff',
+                      boxShadow: isOnTheWay ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onClick={handleNextStatus}
+                    disabled={updating}
+                  >
+                    <Truck size={20} />
+                    {updating ? 'Actualizando...' : 
+                      (isExternal && currentSteps[currentStepIndex + 1]?.key === 'shipped') ? 'Remitir a Transportadora' : 
+                      `Marcar como ${currentSteps[currentStepIndex + 1]?.label || 'Completado'}`}
+                  </button>
+                </CanAccess>
                 
-                <button 
-                  className="action-btn btn-cancelar"
-                  style={{ padding: '12px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', transition: 'all 0.2s ease' }}
-                  onClick={() => setShowCancelModal(true)}
-                  disabled={updating}
-                >
-                  <XCircle size={16} /> Cancelar Entrega
-                </button>
+                <CanAccess permission="cancel_orders">
+                  <button 
+                    className="action-btn btn-cancelar"
+                    style={{ padding: '12px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', transition: 'all 0.2s ease' }}
+                    onClick={() => setShowCancelModal(true)}
+                    disabled={updating}
+                  >
+                    <XCircle size={16} /> Cancelar Entrega
+                  </button>
+                </CanAccess>
               </>
             )}
           </div>
@@ -1198,37 +1391,41 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   <span style={{ fontWeight: 600, color: 'var(--color-success)', display: 'block', marginBottom: '4px' }}>Descuento Guardado</span>
                   <div style={{ color: 'var(--color-success)', fontWeight: 800, fontSize: '16px' }}>- Bs. {Number(details.shipment.sale.discount_total).toFixed(2)}</div>
                 </div>
-                <button 
-                  onClick={handleRemoveDiscount} 
-                  disabled={updating} 
-                  style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-danger)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Quitar
-                </button>
+                <CanAccess permission="manage_order_discounts">
+                  <button 
+                    onClick={handleRemoveDiscount} 
+                    disabled={updating} 
+                    style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-danger)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Quitar
+                  </button>
+                </CanAccess>
               </div>
             ) : (
               <div style={{ marginTop: '16px' }}>
                 {!showDiscountInput ? (
-                  <button
-                    onClick={() => setShowDiscountInput(true)}
-                    disabled={updating || paymentMethod === 'ambos'}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '8px',
-                      background: 'transparent',
-                      border: '1px dashed var(--color-primary)',
-                      color: 'var(--color-primary)',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px'
-                    }}
-                  >
-                    <Plus size={18} /> Agregar descuento
-                  </button>
+                  <CanAccess permission="manage_order_discounts">
+                    <button
+                      onClick={() => setShowDiscountInput(true)}
+                      disabled={updating || paymentMethod === 'ambos'}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        background: 'transparent',
+                        border: '1px dashed var(--color-primary)',
+                        color: 'var(--color-primary)',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <Plus size={18} /> Agregar descuento
+                    </button>
+                  </CanAccess>
                 ) : (
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -1344,13 +1541,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             )}
 
             <div className="payment-modal-footer">
-              <button 
-                onClick={handleShareCheckout}
-                className="btn-share"
-                disabled={updating}
-              >
-                <Share2 size={18} /> Compartir
-              </button>
+              <CanAccess permission="edit_orders">
+                <button 
+                  onClick={handleShareCheckout}
+                  className="btn-share"
+                  disabled={updating}
+                >
+                  <Share2 size={18} /> Compartir
+                </button>
+              </CanAccess>
               <div className="payment-modal-footer-actions">
                 <button 
                   onClick={() => setShowPaymentModal(false)}
@@ -1359,22 +1558,24 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 >
                   Cancelar
                 </button>
-                <button  
-                  onClick={() => {
-                    setShowPaymentModal(false);
-                    handleUpdateStatus(paymentNextStatus, {
-                      monto_real: montoReal,
-                      payment_method: paymentMethod,
-                      amount_cash: cashAmount,
-                      amount_qr: qrAmount,
-                      applied_code: appliedCode
-                    });
-                  }}
-                  className="btn-confirm-payment"
-                  disabled={updating}
-                >
-                  <CheckCircle size={18} /> {paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega'}
-                </button>
+                <CanAccess permission="update_order_status">
+                  <button  
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      handleUpdateStatus(paymentNextStatus, {
+                        monto_real: montoReal,
+                        payment_method: paymentMethod,
+                        amount_cash: cashAmount,
+                        amount_qr: qrAmount,
+                        applied_code: appliedCode
+                      });
+                    }}
+                    className="btn-confirm-payment"
+                    disabled={updating}
+                  >
+                    <CheckCircle size={18} /> {paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega'}
+                  </button>
+                </CanAccess>
               </div>
             </div>
           </div>

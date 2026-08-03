@@ -381,7 +381,7 @@ export default function FinanceDashboard() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                               <span style={{ color: 'var(--text-muted)' }}>Caja Física:</span>
                               <div className="metric-value" style={{ color: 'var(--color-primary)' }}>
-                                Bs. {Number(b.current_balance || 0).toFixed(2)}
+                                Bs. {Number(b.cash_balance || 0).toFixed(2)}
                               </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>

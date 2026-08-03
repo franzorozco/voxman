@@ -12,6 +12,7 @@ import { useScannerStore } from "../../../../store/useScannerStore";
 import "../Carts/Carts.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
+import CanAccess from '../../../../components/ui/CanAccess';
 export default function NewOrderModal({ editData, onClose, onSuccess }) {
   const [step, setStep] = useState(1); // 1: Products, 2: Delivery Details
   const [loading, setLoading] = useState(false);
@@ -1334,15 +1335,17 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                 </button>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <button 
-                    type="submit"
-                    form="delivery-form"
-                    className="action-btn success" 
-                    style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: 'none', background: 'var(--color-success)', color: 'white', cursor: 'pointer', opacity: loading ? 0.7 : 1, fontWeight: 600, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
-                    disabled={loading}
-                  >
-                    {loading ? "Procesando..." : (editData ? "Guardar Cambios" : "Finalizar Entrega")}
-                  </button>
+                  <CanAccess permission={editData ? 'edit_orders' : 'create_orders'}>
+                    <button 
+                      type="submit"
+                      form="delivery-form"
+                      className="action-btn success" 
+                      style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: 'none', background: 'var(--color-success)', color: 'white', cursor: 'pointer', opacity: loading ? 0.7 : 1, fontWeight: 600, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+                      disabled={loading}
+                    >
+                      {loading ? "Procesando..." : (editData ? "Guardar Cambios" : "Finalizar Entrega")}
+                    </button>
+                  </CanAccess>
                   
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button 
@@ -1355,15 +1358,17 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                       Volver
                     </button>
                     {!editData && (
-                      <button 
-                        type="button"
-                        className="btn-cancel" 
-                        style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px dashed var(--border-color)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                        onClick={() => handleSubmit(null, true)}
-                        disabled={loading}
-                      >
-                        Borrador
-                      </button>
+                      <CanAccess permission="create_orders">
+                        <button 
+                          type="button"
+                          className="btn-cancel" 
+                          style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px dashed var(--border-color)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                          onClick={() => handleSubmit(null, true)}
+                          disabled={loading}
+                        >
+                          Borrador
+                        </button>
+                      </CanAccess>
                     )}
                   </div>
                 </div>
