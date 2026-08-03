@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Package, Tag, DollarSign, Activity, Link as LinkIcon, Info, Users, ArrowUpRight, BarChart3, Image as ImageIcon, Ruler, Save, Edit2, Copy, PenTool, ExternalLink, Box, CheckCircle, AlertCircle, ShoppingBag } from "lucide-react";
+import { X, Package, Tag, DollarSign, Activity, Link as LinkIcon, Info, Users, ArrowUpRight, BarChart3, Image as ImageIcon, Ruler, Save, Edit2, Copy, Check, PenTool, ExternalLink, Box, CheckCircle, AlertCircle, ShoppingBag } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
 import api from "../../../../api/client";
 import { updateProductMeasurements, updatePartialProduct } from "../../../../api/admin/products";
@@ -9,6 +9,30 @@ import QrPrintTab from "./components/QrPrintTab";
 import VariantViewModal from "./VariantViewModal";
 import toast from "react-hot-toast";
 import "./Products.css";
+
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button 
+      onClick={handleCopy} 
+      title="Copiar"
+      style={{ 
+        background: 'none', border: 'none', cursor: 'pointer', 
+        padding: '4px', display: 'flex', alignItems: 'center', 
+        color: copied ? 'var(--color-success)' : 'var(--text-muted)',
+        transition: '0.2s', borderRadius: '4px'
+      }}
+    >
+      {copied ? <Check size={14} /> : <Copy size={14} />}
+    </button>
+  );
+};
 
 export default function ProductViewModal({ product: initialProduct, initialVariantId, directVariantMode = false, onClose, onUpdated }) {
   if (!initialProduct) return null;
@@ -205,7 +229,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
     : product.owner?.user?.email || "Sin propietario";
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={directVariantMode ? { background: 'transparent' } : {}}>
+    <div className="modal-overlay pvm-overlay" onClick={onClose} style={directVariantMode ? { background: 'transparent' } : {}}>
       <div className="modal pvm-container" onClick={(e) => e.stopPropagation()} style={{ display: directVariantMode ? 'none' : 'flex' }}>
         
         {/* Header */}
@@ -222,7 +246,10 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
             <div>
               <h2 className="pvm-title">{product.name}</h2>
               <div className="pvm-meta">
-                <span className="pvm-sku">SKU: {product.sku || 'N/A'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="pvm-sku">SKU: {product.sku || 'N/A'}</span>
+                  {product.sku && <CopyButton text={product.sku} />}
+                </div>
                 <span className="pvm-dot"></span>
                 <span className={`status-badge ${product.is_active ? 'active' : 'inactive'}`} style={{ padding: '2px 8px', fontSize: '11px' }}>
                   {product.is_active ? 'Activo' : 'Inactivo'}
@@ -299,13 +326,13 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
         </div>
 
         {/* Content */}
-        <div className="modal-content pvm-modal-body">
+        <div className="pvm-modal-body">
           
           {activeTab === 'general' && (
             <div className="pvm-content-grid">
               {/* Left Column */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+              <div className="pvm-stack">
+                <div className="pvm-card">
                   <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)' }}>
                     <Info size={18} color="var(--color-primary)" /> Detalles del Producto
                   </h3>
@@ -424,8 +451,8 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
               </div>
 
               {/* Right Column */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+              <div className="pvm-stack">
+                <div className="pvm-card">
                   <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)' }}>
                     <DollarSign size={18} color="var(--color-primary)" /> Finanzas (Rango de Variantes)
                   </h3>
@@ -453,7 +480,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                   </div>
                 </div>
 
-                <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                <div className="pvm-card">
                   <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)' }}>
                     <BarChart3 size={18} color="var(--color-primary)" /> Métricas
                   </h3>
@@ -473,7 +500,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
           )}
 
           {activeTab === 'variants' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="pvm-stack">
               {/* Mini KPIs */}
               {(() => {
                 const variants = product.product_variants || [];
@@ -515,7 +542,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
               })()}
               {product.product_variants?.length > 0 ? (
                 <div style={{ overflowX: 'auto' }}>
-                  <table className="products-table" style={{ width: '100%', border: 'none', borderRadius: 0 }}>
+                  <table className="products-table products-table-responsive" style={{ width: '100%', border: 'none', borderRadius: 0 }}>
                   <thead>
                     <tr>
                       <th style={{ background: 'var(--bg-overlay)', width: '25%' }}>Variante (SKU)</th>
@@ -543,7 +570,10 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                                 </div>
                               )}
                               <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.sku}</div>
+                                <CopyButton text={variant.sku} />
+                              </div>
                                 {variant.barcode && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Cód: {variant.barcode}</div>}
                               </div>
                             </div>
@@ -745,7 +775,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                       Imágenes por Color (Compartidas)
                     </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div className="pvm-stack">
                       {/* Agrupar attribute_value_images por attribute_value_id */}
                       {Object.entries(
                         product.attribute_value_images.reduce((acc, img) => {
@@ -759,7 +789,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                         const hexCode = attrDetails?.hex_code;
 
                         return (
-                          <div key={idx} style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                          <div key={idx} className="pvm-card">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                               {hexCode && (
                                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: hexCode, border: '2px solid var(--border-color)' }}></div>
@@ -800,7 +830,10 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                       {variantsWithImages.map((variant, vIdx) => (
                         <div key={variant.id || vIdx} style={{ background: 'var(--bg-overlay)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '15px' }}>{variant.sku}</span>
+                            <CopyButton text={variant.sku} />
+                          </div>
                             <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
                               {variant.variant_attribute_values?.map(vav => vav.attribute_value?.value).join(' • ')}
                             </span>

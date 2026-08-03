@@ -9,7 +9,8 @@ export default function CustomSelect({
   className = '', 
   style = {}, 
   disabled = false,
-  placeholder = "Seleccionar..."
+  placeholder = "Seleccionar...",
+  name
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0, direction: 'down' });
@@ -84,7 +85,7 @@ export default function CustomSelect({
   const handleSelect = (optionValue) => {
     if (onChange) {
       // Simulate native event structure so existing code doesn't break
-      onChange({ target: { value: optionValue } });
+      onChange({ target: { name, value: optionValue } });
     }
     setIsOpen(false);
   };

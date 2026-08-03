@@ -18,7 +18,7 @@ import { getFits } from "../../../../api/admin/fits";
 import "./Products.css";
 import "../css/stylesCruds.css";
 import { Link } from "react-router-dom";
-import { X, Trash2, Search, Filter, Camera } from "lucide-react";
+import { X, Trash2, Search, Filter, Camera, Package, Plus } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 
@@ -399,28 +399,35 @@ export default function Products() {
   return (
     <div className="products-container">
       <div className="products-header">
-        <h1 className="products-title">
+        <h1 className="products-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Package size={24} className="text-primary" />
           Productos
         </h1>
         <div style={{ display: 'flex', gap: '10px' }}>
           <CanAccess permission="view_products">
-            <Link to="/dashboard/products/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
-              <Trash2 size={16} /> Papelera
+            <Link 
+              to="/dashboard/products/deleted" 
+              className="action-btn" 
+              style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600, textDecoration: 'none' }}
+            >
+              <Trash2 size={18} />
+              <span className="hide-on-mobile">Papelera</span>
             </Link>
           </CanAccess>
           <CanAccess permission="create_products">
-            <button
-              className="btn-primary"
+            <button 
+              className="action-btn primary" 
+              style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', color: 'var(--color-primary-text)', background: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}
               onClick={handleCreate}
             >
-              + Crear Producto
+              <Plus size={18} />
+              <span className="hide-on-mobile">Crear Producto</span>
             </button>
           </CanAccess>
         </div>
       </div>
-
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+        <div className="filters-container-inner" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
@@ -444,7 +451,7 @@ export default function Products() {
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
           >
             <Filter size={18} />
             <span className="hide-on-mobile">Filtros</span>

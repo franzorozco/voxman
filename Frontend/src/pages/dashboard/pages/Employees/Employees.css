@@ -195,9 +195,10 @@
   font-size: 24px;
   font-weight: 700;
   border-bottom: 1px solid var(--border-color);
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: transparent;
+  color: var(--text-main);
+  
+  
   margin: 0;
   letter-spacing: 0.5px;
 }
@@ -519,7 +520,7 @@
 
 .btn-danger-bulk {
   background: #ff4d4f;
-  color: #fff;
+  color: var(--text-main);
   border: none;
   padding: 10px 14px;
   border-radius: 8px;
@@ -1476,7 +1477,8 @@
   .modal h2 {
     font-size: 20px;
     padding: 18px;
-  }
+  
+  color: var(--text-main);}
 
   .variants-title {
     font-size: 18px;
@@ -1663,7 +1665,8 @@
   .modal h2 {
     padding: 14px 16px;
     font-size: 17px;
-  }
+  
+  color: var(--text-main);}
 
   /* =========================
      GENERAL PADDINGS
@@ -3514,7 +3517,7 @@ select option:focus {
   gap: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px dashed rgba(255, 255, 255, 0.2);
-  color: var(--text-color);
+  color: var(--text-main);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -3543,9 +3546,9 @@ select option:focus {
   top: calc(100% + 8px);
   left: 0;
   min-width: 220px;
-  background: rgba(25, 25, 25, 0.95);
+  background: var(--bg-card);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 8px 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -3581,7 +3584,7 @@ select option:focus {
   text-align: left;
   background: none;
   border: none;
-  color: var(--text-color);
+  color: var(--text-main);
   padding: 8px 16px;
   font-size: 0.9rem;
   cursor: pointer;
@@ -3589,7 +3592,7 @@ select option:focus {
 }
 
 .custom-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-overlay);
   padding-left: 20px;
 }
  

@@ -901,9 +901,9 @@ const getAttributeValueName = (valueId) => {
 
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay pvm-overlay">
       <div
-        className="modal"
+        className="modal pvm-container"
         style={{
           maxWidth: 1300,
           width: "95%",
@@ -913,7 +913,7 @@ const getAttributeValueName = (valueId) => {
       >
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0 }}>
+          <h2 className="pvm-title" style={{ margin: 0, color: 'var(--text-main)', background: 'none', WebkitTextFillColor: 'var(--text-main)' }}>
             {product ? "Editar Producto" : "Crear Producto"}
           </h2>
           <button className="close-btn" onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
@@ -978,7 +978,7 @@ const getAttributeValueName = (valueId) => {
                       <img 
                         src={brands.find(b => b.id == form.brand_id).logo_url} 
                         alt="logo" 
-                        style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '20px', height: '20px', objectFit: 'contain', background: '#fff', borderRadius: '4px', pointerEvents: 'none' }} 
+                        style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '20px', height: '20px', objectFit: 'contain', background: 'var(--bg-card)', borderRadius: '4px', pointerEvents: 'none' }} 
                       />
                     )}
                   </div>
@@ -1069,8 +1069,8 @@ const getAttributeValueName = (valueId) => {
                             onClick={() => setShowSKU(!showSKU)}
                             style={{ 
                               display: 'flex', alignItems: 'center', gap: '6px', 
-                              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                              color: showSKU ? '#fff' : 'var(--text-muted)', 
+                              background: 'var(--bg-overlay)', border: '1px solid var(--border-color)',
+                              color: showSKU ? 'var(--text-main)' : 'var(--text-muted)', 
                               padding: '6px 12px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer',
                               transition: 'all 0.2s'
                             }}
@@ -1131,7 +1131,7 @@ const getAttributeValueName = (valueId) => {
                                     <td key={cIdx}>
                                       {hexCode ? (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                          <div style={{ width: 14, height: 14, borderRadius: "50%", background: hexCode, border: "1px solid rgba(255,255,255,0.2)" }} />
+                                          <div style={{ width: 14, height: 14, borderRadius: "50%", background: hexCode, border: "1px solid var(--border-color)" }} />
                                           <span style={{ whiteSpace: "nowrap" }}>{valName}</span>
                                         </div>
                                       ) : (
@@ -1246,7 +1246,7 @@ const getAttributeValueName = (valueId) => {
                                 {currentValues.length} seleccionados
                               </span>
                               {!isFixedAxis && (
-                                <button type="button" onClick={() => handleRemoveAxis(axisIndex)} style={{background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer', padding: 0}} title="Eliminar Eje"><X size={16} /></button>
+                                <button type="button" onClick={() => handleRemoveAxis(axisIndex)} style={{background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: 0}} title="Eliminar Eje"><X size={16} /></button>
                               )}
                             </div>
                           </div>
@@ -1324,9 +1324,22 @@ const getAttributeValueName = (valueId) => {
                         onSelect={(value) => {
                           const [t, idStr] = value.split('|');
                           const id = isNaN(Number(idStr)) || idStr === 'sizes' || idStr === 'fits' ? idStr : Number(idStr);
+                          
+                          let firstValueId = null;
+                          if (t === 'size' && sizes && sizes.length > 0) {
+                            firstValueId = sizes[0].id;
+                          } else if (t === 'fit' && fits && fits.length > 0) {
+                            firstValueId = fits[0].id;
+                          } else if (t === 'attribute') {
+                            const attr = attributes.find(a => String(a.id) === String(id));
+                            if (attr && attr.attribute_values && attr.attribute_values.length > 0) {
+                              firstValueId = attr.attribute_values[0].id;
+                            }
+                          }
+
                           setSimpleConfig({
                             ...simpleConfig,
-                            axes: [...simpleConfig.axes.filter(a => a.id), { type: t, id: id, values: [] }]
+                            axes: [...simpleConfig.axes.filter(a => a.id), { type: t, id: id, values: firstValueId !== null ? [firstValueId] : [] }]
                           });
                         }}
                       />
@@ -1390,7 +1403,7 @@ const getAttributeValueName = (valueId) => {
                   {/* ====================================================== */}
                   {/* ATRIBUTOS COMPARTIDOS */}
                   {/* ====================================================== */}
-                  <div style={{ marginTop: 25, borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 20 }}>
+                  <div style={{ marginTop: 25, borderTop: "1px solid var(--border-color)", paddingTop: 20 }}>
                     <div style={{ marginBottom: 15 }}>
                       <h4 style={{ margin: 0 }}>Atributos Compartidos</h4>
                       <p style={{ margin: "5px 0 0 0", fontSize: "13px", color: "var(--text-muted)" }}>
@@ -1401,32 +1414,33 @@ const getAttributeValueName = (valueId) => {
                   {simpleConfig.sharedAttributes.map((sa, idx) => {
                     const attr = attributes.find(a => String(a.id) === String(sa.id));
                     return (
-                      <div key={idx} style={{ display: 'flex', gap: 15, marginBottom: 15, alignItems: 'center' }}>
-                        <div style={{ width: '150px' }}>
-                          <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>{attr?.name || "Atributo"}</span>
+                      <div key={idx} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: 15, alignItems: 'center' }}>
+                        <div style={{ flex: '1 1 120px', minWidth: '120px' }}>
+                          <span style={{ fontSize: 14, color: 'var(--text-main)', fontWeight: 500 }}>{attr?.name || "Atributo"}</span>
                         </div>
-                        <CustomSelect
-                          
-                          style={{ flex: 1, padding: "10px", background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "8px", color: "white" }}
-                          value={sa.valueId || ""}
-                          onChange={(e) => {
+                        <div style={{ flex: '2 1 200px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <CustomSelect
+                            style={{ flex: 1, padding: "10px", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: "8px", color: "var(--text-main)" }}
+                            value={sa.valueId || ""}
+                            onChange={(e) => {
+                              const newShared = [...simpleConfig.sharedAttributes];
+                              newShared[idx] = { ...newShared[idx], valueId: e.target.value };
+                              setSimpleConfig({ ...simpleConfig, sharedAttributes: newShared });
+                            }}
+                          >
+                            <option value="">-- Seleccionar --</option>
+                            {attr?.attribute_values?.map(val => (
+                              <option key={val.id} value={val.id}>{val.value || val.name}</option>
+                            ))}
+                          </CustomSelect>
+                          <button type="button" onClick={() => {
                             const newShared = [...simpleConfig.sharedAttributes];
-                            newShared[idx] = { ...newShared[idx], valueId: e.target.value };
+                            newShared.splice(idx, 1);
                             setSimpleConfig({ ...simpleConfig, sharedAttributes: newShared });
-                          }}
-                        >
-                          <option value="">-- Seleccionar --</option>
-                          {attr?.attribute_values?.map(val => (
-                            <option key={val.id} value={val.id}>{val.value || val.name}</option>
-                          ))}
-                        </CustomSelect>
-                        <button type="button" onClick={() => {
-                          const newShared = [...simpleConfig.sharedAttributes];
-                          newShared.splice(idx, 1);
-                          setSimpleConfig({ ...simpleConfig, sharedAttributes: newShared });
-                        }} style={{background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer'}}>
-                          <X size={20} />
-                        </button>
+                          }} style={{background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: 0}}>
+                            <X size={20} />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -1497,8 +1511,8 @@ const getAttributeValueName = (valueId) => {
                       const attr = attributes.find(a => String(a.id) === String(sa.id));
                       const val = attr?.attribute_values?.find(v => String(v.id) === String(sa.valueId));
                       return (
-                        <div key={`sa-${idx}`} className="simple-summary-item" style={{ borderLeft: '3px solid #6366f1', paddingLeft: '10px' }}>
-                          <div className="simple-summary-label">{attr?.name} <span style={{fontSize: 10, color: '#6366f1'}}>(Compartido)</span></div>
+                        <div key={`sa-${idx}`} className="simple-summary-item" style={{ borderLeft: '3px solid var(--color-primary)', paddingLeft: '10px' }}>
+                          <div className="simple-summary-label">{attr?.name} <span style={{fontSize: 10, color: 'var(--color-primary)'}}>(Compartido)</span></div>
                           <div className="simple-summary-value">{val?.value || val?.name || ""}</div>
                         </div>
                       );
@@ -1529,7 +1543,7 @@ const getAttributeValueName = (valueId) => {
 
                   return (
                     <div style={{ marginTop: 20, marginBottom: 20 }}>
-                      <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 15, color: "rgba(255,255,255,0.9)" }}>
+                      <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 15, color: "var(--text-main)" }}>
                         Gestión de Imágenes por Color
                       </div>
                       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
@@ -1546,7 +1560,7 @@ const getAttributeValueName = (valueId) => {
                             >
                               <div style={{ width: 16, height: 16, borderRadius: "50%", background: colorAttr?.hex_code || "#ccc" }} />
                               {colorAttr?.value || "Color"} 
-                              <span style={{ background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <span style={{ background: "var(--bg-overlay)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
                                 {count} <Camera size={14} />
                               </span>
                             </button>
@@ -1561,11 +1575,11 @@ const getAttributeValueName = (valueId) => {
                 {/* GENERATE */}
                 {/* ====================================================== */}
 
-                <button type="button" className="simple-generate-btn" onClick={generateSimpleVariants} >
+                <button type="button" className="simple-generate-btn btn-primary" onClick={generateSimpleVariants} >
                   Generar Variantes Automáticamente
                 </button>
                 {simpleModeError && (
-                  <div className="error-text" style={{ color: "#ef4444", marginTop: "10px", fontSize: "0.9rem", textAlign: "center" }}>
+                  <div className="error-text" style={{ color: "var(--color-danger)", marginTop: "10px", fontSize: "0.9rem", textAlign: "center" }}>
                     {simpleModeError}
                   </div>
                 )}
@@ -1582,7 +1596,7 @@ const getAttributeValueName = (valueId) => {
             ) : (
             <>
               {/* ADVANCED MODE HEADERS (IMAGE MODE TOGGLE) */}
-              <div style={{ marginBottom: "20px", background: "rgba(255,255,255,0.05)", padding: "15px", borderRadius: "12px" }}>
+              <div style={{ marginBottom: "20px", background: "var(--bg-overlay)", padding: "15px", borderRadius: "12px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: advancedImageMode === "color" ? "15px" : "0" }}>
                   <div style={{ fontWeight: 600 }}>Estrategia de Imágenes</div>
                   <div className="variant-tabs">
@@ -1597,7 +1611,7 @@ const getAttributeValueName = (valueId) => {
 
                 {advancedImageMode === "color" && (
                   <div>
-                    <div style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", marginBottom: "10px" }}>
+                    <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "10px" }}>
                       Imágenes compartidas por color entre todas las variantes
                     </div>
                     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
@@ -1614,7 +1628,7 @@ const getAttributeValueName = (valueId) => {
                           >
                             <div style={{ width: 16, height: 16, borderRadius: "50%", background: colorAttr?.hex_code || "#ccc" }} />
                             {colorAttr?.value || "Color"} 
-                            <span style={{ background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
+                            <span style={{ background: "var(--bg-overlay)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
                               {count} <Camera size={14} />
                             </span>
                           </button>
@@ -1731,7 +1745,7 @@ const getAttributeValueName = (valueId) => {
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                               <label style={{ margin: 0 }}>{label}</label>
                               {!isFixedAxis && (
-                                <button type="button" onClick={() => removeAttributeFromVariant(index, currentType, currentId)} style={{background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer', padding: 0, fontSize: "0.85rem"}} title="Remover atributo">Remover</button>
+                                <button type="button" onClick={() => removeAttributeFromVariant(index, currentType, currentId)} style={{background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: 0, fontSize: "0.85rem"}} title="Remover atributo">Remover</button>
                               )}
                             </div>
 
@@ -1848,8 +1862,7 @@ const getAttributeValueName = (valueId) => {
                 <div className="variant-section-title">
                   Valores de Variante
                 </div>
-
-                <div className="form-grid">
+                     <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))' }}>
                   <div className="form-group">
                     <label>Precio Venta</label>
                     <input
@@ -2091,8 +2104,8 @@ const getAttributeValueName = (valueId) => {
               CREATE COLOR MODAL
           ======================================= */}
           {showCreateColor && (
-            <div className="selector-modal-overlay">
-              <div className="create-modal create-color-modal-premium">
+            <div className="modal-overlay pvm-overlay">
+              <div className="modal pvm-container" style={{ width: "min(560px, 95vw)", height: "auto", maxHeight: "90vh" }}>
 
                 {/* HEADER */}
                 <div className="create-modal-header">
@@ -2205,13 +2218,17 @@ const getAttributeValueName = (valueId) => {
                     onClick={() =>
                       setShowCreateColor(false)
                     }
+                    className="cancel-btn btn-secondary"
+                    onClick={() =>
+                      setShowCreateColor(false)
+                    }
                   >
                     Cancelar
                   </button>
 
                   <button
                     type="button"
-                    className="save-btn"
+                    className="save-btn btn-primary"
                     onClick={handleCreateColor}
                   >
                     Guardar Color
@@ -2225,8 +2242,8 @@ const getAttributeValueName = (valueId) => {
               CREATE SIZE MODAL
           =========================================== */}
           {showCreateSize && (
-            <div className="selector-modal-overlay">
-              <div className="create-modal">
+            <div className="modal-overlay pvm-overlay">
+              <div className="modal pvm-container" style={{ width: "min(560px, 95vw)", height: "auto", maxHeight: "90vh" }}>
 
                 {/* HEADER */}
                 <div className="create-modal-header">
@@ -2308,7 +2325,7 @@ const getAttributeValueName = (valueId) => {
                 <div className="create-modal-footer">
                   <button
                     type="button"
-                    className="cancel-btn"
+                    className="cancel-btn btn-secondary"
                     onClick={() =>
                       setShowCreateSize(false)
                     }
@@ -2318,7 +2335,7 @@ const getAttributeValueName = (valueId) => {
 
                   <button
                     type="button"
-                    className="save-btn"
+                    className="save-btn btn-primary"
                     onClick={handleCreateSize}
                   >
                     Guardar Talla
@@ -2330,12 +2347,12 @@ const getAttributeValueName = (valueId) => {
 
           <div className="form-actions" style={{ flexWrap: "wrap" }}>
             {variantMode === "advanced" && hasDuplicates && (
-              <div style={{ width: "100%", color: "#ef4444", marginBottom: "10px", fontSize: "0.9rem", textAlign: "right" }}>
+              <div style={{ width: "100%", color: "var(--color-danger)", marginBottom: "10px", fontSize: "0.9rem", textAlign: "right" }}>
                 Existen variantes duplicadas con el mismo color y talla. Por favor, corrígelas.
               </div>
             )}
             {variantMode === "simple" && form.variants.length === 0 && (
-              <div style={{ width: "100%", color: "#ef4444", marginBottom: "10px", fontSize: "0.9rem", textAlign: "right" }}>
+              <div style={{ width: "100%", color: "var(--color-danger)", marginBottom: "10px", fontSize: "0.9rem", textAlign: "right" }}>
                 Debes generar las variantes antes de guardar.
               </div>
             )}
@@ -2446,7 +2463,7 @@ const getAttributeValueName = (valueId) => {
           left: 0,
           width: "100%",
           height: "100%",
-          background: "rgba(0,0,0,0.7)",
+          background: "rgba(0,0,0,0.8)",
           backdropFilter: "blur(4px)",
           zIndex: 99999,
           display: "flex",
@@ -2458,8 +2475,8 @@ const getAttributeValueName = (valueId) => {
           <div style={{
             width: "50px",
             height: "50px",
-            border: "4px solid rgba(255,255,255,0.3)",
-            borderTop: "4px solid #fff",
+            border: "4px solid var(--border-color)",
+            borderTop: "4px solid var(--text-main)",
             borderRadius: "50%",
             animation: "spin 1s linear infinite",
             marginBottom: "20px"
@@ -2475,7 +2492,7 @@ const getAttributeValueName = (valueId) => {
           <h2 style={{ fontSize: "1.5rem", fontWeight: "600", margin: 0 }}>
             {product ? "Actualizando Producto..." : "Guardando Producto..."}
           </h2>
-          <p style={{ marginTop: "10px", color: "#ccc" }}>Por favor, no cierre esta ventana.</p>
+          <p style={{ marginTop: "10px", color: "var(--text-muted)" }}>Por favor, no cierre esta ventana.</p>
         </div>
       )}
     </div>

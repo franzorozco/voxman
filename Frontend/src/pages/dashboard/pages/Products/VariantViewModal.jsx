@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Box, Tag, DollarSign, Image as ImageIcon, CheckCircle, XCircle, Info, Hash, PackageSearch, Edit2, Save } from "lucide-react";
+import { X, Box, Tag, DollarSign, Image as ImageIcon, CheckCircle, XCircle, Info, Hash, PackageSearch, Edit2, Save, Copy, Check } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
 import api from "../../../../api/client";
 import { updateVariant, updateProductMeasurements } from "../../../../api/admin/products";
@@ -8,6 +8,30 @@ import toast from "react-hot-toast";
 import CustomSelect from '../../../../components/ui/CustomSelect';
 const formatMoney = (amount) => {
   return new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount);
+};
+
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button 
+      onClick={handleCopy} 
+      title="Copiar"
+      style={{ 
+        background: 'none', border: 'none', cursor: 'pointer', 
+        padding: '4px', display: 'flex', alignItems: 'center', 
+        color: copied ? 'var(--color-success)' : 'var(--text-muted)',
+        transition: '0.2s', borderRadius: '4px'
+      }}
+    >
+      {copied ? <Check size={14} /> : <Copy size={14} />}
+    </button>
+  );
 };
 
 export default function VariantViewModal({ variant, product, requiredMeasurements = [], measurementsState = {}, onClose, onVariantUpdated }) {
@@ -154,34 +178,34 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
       <div className="modal-content" style={{ background: 'var(--bg-main)', borderRadius: '16px', width: '95%', maxWidth: '850px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
         
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', overflow: 'hidden', background: 'var(--bg-overlay)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="pvm-header" style={{ flexShrink: 0 }}>
+          <div className="pvm-header-info">
+            <div className="pvm-image-container">
               {imageUrl ? (
-                <img src={imageUrl} alt="Variant" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={imageUrl} alt="Variant" className="pvm-image" />
               ) : (
                 <ImageIcon size={24} color="var(--text-muted)" />
               )}
             </div>
             <div>
-              <h2 style={{ margin: '0 0 4px 0', fontSize: '20px', color: 'var(--text-main)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h2 className="pvm-title" style={{ fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 SKU: {variant.sku}
                 <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', background: variant.is_active ? 'var(--color-success-alpha, rgba(16, 185, 129, 0.15))' : 'var(--color-danger-alpha, rgba(239, 68, 68, 0.15))', color: variant.is_active ? 'var(--color-success)' : 'var(--color-danger)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   {variant.is_active ? <CheckCircle size={14} /> : <XCircle size={14} />} {variant.is_active ? 'Activa' : 'Inactiva'}
                 </span>
               </h2>
-              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Box size={14} /> Producto Base: {product.name}
               </p>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex', transition: '0.2s' }}>
+          <button onClick={onClose} className="close-btn" style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex', transition: '0.2s' }}>
             <X size={20} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-card)', padding: '0 24px', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--border-color)', background: 'var(--bg-card)', padding: '0 24px', overflowX: 'auto' }}>
           {[
             { id: 'info', label: 'Información', icon: Info },
             { id: 'inventory', label: 'Inventario y Stock', icon: PackageSearch },
@@ -209,10 +233,10 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
         <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
           
           {activeTab === 'info' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            <div className="pvm-content-grid">
               
               {/* Identificación y Atributos */}
-              <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="pvm-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                   <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                     <Hash size={18} color="var(--color-primary)" /> Identificación y Atributos
@@ -236,12 +260,18 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Código SKU</span>
-                    <span style={{ fontWeight: '600', color: 'var(--text-main)', background: 'var(--bg-overlay)', padding: '4px 10px', borderRadius: '6px' }}>{variant.sku}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: '600', color: 'var(--text-main)', background: 'var(--bg-overlay)', padding: '4px 10px', borderRadius: '6px' }}>{variant.sku}</span>
+                      <CopyButton text={variant.sku} />
+                    </div>
                   </div>
                   {variant.barcode && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Código de Lectura</span>
-                      <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.barcode}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.barcode}</span>
+                        <CopyButton text={variant.barcode} />
+                      </div>
                     </div>
                   )}
                   
@@ -317,7 +347,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
               </div>
 
               {/* Finanzas */}
-              <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="pvm-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                   <DollarSign size={18} color="var(--color-primary)" /> Datos Financieros
                 </h3>
@@ -368,36 +398,37 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
           )}
 
           {activeTab === 'inventory' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="pvm-stack">
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="pvm-content-grid">
+                <div className="pvm-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                   <span style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Stock Global Total</span>
                   <span style={{ fontSize: '36px', fontWeight: 700, color: 'var(--text-main)' }}>{totalStock}</span>
                 </div>
                 
-                <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="pvm-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                   <span style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Valor de Venta del Stock</span>
                   <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--color-success)' }}>{formatMoney(totalStock * price)}</span>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Si se vendiera todo hoy</span>
                 </div>
                 
-                <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="pvm-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                   <span style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Costo Inmovilizado</span>
                   <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--color-danger)' }}>{formatMoney(totalStock * cost)}</span>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Capital invertido en almacén</span>
                 </div>
               </div>
 
-              <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+              <div className="pvm-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', padding: '20px' }}>
                   <Tag size={18} color="var(--color-primary)" /> Distribución en Sucursales
                 </h3>
                 
                 {variant.inventories?.length > 0 ? (
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ background: 'var(--bg-overlay)' }}>
-                      <tr>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
+                      <thead style={{ background: 'var(--bg-overlay)' }}>
+                        <tr>
                         <th style={{ textAlign: 'left', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Sucursal</th>
                         <th style={{ textAlign: 'center', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Stock Mínimo</th>
                         <th style={{ textAlign: 'right', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Stock Disponible</th>
@@ -430,6 +461,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                       })}
                     </tbody>
                   </table>
+                  </div>
                 ) : (
                   <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     <p style={{ margin: 0, fontSize: '14px' }}>No hay registros de inventario para esta variante en ninguna sucursal.</p>
@@ -440,14 +472,14 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
             </div>
           )}
           {activeTab === 'images' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '24px' }}>
+            <div className="pvm-stack">
+              <div className="pvm-card">
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                   Imágenes Específicas de esta Variante
                 </h3>
                 
                 {specificImages.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '16px' }}>
                     {specificImages.map((img, idx) => (
                       <div key={img.id || idx} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', aspectRatio: '1', background: 'var(--bg-overlay)' }}>
                         <img src={getImageUrl(img.url)} alt={img.tag} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -486,7 +518,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
           )}
 
           {activeTab === 'measurements' && (
-            <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '24px' }}>
+            <div className="pvm-card">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                   <Hash size={18} color="var(--color-primary)" /> Tabla de Medidas
@@ -507,14 +539,15 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                 )}
               </div>
               {(variant.variant_measurements?.length > 0 || requiredMeasurements?.length > 0) ? (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead style={{ background: 'var(--bg-overlay)' }}>
-                    <tr>
-                      <th style={{ textAlign: 'left', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Tipo de Medida</th>
-                      <th style={{ textAlign: 'right', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Valor (cm)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '300px' }}>
+                    <thead style={{ background: 'var(--bg-overlay)' }}>
+                      <tr>
+                        <th style={{ textAlign: 'left', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Tipo de Medida</th>
+                        <th style={{ textAlign: 'right', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Valor (cm)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                     {(() => {
                       const displayMeasurements = [];
                       
@@ -555,14 +588,20 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                                 placeholder="0.0"
                               />
                             ) : (
-                              m.value ? `${m.value} cm` : <span style={{ color: 'var(--text-muted)' }}>---</span>
-                            )}
+                                m.value ? (
+                                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                                    <span>{m.value} cm</span>
+                                    <CopyButton text={m.value} />
+                                  </div>
+                                ) : <span style={{ color: 'var(--text-muted)' }}>---</span>
+                              )}
                           </td>
                         </tr>
                       ));
                     })()}
                   </tbody>
                 </table>
+                </div>
               ) : (
                 <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                   <p style={{ margin: 0, fontSize: '14px' }}>Esta variante no tiene medidas registradas.</p>

@@ -175,9 +175,9 @@ export default function QrPrintTab({ product }) {
   const previewCols = paperFormat === "thermal" ? 1 : Math.max(1, Math.floor(500 / (sz.width + 10)));
 
   return (
-    <div style={{ display: "flex", gap: "20px", marginTop: "15px" }}>
+    <div className="qr-print-container">
       {/* LEFT: CONFIG */}
-      <div style={{ flex: "0 0 340px", borderRight: "1px solid var(--border-color)", paddingRight: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+      <div className="qr-print-config">
 
         <div className="form-group">
           <label>Sucursal / Almacén</label>
@@ -287,7 +287,7 @@ export default function QrPrintTab({ product }) {
       </div>
 
       {/* RIGHT: PREVIEW */}
-      <div style={{ flex: 1, background: "var(--bg-body)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border-color)", height: "60vh", overflowY: "auto" }}>
+      <div className="qr-print-preview">
 
         {labelsToPrint.length === 0 ? (
           <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", flexDirection: "column", gap: "10px" }}>
