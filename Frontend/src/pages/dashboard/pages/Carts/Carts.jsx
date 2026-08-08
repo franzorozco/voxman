@@ -138,7 +138,7 @@ export default function Carts() {
           <ShoppingCart size={28} className="text-primary" />
           Carritos y Proformas
         </h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="products-header-actions carts-header-actions">
           <CanAccess permission="create_carts">
             <button className="btn-primary" onClick={() => handleOpenForm(null)}>
               <Plus size={18} /> Nueva Proforma
@@ -150,7 +150,7 @@ export default function Carts() {
         </div>
       </div>
 
-      <div className="metrics-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+      <div className="metrics-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px', marginBottom: '20px' }}>
         <div className="metric-card">
           <div className="metric-icon-wrapper" style={{ background: 'rgba(33, 150, 243, 0.1)', color: '#1e88e5' }}>
             <ShoppingCart size={24} />

@@ -498,10 +498,10 @@ export default function Inventory() {
               <thead>
                 <tr>
                   <th>Producto</th>
-                  <th>SKU / Cod.</th>
-                  <th>Sucursal</th>
                   <th>Stock Actual</th>
                   <th>Precio</th>
+                  <th>Sucursal</th>
+                  <th>SKU / Cod.</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
@@ -519,10 +519,10 @@ export default function Inventory() {
                           </div>
                         </div>
                       </td>
-                      <td><div style={{ width: '90px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
-                      <td><div style={{ width: '100px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
                       <td><div style={{ width: '50px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
                       <td><div style={{ width: '60px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
+                      <td><div style={{ width: '100px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
+                      <td><div style={{ width: '90px', height: '14px', borderRadius: '4px', background: 'var(--bg-input)' }}></div></td>
                       <td><div style={{ width: '70px', height: '24px', borderRadius: '12px', background: 'var(--bg-input)' }}></div></td>
                       <td><div style={{ width: '100px', height: '30px', borderRadius: '8px', background: 'var(--bg-input)' }}></div></td>
                     </tr>
@@ -561,6 +561,7 @@ export default function Inventory() {
                       
                       acc[key].items.push(item);
                       acc[key].totalStock += item.stock;
+                      acc[key].totalReserved = (acc[key].totalReserved || 0) + (Number(item.reserved_stock) || 0);
                       return acc;
                     }, {});
 
@@ -601,14 +602,23 @@ export default function Inventory() {
                               </div>
                             </td>
                             <td>
-                              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Múltiples SKU</span>
-                            </td>
-                            <td>{group.branch?.name || "Sin sucursal"}</td>
-                            <td>
-                              <span style={{ fontWeight: 'bold', fontSize: '1.1em' }}>{group.totalStock}</span>
-                              <span style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginLeft: '4px' }}>uds</span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <div>
+                                  <span style={{ fontWeight: 'bold', fontSize: '1.1em' }}>{group.totalStock}</span>
+                                  <span style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginLeft: '4px' }}>uds</span>
+                                </div>
+                                {group.totalReserved > 0 && (
+                                  <div style={{ fontSize: '11px', color: 'var(--color-warning)', fontWeight: 500 }}>
+                                    {group.totalReserved} reservados
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td>-</td>
+                            <td>{group.branch?.name || "Sin sucursal"}</td>
+                            <td>
+                              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Múltiples SKU</span>
+                            </td>
                             <td>
                               {isGroupOutOfStock ? (
                                 <span className="status-badge danger"><AlertTriangle size={12} /> Agotado</span>
@@ -681,17 +691,26 @@ export default function Inventory() {
                                 </td>
                                 <td>
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                    <span style={{ fontWeight: 500, color: 'var(--text-main)', fontSize: '13px' }}>{item.variant?.sku || "Sin SKU"}</span>
-                                    {item.variant?.barcode && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.variant.barcode}</span>}
+                                    <div>
+                                      <span style={{ fontWeight: 'bold', fontSize: '1.05em' }}>{item.stock}</span>
+                                      <span style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginLeft: '4px' }}>uds</span>
+                                    </div>
+                                    {Number(item.reserved_stock) > 0 && (
+                                      <div style={{ fontSize: '11px', color: 'var(--color-warning)', fontWeight: 500 }}>
+                                        {item.reserved_stock} reservados
+                                      </div>
+                                    )}
                                   </div>
-                                </td>
-                                <td style={{ color: 'var(--text-muted)' }}>{item.branch?.name || "Sin sucursal"}</td>
-                                <td>
-                                  <span style={{ fontWeight: 'bold', fontSize: '1.05em' }}>{item.stock}</span>
-                                  <span style={{ fontSize: '0.8em', color: 'var(--text-muted)', marginLeft: '4px' }}>uds</span>
                                 </td>
                                 <td>
                                   <span style={{ fontWeight: 600 }}>Bs {item.variant?.price?.toFixed(2) || "0.00"}</span>
+                                </td>
+                                <td style={{ color: 'var(--text-muted)' }}>{item.branch?.name || "Sin sucursal"}</td>
+                                <td>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <span style={{ fontWeight: 500, color: 'var(--text-main)', fontSize: '13px' }}>{item.variant?.sku || "Sin SKU"}</span>
+                                    {item.variant?.barcode && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.variant.barcode}</span>}
+                                  </div>
                                 </td>
                                 <td>
                                   {isOutOfStock ? (

@@ -435,10 +435,10 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '1100px', width: '95%' }}>
-        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 30px', borderBottom: '1px solid var(--border-color)' }}>
-          <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700, background: 'linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+    <div className="modal-overlay bundle-modal-overlay">
+      <form onSubmit={handleSubmit} className="modal-content bundle-modal-content" style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 30px', borderBottom: '1px solid var(--border-color)', flexShrink: 0 }}>
+          <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>
             {bundle ? "Editar Conjunto" : "Crear Conjunto"}
           </h2>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', transition: '0.2s' }}>
@@ -446,7 +446,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px', padding: '24px 30px' }}>
+        <div className="modal-body bundle-modal-grid" style={{ overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '40px', padding: '24px 30px' }}>
           
           {/* Columna Izquierda: Info Principal */}
           <div className="form-info-col">
@@ -458,7 +458,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
               </div>
 
               <div className="form-group" style={{ position: 'relative' }}>
-                <label style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                <label className="flex-wrap-mobile" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                   <span>Precio del Conjunto</span>
                   {(() => {
                     const regularPrice = calculateTotal(formData.bundle_items);
@@ -515,7 +515,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                 })()}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="bundle-form-row-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label>Categoría <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 'normal' }}>(Opcional)</span></label>
                   <CustomSelect  value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
@@ -568,7 +568,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
 
             <div className="bundle-items-cards" style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
               {formData.bundle_items.map((item, index) => (
-                <div key={index} className="bundle-item-card" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', gap: '16px', position: 'relative', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                <div key={index} className="bundle-item-card flex-wrap-mobile" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', gap: '16px', position: 'relative', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                   <button type="button" onClick={() => handleRemoveItem(index)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s', zIndex: 10 }}>
                     <X size={16} />
                   </button>
@@ -581,7 +581,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                     )}
                   </div>
 
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingRight: '36px' }}>
+                  <div style={{ flex: 1, minWidth: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingRight: '24px' }}>
                      <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ítem {index + 1}</label>
                      <AsyncSelect
                         className="bundle-item-select"
@@ -599,7 +599,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
 
                       {item.selectOption && (
                         <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                          <div className="bundle-item-details-grid" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>SKU / Cód.</span>
                               <span style={{ fontSize: '12px', color: 'var(--text-main)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.selectOption.sku || 'N/A'}</span>
@@ -614,7 +614,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                             </div>
                           </div>
                           
-                          <div style={{ background: 'var(--bg-overlay)', border: '1px dashed var(--border-color)', borderRadius: '6px', padding: '6px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div className="flex-wrap-mobile" style={{ background: 'var(--bg-overlay)', border: '1px dashed var(--border-color)', borderRadius: '6px', padding: '6px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Costo Interno (Fábrica)</span>
                             <span style={{ fontSize: '12px', color: 'var(--color-danger)', fontWeight: 600 }}>Bs. {parseFloat(item.selectOption.cost || 0).toFixed(2)}</span>
                           </div>
@@ -656,23 +656,25 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
             </div>
           </div>
 
-          <div className="modal-footer" style={{ gridColumn: '1 / -1', marginTop: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: 0 }}>
-              <input type="checkbox" id="bundle-active" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }} />
-              <label htmlFor="bundle-active" style={{ margin: 0, cursor: 'pointer', fontWeight: 500 }}>Conjunto Activo</label>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button type="button" className="btn-secondary" onClick={onClose} disabled={loading} style={{ padding: '10px 18px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}>
-                Cancelar
-              </button>
-              <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s' }}>
-                {loading ? "Guardando..." : "Guardar Conjunto"}
-              </button>
-            </div>
           </div>
-        </form>
-      </div>
+        <div className="modal-footer" style={{ flexShrink: 0, padding: '16px 30px', borderTop: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '0 0 12px 12px' }}>
+          
+          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginBottom: 0 }}>
+            <input type="checkbox" id="bundle-active" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} style={{ width: '22px', height: '22px', cursor: 'pointer', accentColor: 'var(--color-primary)', margin: 0 }} />
+            <label htmlFor="bundle-active" style={{ margin: 0, cursor: 'pointer', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Conjunto Activo</label>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+            <button type="button" className="btn-secondary" onClick={onClose} disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600, transition: '0.2s', display: 'flex', justifyContent: 'center' }}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: '0.2s' }}>
+              {loading ? "Guardando..." : "Guardar Conjunto"}
+            </button>
+          </div>
+          
+        </div>
+      </form>
     </div>
   );
 }

@@ -42,7 +42,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
         <thead>
           <tr>
             <th style={{ width: '40px' }}>
-              <input type="checkbox" onChange={handleSelectAll} checked={bundles.length > 0 && selectedRows.length === bundles.length} />
+              <input type="checkbox" onChange={handleSelectAll} checked={bundles.length > 0 && selectedRows.length === bundles.length} className="custom-table-checkbox" />
             </th>
             <th style={{ width: '50px' }}>Img</th>
             <th>Nombre</th>
@@ -64,7 +64,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
             return (
               <tr key={bundle.id} className={selectedRows.includes(bundle.id) ? "selected-row" : ""}>
                 <td>
-                  <input type="checkbox" checked={selectedRows.includes(bundle.id)} onChange={() => handleSelectRow(bundle.id)} />
+                  <input type="checkbox" checked={selectedRows.includes(bundle.id)} onChange={() => handleSelectRow(bundle.id)} className="custom-table-checkbox" />
                 </td>
                 <td onClick={() => onView && onView(bundle)} style={{ cursor: 'pointer' }}>
                   <div className="product-thumb">

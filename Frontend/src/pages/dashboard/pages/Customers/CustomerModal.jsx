@@ -74,7 +74,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
 
   return (
     <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999 }}>
-      <div className="modal-content fade-in" style={{ background: 'var(--bg-main)', borderRadius: '16px', overflow: 'hidden', maxWidth: '500px', width: '100%', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+      <div className="modal-content fade-in" style={{ background: 'var(--bg-main)', borderRadius: '16px', overflow: 'hidden', maxWidth: '500px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
         
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
@@ -85,8 +85,8 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Cliente (Manual) *</label>
@@ -133,12 +133,28 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
 
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
-              <input 
-                type="text" 
-                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  style={{ width: '80px', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                  value={(formData.phone || '').includes(' ') ? (formData.phone || '').split(' ')[0] : '+591'}
+                  onChange={(e) => {
+                     const num = (formData.phone || '').includes(' ') ? (formData.phone || '').split(' ').slice(1).join(' ') : (formData.phone || '');
+                     setFormData({...formData, phone: `${e.target.value} ${num}`.trim()});
+                  }}
+                  placeholder="+591"
+                />
+                <input 
+                  type="text" 
+                  style={{ flex: 1, padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
+                  value={(formData.phone || '').includes(' ') ? (formData.phone || '').split(' ').slice(1).join(' ') : (formData.phone || '')}
+                  onChange={(e) => {
+                     const code = (formData.phone || '').includes(' ') ? (formData.phone || '').split(' ')[0] : '+591';
+                     setFormData({...formData, phone: `${code} ${e.target.value}`.trim()});
+                  }}
+                  placeholder="Número de teléfono"
+                />
+              </div>
             </div>
 
             <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid var(--border-color)', marginTop: '8px' }}>

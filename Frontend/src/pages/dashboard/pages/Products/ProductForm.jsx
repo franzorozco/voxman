@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { getAttributes } from "../../../../api/admin/attributes";
 import { createAttributeValue } from "../../../../api/admin/attributeValues";
 import { createSize } from "../../../../api/admin/sizes";
+import { createFit } from "../../../../api/admin/catalog-settings";
 import { getBrands } from "../../../../api/admin/catalog-settings";
 import namer from "color-namer";
 import { Plus, Camera, AlertTriangle, ChevronDown, Eye, EyeOff } from "lucide-react";
@@ -75,12 +76,13 @@ export default function ProductForm({
   productTypes = [],
   attributes: initialAttributes = [],
   sizes: initialSizes = [], 
-  fits = [],
+  fits: initialFits = [],
   onClose,
   onSubmit,
 }){
   const [attributes, setAttributes] = useState(initialAttributes);
   const [sizes, setSizes] = useState(initialSizes);
+  const [fits, setFits] = useState(initialFits);
   const [brands, setBrands] = useState([]);
   const [productImage, setProductImage] = useState(null);
 
@@ -91,6 +93,11 @@ export default function ProductForm({
   useEffect(() => {
     setAttributes(initialAttributes);
   }, [initialAttributes]);
+
+  useEffect(() => {
+    setFits(initialFits);
+  }, [initialFits]);
+
 
   useEffect(() => {
     const fetchBrands = async () => {
@@ -115,26 +122,28 @@ export default function ProductForm({
   );
 
   const materialAttribute = attributes.find(
-    a => normalizeAttr(a.name).includes("material")
+    a => normalizeAttr(a.name).includes('material')
   );
 
   const seasonAttribute = attributes.find(
-    a => normalizeAttr(a.name).includes("season") || normalizeAttr(a.name).includes("temporada")
+    a => normalizeAttr(a.name).includes('season') || normalizeAttr(a.name).includes('temporada')
   );
 
   const styleAttribute = attributes.find(
-    a => normalizeAttr(a.name).includes("style") || normalizeAttr(a.name).includes("estilo")
+    a => normalizeAttr(a.name).includes('style') || normalizeAttr(a.name).includes('estilo')
   );
 
-  const [showCreateColor, setShowCreateColor] =
-    useState(false);
-
-  const [showCreateSize, setShowCreateSize] =
-    useState(false);
+  const [showCreateColor, setShowCreateColor] = useState(false);
+  const [showCreateSize, setShowCreateSize] = useState(false);
+  const [showCreateAttribute, setShowCreateAttribute] = useState(false);
+  const [showCreateFit, setShowCreateFit] = useState(false);
+  const [newFit, setNewFit] = useState({ name: "", description: "" });
+  const [newAttributeValue, setNewAttributeValue] = useState({ value: '' });
+  const [activeCreateContext, setActiveCreateContext] = useState(null);
 
   const [newColor, setNewColor] = useState({
-    value: "",
-    hex_code: "#000000",
+    value: '',
+    hex_code: '#000000',
   });
 
   const translateText = async (text) => {
@@ -153,22 +162,22 @@ export default function ProductForm({
   const getColorName = async (hex) => {
     try {
       const result = namer(hex);
-      const englishName =
-        result.ntc[0].name;
-      const translatedName =
-        await translateText(englishName);
+      const englishName = result.ntc[0].name;
+      const translatedName = await translateText(englishName);
       return translatedName;
     } catch {
-      return "Color desconocido";
+      return 'Color desconocido';
     }
   };
 
-  
   const handleCreateColor = async () => {
     try {
-      if (!newColor.value || !newColor.hex_code) return;
+      if (!newColor.value || !newColor.hex_code || !activeCreateContext) return;
 
-      const existingColor = colorAttribute?.attribute_values?.find(
+      const currentAttributeId = activeCreateContext.attributeId;
+      const specificColorAttr = attributes.find(a => String(a.id) === String(currentAttributeId)) || colorAttribute;
+
+      const existingColor = specificColorAttr?.attribute_values?.find(
         (c) =>
           c.value.toLowerCase() === newColor.value.toLowerCase() ||
           c.hex_code.toLowerCase() === newColor.hex_code.toLowerCase()
@@ -180,7 +189,7 @@ export default function ProductForm({
         colorIdToSelect = existingColor.id;
       } else {
         const payload = {
-          attribute_id: colorAttribute.id,
+          attribute_id: specificColorAttr.id,
           value: newColor.value,
           hex_code: newColor.hex_code,
         };
@@ -191,37 +200,140 @@ export default function ProductForm({
 
         setAttributes((prev) =>
           prev.map((attr) => {
-            if (attr.id !== colorAttribute?.id) return attr;
+            if (String(attr.id) !== String(specificColorAttr.id)) return attr;
             return {
               ...attr,
-              attribute_values: [...attr.attribute_values, createdColor],
+              attribute_values: [...(attr.attribute_values || []), createdColor],
             };
           })
         );
       }
 
-      if (advancedColorModal?.open && advancedColorModal.variantIndex !== null) {
-        handleAttributeChange(advancedColorModal.variantIndex, colorAttribute.id, colorIdToSelect);
-      } else {
+      if (activeCreateContext.mode === 'advanced') {
+        handleAttributeChange(activeCreateContext.variantIndex, specificColorAttr.id, colorIdToSelect);
+      } else if (activeCreateContext.mode === 'simple') {
         setSimpleConfig((prev) => {
-          if (prev.colors.includes(colorIdToSelect)) return prev;
-          return {
-            ...prev,
-            colors: [...prev.colors, colorIdToSelect],
-          };
+          const newAxes = [...prev.axes];
+          const ax = newAxes[activeCreateContext.axisIndex];
+          if (!ax.values.includes(colorIdToSelect)) {
+            newAxes[activeCreateContext.axisIndex] = { ...ax, values: [colorIdToSelect, ...ax.values] };
+          }
+          return { ...prev, axes: newAxes };
         });
       }
 
       setShowCreateColor(false);
-      setNewColor({ value: "", hex_code: "#000000" });
+      setNewColor({ value: '', hex_code: '#000000' });
+      setActiveCreateContext(null);
     } catch (error) {
       console.error(error);
     }
-  };;
+  };
+
+
+  
+  const handleCreateFit = async () => {
+    try {
+      if (!newFit.name || !activeCreateContext) return;
+
+      const existingFit = fits.find(
+        (f) => f.name.toLowerCase() === newFit.name.toLowerCase()
+      );
+
+      let fitIdToSelect;
+
+      if (existingFit) {
+        fitIdToSelect = existingFit.id;
+      } else {
+        const res = await createFit(newFit);
+        const createdFit = res.data?.data ?? res.data;
+        fitIdToSelect = createdFit.id;
+
+        setFits((prev) => [...prev, createdFit]);
+      }
+
+      if (activeCreateContext.mode === 'advanced') {
+        handleVariantChange(activeCreateContext.variantIndex, 'fit_id', fitIdToSelect);
+      } else if (activeCreateContext.mode === 'simple') {
+        setSimpleConfig((prev) => {
+          const newAxes = [...prev.axes];
+          const ax = newAxes[activeCreateContext.axisIndex];
+          if (!ax.values.includes(fitIdToSelect)) {
+            newAxes[activeCreateContext.axisIndex] = { ...ax, values: [fitIdToSelect, ...ax.values] };
+          }
+          return { ...prev, axes: newAxes };
+        });
+      }
+
+      setShowCreateFit(false);
+      setNewFit({ name: '', description: '' });
+      setActiveCreateContext(null);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleCreateAttribute = async () => {
+    try {
+      if (!newAttributeValue.value || !activeCreateContext) return;
+
+      const currentAttributeId = activeCreateContext.attributeId;
+      const specificAttr = attributes.find(a => String(a.id) === String(currentAttributeId));
+      if (!specificAttr) return;
+
+      const existingAttrVal = specificAttr?.attribute_values?.find(
+        (c) => c.value.toLowerCase() === newAttributeValue.value.toLowerCase()
+      );
+
+      let attrValIdToSelect;
+
+      if (existingAttrVal) {
+        attrValIdToSelect = existingAttrVal.id;
+      } else {
+        const payload = {
+          attribute_id: specificAttr.id,
+          value: newAttributeValue.value,
+        };
+
+        const res = await createAttributeValue(payload);
+        const createdAttrVal = res.data?.data ?? res.data;
+        attrValIdToSelect = createdAttrVal.id;
+
+        setAttributes((prev) =>
+          prev.map((attr) => {
+            if (String(attr.id) !== String(specificAttr.id)) return attr;
+            return {
+              ...attr,
+              attribute_values: [...(attr.attribute_values || []), createdAttrVal],
+            };
+          })
+        );
+      }
+
+      if (activeCreateContext.mode === 'advanced') {
+        handleAttributeChange(activeCreateContext.variantIndex, specificAttr.id, attrValIdToSelect);
+      } else if (activeCreateContext.mode === 'simple') {
+        setSimpleConfig((prev) => {
+          const newAxes = [...prev.axes];
+          const ax = newAxes[activeCreateContext.axisIndex];
+          if (!ax.values.includes(attrValIdToSelect)) {
+            newAxes[activeCreateContext.axisIndex] = { ...ax, values: [attrValIdToSelect, ...ax.values] };
+          }
+          return { ...prev, axes: newAxes };
+        });
+      }
+
+      setShowCreateAttribute(false);
+      setNewAttributeValue({ value: '' });
+      setActiveCreateContext(null);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleCreateSize = async () => {
     try {
-      if (!newSize.name) return;
+      if (!newSize.name || !activeCreateContext) return;
 
       const existingSize = sizes.find(
         (s) => s.name.toLowerCase() === newSize.name.toLowerCase()
@@ -239,34 +351,32 @@ export default function ProductForm({
         setSizes((prev) => [...prev, createdSize]);
       }
 
-      if (advancedSizeModal?.open && advancedSizeModal.variantIndex !== null) {
-        handleVariantChange(advancedSizeModal.variantIndex, "size_id", sizeIdToSelect);
-      } else {
+      if (activeCreateContext.mode === 'advanced') {
+        handleVariantChange(activeCreateContext.variantIndex, 'size_id', sizeIdToSelect);
+      } else if (activeCreateContext.mode === 'simple') {
         setSimpleConfig((prev) => {
-          if (prev.sizes.includes(sizeIdToSelect)) return prev;
-          return {
-            ...prev,
-            sizes: [...prev.sizes, sizeIdToSelect],
-          };
+          const newAxes = [...prev.axes];
+          const ax = newAxes[activeCreateContext.axisIndex];
+          if (!ax.values.includes(sizeIdToSelect)) {
+            newAxes[activeCreateContext.axisIndex] = { ...ax, values: [sizeIdToSelect, ...ax.values] };
+          }
+          return { ...prev, axes: newAxes };
         });
       }
 
       setShowCreateSize(false);
-      setNewSize({ name: "", description: "" });
+      setNewSize({ name: '', description: '' });
+      setActiveCreateContext(null);
     } catch (error) {
       console.error(error);
     }
   };
 
-
   const [newSize, setNewSize] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
   });
 
-  //==========================================================
-  //  MODO SIMPLE
-  //==========================================================
   const [variantMode, setVariantMode] = useState("simple");
   const [showSwitchWarning, setShowSwitchWarning] = useState(false);
   const [showStrategyWarning, setShowStrategyWarning] = useState(false);
@@ -849,9 +959,27 @@ const getAttributeValueName = (valueId) => {
 
 
   const getOwnerName = (o) => {
-    const p = o.user?.user_profiles?.[0];
-    if (!p) return "Sin nombre";
-    return `${p.first_name ?? ""} ${p.last_name_paternal ?? ""}`.trim();
+    if (!o) return "Sin nombre";
+    
+    const p = o.user_profile || 
+              o.user_profiles?.[0] || 
+              o.user?.user_profile || 
+              o.user?.user_profiles?.[0] || 
+              o;
+
+    const username = o.username || o.user?.username || "";
+    const email = o.email || o.user?.email || "";
+    
+    let nameStr = "";
+    if (p.first_name) {
+      nameStr = `${p.first_name || ""} ${p.last_name_paternal || ""} ${p.last_name_maternal || ""}`.trim();
+    }
+
+    const docStr = p.document_number ? ` - DNI: ${p.document_number}` : "";
+    const displayName = nameStr || username || "Sin nombre";
+    const displayEmail = email ? ` (${email})` : "";
+    
+    return `${displayName}${docStr}${displayEmail}`;
   };
 
   const [imagePreview, setImagePreview] = useState(null);
@@ -1254,6 +1382,14 @@ const getAttributeValueName = (valueId) => {
 
                         <div className={isColorGrid ? "color-selector-grid" : "size-selector"}>
                           {optionsToRender
+                            .slice()
+                            .sort((a, b) => {
+                              const aSelected = currentValues.includes(a.id);
+                              const bSelected = currentValues.includes(b.id);
+                              if (aSelected && !bSelected) return -1;
+                              if (!aSelected && bSelected) return 1;
+                              return 0;
+                            })
                             .slice(0, isColorGrid ? MAX_VISIBLE_COLORS : MAX_VISIBLE_SIZES)
                             .map((opt) => {
                               const selected = currentValues.includes(opt.id);
@@ -1285,12 +1421,22 @@ const getAttributeValueName = (valueId) => {
                           )}
                           
                           {currentType === "size" && (
-                            <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true)} title="Crear nueva talla">
+                            <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: axisIndex, attributeId: axis.id }); setShowCreateSize(true); }} title="Crear nueva talla">
+                              <Plus size={18} strokeWidth={2.5} />
+                            </button>
+                          )}
+                          {currentType === "fit" && (
+                            <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: axisIndex, attributeId: axis.id }); setShowCreateFit(true); }} title="Crear nuevo fit">
                               <Plus size={18} strokeWidth={2.5} />
                             </button>
                           )}
                           {currentType === "attribute" && isColorGrid && (
-                            <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true)} title="Crear nuevo color">
+                            <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: axisIndex, attributeId: axis.id }); setShowCreateColor(true); }} title="Crear nuevo color">
+                              <Plus size={18} strokeWidth={2.5} />
+                            </button>
+                          )}
+                          {currentType === "attribute" && !isColorGrid && (
+                            <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: axisIndex, attributeId: axis.id }); setShowCreateAttribute(true); }} title="Crear nueva opción">
                               <Plus size={18} strokeWidth={2.5} />
                             </button>
                           )}
@@ -1808,12 +1954,22 @@ const getAttributeValueName = (valueId) => {
                               )}
                               
                               {currentType === "size" && (
-                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setShowCreateSize(true); }} title="Crear nueva talla">
+                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setActiveCreateContext({ mode: "advanced", variantIndex: index, attributeId: currentId }); setShowCreateSize(true); }} title="Crear nueva talla">
+                                  <Plus size={18} strokeWidth={2.5} />
+                                </button>
+                                )}
+                                {currentType === "fit" && (
+                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setActiveCreateContext({ mode: "advanced", variantIndex: index, attributeId: currentId }); setShowCreateFit(true); }} title="Crear nuevo fit">
+                                  <Plus size={18} strokeWidth={2.5} />
+                                </button>
+                                )}
+                              {currentType === "attribute" && isColorGrid && (
+                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setActiveCreateContext({ mode: "advanced", variantIndex: index, attributeId: currentId }); setShowCreateColor(true); }} title="Crear nuevo color">
                                   <Plus size={18} strokeWidth={2.5} />
                                 </button>
                               )}
-                              {currentType === "attribute" && isColorGrid && (
-                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setShowCreateColor(true); }} title="Crear nuevo color">
+                              {currentType === "attribute" && !isColorGrid && (
+                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setActiveCreateContext({ mode: "advanced", variantIndex: index, attributeId: currentId }); setShowCreateAttribute(true); }} title="Crear nueva opción">
                                   <Plus size={18} strokeWidth={2.5} />
                                 </button>
                               )}
@@ -1976,12 +2132,22 @@ const getAttributeValueName = (valueId) => {
                     <div className="modal-title-group">
                       <h3>{title}</h3>
                       {axis.type === "size" && (
-                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true)}>
+                        <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: activeAxisModal, attributeId: axis.id }); setShowCreateSize(true); }}>
+                          <Plus size={18} />
+                        </button>
+                      )}
+                      {axis.type === "fit" && (
+                        <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: activeAxisModal, attributeId: axis.id }); setShowCreateFit(true); }}>
                           <Plus size={18} />
                         </button>
                       )}
                       {axis.type === "attribute" && isColorGrid && (
-                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true)}>
+                        <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: activeAxisModal, attributeId: axis.id }); setShowCreateColor(true); }}>
+                          <Plus size={18} />
+                        </button>
+                      )}
+                      {axis.type === "attribute" && !isColorGrid && (
+                        <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: activeAxisModal, attributeId: axis.id }); setShowCreateAttribute(true); }}>
                           <Plus size={18} />
                         </button>
                       )}
@@ -2050,12 +2216,22 @@ const getAttributeValueName = (valueId) => {
                     <div className="modal-title-group">
                       <h3>{title}</h3>
                       {axis.type === "size" && (
-                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateSize(true)}>
+                        <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "advanced", variantIndex: vIndex, attributeId: axis.id }); setShowCreateSize(true); }}>
+                          <Plus size={18} />
+                        </button>
+                      )}
+                      {axis.type === "fit" && (
+                        <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "advanced", variantIndex: vIndex, attributeId: axis.id }); setShowCreateFit(true); }}>
                           <Plus size={18} />
                         </button>
                       )}
                       {axis.type === "attribute" && isColorGrid && (
-                        <button type="button" className="add-mini-btn" onClick={() => setShowCreateColor(true)}>
+                        <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "advanced", variantIndex: vIndex, attributeId: axis.id }); setShowCreateColor(true); }}>
+                          <Plus size={18} />
+                        </button>
+                      )}
+                      {axis.type === "attribute" && !isColorGrid && (
+                        <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "advanced", variantIndex: vIndex, attributeId: axis.id }); setShowCreateAttribute(true); }}>
                           <Plus size={18} />
                         </button>
                       )}
@@ -2104,8 +2280,8 @@ const getAttributeValueName = (valueId) => {
               CREATE COLOR MODAL
           ======================================= */}
           {showCreateColor && (
-            <div className="modal-overlay pvm-overlay">
-              <div className="modal pvm-container" style={{ width: "min(560px, 95vw)", height: "auto", maxHeight: "90vh" }}>
+            <div className="selector-modal-overlay">
+              <div className="create-modal">
 
                 {/* HEADER */}
                 <div className="create-modal-header">
@@ -2242,8 +2418,8 @@ const getAttributeValueName = (valueId) => {
               CREATE SIZE MODAL
           =========================================== */}
           {showCreateSize && (
-            <div className="modal-overlay pvm-overlay">
-              <div className="modal pvm-container" style={{ width: "min(560px, 95vw)", height: "auto", maxHeight: "90vh" }}>
+            <div className="selector-modal-overlay">
+              <div className="selector-modal" style={{ padding: "20px", width: "min(450px, 95vw)", height: "auto", maxHeight: "90vh", overflowY: "auto" }}>
 
                 {/* HEADER */}
                 <div className="create-modal-header">
@@ -2375,6 +2551,146 @@ const getAttributeValueName = (valueId) => {
                 : (product ? "Actualizar Producto" : "Crear Producto")}
             </button>
           </div>
+
+
+
+          {/* =======================================
+              CREATE ATTRIBUTE MODAL
+          =========================================== */}
+          {showCreateAttribute && (
+            <div className="selector-modal-overlay">
+              <div className="selector-modal" style={{ padding: "20px", width: "min(450px, 95vw)", height: "auto", maxHeight: "90vh", overflowY: "auto" }}>
+                <div className="create-modal-header">
+                  <div>
+                    <h2>📝 Nueva Opción</h2>
+                    <p>
+                      Crea un nuevo valor para este atributo
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="close-modal-btn"
+                    onClick={() => setShowCreateAttribute(false)}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="create-modal-body">
+                  <div className="size-preview-card">
+                    <div className="size-preview-chip">
+                      {newAttributeValue.value || "Ejemplo"}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Nombre de la Opción</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newAttributeValue.value}
+                      onChange={(e) =>
+                        setNewAttributeValue({ ...newAttributeValue, value: e.target.value })
+                      }
+                      placeholder="Ej: Verano, Casual..."
+                    />
+                  </div>
+
+                  <div className="create-modal-actions">
+                    <button
+                      type="button"
+                      className="cancel-btn btn-secondary"
+                      onClick={() => setShowCreateAttribute(false)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="save-btn btn-primary"
+                      onClick={handleCreateAttribute}
+                    >
+                      Guardar Opción
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =======================================
+              CREATE FIT MODAL
+          =========================================== */}
+          {showCreateFit && (
+            <div className="selector-modal-overlay">
+              <div className="selector-modal" style={{ padding: "20px", width: "min(450px, 95vw)", height: "auto", maxHeight: "90vh", overflowY: "auto" }}>
+                <div className="create-modal-header">
+                  <div>
+                    <h2>👕 Nuevo Fit</h2>
+                    <p>
+                      Crea un nuevo Fit para el producto
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="close-modal-btn"
+                    onClick={() => setShowCreateFit(false)}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="create-modal-body">
+                  <div className="size-preview-card">
+                    <div className="size-preview-chip">
+                      {newFit.name || "Regular"}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Nombre del Fit</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newFit.name}
+                      onChange={(e) =>
+                        setNewFit({ ...newFit, name: e.target.value })
+                      }
+                      placeholder="Ej: Slim Fit, Oversize..."
+                    />
+                  </div>
+                  <div className="form-group" style={{marginTop: '10px'}}>
+                    <label>Descripción</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newFit.description}
+                      onChange={(e) =>
+                        setNewFit({ ...newFit, description: e.target.value })
+                      }
+                      placeholder="Opcional"
+                    />
+                  </div>
+
+                  <div className="create-modal-actions">
+                    <button
+                      type="button"
+                      className="cancel-btn btn-secondary"
+                      onClick={() => setShowCreateFit(false)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="save-btn btn-primary"
+                      onClick={handleCreateFit}
+                    >
+                      Guardar Fit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         </form>
         

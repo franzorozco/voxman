@@ -52,22 +52,26 @@ export default function SupplierModal({ supplier, onClose }) {
   };
 
   return (
-    <div className="suppliers-modal-overlay">
-      <div className="suppliers-modal-content">
-        <div className="suppliers-modal-header">
-          <h2>{supplier ? "Editar Proveedor" : "Nuevo Proveedor"}</h2>
-          <button className="suppliers-btn-close" onClick={onClose} type="button">
+    <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999 }}>
+      <div className="modal-content fade-in" style={{ background: 'var(--bg-main)', borderRadius: '16px', overflow: 'hidden', maxWidth: '500px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+        
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
+            {supplier ? "Editar Proveedor" : "Nuevo Proveedor"}
+          </h2>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }} type="button">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="suppliers-modal-body">
-          <div className="suppliers-form-grid">
-            <div className="suppliers-form-group full-width">
-              <label>Nombre Comercial / Alias *</label>
+        <div style={{ overflowY: 'auto', padding: '24px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Nombre Comercial / Alias *</label>
               <input
                 type="text"
-                className="suppliers-form-input"
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -75,97 +79,95 @@ export default function SupplierModal({ supplier, onClose }) {
               />
             </div>
 
-            <div className="suppliers-form-group">
-              <label>Razón Social (Opcional)</label>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Razón Social (Opcional)</label>
               <input
                 type="text"
-                className="suppliers-form-input"
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                 value={formData.company_name}
                 onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                 placeholder="Ej. Distribuidores Unidos S.A."
               />
             </div>
 
-            <div className="suppliers-form-group">
-              <label>NIT / Identificación Fiscal</label>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>NIT / Identificación Fiscal</label>
               <input
                 type="text"
-                className="suppliers-form-input"
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                 value={formData.tax_id}
                 onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })}
                 placeholder="Ej. 123456789-0"
               />
             </div>
 
-            <div className="suppliers-form-group full-width">
-              <label>Nombre del Contacto</label>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Nombre del Contacto</label>
               <input
                 type="text"
-                className="suppliers-form-input"
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                 value={formData.contact_name}
                 onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
                 placeholder="Ej. Juan Pérez"
               />
             </div>
 
-            <div className="suppliers-form-group">
-              <label>Teléfono</label>
-              <input
-                type="text"
-                className="suppliers-form-input"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Ej. +591 77777777"
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
+                <input
+                  type="text"
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Ej. 76619663"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+                <CustomSelect
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
+                >
+                  <option value="active">Activo</option>
+                  <option value="inactive">Inactivo</option>
+                </CustomSelect>
+              </div>
             </div>
 
-            <div className="suppliers-form-group">
-              <label>Correo Electrónico</label>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Correo Electrónico</label>
               <input
                 type="email"
-                className="suppliers-form-input"
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="Ej. ventas@distribuidora.com"
               />
             </div>
 
-            <div className="suppliers-form-group full-width">
-              <label>Estado</label>
-              <CustomSelect
-                className="suppliers-form-input"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+              <button 
+                type="button" 
+                onClick={onClose} 
+                style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', fontWeight: 500, cursor: 'pointer', transition: '0.2s' }}
+                disabled={loading}
               >
-                <option value="active">Activo</option>
-                <option value="inactive">Inactivo</option>
-              </CustomSelect>
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)', fontWeight: 600, cursor: 'pointer', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}
+                disabled={loading}
+              >
+                {loading ? <span className="animate-spin">⏳</span> : <Save size={18} />}
+                {loading ? "Guardando..." : "Guardar Cambios"}
+              </button>
             </div>
-          </div>
-
-          <div className="suppliers-modal-footer">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="animate-spin" style={{ marginRight: '8px' }}>⌛</span>
-              ) : (
-                <Save size={18} style={{ marginRight: '8px' }} />
-              )}
-              {supplier ? "Guardar Cambios" : "Crear Proveedor"}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

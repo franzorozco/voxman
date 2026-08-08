@@ -1212,7 +1212,6 @@
   }
 
   .simple-summary-grid,
-  .simple-attributes-grid,
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -3772,8 +3771,8 @@ select option:focus {
 }
 
 
- 
- /* =========================
+
+/* =========================
    CUSTOMERS PREMIUM TABLE
 ========================= */
 
@@ -4008,7 +4007,7 @@ select option:focus {
 }
 .link-modal-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
 }
 .link-search-column {
@@ -4141,9 +4140,14 @@ select option:focus {
 .link-modal-footer {
   padding: 20px 24px;
   border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+.link-modal-footer button {
+  width: 100%;
+  white-space: nowrap;
+  justify-content: center;
 }
 .link-submit-btn {
   display: flex;

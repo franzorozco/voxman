@@ -86,24 +86,16 @@ export default function Customers() {
     <div className="products-container fade-in">
       <div className="products-header">
         <h1 className="products-title">Clientes</h1>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <Link to="/dashboard/clients/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+        <div className="products-header-actions">
+          <Link to="/dashboard/clients/deleted" className="btn-secondary">
             <ArchiveRestore size={18} />
-            Papelera
+            <span className="hide-on-mobile">Papelera</span>
           </Link>
-          <button 
-            className="btn-secondary" 
-            onClick={() => setIsLinkModalOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
+          <button className="btn-secondary" onClick={() => setIsLinkModalOpen(true)}>
             <Link2 size={18} />
             <span className="hide-on-mobile">Vincular</span>
           </button>
-          <button 
-            className="btn-primary" 
-            onClick={() => { setSelectedCustomer(null); setIsModalOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
+          <button className="btn-primary" onClick={() => { setSelectedCustomer(null); setIsModalOpen(true); }}>
             <Plus size={18} />
             Nuevo Cliente
           </button>
@@ -111,7 +103,7 @@ export default function Customers() {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Total de Clientes</span>
           <span style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{kpis.totalCustomers}</span>

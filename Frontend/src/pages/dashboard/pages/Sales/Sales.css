@@ -149,3 +149,13 @@
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 8px;
 }
+
+@media (max-width: 768px) {
+  .sale-detail-section {
+    border: none;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 30px;
+  }
+}

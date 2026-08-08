@@ -245,3 +245,182 @@
   font-weight: 600;
   margin-left: 8px;
 }
+
+
+/* =========================
+   RESPONSIVE FIXES
+========================= */
+
+.hide-on-mobile {
+  display: inline;
+}
+
+@media (max-width: 600px) {
+  .bundles-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .filters-container-inner {
+    flex-direction: column;
+    gap: 8px !important;
+  }
+
+  .filters-container-inner input,
+  .filters-container-inner button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .bulk-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .bulk-actions-left {
+    justify-content: center;
+  }
+
+  .bulk-actions-divider {
+    display: none;
+  }
+  
+  .bulk-actions-right {
+    justify-content: center;
+  }
+
+  .btn-danger-bulk {
+    width: 100%;
+  }
+
+  .bundles-table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+
+/* =========================
+   MODAL RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .filters-panel {
+    grid-template-columns: 1fr !important;
+  }
+  .filters-panel > div {
+    grid-column: span 1 !important;
+  }
+  
+  .bundle-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .bundle-view-summary-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .bundle-view-items-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .bundle-view-summary-grid,
+  .bundle-view-items-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .bundle-item-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* =========================
+   BUNDLE MODALS
+========================= */
+
+.bundle-modal-content {
+  max-width: 1100px;
+  width: 95%;
+}
+
+.bundle-view-modal {
+  max-width: 800px;
+  width: 90%;
+}
+
+.flex-wrap-mobile {
+  display: flex;
+}
+
+@media (max-width: 768px) {
+  .bundle-modal-content,
+  .bundle-view-modal {
+    width: 95% !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    border-radius: 12px !important;
+    margin: auto !important;
+    padding: 0 !important;
+  }
+  
+  .bundle-form-row-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .bundle-modal-overlay {
+    padding: 10px !important;
+  }
+
+  .flex-wrap-mobile {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .stack-mobile {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .modal-body {
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  .bundle-modal-content * {
+    box-sizing: border-box !important;
+  }
+  
+  .bundle-item-details-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  
+  .bundle-modal-content {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+  
+  .form-control {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+  
+  .bundle-view-items-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .bundle-view-items-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

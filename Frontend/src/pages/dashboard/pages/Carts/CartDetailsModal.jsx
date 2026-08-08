@@ -66,13 +66,22 @@ export default function CartDetailsModal({ cart, onClose }) {
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h2 className="modal-title">
-            <Package className="text-primary" />
-            {cart.status === 'proforma' ? 'Detalles de la Proforma ' : 
-             cart.status === 'converted' ? 'Detalles de la Venta ' : 
-             'Detalles del Carrito '} 
-            {cart.reference_number ? `(${cart.reference_number})` : ""}
-          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 0 }}>
+              <Package className="text-primary" style={{ flexShrink: 0 }} />
+              <span style={{ wordBreak: 'break-word' }}>{cart.reference_number || (
+                cart.status === 'proforma' ? 'Proforma' : 
+                cart.status === 'converted' ? 'Venta' : 'Carrito'
+              )}</span>
+            </h2>
+            {cart.reference_number && (
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)', paddingLeft: '32px' }}>
+                {cart.status === 'proforma' ? 'Detalles de la Proforma' : 
+                 cart.status === 'converted' ? 'Detalles de la Venta' : 
+                 'Detalles del Carrito'}
+              </span>
+            )}
+          </div>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
 
@@ -110,59 +119,61 @@ export default function CartDetailsModal({ cart, onClose }) {
 
           <h3 className="modal-section-title">Productos Seleccionados</h3>
           
-          <table className="products-table">
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Variante</th>
-                <th>Cantidad</th>
-                <th className="text-right">Precio Unit.</th>
-                <th className="text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cart.items && cart.items.length > 0 ? (
-                cart.items.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="modal-product-cell">
-                        {getVariantImage(item.product_variant) ? (
-                          <img 
-                            src={getImageUrl(getVariantImage(item.product_variant))} 
-                            alt="product" 
-                            className="modal-product-image"
-                          />
-                        ) : (
-                          <div className="modal-product-placeholder"></div>
-                        )}
-                        <span className="modal-product-name">{item.product_variant?.product?.name || "Desconocido"}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="modal-variant-info">
-                        {renderVariantAttributes(item.product_variant)}
-                      </div>
-                    </td>
-                    <td className="font-semibold">{item.quantity}</td>
-                    <td className="text-right">Bs. {Number(item.product_variant?.price || 0).toFixed(2)}</td>
-                    <td className="text-right font-semibold">Bs. {((item.product_variant?.price || 0) * item.quantity).toFixed(2)}</td>
-                  </tr>
-                ))
-              ) : (
+          <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch', paddingBottom: '12px' }}>
+            <table className="products-table">
+              <thead>
                 <tr>
-                  <td colSpan="5" className="text-center modal-empty-state">No hay productos en este carrito</td>
+                  <th>Producto</th>
+                  <th>Variante</th>
+                  <th>Cantidad</th>
+                  <th className="text-right">Precio Unit.</th>
+                  <th className="text-right">Subtotal</th>
                 </tr>
-              )}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan="4" className="text-right font-bold modal-footer-label">Total a Pagar:</td>
-                <td className="text-right font-bold modal-footer-value">
-                  Bs. {Number(cart.total_amount_calculated).toFixed(2)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody>
+                {cart.items && cart.items.length > 0 ? (
+                  cart.items.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <div className="modal-product-cell">
+                          {getVariantImage(item.product_variant) ? (
+                            <img 
+                              src={getImageUrl(getVariantImage(item.product_variant))} 
+                              alt="product" 
+                              className="modal-product-image"
+                            />
+                          ) : (
+                            <div className="modal-product-placeholder"></div>
+                          )}
+                          <span className="modal-product-name">{item.product_variant?.product?.name || "Desconocido"}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="modal-variant-info">
+                          {renderVariantAttributes(item.product_variant)}
+                        </div>
+                      </td>
+                      <td className="font-semibold">{item.quantity}</td>
+                      <td className="text-right">Bs. {Number(item.product_variant?.price || 0).toFixed(2)}</td>
+                      <td className="text-right font-semibold">Bs. {((item.product_variant?.price || 0) * item.quantity).toFixed(2)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center modal-empty-state">No hay productos en este carrito</td>
+                  </tr>
+                )}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="4" className="text-right font-bold modal-footer-label">Total a Pagar:</td>
+                  <td className="text-right font-bold modal-footer-value">
+                    Bs. {Number(cart.total_amount_calculated).toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
 
         </div>
       </div>

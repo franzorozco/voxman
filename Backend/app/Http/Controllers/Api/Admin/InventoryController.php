@@ -24,6 +24,13 @@ class InventoryController extends Controller
             'variant.size',
             'variant.fit',
             'variant.variant_attribute_values.attribute_value.attribute'
+        ])
+        ->select('inventories.*') // Add this so the * doesn't override reserved_stock
+        ->addSelect([
+            'reserved_stock' => \App\Models\Base\StockReservation::selectRaw('COALESCE(SUM(quantity), 0)')
+                ->whereColumn('variant_id', 'inventories.variant_id')
+                ->whereColumn('branch_id', 'inventories.branch_id')
+                ->where('status', 'reserved')
         ]);
 
         if ($request->filled('branch_id')) {

@@ -8,7 +8,7 @@ import "./Bundles.css";
 import "../css/stylesCruds.css";
 
 import { Link } from "react-router-dom";
-import { Search, Filter, Trash2, Package, DollarSign, Activity, Archive, TrendingUp } from "lucide-react";
+import { Plus, Search, Filter, Trash2, Package, DollarSign, Activity, Archive, TrendingUp } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 
@@ -195,11 +195,12 @@ export default function Bundles() {
   return (
     <div className="bundles-container">
       <div className="bundles-header">
-        <h1 className="bundles-title">Conjuntos</h1>
+        <h1 className="bundles-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}><Package size={24} className="text-primary" /> Conjuntos</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
           <CanAccess permission="create_products">
-            <button className="btn-primary" onClick={handleCreate}>
-              + Crear Conjunto
+            <button className="btn-primary" style={{ padding: "10px 14px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "8px", border: "none", cursor: "pointer", fontWeight: 600 }} onClick={handleCreate}>
+              <Package size={18} />
+              <span className="hide-on-mobile">Crear Conjunto</span>
             </button>
           </CanAccess>
         </div>
@@ -248,7 +249,7 @@ export default function Bundles() {
       </div>
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+        <div className="filters-container-inner" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input

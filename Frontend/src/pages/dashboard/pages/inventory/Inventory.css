@@ -25,6 +25,8 @@
   
   .inventory-table {
     width: 100%;
+    min-width: 900px; /* Increased to give plenty of room */
+    table-layout: auto !important; /* Ensure it's not fixed */
     border-collapse: collapse;
     background: var(--bg-card);
     border-radius: 12px;
@@ -117,15 +119,105 @@
     display: inline;
   }
   
-  @media (max-width: 768px) {
-    .hide-on-mobile {
-      display: none;
-    }
-    
+  @media (max-width: 600px) {
     .inventory-header {
       flex-direction: column;
       align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .audit-modal-footer {
+      flex-direction: column;
+      align-items: stretch !important;
       gap: 15px;
+    }
+    .audit-modal-footer > div:last-child {
+      width: 100%;
+    }
+    .audit-modal-footer > div:last-child > button {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hide-on-mobile {
+      display: none !important;
+    }
+
+    .filters-container > div:first-child {
+      flex-wrap: wrap !important;
+    }
+    
+    .filters-container > div:first-child > div {
+      flex-basis: 100% !important;
+    }
+    
+    .filters-container > div:first-child > button {
+      flex: 1;
+      justify-content: center;
+    }
+
+    /* Make camera button strict size again */
+    .filters-container > div:first-child > button[title="Escanear con Cámara"] {
+      flex: 0 0 42px !important;
+      padding: 0 !important;
+    }
+
+    .filters-panel {
+      grid-template-columns: 1fr 1fr !important;
+    }
+
+    .inventory-actions {
+      flex-direction: row !important;
+      flex-wrap: wrap;
+    }
+    
+    .header-actions {
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    
+    /* Make the branch selector flex appropriately */
+    .header-actions > div:first-child {
+      flex-basis: 100%;
+    }
+    .header-actions > div:first-child > button {
+      width: 100%;
+      justify-content: space-between;
+    }
+    
+    /* Historial full width */
+    .header-actions > a {
+      flex-basis: 100%;
+      justify-content: center;
+    }
+    
+    /* Auditar and Ingresar 50% each */
+    .header-actions > button {
+      flex: 1 1 calc(50% - 8px);
+      max-width: calc(50% - 7px);
+      justify-content: center;
+      padding: 10px !important;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .filters-panel {
+      grid-template-columns: 1fr !important;
+    }
+    .filters-panel > div {
+      grid-column: span 1 !important;
+    }
+
+    .inventory-table th,
+    .inventory-table td {
+      padding: 12px 8px;
+      font-size: 13px;
     }
   }
 

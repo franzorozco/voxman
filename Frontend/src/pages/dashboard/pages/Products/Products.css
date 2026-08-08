@@ -927,7 +927,7 @@
 
 .simple-attributes-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
@@ -1181,8 +1181,7 @@
 
 @media (max-width: 1100px) {
 
-  .simple-summary-grid,
-  .simple-attributes-grid {
+  .simple-summary-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -1198,7 +1197,6 @@
   }
 
   .simple-summary-grid,
-  .simple-attributes-grid,
   .form-grid {
     grid-template-columns: 1fr;
   }

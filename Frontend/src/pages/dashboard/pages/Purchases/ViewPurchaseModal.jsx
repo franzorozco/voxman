@@ -94,25 +94,25 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
   const account = purchase.accounts_payables?.[0];
 
   return (
-    <div className="purchase-detail-modal-overlay print-overlay" onClick={onClose}>
-      <div className="purchase-detail-modal" onClick={e => e.stopPropagation()}>
-        <div className="purchase-detail-header no-print">
-          <h2>
+    <div className="modal-overlay print-overlay" onClick={onClose}>
+      <div className="modal-content" style={{ maxWidth: "800px", width: "95%" }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header no-print" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+          <h2 className="modal-title" style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '40px' }}>
             <FileText size={20} color="var(--color-primary)" />
-            Detalles de Orden de Compra
+            Detalles de Compra
           </h2>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={handlePrint} className="btn-secondary" style={{ padding: '6px 12px' }}>
-              <Printer size={16} /> Imprimir
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button onClick={handlePrint} className="btn-secondary" style={{ padding: '6px 12px', minWidth: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Printer size={16} /> <span className="hide-on-mobile">Imprimir</span>
             </button>
-            <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
-              <X size={24} />
+            <button onClick={onClose} className="modal-close" style={{ position: 'absolute', top: '20px', right: '20px' }}>
+              <X size={20} />
             </button>
           </div>
         </div>
 
         <div className="purchase-detail-body">
-          <div className="purchase-info-grid">
+          <div className="modal-info-grid">
             <div className="purchase-info-item">
               <div className="purchase-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Hash size={14} /> Nro Factura
@@ -166,8 +166,8 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
               Productos Solicitados
             </h3>
             
-            <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
-              <table className="purchases-table" style={{ margin: 0, border: 'none', borderRadius: 0 }}>
+            <div className="table-container" style={{ overflowX: 'auto', marginBottom: '20px' }}>
+              <table className="products-table" style={{ margin: 0, borderBottom: '1px solid var(--border-color)', borderRadius: 0, minWidth: '500px' }}>
                 <thead>
                   <tr>
                     <th style={{ background: 'var(--bg-overlay)' }}>Producto</th>
@@ -208,8 +208,8 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <div style={{ background: 'var(--bg-overlay)', padding: '16px', borderRadius: '8px', width: '250px', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+            <div style={{ width: '250px', padding: '10px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
                 <span>Subtotal:</span>
                 <span>${Number(purchase.subtotal).toFixed(2)}</span>
@@ -234,7 +234,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
 
           {/* FINANCIAL SECTION */}
           {account && (
-            <div className="no-print" style={{ marginTop: '20px', padding: '16px', background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px' }}>
+            <div className="no-print" style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
               <h3 style={{ fontSize: '15px', color: 'var(--text-main)', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <DollarSign size={16} color="var(--color-success)" />
@@ -245,7 +245,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
                 </span>
               </h3>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '15px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px', marginBottom: '15px' }}>
                 <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total a Pagar</div>
                   <div style={{ fontSize: '18px', fontWeight: 'bold' }}>Bs. {Number(account.total_amount).toFixed(2)}</div>
@@ -263,7 +263,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
               {account.balance > 0 && (
                 <div style={{ marginTop: '10px' }}>
                   {!isAddingPayment ? (
-                    <button className="btn-primary" onClick={() => setIsAddingPayment(true)}>
+                    <button style={{ background: 'var(--bg-overlay)', border: '1px dashed var(--border-color)', color: 'var(--text-main)', padding: '10px', width: '100%', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => setIsAddingPayment(true)}>
                       <Plus size={16} /> Registrar Abono / Pago
                     </button>
                   ) : (
@@ -288,16 +288,16 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
           )}
 
           {purchase.status === 'pending' && (
-            <div className="no-print" style={{ marginTop: '20px', padding: '16px', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px' }}>
+            <div className="no-print" style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
               <h3 style={{ fontSize: '15px', color: 'var(--text-main)', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <MapPin size={16} color="var(--color-warning)" /> Costos de Importación (Landed Cost)
               </h3>
               {!isAddingCost ? (
-                <button className="btn-secondary" onClick={() => setIsAddingCost(true)}>
+                <button style={{ background: 'transparent', border: '1px dashed var(--border-color)', color: 'var(--text-main)', padding: '10px', width: '100%', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => setIsAddingCost(true)}>
                   <Plus size={16} /> Agregar Flete o Seguros
                 </button>
               ) : (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
                   <div className="form-group" style={{ margin: 0 }}>
                     <label>Flete (Bs)</label>
                     <input type="number" className="purchase-form-input" value={shippingCost} onChange={e => setShippingCost(e.target.value)} />
@@ -314,9 +314,9 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
           )}
         </div>
 
-        <div className="purchase-detail-footer no-print">
-          <button className="btn-secondary" onClick={onClose}>
-            Cerrar
+        <div className="modal-footer no-print" style={{ marginTop: '30px', borderTop: 'none', display: 'flex', justifyContent: 'center' }}>
+          <button style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', padding: '10px 20px' }} onClick={onClose}>
+            Cerrar Detalles
           </button>
         </div>
       </div>

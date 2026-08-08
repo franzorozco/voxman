@@ -73,9 +73,9 @@ export default function LinkCustomerModal({ onClose, onSuccess }) {
     <div className="modal-overlay">
       <div className="modal-content link-modal-content">
         <div className="link-modal-header">
-          <h2 className="link-modal-title">
-            <Link2 size={24} color="var(--color-primary)" />
-            Vincular Usuario a Cliente POS
+          <h2 className="link-modal-title" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.2 }}>
+            <Link2 size={24} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+            <span>Vincular Usuario a Cliente POS</span>
           </h2>
           <button onClick={onClose} className="link-modal-close">
             <X size={20} />

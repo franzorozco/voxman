@@ -60,34 +60,35 @@ export default function DeletedSuppliers() {
 
   return (
     <div className="suppliers-container">
-      <div className="suppliers-header">
-        <h1 className="suppliers-title" style={{ color: 'var(--color-danger)' }}>
+      <div className="suppliers-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1 className="suppliers-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'var(--color-danger)' }}>
           <Trash2 size={28} />
           Proveedores Eliminados
         </h1>
         
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <Link to="/dashboard/suppliers" className="btn-secondary">
-            <ArrowLeft size={16} />
-            Volver a Proveedores
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'nowrap', flex: 1, justifyContent: 'flex-end', width: '100%', overflowX: 'auto' }}>
+          <Link to="/dashboard/suppliers" className="btn-secondary" style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 4px', minWidth: '0', maxWidth: '200px' }}>
+            <ArrowLeft size={14} style={{ flexShrink: 0 }} />
+            <span style={{ whiteSpace: 'nowrap', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden' }}>Volver a Proveedores</span>
           </Link>
         </div>
       </div>
 
-      <div className="suppliers-filters">
-        <div className="suppliers-search-box">
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Buscar proveedor eliminado..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="suppliers-search-input"
-          />
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div className="filters-container-inner" style={{ display: 'flex', gap: '12px', marginBottom: '0' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              placeholder="Buscar proveedor eliminado..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="suppliers-table-container">
+      <div className="table-container">
         <table className="suppliers-table">
           <thead>
             <tr>

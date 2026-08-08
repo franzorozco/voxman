@@ -86,12 +86,12 @@ export default function BundleViewModal({ bundle, onClose }) {
   );
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content view-modal" style={{ maxWidth: '800px', width: '90%', padding: '0', overflow: 'hidden' }}>
+    <div className="modal-overlay bundle-modal-overlay">
+      <div className="modal-content bundle-view-modal" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         
         {/* Header */}
         <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'var(--bg-card)' }}>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+          <div className="stack-mobile" style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
             <div style={{ width: '80px', height: '80px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <img 
                 src={mainImage} 
@@ -195,7 +195,7 @@ export default function BundleViewModal({ bundle, onClose }) {
 
                   return (
                     <div key={item.id || idx} style={{ display: 'flex', flexDirection: 'column', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '10px', background: 'var(--bg-overlay)' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div className="flex-wrap-mobile" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                           <div style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg-card)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
                             <img 
@@ -207,7 +207,7 @@ export default function BundleViewModal({ bundle, onClose }) {
                           </div>
                           <div>
                             <div style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '15px', marginBottom: '4px' }}>{itemName}</div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building2 size={12} /> {item.owner}</span>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Hash size={12} /> {sku}</span>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Tag size={12} /> {attributesText}</span>
@@ -219,7 +219,7 @@ export default function BundleViewModal({ bundle, onClose }) {
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                      <div className="bundle-view-items-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
                         <div>
                           <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Precio Reg. Total</p>
                           <div style={{ fontWeight: '500', color: 'var(--text-main)' }}>Bs. {item.itemRegularValue.toFixed(2)}</div>

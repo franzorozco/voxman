@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { getSupplierReturns } from "../../../../api/admin/supplierReturns";
-import { RotateCcw, PackageOpen, Package } from "lucide-react";
-import "../Purchases/Purchases.css";
+import { Link } from "react-router-dom";
+import { ArrowLeft, RotateCcw, PackageOpen, Package } from "lucide-react";
+import "./Suppliers.css";
 import { API_BASE_URL } from "../../../../config/api";
 
 const SupplierReturns = () => {
@@ -26,24 +27,31 @@ const SupplierReturns = () => {
   }, []);
 
   return (
-    <div className="purchases-container">
-      <div className="purchases-header">
-        <div className="purchases-title">
-          <RotateCcw size={24} />
+    <div className="suppliers-container">
+      <div className="suppliers-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <h1 className="suppliers-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+          <RotateCcw size={28} className="text-primary" />
           Devoluciones a Proveedores
-        </div>
-        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          Historial de mermas y productos devueltos a los proveedores.
+        </h1>
+        
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'nowrap', flex: 1, justifyContent: 'flex-end', width: '100%', overflowX: 'auto' }}>
+          <Link to="/dashboard/suppliers" className="btn-secondary" style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 4px', minWidth: '0', maxWidth: '200px' }}>
+            <ArrowLeft size={14} style={{ flexShrink: 0 }} />
+            <span style={{ whiteSpace: 'nowrap', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden' }}>Volver a Proveedores</span>
+          </Link>
         </div>
       </div>
+      <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+        Historial de mermas y productos devueltos a los proveedores.
+      </div>
 
-      <div className="purchases-table-container">
+      <div className="table-container">
         {loading ? (
           <div className="loading-state">Cargando devoluciones...</div>
         ) : items.length === 0 ? (
           <div className="empty-state">No hay devoluciones registradas.</div>
         ) : (
-          <table className="purchases-table">
+          <table className="suppliers-table">
             <thead>
               <tr>
                 <th>Producto Devuelto</th>

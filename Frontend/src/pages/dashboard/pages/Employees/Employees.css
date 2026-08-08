@@ -1200,7 +1200,6 @@
   }
 
   .simple-summary-grid,
-  .simple-attributes-grid,
   .form-grid {
     grid-template-columns: 1fr;
   }

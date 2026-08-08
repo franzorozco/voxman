@@ -83,23 +83,30 @@ export default function SaleDetailsModal({ saleId, onClose }) {
       <div className="modal-content fade-in" style={{ background: 'var(--bg-card)', borderRadius: '12px', overflow: 'hidden', width: '95%', maxWidth: '1000px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
         
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FileText size={20} className="text-primary"/>
-            Detalle de Venta: {sale.invoice_number || sale.id.split('-')[0]}
+        <div className="modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', paddingRight: '50px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <FileText size={24} className="text-primary" style={{ flexShrink: 0, marginTop: '2px' }}/>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: 0, lineHeight: 1.2 }}>
+              Detalle de Venta
+              <div style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginTop: '4px', wordBreak: 'break-all', fontWeight: 500 }}>
+                {sale.invoice_number || sale.id.split('-')[0]}
+              </div>
+            </h2>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
             {sale.shipments?.[0]?.delivery_code && (
-              <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '8px', fontWeight: 500 }}>| Entrega: {sale.shipments[0].delivery_code}</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Entrega: {sale.shipments[0].delivery_code}</span>
             )}
-            <span className={`status-badge ${sale.status === 'completed' ? 'status-success' : sale.status === 'cancelled' ? 'status-danger' : 'status-warning'}`} style={{ marginLeft: '10px' }}>
+            <span className={`status-badge ${sale.status === 'completed' ? 'status-success' : sale.status === 'cancelled' ? 'status-danger' : 'status-warning'}`}>
               {sale.status}
             </span>
             {sale.shipments?.[0]?.delivery_schedule && (
-              <span className={`status-badge ${sale.shipments[0].delivery_schedule.status === 'completed' ? 'status-success' : 'status-warning'}`} style={{ marginLeft: '10px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}>
+              <span className={`status-badge ${sale.shipments[0].delivery_schedule.status === 'completed' ? 'status-success' : 'status-warning'}`} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}>
                 Entrega: {sale.shipments[0].delivery_schedule.status === 'at_the_meeting_point' ? 'En el punto' : sale.shipments[0].delivery_schedule.status === 'on_the_way' ? 'En camino' : sale.shipments[0].delivery_schedule.status === 'completed' ? 'Completado' : sale.shipments[0].delivery_schedule.status === 'cancelled' ? 'Cancelado' : sale.shipments[0].delivery_schedule.status === 'pending' ? 'Pendiente' : sale.shipments[0].delivery_schedule.status === 'assigned' ? 'Asignado' : sale.shipments[0].delivery_schedule.status}
               </span>
             )}
-          </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', position: 'absolute', top: '20px', right: '20px' }}>
             <X size={24} />
           </button>
         </div>
@@ -107,7 +114,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
         {/* Body */}
         <div style={{ overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
             {/* Cliente Info */}
             <div className="sale-detail-section">
               <div className="sale-detail-title">
@@ -216,7 +223,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               <FileText size={18} /> Productos
             </div>
             <div style={{ overflowX: 'auto', width: '100%' }}>
-              <table className="products-table" style={{ marginTop: '10px' }}>
+              <table className="products-table" style={{ marginTop: '10px', minWidth: '600px' }}>
                 <thead>
                   <tr>
                     <th>Producto</th>
@@ -410,10 +417,10 @@ export default function SaleDetailsModal({ saleId, onClose }) {
           {/* Notas */}
           <div className="sale-detail-section" style={{ marginBottom: '20px' }}>
             <div className="sale-detail-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div><StickyNote size={18} /> Notas Internas de la Venta</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><StickyNote size={18} style={{ flexShrink: 0 }} /> <span>Notas Internas de la Venta</span></div>
               {!isEditingNotes && (
                 <CanAccess permission="edit_sale_notes">
-                  <button onClick={() => setIsEditingNotes(true)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>
+                  <button onClick={() => setIsEditingNotes(true)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
                     Editar Notas
                   </button>
                 </CanAccess>
@@ -452,7 +459,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
 
           {/* Totales */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <div className="sale-detail-section" style={{ width: '300px' }}>
+            <div className="sale-detail-section" style={{ width: '100%', maxWidth: '300px', border: 'none', padding: '10px 0', background: 'transparent' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
                 <span>Bs. {parseFloat(sale.subtotal).toFixed(2)}</span>
@@ -482,41 +489,47 @@ export default function SaleDetailsModal({ saleId, onClose }) {
         </div>
 
         {/* Footer actions */}
-        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', background: 'var(--bg-main)' }}>
-          <div>
-            <CanAccess permission="print_sale_receipt">
-              <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowReceipt(true)}>
-                <Printer size={16} /> Imprimir Ticket
-              </button>
-            </CanAccess>
-          </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div className="modal-footer" style={{ padding: '20px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--bg-main)' }}>
+          
+            {/* Primary Action */}
             <CanAccess permission="manage_sales">
-              {sale.status !== 'cancelled' && sale.status !== 'refunded' && (
-                <button 
-                  className="btn" 
-                  style={{ backgroundColor: 'var(--color-danger)', color: 'white', display: 'flex', alignItems: 'center', gap: '6px', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}
-                  onClick={() => handleStatusChange('cancelled')}
-                  disabled={actionLoading}
-                >
-                  <X size={16} /> Cancelar Venta
-                </button>
-              )}
               {sale.status === 'pending' && (
                 <button 
-                  className="btn" 
-                  style={{ backgroundColor: 'var(--color-success)', color: 'white', display: 'flex', alignItems: 'center', gap: '6px', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}
+                  style={{ backgroundColor: 'var(--color-success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, width: '100%', fontSize: '14px', boxSizing: 'border-box' }}
                   onClick={() => handleStatusChange('completed')}
                   disabled={actionLoading}
                 >
-                  <CheckCircle size={16} /> Marcar Completada
+                  <CheckCircle size={18} /> Marcar Completada
                 </button>
               )}
             </CanAccess>
-            <button className="btn-secondary" onClick={onClose} disabled={actionLoading} style={{ padding: '8px 16px' }}>
-              Cerrar
-            </button>
-          </div>
+
+            {/* Secondary Action */}
+            <CanAccess permission="print_sale_receipt">
+              <button style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', height: '44px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px', boxSizing: 'border-box' }} onClick={() => setShowReceipt(true)}>
+                <Printer size={18} /> Imprimir Ticket
+              </button>
+            </CanAccess>
+
+            {/* Side-by-side actions */}
+            <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+              <CanAccess permission="manage_sales">
+                {sale.status !== 'cancelled' && sale.status !== 'refunded' && (
+                  <button 
+                    style={{ background: 'transparent', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid var(--color-danger)', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, flex: 1, fontSize: '14px', boxSizing: 'border-box' }}
+                    onClick={() => handleStatusChange('cancelled')}
+                    disabled={actionLoading}
+                  >
+                    <X size={16} /> Cancelar
+                  </button>
+                )}
+              </CanAccess>
+              
+              <button onClick={onClose} disabled={actionLoading} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontWeight: 600, cursor: 'pointer', height: '44px', borderRadius: '8px', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', boxSizing: 'border-box' }}>
+                Cerrar
+              </button>
+            </div>
+          
         </div>
 
       </div>

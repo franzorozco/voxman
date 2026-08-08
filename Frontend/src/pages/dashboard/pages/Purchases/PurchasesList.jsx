@@ -52,7 +52,7 @@ export default function PurchasesList() {
   };
 
   return (
-    <div className="purchases-container">
+    <div className="products-container fade-in">
       {selectedPurchase && (
         <ViewPurchaseModal 
           purchase={selectedPurchase} 
@@ -61,79 +61,84 @@ export default function PurchasesList() {
         />
       )}
 
-      <div className="purchases-header">
-        <h1 className="purchases-title">
+      <div className="products-header">
+        <h1 className="products-title">
           <FileText size={28} className="text-primary" />
           Órdenes de Compra
         </h1>
 
         <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-secondary" onClick={() => fetchPurchases()} title="Actualizar">
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+          </button>
           <CanAccess permission="create_purchases">
             <Link to="/dashboard/purchases/create" className="btn-primary" style={{ textDecoration: 'none' }}>
-              <Plus size={16} />
-              Nueva Compra
+              <Plus size={18} /> Nueva Compra
             </Link>
           </CanAccess>
         </div>
       </div>
 
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Deuda Total (Cuentas por Pagar)</span>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Clock size={16} /></div>
+        <div className="metrics-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+          <div className="metric-card">
+            <div className="metric-icon-wrapper" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--color-danger)' }}>
+              <Clock size={24} />
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.total_debt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div className="metric-content">
+              <div className="metric-label">Deuda Total</div>
+              <div className="metric-value">Bs. {Number(stats.total_debt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            </div>
           </div>
           
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Pagado (Mes)</span>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CheckCircle size={16} /></div>
+          <div className="metric-card">
+            <div className="metric-icon-wrapper" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)' }}>
+              <CheckCircle size={24} />
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.monthly_payments).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div className="metric-content">
+              <div className="metric-label">Total Pagado (Mes)</div>
+              <div className="metric-value">Bs. {Number(stats.monthly_payments).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            </div>
           </div>
 
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Mercadería Recibida (Mes)</span>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={16} /></div>
+          <div className="metric-card">
+            <div className="metric-icon-wrapper" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)' }}>
+              <FileText size={24} />
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.monthly_purchases).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div className="metric-content">
+              <div className="metric-label">Mercadería Recibida</div>
+              <div className="metric-value">Bs. {Number(stats.monthly_purchases).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="purchases-filters">
-        <div className="purchases-search-box">
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Buscar por Nro Factura o Proveedor..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="purchases-search-input"
-          />
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div className="filters-container-inner" style={{ marginBottom: '0' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              placeholder="Buscar por Nro Factura o Proveedor..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <CustomSelect 
+            style={{ width: '100%', maxWidth: '200px', padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">Todos los estados</option>
+            <option value="pending">Pendientes</option>
+            <option value="received">Recepcionados</option>
+            <option value="cancelled">Cancelados</option>
+          </CustomSelect>
         </div>
-        <CustomSelect 
-          className="purchase-form-select" 
-          style={{ width: '200px' }}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">Todos los estados</option>
-          <option value="pending">Pendientes</option>
-          <option value="received">Recepcionados</option>
-          <option value="cancelled">Cancelados</option>
-        </CustomSelect>
-        <button className="btn-secondary" onClick={fetchPurchases} title="Actualizar" style={{ padding: '10px' }}>
-          <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-        </button>
       </div>
 
-      <div className="purchases-table-container">
-        <table className="purchases-table">
+      <div className="table-container">
+        <table className="products-table">
           <thead>
             <tr>
               <th>Fecha</th>
@@ -181,8 +186,7 @@ export default function PurchasesList() {
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                       <button
-                        className="btn-secondary"
-                        style={{ padding: '6px', minWidth: 'auto' }}
+                        className="btn-view"
                         onClick={() => setSelectedPurchase(purchase)}
                         title="Ver Detalles"
                       >
@@ -193,8 +197,7 @@ export default function PurchasesList() {
                         {purchase.status === 'pending' && (
                           <Link
                             to={`/dashboard/purchases/receive/${purchase.id}`}
-                            className="btn-primary"
-                            style={{ padding: '6px', minWidth: 'auto' }}
+                            className="btn-convert"
                             title="Recepcionar Mercadería"
                           >
                             <Package size={16} />
@@ -205,8 +208,7 @@ export default function PurchasesList() {
                       <CanAccess permission="cancel_purchases">
                         {purchase.status === 'pending' && (
                           <button
-                            className="btn-remove-item"
-                            style={{ padding: '6px', minWidth: 'auto' }}
+                            className="btn-delete"
                             onClick={() => handleCancel(purchase.id)}
                             title="Anular Compra"
                           >

@@ -64,25 +64,25 @@ export default function Suppliers() {
 
   return (
     <div className="suppliers-container">
-      <div className="suppliers-header">
-        <h1 className="suppliers-title">
+      <div className="suppliers-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1 className="suppliers-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
           <Truck size={28} className="text-primary" />
           Proveedores
         </h1>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <Link to="/dashboard/suppliers/returns" className="btn-secondary">
-            <RotateCcw size={16} />
-            Devoluciones
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'nowrap', flex: 1, justifyContent: 'flex-end', width: '100%', overflowX: 'auto' }}>
+          <Link to="/dashboard/suppliers/returns" className="btn-secondary" style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 4px', minWidth: '0' }}>
+            <RotateCcw size={14} style={{ flexShrink: 0 }} />
+            <span style={{ whiteSpace: 'nowrap', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden' }}>Devoluciones</span>
           </Link>
-          <Link to="/dashboard/suppliers/deleted" className="btn-secondary">
-            <Trash2 size={16} />
-            Papelera
+          <Link to="/dashboard/suppliers/deleted" className="btn-secondary" style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 4px', minWidth: '0' }}>
+            <Trash2 size={14} style={{ flexShrink: 0 }} />
+            <span style={{ whiteSpace: 'nowrap', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden' }}>Papelera</span>
           </Link>
           <CanAccess permission="create_suppliers">
-            <button className="btn-primary" onClick={() => openModal()}>
-              <Plus size={16} />
-              Nuevo Proveedor
+            <button className="btn-primary" onClick={() => openModal()} style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 4px', minWidth: '0' }}>
+              <Plus size={14} style={{ flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden' }}>Nuevo Proveedor</span>
             </button>
           </CanAccess>
         </div>
@@ -116,23 +116,28 @@ export default function Suppliers() {
         </div>
       )}
 
-      <div className="suppliers-filters">
-        <div className="suppliers-search-box">
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre, empresa, NIT, email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="suppliers-search-input"
-          />
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div className="filters-container-inner" style={{ display: 'flex', gap: '12px', marginBottom: '0' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              placeholder="Buscar por nombre, empresa, NIT, email..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button 
+            onClick={fetchSuppliers}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            <span className="hide-on-mobile">Actualizar</span>
+          </button>
         </div>
-        <button className="btn-secondary" onClick={fetchSuppliers} title="Actualizar" style={{ padding: '10px' }}>
-          <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-        </button>
       </div>
 
-      <div className="suppliers-table-container">
+      <div className="table-container">
         <table className="suppliers-table">
           <thead>
             <tr>

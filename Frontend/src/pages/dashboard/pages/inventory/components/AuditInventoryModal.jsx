@@ -207,12 +207,12 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
     <div className="modal-overlay" style={{ zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div className="modal-content" style={{ background: 'var(--bg-card)', width: '100%', maxWidth: '900px', borderRadius: '16px', display: 'flex', flexDirection: 'column', maxHeight: '90vh', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
         
-        <div className="modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
+        <div className="modal-header" style={{ position: 'relative', padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ paddingRight: '40px' }}>
             <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}><Package /> Auditoría de Inventario</h2>
             <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>Sucursal: {selectedBranch?.name}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={24} /></button>
+          <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={24} /></button>
         </div>
 
         <div className="modal-body" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
@@ -251,15 +251,15 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
               <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>Usa el buscador de arriba para encontrar productos y ajustar su stock.</p>
             </div>
           ) : (
-            <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', overflowY: 'auto', flex: 1, minHeight: 0, background: 'var(--bg-card)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'auto', flex: 1, minHeight: 0, background: 'var(--bg-card)' }}>
+              <table style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'auto' }}>
                 <thead style={{ background: 'var(--bg-card)', position: 'sticky', top: 0, zIndex: 1 }}>
                   <tr>
-                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)' }}>Producto / Variante</th>
-                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)' }}>SKU</th>
-                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center' }}>Teórico</th>
-                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center' }}>Físico</th>
-                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center' }}>Diferencia</th>
+                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>Producto / Variante</th>
+                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>SKU</th>
+                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap' }}>Teórico</th>
+                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap' }}>Físico</th>
+                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap' }}>Diferencia</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,7 +300,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
                                   </span>
                                 </div>
                               </td>
-                              <td style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)' }}>{item.variant?.sku}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{item.variant?.sku}</td>
                               <td style={{ padding: '12px 16px', fontSize: '14px', textAlign: 'center', color: 'var(--text-main)' }}>{theoryStock}</td>
                               <td style={{ padding: '8px 16px', textAlign: 'center' }}>
                                 <input
@@ -327,15 +327,15 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
           )}
         </div>
 
-        <div className="modal-footer" style={{ padding: '20px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', borderRadius: '0 0 16px 16px' }}>
-          <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>
+        <div className="modal-footer audit-modal-footer" style={{ padding: '20px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', borderRadius: '0 0 16px 16px', gap: '15px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>
             {Object.keys(auditedItems).length} productos auditados en esta sesión
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={onClose} disabled={saving} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}>
               Cancelar
             </button>
-            <button onClick={handleSubmit} disabled={saving || loading || Object.keys(auditedItems).length === 0} style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500, opacity: Object.keys(auditedItems).length === 0 ? 0.5 : 1 }}>
+            <button onClick={handleSubmit} disabled={saving || loading || Object.keys(auditedItems).length === 0} style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 500, opacity: Object.keys(auditedItems).length === 0 ? 0.5 : 1 }}>
               <Save size={18} /> {saving ? "Guardando..." : "Guardar Auditoría"}
             </button>
           </div>

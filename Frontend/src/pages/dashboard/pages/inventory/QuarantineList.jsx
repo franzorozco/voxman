@@ -4,7 +4,7 @@ import { getQuarantineItems } from "../../../../api/admin/quarantine";
 import { getBranches } from "../../../../api/admin/branches";
 import ResolveQuarantineModal from "./ResolveQuarantineModal";
 import { PackageX, AlertTriangle, CheckCircle, PackageOpen } from "lucide-react";
-import "../Purchases/Purchases.css";
+import "./Inventory.css";
 import { API_BASE_URL } from "../../../../config/api";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
@@ -67,18 +67,20 @@ const QuarantineList = () => {
   };
 
   return (
-    <div className="purchases-container">
-      <div className="purchases-header">
-        <div className="purchases-title">
-          <AlertTriangle size={24} />
-          Mermas y Cuarentena
-        </div>
-        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-          Resolución de productos dañados o equivocados en recepciones.
+    <div className="inventory-container">
+      <div className="inventory-header" style={{ display: "flex", flexWrap: "wrap", gap: "15px", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <div>
+          <h1 className="inventory-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AlertTriangle size={24} />
+            Mermas y Cuarentena
+          </h1>
+          <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+            Resolución de productos dañados o equivocados en recepciones.
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)' }}>
+      <div className="quarantine-tabs" style={{ display: "flex", gap: "20px", marginBottom: "20px", borderBottom: "1px solid var(--border-color)", overflowX: "auto", whiteSpace: "nowrap" }}>
         <button 
           onClick={() => setStatusFilter('pending')}
           style={{ background: 'none', border: 'none', padding: '10px 0', borderBottom: statusFilter === 'pending' ? '2px solid var(--primary-color)' : '2px solid transparent', color: statusFilter === 'pending' ? 'var(--text-main)' : 'var(--text-muted)', fontWeight: statusFilter === 'pending' ? 600 : 400, cursor: 'pointer', fontSize: '15px' }}
@@ -93,24 +95,20 @@ const QuarantineList = () => {
         </button>
       </div>
 
-      <div className="filters-container" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <CustomSelect 
-          className="purchase-form-select"
-          value={selectedBranch}
-          onChange={(e) => setSelectedBranch(e.target.value)}
-          style={{ width: '250px' }}
+      <div className="filters-container quarantine-filters" style={{ display: "flex", gap: "12px", marginBottom: "20px", flexWrap: "wrap" }}>
+        <CustomSelect className="inventory-select" value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} style={{ flex: "1 1 250px", minWidth: "200px" }}
         >
           <option value="">Todas las Sucursales</option>
           {branches.map(b => (
             <option key={b.id} value={b.id}>{b.name}</option>
           ))}
         </CustomSelect>
-        <button className="btn-secondary" onClick={loadData}>
+        <button className="btn-secondary" onClick={loadData} style={{ padding: "10px 20px", flex: "0 0 auto", minWidth: "120px" }}>
           Actualizar
         </button>
       </div>
 
-      <div className="purchases-table-container">
+      <div className="table-wrapper">
         {loading ? (
           <div className="loading-state">Cargando...</div>
         ) : items.length === 0 ? (
@@ -118,15 +116,15 @@ const QuarantineList = () => {
             {statusFilter === 'pending' ? 'No hay mermas pendientes. ¡Excelente!' : 'No hay historial de mermas resueltas.'}
           </div>
         ) : (
-          <table className="purchases-table">
+          <table className="inventory-table">
             <thead>
               <tr>
-                <th>Producto</th>
-                <th>Recepción</th>
-                <th>Motivo</th>
-                <th style={{ textAlign: 'center' }}>Pendiente</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th style={{ whiteSpace: "nowrap" }}>Producto</th>
+                <th style={{ whiteSpace: "nowrap" }}>Recepción</th>
+                <th style={{ whiteSpace: "nowrap" }}>Motivo</th>
+                <th style={{ textAlign: "center", whiteSpace: "nowrap" }}>Pendiente</th>
+                <th style={{ whiteSpace: "nowrap" }}>Estado</th>
+                <th style={{ whiteSpace: "nowrap" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -147,7 +145,7 @@ const QuarantineList = () => {
                 
                 return (
                   <tr key={item.id}>
-                    <td>
+                    <td style={{ whiteSpace: "nowrap" }}>
                       <div className="product-cell" style={{ display: 'flex', alignItems: 'center' }}>
                         <img 
                           src={finalImageUrl} 
@@ -165,23 +163,23 @@ const QuarantineList = () => {
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td style={{ whiteSpace: "nowrap" }}>
                       <div style={{ fontSize: 13 }}>OC: {item.purchase_reception?.purchase?.invoice_number || 'S/N'}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                         {new Date(item.created_at).toLocaleDateString()}
                       </div>
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <div style={{ display: "flex", alignItems: 'center' }}>
                         {getReasonBadge(item.reason)}
                       </div>
                     </td>
-                    <td style={{ textAlign: 'center' }}>
+                    <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, fontWeight: 'bold' }}>{pendingCount}</span>
                       <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 4 }}>de {item.quantity}</span>
                     </td>
-                    <td>{getStatusBadge(item.status)}</td>
-                    <td>
+                    <td style={{ whiteSpace: "nowrap" }}>{getStatusBadge(item.status)}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>
                       {item.status !== 'resolved' ? (
                         <button className="btn-primary" onClick={() => handleResolveClick(item)}>
                           Resolver
