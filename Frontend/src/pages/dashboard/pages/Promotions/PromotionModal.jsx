@@ -227,23 +227,23 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
   return (
     <div className="modal-overlay">
       <div className="modal">
-        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, padding: '24px 30px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '20px', fontWeight: '600' }}>
+        <h2 className="promo-modal-header">
           {promotion ? "Editar Promoción" : "Nueva Promoción"}
-          <button className="btn-secondary" style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer' }} onClick={onClose}>
+          <button type="button" className="promo-modal-close-btn" onClick={onClose}>
             <X size={20} />
           </button>
         </h2>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <form onSubmit={handleSubmit} className="promo-modal-form">
           {dataLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: '300px' }}>
               <Spinner size={48} color="var(--primary-color)" />
             </div>
           ) : (
             <>
-              <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+              <div className="promo-modal-body">
                 
-                <p style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600, color: 'var(--primary-color)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Información General</p>
+                <p className="promo-section-title">Información General</p>
             <div className="form-grid">
               <div className="form-group">
                 <label>Nombre de la Promoción *</label>
@@ -256,29 +256,21 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   placeholder="Ej: Oferta de Verano"
                 />
               </div>
-              <div className="form-group" style={{justifyContent: 'center', display: 'flex', flexDirection: 'column'}}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 'auto', marginBottom: 'auto' }}>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0, margin: 0 }}>
+              <div className="form-group" style={{justifyContent: "center"}}>
+                <div className="promo-toggle-wrapper">
+                  <label className="promo-toggle-label">
                     <input 
                       type="checkbox" 
                       name="active" 
                       checked={formData.active} 
                       onChange={handleChange} 
-                      style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                      className="promo-toggle-input"
                     />
-                    <span style={{ 
-                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
-                      backgroundColor: formData.active ? 'var(--color-primary)' : 'var(--border-color)', 
-                      transition: '.4s', borderRadius: '34px' 
-                    }}>
-                      <span style={{
-                        position: 'absolute', content: '""', height: '16px', width: '16px', 
-                        left: formData.active ? '24px' : '4px', bottom: '4px', 
-                        backgroundColor: 'var(--bg-main)', transition: '.4s', borderRadius: '50%'
-                      }}></span>
+                    <span className="promo-toggle-slider">
+                      
                     </span>
                   </label>
-                  <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '14px' }}>Promoción Activa</span>
+                  <span className="promo-toggle-text">Promoción Activa</span>
                 </div>
               </div>
             </div>
@@ -307,7 +299,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
 
             {formData.type === 'percentage' && (
               <div className="form-grid">
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <div className="form-group promo-form-group-full">
                   <label>Límite de Descuento (Monto Máximo en Bs.)</label>
                   <input 
                     type="number" 
@@ -317,38 +309,30 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                     onChange={handleChange} 
                     placeholder="Ej: 100 (Dejar vacío para no tener límite)"
                   />
-                  <small style={{ color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                  <small className="promo-helper-text">
                     Establece un tope monetario máximo. Si el 50% de descuento de un producto de 1000 Bs es 500 Bs, pero el límite es 100 Bs, el descuento final será 100 Bs.
                   </small>
                 </div>
               </div>
             )}
 
-            <p style={{ margin: '24px 0 16px 0', fontSize: '16px', fontWeight: 600, color: 'var(--primary-color)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Código y Automatización</p>
+            <p className="promo-section-title">Código y Automatización</p>
             <div className="form-grid">
               <div className="form-group">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '28px' }}>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0, margin: 0 }}>
+                <div className="promo-toggle-wrapper">
+                  <label className="promo-toggle-label">
                     <input 
                       type="checkbox" 
                       name="is_automatic" 
                       checked={formData.is_automatic} 
                       onChange={handleChange} 
-                      style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                      className="promo-toggle-input"
                     />
-                    <span style={{ 
-                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
-                      backgroundColor: formData.is_automatic ? 'var(--color-primary)' : 'var(--border-color)', 
-                      transition: '.4s', borderRadius: '34px' 
-                    }}>
-                      <span style={{
-                        position: 'absolute', content: '""', height: '16px', width: '16px', 
-                        left: formData.is_automatic ? '24px' : '4px', bottom: '4px', 
-                        backgroundColor: 'var(--bg-main)', transition: '.4s', borderRadius: '50%'
-                      }}></span>
+                    <span className="promo-toggle-slider">
+                      
                     </span>
                   </label>
-                  <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '14px' }}>Aplicar Automáticamente</span>
+                  <span className="promo-toggle-text">Aplicar Automáticamente</span>
                 </div>
               </div>
               {!formData.is_automatic && (
@@ -371,7 +355,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
               )}
             </div>
 
-            <p style={{ margin: '24px 0 16px 0', fontSize: '16px', fontWeight: 600, color: 'var(--primary-color)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Condiciones y Límites (Opcional)</p>
+            <p className="promo-section-title">Condiciones y Límites (Opcional)</p>
             <div className="form-grid">
               <div className="form-group">
                 <label>Compra Mínima (Bs)</label>
@@ -439,7 +423,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
               </div>
             </div>
 
-            <p style={{ margin: '24px 0 16px 0', fontSize: '16px', fontWeight: 600, color: 'var(--primary-color)', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Objetivos Específicos (Dejar vacío para aplicar a todo)</p>
+            <p className="promo-section-title">Objetivos Específicos (Dejar vacío para aplicar a todo)</p>
             <div className="form-grid">
               
               <div className="form-group">
@@ -481,7 +465,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                 />
               </div>
 
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <div className="form-group promo-form-group-full">
                 <label>Productos (Búsqueda Asyncrona)</label>
                 <AsyncSelect
                   isMulti
@@ -497,7 +481,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                 />
               </div>
 
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <div className="form-group promo-form-group-full">
                 <label>Variantes o SKUs (Búsqueda Asyncrona)</label>
                 <AsyncSelect
                   isMulti
@@ -547,11 +531,11 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
             </div>
           </div>
           
-          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--bg-card)' }}>
-            <button type="button" className="btn-secondary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)' }} onClick={onClose} disabled={loading}>
+          <div className="promo-modal-footer">
+            <button type="button" className="promo-btn-cancel" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
-            <button type="submit" className="btn-primary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '160px' }} disabled={loading}>
+            <button type="submit" className="btn-primary promo-btn-submit" disabled={loading}>
               {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Guardar Promoción"}
             </button>
               </div>

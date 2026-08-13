@@ -292,7 +292,7 @@ export default function ExpensesTab() {
           <div className="loading-state">Cargando datos...</div>
         ) : viewMode === 'general' ? (
           <div className="table-responsive">
-          <table className="products-table">
+          <table className="finance-table">
             <thead>
                 <tr>
                   <th>Fecha</th>
@@ -439,7 +439,7 @@ export default function ExpensesTab() {
           </div>
         ) : (
           <div className="table-responsive">
-          <table className="products-table">
+          <table className="finance-table">
             <thead>
               <tr>
                 <th>Fecha de Pago</th>

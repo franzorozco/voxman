@@ -70,20 +70,26 @@ export default function Suppliers() {
           Proveedores
         </h1>
 
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'nowrap', flex: 1, justifyContent: 'flex-end', width: '100%', overflowX: 'auto' }}>
-          <Link to="/dashboard/suppliers/returns" className="btn-secondary" style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 4px', minWidth: '0' }}>
-            <RotateCcw size={14} style={{ flexShrink: 0 }} />
-            <span style={{ whiteSpace: 'nowrap', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden' }}>Devoluciones</span>
-          </Link>
-          <Link to="/dashboard/suppliers/deleted" className="btn-secondary" style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 4px', minWidth: '0' }}>
-            <Trash2 size={14} style={{ flexShrink: 0 }} />
-            <span style={{ whiteSpace: 'nowrap', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden' }}>Papelera</span>
-          </Link>
+        <div className="header-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'nowrap', flex: 1, justifyContent: 'center', width: '100%' }}>
+          <div style={{ flex: 1, display: 'flex' }}>
+            <Link to="/dashboard/suppliers/returns" className="btn-secondary" style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 0', margin: 0 }}>
+              <RotateCcw size={18} style={{ flexShrink: 0 }} />
+              <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: 500 }}>Devoluciones</span>
+            </Link>
+          </div>
+          <div style={{ flex: 1, display: 'flex' }}>
+            <Link to="/dashboard/suppliers/deleted" className="btn-secondary" style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 0', margin: 0 }}>
+              <Trash2 size={18} style={{ flexShrink: 0 }} />
+              <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: 500 }}>Papelera</span>
+            </Link>
+          </div>
           <CanAccess permission="create_suppliers">
-            <button className="btn-primary" onClick={() => openModal()} style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 4px', minWidth: '0' }}>
-              <Plus size={14} style={{ flexShrink: 0 }} />
-              <span style={{ whiteSpace: 'nowrap', fontSize: '11px', textOverflow: 'ellipsis', overflow: 'hidden' }}>Nuevo Proveedor</span>
-            </button>
+            <div style={{ flex: 1, display: 'flex' }}>
+              <button className="btn-primary" onClick={() => openModal()} style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 0', margin: 0 }}>
+                <Plus size={18} style={{ flexShrink: 0 }} />
+                <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: 500 }}>Nuevo Proveedor</span>
+              </button>
+            </div>
           </CanAccess>
         </div>
       </div>

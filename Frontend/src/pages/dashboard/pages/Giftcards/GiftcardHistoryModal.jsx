@@ -34,30 +34,30 @@ export default function GiftcardHistoryModal({ isOpen, onClose, giftcard }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content giftcard-history-modal" style={{ maxWidth: '600px', width: '100%' }}>
-        <div className="modal-header" style={{ paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
+      <div className="modal-content gift-modal-history">
+        <div className="gift-modal-header gift-history-header">
           <div>
-            <h2 style={{ marginBottom: '8px' }}>Historial de Transacciones</h2>
-            <div style={{ display: 'flex', gap: '15px', color: 'var(--text-muted)', fontSize: '14px' }}>
-              <span style={{ fontWeight: 600, color: 'var(--text-main)', fontFamily: 'monospace' }}>
+            <h2>Historial de Transacciones</h2>
+            <div className="gift-history-subtitle">
+              <span className="gift-code-text">
                 {giftcard.code}
               </span>
-              <span>Saldo Actual: <strong style={{ color: 'var(--primary-color)' }}>{formatCurrency(giftcard.current_balance)}</strong></span>
+              <span>Saldo Actual: <strong className="gift-text-primary">{formatCurrency(giftcard.current_balance)}</strong></span>
             </div>
             {(giftcard.purchaser || giftcard.customer) && (
-              <div style={{ fontSize: '13px', marginTop: '8px', color: 'var(--text-muted)' }}>
+              <div className="gift-history-owner">
                 {giftcard.purchaser && <span><strong>Comprador original:</strong> {giftcard.purchaser.user?.profile?.first_name || 'Cliente'} {giftcard.purchaser.user?.profile?.last_name || ''}</span>}
-                {giftcard.purchaser && giftcard.customer && <span style={{ margin: '0 8px' }}>|</span>}
+                {giftcard.purchaser && giftcard.customer && <span className="divider">|</span>}
                 {giftcard.customer && <span><strong>Propietario digital:</strong> {giftcard.customer.user?.profile?.first_name || 'Cliente'} {giftcard.customer.user?.profile?.last_name || ''}</span>}
               </div>
             )}
           </div>
-          <button className="close-btn" onClick={onClose}>
-            <X size={24} />
+          <button type="button" className="gift-modal-close-btn" onClick={onClose}>
+            <X size={20} />
           </button>
         </div>
 
-        <div className="modal-body" style={{ maxHeight: '400px', overflowY: 'auto', padding: '20px 0' }}>
+        <div className="gift-modal-body gift-history-body">
           {giftcard.transactions && giftcard.transactions.length > 0 ? (
             <div className="timeline">
               {giftcard.transactions.map((t, index) => {
@@ -83,8 +83,8 @@ export default function GiftcardHistoryModal({ isOpen, onClose, giftcard }) {
                 }
 
                 return (
-                  <div key={t.id} style={{ display: 'flex', gap: '16px', marginBottom: '20px', padding: '0 20px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div key={t.id} className="gift-timeline-item">
+                    <div className="gift-timeline-icon-col">
                       <div style={{ 
                         width: '32px', height: '32px', borderRadius: '50%', 
                         background: `${getTypeColor(t.type)}20`, 
@@ -94,25 +94,25 @@ export default function GiftcardHistoryModal({ isOpen, onClose, giftcard }) {
                         <Activity size={16} />
                       </div>
                       {index !== giftcard.transactions.length - 1 && (
-                        <div style={{ width: '2px', height: '100%', background: 'var(--border-color)', margin: '4px 0' }}></div>
+                        <div className="gift-timeline-line"></div>
                       )}
                     </div>
-                    <div style={{ flex: 1, background: 'var(--bg-overlay)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div className="gift-timeline-content">
+                      <div className="gift-timeline-header">
                         <strong style={{ color: getTypeColor(t.type) }}>{title}</strong>
                         <span style={{ fontWeight: 'bold', color: t.type === 'payment' || t.type === 'refund' && t.amount < 0 ? 'var(--danger-color)' : 'var(--text-main)' }}>
                           {t.type === 'payment' || (t.type === 'refund' && t.amount < 0) ? '-' : '+'}{formatCurrency(Math.abs(t.amount))}
                         </span>
                       </div>
-                      <p style={{ color: 'var(--text-main)', fontSize: '13px', margin: '0 0 8px 0', lineHeight: '1.4' }}>
+                      <p className="gift-timeline-desc">
                         {description}
                       </p>
-                      <div style={{ display: 'flex', gap: '15px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div className="gift-timeline-meta">
+                        <span className="gift-timeline-meta-item">
                           <Calendar size={12} /> {formatDate(t.created_at)}
                         </span>
                         {t.sale && (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary-color)', fontWeight: 500 }}>
+                          <span className="gift-timeline-meta-item primary">
                             <DollarSign size={12} /> Venta #{t.sale.invoice_number || t.sale.id}
                           </span>
                         )}
@@ -123,7 +123,7 @@ export default function GiftcardHistoryModal({ isOpen, onClose, giftcard }) {
               })}
             </div>
           ) : (
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>
+            <p className="gift-history-empty">
               No hay transacciones registradas para esta Giftcard.
             </p>
           )}

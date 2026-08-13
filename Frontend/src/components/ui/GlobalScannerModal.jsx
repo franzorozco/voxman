@@ -59,7 +59,7 @@ export default function GlobalScannerModal() {
 
   return (
     <div className="modal-overlay" style={{ zIndex: 1100, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
-      <div className="modal-content" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)', borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="scanner-modal-content" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)', borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         
         <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)' }}>
           <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', color: 'var(--text-main)' }}>
@@ -91,7 +91,7 @@ export default function GlobalScannerModal() {
           </div>
         </div>
 
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {error ? (
             <div style={{ color: '#fff', textAlign: 'center', padding: '20px' }}>
               <Camera size={48} style={{ opacity: 0.3, margin: '0 auto 10px auto' }} />
@@ -116,9 +116,9 @@ export default function GlobalScannerModal() {
           )}
         </div>
 
-        <div style={{ padding: '20px', background: 'var(--bg-card)', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)' }}>
-            Apunta la cámara de tu dispositivo hacia el código QR o barras.
+        <div style={{ padding: '12px 16px', background: 'var(--bg-card)', textAlign: 'center' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>
+            Apunta la cámara hacia el código QR o barras.
           </p>
         </div>
       </div>

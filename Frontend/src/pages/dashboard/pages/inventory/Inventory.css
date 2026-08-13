@@ -189,7 +189,6 @@
     
     /* Historial full width */
     .header-actions > a {
-      flex-basis: 100%;
       justify-content: center;
     }
     
@@ -199,6 +198,20 @@
       max-width: calc(50% - 7px);
       justify-content: center;
       padding: 10px !important;
+    }
+
+    .filters-header {
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    
+    .filters-header .search-bar {
+      max-width: 100% !important;
+    }
+    
+    .filters-header .filter-toggle-btn {
+      width: 100%;
+      justify-content: center;
     }
 
     .table-wrapper {

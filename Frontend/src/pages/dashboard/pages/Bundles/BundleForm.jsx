@@ -41,9 +41,11 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
         } else if (item.variant_id) {
           type = "variant";
           value = item.variant_id;
-          const color = item.variant?.variant_attribute_values?.[0]?.attribute_value?.value || '';
           const size = item.variant?.size?.name || '';
-          label = `[Variante] ${item.product?.name || 'Desconocido'} - ${size} ${color}`;
+          const fit = item.variant?.fit?.name || '';
+          const otherAttrs = (item.variant?.variant_attribute_values || []).map(val => val.attribute_value?.value).filter(Boolean);
+          const allAttrs = [fit, size, ...otherAttrs].filter(Boolean).join(" - ");
+          label = `[Variante] ${item.product?.name || 'Desconocido'} - ${allAttrs}`;
         }
 
         let mainImage = null;
@@ -69,9 +71,10 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
           price = parseFloat(item.variant?.price || item.product?.base_price || 0);
           cost = parseFloat(item.variant?.cost || 0);
           sku = item.variant?.sku || "N/A";
-          const color = item.variant?.variant_attribute_values?.[0]?.attribute_value?.value || '';
           const size = item.variant?.size?.name || '';
-          attributesText = [size, color].filter(Boolean).join(" - ");
+          const fit = item.variant?.fit?.name || '';
+          const otherAttrs = (item.variant?.variant_attribute_values || []).map(val => val.attribute_value?.value).filter(Boolean);
+          attributesText = [fit, size, ...otherAttrs].filter(Boolean).join(" - ");
         }
 
         return {
@@ -147,18 +150,20 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
             const finalVariantImage = variantImage ? (variantImage.startsWith('http') ? variantImage : `${API_BASE_URL}${variantImage}`) : imageUrl;
             
             const sizeName = v.size?.name || '';
-            const colorName = v.variant_attribute_values?.[0]?.attribute_value?.value || '';
+            const fitName = v.fit?.name || '';
+            const otherAttrs = (v.variant_attribute_values || []).map(val => val.attribute_value?.value).filter(Boolean);
+            const allAttrs = [fitName, sizeName, ...otherAttrs].filter(Boolean).join(" - ");
             
             options.push({
               value: v.id,
-              label: `[Variante] ${p.name} - ${sizeName} ${colorName} (SKU: ${v.sku})`,
+              label: `[Variante] ${p.name} - ${allAttrs} (SKU: ${v.sku})`,
               type: 'variant',
               productId: p.id,
               price: parseFloat(v.price || p.base_price || 0),
               cost: parseFloat(v.cost || 0),
               image: finalVariantImage,
               sku: v.sku || 'N/A',
-              attributesText: [sizeName, colorName].filter(Boolean).join(" - ")
+              attributesText: allAttrs
             });
           });
         }
@@ -316,10 +321,10 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    setImageFiles(prev => [...prev, ...files]);
-    
-    const previews = files.map(file => URL.createObjectURL(file));
-    setImagePreviews(prev => [...prev, ...previews]);
+    if (files.length > 0) {
+      setImageFiles([files[0]]);
+      setImagePreviews([URL.createObjectURL(files[0])]);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -436,29 +441,29 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
 
   return (
     <div className="modal-overlay bundle-modal-overlay">
-      <form onSubmit={handleSubmit} className="modal-content bundle-modal-content" style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
-        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 30px', borderBottom: '1px solid var(--border-color)', flexShrink: 0 }}>
-          <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>
+      <form id="bundle-form-modal" onSubmit={handleSubmit} className="modal-content bundle-modal-content">
+        <div className="modal-header">
+          <h2 className="modal-title">
             {bundle ? "Editar Conjunto" : "Crear Conjunto"}
           </h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', transition: '0.2s' }}>
+          <button type="button" onClick={onClose} className="modal-close-btn">
             <X size={24} />
           </button>
         </div>
 
-        <div className="modal-body bundle-modal-grid" style={{ overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '40px', padding: '24px 30px' }}>
+        <div className="modal-body bundle-modal-grid">
           
           {/* Columna Izquierda: Info Principal */}
           <div className="form-info-col">
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>Información del Conjunto</h3>
-            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+            <h3 className="bfm-section-title">Información del Conjunto</h3>
+            <div className="form-grid bfm-form-grid">
               <div className="form-group">
                 <label>Nombre del Conjunto</label>
                 <input type="text" className="form-control" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
               </div>
 
-              <div className="form-group" style={{ position: 'relative' }}>
-                <label className="flex-wrap-mobile" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <div className="form-group bfm-price-group">
+                <label className="flex-wrap-mobile bfm-price-label">
                   <span>Precio del Conjunto</span>
                   {(() => {
                     const regularPrice = calculateTotal(formData.bundle_items);
@@ -466,7 +471,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                     const savings = regularPrice - basePrice;
                     if (savings > 0) {
                       return (
-                        <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: '600' }}>
+                        <span className="bfm-savings-text">
                           Ahorro Cliente: Bs. {savings.toFixed(2)}
                         </span>
                       );
@@ -474,14 +479,14 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                     return null;
                   })()}
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="bfm-price-input-wrapper">
                   <input type="number" step="0.01" className="form-control" required value={formData.base_price} onChange={(e) => setFormData({ ...formData, base_price: e.target.value })} />
                   {(() => {
                     const regularPrice = calculateTotal(formData.bundle_items);
                     if (regularPrice > 0) {
                       return (
-                        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: 'var(--text-muted)' }}>
-                          Reg: <span style={{ textDecoration: 'line-through' }}>Bs. {regularPrice.toFixed(2)}</span>
+                        <div className="bfm-reg-price-tag">
+                          Reg: <span>Bs. {regularPrice.toFixed(2)}</span>
                         </div>
                       );
                     }
@@ -497,14 +502,14 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                   
                   if (totalCost > 0 || basePrice > 0) {
                     return (
-                      <div style={{ marginTop: '8px', padding: '10px', borderRadius: '8px', background: margin >= 0 ? 'var(--color-success-alpha)' : 'var(--color-danger-alpha)', border: `1px solid ${margin >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Costo Total Ítems</span>
-                          <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-main)' }}>Bs. {totalCost.toFixed(2)}</span>
+                      <div className={`bfm-margin-box ${margin >= 0 ? 'margin-positive' : 'margin-negative'}`}>
+                        <div className="bfm-margin-col">
+                          <span className="bfm-margin-lbl">Costo Total Ítems</span>
+                          <span className="bfm-margin-val">Bs. {totalCost.toFixed(2)}</span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Margen de Ganancia</span>
-                          <span style={{ fontSize: '14px', fontWeight: '700', color: margin >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                        <div className="bfm-margin-col bfm-margin-col-right">
+                          <span className="bfm-margin-lbl">Margen de Ganancia</span>
+                          <span className={`bfm-margin-val-big ${margin >= 0 ? 'text-success' : 'text-danger'}`}>
                             Bs. {margin.toFixed(2)}
                           </span>
                         </div>
@@ -515,9 +520,9 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                 })()}
               </div>
 
-              <div className="bundle-form-row-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="bundle-form-row-grid">
                 <div className="form-group">
-                  <label>Categoría <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 'normal' }}>(Opcional)</span></label>
+                  <label>Categoría <span className="bfm-optional-label">(Opcional)</span></label>
                   <CustomSelect  value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
                     <option value="">Seleccione...</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -540,49 +545,51 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
 
               <div className="form-group">
                 <label>Imágenes del Conjunto</label>
-                <input 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  onChange={handleImageUpload} 
-                  className="form-control" 
-                  style={{ padding: '8px' }} 
-                />
-                {imagePreviews.length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '12px', marginTop: '12px' }}>
-                    {imagePreviews.map((preview, idx) => (
-                      <div key={idx} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-                        <img src={preview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div className="bfm-custom-upload-zone">
+                  <input 
+                    type="file" 
+                    id="bundle-image-upload"
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                    className="bfm-hidden-file-input" 
+                  />
+                  {imagePreviews.length > 0 ? (
+                    <label htmlFor="bundle-image-upload" className="bfm-single-image-preview">
+                      <img src={imagePreviews[0]} alt="Preview" />
+                      <div className="bfm-preview-overlay">
+                        <Camera size={24} />
+                        <span>Cambiar Imagen</span>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </label>
+                  ) : (
+                    <label htmlFor="bundle-image-upload" className="bfm-upload-placeholder">
+                      <div className="bfm-upload-icon-wrapper">
+                        <Camera size={32} />
+                      </div>
+                      <span className="bfm-upload-text">Haz clic para añadir imagen</span>
+                      <span className="bfm-upload-subtext">JPG, PNG o WEBP</span>
+                    </label>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Columna Derecha: Ítems del Conjunto */}
           <div className="form-items-col">
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>Ítems del Conjunto</h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 20px 0' }}>Selecciona Productos (el cliente elige talla/color) o Variantes (talla/color fijo).</p>
+            <h3 className="bfm-section-title">Ítems del Conjunto</h3>
+            <p className="bfm-section-desc">Selecciona Productos (el cliente elige talla/color) o Variantes (talla/color fijo).</p>
 
-            <div className="bundle-items-cards" style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
+            <div className="bundle-items-cards">
               {formData.bundle_items.map((item, index) => (
-                <div key={index} className="bundle-item-card flex-wrap-mobile" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', gap: '16px', position: 'relative', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-                  <button type="button" onClick={() => handleRemoveItem(index)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s', zIndex: 10 }}>
+                <div key={index} className="bfm-item-card">
+                  <button type="button" className="bfm-item-remove-btn" onClick={() => handleRemoveItem(index)}>
                     <X size={16} />
                   </button>
                   
-                  <div style={{ width: '100px', height: '100px', borderRadius: '10px', overflow: 'hidden', background: 'var(--bg-overlay)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {item.selectOption?.image ? (
-                      <img src={item.selectOption.image} alt="Portada" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sin img</span>
-                    )}
-                  </div>
-
-                  <div style={{ flex: 1, minWidth: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingRight: '24px' }}>
-                     <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ítem {index + 1}</label>
+                  {/* Select Header */}
+                  <div className="bfm-item-header">
+                     <label className="bfm-item-label">Ítem {index + 1}</label>
                      <AsyncSelect
                         className="bundle-item-select"
                         styles={selectStyles}
@@ -596,60 +603,70 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                         menuPortalTarget={themeNode}
                         menuPosition="fixed"
                       />
+                  </div>
 
+                  {/* Body: Image and Details side by side */}
+                  <div className="bfm-item-body">
+                    <div className="bfm-item-image">
+                      {item.selectOption?.image ? (
+                        <img src={item.selectOption.image} alt="Portada" />
+                      ) : (
+                        <span>Sin img</span>
+                      )}
+                    </div>
+
+                    <div className="bfm-item-details-container">
                       {item.selectOption && (
-                        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div className="bundle-item-details-grid" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>SKU / Cód.</span>
-                              <span style={{ fontSize: '12px', color: 'var(--text-main)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.selectOption.sku || 'N/A'}</span>
+                        <div className="bfm-item-details-wrapper">
+                          <div className="bfm-item-details-grid">
+                            <div>
+                              <span>SKU / Cód.</span>
+                              <strong>{item.selectOption.sku || 'N/A'}</strong>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Variante</span>
-                              <span style={{ fontSize: '12px', color: 'var(--text-main)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.selectOption.attributesText || 'General'}</span>
+                            <div>
+                              <span>Variante</span>
+                              <strong title={item.selectOption.attributesText}>{item.selectOption.attributesText || 'General'}</strong>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Precio Reg.</span>
-                              <span style={{ fontSize: '12px', color: 'var(--color-success)', fontWeight: 600 }}>Bs. {parseFloat(item.selectOption.price || 0).toFixed(2)}</span>
+                            <div>
+                              <span>Precio Reg.</span>
+                              <strong className="text-success">Bs. {parseFloat(item.selectOption.price || 0).toFixed(2)}</strong>
                             </div>
                           </div>
                           
-                          <div className="flex-wrap-mobile" style={{ background: 'var(--bg-overlay)', border: '1px dashed var(--border-color)', borderRadius: '6px', padding: '6px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Costo Interno (Fábrica)</span>
-                            <span style={{ fontSize: '12px', color: 'var(--color-danger)', fontWeight: 600 }}>Bs. {parseFloat(item.selectOption.cost || 0).toFixed(2)}</span>
+                          <div className="bfm-item-cost">
+                            <span>Costo Interno (Fábrica)</span>
+                            <strong>Bs. {parseFloat(item.selectOption.cost || 0).toFixed(2)}</strong>
                           </div>
                         </div>
                       )}
+                    </div>
+                  </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '12px' }}>
-                        <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                          Cantidad {item.type === 'product' && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>(Fija)</span>}
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          disabled={item.type === 'product'}
-                          style={{ width: '80px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: item.type === 'product' ? 'var(--bg-overlay)' : 'var(--bg-input)', color: item.type === 'product' ? 'var(--text-muted)' : 'var(--text-main)', outline: 'none', textAlign: 'center', fontWeight: 600, cursor: item.type === 'product' ? 'not-allowed' : 'text' }}
-                          value={item.quantity}
-                          onChange={(e) => handleQuantityChange(index, e.target.value)}
-                        />
-                      </div>
+                  <div className="bfm-item-quantity-row">
+                    <label>
+                      Cantidad {item.type === 'product' && <span>(Fija)</span>}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      disabled={item.type === 'product'}
+                      value={item.quantity}
+                      onChange={(e) => handleQuantityChange(index, e.target.value)}
+                    />
                   </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '16px', alignItems: 'stretch' }}>
-              <button type="button" className="btn-add-item" onClick={handleAddItem} style={{ flex: 1, marginTop: 0 }}>
+            <div className="bfm-add-actions">
+              <button type="button" className="btn-add-item bfm-add-btn" onClick={handleAddItem}>
                 <Plus size={18} /> Agregar Ítem Manual
               </button>
               <button
                 type="button"
+                className="bfm-scanner-btn"
                 onClick={() => openScanner(processScannedCode, true)}
                 title="Escanear Ítem"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 15px', borderRadius: '8px', background: 'var(--bg-card)', color: 'var(--color-primary)', border: '1px dashed var(--border-color)', cursor: 'pointer', transition: '0.2s', flexShrink: 0 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(99,102,241,0.05)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-card)' }}
               >
                 <Camera size={20} />
               </button>
@@ -657,18 +674,18 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
           </div>
 
           </div>
-        <div className="modal-footer" style={{ flexShrink: 0, padding: '16px 30px', borderTop: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '0 0 12px 12px' }}>
+        <div className="bundle-modal-footer">
           
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginBottom: 0 }}>
-            <input type="checkbox" id="bundle-active" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} style={{ width: '22px', height: '22px', cursor: 'pointer', accentColor: 'var(--color-primary)', margin: 0 }} />
-            <label htmlFor="bundle-active" style={{ margin: 0, cursor: 'pointer', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Conjunto Activo</label>
+          <div className="bfm-checkbox-group">
+            <input type="checkbox" id="bundle-active" checked={formData.is_active} onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })} className="bfm-checkbox" />
+            <label htmlFor="bundle-active" className="bfm-checkbox-label">Conjunto Activo</label>
           </div>
           
-          <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600, transition: '0.2s', display: 'flex', justifyContent: 'center' }}>
+          <div className="bfm-footer-actions">
+            <button type="button" className="btn-secondary bfm-footer-btn" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
-            <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: '0.2s' }}>
+            <button type="submit" className="btn-primary bfm-footer-btn bfm-submit-btn" disabled={loading}>
               {loading ? "Guardando..." : "Guardar Conjunto"}
             </button>
           </div>

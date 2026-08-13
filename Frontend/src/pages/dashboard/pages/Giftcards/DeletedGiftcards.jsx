@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Search, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, RotateCcw, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDeletedGiftcards, restoreGiftcard, forceDeleteGiftcard } from "../../../../api/admin/giftcards";
 import { Link } from "react-router-dom";
-import "../Products/Products.css";
+import "./Giftcards.css";
 
 export default function DeletedGiftcards() {
   const [giftcards, setGiftcards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCodes, setVisibleCodes] = useState({});
 
   useEffect(() => {
     fetchDeletedGiftcards();
@@ -58,23 +59,30 @@ export default function DeletedGiftcards() {
 
   return (
     <div className="products-container">
-      <div className="products-header">
-        <h1 className="products-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Link to="/dashboard/giftcards" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>
-            <ArrowLeft size={24} />
-          </Link>
-          Papelera de Giftcards
-        </h1>
-        
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ position: 'relative', width: '300px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div className="products-header gift-header-container">
+        <div className="gift-header-title-row">
+          <div className="gift-header-icon-box" style={{ background: 'var(--bg-card)' }}>
+            <Link to="/dashboard/giftcards" style={{ color: 'var(--text-main)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ArrowLeft size={24} />
+            </Link>
+          </div>
+          <div>
+            <h1 className="products-title gift-header-title">Papelera de Giftcards</h1>
+            <p className="gift-header-subtitle">Giftcards eliminadas</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div className="filters-container-inner gift-filters-row">
+          <div style={{ flex: 1 }} className="gift-search-wrapper">
+            <Search size={18} className="gift-search-icon" />
             <input 
               type="text" 
               placeholder="Buscar por código..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="gift-search-input"
             />
           </div>
         </div>
@@ -86,7 +94,7 @@ export default function DeletedGiftcards() {
             Cargando papelera...
           </div>
         ) : (
-          <table className="products-table">
+          <table className="gift-table">
             <thead>
               <tr>
                 <th>Código</th>
@@ -100,28 +108,39 @@ export default function DeletedGiftcards() {
               {filteredGiftcards.length > 0 ? (
                 filteredGiftcards.map((g) => (
                   <tr key={g.id}>
-                    <td>
-                      <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px', fontFamily: 'monospace' }}>
-                        {g.code}
+                    <td data-label="Código">
+                      <div className="gift-code-wrapper">
+                        <span className="gift-code-text">
+                          {visibleCodes[g.id] ? g.code : "••••••••"}
+                        </span>
+                        <button 
+                          className="gift-visibility-btn" 
+                          onClick={() => setVisibleCodes(prev => ({...prev, [g.id]: !prev[g.id]}))}
+                          title={visibleCodes[g.id] ? "Ocultar código" : "Mostrar código"}
+                        >
+                          {visibleCodes[g.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </td>
+                    <td data-label="Saldo Restante">
+                      <span className="gift-balance-active">
+                        {formatCurrency(g.current_balance)}
                       </span>
                     </td>
-                    <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>
-                      {formatCurrency(g.current_balance)}
-                    </td>
-                    <td>
-                      <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                    <td data-label="Vencimiento">
+                      <div className="gift-dates-text">
                         {g.expires_at ? new Date(g.expires_at).toLocaleDateString() : 'Sin vencimiento'}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       <span className="status-badge status-inactive">
                         Eliminada
                       </span>
                     </td>
-                    <td>
-                      <div className="table-actions" style={{ display: 'flex', gap: '10px' }}>
+                    <td data-label="Acciones" className="gift-actions-cell">
+                      <div className="gift-actions-wrapper">
                         <button 
-                          className="action-btn"
+                          className="btn-secondary gift-ticket-btn"
                           title="Restaurar"
                           onClick={() => handleRestore(g.id)}
                           style={{ color: '#10b981' }}
@@ -129,10 +148,9 @@ export default function DeletedGiftcards() {
                           <RotateCcw size={18} />
                         </button>
                         <button 
-                          className="action-btn"
+                          className="btn-delete gift-delete-btn"
                           title="Eliminar permanentemente"
                           onClick={() => handleForceDelete(g.id)}
-                          style={{ color: 'var(--danger-color)' }}
                         >
                           <Trash2 size={18} />
                         </button>

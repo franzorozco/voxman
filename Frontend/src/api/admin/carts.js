@@ -25,3 +25,7 @@ export const sendCartReminder = (id) => {
 export const deleteCart = (id) => {
   return api.delete(`${BASE_URL}/${id}`);
 };
+
+export const convertCartToOrder = (id) => {
+  return api.post('/v1/admin/order-network/convert-draft', { cart_id: id });
+};

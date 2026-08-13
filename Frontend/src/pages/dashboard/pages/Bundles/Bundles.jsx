@@ -195,73 +195,73 @@ export default function Bundles() {
   return (
     <div className="bundles-container">
       <div className="bundles-header">
-        <h1 className="bundles-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}><Package size={24} className="text-primary" /> Conjuntos</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <h1 className="bundles-title"><Package size={24} className="text-primary" /> Conjuntos</h1>
+        <div className="bundles-header-actions">
           <CanAccess permission="create_products">
-            <button className="btn-primary" style={{ padding: "10px 14px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "8px", border: "none", cursor: "pointer", fontWeight: 600 }} onClick={handleCreate}>
+            <button className="btn-primary bundles-create-btn" onClick={handleCreate}>
               <Package size={18} />
-              <span className="hide-on-mobile">Crear Conjunto</span>
+              <span>Crear Conjunto</span>
             </button>
           </CanAccess>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="bundles-kpi-grid">
+        <div className="bundles-kpi-card">
+          <div className="bundles-kpi-icon kpi-icon-total">
             <Package size={24} />
           </div>
           <div>
-            <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Total Conjuntos</p>
-            <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-main)' }}>{kpiStats.total}</h3>
+            <p className="bundles-kpi-title">Total Conjuntos</p>
+            <h3 className="bundles-kpi-value">{kpiStats.total}</h3>
           </div>
         </div>
 
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="bundles-kpi-card">
+          <div className="bundles-kpi-icon kpi-icon-active">
             <Activity size={24} />
           </div>
           <div>
-            <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Conjuntos Activos</p>
-            <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-main)' }}>{kpiStats.active}</h3>
+            <p className="bundles-kpi-title">Conjuntos Activos</p>
+            <h3 className="bundles-kpi-value">{kpiStats.active}</h3>
           </div>
         </div>
 
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="bundles-kpi-card">
+          <div className="bundles-kpi-icon kpi-icon-stock">
             <Archive size={24} />
           </div>
           <div>
-            <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Stock Virtual Total</p>
-            <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-main)' }}>{kpiStats.totalVirtualStock}</h3>
+            <p className="bundles-kpi-title">Stock Virtual Total</p>
+            <h3 className="bundles-kpi-value">{kpiStats.totalVirtualStock}</h3>
           </div>
         </div>
 
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="bundles-kpi-card">
+          <div className="bundles-kpi-icon kpi-icon-revenue">
             <DollarSign size={24} />
           </div>
           <div>
-            <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Valor Potencial (Ingresos)</p>
-            <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-main)' }}>Bs. {kpiStats.potentialValue.toFixed(2)}</h3>
+            <p className="bundles-kpi-title">Valor Potencial (Ingresos)</p>
+            <h3 className="bundles-kpi-value">Bs. {kpiStats.potentialValue.toFixed(2)}</h3>
           </div>
         </div>
       </div>
 
-      <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div className="filters-container bundles-filters">
+        <div className={`filters-container-inner ${showFilters ? 'filters-expanded' : ''}`}>
+          <div className="bundles-search-wrapper">
+            <Search size={18} className="bundles-search-icon" />
             <input
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="bundles-search-input"
               placeholder="Buscar conjunto por nombre..."
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             />
           </div>
           <button
+            className={`bundles-filter-toggle ${showFilters ? 'active' : ''}`}
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
           >
             <Filter size={18} />
             <span className="hide-on-mobile">Filtros</span>
@@ -269,11 +269,11 @@ export default function Bundles() {
         </div>
 
         {showFilters && (
-          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Categoría</label>
+          <div className="filters-panel">
+            <div className="filter-group">
+              <label className="filter-label">Categoría</label>
               <CustomSelect
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                className="filter-select"
                 value={filters.category}
                 onChange={(e) => setFilters({ ...filters, category: e.target.value })}
               >
@@ -284,10 +284,10 @@ export default function Bundles() {
               </CustomSelect>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Propietario</label>
+            <div className="filter-group">
+              <label className="filter-label">Propietario</label>
               <CustomSelect
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                className="filter-select"
                 value={filters.owner}
                 onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
               >
@@ -298,10 +298,10 @@ export default function Bundles() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+            <div className="filter-group">
+              <label className="filter-label">Estado</label>
               <CustomSelect
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                className="filter-select"
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >
@@ -311,10 +311,10 @@ export default function Bundles() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Stock Virtual</label>
+            <div className="filter-group">
+              <label className="filter-label">Stock Virtual</label>
               <CustomSelect
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                className="filter-select"
                 value={filters.stockStatus}
                 onChange={(e) => setFilters({ ...filters, stockStatus: e.target.value })}
               >
@@ -324,20 +324,20 @@ export default function Bundles() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Rango de Precio (Bs.)</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="filter-group filter-group-span-2">
+              <label className="filter-label">Rango de Precio (Bs.)</label>
+              <div className="filter-range-inputs">
                 <input
                   type="number"
                   placeholder="Min"
-                  style={{ width: '50%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                  className="filter-input"
                   value={filters.minPrice}
                   onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
                 />
                 <input
                   type="number"
                   placeholder="Max"
-                  style={{ width: '50%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                  className="filter-input"
                   value={filters.maxPrice}
                   onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
                 />

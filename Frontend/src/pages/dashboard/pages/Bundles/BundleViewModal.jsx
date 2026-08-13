@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Package, DollarSign, Target, CheckCircle2, AlertCircle, TrendingDown, Image as ImageIcon, Users, PieChart, Tag, Hash, Building2 } from 'lucide-react';
+import { X, Package, DollarSign, Target, CheckCircle2, AlertCircle, TrendingDown, Users, PieChart, Tag, Hash, Building2 } from 'lucide-react';
 import { API_BASE_URL } from '../../../../config/api';
 
 export default function BundleViewModal({ bundle, onClose }) {
@@ -72,208 +72,215 @@ export default function BundleViewModal({ bundle, onClose }) {
     return acc;
   }, {})).map(([ownerName, data]) => ({ name: ownerName, ...data }));
 
-  // Render status badge
   const StatusBadge = () => (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '4px',
-      padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500',
-      background: bundle.is_active ? 'var(--color-success-alpha)' : 'var(--color-danger-alpha)',
-      color: bundle.is_active ? 'var(--color-success)' : 'var(--color-danger)'
-    }}>
-      {bundle.is_active ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+    <span className={`bvm-status-badge ${bundle.is_active ? 'status-active' : 'status-inactive'}`}>
+      {bundle.is_active ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
       {bundle.is_active ? 'Activo' : 'Inactivo'}
     </span>
   );
 
   return (
     <div className="modal-overlay bundle-modal-overlay">
-      <div className="modal-content bundle-view-modal" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="bundle-view-modal bvm-container">
         
-        {/* Header */}
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'var(--bg-card)' }}>
-          <div className="stack-mobile" style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {/* Header - Image side by side with name */}
+        <div className="bvm-header">
+          <div className="bvm-header-info">
+            <div className="bvm-header-img">
               <img 
                 src={mainImage} 
                 alt={bundle.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                 onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_IMAGE; }}
               />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: 'var(--text-main)' }}>{bundle.name}</h2>
+            <div className="bvm-header-text">
+              <div className="bvm-name-row">
+                <h2 className="bvm-name">{bundle.name}</h2>
                 <StatusBadge />
               </div>
-              <p style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
-                {bundle.category?.name || 'Sin categoría'}
-              </p>
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: 'var(--text-main)' }}>
-                  <Package size={14} color="var(--color-primary)" />
-                  <b>{bundle.virtualStock || 0}</b> posibles (Stock Virtual)
-                </span>
-              </div>
+              <p className="bvm-category">{bundle.category?.name || 'Sin categoría'}</p>
+              <span className="bvm-stock-badge">
+                <Package size={13} color="var(--color-primary)" />
+                <b>{bundle.virtualStock || 0}</b> posibles (Stock Virtual)
+              </span>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px' }}>
+          <button className="bvm-close-btn" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div style={{ padding: '24px', background: 'var(--bg-body)', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+        <div className="bvm-body">
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-            {/* KPI Cards */}
-            <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                <DollarSign size={16} /> <span style={{ fontSize: '13px' }}>Precio del Conjunto</span>
+          {/* KPI Cards */}
+          <div className="bvm-kpi-grid">
+            <div className="bvm-kpi-card">
+              <div className="bvm-kpi-label">
+                <DollarSign size={15} /> Precio del Conjunto
               </div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)' }}>
-                Bs. {parseFloat(bundle.base_price || 0).toFixed(2)}
-              </div>
+              <div className="bvm-kpi-value">Bs. {parseFloat(bundle.base_price || 0).toFixed(2)}</div>
             </div>
 
-            <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                <Target size={16} /> <span style={{ fontSize: '13px' }}>Precio Regular (Por separado)</span>
+            <div className="bvm-kpi-card">
+              <div className="bvm-kpi-label">
+                <Target size={15} /> Precio Regular
               </div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+              <div className="bvm-kpi-value bvm-val-regular">
                 Bs. {(bundle.regularPrice || 0).toFixed(2)}
               </div>
             </div>
 
-            <div style={{ background: 'var(--color-success-alpha)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-success)', marginBottom: '8px' }}>
-                <TrendingDown size={16} /> <span style={{ fontSize: '13px' }}>Ahorro del Cliente</span>
+            <div className="bvm-kpi-card bvm-kpi-savings">
+              <div className="bvm-kpi-label bvm-val-success">
+                <TrendingDown size={15} /> Ahorro del Cliente
               </div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--color-success)' }}>
+              <div className="bvm-kpi-value bvm-val-success">
                 Bs. {(bundle.savings || 0).toFixed(2)}
               </div>
             </div>
           </div>
 
-          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Package size={18} color="var(--color-primary)" /> Ítems del Conjunto
-            </h3>
-            
-            {enrichedItems.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>Este conjunto no tiene ítems asignados.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {enrichedItems.map((item, idx) => {
-                  let itemName = "";
-                  let itemType = "";
-                  let itemImg = null;
-                  let sku = "";
-                  let attributesText = "";
+          {/* Items Section - No wrapper border */}
+          <h3 className="bvm-section-title">
+            <Package size={17} color="var(--color-primary)" /> Ítems del Conjunto
+          </h3>
+          
+          {enrichedItems.length === 0 ? (
+            <p className="bvm-empty-msg">Este conjunto no tiene ítems asignados.</p>
+          ) : (
+            <div className="bvm-items-list">
+              {enrichedItems.map((item, idx) => {
+                let itemName = "";
+                let sku = "";
+                let attributesText = "";
+                let itemImg = null;
 
-                  if (item.variant_id && item.variant) {
-                    const size = item.variant.size?.name || '';
-                    const color = item.variant.variant_attribute_values?.[0]?.attribute_value?.value || '';
-                    itemName = item.product?.name || 'Producto';
-                    attributesText = [size, color].filter(Boolean).join(" - ");
-                    itemType = "Variante";
-                    sku = item.variant.sku || "N/A";
-                    
-                    const colorId = item.variant.variant_attribute_values?.[0]?.attribute_value_id;
-                    const avi = item.product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
-                    itemImg = item.variant.variant_images?.[0]?.url || avi?.url || item.product?.product_images?.find(img => img.is_main)?.url || item.product?.product_images?.[0]?.url;
-                  } else if (item.product) {
-                    itemName = item.product.name;
-                    itemType = "Producto Base";
-                    sku = item.product.sku || item.product.code || "N/A";
-                    attributesText = "General";
-                    itemImg = item.product.product_images?.find(img => img.is_main)?.url || item.product.product_images?.[0]?.url;
-                  } else {
-                    itemName = "Producto no encontrado";
-                  }
+                if (item.variant_id && item.variant) {
+                  const size = item.variant.size?.name || '';
+                  const fit = item.variant.fit?.name || '';
+                  const otherAttrs = (item.variant.variant_attribute_values || []).map(val => val.attribute_value?.value).filter(Boolean);
+                  itemName = item.product?.name || 'Producto';
+                  attributesText = [fit, size, ...otherAttrs].filter(Boolean).join(" · ");
+                  sku = item.variant.sku || "N/A";
+                  
+                  const colorId = item.variant.variant_attribute_values?.[0]?.attribute_value_id;
+                  const avi = item.product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
+                  itemImg = item.variant.variant_images?.[0]?.url || avi?.url || item.product?.product_images?.find(img => img.is_main)?.url || item.product?.product_images?.[0]?.url;
+                } else if (item.product) {
+                  itemName = item.product.name;
+                  sku = item.product.sku || item.product.code || "N/A";
+                  attributesText = "General";
+                  itemImg = item.product.product_images?.find(img => img.is_main)?.url || item.product.product_images?.[0]?.url;
+                } else {
+                  itemName = "Producto no encontrado";
+                }
 
-                  const imgSrc = getImageUrl(itemImg);
+                const imgSrc = getImageUrl(itemImg);
 
-                  return (
-                    <div key={item.id || idx} style={{ display: 'flex', flexDirection: 'column', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '10px', background: 'var(--bg-overlay)' }}>
-                      <div className="flex-wrap-mobile" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                          <div style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg-card)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
-                            <img 
-                              src={imgSrc} 
-                              alt="item" 
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                              onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_IMAGE; }}
-                            />
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '15px', marginBottom: '4px' }}>{itemName}</div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building2 size={12} /> {item.owner}</span>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Hash size={12} /> {sku}</span>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Tag size={12} /> {attributesText}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ fontWeight: '600', color: 'var(--color-primary)', background: 'var(--color-primary-alpha)', padding: '6px 14px', borderRadius: '20px', fontSize: '14px' }}>
-                          Cantidad: {item.quantity}
+                return (
+                  <div key={item.id || idx} className="bvm-item-card">
+                    {/* Item top row: image + info + quantity */}
+                    <div className="bvm-item-top">
+                      <div className="bvm-item-img">
+                        <img 
+                          src={imgSrc} 
+                          alt="item" 
+                          onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_IMAGE; }}
+                        />
+                      </div>
+                      <div className="bvm-item-info">
+                        <div className="bvm-item-name">{itemName}</div>
+                        <div className="bvm-item-meta">
+                          <span><Building2 size={11} /> {item.owner}</span>
+                          <span><Hash size={11} /> {sku}</span>
+                          {attributesText && <span><Tag size={11} /> {attributesText}</span>}
                         </div>
                       </div>
+                      <div className="bvm-item-qty-badge">×{item.quantity}</div>
+                    </div>
 
-                      <div className="bundle-view-items-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                        <div>
-                          <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Precio Reg. Total</p>
-                          <div style={{ fontWeight: '500', color: 'var(--text-main)' }}>Bs. {item.itemRegularValue.toFixed(2)}</div>
-                        </div>
-                        <div>
-                          <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ingreso Asignado ({(item.proportion * 100).toFixed(1)}%)</p>
-                          <div style={{ fontWeight: '600', color: 'var(--color-primary)' }}>Bs. {item.assignedRevenue.toFixed(2)}</div>
-                        </div>
-                        <div>
-                          <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Costo Total</p>
-                          <div style={{ fontWeight: '600', color: 'var(--color-danger)' }}>Bs. {item.totalCost.toFixed(2)}</div>
-                        </div>
-                        <div>
-                          <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ganancia Neta</p>
-                          <div style={{ fontWeight: '700', color: item.profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>Bs. {item.profit.toFixed(2)}</div>
-                        </div>
+                    {/* Item financials grid */}
+                    <div className="bvm-item-financials">
+                      <div>
+                        <span className="bvm-fin-label">Precio Reg. Total</span>
+                        <span className="bvm-fin-value">Bs. {item.itemRegularValue.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="bvm-fin-label">Ingreso ({(item.proportion * 100).toFixed(1)}%)</span>
+                        <span className="bvm-fin-value bvm-fin-primary">Bs. {item.assignedRevenue.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="bvm-fin-label">Costo Total</span>
+                        <span className="bvm-fin-value bvm-fin-danger">Bs. {item.totalCost.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="bvm-fin-label">Ganancia</span>
+                        <span className={`bvm-fin-value-bold ${item.profit >= 0 ? 'text-success' : 'text-danger'}`}>Bs. {item.profit.toFixed(2)}</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Liquidación por Socio */}
           {ownerDistribution.length > 0 && (
-            <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '20px', marginTop: '24px' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <PieChart size={18} color="var(--color-success)" /> Liquidación por Socio (Por 1 Conjunto Vendido)
+            <div className="bvm-settlement-section">
+              <h3 className="bvm-section-title">
+                <PieChart size={17} color="var(--color-success)" /> Liquidación por Socio
               </h3>
               
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              {/* Desktop table */}
+              <div className="bvm-settlement-table-wrap">
+                <table className="bvm-settlement-table">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '12px', textTransform: 'uppercase' }}>
-                      <th style={{ padding: '12px 8px' }}>Socio</th>
-                      <th style={{ padding: '12px 8px' }}>Ingreso Bruto</th>
-                      <th style={{ padding: '12px 8px' }}>Costo Total</th>
-                      <th style={{ padding: '12px 8px' }}>Ganancia Real</th>
+                    <tr>
+                      <th>Socio</th>
+                      <th>Ingreso Bruto</th>
+                      <th>Costo Total</th>
+                      <th>Ganancia Real</th>
                     </tr>
                   </thead>
                   <tbody>
                     {ownerDistribution.map((owner, idx) => (
-                      <tr key={idx} style={{ borderBottom: idx === ownerDistribution.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
-                        <td style={{ padding: '14px 8px', fontWeight: '500', color: 'var(--text-main)' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Users size={14} color="var(--text-muted)" /> {owner.name}</span>
+                      <tr key={idx}>
+                        <td>
+                          <span className="bvm-owner-cell"><Users size={14} className="text-muted" /> {owner.name}</span>
                         </td>
-                        <td style={{ padding: '14px 8px', fontWeight: '600', color: 'var(--color-primary)' }}>Bs. {owner.revenue.toFixed(2)}</td>
-                        <td style={{ padding: '14px 8px', fontWeight: '600', color: 'var(--color-danger)' }}>Bs. {owner.cost.toFixed(2)}</td>
-                        <td style={{ padding: '14px 8px', fontWeight: '700', color: owner.profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>Bs. {owner.profit.toFixed(2)}</td>
+                        <td className="bvm-td-primary">Bs. {owner.revenue.toFixed(2)}</td>
+                        <td className="bvm-td-danger">Bs. {owner.cost.toFixed(2)}</td>
+                        <td className={`bvm-td-bold ${owner.profit >= 0 ? 'text-success' : 'text-danger'}`}>Bs. {owner.profit.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="bvm-settlement-cards">
+                {ownerDistribution.map((owner, idx) => (
+                  <div key={idx} className="bvm-settlement-card">
+                    <div className="bvm-settlement-card-name">
+                      <Users size={14} color="var(--text-muted)" /> {owner.name}
+                    </div>
+                    <div className="bvm-settlement-card-grid">
+                      <div>
+                        <span className="bvm-fin-label">Ingreso</span>
+                        <span className="bvm-fin-value bvm-fin-primary">Bs. {owner.revenue.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="bvm-fin-label">Costo</span>
+                        <span className="bvm-fin-value bvm-fin-danger">Bs. {owner.cost.toFixed(2)}</span>
+                      </div>
+                      <div>
+                        <span className="bvm-fin-label">Ganancia</span>
+                        <span className={`bvm-fin-value-bold ${owner.profit >= 0 ? 'text-success' : 'text-danger'}`}>Bs. {owner.profit.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

@@ -381,7 +381,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                   El rol define el conjunto de permisos y accesos que el empleado tiene en el sistema.
                 </p>
 
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                <div className="employee-role-actions">
                   <CustomSelect 
                     style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                     value={selectedRole}

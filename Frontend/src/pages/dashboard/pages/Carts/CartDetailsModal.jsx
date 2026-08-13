@@ -1,8 +1,9 @@
-import { X, CheckCircle, Package } from "lucide-react";
+import { X, Package, Edit, CheckCircle, Truck, Bell, Trash2 } from "lucide-react";
 import "./Carts.css";
 import { API_BASE_URL } from "../../../../config/api";
+import CanAccess from "../../../../components/ui/CanAccess";
 
-export default function CartDetailsModal({ cart, onClose }) {
+export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onConvertOrder, onReminder, onDelete }) {
   if (!cart) return null;
 
   const getImageUrl = (path) => {
@@ -62,9 +63,13 @@ export default function CartDetailsModal({ cart, onClose }) {
     );
   };
 
+  const isActionable = cart.status === 'proforma' || cart.status === 'active';
+  const isAbandoned = cart.status === 'abandoned';
+  const isNotConverted = cart.status !== 'converted';
+
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div className="modal-content cart-details-modal-container">
         <div className="modal-header">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 0 }}>
@@ -173,6 +178,50 @@ export default function CartDetailsModal({ cart, onClose }) {
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="modal-actions-bar">
+            {isNotConverted && onEdit && (
+              <CanAccess permission="edit_carts">
+                <button className="modal-action-btn modal-action-edit" onClick={() => { onClose(); onEdit(cart); }}>
+                  <Edit size={16} />
+                  <span>Editar</span>
+                </button>
+              </CanAccess>
+            )}
+            {isActionable && onConvert && (
+              <CanAccess permission="convert_carts">
+                <button className="modal-action-btn modal-action-convert" onClick={() => { onClose(); onConvert(cart.id); }}>
+                  <CheckCircle size={16} />
+                  <span>Convertir a Venta</span>
+                </button>
+              </CanAccess>
+            )}
+            {isActionable && onConvertOrder && (
+              <CanAccess permission="create_orders">
+                <button className="modal-action-btn modal-action-order" onClick={() => { onClose(); onConvertOrder(cart.id); }}>
+                  <Truck size={16} />
+                  <span>Convertir a Entrega</span>
+                </button>
+              </CanAccess>
+            )}
+            {isAbandoned && onReminder && (
+              <CanAccess permission="send_cart_reminders">
+                <button className="modal-action-btn modal-action-reminder" onClick={() => { onReminder(cart.id); }}>
+                  <Bell size={16} />
+                  <span>Enviar Recordatorio</span>
+                </button>
+              </CanAccess>
+            )}
+            {onDelete && (
+              <CanAccess permission="delete_carts">
+                <button className="modal-action-btn modal-action-delete" onClick={() => { onClose(); onDelete(cart.id); }}>
+                  <Trash2 size={16} />
+                  <span>Eliminar</span>
+                </button>
+              </CanAccess>
+            )}
           </div>
 
         </div>

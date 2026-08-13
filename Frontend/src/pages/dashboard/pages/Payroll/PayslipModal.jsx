@@ -31,19 +31,20 @@ export default function PayslipModal({ payment, onClose }) {
             <p style={{ margin: '0', color: 'var(--text-muted)', fontSize: '14px' }}>Boleta de Pago de Salario</p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', fontSize: '14px' }}>
+          <div className="payslip-header-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', fontSize: '14px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <p style={{ margin: '0 0 5px 0' }}><strong>Empleado:</strong> {fullName}</p>
               <p style={{ margin: '0 0 5px 0' }}><strong>Código:</strong> {payment.employee?.employee_code}</p>
               <p style={{ margin: '0' }}><strong>Cargo:</strong> {payment.employee?.role}</p>
             </div>
-            <div style={{ textAlign: 'right' }}>
+            <div className="payslip-header-right" style={{ textAlign: 'right' }}>
               <p style={{ margin: '0 0 5px 0' }}><strong>Fecha de Pago:</strong> {format(new Date(payment.payment_date), 'dd/MM/yyyy')}</p>
               <p style={{ margin: '0' }}><strong>Mes Correspondiente:</strong> {format(new Date(payment.payment_date), 'MMMM yyyy', { locale: es }).toUpperCase()}</p>
             </div>
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="payslip-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px', minWidth: '400px' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid #000' }}>
                 <th style={{ textAlign: 'left', padding: '10px 0' }}>CONCEPTO</th>
@@ -90,8 +91,9 @@ export default function PayslipModal({ payment, onClose }) {
               </tr>
             </tfoot>
           </table>
+          </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '60px' }}>
+          <div className="payslip-signatures" style={{ display: 'flex', justifyContent: 'space-around', marginTop: '60px', flexWrap: 'wrap', gap: '40px' }}>
             <div style={{ textAlign: 'center', width: '200px' }}>
               <div style={{ borderBottom: '1px solid #000', height: '40px' }}></div>
               <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>Firma del Empleador</p>

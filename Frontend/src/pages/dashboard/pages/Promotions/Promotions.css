@@ -8,13 +8,13 @@
   width: 100%;
 }
 
-.gift-search-wrapper {
+.promo-search-wrapper {
   position: relative;
   width: 100%;
   box-sizing: border-box;
 }
 
-.gift-search-icon {
+.promo-search-icon {
   position: absolute;
   left: 12px;
   top: 50%;
@@ -22,7 +22,7 @@
   color: var(--text-muted);
 }
 
-.gift-search-input {
+.promo-search-input {
   width: 100%;
   height: 42px;
   padding: 10px 10px 10px 36px;
@@ -34,12 +34,12 @@
   box-sizing: border-box;
 }
 
-.gift-status-select {
+.promo-status-select {
   width: 100%;
   box-sizing: border-box;
 }
 
-.gift-action-btn {
+.promo-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,37 +51,37 @@
   text-decoration: none;
 }
 
-.gift-action-btn.secondary {
+.promo-action-btn.secondary {
   border: 1px solid var(--border-color);
   background: var(--bg-overlay);
   color: var(--text-main);
 }
 
 /* Table elements */
-.gift-table-loading {
+.promo-table-loading {
   padding: 40px;
   text-align: center;
   color: var(--text-muted);
 }
 
-.gift-empty-text {
+.promo-empty-text {
   text-align: center;
   padding: 40px;
   color: var(--text-muted);
 }
 
-.gift-name {
+.promo-name {
   font-weight: 500;
   color: var(--text-main);
   display: block;
   min-width: 200px;
 }
 
-.gift-automatic-label {
+.promo-automatic-label {
   color: var(--text-muted);
 }
 
-.gift-code-badge {
+.promo-code-badge {
   font-weight: 600;
   letter-spacing: 1px;
   background: var(--bg-overlay);
@@ -89,29 +89,29 @@
   border-radius: 4px;
 }
 
-.gift-value-cell {
+.promo-value-cell {
   font-weight: 600;
 }
 
-.gift-value-wrapper {
+.promo-value-wrapper {
   display: flex;
   flex-direction: column;
 }
 
-.gift-max-discount {
+.promo-max-discount {
   font-size: 11px;
   color: var(--text-muted);
   font-weight: normal;
 }
 
-.gift-targets-wrapper {
+.promo-targets-wrapper {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   min-width: 150px;
 }
 
-.gift-target-badge {
+.promo-target-badge {
   font-size: 11px;
   background: var(--bg-overlay);
   padding: 2px 6px;
@@ -120,34 +120,34 @@
   border: 1px solid var(--border-color);
 }
 
-.gift-target-badge.overflow {
+.promo-target-badge.overflow {
   border: none;
 }
 
-.gift-target-badge.global {
+.promo-target-badge.global {
   font-size: 12px;
   color: var(--color-primary);
   background: rgba(37, 99, 235, 0.1);
   border: none;
 }
 
-.gift-limits-text {
+.promo-limits-text {
   font-size: 13px;
   color: var(--text-muted);
   min-width: 130px;
 }
 
-.gift-dates-text {
+.promo-dates-text {
   font-size: 13px;
   min-width: 150px;
 }
 
-.gift-actions-cell {
+.promo-actions-cell {
   padding-left: 10px;
   text-align: center;
 }
 
-.gift-actions-wrapper {
+.promo-actions-wrapper {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -157,8 +157,8 @@
   flex-direction: row;
 }
 
-.gift-actions-wrapper button,
-.gift-actions-wrapper a {
+.promo-actions-wrapper button,
+.promo-actions-wrapper a {
   width: auto !important;
   flex: initial !important;
   height: 36px !important;
@@ -167,22 +167,22 @@
   justify-content: center;
 }
 
-.gift-ticket-btn {
+.promo-ticket-btn {
   padding: 6px;
 }
 
-.gift-restore-btn {
+.promo-restore-btn {
   color: #3b82f6;
   background: rgba(59, 130, 246, 0.1);
 }
 
-.gift-force-delete-btn {
+.promo-force-delete-btn {
   color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
 }
 
 /* Coupon Modal */
-.gift-coupon-overlay {
+.promo-coupon-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -195,7 +195,7 @@
   z-index: 9999;
 }
 
-.gift-coupon-content {
+.promo-coupon-content {
   background: var(--bg-main);
   border-radius: 16px;
   padding: 24px;
@@ -204,7 +204,7 @@
   position: relative;
 }
 
-.gift-coupon-close {
+.promo-coupon-close {
   position: absolute;
   top: 16px;
   right: 16px;
@@ -214,14 +214,14 @@
   cursor: pointer;
 }
 
-.gift-coupon-title {
+.promo-coupon-title {
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 20px;
   color: var(--text-main);
 }
 
-.gift-coupon-print-area {
+.promo-coupon-print-area {
   background: #0a0a0a;
   border-radius: 20px;
   padding: 30px;
@@ -236,7 +236,7 @@
   margin-bottom: 24px;
 }
 
-.gift-coupon-circle {
+.promo-coupon-circle {
   position: absolute;
   top: -20px;
   width: 60px;
@@ -244,40 +244,40 @@
   border-radius: 50%;
   background: var(--bg-main);
 }
-.gift-coupon-circle.left { left: -20px; }
-.gift-coupon-circle.right { right: -20px; }
+.promo-coupon-circle.left { left: -20px; }
+.promo-coupon-circle.right { right: -20px; }
 
-.gift-coupon-logo {
+.promo-coupon-logo {
   height: 60px;
   object-fit: contain;
   margin-bottom: 20px;
 }
 
-.gift-coupon-header {
+.promo-coupon-header {
   text-align: center;
   margin-bottom: 20px;
 }
-.gift-coupon-discount {
+.promo-coupon-discount {
   font-size: 24px;
   font-weight: 800;
   margin: 0 0 5px 0;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
-.gift-coupon-name {
+.promo-coupon-name {
   margin: 0;
   font-size: 14px;
   color: #aaaaaa;
 }
 
-.gift-coupon-qr {
+.promo-coupon-qr {
   background: white;
   padding: 10px;
   border-radius: 10px;
   margin-bottom: 15px;
 }
 
-.gift-coupon-code-box {
+.promo-coupon-code-box {
   background: #222;
   padding: 8px 20px;
   border-radius: 8px;
@@ -287,7 +287,7 @@
   margin-bottom: 15px;
 }
 
-.gift-coupon-footer {
+.promo-coupon-footer {
   font-size: 12px;
   color: #888;
   text-align: center;
@@ -295,11 +295,11 @@
   padding-top: 15px;
   width: 100%;
 }
-.gift-coupon-footer strong {
+.promo-coupon-footer strong {
   color: #fff;
 }
 
-.gift-coupon-print-btn {
+.promo-coupon-print-btn {
   width: 100%;
   display: flex;
   justify-content: center;
@@ -310,51 +310,51 @@
 }
 
 /* Proveedores-style Header */
-.gift-header-container {
+.promo-header-container {
   margin-bottom: 24px;
 }
 
-.gift-header-title-row {
+.promo-header-title-row {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
 }
 
-.gift-header-icon-box {
+.promo-header-icon-box {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.gift-header-icon-box svg {
+.promo-header-icon-box svg {
   color: var(--text-main);
 }
 
-.gift-header-title {
+.promo-header-title {
   margin: 0;
   font-size: 20px;
 }
 
-.gift-header-subtitle {
+.promo-header-subtitle {
   margin: 0;
   color: var(--text-muted);
   font-size: 14px;
 }
 
-.gift-header-actions-row {
+.promo-header-actions-row {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 4px;
 }
 
-.gift-header-action-col {
+.promo-header-action-col {
   flex: 1;
   display: flex;
 }
 
-.gift-header-action-btn {
+.promo-header-action-btn {
   flex: 1;
   width: 100%;
   display: flex;
@@ -366,32 +366,32 @@
   min-width: max-content;
 }
 
-.gift-header-action-btn span {
+.promo-header-action-btn span {
   font-size: 13px;
   font-weight: 500;
 }
 
-.gift-filters-row {
+.promo-filters-row {
   display: flex;
   gap: 12px;
   margin-bottom: 0;
 }
 
 @media (max-width: 768px) {
-  .gift-filters-row {
+  .promo-filters-row {
     flex-direction: column;
   }
 }
 
 /* Table layout overriding products-table card view */
-.gift-table {
+.promo-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   text-align: left;
 }
 
-.gift-table th {
+.promo-table th {
   padding: 16px;
   color: var(--text-muted);
   font-weight: 600;
@@ -401,7 +401,7 @@
   white-space: nowrap;
 }
 
-.gift-table td {
+.promo-table td {
   padding: 16px;
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
@@ -409,11 +409,11 @@
   font-size: 14px;
 }
 
-.gift-table tbody tr {
+.promo-table tbody tr {
   transition: background-color 0.2s;
 }
 
-.gift-table tbody tr:hover {
+.promo-table tbody tr:hover {
   background-color: var(--bg-input);
 }
 
@@ -421,7 +421,7 @@
    PROMOTION MODAL REFACTOR
 ========================================= */
 
-.gift-modal-header {
+.promo-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -433,7 +433,7 @@
   font-weight: 600;
 }
 
-.gift-modal-close-btn {
+.promo-modal-close-btn {
   padding: 6px;
   display: flex;
   align-items: center;
@@ -446,24 +446,24 @@
   transition: 0.2s;
 }
 
-.gift-modal-close-btn:hover {
+.promo-modal-close-btn:hover {
   background: var(--bg-input);
 }
 
-.gift-modal-form {
+.promo-modal-form {
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow: hidden;
 }
 
-.gift-modal-body {
+.promo-modal-body {
   padding: 24px;
   overflow-y: auto;
   flex: 1;
 }
 
-.gift-section-title {
+.promo-section-title {
   margin: 24px 0 16px 0;
   font-size: 15px;
   font-weight: 600;
@@ -472,17 +472,17 @@
   padding-bottom: 8px;
 }
 
-.gift-section-title:first-child {
+.promo-section-title:first-child {
   margin-top: 0;
 }
 
-.gift-toggle-wrapper {
+.promo-toggle-wrapper {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.gift-toggle-label {
+.promo-toggle-label {
   position: relative;
   display: inline-block;
   width: 44px;
@@ -491,14 +491,14 @@
   margin: 0;
 }
 
-.gift-toggle-input {
+.promo-toggle-input {
   opacity: 0;
   width: 0;
   height: 0;
   position: absolute;
 }
 
-.gift-toggle-slider {
+.promo-toggle-slider {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -510,11 +510,11 @@
   border-radius: 34px;
 }
 
-.gift-toggle-input:checked + .gift-toggle-slider {
+.promo-toggle-input:checked + .promo-toggle-slider {
   background-color: var(--color-primary);
 }
 
-.gift-toggle-slider:before {
+.promo-toggle-slider:before {
   position: absolute;
   content: "";
   height: 16px;
@@ -526,17 +526,17 @@
   border-radius: 50%;
 }
 
-.gift-toggle-input:checked + .gift-toggle-slider:before {
+.promo-toggle-input:checked + .promo-toggle-slider:before {
   transform: translateX(20px);
 }
 
-.gift-toggle-text {
+.promo-toggle-text {
   font-weight: 500;
   color: var(--text-main);
   font-size: 14px;
 }
 
-.gift-modal-footer {
+.promo-modal-footer {
   padding: 16px 24px;
   border-top: 1px solid var(--border-color);
   display: flex;
@@ -545,7 +545,7 @@
   background: var(--bg-card);
 }
 
-.gift-btn-cancel {
+.promo-btn-cancel {
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 500;
@@ -556,11 +556,11 @@
   transition: background-color 0.2s;
 }
 
-.gift-btn-cancel:hover {
+.promo-btn-cancel:hover {
   background: var(--bg-input);
 }
 
-.gift-btn-submit {
+.promo-btn-submit {
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 500;
@@ -572,11 +572,11 @@
   min-width: 160px;
 }
 
-.gift-form-group-full {
+.promo-form-group-full {
   grid-column: 1 / -1;
 }
 
-.gift-helper-text {
+.promo-helper-text {
   color: var(--text-muted);
   margin-top: 6px;
   display: block;
@@ -585,250 +585,25 @@
 
 /* Modal Form Mobile Tweaks */
 @media (max-width: 768px) {
-  .gift-modal-header {
+  .promo-modal-header {
     padding: 16px 20px;
     font-size: 18px;
   }
   
-  .gift-modal-body {
+  .promo-modal-body {
     padding: 16px 20px;
   }
   
-  .gift-modal-footer {
+  .promo-modal-footer {
     padding: 16px 20px;
     flex-direction: column-reverse;
   }
   
-  .gift-modal-footer button {
+  .promo-modal-footer button {
     width: 100%;
   }
 
-  .gift-section-title {
+  .promo-section-title {
     font-size: 14px;
   }
-}
-
-
-/* =========================================
-   GIFTCARD HISTORY & DIGITALIZE MODALS
-========================================= */
-.gift-modal-history {
-  max-width: 600px;
-  width: 100%;
-}
-
-.gift-history-subtitle {
-  display: flex;
-  gap: 15px;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-.gift-code-text {
-  font-weight: 600;
-  color: var(--text-main);
-  font-family: monospace;
-}
-
-.gift-history-owner {
-  font-size: 13px;
-  margin-top: 8px;
-  color: var(--text-muted);
-}
-
-.gift-history-owner .divider {
-  margin: 0 8px;
-}
-
-.gift-history-body {
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 20px 0;
-}
-
-.gift-timeline-item {
-  display: flex;
-  gap: 16px;
-  padding: 0 20px 20px 20px;
-}
-
-.gift-timeline-icon-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.gift-timeline-line {
-  width: 2px;
-  flex-grow: 1;
-  background: var(--border-color);
-  margin: 4px 0 0 0;
-}
-
-.gift-timeline-content {
-  flex: 1;
-  background: var(--bg-overlay);
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-}
-
-.gift-timeline-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.gift-timeline-desc {
-  color: var(--text-main);
-  font-size: 13px;
-  margin: 0 0 8px 0;
-  line-height: 1.4;
-}
-
-.gift-timeline-meta {
-  display: flex;
-  gap: 15px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.gift-timeline-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.gift-timeline-meta-item.primary {
-  color: var(--primary-color);
-  font-weight: 500;
-}
-
-.gift-history-empty {
-  text-align: center;
-  color: var(--text-muted);
-  padding: 20px;
-}
-
-/* Digitalize Modal specific */
-.gift-modal-digitalize {
-  max-width: 500px;
-}
-
-.gift-modal-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.gift-alert-box {
-  margin-bottom: 20px;
-  padding: 16px;
-  background: var(--bg-overlay);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-}
-
-.gift-alert-text {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.gift-alert-meta {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-  font-size: 13px;
-}
-
-/* Mobile Tweaks */
-@media (max-width: 768px) {
-  .gift-alert-meta {
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-
-/* =========================================
-   GIFTCARD SPECIFIC TABLE STYLES
-========================================= */
-
-.gift-code-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 150px;
-}
-
-.gift-code-text {
-  font-weight: 600;
-  letter-spacing: 1px;
-  background: var(--bg-overlay);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-family: monospace;
-  white-space: nowrap;
-}
-
-.gift-visibility-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 4px;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.gift-visibility-btn:hover {
-  background-color: var(--bg-input);
-  color: var(--text-main);
-}
-
-.gift-owner-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.gift-owner-name {
-  font-weight: 500;
-}
-
-.gift-owner-role {
-  font-size: 11px;
-}
-
-.gift-owner-role.primary {
-  color: var(--primary-color);
-}
-
-.gift-owner-role.muted {
-  color: var(--text-muted);
-}
-
-.gift-unassigned-text {
-  color: var(--text-muted);
-  font-style: italic;
-  font-size: 13px;
-}
-
-.gift-balance-muted {
-  color: var(--text-muted);
-}
-
-.gift-balance-active {
-  font-weight: 600;
-  color: var(--primary-color);
-}
-
-.gift-history-header {
-  align-items: flex-start;
-}
-
-.gift-text-primary {
-  color: var(--primary-color);
 }

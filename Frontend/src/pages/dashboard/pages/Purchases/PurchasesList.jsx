@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, FileText, XCircle, RefreshCw, Eye, Package } from "lucide-react";
+import { Plus, Search, FileText, XCircle, RefreshCw, Eye, Package, Filter } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getPurchases, cancelPurchase, getPurchaseStats } from "../../../../api/admin/purchases";
 import { Link } from "react-router-dom";
@@ -16,6 +16,7 @@ export default function PurchasesList() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
   const fetchPurchases = async () => {
@@ -67,9 +68,9 @@ export default function PurchasesList() {
           Órdenes de Compra
         </h1>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="purchases-header-actions">
           <button className="btn-secondary" onClick={() => fetchPurchases()} title="Actualizar">
-            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} /> Recargar
           </button>
           <CanAccess permission="create_purchases">
             <Link to="/dashboard/purchases/create" className="btn-primary" style={{ textDecoration: 'none' }}>
@@ -114,7 +115,7 @@ export default function PurchasesList() {
       )}
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner" style={{ marginBottom: '0' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
@@ -124,17 +125,32 @@ export default function PurchasesList() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <CustomSelect 
-            style={{ width: '100%', maxWidth: '200px', padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
           >
-            <option value="">Todos los estados</option>
-            <option value="pending">Pendientes</option>
-            <option value="received">Recepcionados</option>
-            <option value="cancelled">Cancelados</option>
-          </CustomSelect>
+            <Filter size={18} />
+            <span className="hide-on-mobile">Filtros</span>
+          </button>
         </div>
+
+        {showFilters && (
+          <div className="filters-panel">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+              <CustomSelect 
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="">Todos los estados</option>
+                <option value="pending">Pendientes</option>
+                <option value="received">Recepcionados</option>
+                <option value="cancelled">Cancelados</option>
+              </CustomSelect>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="table-container">

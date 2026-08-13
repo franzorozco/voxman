@@ -65,15 +65,15 @@ export default function Employees() {
     <div className="products-container fade-in">
       <div className="products-header">
         <h1 className="products-title">Empleados</h1>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <Link to="/dashboard/employees/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+        <div className="products-header-actions">
+          <Link to="/dashboard/employees/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none' }}>
             <ArchiveRestore size={18} />
             Papelera
           </Link>
           <button 
             className="btn-primary" 
             onClick={() => { setSelectedEmployee(null); setIsModalOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             <Plus size={18} />
             Nuevo Empleado

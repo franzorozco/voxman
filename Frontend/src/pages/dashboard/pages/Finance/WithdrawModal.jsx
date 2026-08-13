@@ -137,7 +137,7 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
             <div style={{ background: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Saldo Disponible:</span>
-                <span style={{ fontSize: '16px', fontWeight: 700, color: maxBalance > 0 ? '#22c55e' : '#ef4444' }}>
+                <span style={{ fontSize: '16px', fontWeight: 700, color: maxBalance > 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
                   Bs. {maxBalance.toFixed(2)}
                 </span>
               </div>

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, MoreVertical, Edit, Trash2, Ticket } from "lucide-react";
+import { Plus, Search, MoreVertical, Edit, Trash2, Ticket, Eye, EyeOff, RotateCcw } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getPromotions, deletePromotion } from "../../../../api/admin/discounts";
 import PromotionModal from "./PromotionModal";
 import PromotionCoupon from "./PromotionCoupon";
 import "../Products/Products.css";
+import "./Promotions.css";
 import { Link } from "react-router-dom";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
@@ -16,6 +17,7 @@ export default function Promotions() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPromotion, setSelectedPromotion] = useState(null);
+  const [visibleCodes, setVisibleCodes] = useState({});
   
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [selectedCouponPromo, setSelectedCouponPromo] = useState(null);
@@ -83,52 +85,71 @@ export default function Promotions() {
 
   return (
     <div className="products-container">
-      <div className="products-header">
-        <h1 className="products-title">Promociones y Descuentos</h1>
-        
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div className="products-header promo-header-container">
+        <div className="promo-header-title-row">
+          <div className="promo-header-icon-box">
+            <Ticket size={24} />
+          </div>
+          <div>
+            <h1 className="products-title promo-header-title">Promociones y Descuentos</h1>
+            <p className="promo-header-subtitle">Gestión de ofertas y cupones</p>
+          </div>
+        </div>
+
+        <div className="promo-header-actions-row">
+          <div className="promo-header-action-col">
+            <Link to="/dashboard/promotions/deleted" className="btn-secondary promo-header-action-btn">
+              <Trash2 size={18} style={{ flexShrink: 0 }} />
+              <span className="hide-on-mobile">Papelera</span>
+            </Link>
+          </div>
+          <div className="promo-header-action-col">
+            <button className="btn-primary promo-header-action-btn" onClick={() => handleOpenModal()}>
+              <Plus size={18} style={{ flexShrink: 0 }} />
+              <span className="hide-on-mobile">Nueva Promoción</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div className="filters-container-inner promo-filters-row">
+          <div style={{ flex: 2 }} className="promo-search-wrapper">
+            <Search size={18} className="promo-search-icon" />
             <input 
               type="text" 
               placeholder="Buscar por nombre o código..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="promo-search-input"
             />
           </div>
 
-          <CustomSelect 
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-          >
-            <option value="all">Todos los Estados</option>
-            <option value="active">Activas</option>
-            <option value="scheduled">Programadas (Futuras)</option>
-            <option value="expired">Expiradas</option>
-            <option value="exhausted">Agotadas (Límite de usos)</option>
-            <option value="inactive">Inactivas</option>
-          </CustomSelect>
-          
-          <Link to="/dashboard/promotions/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
-             <Trash2 size={16}/> Papelera
-          </Link>
-
-          <button className="btn-primary" onClick={() => handleOpenModal()}>
-            <Plus size={18} />
-            Nueva Promoción
-          </button>
+          <div style={{ flex: 1 }}>
+            <CustomSelect 
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="promo-status-select"
+              style={{ height: '42px' }}
+            >
+              <option value="all">Todos los Estados</option>
+              <option value="active">Activas</option>
+              <option value="scheduled">Programadas (Futuras)</option>
+              <option value="expired">Expiradas</option>
+              <option value="exhausted">Agotadas (Límite de usos)</option>
+              <option value="inactive">Inactivas</option>
+            </CustomSelect>
+          </div>
         </div>
       </div>
 
       <div className="table-wrapper">
         {loading ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+          <div className="promo-table-loading">
             Cargando promociones...
           </div>
         ) : (
-          <table className="products-table">
+          <table className="promo-table">
             <thead>
               <tr>
                 <th>Nombre</th>
@@ -173,72 +194,89 @@ export default function Promotions() {
 
                   return (
                   <tr key={promo.id}>
-                    <td>
-                      <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{promo.name}</span>
+                    <td data-label="Nombre">
+                      <span className="promo-name">{promo.name}</span>
                     </td>
-                    <td>
+                    <td data-label="Código">
                       {promo.is_automatic ? (
-                        <span style={{ color: 'var(--text-muted)' }}>Automático</span>
+                        <span className="promo-automatic-label">Automático</span>
                       ) : (
-                        <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px' }}>
-                          {promo.code}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="promo-code-badge">
+                            {visibleCodes[promo.id] ? promo.code : '••••••••'}
+                          </span>
+                          <button 
+                            className="btn-secondary" 
+                            style={{ padding: '4px', border: 'none', background: 'transparent' }}
+                            onClick={() => setVisibleCodes(prev => ({ ...prev, [promo.id]: !prev[promo.id] }))}
+                            title={visibleCodes[promo.id] ? "Ocultar código" : "Mostrar código"}
+                          >
+                            {visibleCodes[promo.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
                       )}
                     </td>
-                    <td>{promo.type === 'percentage' ? 'Porcentaje' : 'Monto Fijo'}</td>
-                    <td style={{ fontWeight: 600 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <td data-label="Tipo">{promo.type === 'percentage' ? 'Porcentaje' : 'Monto Fijo'}</td>
+                    <td data-label="Valor" className="promo-value-cell">
+                      <div className="promo-value-wrapper">
                         <span>{promo.type === 'percentage' ? `${promo.value}%` : `Bs. ${promo.value}`}</span>
                         {promo.type === 'percentage' && promo.max_discount_amount && (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                          <span className="promo-max-discount">
                             Max: Bs. {promo.max_discount_amount}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Alcance (Targets)">
                       {targetLabels.length > 0 ? (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '180px' }}>
+                        <div className="promo-targets-wrapper">
                           {targetLabels.slice(0, 3).map((lbl, idx) => (
-                            <span key={idx} style={{ fontSize: '11px', background: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
+                            <span key={idx} className="promo-target-badge">
                               {lbl}
                             </span>
                           ))}
                           {targetLabels.length > 3 && (
-                            <span style={{ fontSize: '11px', background: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-main)' }}>
+                            <span className="promo-target-badge overflow">
                               +{targetLabels.length - 3} más
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span style={{ fontSize: '12px', color: 'var(--color-primary)', background: 'rgba(37, 99, 235, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                        <span className="promo-target-badge global">
                           Global (Todo)
                         </span>
                       )}
                     </td>
-                    <td>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        {promo.usage_limit ? `Usos: ${promo.used_count}/${promo.usage_limit}` : 'Sin límite'}
+                    <td data-label="Límites">
+                      <div className="promo-limits-text" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        {promo.usage_limit ? (
+                          <span>Global: {promo.used_count || 0}/{promo.usage_limit}</span>
+                        ) : null}
+                        {promo.usage_limit_per_customer ? (
+                          <span>Por cliente: {promo.usage_limit_per_customer}</span>
+                        ) : null}
+                        {!promo.usage_limit && !promo.usage_limit_per_customer && (
+                          <span>Sin límite</span>
+                        )}
                       </div>
                     </td>
-                    <td>
-                      <div style={{ fontSize: '12px' }}>
+                    <td data-label="Vigencia">
+                      <div className="promo-dates-text">
                         {promo.start_date ? new Date(promo.start_date).toLocaleDateString() : 'Siempre'} - 
                         {promo.end_date ? new Date(promo.end_date).toLocaleDateString() : ' Siempre'}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       <span className={`status-badge ${statusClass}`}>
                         {statusText}
                       </span>
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
+                    <td className="promo-actions-cell">
+                      <span className="promo-actions-wrapper">
                         <button 
-                          className="btn-secondary"
+                          className="btn-secondary promo-ticket-btn"
                           onClick={() => handleOpenCoupon(promo)}
                           title="Imprimir Ticket"
-                          style={{ padding: '6px' }}
                         >
                           <Ticket size={16} />
                         </button>
@@ -254,14 +292,14 @@ export default function Promotions() {
                         >
                           Eliminar
                         </button>
-                      </div>
+                      </span>
                     </td>
                   </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                  <td colSpan="9" className="promo-empty-text">
                     No se encontraron promociones
                   </td>
                 </tr>

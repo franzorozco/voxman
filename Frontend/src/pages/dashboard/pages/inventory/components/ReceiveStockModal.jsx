@@ -258,12 +258,12 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
     <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, animation: 'fadeIn 0.2s ease' }}>
       <div className="modal-content" style={{ background: 'var(--bg-card)', borderRadius: '16px', width: '90%', maxWidth: '600px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
         
-        <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-overlay)' }}>
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Plus size={20} />
+            <div style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Plus size={24} />
             </div>
-            <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--text-main)', fontWeight: 600 }}>Ingreso Global de Stock</h2>
+            <h2 style={{ margin: 0, fontSize: '20px', color: 'var(--text-main)', fontWeight: 700 }}>Ingreso Global de Stock</h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '5px' }}>
             <X size={20} />

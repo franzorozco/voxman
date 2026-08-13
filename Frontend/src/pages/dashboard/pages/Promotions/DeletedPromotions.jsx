@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, RefreshCw, Trash2, Search, Ticket } from "lucide-react";
+import { ArrowLeft, RefreshCw, Trash2, Search, Ticket, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDeletedPromotions, restorePromotion, forceDeletePromotion } from "../../../../api/admin/discounts";
 import { Link } from "react-router-dom";
+import "./Promotions.css";
 
 export default function DeletedPromotions() {
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCodes, setVisibleCodes] = useState({});
 
   useEffect(() => {
     fetchDeleted();
@@ -54,26 +56,28 @@ export default function DeletedPromotions() {
 
   return (
     <div className="products-container">
-      <div className="products-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link to="/dashboard/promotions" className="btn-secondary" style={{textDecoration: 'none', padding: '8px', display: 'flex', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-overlay)', color: 'var(--text-main)'}}>
+      <div className="products-header promo-header-container">
+        <div className="promo-header-title-row">
+          <Link to="/dashboard/promotions" className="btn-secondary" style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="products-title" style={{margin: 0}}>Papelera de Promociones</h1>
-            <span style={{color: 'var(--text-muted)', fontSize: '14px'}}>Promociones desactivadas o eliminadas</span>
+            <h1 className="products-title promo-header-title">Papelera de Promociones</h1>
+            <p className="promo-header-subtitle">Promociones desactivadas o eliminadas</p>
           </div>
         </div>
-        
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      </div>
+
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div className="filters-container-inner promo-filters-row">
+          <div style={{ flex: 1 }} className="promo-search-wrapper">
+            <Search size={18} className="promo-search-icon" />
             <input 
               type="text" 
               placeholder="Buscar..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="promo-search-input"
             />
           </div>
         </div>
@@ -81,11 +85,11 @@ export default function DeletedPromotions() {
 
       <div className="table-wrapper">
         {loading ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+          <div className="promo-table-loading">
             Cargando papelera...
           </div>
         ) : (
-          <table className="products-table">
+          <table className="promo-table">
             <thead>
               <tr>
                 <th>Nombre</th>
@@ -112,68 +116,84 @@ export default function DeletedPromotions() {
 
                   return (
                   <tr key={promo.id}>
-                    <td>
-                      <span style={{ fontWeight: 500 }}>{promo.name}</span>
+                    <td data-label="Nombre">
+                      <span className="promo-name">{promo.name}</span>
                     </td>
-                    <td>{promo.code || 'Automático'}</td>
-                    <td>{promo.type === 'percentage' ? 'Porcentaje' : 'Fijo'}</td>
-                    <td style={{ fontWeight: 600 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <td data-label="Código">
+                      {!promo.code ? (
+                        <span className="promo-automatic-label">Automático</span>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="promo-code-badge">
+                            {visibleCodes[promo.id] ? promo.code : '••••••••'}
+                          </span>
+                          <button 
+                            className="btn-secondary" 
+                            style={{ padding: '4px', border: 'none', background: 'transparent' }}
+                            onClick={() => setVisibleCodes(prev => ({ ...prev, [promo.id]: !prev[promo.id] }))}
+                            title={visibleCodes[promo.id] ? "Ocultar código" : "Mostrar código"}
+                          >
+                            {visibleCodes[promo.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td data-label="Tipo">{promo.type === 'percentage' ? 'Porcentaje' : 'Fijo'}</td>
+                    <td data-label="Valor" className="promo-value-cell">
+                      <div className="promo-value-wrapper">
                         <span>{promo.type === 'percentage' ? `${promo.value}%` : `Bs. ${promo.value}`}</span>
                         {promo.type === 'percentage' && promo.max_discount_amount && (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                          <span className="promo-max-discount">
                             Max: Bs. {promo.max_discount_amount}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Alcance">
                       {targetLabels.length > 0 ? (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '180px' }}>
+                        <div className="promo-targets-wrapper">
                           {targetLabels.slice(0, 3).map((lbl, idx) => (
-                            <span key={idx} style={{ fontSize: '11px', background: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}>
+                            <span key={idx} className="promo-target-badge">
                               {lbl}
                             </span>
                           ))}
                           {targetLabels.length > 3 && (
-                            <span style={{ fontSize: '11px', background: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-main)' }}>
+                            <span className="promo-target-badge overflow">
                               +{targetLabels.length - 3} más
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span style={{ fontSize: '12px', color: 'var(--color-primary)', background: 'rgba(37, 99, 235, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                        <span className="promo-target-badge global">
                           Global (Todo)
                         </span>
                       )}
                     </td>
-                    <td>{new Date(promo.deleted_at).toLocaleDateString()}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                    <td data-label="Eliminación">{new Date(promo.deleted_at).toLocaleDateString()}</td>
+                    <td className="promo-actions-cell">
+                      <span className="promo-actions-wrapper">
                         <button 
-                          className="action-btn" 
+                          className="action-btn promo-restore-btn" 
                           title="Restaurar"
                           onClick={() => handleRestore(promo.id)}
-                          style={{ color: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)' }}
                         >
                           <RefreshCw size={16} />
                         </button>
                         <button 
-                          className="action-btn" 
+                          className="action-btn promo-force-delete-btn" 
                           title="Eliminar Permanente"
                           onClick={() => handleForceDelete(promo.id)}
-                          style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)' }}
                         >
                           <Trash2 size={16} />
                         </button>
-                      </div>
+                      </span>
                     </td>
                   </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                  <td colSpan="7" className="promo-empty-text">
                     La papelera está vacía
                   </td>
                 </tr>

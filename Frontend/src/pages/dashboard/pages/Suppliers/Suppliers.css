@@ -3743,9 +3743,23 @@ select option:focus {
 .filters-container-inner { display: flex; gap: 10px; align-items: center; }
 
 @media (max-width: 768px) {
-  .suppliers-header { flex-direction: column; align-items: flex-start; gap: 16px; }
-  .suppliers-header > div { width: 100%; justify-content: flex-start; }
-  .suppliers-header button, .suppliers-header a { flex: 1; justify-content: center; }
+  .suppliers-header { flex-direction: column; align-items: stretch !important; gap: 16px; width: 100%; }
+  .suppliers-header > div { width: 100%; justify-content: stretch !important; }
+  
+  .header-actions {
+    width: 100%;
+    flex-wrap: nowrap !important;
+    justify-content: stretch !important;
+    gap: 12px !important;
+  }
+  .header-actions a, .header-actions button {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    padding: 12px !important;
+    justify-content: center !important;
+    width: 100%;
+  }
+
   .modal-form-grid { grid-template-columns: 1fr; }
   .filters-container-inner { flex-direction: column; align-items: stretch; }
   .filters-container-inner > div { width: 100%; }

@@ -41,10 +41,10 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
       <table className="bundles-table">
         <thead>
           <tr>
-            <th style={{ width: '40px' }}>
+            <th className="bt-col-check">
               <input type="checkbox" onChange={handleSelectAll} checked={bundles.length > 0 && selectedRows.length === bundles.length} className="custom-table-checkbox" />
             </th>
-            <th style={{ width: '50px' }}>Img</th>
+            <th className="bt-col-img">Img</th>
             <th>Nombre</th>
             <th>Precio</th>
             <th>Categoría</th>
@@ -66,7 +66,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                 <td>
                   <input type="checkbox" checked={selectedRows.includes(bundle.id)} onChange={() => handleSelectRow(bundle.id)} className="custom-table-checkbox" />
                 </td>
-                <td onClick={() => onView && onView(bundle)} style={{ cursor: 'pointer' }}>
+                <td onClick={() => onView && onView(bundle)} className="bt-clickable-td">
                   <div className="product-thumb">
                     <img
                       src={mainImage}
@@ -78,15 +78,15 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                     />
                   </div>
                 </td>
-                <td onClick={() => onView && onView(bundle)} style={{ cursor: 'pointer' }}>
-                  <div style={{ fontWeight: 500, color: "var(--text-main)" }}>{bundle.name}</div>
-                  {bundle.slug && <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>{bundle.slug}</div>}
+                <td onClick={() => onView && onView(bundle)} className="bt-clickable-td">
+                  <div className="bt-cell-name">{bundle.name}</div>
+                  {bundle.slug && <div className="bt-cell-slug">{bundle.slug}</div>}
                 </td>
                 <td>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontWeight: 600 }}>Bs. {parseFloat(bundle.base_price).toFixed(2)}</span>
+                  <div className="bt-cell-price">
+                    <span className="bt-price-main">Bs. {parseFloat(bundle.base_price).toFixed(2)}</span>
                     {bundle.savings > 0 && (
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                      <span className="bt-price-regular">
                         Regular: Bs. {bundle.regularPrice?.toFixed(2)}
                       </span>
                     )}
@@ -99,7 +99,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                   </span>
                 </td>
                 <td>
-                  <span style={{ fontWeight: 500, color: bundle.virtualStock > 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                  <span className={`bt-stock ${bundle.virtualStock > 0 ? 'bt-stock-ok' : 'bt-stock-low'}`}>
                     {bundle.virtualStock} posibles
                   </span>
                 </td>
@@ -110,7 +110,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                 </td>
                 <td>
                   <div className="table-actions">
-                    <button className="btn-view" onClick={() => onView && onView(bundle)} title="Ver detalles" style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button className="btn-view" onClick={() => onView && onView(bundle)} title="Ver detalles">
                       <Eye size={16} />
                     </button>
                     <CanAccess permission="edit_products">

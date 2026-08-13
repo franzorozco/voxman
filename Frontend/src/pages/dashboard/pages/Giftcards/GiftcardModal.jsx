@@ -109,15 +109,15 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
   return (
     <div className="modal-overlay">
       <div className="modal" style={{ maxWidth: '500px' }}>
-        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, padding: '24px 30px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '20px', fontWeight: '600' }}>
+        <h2 className="gift-modal-header">
           {isReload ? `Recargar Giftcard: ${giftcard?.code}` : "Emitir Nueva Giftcard"}
-          <button type="button" className="btn-secondary" style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer' }} onClick={onClose}>
+          <button type="button" className="gift-modal-close-btn" onClick={onClose}>
             <X size={20} />
           </button>
         </h2>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '24px', flex: 1 }}>
+        <form onSubmit={handleSubmit} className="gift-modal-form">
+          <div className="gift-modal-body">
             
             <div className="form-group">
               <label>Monto a {isReload ? 'recargar' : 'cargar'} (Bs) *</label>
@@ -170,7 +170,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
                     styles={customStyles}
                     menuPosition="fixed"
                   />
-                  <small style={{ color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                  <small className="gift-helper-text">
                     Opcional. Deja vacío si se vende de forma anónima.
                   </small>
                 </div>
@@ -224,12 +224,12 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
             )}
           </div>
 
-          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--bg-card)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
-            <button type="button" className="btn-secondary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)' }} onClick={onClose} disabled={loading}>
+          <div className="gift-modal-footer">
+            <button type="button" className="gift-btn-cancel" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
-            <button type="submit" className="btn-primary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '160px' }} disabled={loading}>
-              {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : (isReload ? "Recargar Saldo" : "Emitir Giftcard")}
+            <button type="submit" className="btn-primary gift-btn-submit" disabled={loading}>
+              {loading ? "Procesando..." : (isReload ? "Confirmar Recarga" : "Emitir Giftcard")}
             </button>
           </div>
         </form>

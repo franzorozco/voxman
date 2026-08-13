@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit } from "lucide-react";
+import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit, Truck } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { getCarts, deleteCart, convertCartToSale, sendCartReminder } from "../../../../api/admin/carts";
+import { getCarts, deleteCart, convertCartToSale, sendCartReminder, convertCartToOrder } from "../../../../api/admin/carts";
 import CartDetailsModal from "./CartDetailsModal";
 import CartFormModal from "./CartFormModal";
 import CanAccess from "../../../../components/ui/CanAccess";
@@ -83,6 +83,16 @@ export default function Carts() {
     });
   };
 
+  const handleConvertToOrderClick = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      type: 'convert_order',
+      cartId: id,
+      title: 'Convertir a Entrega',
+      message: '¿Convertir esta proforma en una entrega pendiente? Podrás completar los datos de envío desde la página de Entregas.'
+    });
+  };
+
   const handleConfirmAction = async () => {
     const { type, cartId } = confirmModal;
     setConfirmModal({ ...confirmModal, isOpen: false });
@@ -102,6 +112,15 @@ export default function Carts() {
         fetchCarts(filters);
       } catch (error) {
         toast.error("Error al convertir carrito");
+      }
+    } else if (type === 'convert_order') {
+      try {
+        await convertCartToOrder(cartId);
+        toast.success("Convertido a entrega pendiente exitosamente");
+        fetchCarts(filters);
+      } catch (error) {
+        const msg = error?.response?.data?.error || "Error al convertir a entrega";
+        toast.error(msg);
       }
     }
   };
@@ -363,11 +382,18 @@ export default function Carts() {
                         )}
                       </CanAccess>
                       {(cart.status === 'proforma' || cart.status === 'active') && (
-                        <CanAccess permission="convert_carts">
-                          <button className="btn-convert" onClick={() => handleConvertClick(cart.id)} title="Convertir a Venta">
-                            <CheckCircle size={18} />
-                          </button>
-                        </CanAccess>
+                        <>
+                          <CanAccess permission="convert_carts">
+                            <button className="btn-convert" onClick={() => handleConvertClick(cart.id)} title="Convertir a Venta">
+                              <CheckCircle size={18} />
+                            </button>
+                          </CanAccess>
+                          <CanAccess permission="create_orders">
+                            <button className="btn-convert-order" onClick={() => handleConvertToOrderClick(cart.id)} title="Convertir a Entrega">
+                              <Truck size={18} />
+                            </button>
+                          </CanAccess>
+                        </>
                       )}
                       {cart.status === 'abandoned' && (
                         <CanAccess permission="send_cart_reminders">
@@ -393,7 +419,12 @@ export default function Carts() {
       {isDetailsOpen && (
         <CartDetailsModal 
           cart={selectedCart} 
-          onClose={() => setIsDetailsOpen(false)} 
+          onClose={() => setIsDetailsOpen(false)}
+          onEdit={(cart) => handleOpenForm(cart)}
+          onConvert={(id) => handleConvertClick(id)}
+          onConvertOrder={(id) => handleConvertToOrderClick(id)}
+          onReminder={(id) => handleReminder(id)}
+          onDelete={(id) => handleDeleteClick(id)}
         />
       )}
 

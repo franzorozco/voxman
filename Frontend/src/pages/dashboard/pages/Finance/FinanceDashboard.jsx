@@ -106,7 +106,7 @@ export default function FinanceDashboard() {
       {/* HEADER SECTION */}
       <div className="responsive-header" style={{ marginBottom: '10px' }}>
         <div>
-            <h1 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 8px 0', background: 'linear-gradient(90deg, var(--color-primary) 0%, #a855f7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-main)' }}>
             Resumen General
             </h1>
             <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '15px' }}>Control de ingresos, gastos y tesorería en tiempo real.</p>
@@ -142,8 +142,8 @@ export default function FinanceDashboard() {
 
       {/* SUMMARY CARDS */}
       <div className="dashboard-summary-cards">
-        <div style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.02) 100%)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(34, 197, 94, 0.2)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(34, 197, 94, 0.2)', color: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(34, 197, 94, 0.2)' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
+          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.2)', color: 'var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.2)' }}>
             <TrendingUp size={28} />
           </div>
           <div>
@@ -152,8 +152,8 @@ export default function FinanceDashboard() {
           </div>
         </div>
 
-        <div style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
+          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(239, 68, 68, 0.2)', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)' }}>
             <TrendingDown size={28} />
           </div>
           <div>
@@ -162,8 +162,8 @@ export default function FinanceDashboard() {
           </div>
         </div>
 
-        <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.02) 100%)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.2)' }}>
+        <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '20px', border: '1px solid var(--bg-overlay)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
+          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--bg-overlay)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px var(--bg-overlay)' }}>
             <DollarSign size={28} />
           </div>
           <div>
@@ -178,7 +178,7 @@ export default function FinanceDashboard() {
         <div style={{ background: 'var(--bg-card)', borderRadius: '20px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
           <div style={{ padding: '24px 30px', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
             <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 700 }}>
-              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '8px', borderRadius: '10px', color: '#3b82f6', display: 'flex' }}>
+              <div style={{ background: 'var(--bg-overlay)', padding: '8px', borderRadius: '10px', color: 'var(--color-primary)', display: 'flex' }}>
                 <Activity size={20} />
               </div>
               Tesorería Global de la Marca
@@ -189,7 +189,7 @@ export default function FinanceDashboard() {
             
             {/* CASH BALANCE */}
             <div style={{ padding: '30px 40px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-              <div style={{ padding: '16px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '50%', color: '#22c55e', marginBottom: '20px', boxShadow: '0 0 20px rgba(34, 197, 94, 0.2)' }}>
+              <div style={{ padding: '16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '50%', color: 'var(--color-success)', marginBottom: '20px', boxShadow: '0 0 20px rgba(16, 185, 129, 0.2)' }}>
                 <Wallet size={36} />
               </div>
               <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Efectivo en Caja</h4>
@@ -197,18 +197,18 @@ export default function FinanceDashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', width: '100%', fontSize: '13px' }}>
                 <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Entradas</span>
-                  <div style={{ color: '#22c55e', fontWeight: 700, fontSize: '15px' }}>+{(Number(summary.treasury.details.cash.sales) + Number(summary.treasury.details.cash.deposits)).toFixed(2)}</div>
+                  <div style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: '15px' }}>+{(Number(summary.treasury.details.cash.sales) + Number(summary.treasury.details.cash.deposits)).toFixed(2)}</div>
                 </div>
                 <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Salidas</span>
-                  <div style={{ color: '#ef4444', fontWeight: 700, fontSize: '15px' }}>-{(Number(summary.treasury.details.cash.expenses) + Number(summary.treasury.details.cash.withdrawals)).toFixed(2)}</div>
+                  <div style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: '15px' }}>-{(Number(summary.treasury.details.cash.expenses) + Number(summary.treasury.details.cash.withdrawals)).toFixed(2)}</div>
                 </div>
               </div>
             </div>
 
             {/* BANK BALANCE */}
             <div style={{ padding: '30px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>
-              <div style={{ padding: '16px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '50%', color: '#3b82f6', marginBottom: '20px', boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' }}>
+              <div style={{ padding: '16px', background: 'var(--bg-overlay)', borderRadius: '50%', color: 'var(--color-primary)', marginBottom: '20px', boxShadow: '0 0 20px var(--bg-overlay)' }}>
                 <CreditCard size={36} />
               </div>
               <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cuenta Bancaria</h4>
@@ -216,18 +216,18 @@ export default function FinanceDashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', width: '100%', fontSize: '13px' }}>
                 <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Entradas</span>
-                  <div style={{ color: '#22c55e', fontWeight: 700, fontSize: '15px' }}>+{(Number(summary.treasury.details.bank.sales) + Number(summary.treasury.details.bank.deposits)).toFixed(2)}</div>
+                  <div style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: '15px' }}>+{(Number(summary.treasury.details.bank.sales) + Number(summary.treasury.details.bank.deposits)).toFixed(2)}</div>
                 </div>
                 <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Salidas</span>
-                  <div style={{ color: '#ef4444', fontWeight: 700, fontSize: '15px' }}>-{(Number(summary.treasury.details.bank.expenses) + Number(summary.treasury.details.bank.withdrawals)).toFixed(2)}</div>
+                  <div style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: '15px' }}>-{(Number(summary.treasury.details.bank.expenses) + Number(summary.treasury.details.bank.withdrawals)).toFixed(2)}</div>
                 </div>
               </div>
             </div>
 
             {/* GIFTCARD "BALANCE" */}
             <div style={{ padding: '30px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', background: 'rgba(168, 85, 247, 0.02)' }}>
-              <div style={{ padding: '16px', background: 'rgba(168, 85, 247, 0.1)', borderRadius: '50%', color: '#a855f7', marginBottom: '20px', boxShadow: '0 0 20px rgba(168, 85, 247, 0.2)' }}>
+              <div style={{ padding: '16px', background: 'var(--bg-overlay)', borderRadius: '50%', color: 'var(--color-primary)', marginBottom: '20px', boxShadow: '0 0 20px var(--bg-overlay)' }}>
                 <Gift size={36} />
               </div>
               <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ventas con Giftcard</h4>
@@ -295,8 +295,8 @@ export default function FinanceDashboard() {
                   <div className="owner-details-header">
                     <div style={{ 
                       padding: '24px', 
-                      background: activeOwnerData.current_balance >= 0 ? 'rgba(34, 197, 94, 0.04)' : 'rgba(239, 68, 68, 0.04)', 
-                      border: `1px solid ${activeOwnerData.current_balance >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`, 
+                      background: activeOwnerData.current_balance >= 0 ? 'rgba(16, 185, 129, 0.04)' : 'rgba(239, 68, 68, 0.04)', 
+                      border: `1px solid ${activeOwnerData.current_balance >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`, 
                       borderRadius: '16px', 
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
@@ -304,7 +304,7 @@ export default function FinanceDashboard() {
                           <p style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <Wallet size={16} /> Saldo Disponible Total
                           </p>
-                          <h2 style={{ margin: 0, fontSize: '36px', color: activeOwnerData.current_balance >= 0 ? '#22c55e' : '#ef4444', fontWeight: 700 }}>
+                          <h2 style={{ margin: 0, fontSize: '36px', color: activeOwnerData.current_balance >= 0 ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: 700 }}>
                             Bs. {Number(activeOwnerData.current_balance).toFixed(2)}
                           </h2>
                         </div>
@@ -355,12 +355,12 @@ export default function FinanceDashboard() {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Deudas Pendientes:</span>
-                        <span style={{ fontWeight: 600, color: '#ef4444' }}>Bs. {Number(activeOwnerData.pending_debts).toFixed(2)}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--color-danger)' }}>Bs. {Number(activeOwnerData.pending_debts).toFixed(2)}</span>
                       </div>
                       <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px' }}>
                         <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>Proyección (Restando Deudas):</span>
-                        <span style={{ fontWeight: 700, color: (activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed - activeOwnerData.pending_debts) >= 0 ? '#22c55e' : '#ef4444' }}>
+                        <span style={{ fontWeight: 700, color: (activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed - activeOwnerData.pending_debts) >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
                           Bs. {Number(activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed - activeOwnerData.pending_debts).toFixed(2)}
                         </span>
                       </div>
@@ -390,11 +390,11 @@ export default function FinanceDashboard() {
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px dashed var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
                               <span style={{ color: 'var(--text-muted)' }}>Deuda Pendiente:</span>
-                              <span style={{ fontWeight: 600, color: '#ef4444' }}>Bs. {Number(b.pending_debts).toFixed(2)}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--color-danger)' }}>Bs. {Number(b.pending_debts).toFixed(2)}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                               <span style={{ color: 'var(--text-muted)' }}>Ganancia Sucursal:</span>
-                              <span style={{ fontWeight: 600, color: '#22c55e' }}>Bs. {Number(b.sales_revenue - b.expenses_assumed).toFixed(2)}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>Bs. {Number(b.sales_revenue - b.expenses_assumed).toFixed(2)}</span>
                             </div>
                           </div>
                         ))}
@@ -407,7 +407,7 @@ export default function FinanceDashboard() {
                     
                     <div style={{ padding: '20px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                        <div style={{ padding: '8px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', color: '#22c55e' }}>
+                        <div style={{ padding: '8px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', color: 'var(--color-success)' }}>
                           <TrendingUp size={20} />
                         </div>
                         <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>Ingresos por Ventas</h4>
@@ -417,7 +417,7 @@ export default function FinanceDashboard() {
 
                     <div style={{ padding: '20px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                        <div style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', color: '#ef4444' }}>
+                        <div style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', color: 'var(--color-danger)' }}>
                           <TrendingDown size={20} />
                         </div>
                         <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>Gastos Asumidos</h4>
@@ -427,24 +427,24 @@ export default function FinanceDashboard() {
 
                     <div style={{ padding: '20px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                        <div style={{ padding: '8px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', color: '#3b82f6' }}>
+                        <div style={{ padding: '8px', background: 'var(--bg-overlay)', borderRadius: '8px', color: 'var(--color-primary)' }}>
                           <ArrowUpCircle size={20} />
                         </div>
                         <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>Inyecciones</h4>
                       </div>
-                      <div className="metric-value" style={{ color: '#10b981', fontWeight: 700, fontSize: '24px' }}>
+                      <div className="metric-value" style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: '24px' }}>
                         Bs. {Number(activeOwnerData?.total_contributions || 0).toFixed(2)}
                       </div>
                     </div>
 
                     <div style={{ padding: '20px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                        <div style={{ padding: '8px', background: 'rgba(234, 179, 8, 0.1)', borderRadius: '8px', color: '#eab308' }}>
+                        <div style={{ padding: '8px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', color: 'var(--color-warning)' }}>
                           <ArrowDownCircle size={20} />
                         </div>
                         <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>Retiros</h4>
                       </div>
-                      <div className="metric-value" style={{ color: '#ef4444', fontWeight: 700, fontSize: '24px' }}>
+                      <div className="metric-value" style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: '24px' }}>
                         Bs. {Number(activeOwnerData?.total_withdrawals || 0).toFixed(2)}
                       </div>
                     </div>
@@ -478,7 +478,7 @@ export default function FinanceDashboard() {
                     )}
 
                     <div className="ledger-table-container table-responsive" style={{ margin: 0 }}>
-                      <table className="products-table">
+                      <table className="finance-table">
                         <thead>
                           <tr>
                             <th>Fecha</th>
@@ -495,20 +495,20 @@ export default function FinanceDashboard() {
                             <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>Cargando historial...</td></tr>
                           ) : ledgerData.length > 0 ? (
                             ledgerData.map((tx, idx) => (
-                              <tr key={idx} style={{ background: tx.amount > 0 ? 'rgba(34, 197, 94, 0.02)' : 'rgba(239, 68, 68, 0.02)' }}>
+                              <tr key={idx} style={{ background: tx.amount > 0 ? 'rgba(16, 185, 129, 0.02)' : 'rgba(239, 68, 68, 0.02)' }}>
                                 <td>{new Date(tx.date).toLocaleDateString()} {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                 <td>{tx.branch_name || 'Global'}</td>
                                 <td>{tx.description}</td>
                                 <td>
                                   <span style={{ 
                                     padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
-                                    background: tx.type === 'deposit' ? 'rgba(34, 197, 94, 0.1)' : tx.type === 'withdrawal' ? 'rgba(234, 179, 8, 0.1)' : tx.type === 'sale' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                    color: tx.type === 'deposit' ? '#22c55e' : tx.type === 'withdrawal' ? '#eab308' : tx.type === 'sale' ? '#3b82f6' : '#ef4444'
+                                    background: tx.type === 'deposit' ? 'rgba(16, 185, 129, 0.1)' : tx.type === 'withdrawal' ? 'rgba(245, 158, 11, 0.1)' : tx.type === 'sale' ? 'var(--bg-overlay)' : 'rgba(239, 68, 68, 0.1)',
+                                    color: tx.type === 'deposit' ? 'var(--color-success)' : tx.type === 'withdrawal' ? 'var(--color-warning)' : tx.type === 'sale' ? 'var(--color-primary)' : 'var(--color-danger)'
                                   }}>
                                     {tx.type}
                                   </span>
                                 </td>
-                                <td style={{ textAlign: 'right', fontWeight: 600, color: tx.amount > 0 ? '#22c55e' : '#ef4444' }}>{tx.amount > 0 ? '+' : ''}{Number(tx.amount).toFixed(2)}</td>
+                                <td style={{ textAlign: 'right', fontWeight: 600, color: tx.amount > 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>{tx.amount > 0 ? '+' : ''}{Number(tx.amount).toFixed(2)}</td>
                                 <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>{Number(tx.previous_balance).toFixed(2)}</td>
                                 <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>{Number(tx.new_balance).toFixed(2)}</td>
                               </tr>
@@ -525,8 +525,8 @@ export default function FinanceDashboard() {
             </div>
           </div>
         ) : (
-          <div className="table-container fade-in table-responsive" style={{ margin: 0, border: 'none', borderRadius: 0 }}>
-            <table className="products-table" style={{ border: 'none', borderRadius: 0, minWidth: '600px' }}>
+          <div className="table-container fade-in table-responsive" style={{ margin: 0, border: 'none', borderRadius: 0, overflowX: 'auto' }}>
+            <table className="finance-table" style={{ border: 'none', borderRadius: 0, minWidth: '800px' }}>
               <thead>
                 <tr>
                   <th>Socio</th>
@@ -540,15 +540,15 @@ export default function FinanceDashboard() {
               <tbody>
                 {owners && owners.length > 0 ? owners.map(o => (
                   <tr key={o.owner_id} onClick={() => setSelectedOwnerId(o.owner_id)} style={{ cursor: 'pointer' }}>
-                    <td style={{ fontWeight: 600 }}>{o.name}</td>
-                    <td style={{ color: '#22c55e', fontWeight: 500 }}>+ Bs. {Number(o.sales_revenue).toFixed(2)}</td>
-                    <td style={{ color: '#ef4444', fontWeight: 500 }}>- Bs. {Number(o.expenses_assumed).toFixed(2)}</td>
-                    <td style={{ color: '#3b82f6', fontWeight: 500 }}>+ Bs. {Number(o.deposits).toFixed(2)}</td>
-                    <td style={{ color: '#eab308', fontWeight: 500 }}>- Bs. {Number(o.withdrawals).toFixed(2)}</td>
-                    <td>
+                    <td data-label="Socio" style={{ fontWeight: 600 }}>{o.name}</td>
+                    <td data-label="Ingresos por Ventas" style={{ color: 'var(--color-success)', fontWeight: 500 }}>+ Bs. {Number(o.sales_revenue).toFixed(2)}</td>
+                    <td data-label="Gastos Asumidos" style={{ color: 'var(--color-danger)', fontWeight: 500 }}>- Bs. {Number(o.expenses_assumed).toFixed(2)}</td>
+                    <td data-label="Inyecciones" style={{ color: 'var(--color-primary)', fontWeight: 500 }}>+ Bs. {Number(o.deposits).toFixed(2)}</td>
+                    <td data-label="Retiros" style={{ color: 'var(--color-warning)', fontWeight: 500 }}>- Bs. {Number(o.withdrawals).toFixed(2)}</td>
+                    <td data-label="Saldo Disponible">
                       <span style={{ 
-                        background: o.current_balance >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                        color: o.current_balance >= 0 ? '#22c55e' : '#ef4444',
+                        background: o.current_balance >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        color: o.current_balance >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
                         padding: '6px 12px',
                         borderRadius: '8px',
                         fontWeight: 'bold',

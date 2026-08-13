@@ -75,6 +75,12 @@ p {
   }
 }
 
+/* FIX: NORMALIZAR ALTURA DE LOS MODALES PARA EVITAR ESPACIOS EN BLANCO */
+.modal-content, .modal {
+  height: auto !important;
+  max-height: 90vh !important;
+}
+
 /* Fix global para dropdowns (options heredan el color del select para evitar bug en Chromium) */
 select option {
   background-color: inherit;

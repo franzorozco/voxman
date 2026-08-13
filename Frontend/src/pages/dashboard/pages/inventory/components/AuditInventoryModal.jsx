@@ -218,7 +218,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
         <div className="modal-body" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
           
           <div style={{ display: 'flex', alignItems: 'center', background: 'var(--color-secondary)', padding: '12px 16px', borderRadius: '8px', color: 'var(--color-warning)', gap: '10px', border: '1px solid var(--border-color)' }}>
-            <AlertCircle size={20} />
+            <AlertCircle size={20} style={{ flexShrink: 0 }} />
             <span style={{ fontSize: '13px', color: 'var(--text-main)' }}><strong>Auditoría por Búsqueda:</strong> Busca los productos, ingresa su conteo real y se guardarán en tu lista de auditados. Al finalizar, presiona Guardar.</span>
           </div>
 
@@ -236,7 +236,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
             <button
               onClick={handleScanClick}
               title="Escanear con Cámara"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '50px', height: '50px', borderRadius: '10px', background: 'var(--bg-input)', color: 'var(--color-primary)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '50px', height: '50px', borderRadius: '10px', background: 'var(--bg-input)', color: 'var(--color-primary)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500, flexShrink: 0 }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(99,102,241,0.05)' }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-input)' }}
             >
@@ -245,14 +245,14 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
           </div>
 
           {!isSearching && Object.keys(auditedItems).length === 0 ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)', borderRadius: '12px', background: 'var(--bg-card)' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)', borderRadius: '12px', background: 'var(--bg-card)', padding: '40px 20px', textAlign: 'center' }}>
               <Package size={48} style={{ opacity: 0.5, marginBottom: '12px' }} />
               <p style={{ margin: 0, fontSize: '15px', fontWeight: 500 }}>Tu lista de auditoría está vacía</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '13px' }}>Usa el buscador de arriba para encontrar productos y ajustar su stock.</p>
+              <p style={{ margin: '8px 0 0 0', fontSize: '13px', maxWidth: '300px' }}>Usa el buscador para añadir productos y ajustar su stock real.</p>
             </div>
           ) : (
-            <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'auto', flex: 1, minHeight: 0, background: 'var(--bg-card)' }}>
-              <table style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'auto' }}>
+            <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', overflowX: 'auto', flex: 1, minHeight: 0, background: 'var(--bg-card)' }}>
+              <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'auto' }}>
                 <thead style={{ background: 'var(--bg-card)', position: 'sticky', top: 0, zIndex: 1 }}>
                   <tr>
                     <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>Producto / Variante</th>

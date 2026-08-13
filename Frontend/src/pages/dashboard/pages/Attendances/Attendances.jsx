@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Clock, Calendar, RefreshCw, Plus, Edit, Trash2, CalendarDays, List as ListIcon, ShieldAlert } from "lucide-react";
+import { Search, Clock, Calendar, RefreshCw, Plus, Edit, Trash2, CalendarDays, List as ListIcon, ShieldAlert, Filter } from "lucide-react";
 import { getAttendances, deleteAttendance } from "../../../../api/admin/attendances";
 import { getEmployees } from "../../../../api/admin/employees";
 import Spinner from "../../components/Spinner/Spinner";
@@ -21,6 +21,8 @@ export default function Attendances() {
   
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
+  
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -98,26 +100,26 @@ export default function Attendances() {
       <div className="products-header">
         <h1 className="products-title">Control de Asistencia</h1>
         
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', background: 'var(--bg-input)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+        <div className="products-header-actions stacked-mobile">
+          <button className="btn-primary" onClick={handleAddNew} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Plus size={18} /> Registrar Manual
+          </button>
+          <div className="view-mode-toggle" style={{ display: 'flex', background: 'var(--bg-input)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
             <button 
               className={viewMode === 'daily' ? 'btn-primary' : ''} 
-              style={{ padding: '8px 16px', border: 'none', background: viewMode === 'daily' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'daily' ? '#fff' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '8px 16px', border: 'none', background: viewMode === 'daily' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'daily' ? '#fff' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flex: 1 }}
               onClick={() => setViewMode('daily')}
             >
               <Calendar size={16} /> Diario
             </button>
             <button 
               className={viewMode === 'monthly' ? 'btn-primary' : ''} 
-              style={{ padding: '8px 16px', border: 'none', background: viewMode === 'monthly' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'monthly' ? '#fff' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '8px 16px', border: 'none', background: viewMode === 'monthly' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'monthly' ? '#fff' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flex: 1 }}
               onClick={() => setViewMode('monthly')}
             >
               <CalendarDays size={16} /> Mensual
             </button>
           </div>
-          <button className="btn-primary" onClick={handleAddNew} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Plus size={18} /> Registrar Manual
-          </button>
         </div>
       </div>
 
@@ -143,62 +145,70 @@ export default function Attendances() {
       )}
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner" style={{ flexWrap: 'wrap', gap: '12px' }}>
-          
-          <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
+        <div className="filters-container-inner" style={{ marginBottom: showFilters ? '15px' : '0', display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
-              type="text" 
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
               placeholder="Buscar por nombre, código o notas..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          {viewMode === 'daily' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Fecha:</span>
-              <input 
-                type="date" 
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              />
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Mes:</span>
-                <input 
-                  type="month" 
-                  value={filterMonth}
-                  onChange={(e) => setFilterMonth(e.target.value)}
-                  style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-                />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Empleado:</span>
-                <CustomSelect 
-                  value={selectedEmployeeForMonth}
-                  onChange={(e) => setSelectedEmployeeForMonth(e.target.value)}
-                  style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none', minWidth: '200px' }}
-                >
-                  <option value="">Todos los empleados...</option>
-                  {employees.map(emp => {
-                    const profile = emp.user?.profile || {};
-                    const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
-                    return <option key={emp.id} value={emp.id}>{fullName}</option>;
-                  })}
-                </CustomSelect>
-              </div>
-            </div>
-          )}
-
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+          >
+            <Filter size={18} />
+            <span className="hide-on-mobile">Filtros</span>
+          </button>
           <button className="btn-secondary" onClick={fetchData} disabled={loading} style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', cursor: 'pointer' }}>
             <RefreshCw size={18} className={loading ? "spin" : ""} />
           </button>
         </div>
+
+        {showFilters && (
+          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
+            {viewMode === 'daily' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Fecha</label>
+                <input 
+                  type="date" 
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                />
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Mes</label>
+                  <input 
+                    type="month" 
+                    value={filterMonth}
+                    onChange={(e) => setFilterMonth(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Empleado</label>
+                  <CustomSelect 
+                    value={selectedEmployeeForMonth}
+                    onChange={(e) => setSelectedEmployeeForMonth(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                  >
+                    <option value="">Todos los empleados...</option>
+                    {employees.map(emp => {
+                      const profile = emp.user?.profile || {};
+                      const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
+                      return <option key={emp.id} value={emp.id}>{fullName}</option>;
+                    })}
+                  </CustomSelect>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="table-container fade-in">
@@ -235,26 +245,26 @@ export default function Attendances() {
                   const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
                   return (
                     <tr key={att.id} className="fade-in">
-                      {viewMode === 'daily' && <td><span className="customer-code">{att.employee?.employee_code}</span></td>}
-                      {viewMode === 'daily' && <td><span style={{ fontWeight: 600 }}>{fullName}</span></td>}
+                      {viewMode === 'daily' && <td data-label="CÓDIGO"><span className="customer-code">{att.employee?.employee_code}</span></td>}
+                      {viewMode === 'daily' && <td data-label="EMPLEADO"><span style={{ fontWeight: 600 }}>{fullName}</span></td>}
                       
                       {viewMode === 'monthly' && (
-                        <td><span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{new Date(att.date + 'T00:00:00').toLocaleDateString()}</span></td>
+                        <td data-label="FECHA"><span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{new Date(att.date + 'T00:00:00').toLocaleDateString()}</span></td>
                       )}
 
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
+                      <td data-label="ENTRADA">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)', justifyContent: 'flex-end' }}>
                           <Clock size={16} color="#10b981" />
                           {att.check_in ? new Date(att.check_in).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
                         </div>
                       </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
+                      <td data-label="SALIDA">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)', justifyContent: 'flex-end' }}>
                           <Clock size={16} color="#ef4444" />
                           {att.check_out ? new Date(att.check_out).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
                         </div>
                       </td>
-                      <td>
+                      <td data-label="ESTADO">
                         <span style={{ 
                           padding: '4px 12px', 
                           borderRadius: '20px', 
@@ -266,12 +276,12 @@ export default function Attendances() {
                           {att.status === 'late' ? 'Atraso' : att.status === 'absent' ? 'Falta' : att.status === 'excused' ? 'Permiso/Licencia' : 'A Tiempo'}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="NOTAS">
                         <span style={{ color: 'var(--text-muted)', fontSize: '13px', maxWidth: '200px', display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {att.notes || '-'}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td data-label="ACCIONES" style={{ textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                           <button className="icon-btn" onClick={() => handleEdit(att)} title="Editar Asistencia">
                             <Edit size={16} color="var(--color-primary)" />

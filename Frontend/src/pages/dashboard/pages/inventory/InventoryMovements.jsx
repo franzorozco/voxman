@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { getMovements } from "../../../../api/admin/inventory";
 import { getBranches } from "../../../../api/admin/branches";
 import { API_BASE_URL } from "../../../../config/api";
-import { Search, Filter, ArrowLeft, ArrowUpRight, ArrowDownRight, RefreshCcw } from "lucide-react";
+import { Search, Filter, ArrowLeft, ArrowUpRight, ArrowDownRight, RefreshCcw, History } from "lucide-react";
 import "./Inventory.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
@@ -76,16 +76,17 @@ export default function InventoryMovements() {
   return (
     <div className="inventory-container">
       <div className="inventory-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <Link to="/dashboard/inventory" className="btn-secondary" style={{ padding: '8px', borderRadius: '50%', display: 'flex' }}>
-            <ArrowLeft size={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} className="header-actions">
+          <Link to="/dashboard/inventory" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={18} />
+            <span className="hide-on-mobile">Atrás</span>
           </Link>
           <h1 className="inventory-title">Historial de Movimientos</h1>
         </div>
       </div>
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }} className="filters-header">
           <div className="search-bar" style={{ flex: 1, maxWidth: '400px' }}>
             <Search size={20} className="search-icon" />
             <input
@@ -98,10 +99,11 @@ export default function InventoryMovements() {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
+            className="filter-toggle-btn"
             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--primary-color)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
           >
             <Filter size={18} />
-            <span className="hide-on-mobile">Filtros</span>
+            <span>Filtros</span>
           </button>
         </div>
 

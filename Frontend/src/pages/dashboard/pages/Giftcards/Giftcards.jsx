@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, Edit, Ticket, RefreshCw, Eye, Smartphone } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Ticket, RefreshCw, Eye, EyeOff, Smartphone } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getGiftcards, deleteGiftcard } from "../../../../api/admin/giftcards";
 import GiftcardModal from "./GiftcardModal";
@@ -8,7 +8,7 @@ import GiftcardCoupon from "./GiftcardCoupon";
 import GiftcardDigitalizeModal from "./GiftcardDigitalizeModal";
 import { Link } from "react-router-dom";
 
-import "../Products/Products.css";
+import "./Giftcards.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Giftcards() {
@@ -23,6 +23,7 @@ export default function Giftcards() {
   const [isDigitalizeModalOpen, setIsDigitalizeModalOpen] = useState(false);
   const [selectedGiftcard, setSelectedGiftcard] = useState(null);
   const [modalMode, setModalMode] = useState("create");
+  const [visibleCodes, setVisibleCodes] = useState({});
 
   useEffect(() => {
     fetchGiftcards();
@@ -94,41 +95,60 @@ export default function Giftcards() {
 
   return (
     <div className="products-container">
-      <div className="products-header">
-        <h1 className="products-title">Giftcards y Cupones</h1>
-        
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div className="products-header gift-header-container">
+        <div className="gift-header-title-row">
+          <div className="gift-header-icon-box">
+            <Ticket size={24} />
+          </div>
+          <div>
+            <h1 className="products-title gift-header-title">Giftcards y Cupones</h1>
+            <p className="gift-header-subtitle">Gestión de tarjetas de regalo y saldos</p>
+          </div>
+        </div>
+
+        <div className="gift-header-actions-row">
+          <div className="gift-header-action-col">
+            <Link to="/dashboard/giftcards/deleted" className="btn-secondary gift-header-action-btn">
+              <Trash2 size={18} style={{ flexShrink: 0 }} />
+              <span className="hide-on-mobile">Papelera</span>
+            </Link>
+          </div>
+          <div className="gift-header-action-col">
+            <button className="btn-primary gift-header-action-btn" onClick={() => handleOpenModal("create")}>
+              <Plus size={18} style={{ flexShrink: 0 }} />
+              <span className="hide-on-mobile">Emitir Giftcard</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="filters-container" style={{ marginBottom: '20px' }}>
+        <div className="filters-container-inner gift-filters-row">
+          <div style={{ flex: 2 }} className="gift-search-wrapper">
+            <Search size={18} className="gift-search-icon" />
             <input 
               type="text" 
               placeholder="Buscar por código..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="gift-search-input"
             />
           </div>
           
-          <CustomSelect 
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{ padding: '10px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-          >
-            <option value="all">Todos los Estados</option>
-            <option value="active">Solo Activas</option>
-            <option value="exhausted">Agotadas (Saldo 0)</option>
-            <option value="expired">Expiradas</option>
-            <option value="inactive">Inactivas</option>
-          </CustomSelect>
-          
-          <Link to="/dashboard/giftcards/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-overlay)', color: 'var(--text-main)' }}>
-             <Trash2 size={16}/> Papelera
-          </Link>
-
-          <button className="btn-primary" onClick={() => handleOpenModal("create")}>
-            <Plus size={18} />
-            Emitir Giftcard
-          </button>
+          <div style={{ flex: 1 }}>
+            <CustomSelect 
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="gift-status-select"
+              style={{ height: '42px' }}
+            >
+              <option value="all">Todos los Estados</option>
+              <option value="active">Solo Activas</option>
+              <option value="exhausted">Agotadas (Saldo 0)</option>
+              <option value="expired">Expiradas</option>
+              <option value="inactive">Inactivas</option>
+            </CustomSelect>
+          </div>
         </div>
       </div>
 
@@ -138,7 +158,7 @@ export default function Giftcards() {
             Cargando giftcards...
           </div>
         ) : (
-          <table className="products-table">
+          <table className="gift-table">
             <thead>
               <tr>
                 <th>Código</th>
@@ -171,61 +191,68 @@ export default function Giftcards() {
 
                   return (
                   <tr key={g.id}>
-                    <td>
-                      <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px', fontFamily: 'monospace' }}>
-                        {g.code}
-                      </span>
+                    <td data-label="Código">
+                      <div className="gift-code-wrapper">
+                        <span className="gift-code-text">
+                          {visibleCodes[g.id] ? g.code : "••••••••"}
+                        </span>
+                        <button 
+                          className="gift-visibility-btn" 
+                          onClick={() => setVisibleCodes(prev => ({...prev, [g.id]: !prev[g.id]}))}
+                          title={visibleCodes[g.id] ? "Ocultar código" : "Mostrar código"}
+                        >
+                          {visibleCodes[g.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
                     </td>
-                    <td>
+                    <td data-label="Propietario / Comprador">
                       {g.customer ? (
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 500 }}>{g.customer.user?.profile?.first_name || 'Cliente'} {g.customer.user?.profile?.last_name || ''}</span>
-                          <span style={{ fontSize: '11px', color: 'var(--primary-color)' }}>Propietario Digital</span>
+                        <div className="gift-owner-info">
+                          <span className="gift-owner-name">{g.customer.user?.profile?.first_name || 'Cliente'} {g.customer.user?.profile?.last_name || ''}</span>
+                          <span className="gift-owner-role primary">Propietario Digital</span>
                         </div>
                       ) : g.purchaser ? (
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 500 }}>{g.purchaser.user?.profile?.first_name || 'Cliente'} {g.purchaser.user?.profile?.last_name || ''}</span>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Comprador Original</span>
+                        <div className="gift-owner-info">
+                          <span className="gift-owner-name">{g.purchaser.user?.profile?.first_name || 'Cliente'} {g.purchaser.user?.profile?.last_name || ''}</span>
+                          <span className="gift-owner-role muted">Comprador Original</span>
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '13px' }}>Sin asignar</span>
+                        <span className="gift-unassigned-text">Sin asignar</span>
                       )}
                     </td>
-                    <td>
-                      <span style={{ color: 'var(--text-muted)' }}>
+                    <td data-label="Saldo Original">
+                      <span className="gift-balance-muted">
                         {formatCurrency(g.initial_balance)}
                       </span>
                     </td>
-                    <td style={{ fontWeight: 600, color: 'var(--primary-color)' }}>
+                    <td data-label="Saldo Actual" className="gift-balance-active">
                       {formatCurrency(g.current_balance)}
                     </td>
-                    <td>
-                      <div style={{ fontSize: '13px' }}>
+                    <td data-label="Vencimiento">
+                      <div className="gift-dates-text">
                         {g.expires_at ? new Date(g.expires_at).toLocaleDateString() : 'Sin vencimiento'}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       <span className={`status-badge ${statusClass}`}>
                         {statusText}
                       </span>
                     </td>
-                    <td>
-                      <div className="table-actions" style={{ display: 'flex', gap: '10px' }}>
+                    <td data-label="Acciones" className="gift-actions-cell">
+                      <div className="gift-actions-wrapper">
                         <button 
-                          className="action-btn"
+                          className="btn-secondary gift-ticket-btn"
                           title="Imprimir Cupón"
                           onClick={() => handleOpenCoupon(g)}
-                          style={{ color: '#8b5cf6' }} // purple for tickets
                         >
                           <Ticket size={18} />
                         </button>
                         
                         {!g.is_digitalized && (
                           <button 
-                            className="action-btn"
+                            className="btn-secondary gift-digitalize-btn"
                             title="Digitalizar (Asignar Dueño)"
                             onClick={() => handleOpenDigitalize(g)}
-                            style={{ color: '#10b981' }} // green for digitalize
                             disabled={!g.is_active}
                           >
                             <Smartphone size={18} />
@@ -233,14 +260,14 @@ export default function Giftcards() {
                         )}
 
                         <button 
-                          className="action-btn"
+                          className="btn-secondary gift-history-btn"
                           title="Ver Historial"
                           onClick={() => handleOpenHistory(g)}
                         >
                           <Eye size={18} />
                         </button>
                         <button 
-                          className="action-btn"
+                          className="btn-secondary gift-reload-btn"
                           title="Recargar saldo"
                           onClick={() => handleOpenModal("reload", g)}
                           disabled={!g.is_active}
@@ -248,8 +275,7 @@ export default function Giftcards() {
                           <RefreshCw size={18} />
                         </button>
                         <button 
-                          className="action-btn"
-                          style={{ color: 'var(--danger-color)' }}
+                          className="btn-delete gift-delete-btn"
                           title="Eliminar"
                           onClick={() => handleDelete(g.id)}
                           disabled={!g.is_active}

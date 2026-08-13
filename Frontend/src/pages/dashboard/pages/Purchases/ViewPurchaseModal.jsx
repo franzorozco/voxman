@@ -112,49 +112,49 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
         </div>
 
         <div className="purchase-detail-body">
-          <div className="modal-info-grid">
-            <div className="purchase-info-item">
-              <div className="purchase-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div className="purchase-modal-info-grid">
+            <div className="modal-info-item">
+              <div className="modal-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Hash size={14} /> Nro Factura
               </div>
-              <div className="purchase-info-value">{purchase.invoice_number || "Sin factura"}</div>
+              <div className="modal-info-value">{purchase.invoice_number || "Sin factura"}</div>
             </div>
             
-            <div className="purchase-info-item">
-              <div className="purchase-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="modal-info-item">
+              <div className="modal-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Info size={14} /> Estado
               </div>
-              <div className="purchase-info-value" style={{ marginTop: '4px' }}>
+              <div className="modal-info-value" style={{ marginTop: '4px' }}>
                 {getStatusBadge(purchase.status)}
               </div>
             </div>
 
-            <div className="purchase-info-item">
-              <div className="purchase-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="modal-info-item">
+              <div className="modal-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <User size={14} /> Proveedor
               </div>
-              <div className="purchase-info-value">{purchase.supplier?.name || "Desconocido"}</div>
+              <div className="modal-info-value">{purchase.supplier?.name || "Desconocido"}</div>
             </div>
 
-            <div className="purchase-info-item">
-              <div className="purchase-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="modal-info-item">
+              <div className="modal-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <MapPin size={14} /> Sucursal Destino
               </div>
-              <div className="purchase-info-value">{purchase.branch?.name || "No especificada"}</div>
+              <div className="modal-info-value">{purchase.branch?.name || "No especificada"}</div>
             </div>
 
-            <div className="purchase-info-item">
-              <div className="purchase-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="modal-info-item">
+              <div className="modal-info-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <User size={14} /> Comprador / Empleado
               </div>
-              <div className="purchase-info-value">
-                {purchase.employee?.user?.user_profiles?.[0]?.first_name || "Desconocido"}
+              <div className="modal-info-value">
+                {purchase.employee?.user?.profile?.first_name || purchase.employee?.user?.user_profiles?.[0]?.first_name || "Desconocido"}
               </div>
             </div>
 
-            <div className="purchase-info-item">
-              <div className="purchase-info-label">Fecha de Emisión</div>
-              <div className="purchase-info-value">
+            <div className="modal-info-item">
+              <div className="modal-info-label">Fecha de Emisión</div>
+              <div className="modal-info-value">
                 {new Date(purchase.created_at).toLocaleString()}
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-            <div style={{ width: '250px', padding: '10px 0' }}>
+            <div className="modal-totals-section" style={{ padding: '10px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
                 <span>Subtotal:</span>
                 <span>${Number(purchase.subtotal).toFixed(2)}</span>
@@ -267,7 +267,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
                       <Plus size={16} /> Registrar Abono / Pago
                     </button>
                   ) : (
-                    <div style={{ background: 'var(--bg-card)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <div className="modal-payment-form" style={{ background: 'var(--bg-card)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                       <div className="form-group" style={{ margin: 0, flex: 1 }}>
                         <label>Monto a Pagar (Bs)</label>
                         <input type="number" className="purchase-form-input" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} max={account.balance} />
@@ -297,12 +297,12 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
                   <Plus size={16} /> Agregar Flete o Seguros
                 </button>
               ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
+                <div className="modal-payment-form">
+                  <div className="form-group" style={{ margin: 0, flex: 1 }}>
                     <label>Flete (Bs)</label>
                     <input type="number" className="purchase-form-input" value={shippingCost} onChange={e => setShippingCost(e.target.value)} />
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
+                  <div className="form-group" style={{ margin: 0, flex: 1 }}>
                     <label>Otros Costos (Bs)</label>
                     <input type="number" className="purchase-form-input" value={otherCost} onChange={e => setOtherCost(e.target.value)} />
                   </div>

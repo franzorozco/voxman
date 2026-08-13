@@ -78,25 +78,25 @@ export default function GiftcardDigitalizeModal({ isOpen, onClose, onSuccess, gi
 
   return (
     <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: '500px' }}>
-        <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, padding: '24px 30px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '20px', fontWeight: '600' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="modal gift-modal-digitalize">
+        <h2 className="gift-modal-header">
+          <div className="gift-modal-title-wrapper">
             <Smartphone size={24} className="text-primary" />
             Digitalizar Giftcard
           </div>
-          <button type="button" className="btn-secondary" style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer' }} onClick={onClose}>
+          <button type="button" className="gift-modal-close-btn" onClick={onClose}>
             <X size={20} />
           </button>
         </h2>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '24px', flex: 1 }}>
+        <form onSubmit={handleSubmit} className="gift-modal-form">
+          <div className="gift-modal-body">
             
-            <div style={{ marginBottom: '20px', padding: '16px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--text-muted)' }}>
+            <div className="gift-alert-box">
+                <p className="gift-alert-text">
                     Al digitalizar la giftcard <strong>{giftcard.code}</strong>, quedará vinculada permanentemente al cliente seleccionado (propietario digital). El comprador original seguirá registrado para auditoría.
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '13px' }}>
+                <div className="gift-alert-meta">
                     <span><strong>Comprador:</strong> {giftcard.purchaser?.user?.profile?.first_name || 'Anónimo'}</span>
                     <span><strong>Saldo Actual:</strong> {giftcard.current_balance} Bs</span>
                 </div>
@@ -119,11 +119,11 @@ export default function GiftcardDigitalizeModal({ isOpen, onClose, onSuccess, gi
             </div>
           </div>
 
-          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--bg-card)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
-            <button type="button" className="btn-secondary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)' }} onClick={onClose} disabled={loading}>
+          <div className="gift-modal-footer">
+            <button type="button" className="gift-btn-cancel" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
-            <button type="submit" className="btn-primary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '160px' }} disabled={loading}>
+            <button type="submit" className="btn-primary gift-btn-submit" disabled={loading}>
               {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Digitalizar"}
             </button>
           </div>

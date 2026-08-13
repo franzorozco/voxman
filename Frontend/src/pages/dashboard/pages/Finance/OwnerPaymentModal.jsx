@@ -122,12 +122,12 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
           <div style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
             {errorMsg && (
-              <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '13px' }}>
+              <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '13px' }}>
                 <strong>Error:</strong> {errorMsg}
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div className="modal-form-row">
               <div className="form-group">
                 <label>Tipo de Movimiento</label>
                 <CustomSelect name="type" value={formData.type} onChange={handleChange}>
@@ -176,7 +176,7 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
               <input type="number" step="0.01" min="0.01" name="amount" required value={formData.amount} onChange={handleChange} placeholder="0.00" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div className="modal-form-row">
               <div className="form-group">
                 <label>Método de Pago</label>
                 <CustomSelect name="payment_method" value={formData.payment_method} onChange={handleChange}>
@@ -201,7 +201,7 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
 
           </div>
 
-          <div style={{ padding: '20px 24px', borderTop: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', justifyContent: 'flex-end', gap: '12px', flexShrink: 0 }}>
+          <div className="modal-footer-actions">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
               Cancelar
             </button>

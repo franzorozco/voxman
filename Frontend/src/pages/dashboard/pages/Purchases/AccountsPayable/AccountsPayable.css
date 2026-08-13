@@ -1,5 +1,143 @@
+/* AccountsPayable.css */
 .accounts-payable-container {
   padding: 20px;
 }
 
 /* Inherits most styles from Purchases.css but can override specific things here */
+
+.accounts-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.account-stat-card {
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.account-filter-select {
+    width: 200px;
+}
+
+.account-refresh-btn {
+    padding: 10px;
+}
+
+.row-overdue {
+    background: rgba(239, 68, 68, 0.02) !important;
+}
+
+.account-action-btn {
+    padding: 6px 12px;
+}
+
+/* ==================================
+   MOBILE / RESPONSIVE (CARD VIEW)
+   ================================== */
+@media (max-width: 768px) {
+    .accounts-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .account-filter-select {
+        width: 100%;
+        flex: none;
+    }
+    
+    .account-refresh-btn {
+        width: 100%;
+        flex: none;
+    }
+
+    /* Table to Card View Transformation */
+    .purchases-table-container {
+        border: none;
+        background: transparent;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .purchases-table {
+        border: none;
+    }
+
+    .purchases-table thead {
+        display: none; /* Ocultar cabeceras en móviles */
+    }
+
+    .purchases-table tbody tr {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 15px;
+        padding: 16px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    
+    .purchases-table tbody tr.row-overdue {
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .purchases-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: none;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+    .purchases-table tbody td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-top: 8px;
+    }
+
+    /* Insert data-label as the fake column header */
+    .purchases-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 13px;
+        text-transform: uppercase;
+        margin-right: 15px;
+    }
+
+    /* Fix alignments for card mode */
+    .purchases-table tbody td > div, 
+    .purchases-table tbody td > span {
+        text-align: right;
+    }
+
+    .purchases-table tbody td.actions-cell {
+        justify-content: center;
+        border-top: 1px solid var(--border-color);
+        margin-top: 12px;
+        padding-top: 16px;
+    }
+
+    .purchases-table tbody td.actions-cell::before {
+        display: none; /* No necesitamos etiqueta para las acciones */
+    }
+
+    .purchases-table tbody td.actions-cell > div {
+        width: 100%;
+        justify-content: center !important;
+    }
+
+    .account-action-btn {
+        width: 100%;
+        flex: 1;
+        justify-content: center;
+    }
+}

@@ -122,9 +122,9 @@ export default function OwnerTransferModal({ transferData, onClose, onSuccess })
               <span style={{ color: 'var(--text-muted)' }}>Saldo Disponible:</span>
               <div style={{ fontWeight: 'bold', fontSize: '16px', color: 'var(--color-primary)' }}>Bs. {getAvailableBalance().toFixed(2)}</div>
             </div>
-            <div style={{ flex: 1, padding: '10px', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+            <div style={{ flex: 1, padding: '10px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
               <span style={{ color: 'var(--text-muted)' }}>Saldo Actual Destino:</span>
-              <div style={{ fontWeight: 'bold', fontSize: '16px', color: '#22c55e' }}>Bs. {getDestBalance().toFixed(2)}</div>
+              <div style={{ fontWeight: 'bold', fontSize: '16px', color: 'var(--color-success)' }}>Bs. {getDestBalance().toFixed(2)}</div>
             </div>
           </div>
 

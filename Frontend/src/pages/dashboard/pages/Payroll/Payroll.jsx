@@ -154,11 +154,11 @@ export default function Payroll() {
       <div className="products-header">
         <h1 className="products-title">Nómina y Pagos</h1>
         
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div className="products-header-actions">
           <CustomSelect 
             value={month} 
             onChange={(e) => setMonth(e.target.value)}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+            style={{ width: '100%' }}
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('es', { month: 'long' }).toUpperCase()}</option>
@@ -168,30 +168,30 @@ export default function Payroll() {
             type="number" 
             value={year} 
             onChange={(e) => setYear(e.target.value)}
-            style={{ width: '80px', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+            style={{ width: '100%', height: '42px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)' }}>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', overflowX: 'auto' }}>
         <button 
           className={`tab-btn ${activeTab === 'procesar' ? 'active' : ''}`}
           onClick={() => setActiveTab('procesar')}
-          style={{ padding: '12px 24px', background: 'transparent', border: 'none', borderBottom: activeTab === 'procesar' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'procesar' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', fontSize: '15px' }}
+          style={{ flex: 1, padding: '12px 24px', background: 'transparent', border: 'none', borderBottom: activeTab === 'procesar' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'procesar' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', fontSize: '15px', whiteSpace: 'nowrap', textAlign: 'center' }}
         >
           Procesar Pagos
         </button>
         <button 
           className={`tab-btn ${activeTab === 'historial' ? 'active' : ''}`}
           onClick={() => setActiveTab('historial')}
-          style={{ padding: '12px 24px', background: 'transparent', border: 'none', borderBottom: activeTab === 'historial' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'historial' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', fontSize: '15px' }}
+          style={{ flex: 1, padding: '12px 24px', background: 'transparent', border: 'none', borderBottom: activeTab === 'historial' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'historial' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', fontSize: '15px', whiteSpace: 'nowrap', textAlign: 'center' }}
         >
           Historial del Mes
         </button>
       </div>
 
       {activeTab === 'procesar' && (
-        <div className="table-container fade-in">
+        <div className="fade-in">
           <div className="filters-container" style={{ marginBottom: '20px' }}>
             <div className="filters-container-inner">
               <div style={{ flex: 1, position: 'relative' }}>
@@ -210,7 +210,7 @@ export default function Payroll() {
             </div>
           </div>
 
-          <div className="table-wrapper">
+          <div className="table-container">
             <table className="products-table">
               <thead>
                 <tr>
@@ -243,21 +243,21 @@ export default function Payroll() {
                     
                     return (
                       <tr key={emp.id} className="fade-in">
-                        <td><span className="customer-code">{emp.employee_code}</span></td>
-                        <td>
+                        <td data-label="CÓDIGO"><span className="customer-code">{emp.employee_code}</span></td>
+                        <td data-label="EMPLEADO">
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontWeight: 600 }}>{fullName}</span>
                             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{emp.role}</span>
                           </div>
                         </td>
-                        <td>
+                        <td data-label="DÍA DE PAGO">
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--bg-input)', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', border: '1px solid var(--border-color)' }}>
                                 <Clock size={14} color="var(--text-muted)" />
                                 Día {hireDay} de cada mes
                             </span>
                         </td>
-                        <td>Bs. {Number(emp.base_salary).toFixed(2)}</td>
-                        <td className="text-right">
+                        <td data-label="SUELDO BASE">Bs. {Number(emp.base_salary).toFixed(2)}</td>
+                        <td className="text-right" data-label="ACCIÓN">
                           {isPaid ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: 600, padding: '8px 16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>
                                 <CheckCircle size={16} /> Pagado
@@ -279,8 +279,8 @@ export default function Payroll() {
       )}
 
       {activeTab === 'historial' && (
-        <div className="table-container fade-in">
-          <div className="table-wrapper">
+        <div className="fade-in">
+          <div className="table-container">
             <table className="products-table">
               <thead>
                 <tr>
@@ -313,18 +313,18 @@ export default function Payroll() {
                     
                     return (
                       <tr key={pay.id} className="fade-in">
-                        <td>{new Date(pay.payment_date).toLocaleDateString()}</td>
-                        <td>
+                        <td data-label="FECHA DE PAGO">{new Date(pay.payment_date).toLocaleDateString()}</td>
+                        <td data-label="EMPLEADO">
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontWeight: 600 }}>{fullName}</span>
                             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{pay.employee?.employee_code}</span>
                           </div>
                         </td>
-                        <td>Bs. {Number(pay.base_salary).toFixed(2)}</td>
-                        <td>Bs. {Number(pay.commissions).toFixed(2)}</td>
-                        <td style={{ color: '#ef4444' }}>Bs. {Number(pay.deductions).toFixed(2)}</td>
-                        <td><strong style={{ color: '#10b981' }}>Bs. {Number(pay.total_paid).toFixed(2)}</strong></td>
-                        <td className="text-right">
+                        <td data-label="SUELDO BASE">Bs. {Number(pay.base_salary).toFixed(2)}</td>
+                        <td data-label="COMISIONES">Bs. {Number(pay.commissions).toFixed(2)}</td>
+                        <td data-label="DESCUENTOS" style={{ color: '#ef4444' }}>Bs. {Number(pay.deductions).toFixed(2)}</td>
+                        <td data-label="TOTAL PAGADO"><strong style={{ color: '#10b981' }}>Bs. {Number(pay.total_paid).toFixed(2)}</strong></td>
+                        <td className="text-right" data-label="ACCIONES">
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                               <button className="icon-btn" onClick={() => setSelectedPayslip(pay)} title="Ver Recibo">
                                 <FileText size={18} color="var(--color-primary)" />
@@ -432,13 +432,14 @@ export default function Payroll() {
               )}
             </div>
 
-            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
-              <button type="button" className="btn-secondary" onClick={() => setSelectedEmployee(null)}>
+            <div className="modal-footer" style={{ display: 'flex', gap: '10px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+              <button type="button" className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setSelectedEmployee(null)}>
                 Cancelar
               </button>
               <button 
                 type="button" 
                 className="btn-primary" 
+                style={{ flex: 1, justifyContent: 'center' }}
                 onClick={handlePay}
                 disabled={payrollLoading || !payrollData}
               >

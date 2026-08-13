@@ -57,29 +57,31 @@ export default function OwnerProfile() {
     <div className="fade-in" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       
       {/* HEADER */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-        <button 
-          onClick={() => navigate("/dashboard/owners")}
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '8px', cursor: 'pointer', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+      <div className="owner-profile-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+          <button 
+            className="btn-back-responsive"
+            onClick={() => navigate("/dashboard/owners")}
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
             <UserCircle2 size={32} />
           </div>
-          <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 4px 0', color: 'var(--text-main)' }}>{fullName}</h1>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '14px' }}>
-              {owner.user?.email} • {profile.phone || "Sin teléfono"}
+          <div style={{ minWidth: 0, wordBreak: 'break-word' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 4px 0', color: 'var(--text-main)', lineHeight: '1.2' }}>{fullName}</h1>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '14px', display: 'flex', flexWrap: 'wrap', gap: '4px 8px' }}>
+              <span>{owner.user?.email}</span>
+              <span>•</span>
+              <span>{profile.phone || "Sin teléfono"}</span>
             </p>
           </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="owner-action-buttons">
           <button 
             className="btn-secondary" 
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
             onClick={() => handleOpenPayment("withdrawal")}
           >
             <MinusCircle size={18} />
@@ -87,7 +89,7 @@ export default function OwnerProfile() {
           </button>
           <button 
             className="btn-primary" 
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#22c55e', borderColor: '#22c55e' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#22c55e', borderColor: '#22c55e' }}
             onClick={() => handleOpenPayment("deposit")}
           >
             <PlusCircle size={18} />
@@ -163,7 +165,7 @@ export default function OwnerProfile() {
           <h3 style={{ fontSize: '18px', color: 'var(--text-main)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Wallet size={20} /> Desglose de Liquidez y Rendimiento por Sucursal
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+          <div className="branch-breakdown-grid">
             {data.fund_breakdown.map((b) => (
               <div key={b.branch_id} className="table-card" style={{ padding: '20px', borderRadius: '12px' }}>
                 <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
@@ -207,7 +209,7 @@ export default function OwnerProfile() {
       )}
 
       {/* TABS */}
-      <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid var(--border-color)', marginBottom: '24px' }}>
+      <div className="owner-tabs-container">
         <button
           style={{
             padding: '12px 16px',
@@ -262,8 +264,8 @@ export default function OwnerProfile() {
                 {owner.owner_payments && owner.owner_payments.length > 0 ? (
                   owner.owner_payments.map(payment => (
                     <tr key={payment.id}>
-                      <td>{new Date(payment.payment_date).toLocaleDateString()}</td>
-                      <td>
+                      <td data-label="Fecha">{new Date(payment.payment_date).toLocaleDateString()}</td>
+                      <td data-label="Tipo">
                         {payment.type === 'deposit' ? (
                           <span style={{ color: '#22c55e', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <TrendingUp size={14} /> Aporte
@@ -274,13 +276,13 @@ export default function OwnerProfile() {
                           </span>
                         )}
                       </td>
-                      <td style={{ fontWeight: 600 }}>Bs. {(parseFloat(payment.amount) || parseFloat(payment.total_amount) || 0).toFixed(2)}</td>
-                      <td>{payment.fund_source === 'cash' ? 'Caja Fuerte' : 'Banco'}</td>
-                      <td>
+                      <td data-label="Monto" style={{ fontWeight: 600 }}>Bs. {(parseFloat(payment.amount) || parseFloat(payment.total_amount) || 0).toFixed(2)}</td>
+                      <td data-label="Método">{payment.fund_source === 'cash' ? 'Caja Fuerte' : 'Banco'}</td>
+                      <td data-label="Ref / Notas">
                         <div style={{ fontSize: '13px' }}>{payment.reference_number || '-'}</div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{payment.notes}</div>
                       </td>
-                      <td>
+                      <td data-label="Estado">
                         <span style={{ background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: payment.status === 'paid' ? 'var(--color-success)' : 'var(--text-muted)' }}>
                           {payment.status}
                         </span>
@@ -318,9 +320,9 @@ export default function OwnerProfile() {
                 {products && products.length > 0 ? (
                   products.map(p => (
                     <tr key={p.id}>
-                      <td style={{ fontWeight: 500 }}>{p.name}</td>
-                      <td>{p.product_variants?.length || 0} variantes</td>
-                      <td>Bs. {parseFloat(p.base_price).toFixed(2)}</td>
+                      <td data-label="Producto" style={{ fontWeight: 500 }}>{p.name}</td>
+                      <td data-label="Variantes">{p.product_variants?.length || 0} variantes</td>
+                      <td data-label="Precio Base">Bs. {parseFloat(p.base_price).toFixed(2)}</td>
                     </tr>
                   ))
                 ) : (

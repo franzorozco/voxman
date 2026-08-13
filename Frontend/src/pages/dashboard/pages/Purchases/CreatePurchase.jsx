@@ -113,7 +113,7 @@ export default function CreatePurchase() {
                   sku: v.sku,
                   cost: v.cost || 0,
                   image: v.variant_images?.[0]?.url || attrImage || p.product_images?.[0]?.url || null,
-                  attributes: v.attributes || []
+                  attributes: v.variant_attribute_values || []
                 });
               });
             }
@@ -147,7 +147,8 @@ export default function CreatePurchase() {
         sku: variant.sku,
         quantity: 1,
         unit_cost: variant.cost,
-        image: variant.image
+        image: variant.image,
+        attributes: variant.attributes
       }]);
     }
     toast.success("Agregado a la orden", { duration: 1500, position: 'bottom-right' });
@@ -225,7 +226,7 @@ export default function CreatePurchase() {
           Nueva Orden de Compra
         </h1>
         
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="purchases-header-actions">
           <Link to="/dashboard/purchases" className="btn-secondary">
             <ArrowLeft size={16} />
             Volver
@@ -245,8 +246,8 @@ export default function CreatePurchase() {
         {/* LADO IZQUIERDO: Buscador y Carrito */}
         <div className="purchase-panel">
           <div className="purchase-panel-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>Productos a Abastecer</span>
-            <span className="text-muted" style={{ fontSize: '13px' }}>{cart.length} items</span>
+            <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-main)' }}>Productos a Abastecer</span>
+            <span className="text-muted" style={{ fontSize: '14px', background: 'var(--bg-input)', padding: '4px 10px', borderRadius: '20px' }}>{cart.length} items</span>
           </div>
 
           <div className="purchases-search-box" ref={searchRef}>
@@ -295,20 +296,35 @@ export default function CreatePurchase() {
             ) : (
               cart.map((item) => (
                 <div key={item.variant_id} className="purchase-cart-item">
-                  {item.image ? (
-                    <img src={getImageUrl(item.image)} alt={item.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} />
-                  ) : (
-                    <div style={{ width: 40, height: 40, background: 'var(--bg-overlay)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Box size={20} color="var(--text-muted)" />
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flex: 1 }}>
+                    {item.image ? (
+                      <img src={getImageUrl(item.image)} alt={item.name} className="purchase-cart-img" style={{ flexShrink: 0 }} />
+                    ) : (
+                      <div className="purchase-cart-img-placeholder" style={{ flexShrink: 0 }}>
+                        <Box size={24} color="var(--text-muted)" />
+                      </div>
+                    )}
+                    <div className="purchase-cart-info">
+                      <div className="purchase-cart-name">{item.name}</div>
+                      <div className="purchase-cart-sku">SKU: {item.sku || "N/A"}</div>
+                      {item.attributes && item.attributes.length > 0 && (
+                        <div className="purchase-cart-attributes">
+                          {item.attributes.map(vav => {
+                            const attrName = vav.attribute_value?.attribute?.name || '';
+                            const attrValue = vav.attribute_value?.value || '';
+                            return (
+                              <span key={vav.id} className="purchase-cart-attr-badge">
+                                {attrName ? `${attrName}: ${attrValue}` : attrValue}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="purchase-cart-info">
-                    <div className="purchase-cart-name">{item.name}</div>
-                    <div className="purchase-cart-sku">SKU: {item.sku || "N/A"}</div>
                   </div>
                   
                   <div className="purchase-cart-controls">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
                       <label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Costo Unit. ($)</label>
                       <input
                         type="number"
@@ -317,11 +333,11 @@ export default function CreatePurchase() {
                         className="purchase-form-input"
                         value={item.unit_cost}
                         onChange={(e) => updateCost(item.variant_id, e.target.value)}
-                        style={{ width: '90px' }}
+                        style={{ width: '100%', minWidth: '80px' }}
                       />
                     </div>
                     
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
                       <label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Cantidad</label>
                       <input
                         type="number"
@@ -329,7 +345,7 @@ export default function CreatePurchase() {
                         className="purchase-form-input"
                         value={item.quantity}
                         onChange={(e) => updateQuantity(item.variant_id, e.target.value)}
-                        style={{ width: '80px' }}
+                        style={{ width: '100%', minWidth: '70px' }}
                       />
                     </div>
 
@@ -390,9 +406,9 @@ export default function CreatePurchase() {
               value={formData.employee_id}
               onChange={e => setFormData({...formData, employee_id: e.target.value})}
             >
-              <option value="">Seleccione un empleado explicitamente</option>
+              <option value="">Seleccione un empleado explícitamente</option>
               {employees.map(e => {
-                const profile = e.user?.user_profiles?.[0] || {};
+                const profile = e.user?.profile || {};
                 const name = `${profile.first_name || 'Empleado'} ${profile.last_name_paternal || ''}`.trim();
                 return <option key={e.id} value={e.id}>{name}</option>;
               })}

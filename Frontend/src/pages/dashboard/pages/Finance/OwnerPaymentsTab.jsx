@@ -186,7 +186,7 @@ export default function OwnerPaymentsTab() {
           <div className="loading-state">Cargando movimientos...</div>
         ) : (
           <div className="table-responsive">
-          <table className="products-table">
+          <table className="finance-table">
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -213,17 +213,17 @@ export default function OwnerPaymentsTab() {
                   </td>
                   <td data-label="Tipo">
                     {p.type === 'deposit' ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-success)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                         <ArrowDownCircle size={14} /> Inyección
                       </span>
                     ) : (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--color-warning)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                         <ArrowUpCircle size={14} /> Retiro
                       </span>
                     )}
                   </td>
                   <td data-label="Monto">
-                    <span style={{ fontWeight: 'bold', color: p.type === 'deposit' ? '#22c55e' : '#f59e0b' }}>
+                    <span style={{ fontWeight: 'bold', color: p.type === 'deposit' ? 'var(--color-success)' : 'var(--color-warning)' }}>
                       {p.type === 'deposit' ? '+' : '-'} Bs. {Number(p.amount).toFixed(2)}
                     </span>
                   </td>
@@ -234,8 +234,8 @@ export default function OwnerPaymentsTab() {
                   </td>
                   <td data-label="Estado">
                     <span style={{ 
-                      background: p.status === 'paid' ? 'rgba(34, 197, 94, 0.1)' : p.status === 'annulled' ? 'rgba(100, 116, 139, 0.1)' : 'rgba(59, 130, 246, 0.1)', 
-                      color: p.status === 'paid' ? '#22c55e' : p.status === 'annulled' ? '#64748b' : '#3b82f6', 
+                      background: p.status === 'paid' ? 'rgba(16, 185, 129, 0.1)' : p.status === 'annulled' ? 'rgba(100, 116, 139, 0.1)' : 'var(--bg-overlay)', 
+                      color: p.status === 'paid' ? 'var(--color-success)' : p.status === 'annulled' ? 'var(--text-muted)' : 'var(--color-primary)', 
                       padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' 
                     }}>
                       {p.status === 'paid' ? 'Pagado' : p.status === 'annulled' ? 'Anulado' : 'Archivado'}
@@ -269,7 +269,7 @@ export default function OwnerPaymentsTab() {
                           <button 
                             onClick={() => handleAnnul(p.id)}
                             title="Anular Movimiento (Revertir)"
-                            style={{ padding: '6px', background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)', borderRadius: '6px', cursor: 'pointer' }}
+                            style={{ padding: '6px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--color-warning)', border: '1px solid rgba(245, 158, 11, 0.2)', borderRadius: '6px', cursor: 'pointer' }}
                           >
                             <XCircle size={16} />
                           </button>
@@ -280,7 +280,7 @@ export default function OwnerPaymentsTab() {
                         <button 
                           onClick={() => handleArchive(p.id)}
                           title="Archivar Movimiento (Ocultar)"
-                          style={{ padding: '6px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '6px', cursor: 'pointer' }}
+                          style={{ padding: '6px', background: 'var(--bg-overlay)', color: 'var(--color-primary)', border: '1px solid var(--bg-overlay)', borderRadius: '6px', cursor: 'pointer' }}
                         >
                           <Archive size={16} />
                         </button>
