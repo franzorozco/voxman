@@ -4106,49 +4106,7 @@ select option:focus {
     justify-content: center;
   }
   
-  /* Tables to Cards */
-  .reports-table thead {
-    display: none;
-  }
-  
-  .reports-table tbody tr {
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    margin-bottom: 15px;
-    padding: 16px;
-  }
-  
-  .reports-table tbody td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: none;
-    padding: 8px 0;
-    border-bottom: 1px dashed var(--border-color);
-  }
-  
-  .reports-table tbody td:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-    margin-top: 8px;
-  }
-  
-  .reports-table tbody td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: var(--text-muted);
-    font-size: 13px;
-    text-transform: uppercase;
-    margin-right: 15px;
-  }
-  
-  .reports-table tbody td > div,
-  .reports-table tbody td > span {
-    text-align: right;
-  }
+
 }
 
 
@@ -4182,3 +4140,6 @@ select option:focus {
 .finance-table tr:hover td {
   background: var(--bg-overlay);
 }
+
+
+
