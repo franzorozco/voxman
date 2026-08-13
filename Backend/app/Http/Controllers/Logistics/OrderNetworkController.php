@@ -412,6 +412,114 @@ class OrderNetworkController extends Controller
     }
 
     /**
+     * Convert a cart/proforma into a pending delivery order (draft).
+     * This creates Sale + SaleDetails + Shipment + DeliverySchedule
+     * WITHOUT stock reservations. The user completes details later in dashboard/orders.
+     */
+    public function convertToOrderDraft(Request $request)
+    {
+        $request->validate([
+            'cart_id' => 'required|uuid|exists:carts,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $cart = Cart::with('items.product_variant.product')->findOrFail($request->cart_id);
+
+            if ($cart->items->isEmpty()) {
+                return response()->json(['error' => 'El carrito no tiene productos.'], 422);
+            }
+
+            // Use existing guest/customer from the cart
+            $guestId = $cart->guest_id;
+            $customerId = $cart->customer_id;
+
+            // Create Sale (delivery type, pending status, no branch)
+            $sale = Sale::create([
+                'customer_id' => $customerId,
+                'guest_id' => $guestId,
+                'branch_id' => null,
+                'user_id' => auth()->id() ?? null,
+                'invoice_number' => 'DLV-' . strtoupper(\Illuminate\Support\Str::random(6)),
+                'sale_type' => 'delivery',
+                'status' => 'pending',
+                'source' => 'order_network',
+                'subtotal' => 0,
+                'discount_total' => $cart->total_discount ?? 0,
+                'discount_id' => $cart->discount_id ?? null,
+                'total' => 0,
+                'notes' => 'Convertido desde proforma ' . ($cart->reference_number ?? $cart->id)
+            ]);
+
+            $subtotal = 0;
+
+            foreach ($cart->items as $item) {
+                $price = $item->product_variant->price ?? 0;
+                $discountAmount = $item->discount_amount ?? 0;
+                $finalPrice = max(0, $price - $discountAmount);
+                $lineTotal = $finalPrice * $item->quantity;
+                $subtotal += $lineTotal;
+
+                SaleDetail::create([
+                    'sale_id' => $sale->id,
+                    'variant_id' => $item->variant_id,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $price,
+                    'discount' => $discountAmount,
+                    'final_price' => $finalPrice,
+                    'subtotal' => $lineTotal
+                ]);
+
+                // NOTE: No stock reservation here. That happens when
+                // the user assigns branch + items in dashboard/orders.
+            }
+
+            // Update sale totals
+            $sale->subtotal = $subtotal;
+            $sale->total = max(0, $subtotal - ($sale->discount_total ?? 0));
+            $sale->save();
+
+            // Create Shipment (minimal, pending)
+            $shipment = Shipment::create([
+                'sale_id' => $sale->id,
+                'status' => 'pending',
+                'shipping_cost' => 0,
+                'delivery_code' => str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT),
+                'delivery_type' => 'scheduled_point',
+            ]);
+
+            // Create DeliverySchedule (pending, placeholder values)
+            $schedule = DeliverySchedule::create([
+                'shipment_id' => $shipment->id,
+                'scheduled_date' => now()->addDays(1)->toDateString(),
+                'time_window' => 'Por definir',
+                'meeting_point' => 'Por definir',
+                'status' => 'pending',
+            ]);
+
+            // Mark cart as converted and delete
+            $cart->status = 'converted';
+            $cart->save();
+            $cart->items()->delete();
+            $cart->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Carrito convertido a entrega pendiente exitosamente.',
+                'schedule_id' => $schedule->id,
+                'sale_id' => $sale->id
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('OrderNetwork ConvertDraft Error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Get details for the public delivery confirmation link.
      */
     public function getDeliveryDetails($id)

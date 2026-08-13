@@ -422,6 +422,7 @@ Route::middleware([
         Route::put('/delivery-zones/{id}', [OrderNetworkController::class, 'updateDeliveryZone'])->middleware('permission:manage_settings');
         Route::get('/drivers', [OrderNetworkController::class, 'getDrivers'])->middleware('permission:view_orders|view_orders_own_branch|view_orders_all_branches');
         Route::post('/convert', [OrderNetworkController::class, 'convertToOrder'])->middleware('permission:create_orders');
+        Route::post('/convert-draft', [OrderNetworkController::class, 'convertToOrderDraft'])->middleware('permission:create_orders');
         Route::post('/{id}/status', [OrderNetworkController::class, 'updateStatus'])->middleware('permission:update_order_status');
         Route::post('/{id}/share-checkout', [OrderNetworkController::class, 'shareCheckoutSession'])->middleware('permission:edit_orders');
         Route::post('/{id}/apply-discount', [OrderNetworkController::class, 'applyDiscount'])->middleware('permission:manage_order_discounts');
