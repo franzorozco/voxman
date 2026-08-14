@@ -70,26 +70,20 @@ export default function Suppliers() {
           Proveedores
         </h1>
 
-        <div className="header-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'nowrap', flex: 1, justifyContent: 'center', width: '100%' }}>
-          <div style={{ flex: 1, display: 'flex' }}>
-            <Link to="/dashboard/suppliers/returns" className="btn-secondary" style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 0', margin: 0 }}>
-              <RotateCcw size={18} style={{ flexShrink: 0 }} />
-              <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: 500 }}>Devoluciones</span>
-            </Link>
-          </div>
-          <div style={{ flex: 1, display: 'flex' }}>
-            <Link to="/dashboard/suppliers/deleted" className="btn-secondary" style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 0', margin: 0 }}>
-              <Trash2 size={18} style={{ flexShrink: 0 }} />
-              <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: 500 }}>Papelera</span>
-            </Link>
-          </div>
+        <div className="header-actions" style={{ display: 'flex', gap: '10px' }}>
+          <Link to="/dashboard/suppliers/returns" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <RotateCcw size={18} />
+            <span className="hide-on-mobile">Devoluciones</span>
+          </Link>
+          <Link to="/dashboard/suppliers/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Trash2 size={18} />
+            <span className="hide-on-mobile">Papelera</span>
+          </Link>
           <CanAccess permission="create_suppliers">
-            <div style={{ flex: 1, display: 'flex' }}>
-              <button className="btn-primary" onClick={() => openModal()} style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 0', margin: 0 }}>
-                <Plus size={18} style={{ flexShrink: 0 }} />
-                <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: 500 }}>Nuevo Proveedor</span>
-              </button>
-            </div>
+            <button className="btn-primary" onClick={() => openModal()} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Plus size={18} />
+              <span className="hide-on-mobile">Nuevo Proveedor</span>
+            </button>
           </CanAccess>
         </div>
       </div>

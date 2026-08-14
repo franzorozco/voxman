@@ -270,6 +270,20 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
 
   const handleUpdateStatus = async (newStatus, paymentData = null) => {
     setUpdating(true);
+    // Optimistic UI update
+    const prevDetails = { ...details };
+    setDetails(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        status: newStatus,
+        shipment: {
+          ...prev.shipment,
+          status: newStatus === 'completed' ? 'delivered' : newStatus
+        }
+      };
+    });
+
     try {
       const payload = paymentData ? { status: newStatus, ...paymentData } : newStatus;
       await updateDeliveryStatus(scheduleId, payload);
@@ -279,6 +293,8 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       onStatusChange();
     } catch (error) {
       toast.error("Error al actualizar estado");
+      // Rollback on error
+      setDetails(prevDetails);
     } finally {
       setUpdating(false);
     }

@@ -528,9 +528,7 @@ class OrderNetworkController extends Controller
             'shipment.address',
             'shipment.sale.sale_details' => function($q) { 
                 $q->withTrashed()->with([
-                    'product_variant.product.product_images', 
-                    'product_variant.product.attribute_value_images',
-                    'product_variant.variant_images',
+                    'product_variant.product.product_images',
                     'product_variant.size',
                     'product_variant.fit',
                     'product_variant.variant_attribute_values.attribute_value.attribute',
@@ -605,7 +603,7 @@ class OrderNetworkController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:on_the_way,at_the_meeting_point,completed,cancelled,prepared,packaged,shipped'
+            'status' => 'required|in:pending,assigned,on_the_way,at_the_meeting_point,completed,cancelled,prepared,packaged,shipped'
         ]);
 
         try {
@@ -617,17 +615,17 @@ class OrderNetworkController extends Controller
 
             // Track the status change
             if ($schedule->shipment) {
-                $description = 'El estado de la entrega cambió a ' . $request->status;
+                $description = 'El estado de la entrega cambiÃƒÂ³ a ' . $request->status;
                 if ($request->status === 'prepared') $description = 'Pedido preparado y listo para empaque.';
-                if ($request->status === 'packaged') $description = 'Pedido empaquetado y listo para envío.';
+                if ($request->status === 'packaged') $description = 'Pedido empaquetado y listo para envÃƒÂ­o.';
                 if ($request->status === 'shipped') {
                     $company = $request->input('external_company', 'Agencia');
                     $guide = $request->input('external_guide', 'S/N');
-                    $description = "Pedido remitido a la transportadora {$company} (Guía: {$guide}).";
+                    $description = "Pedido remitido a la transportadora {$company} (GuÃƒÂ­a: {$guide}).";
                 }
                 if ($request->status === 'completed') $description = 'Pedido entregado exitosamente al cliente.';
-                if ($request->status === 'on_the_way') $description = 'El pedido está en camino.';
-                if ($request->status === 'at_the_meeting_point') $description = 'El repartidor llegó al punto de encuentro.';
+                if ($request->status === 'on_the_way') $description = 'El pedido estÃƒÂ¡ en camino.';
+                if ($request->status === 'at_the_meeting_point') $description = 'El repartidor llegÃƒÂ³ al punto de encuentro.';
                 
                 \App\Models\Logistics\ShipmentTracking::create([
                     'shipment_id' => $schedule->shipment->id,
@@ -1206,7 +1204,7 @@ if ($request->status === 'shipped') {
             $schedule = DeliverySchedule::with('shipment.sale.sale_details')->findOrFail($id);
 
             if ($schedule->status !== 'at_the_meeting_point') {
-                return response()->json(['error' => 'Solo puedes agregar prendas cuando el pedido está en el punto de encuentro.'], 400);
+                return response()->json(['error' => 'Solo puedes agregar prendas cuando el pedido estÃƒÂ¡ en el punto de encuentro.'], 400);
             }
 
             $sale = $schedule->shipment->sale;
@@ -1351,7 +1349,7 @@ if ($request->status === 'shipped') {
             // Check if it's the ONLY active item left
             $totalActiveQty = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->whereIn('status', ['reserved', 'confirmed'])->sum('quantity');
             if ($totalActiveQty <= 1) {
-                return response()->json(['error' => 'No puedes quitar la única prenda de la entrega. Si el cliente no desea nada, cancela la entrega completa.'], 400);
+                return response()->json(['error' => 'No puedes quitar la ÃƒÂºnica prenda de la entrega. Si el cliente no desea nada, cancela la entrega completa.'], 400);
             }
 
             $branchId = $res->branch_id;
@@ -1467,7 +1465,7 @@ if ($request->status === 'shipped') {
             $detail = $sale->sale_details()->withTrashed()->where('variant_id', $res->variant_id)->first();
 
             if (!$detail || !$detail->trashed()) {
-                return response()->json(['error' => 'La prenda no está eliminada.'], 400);
+                return response()->json(['error' => 'La prenda no estÃƒÂ¡ eliminada.'], 400);
             }
 
             $branchId = $res->branch_id;
@@ -1552,7 +1550,7 @@ if ($request->status === 'shipped') {
 
         event(new \App\Events\CheckoutSessionShared($id, $request->all()));
 
-        return response()->json(['message' => 'Sesión de cobro compartida exitosamente.']);
+        return response()->json(['message' => 'SesiÃƒÂ³n de cobro compartida exitosamente.']);
     }
 
     public function applyDiscount(Request $request, $id, \App\Services\Finance\DiscountValidationService $discountService)
@@ -1565,7 +1563,7 @@ if ($request->status === 'shipped') {
         $sale = $schedule->shipment->sale;
 
         if (!$sale) {
-            return response()->json(['error' => 'No se encontró la venta asociada a esta entrega.'], 404);
+            return response()->json(['error' => 'No se encontrÃƒÂ³ la venta asociada a esta entrega.'], 404);
         }
 
         // Rule: Solo uno (Only one discount/giftcard per sale)
@@ -1666,7 +1664,7 @@ if ($request->status === 'shipped') {
         $schedule = DeliverySchedule::with('shipment')->findOrFail($id);
         
         if (!$schedule->shipment) {
-            return response()->json(['error' => 'No se encontró el envío.'], 404);
+            return response()->json(['error' => 'No se encontrÃƒÂ³ el envÃƒÂ­o.'], 404);
         }
 
         $session = $schedule->shipment->recipient_edit_session ?: [];
@@ -1682,7 +1680,7 @@ if ($request->status === 'shipped') {
         event(new \App\Events\DeliveryUpdated($schedule->id, 'recipient_edit_toggled'));
 
         return response()->json([
-            'message' => $session['is_shared'] ? 'Edición compartida habilitada' : 'Edición deshabilitada',
+            'message' => $session['is_shared'] ? 'EdiciÃƒÂ³n compartida habilitada' : 'EdiciÃƒÂ³n deshabilitada',
             'shipment' => $schedule->shipment
         ]);
     }
@@ -1692,12 +1690,12 @@ if ($request->status === 'shipped') {
         $schedule = DeliverySchedule::with('shipment')->findOrFail($id);
         
         if (!$schedule->shipment) {
-            return response()->json(['error' => 'No se encontró el envío.'], 404);
+            return response()->json(['error' => 'No se encontrÃƒÂ³ el envÃƒÂ­o.'], 404);
         }
 
         $session = $schedule->shipment->recipient_edit_session;
         if (empty($session) || empty($session['is_shared'])) {
-            return response()->json(['error' => 'La edición no está habilitada para este envío.'], 403);
+            return response()->json(['error' => 'La ediciÃƒÂ³n no estÃƒÂ¡ habilitada para este envÃƒÂ­o.'], 403);
         }
 
         $request->validate([
@@ -1722,8 +1720,10 @@ if ($request->status === 'shipped') {
         event(new \App\Events\DeliveryUpdated($schedule->id, 'recipient_info_updated'));
 
         return response()->json([
-            'message' => 'Información actualizada correctamente',
+            'message' => 'InformaciÃƒÂ³n actualizada correctamente',
             'shipment' => $schedule->shipment
         ]);
     }
 }
+
+
