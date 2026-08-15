@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Check } from "lucide-react";
 import { getRoles } from "../../../../api/admin/roles";
 import { restoreUser } from "../../../../api/admin/users";
 import { useAuthStore } from "../../../../store/authStore";
@@ -8,6 +9,7 @@ export default function UserForm({ user, onClose, onSubmit }) {
   const authUser = useAuthStore((state) => state.user);
   const canManageRoles = authUser?.permissions?.includes("manage_user_roles") || authUser?.roles?.includes("Owner");
   const canManageSalaries = authUser?.permissions?.includes("manage_user_salaries") || authUser?.roles?.includes("Owner");
+  const isSelf = user?.id === authUser?.id;
   const canManageExecutives = authUser?.permissions?.includes("manage_executives") || authUser?.roles?.includes("Owner");
 
   const [availableRoles, setAvailableRoles] = useState([]);
@@ -21,6 +23,7 @@ export default function UserForm({ user, onClose, onSubmit }) {
     first_name: "",
     last_name_paternal: "",
     last_name_maternal: "",
+    phone_code: "+591",
     phone: "",
     birthdate: "",
     gender: "",
@@ -44,6 +47,7 @@ export default function UserForm({ user, onClose, onSubmit }) {
   const today = new Date().toISOString().split("T")[0];
   const minDate = "1900-01-01";
   const [errors, setErrors] = useState({});
+  const [isUsernameTouched, setIsUsernameTouched] = useState(false);
   const [usernameSuggestions, setUsernameSuggestions] = useState([]);
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -123,7 +127,8 @@ export default function UserForm({ user, onClose, onSubmit }) {
         first_name: user.profile?.first_name || "",
         last_name_paternal: user.profile?.last_name_paternal || "",
         last_name_maternal: user.profile?.last_name_maternal || "",
-        phone: user.profile?.phone || "",
+        phone_code: user.profile?.phone ? (user.profile.phone.match(/^(\+\d+)\s*(.*)$/) ? user.profile.phone.match(/^(\+\d+)\s*(.*)$/)[1] : "+591") : "+591",
+        phone: user.profile?.phone ? (user.profile.phone.match(/^(\+\d+)\s*(.*)$/) ? user.profile.phone.match(/^(\+\d+)\s*(.*)$/)[2] : user.profile.phone.replace("+591", "")) : "",
         birthdate: user.profile?.birthdate || "",
         gender: user.profile?.gender || "",
 
@@ -147,6 +152,27 @@ export default function UserForm({ user, onClose, onSubmit }) {
       });
     }
   }, [user]);
+
+
+  // Auto-generar username basado en nombres o email
+  useEffect(() => {
+    if (user && user.username) return; // Si estamos editando y ya tiene, no tocar
+    if (isUsernameTouched) return; // Si el usuario ya lo modificó a mano, no tocar
+
+    let generatedUsername = "";
+    
+    if (form.first_name || form.last_name_paternal) {
+      const first = form.first_name ? form.first_name.toLowerCase().trim() : "";
+      const last = form.last_name_paternal ? form.last_name_paternal.toLowerCase().trim() : "";
+      generatedUsername = `${first}${last ? '_' + last : ''}`.replace(/[^a-z0-9_]/g, '');
+    } else if (form.email) {
+      generatedUsername = form.email.split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+    }
+
+    if (generatedUsername && form.username !== generatedUsername) {
+      setForm((prev) => ({ ...prev, username: generatedUsername }));
+    }
+  }, [form.first_name, form.last_name_paternal, form.email, user, isUsernameTouched]);
 
 const handleChange = (e) => {
   const { name, value, type, checked } = e.target;
@@ -212,7 +238,7 @@ const handleSubmit = async (e) => {
     first_name: form.first_name,
     last_name_paternal: form.last_name_paternal,
     last_name_maternal: form.last_name_maternal,
-    phone: form.phone ? `+591${form.phone}` : null,
+    phone: form.phone ? `${form.phone_code.trim()} ${form.phone.trim()}` : null,
     birthdate: form.birthdate,
     gender: form.gender,
   };
@@ -272,6 +298,15 @@ const handleSubmit = async (e) => {
   }
 };
 
+  
+  const appendDomain = (domain) => {
+    const base = form.email.split("@")[0];
+    const newEmail = base + domain;
+    setForm((prev) => ({ ...prev, email: newEmail }));
+    const newErrors = validateField("email", newEmail);
+    setErrors((prev) => ({ ...prev, email: newErrors }));
+  };
+
   return (
     <div className="modal-overlay">
       <form className="modal" onSubmit={handleSubmit}>
@@ -290,6 +325,29 @@ const handleSubmit = async (e) => {
                 onChange={handleChange}
                 className={errors.email ? "input-error" : ""}
               />
+              
+              <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                {["@gmail.com", "@hotmail.com", "@outlook.com", "@yahoo.com"].map(domain => (
+                  <span
+                    key={domain}
+                    onClick={() => appendDomain(domain)}
+                    style={{
+                      fontSize: "12px",
+                      padding: "4px 10px",
+                      background: "var(--bg-overlay)",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "12px",
+                      cursor: "pointer",
+                      color: "var(--text-muted)",
+                      transition: "0.2s"
+                    }}
+                    onMouseEnter={(e) => { e.target.style.background = "var(--color-primary)"; e.target.style.color = "#fff"; }}
+                    onMouseLeave={(e) => { e.target.style.background = "var(--bg-overlay)"; e.target.style.color = "var(--text-muted)"; }}
+                  >
+                    {domain}
+                  </span>
+                ))}
+              </div>
               {errors.email && <span className="error">{errors.email}</span>}
             </div>
 
@@ -338,15 +396,22 @@ const handleSubmit = async (e) => {
               {errors.password && <span className="error">{errors.password}</span>}
             </div>
 
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  name="is_active"
-                  checked={form.is_active}
-                  onChange={handleChange}
-                />
-                Usuario activo
+            <div className="form-group checkbox-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px', gridColumn: 'span 2' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px' }}>Estado de la Cuenta</label>
+              <label className="toggle-switch" style={{ display: 'flex', alignItems: 'center', gap: '12px', width: 'auto', cursor: 'pointer' }}>
+                <div style={{ position: 'relative', width: '44px', height: '24px' }}>
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={form.is_active}
+                    onChange={handleChange}
+                    disabled={isSelf}
+                  />
+                  <span className="toggle-slider"></span>
+                </div>
+                <span style={{ fontSize: '14px', fontWeight: 500, color: form.is_active ? 'var(--color-success)' : 'var(--text-muted)' }}>
+                  {form.is_active ? "Usuario Activo" : "Usuario Inactivo"}
+                </span>
               </label>
             </div>
           </div>
@@ -381,16 +446,21 @@ const handleSubmit = async (e) => {
 
             <div className="form-group">
               <label>Teléfono</label>
-              <div style={{ display: "flex", gap: "5px" }}>
-                <CustomSelect disabled value="+591">
-                  <option value="+591">🇧🇴 +591</option>
-                </CustomSelect>
-
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  name="phone_code"
+                  value={form.phone_code}
+                  onChange={handleChange}
+                  placeholder="+591"
+                  style={{ width: "80px", textAlign: "center" }}
+                />
                 <input
                   name="phone"
                   value={form.phone}
                   onChange={handleChange}
-                  placeholder="77777777"
+                  placeholder="Número de teléfono"
+                  className={errors.phone ? "input-error" : ""}
+                  style={{ flex: 1 }}
                 />
               </div>
               {errors.phone && <span className="error">{errors.phone}</span>}
@@ -427,17 +497,18 @@ const handleSubmit = async (e) => {
           <div className="types-grid">
             <label className={`type-card ${form.types.includes("owner") ? "active" : ""}`}>
               <input
-                type="checkbox"
-                checked={form.types.includes("owner")}
-                disabled={!canManageExecutives}
+                  type="checkbox"
+                  checked={form.types.includes("owner")}
+                  disabled={isSelf || !canManageExecutives}
                 onChange={(e) => {
                   const checked = e.target.checked;
 
                   setForm((prev) => ({
                     ...prev,
                     types: checked
-                      ? [...prev.types, "owner"]
-                      : prev.types.filter((t) => t !== "owner"),
+                        ? [...prev.types, "owner"]
+                        : prev.types.filter((t) => t !== "owner"),
+                      roles: [], // Limpiar roles al cambiar tipo
                   }));
                 }}
               />
@@ -449,16 +520,18 @@ const handleSubmit = async (e) => {
 
             <label className={`type-card ${form.types.includes("customer") ? "active" : ""}`}>
               <input
-                type="checkbox"
-                checked={form.types.includes("customer")}
-                onChange={(e) => {
+                  type="checkbox"
+                  checked={form.types.includes("customer")}
+                  disabled={isSelf}
+                  onChange={(e) => {
                   const checked = e.target.checked;
 
                   setForm((prev) => ({
                     ...prev,
                     types: checked
-                      ? [...prev.types, "customer"]
-                      : prev.types.filter((t) => t !== "customer"),
+                        ? [...prev.types, "customer"]
+                        : prev.types.filter((t) => t !== "customer"),
+                      roles: [], // Limpiar roles al cambiar tipo
                   }));
                 }}
               />
@@ -470,16 +543,18 @@ const handleSubmit = async (e) => {
 
             <label className={`type-card ${form.types.includes("employee") ? "active" : ""}`}>
               <input
-                type="checkbox"
-                checked={form.types.includes("employee")}
-                onChange={(e) => {
+                  type="checkbox"
+                  checked={form.types.includes("employee")}
+                  disabled={isSelf}
+                  onChange={(e) => {
                   const checked = e.target.checked;
 
                   setForm((prev) => ({
                     ...prev,
                     types: checked
-                      ? [...prev.types, "employee"]
-                      : prev.types.filter((t) => t !== "employee"),
+                        ? [...prev.types, "employee"]
+                        : prev.types.filter((t) => t !== "employee"),
+                      roles: [], // Limpiar roles al cambiar tipo
                   }));
                 }}
               />
@@ -580,16 +655,24 @@ const handleSubmit = async (e) => {
         <div className="form-section">
           <h3>Roles</h3>
 
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', marginTop: '-4px' }}>
+            Selecciona los roles que determinarán los permisos de este usuario en el sistema.
+          </p>
           <div className="roles-grid">
-            {availableRoles.map((role) => (
-              <label key={role.id} className="role-item">
+            {availableRoles.filter(role => {
+              if (form.types.length === 0) return false; // No mostrar roles si no se seleccionó tipo
+              if (form.types.includes("owner") && !role.is_employee && !role.is_customer) return true;
+              if (form.types.includes("customer") && role.is_customer) return true;
+              if (form.types.includes("employee") && role.is_employee) return true;
+              return false;
+            }).map((role) => (
+              <label key={role.id} className={`role-item ${form.roles.includes(role.name) ? 'active' : ''}`} style={{ opacity: (isSelf || !canManageRoles) ? 0.6 : 1, cursor: (isSelf || !canManageRoles) ? 'not-allowed' : 'pointer' }}>
                 <input
-                  type="checkbox"
-                  checked={form.roles.includes(role.name)}
-                  disabled={!canManageRoles}
+                    type="checkbox"
+                    checked={form.roles.includes(role.name)}
+                    disabled={isSelf || !canManageRoles}
                   onChange={(e) => {
                     const checked = e.target.checked;
-
                     setForm((prev) => ({
                       ...prev,
                       roles: checked
@@ -598,10 +681,10 @@ const handleSubmit = async (e) => {
                     }));
                   }}
                 />
+                {form.roles.includes(role.name) && <Check size={14} style={{ strokeWidth: 3 }} />}
                 {role.name}
               </label>
             ))}
-            {errors.roles && <span className="error">{errors.roles}</span>}
           </div>
         </div>
 

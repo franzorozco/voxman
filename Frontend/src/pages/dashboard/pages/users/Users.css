@@ -464,22 +464,83 @@ form.modal {
 
 /*  ROLES */
 .roles-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
 .role-item {
-  background: var(--bg-overlay);
-  padding: 10px;
-  border-radius: 8px;
+  background: var(--bg-card);
+  padding: 8px 16px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 13px;
-  transition: 0.2s;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-item input {
+  display: none;
+}
+
+.role-item.active {
+  background: rgba(99,102,241,0.1);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .role-item:hover {
   background: var(--bg-overlay);
+}
+
+.role-item.active:hover {
+  background: rgba(99,102,241,0.15);
+}
+
+/* TOGGLE SWITCH */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--bg-overlay);
+  transition: .3s;
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+}
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--text-muted);
+  transition: .3s;
+  border-radius: 50%;
+}
+input:checked + .toggle-slider {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+}
+input:checked + .toggle-slider:before {
+  background-color: white;
+  transform: translateX(20px);
 }
 
 /*  FOOTER */

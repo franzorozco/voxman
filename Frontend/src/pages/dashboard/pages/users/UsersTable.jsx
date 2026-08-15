@@ -130,8 +130,6 @@ export default function UsersTable({
   const canManageExecutives = authUser?.permissions?.includes("manage_executives") || authUser?.roles?.includes("Owner");
 
   const canModify = (u) => {
-    const isSelf = authUser?.id === u.id;
-    if (isSelf) return false;
 
     const isAdmin = u.roles?.some(r => r.name === "Administrador");
     const isOwner = u.owner?.is_active;
@@ -144,7 +142,6 @@ export default function UsersTable({
   };
 
   const getModifyReason = (u) => {
-    if (authUser?.id === u.id) return "No puedes modificar tu propia cuenta desde aquí";
     if (!canManageExecutives) {
       if (u.roles?.some(r => r.name === "Administrador")) return "No tienes permiso para modificar a un Administrador";
       if (u.owner?.is_active) return "No tienes permiso para modificar a un Owner";
@@ -370,9 +367,9 @@ export default function UsersTable({
 
                       <CanAccess permission="delete_users">
                         <button
-                          className={`btn-delete ${!canModify(u) ? "disabled" : ""}`}
-                          disabled={!canModify(u)}
-                          title={!canModify(u) ? getModifyReason(u) : "Eliminar usuario"}
+                            className={`btn-delete ${(!canModify(u) || authUser?.id === u.id) ? "disabled" : ""}`}
+                            disabled={!canModify(u) || authUser?.id === u.id}
+                            title={authUser?.id === u.id ? "No puedes eliminar tu propia cuenta" : (!canModify(u) ? getModifyReason(u) : "Eliminar usuario")}
                           onClick={() => {
                             if (!canModify(u)) return; // 🔒 doble protección
                             setConfirmId(u.id);

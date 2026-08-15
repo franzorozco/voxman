@@ -511,8 +511,8 @@ export default function ProductForm({
         price: simpleConfig.globalPrice || form.base_price || "",
         cost: simpleConfig.globalCost || "",
         weight: simpleConfig.globalWeight || "",
-        size_id: combo.size_id || null,
-        fit_id: combo.fit_id || "",
+        size_id: combo.size_id || undefined,
+        fit_id: combo.fit_id || undefined,
         is_active: true,
         attribute_value_ids: attributeMap
       };
@@ -587,8 +587,8 @@ const getAttributeValueName = (valueId) => {
 
         return {
           ...v,
-          size_id: v.size_id || "",
-          fit_id: v.fit_id || "",
+          size_id: v.size_id || undefined,
+          fit_id: v.fit_id || undefined,
           price: v.price || "",
           cost: v.cost || "",
           weight: v.weight || "",

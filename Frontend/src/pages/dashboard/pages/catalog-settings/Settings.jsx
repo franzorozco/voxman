@@ -276,9 +276,14 @@ function TabCategories() {
                 </CustomSelect>
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-add">Guardar</button>
-              </div>
+                  <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                  {!formData.id && (
+                    <button type="button" className="btn-add secondary" onClick={(e) => handleSave(e, true)}>
+                      Guardar y agregar otro
+                    </button>
+                  )}
+                  <button type="submit" className="btn-add">Guardar</button>
+                </div>
             </form>
           </div>
         </div>
@@ -430,9 +435,14 @@ function TabProductTypes() {
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-add">Guardar</button>
-              </div>
+                  <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                  {!formData.id && (
+                    <button type="button" className="btn-add secondary" onClick={(e) => handleSave(e, true)}>
+                      Guardar y agregar otro
+                    </button>
+                  )}
+                  <button type="submit" className="btn-add">Guardar</button>
+                </div>
             </form>
           </div>
         </div>
@@ -664,9 +674,14 @@ function TabAttributes() {
                 <label style={{ margin: 0, fontSize: 14, cursor: 'pointer', userSelect: 'none' }}>¿Es un Eje Fijo? (No se puede borrar de productos)</label>
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setIsAttrModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-add">Guardar</button>
-              </div>
+                  <button type="button" className="btn-cancel" onClick={() => setIsAttrModalOpen(false)}>Cancelar</button>
+                  {!attrForm.id && (
+                    <button type="button" className="btn-add secondary" onClick={(e) => handleSaveAttr(e, true)}>
+                      Guardar y agregar otro
+                    </button>
+                  )}
+                  <button type="submit" className="btn-add">Guardar</button>
+                </div>
             </form>
           </div>
         </div>
@@ -704,9 +719,14 @@ function TabAttributes() {
                 </div>
               )}
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setIsValueModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-add">Guardar</button>
-              </div>
+                  <button type="button" className="btn-cancel" onClick={() => setIsValueModalOpen(false)}>Cancelar</button>
+                  {!valueForm.id && (
+                    <button type="button" className="btn-add secondary" onClick={(e) => handleSaveValue(e, true)}>
+                      Guardar y agregar otro
+                    </button>
+                  )}
+                  <button type="submit" className="btn-add">Guardar</button>
+                </div>
             </form>
           </div>
         </div>
@@ -748,20 +768,25 @@ function TabSizes() {
       const { data } = await api.getSizes();
 
       setSizes(data?.data ?? data ?? []);
-    } catch (err) {
+        } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (e, keepOpen = false) => {
+    if (e) e.preventDefault();
     try {
       if (formData.id) await api.updateSize(formData.id, { name: formData.name, description: formData.description });
       else await api.createSize({ name: formData.name, description: formData.description });
-      setIsModalOpen(false);
+      
       loadSizes();
+      if (keepOpen && !formData.id) {
+        setFormData({ id: null, name: "", description: "" });
+      } else {
+        setIsModalOpen(false);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -820,9 +845,14 @@ function TabSizes() {
                 <input type="text" className="form-control" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-add">Guardar</button>
-              </div>
+                  <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                  {!formData.id && (
+                    <button type="button" className="btn-add secondary" onClick={(e) => handleSave(e, true)}>
+                      Guardar y agregar otro
+                    </button>
+                  )}
+                  <button type="submit" className="btn-add">Guardar</button>
+                </div>
             </form>
           </div>
         </div>
@@ -852,13 +882,18 @@ function TabFits() {
     }
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (e, keepOpen = false) => {
+    if (e) e.preventDefault();
     try {
       if (formData.id) await api.updateFit(formData.id, { name: formData.name });
       else await api.createFit({ name: formData.name });
-      setIsModalOpen(false);
+      
       loadFits();
+      if (keepOpen && !formData.id) {
+        setFormData({ id: null, name: "" });
+      } else {
+        setIsModalOpen(false);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -912,9 +947,14 @@ function TabFits() {
                 <input required type="text" className="form-control" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-add">Guardar</button>
-              </div>
+                  <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                  {!formData.id && (
+                    <button type="button" className="btn-add secondary" onClick={(e) => handleSave(e, true)}>
+                      Guardar y agregar otro
+                    </button>
+                  )}
+                  <button type="submit" className="btn-add">Guardar</button>
+                </div>
             </form>
           </div>
         </div>
@@ -954,13 +994,18 @@ function TabMeasurements() {
     }
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (e, keepOpen = false) => {
+    if (e) e.preventDefault();
     try {
       if (formData.id) await api.updateMeasurementType(formData.id, { name: formData.name });
       else await api.createMeasurementType({ name: formData.name });
-      setIsModalOpen(false);
+      
       loadMeasurements();
+      if (keepOpen && !formData.id) {
+        setFormData({ id: null, name: "" });
+      } else {
+        setIsModalOpen(false);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -1014,9 +1059,14 @@ function TabMeasurements() {
                 <input required type="text" className="form-control" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-add">Guardar</button>
-              </div>
+                  <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                  {!formData.id && (
+                    <button type="button" className="btn-add secondary" onClick={(e) => handleSave(e, true)}>
+                      Guardar y agregar otro
+                    </button>
+                  )}
+                  <button type="submit" className="btn-add">Guardar</button>
+                </div>
             </form>
           </div>
         </div>
@@ -1056,13 +1106,18 @@ function TabBrands() {
     }
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (e, keepOpen = false) => {
+    if (e) e.preventDefault();
     try {
       if (formData.id) await api.updateBrand(formData.id, formData);
       else await api.createBrand(formData);
-      setIsModalOpen(false);
+      
       loadBrands();
+      if (keepOpen && !formData.id) {
+        setFormData({ id: null, name: "", description: "", logo_url: "" });
+      } else {
+        setIsModalOpen(false);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -1134,9 +1189,14 @@ function TabBrands() {
                 )}
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-add">Guardar</button>
-              </div>
+                  <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                  {!formData.id && (
+                    <button type="button" className="btn-add secondary" onClick={(e) => handleSave(e, true)}>
+                      Guardar y agregar otro
+                    </button>
+                  )}
+                  <button type="submit" className="btn-add">Guardar</button>
+                </div>
             </form>
           </div>
         </div>
