@@ -570,8 +570,16 @@ export default function Inventory() {
                         setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
                       };
 
-                      const groupImgUrl = group.product?.product_images?.find(img => img.is_main)?.url || group.product?.product_images?.[0]?.url;
-                      const groupFinalImgUrl = groupImgUrl ? (groupImgUrl.startsWith("http") ? groupImgUrl : `${API_BASE_URL}${groupImgUrl}`) : "/placeholder.png";
+                      const groupProdImg = group.product?.product_images?.find(img => img.is_main) || group.product?.product_images?.[0];
+                        const groupImgUrl = groupProdImg?.url || groupProdImg?.image_path;
+                        let groupFinalImgUrl = "/placeholder.png";
+                        if (groupImgUrl) {
+                          if (groupImgUrl.startsWith("http")) {
+                            groupFinalImgUrl = groupImgUrl;
+                          } else {
+                            groupFinalImgUrl = `${API_BASE_URL}${groupImgUrl.startsWith('/') ? '' : '/'}${groupImgUrl.replace('storage/', '')}`;
+                          }
+                        }
 
                       const isGroupLowStock = group.items.some(i => i.stock <= i.min_stock && i.stock > 0);
                       const isGroupOutOfStock = group.items.every(i => i.stock <= 0);
@@ -638,16 +646,25 @@ export default function Inventory() {
                             const isLowStock = item.stock <= item.min_stock && item.stock > 0;
                             const isOutOfStock = item.stock <= 0;
                             
-                            let imgUrl = item.variant?.variant_images?.[0]?.url;
-                            if (!imgUrl) {
-                              const attrIds = item.variant?.variant_attribute_values?.map(vav => vav.attribute_value_id) || [];
-                              const colorImg = product?.attribute_value_images?.find(img => attrIds.includes(img.attribute_value_id));
-                              if (colorImg) imgUrl = colorImg.url;
-                            }
-                            if (!imgUrl) {
-                              imgUrl = product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
-                            }
-                            const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : `${API_BASE_URL}${imgUrl}`) : "/placeholder.png";
+                            let imgUrl = item.variant?.variant_images?.[0]?.url || item.variant?.variant_images?.[0]?.image_path;
+                              if (!imgUrl) {
+                                const attrIds = item.variant?.variant_attribute_values?.map(vav => vav.attribute_value_id) || [];
+                                const colorImgs = product?.attribute_value_images?.filter(img => attrIds.includes(img.attribute_value_id)) || [];
+                                const colorImg = colorImgs.find(img => img.is_main) || colorImgs[0];
+                                if (colorImg) imgUrl = colorImg.url || colorImg.image_path;
+                              }
+                              if (!imgUrl) {
+                                const prodImg = product?.product_images?.find(img => img.is_main) || product?.product_images?.[0];
+                                imgUrl = prodImg?.url || prodImg?.image_path;
+                              }
+                              let finalImgUrl = "/placeholder.png";
+                              if (imgUrl) {
+                                if (imgUrl.startsWith("http")) {
+                                  finalImgUrl = imgUrl;
+                                } else {
+                                  finalImgUrl = `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl.replace('storage/', '')}`;
+                                }
+                              }
 
                             let colorVal = null;
                             let otherAttrs = [];

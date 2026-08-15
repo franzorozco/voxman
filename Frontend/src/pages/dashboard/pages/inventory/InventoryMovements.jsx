@@ -199,21 +199,30 @@ export default function InventoryMovements() {
                                  : mov.user?.username || 'Sistema';
 
                 const product = mov.variant?.product;
-                let imgUrl = mov.variant?.variant_images?.[0]?.url;
-
+                let imgUrl = mov.variant?.variant_images?.[0]?.url || mov.variant?.variant_images?.[0]?.image_path;
+                
                 if (!imgUrl) {
                   const attrIds = mov.variant?.variant_attribute_values?.map(vav => vav.attribute_value_id) || [];
-                  const colorImg = product?.attribute_value_images?.find(img => attrIds.includes(img.attribute_value_id));
+                  const colorImgs = product?.attribute_value_images?.filter(img => attrIds.includes(img.attribute_value_id)) || [];
+                  const colorImg = colorImgs.find(img => img.is_main) || colorImgs[0];
                   if (colorImg) {
-                    imgUrl = colorImg.url;
+                    imgUrl = colorImg.url || colorImg.image_path;
                   }
                 }
 
                 if (!imgUrl) {
-                  imgUrl = product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
+                  const prodImg = product?.product_images?.find(img => img.is_main) || product?.product_images?.[0];
+                  imgUrl = prodImg?.url || prodImg?.image_path;
                 }
 
-                const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : `${API_BASE_URL}${imgUrl}`) : "/placeholder.png";
+                let finalImgUrl = "/placeholder.png";
+                if (imgUrl) {
+                  if (imgUrl.startsWith("http")) {
+                    finalImgUrl = imgUrl;
+                  } else {
+                    finalImgUrl = `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl.replace('storage/', '')}`;
+                  }
+                }
 
                 let colorVal = null;
                 let otherAttrs = [];
