@@ -329,7 +329,7 @@ class ExpenseController extends Controller
                       ->whereYear('created_at', $expenseDate->year);
                 })
                 ->where('owner_id', $owner->id)
-                ->sum(DB::raw('subtotal - discount'));
+                ->sum('subtotal');
                 
                 $salesPerOwner[$owner->id] = $sales;
                 $totalSales += $sales;

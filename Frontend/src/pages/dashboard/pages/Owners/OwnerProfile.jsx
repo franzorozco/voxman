@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Wallet, Package, TrendingUp, TrendingDown, DollarSign, PlusCircle, MinusCircle, UserCircle2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getOwnerProfile } from "../../../../api/admin/owners";
-import OwnerPaymentModal from "../Finance/OwnerPaymentModal";
 import "../Finance/Finance.css"; // Reuse some KPI card styles
 
 export default function OwnerProfile() {
@@ -13,9 +12,6 @@ export default function OwnerProfile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("kpis");
-
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentType, setPaymentType] = useState("deposit"); // 'deposit' or 'withdrawal'
 
   const fetchProfile = async () => {
     try {
@@ -33,11 +29,6 @@ export default function OwnerProfile() {
   useEffect(() => {
     fetchProfile();
   }, [id]);
-
-  const handleOpenPayment = (type) => {
-    setPaymentType(type);
-    setShowPaymentModal(true);
-  };
 
   if (loading) {
     return (
@@ -77,87 +68,78 @@ export default function OwnerProfile() {
             </p>
           </div>
         </div>
-        
-        <div className="owner-action-buttons">
-          <button 
-            className="btn-secondary" 
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-            onClick={() => handleOpenPayment("withdrawal")}
-          >
-            <MinusCircle size={18} />
-            Retirar Capital
-          </button>
-          <button 
-            className="btn-primary" 
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#22c55e', borderColor: '#22c55e' }}
-            onClick={() => handleOpenPayment("deposit")}
-          >
-            <PlusCircle size={18} />
-            Inyectar Capital
-          </button>
-        </div>
       </div>
 
       {/* KPIS */}
-      <div className="kpi-row" style={{ marginBottom: '24px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="owner-kpi-grid">
         
-        <div className="kpi-card" style={{ flex: '1 1 200px' }}>
-          <div className="kpi-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
-            <TrendingUp size={24} />
+        <div className="kpi-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '6px', borderRadius: '8px', display: 'flex' }}>
+                <TrendingUp size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Liquidez Disponible (Caja Real)</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <p style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', color: kpis.available_liquidity >= 0 ? '#22c55e' : '#ef4444' }}>Bs. {kpis.available_liquidity.toFixed(2)}</p>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Capital + Ganancia Neta</span>
+            </div>
           </div>
-          <div className="kpi-info" style={{ flex: 1 }}>
-            <h3>Liquidez Disponible (Caja Real)</h3>
-            <p style={{ color: kpis.available_liquidity >= 0 ? '#22c55e' : '#ef4444' }}>Bs. {kpis.available_liquidity.toFixed(2)}</p>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Capital + Ganancia Neta</span>
-          </div>
-        </div>
 
-        <div className="kpi-card" style={{ flex: '1 1 200px' }}>
-          <div className="kpi-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
-            <Wallet size={24} />
+          <div className="kpi-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', padding: '6px', borderRadius: '8px', display: 'flex' }}>
+                <Wallet size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Capital Invertido</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <p style={{ margin: 0, fontSize: '22px', fontWeight: 'bold' }}>Bs. {kpis.total_capital.toFixed(2)}</p>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Aportes Totales</span>
+            </div>
           </div>
-          <div className="kpi-info" style={{ flex: 1 }}>
-            <h3>Capital Invertido</h3>
-            <p>Bs. {kpis.total_capital.toFixed(2)}</p>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Aportes - Retiros</span>
+          
+          <div className="kpi-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', padding: '6px', borderRadius: '8px', display: 'flex' }}>
+                <Package size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Valor del Inventario</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <p style={{ margin: 0, fontSize: '22px', fontWeight: 'bold' }}>Bs. {kpis.inventory_value.toFixed(2)}</p>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{kpis.total_stock} uds. en stock</span>
+            </div>
           </div>
-        </div>
-        
-        <div className="kpi-card" style={{ flex: '1 1 200px' }}>
-          <div className="kpi-icon" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>
-            <Package size={24} />
-          </div>
-          <div className="kpi-info" style={{ flex: 1 }}>
-            <h3>Valor del Inventario</h3>
-            <p>Bs. {kpis.inventory_value.toFixed(2)}</p>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{kpis.total_stock} uds. en stock</span>
-          </div>
-        </div>
 
-        <div className="kpi-card" style={{ flex: '1 1 200px' }}>
-          <div className="kpi-icon" style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#eab308' }}>
-            <TrendingUp size={24} />
+          <div className="kpi-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', padding: '6px', borderRadius: '8px', display: 'flex' }}>
+                <TrendingUp size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Volumen Vendido</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <p style={{ margin: 0, fontSize: '22px', fontWeight: 'bold' }}>{kpis.items_sold} uds.</p>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Productos comercializados</span>
+            </div>
           </div>
-          <div className="kpi-info" style={{ flex: 1 }}>
-            <h3>Volumen Vendido</h3>
-            <p>{kpis.items_sold} uds.</p>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Productos comercializados</span>
-          </div>
-        </div>
 
-        <div className="kpi-card" style={{ flex: '1 1 200px' }}>
-          <div className="kpi-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-            <DollarSign size={24} />
-          </div>
-          <div className="kpi-info" style={{ flex: 1 }}>
-            <h3>Rendimiento Neto</h3>
-            <p style={{ color: kpis.net_profit >= 0 ? '#22c55e' : '#ef4444' }}>
-              Bs. {kpis.net_profit.toFixed(2)}
-            </p>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ventas: {kpis.gross_sales.toFixed(2)} | Gastos: {kpis.assigned_expenses.toFixed(2)}</span>
+          <div className="kpi-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '6px', borderRadius: '8px', display: 'flex' }}>
+                <DollarSign size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Rendimiento Neto</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <p style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', color: kpis.net_profit >= 0 ? '#22c55e' : '#ef4444' }}>
+                Bs. {kpis.net_profit.toFixed(2)}
+              </p>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ventas: {kpis.gross_sales.toFixed(2)} | Gastos: {kpis.assigned_expenses.toFixed(2)}</span>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* BREAKDOWN BY BRANCH */}
       {data.fund_breakdown && data.fund_breakdown.length > 0 && (
@@ -336,18 +318,6 @@ export default function OwnerProfile() {
             </table>
           </div>
         </div>
-      )}
-
-      {/* PAYMENT MODAL */}
-      {showPaymentModal && (
-        <OwnerPaymentModal
-          payment={null}
-          onClose={() => setShowPaymentModal(false)}
-          onSuccess={() => {
-            setShowPaymentModal(false);
-            fetchProfile(); // Reload data
-          }}
-        />
       )}
     </div>
   );

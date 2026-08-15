@@ -6,7 +6,7 @@
 
 namespace App\Models\Base;
 
-use App\Models\SaleDetail;
+use App\Models\Sales\SaleDetail;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 

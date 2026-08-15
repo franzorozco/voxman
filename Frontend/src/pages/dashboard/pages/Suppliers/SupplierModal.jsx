@@ -7,6 +7,9 @@ import "./Suppliers.css";
 import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function SupplierModal({ supplier, onClose }) {
   const [loading, setLoading] = useState(false);
+  const [phoneCode, setPhoneCode] = useState('+591');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
   const [formData, setFormData] = useState({
     name: "",
     company_name: "",
@@ -19,6 +22,20 @@ export default function SupplierModal({ supplier, onClose }) {
 
   useEffect(() => {
     if (supplier) {
+      if (supplier.phone) {
+        const parts = supplier.phone.split(' ');
+        if (parts.length > 1 && parts[0].startsWith('+')) {
+          setPhoneCode(parts[0]);
+          setPhoneNumber(parts.slice(1).join(' '));
+        } else {
+          setPhoneCode('+591');
+          setPhoneNumber(supplier.phone);
+        }
+      } else {
+        setPhoneCode('+591');
+        setPhoneNumber('');
+      }
+
       setFormData({
         name: supplier.name || "",
         company_name: supplier.company_name || "",
@@ -36,11 +53,14 @@ export default function SupplierModal({ supplier, onClose }) {
     setLoading(true);
 
     try {
+      const finalPhone = phoneNumber ? `${phoneCode} ${phoneNumber}` : "";
+      const submitData = { ...formData, phone: finalPhone };
+
       if (supplier) {
-        const { data } = await updateSupplier(supplier.id, formData);
+        const { data } = await updateSupplier(supplier.id, submitData);
         toast.success(data.message);
       } else {
-        const { data } = await createSupplier(formData);
+        const { data } = await createSupplier(submitData);
         toast.success(data.message);
       }
       onClose();
@@ -115,13 +135,35 @@ export default function SupplierModal({ supplier, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
-                <input
-                  type="text"
-                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="Ej. 76619663"
-                />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <CustomSelect
+                      value={phoneCode}
+                      onChange={(e) => setPhoneCode(e.target.value)}
+                      style={{ width: '120px', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
+                    >
+                      <option value="+591">🇧🇴 +591</option>
+                      <option value="+52">🇲🇽 +52</option>
+                      <option value="+51">🇵🇪 +51</option>
+                      <option value="+54">🇦🇷 +54</option>
+                      <option value="+56">🇨🇱 +56</option>
+                      <option value="+57">🇨🇴 +57</option>
+                      <option value="+58">🇻🇪 +58</option>
+                      <option value="+593">🇪🇨 +593</option>
+                      <option value="+595">🇵🇾 +595</option>
+                      <option value="+598">🇺🇾 +598</option>
+                      <option value="+507">🇵🇦 +507</option>
+                      <option value="+506">🇨🇷 +506</option>
+                      <option value="+34">🇪🇸 +34</option>
+                      <option value="+1">🇺🇸 +1</option>
+                    </CustomSelect>
+                    <input
+                      type="text"
+                      style={{ flex: 1, padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="Ej. 76619663"
+                    />
+                  </div>
               </div>
 
               <div>

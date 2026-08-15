@@ -13,7 +13,14 @@ class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Purchase::with(['supplier', 'branch', 'employee.user.user_profiles', 'purchase_details.product_variant.product', 'accounts_payables']);
+        $query = Purchase::with(['supplier', 'branch', 'employee.user.user_profiles', 'purchase_details.product_variant.product.product_images',
+            'purchase_details.product_variant.product.attribute_value_images',
+            'purchase_details.product_variant.variant_images',
+            'purchase_details.product_variant.variant_attribute_values', 
+          'purchase_details.product_variant.product.attribute_value_images', 
+          'purchase_details.product_variant.variant_images',
+          'purchase_details.product_variant.variant_attribute_values',
+          'accounts_payables']);
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -40,6 +47,9 @@ class PurchaseController extends Controller
             'branch', 
             'employee.user.user_profiles', 
             'purchase_details.product_variant.product.product_images',
+            'purchase_details.product_variant.product.attribute_value_images',
+            'purchase_details.product_variant.variant_images',
+            'purchase_details.product_variant.variant_attribute_values',
             'accounts_payables',
             'supplier_payments.paymentMethod'
         ])->findOrFail($id);

@@ -23,7 +23,35 @@ class OwnerController extends Controller
         $owners->each(function($owner) {
             $deposits = $owner->owner_payments->where('type', 'deposit')->sum('total_amount');
             $withdrawals = $owner->owner_payments->where('type', 'withdrawal')->sum('total_amount');
-            $owner->total_capital = $deposits - $withdrawals;
+            
+            // Calculate inventory value
+            $inventoryValue = \App\Models\Inventory\Inventory::whereHas('variant.product', function($q) use ($owner) {
+                $q->where('owner_id', $owner->id);
+            })->get()->sum(function($inv) {
+                return $inv->stock * ($inv->variant->cost ?? 0);
+            });
+
+            $reservedInventoryValue = \App\Models\Inventory\StockReservation::whereHas('variant.product', function($q) use ($owner) {
+                $q->where('owner_id', $owner->id);
+            })->get()->sum(function($res) {
+                return $res->quantity * ($res->variant->cost ?? 0);
+            });
+            $inventoryValue += $reservedInventoryValue;
+
+            // Calculate Net Profit
+            $totalSales = \App\Models\Sales\SaleDetail::where('owner_id', $owner->id)
+                ->whereHas('sale', function($q) {
+                    $q->where('status', 'paid');
+                })->sum('subtotal');
+
+            $totalExpenses = \App\Models\Finance\ExpenseSplit::where('owner_id', $owner->id)
+                ->whereIn('status', ['paid', 'archived'])
+                ->sum('amount');
+            
+            $netProfit = $totalSales - $totalExpenses;
+
+            // Total Capital = Deposits + Inventory Value (What the owner invested into the business)
+            $owner->total_capital = $deposits + $inventoryValue;
             unset($owner->owner_payments); // Don't send all payments in index
         });
 
@@ -44,7 +72,6 @@ class OwnerController extends Controller
 
         $deposits = $owner->owner_payments->where('type', 'deposit')->whereIn('status', ['paid', 'archived'])->sum('total_amount');
         $withdrawals = $owner->owner_payments->where('type', 'withdrawal')->whereIn('status', ['paid', 'archived'])->sum('total_amount');
-        $totalCapital = $deposits - $withdrawals;
 
         $inventoryItems = \App\Models\Inventory\Inventory::with(['variant.product'])
             ->whereHas('variant.product', function($q) use ($id) {
@@ -60,6 +87,20 @@ class OwnerController extends Controller
                 $totalInventoryValue += (float)$inv->variant->cost * $stock;
             }
         }
+
+        $reservedItems = \App\Models\Inventory\StockReservation::with(['variant.product'])
+            ->whereHas('variant.product', function($q) use ($id) {
+                $q->where('owner_id', $id);
+            })->get();
+
+        foreach($reservedItems as $res) {
+            $qty = (int)$res->quantity;
+            $totalStock += $qty;
+            if ($res->variant) {
+                $totalInventoryValue += (float)$res->variant->cost * $qty;
+            }
+        }
+        $totalCapital = $deposits + $totalInventoryValue; // Update total capital after reserved inventory is calculated
 
         $totalSales = \App\Models\Sales\SaleDetail::where('owner_id', $id)
             ->whereHas('sale', function($q) {
@@ -162,7 +203,7 @@ class OwnerController extends Controller
                 'gross_sales' => (float)$totalSales,
                 'assigned_expenses' => (float)$totalExpenses,
                 'net_profit' => (float)$totalSales - (float)$totalExpenses,
-                'available_liquidity' => (float)$totalCapital + ((float)$totalSales - (float)$totalExpenses)
+                'available_liquidity' => (float)$deposits - (float)$withdrawals + ((float)$totalSales - (float)$totalExpenses)
             ],
             'products' => $products,
             'fund_breakdown' => $fund_breakdown

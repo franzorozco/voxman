@@ -4143,3 +4143,15 @@ select option:focus {
 
 
 
+/* Owner Profile KPIs responsive grid */
+.owner-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 768px) {
+  .owner-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -28,13 +28,29 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
   };
 
   const extractImage = (item) => {
-    // Try variant image first
-    const vImages = item.product_variant?.variant_images;
-    if (vImages && vImages.length > 0) return getImageUrl(vImages[0].url);
-    
-    // Try product image fallback
-    const pImages = item.product_variant?.product?.product_images;
-    if (pImages && pImages.length > 0) return getImageUrl(pImages[0].url);
+    const variant = item.product_variant;
+    if (!variant) return null;
+
+    // 1. Try variant exclusive image
+    if (variant.variant_images?.[0]) {
+      return getImageUrl(variant.variant_images[0].url);
+    }
+
+    // 2. Try shared color image
+    const variantAttrIds = variant.variant_attribute_values?.map(v => String(v.attribute_value_id)) || [];
+    const product = variant.product;
+    if (product?.attribute_value_images) {
+      const colorImg = product.attribute_value_images.find(img => variantAttrIds.includes(String(img.attribute_value_id)) && img.is_main) 
+                    || product.attribute_value_images.find(img => variantAttrIds.includes(String(img.attribute_value_id)));
+      if (colorImg) return getImageUrl(colorImg.url);
+    }
+
+    // 3. Try global product image
+    const pImages = product?.product_images;
+    if (pImages && pImages.length > 0) {
+      const mainImg = pImages.find(img => img.is_main) || pImages[0];
+      return getImageUrl(mainImg.url);
+    }
     
     return null;
   };
@@ -96,17 +112,17 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
   return (
     <div className="modal-overlay print-overlay" onClick={onClose}>
       <div className="modal-content" style={{ maxWidth: "800px", width: "95%" }} onClick={e => e.stopPropagation()}>
-        <div className="modal-header no-print" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
-          <h2 className="modal-title" style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '40px' }}>
+        <div className="modal-header no-print" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', justifyContent: 'space-between', paddingRight: '15px' }}>
+          <h2 className="modal-title" style={{ margin: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FileText size={20} color="var(--color-primary)" />
             Detalles de Compra
           </h2>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
             <button onClick={handlePrint} className="btn-secondary" style={{ padding: '6px 12px', minWidth: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Printer size={16} /> <span className="hide-on-mobile">Imprimir</span>
             </button>
-            <button onClick={onClose} className="modal-close" style={{ position: 'absolute', top: '20px', right: '20px' }}>
-              <X size={20} />
+            <button onClick={onClose} className="modal-close" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', borderRadius: '50%', color: 'var(--text-muted)' }}>
+              <X size={24} />
             </button>
           </div>
         </div>
@@ -259,6 +275,32 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
                   <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-danger)' }}>Bs. {Number(account.balance).toFixed(2)}</div>
                 </div>
               </div>
+
+                {purchase.supplier_payments && purchase.supplier_payments.length > 0 && (
+                  <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+                    <h4 style={{ fontSize: '13px', margin: '0 0 10px 0', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Historial de Pagos</h4>
+                    <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                        <thead style={{ background: 'var(--bg-overlay)', borderBottom: '1px solid var(--border-color)' }}>
+                          <tr>
+                            <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)' }}>Fecha</th>
+                            <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)' }}>Método</th>
+                            <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--text-muted)' }}>Monto</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {purchase.supplier_payments.map(payment => (
+                            <tr key={payment.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '8px 12px', color: 'var(--text-main)' }}>{new Date(payment.created_at).toLocaleDateString()}</td>
+                              <td style={{ padding: '8px 12px', color: 'var(--text-main)' }}>{payment.paymentMethod?.name || 'Manual'}</td>
+                              <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--color-success)' }}>Bs. {Number(payment.amount).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
               {account.balance > 0 && (
                 <div style={{ marginTop: '10px' }}>

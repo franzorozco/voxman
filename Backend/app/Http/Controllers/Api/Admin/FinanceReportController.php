@@ -28,7 +28,7 @@ class FinanceReportController extends Controller
             $salesQuery->where('sales.branch_id', $branchId);
         }
 
-        $salesData = $salesQuery->select(DB::raw('DATE(sales.created_at) as date'), DB::raw('SUM(sale_details.subtotal - sale_details.discount) as amount'))
+        $salesData = $salesQuery->select(DB::raw('DATE(sales.created_at) as date'), DB::raw('SUM(sale_details.subtotal) as amount'))
             ->groupBy('date')
             ->orderBy('date', 'ASC')
             ->get();
@@ -158,7 +158,7 @@ class FinanceReportController extends Controller
             ->whereBetween('sales.created_at', [$prevStartDate, $prevEndDate])
             ->where('sales.status', 'paid');
         if ($branchId) $prevSalesQuery->where('sales.branch_id', $branchId);
-        $prevTotalSales = (float) $prevSalesQuery->sum(DB::raw('sale_details.subtotal - sale_details.discount'));
+        $prevTotalSales = (float) $prevSalesQuery->sum('sale_details.subtotal');
         
         $prevMovementsInQuery = CashMovement::whereBetween('created_at', [$prevStartDate, $prevEndDate])
             ->where('movement_type', 'income');

@@ -39,7 +39,7 @@ class PurchaseReceptionController extends Controller
         try {
             DB::beginTransaction();
 
-            $purchase = Purchase::findOrFail($request->purchase_id);
+            $purchase = Purchase::with('purchase_details')->findOrFail($request->purchase_id);
 
             // Create the reception record
             $reception = PurchaseReception::create([
@@ -156,9 +156,13 @@ class PurchaseReceptionController extends Controller
                     if ($item['accepted_quantity'] > 0) {
                         $variant = \App\Models\Catalog\ProductVariant::find($item['variant_id']);
                         if ($variant) {
-                            // Actualizamos el costo al último costo de importación
-                            $variant->cost = $item['unit_cost'];
-                            $variant->save();
+                            // Encontramos el detalle de la compra para sacar el unit_cost real
+                            $detail = $purchase->purchase_details->where('variant_id', $item['variant_id'])->first();
+                            if ($detail) {
+                                // Actualizamos el costo al último costo de importación
+                                $variant->cost = $detail->unit_cost;
+                                $variant->save();
+                            }
                         }
                     }
                 }

@@ -16,8 +16,15 @@ class ReturnController extends Controller
     public function index(Request $request)
     {
         $query = Returns::with([
-            'sale_detail.sale.customer',
-            'sale_detail.product_variant.product'
+            'sale_detail.sale.customer.user.profile',
+            'sale_detail.sale.customer.posProfile',
+            'sale_detail.sale.guest',
+            'sale_detail.product_variant.product.product_images',
+            'sale_detail.product_variant.product.attribute_value_images',
+            'sale_detail.product_variant.variant_images',
+            'sale_detail.product_variant.variant_attribute_values.attribute_value',
+            'sale_detail.product_variant.size',
+            'sale_detail.product_variant.fit'
         ])->orderBy('created_at', 'desc');
 
         if (auth()->check() && !auth()->user()->can('view_returns_all_branches')) {
@@ -114,48 +121,73 @@ class ReturnController extends Controller
             return response()->json(['message' => 'Esta devolución ya fue aprobada anteriormente.'], 400);
         }
 
-        $return->status = 'approved';
-        $return->refund_method = $request->input('refund_method', 'cash');
-        $return->refund_amount = $request->input('refund_amount', $return->sale_detail->final_price * $return->quantity);
-        $return->restock_destination = $request->input('restock_destination', 'inventory');
-        $return->updated_at = now();
-        $return->save();
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $return->status = 'approved';
+            $return->refund_method = $request->input('refund_method', 'cash');
+            $return->refund_amount = $request->input('refund_amount', $return->sale_detail->final_price * $return->quantity);
+            $return->restock_destination = $request->input('restock_destination', 'inventory');
+            $return->updated_at = now();
+            $return->save();
 
-        $variantId = $return->sale_detail->variant_id;
-        $branchId = $return->sale_detail->sale->branch_id;
-        
-        if ($branchId && $variantId) {
-            if ($return->restock_destination === 'inventory') {
-                $inventory = Inventory::firstOrCreate(
-                    ['branch_id' => $branchId, 'variant_id' => $variantId],
-                    ['stock' => 0]
-                );
-                
-                $inventory->stock += $return->quantity;
-                $inventory->save();
-                
-                InventoryMovement::create([
-                    'inventory_id' => $inventory->id,
-                    'type' => 'in',
-                    'quantity' => $return->quantity,
-                    'reason' => 'Customer Return Approved',
-                    'reference_id' => $return->id
-                ]);
-            } else if ($return->restock_destination === 'quarantine') {
-                QuarantineItem::create([
-                    'branch_id' => $branchId,
-                    'variant_id' => $variantId,
-                    'quantity' => $return->quantity,
-                    'reason' => $return->reason ?? 'Devolución del cliente con daño reportado',
-                    'status' => 'pending'
-                ]);
+            $variantId = $return->sale_detail->variant_id;
+            $branchId = $return->sale_detail->sale->branch_id;
+            $saleId = $return->sale_detail->sale_id;
+            
+            if ($branchId && $variantId) {
+                if ($return->restock_destination === 'inventory') {
+                    $inventory = Inventory::firstOrCreate(
+                        ['branch_id' => $branchId, 'variant_id' => $variantId],
+                        ['stock' => 0]
+                    );
+                    
+                    $stockBefore = $inventory->stock;
+                    $inventory->stock += $return->quantity;
+                    $inventory->save();
+                    
+                    InventoryMovement::create([
+                        'variant_id' => $variantId,
+                        'branch_id' => $branchId,
+                        'movement_type' => 'return',
+                        'quantity' => $return->quantity,
+                        'stock_before' => $stockBefore,
+                        'stock_after' => $inventory->stock,
+                        'notes' => "Devolución aprobada (Ref: " . $return->reference_number . ")",
+                        'reference_type' => Returns::class,
+                        'reference_id' => $return->id
+                    ]);
+                } else if ($return->restock_destination === 'quarantine') {
+                    QuarantineItem::create([
+                        'branch_id' => $branchId,
+                        'variant_id' => $variantId,
+                        'quantity' => $return->quantity,
+                        'reason' => $return->reason ?? 'Devolución del cliente con daño reportado',
+                        'status' => 'pending'
+                    ]);
+                }
             }
-        }
 
-        return response()->json([
-            'message' => 'Devolución aprobada y stock restituido.',
-            'return' => $return
-        ]);
+            // Marcar la variable como devuelta (anular ingreso/capital)
+            if ($return->sale_detail) {
+                $return->sale_detail->delete(); // Soft delete for finance reversal
+            }
+
+            // Verificar si toda la venta fue devuelta
+            $remainingActiveDetails = SaleDetail::where('sale_id', $saleId)->count();
+            if ($remainingActiveDetails === 0 && $return->sale_detail && $return->sale_detail->sale) {
+                $return->sale_detail->sale->update(['status' => 'refunded']);
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'message' => 'Devolución aprobada y stock restituido.',
+                'return' => $return
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return response()->json(['message' => 'Error al procesar devolución: ' . $e->getMessage()], 500);
+        }
     }
 
     public function reject(Request $request, $id)

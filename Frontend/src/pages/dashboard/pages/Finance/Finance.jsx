@@ -4,10 +4,19 @@ import ExpensesTab from "./ExpensesTab";
 import OwnerPaymentsTab from "./OwnerPaymentsTab";
 import { PieChart, TrendingDown, Wallet } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
+import { useAuthStore } from "../../../../store/authStore";
 import "./Finance.css";
 
 export default function Finance() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const user = useAuthStore(state => state.user);
+  const isAdmin = ['admin', 'propietario', 'super_admin', 'Administrador', 'Propietario'].includes(user?.role);
+  const hasPerm = (p) => isAdmin || (user?.permissions || []).includes(p);
+
+  const [activeTab, setActiveTab] = useState(
+    hasPerm('view_finance') ? 'dashboard' :
+    hasPerm('manage_expenses') ? 'expenses' :
+    'owner-payments'
+  );
 
   return (
     <div className="finance-page fade-in">
@@ -18,13 +27,15 @@ export default function Finance() {
         
       {/* TAB NAVIGATION */}
       <div className="finance-tabs">
-          <button 
-            className={`finance-tab ${activeTab === "dashboard" ? "active" : ""}`}
-            onClick={() => setActiveTab("dashboard")}
-          >
-            <PieChart size={18} />
-            Balance Financiero
-          </button>
+          <CanAccess permission="view_finance">
+            <button 
+              className={`finance-tab ${activeTab === "dashboard" ? "active" : ""}`}
+              onClick={() => setActiveTab("dashboard")}
+            >
+              <PieChart size={18} />
+              Balance Financiero
+            </button>
+          </CanAccess>
           
           <CanAccess permission="manage_expenses">
             <button 
@@ -47,7 +58,9 @@ export default function Finance() {
           </CanAccess>
         </div>
       <div className="settings-content-card" style={{ padding: '0', background: 'transparent', border: 'none' }}>
-        {activeTab === "dashboard" && <FinanceDashboard />}
+        <CanAccess permission="view_finance">
+          {activeTab === "dashboard" && <FinanceDashboard />}
+        </CanAccess>
         <CanAccess permission="manage_expenses">
           {activeTab === "expenses" && <ExpensesTab />}
         </CanAccess>

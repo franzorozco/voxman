@@ -733,21 +733,22 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   {sale?.sale_details?.flatMap(item => {
                     const variant = item.product_variant;
                     const product = variant?.product;
-                    const colorId = variant?.variant_attribute_values?.[0]?.attribute_value_id;
-                    const colorImg = product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
-                    
-                    let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
-                    
-                    if (!imageUrl) {
-                      const fallbackPath = variant?.variant_images?.[0]?.image_path || colorImg?.image_path || product?.product_images?.[0]?.image_path;
-                      if (fallbackPath) {
-                        imageUrl = `/storage/${fallbackPath}`;
+                    const variantAttrIds = variant?.variant_attribute_values?.map(v => v.attribute_value_id) || [];
+                      const colorImgs = product?.attribute_value_images?.filter(img => variantAttrIds.includes(img.attribute_value_id)) || [];
+                      const colorImg = colorImgs.find(img => img.is_main) || colorImgs[0];
+                      
+                      let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
+                      
+                      if (!imageUrl) {
+                        const fallbackPath = variant?.variant_images?.[0]?.image_path || colorImg?.image_path || product?.product_images?.find(img => img.is_main)?.image_path || product?.product_images?.[0]?.image_path;
+                        if (fallbackPath) {
+                          imageUrl = `/storage/${fallbackPath}`;
+                        }
                       }
-                    }
 
-                    if (!imageUrl.startsWith('http')) {
-                      imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl}`;
-                    }
+                      if (imageUrl && !imageUrl.startsWith('http')) {
+                        imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl.replace('storage/', '')}`;
+                      }
 
                     const allReservations = sale?.stock_reservations || sale?.stockReservations || [];
                     const variantReservations = allReservations.filter(res => res.variant_id === item.variant_id);

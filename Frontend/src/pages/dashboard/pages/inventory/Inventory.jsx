@@ -633,7 +633,7 @@ export default function Inventory() {
                             </td>
                           </tr>
                           
-                          {group.isExpanded && group.items.map((item) => {
+                          {group.isExpanded && [...group.items].sort((a, b) => (a.variant?.sku || '').localeCompare(b.variant?.sku || '')).map((item) => {
                             const product = item.variant?.product;
                             const isLowStock = item.stock <= item.min_stock && item.stock > 0;
                             const isOutOfStock = item.stock <= 0;

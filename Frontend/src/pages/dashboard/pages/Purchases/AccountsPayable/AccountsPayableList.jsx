@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Search, DollarSign, Clock, CheckCircle, RefreshCw, Eye, FileText, AlertTriangle, Filter } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getAccountsPayable, getAccountsPayableStats } from "../../../../../api/admin/accountsPayable";
+import { getPurchase } from "../../../../../api/admin/purchases";
 import { Link } from "react-router-dom";
 import Spinner from "../../../components/Spinner/Spinner";
 import ViewPurchaseModal from "../ViewPurchaseModal";
@@ -134,8 +135,8 @@ export default function AccountsPayableList() {
         )}
       </div>
 
-      <div className="purchases-table-container">
-        <table className="purchases-table">
+      <div className="purchases-table-container" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+        <table className="products-table" style={{ minWidth: '800px' }}>
           <thead>
             <tr>
               <th>Proveedor</th>
@@ -164,36 +165,45 @@ export default function AccountsPayableList() {
                 const isOverdue = acc.status !== 'paid' && new Date(acc.due_date) < new Date();
                 return (
                   <tr key={acc.id} className={isOverdue ? "row-overdue" : ""}>
-                    <td data-label="Proveedor">
+                    <td >
                       <div style={{ fontWeight: 600 }}>{acc.supplier?.name || "Desconocido"}</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{acc.supplier?.contact_name}</div>
                     </td>
-                    <td data-label="Ref. Compra">
+                    <td >
                       <div style={{ fontWeight: 500 }}>{acc.purchase?.invoice_number || "Sin factura"}</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>ID: {acc.purchase?.id?.split('-')[0]}</div>
                     </td>
-                    <td data-label="Vencimiento">
+                    <td >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: isOverdue ? 'var(--color-danger)' : 'var(--text-main)', fontWeight: isOverdue ? 600 : 400 }}>
                         {isOverdue && <AlertTriangle size={14} />}
                         {new Date(acc.due_date).toLocaleDateString()}
                       </div>
                     </td>
-                    <td data-label="Monto Total" style={{ fontWeight: 600 }}>Bs. {Number(acc.total_amount).toFixed(2)}</td>
-                    <td data-label="Pagado" style={{ color: 'var(--color-success)', fontWeight: 500 }}>Bs. {Number(acc.paid_amount).toFixed(2)}</td>
-                    <td data-label="Saldo" style={{ color: 'var(--color-danger)', fontWeight: 600 }}>Bs. {Number(acc.balance).toFixed(2)}</td>
-                    <td data-label="Estado">
+                    <td  style={{ fontWeight: 600 }}>Bs. {Number(acc.total_amount).toFixed(2)}</td>
+                    <td  style={{ color: 'var(--color-success)', fontWeight: 500 }}>Bs. {Number(acc.paid_amount).toFixed(2)}</td>
+                    <td  style={{ color: 'var(--color-danger)', fontWeight: 600 }}>Bs. {Number(acc.balance).toFixed(2)}</td>
+                    <td >
                       <span className={`status-badge status-${acc.status === 'paid' ? 'success' : acc.status === 'partial' ? 'warning' : 'danger'}`}>
                         {acc.status === 'paid' ? 'Pagado' : acc.status === 'partial' ? 'Pago Parcial' : 'Por Pagar'}
                       </span>
                     </td>
-                    <td data-label="Acciones" className="actions-cell">
+                    <td  className="actions-cell">
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                         <button
                           className="btn-primary account-action-btn"
                           style={{ opacity: acc.status === 'paid' ? 0.5 : 1 }}
-                          onClick={() => {
-                            const fullPurchase = { ...acc.purchase, accounts_payables: [acc] };
-                            setSelectedPurchase(fullPurchase);
+                          onClick={async () => {
+                            try {
+                              const toastId = toast.loading("Cargando detalles...");
+                              const res = await getPurchase(acc.purchase.id);
+                              const fullPurchaseData = res.data.data || res.data;
+                              fullPurchaseData.accounts_payables = [acc];
+                              toast.dismiss(toastId);
+                              setSelectedPurchase(fullPurchaseData);
+                            } catch (e) {
+                              toast.dismiss();
+                              toast.error("Error al cargar detalles");
+                            }
                           }}
                           title={acc.status === 'paid' ? "Ver Detalles" : "Registrar Pago"}
                         >

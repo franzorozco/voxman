@@ -276,9 +276,19 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                                   Sucursal: {sale.stock_reservations.find(sr => sr.variant_id === detail.variant_id).branch?.name || 'Desconocida'}
                                 </span>
                               )}
-                              {detail.deleted_at && (
+                              {detail.return_request && detail.return_request.status === 'pending' && (
+                                <span style={{ fontSize: '10px', color: '#b45309', fontWeight: 600, background: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
+                                  Devolución Solicitada
+                                </span>
+                              )}
+                              {detail.return_request && detail.return_request.status === 'rejected' && (
+                                <span style={{ fontSize: '10px', color: '#b91c1c', fontWeight: 600, background: '#fee2e2', padding: '2px 6px', borderRadius: '4px' }}>
+                                  Devolución Rechazada
+                                </span>
+                              )}
+                              {((detail.return_request && detail.return_request.status === 'approved') || (detail.deleted_at && !detail.return_request)) && (
                                 <span style={{ fontSize: '10px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                                  Rechazado
+                                  {detail.return_request ? 'Devuelto' : 'Rechazado'}
                                 </span>
                               )}
                             </div>
@@ -482,7 +492,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '2px solid var(--border-color)' }}>
                 <span style={{ fontWeight: 700, fontSize: '16px' }}>TOTAL:</span>
-                <span style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-primary)' }}>Bs. {parseFloat(sale.total).toFixed(2)}</span>
+                <span style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-primary)' }}>Bs. {parseFloat(sale.subtotal - (sale.discount_total || 0)).toFixed(2)}</span>
               </div>
             </div>
           </div>

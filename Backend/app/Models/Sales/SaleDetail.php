@@ -39,6 +39,16 @@ class SaleDetail extends BaseSaleDetail
 		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();
 	}
 
+	public function owner_payment_details()
+	{
+		return $this->hasMany(\App\Models\Finance\OwnerPaymentDetail::class, 'sale_detail_id');
+	}
+
+	public function return_request()
+	{
+		return $this->hasOne(\App\Models\Sales\Returns::class, 'sale_detail_id');
+	}
+
 	public function giftcard()
 	{
 		return $this->belongsTo(\App\Models\Finance\Giftcard::class, 'gift_card_id');

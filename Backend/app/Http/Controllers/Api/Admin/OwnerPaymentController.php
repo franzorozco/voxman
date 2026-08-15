@@ -35,7 +35,17 @@ class OwnerPaymentController extends Controller
             $owner = \App\Models\Actors\Owner::with('owner_payments')->findOrFail($request->owner_id);
             $deposits = $owner->owner_payments->where('type', 'deposit')->whereIn('status', ['paid', 'archived'])->sum('total_amount');
             $withdrawals = $owner->owner_payments->where('type', 'withdrawal')->whereIn('status', ['paid', 'archived'])->sum('total_amount');
-            $available = $deposits - $withdrawals;
+            
+            $totalSales = \App\Models\Sales\SaleDetail::where('owner_id', $owner->id)
+                ->whereHas('sale', function($q) {
+                    $q->where('status', 'paid');
+                })->sum('subtotal');
+
+            $totalExpenses = \App\Models\Finance\ExpenseSplit::where('owner_id', $owner->id)
+                ->whereIn('status', ['paid', 'archived'])
+                ->sum('amount');
+
+            $available = ($deposits - $withdrawals) + ($totalSales - $totalExpenses);
 
             if ($request->amount > $available) {
                 return response()->json([

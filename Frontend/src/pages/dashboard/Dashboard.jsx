@@ -8,6 +8,7 @@ import logo_white from "../../assets/global/logo_white.png";
 import CanAccess from "../../components/ui/CanAccess";
 import AttendanceWidget from "./components/AttendanceWidget/AttendanceWidget";
 import GlobalScannerModal from "../../components/ui/GlobalScannerModal";
+import ModalProtection from "./components/ModalProtection";
 
 import {
   LayoutDashboard,
@@ -81,6 +82,7 @@ export default function DashboardLayout() {
 
   return (
     <>
+      <ModalProtection />
       {/* LOGOUT MODAL */}
       {showLogoutModal && (
         <div className="modal-overlay">

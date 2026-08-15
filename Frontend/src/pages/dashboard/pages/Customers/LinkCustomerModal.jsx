@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, User as UserIcon, Link2, CheckCircle } from 'lucide-react';
 import { searchUnlinkedUsers, searchPosCustomers, linkUserToCustomer } from '../../../../api/admin/customers';
+import { toast } from 'react-hot-toast';
 
 export default function LinkCustomerModal({ onClose, onSuccess }) {
   const [userQuery, setUserQuery] = useState('');
@@ -62,6 +63,7 @@ export default function LinkCustomerModal({ onClose, onSuccess }) {
         user_id: selectedUser.id,
         customer_id: selectedCustomer.id
       });
+      toast.success("Usuario vinculado al cliente exitosamente.");
       onSuccess();
     } catch (err) {
       setError(err.response?.data?.message || 'Error al vincular cuentas');

@@ -31,8 +31,18 @@ class OrderNetworkController extends Controller
             'shipment.sale.guest',
             'shipment.sale.customer.user.profile',
             'shipment.sale.customer.posProfile',
-            'shipment.sale.sale_details.product_variant.product',
-            'shipment.sale.sale_details.product_variant.inventories.branch',
+            'shipment.sale.sale_details' => function($q) {
+                $q->withTrashed()->with([
+                    'product_variant.product.product_images',
+                    'product_variant.product.attribute_value_images',
+                    'product_variant.size',
+                    'product_variant.fit',
+                    'product_variant.variant_attribute_values.attribute_value.attribute',
+                    'product_variant.variant_images',
+                    'product_variant.inventories.branch',
+                    'return_request'
+                ]);
+            },
             'shipment.sale.stock_reservations',
             'driver.user.profile'
         ])->orderBy('created_at', 'desc');
@@ -529,10 +539,13 @@ class OrderNetworkController extends Controller
             'shipment.sale.sale_details' => function($q) { 
                 $q->withTrashed()->with([
                     'product_variant.product.product_images',
+                    'product_variant.product.attribute_value_images',
                     'product_variant.size',
                     'product_variant.fit',
                     'product_variant.variant_attribute_values.attribute_value.attribute',
-                    'product_variant.inventories.branch'
+                    'product_variant.variant_images',
+                    'product_variant.inventories.branch',
+                    'return_request'
                 ]); 
             },
             'shipment.sale.guest', 

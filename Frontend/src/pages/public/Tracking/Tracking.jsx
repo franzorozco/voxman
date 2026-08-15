@@ -278,8 +278,8 @@ export default function Tracking() {
   // Resolve Image URL Logic (same as Admin Panel)
   const resolveImageUrl = (variant) => {
     const product = variant?.product;
-    const colorId = variant?.variant_attribute_values?.[0]?.attribute_value_id;
-    const colorImg = product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
+    const variantAttrIds = variant?.variant_attribute_values?.map(v => v.attribute_value_id) || [];
+    const colorImg = product?.attribute_value_images?.find(img => variantAttrIds.includes(img.attribute_value_id));
     
     let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
     

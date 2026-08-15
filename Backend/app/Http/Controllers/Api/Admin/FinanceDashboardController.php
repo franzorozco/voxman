@@ -41,6 +41,9 @@ class FinanceDashboardController extends Controller
         if ($branchIdFilter !== 'all') {
             $expensesQuery->where('branch_id', $branchIdFilter);
         }
+        if ($startDate && $endDate) {
+            $expensesQuery->whereBetween('expense_date', [$startDate, $endDate]);
+        }
         $totalStoreExpenses = $expensesQuery->sum('amount');
         
         $globalSalesQuery = SaleDetail::with('sale.payments')
@@ -61,7 +64,7 @@ class FinanceDashboardController extends Controller
         $giftcardSales = 0;
 
         foreach ($globalSalesDetails as $detail) {
-            $detailTotal = $detail->subtotal - $detail->discount;
+            $detailTotal = $detail->subtotal;
             $sale = $detail->sale;
             $saleTotal = $sale->total;
             
@@ -98,6 +101,10 @@ class FinanceDashboardController extends Controller
             $cashExpensesQuery->where('branch_id', $branchIdFilter);
             $bankExpensesQuery->where('branch_id', $branchIdFilter);
         }
+        if ($startDate && $endDate) {
+            $cashExpensesQuery->whereBetween('expense_date', [$startDate, $endDate]);
+            $bankExpensesQuery->whereBetween('expense_date', [$startDate, $endDate]);
+        }
         $cashExpenses = $cashExpensesQuery->sum('amount');
         $bankExpenses = $bankExpensesQuery->sum('amount');
 
@@ -106,6 +113,10 @@ class FinanceDashboardController extends Controller
         if ($branchIdFilter !== 'all') {
             $cashDepositsQuery->where('branch_id', $branchIdFilter);
             $bankDepositsQuery->where('branch_id', $branchIdFilter);
+        }
+        if ($startDate && $endDate) {
+            $cashDepositsQuery->whereBetween('created_at', [$startDate, $endDate]);
+            $bankDepositsQuery->whereBetween('created_at', [$startDate, $endDate]);
         }
         $cashDeposits = $cashDepositsQuery->sum('total_amount');
         $bankDeposits = $bankDepositsQuery->sum('total_amount');
@@ -116,8 +127,37 @@ class FinanceDashboardController extends Controller
             $cashWithdrawalsQuery->where('branch_id', $branchIdFilter);
             $bankWithdrawalsQuery->where('branch_id', $branchIdFilter);
         }
+        if ($startDate && $endDate) {
+            $cashWithdrawalsQuery->whereBetween('created_at', [$startDate, $endDate]);
+            $bankWithdrawalsQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
         $cashWithdrawals = $cashWithdrawalsQuery->sum('total_amount');
         $bankWithdrawals = $bankWithdrawalsQuery->sum('total_amount');
+
+        // Add CashMovements (Adjustments from cash registers) to total cash
+        $globalMovementsInQuery = \App\Models\Finance\CashMovement::where('movement_type', 'income');
+        $globalMovementsOutQuery = \App\Models\Finance\CashMovement::where('movement_type', 'expense');
+        
+        if ($branchIdFilter !== 'all') {
+            $globalMovementsInQuery->whereHas('cash_register', function($q) use ($branchIdFilter) {
+                $q->where('branch_id', $branchIdFilter);
+            });
+            $globalMovementsOutQuery->whereHas('cash_register', function($q) use ($branchIdFilter) {
+                $q->where('branch_id', $branchIdFilter);
+            });
+        }
+        
+        if ($startDate && $endDate) {
+            $globalMovementsInQuery->whereBetween('created_at', [$startDate, $endDate]);
+            $globalMovementsOutQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        $globalMovementsIn = $globalMovementsInQuery->sum('amount');
+        $globalMovementsOut = $globalMovementsOutQuery->sum('amount');
+
+        $cashSales += $globalMovementsIn;
+        $cashExpenses += $globalMovementsOut;
+        $totalStoreExpenses += $globalMovementsOut;
 
         $totalStoreRevenue = $cashSales + $bankSales + $giftcardSales;
 
@@ -152,7 +192,7 @@ class FinanceDashboardController extends Controller
                 $branchSalesRevenue = 0;
 
                 foreach ($salesDetails as $detail) {
-                    $detailTotal = $detail->subtotal - $detail->discount;
+                    $detailTotal = $detail->subtotal;
                     $branchSalesRevenue += $detailTotal;
                     
                     $sale = $detail->sale;
@@ -380,7 +420,7 @@ class FinanceDashboardController extends Controller
         $cashMethodId = $cashMethod ? $cashMethod->id : null;
 
         foreach ($sales as $saleDetail) {
-            $detailTotal = $saleDetail->subtotal - $saleDetail->discount;
+            $detailTotal = $saleDetail->subtotal;
             $sale = $saleDetail->sale;
             $saleTotal = $sale->total;
             $branchName = $sale->branch ? $sale->branch->name : 'N/A';

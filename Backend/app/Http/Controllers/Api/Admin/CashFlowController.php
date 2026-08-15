@@ -72,7 +72,7 @@ class CashFlowController extends Controller
         $dailyIncomeMap = [];
         
         foreach ($globalSalesDetails as $detail) {
-            $detailTotal = $detail->subtotal - $detail->discount;
+            $detailTotal = $detail->subtotal;
             $sale = $detail->sale;
             $saleTotal = $sale->total;
             
@@ -295,7 +295,7 @@ class CashFlowController extends Controller
                 
                 $productTotal = 0;
                 foreach ($sale->sale_details as $detail) {
-                    $productTotal += ($detail->subtotal - $detail->discount);
+                    $productTotal += $detail->subtotal;
                 }
                 
                 $cashAmount = $productTotal * $cashRatio;

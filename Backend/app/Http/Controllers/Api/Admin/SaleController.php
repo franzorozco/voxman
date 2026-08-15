@@ -76,7 +76,7 @@ class SaleController extends Controller
         $perPage = $request->query('per_page', 50);
         
         $summary = [
-            'total_revenue' => (clone $query)->where('status', 'paid')->sum('total'),
+            'total_revenue' => (clone $query)->where('status', 'paid')->sum('subtotal') - (clone $query)->where('status', 'paid')->sum('discount_total'),
             'total_sales' => (clone $query)->where('status', '!=', 'cancelled')->count(),
             'total_discount' => (clone $query)->where('status', 'paid')->sum('discount_total'),
             'average_ticket' => 0
@@ -113,7 +113,8 @@ class SaleController extends Controller
                     'product_variant.variant_images',
                     'product_variant.size',
                     'product_variant.fit',
-                    'product_variant.variant_attribute_values.attribute_value.attribute'
+                    'product_variant.variant_attribute_values.attribute_value.attribute',
+                    'return_request'
                 ]); 
             },
             'sale_details.giftcard',

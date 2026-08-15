@@ -62,7 +62,15 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px', background: 'var(--bg-input)', padding: '16px', borderRadius: '8px' }}>
             <div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Cliente</div>
-              <div style={{ fontWeight: 600 }}>{returnItem.sale_detail?.sale?.customer ? (returnItem.sale_detail.sale.customer.first_name + " " + returnItem.sale_detail.sale.customer.last_name) : "N/A"}</div>
+              <div style={{ fontWeight: 600 }}>
+                {returnItem.sale_detail?.sale?.customer ? (
+                  returnItem.sale_detail.sale.customer.user?.profile ? 
+                    `${returnItem.sale_detail.sale.customer.user.profile.first_name} ${returnItem.sale_detail.sale.customer.user.profile.last_name_paternal || ''}` : 
+                  (returnItem.sale_detail.sale.customer.pos_profile || returnItem.sale_detail.sale.customer.posProfile) ? 
+                    `${(returnItem.sale_detail.sale.customer.pos_profile || returnItem.sale_detail.sale.customer.posProfile).first_name} ${(returnItem.sale_detail.sale.customer.pos_profile || returnItem.sale_detail.sale.customer.posProfile).last_name_paternal || ''}` :
+                  "Cliente sin perfil"
+                ) : returnItem.sale_detail?.sale?.guest ? returnItem.sale_detail.sale.guest.name : "N/A"}
+              </div>
             </div>
             <div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Venta Original</div>
@@ -77,20 +85,32 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
           <h3 style={{ marginBottom: '16px', fontSize: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Producto a Devolver</h3>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-            {returnItem.sale_detail?.product_variant?.product?.images?.[0] ? (
-              <img 
-                src={`${API_BASE_URL}/storage/${returnItem.sale_detail.product_variant.product.images[0].image_path}`} 
-                alt="Producto" 
-                style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
-              />
-            ) : (
-              <div style={{ width: '60px', height: '60px', background: 'var(--border-color)', borderRadius: '8px' }}></div>
-            )}
+            {(() => {
+              const variant = returnItem.sale_detail?.product_variant;
+              const product = variant?.product;
+              const colorId = variant?.variant_attribute_values?.[0]?.attribute_value_id;
+              const colorImg = product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
+              let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
+              if (imageUrl && !imageUrl.startsWith('http')) {
+                imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl}`;
+              }
+              
+              return imageUrl ? (
+                <img 
+                  src={imageUrl} 
+                  alt="Producto" 
+                  style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
+                />
+              ) : (
+                <div style={{ width: '60px', height: '60px', background: 'var(--border-color)', borderRadius: '8px' }}></div>
+              );
+            })()}
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 600, fontSize: '16px' }}>{returnItem.sale_detail?.product_variant?.product?.name || "Desconocido"}</div>
               <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                 Talla: {returnItem.sale_detail?.product_variant?.size?.name || "N/A"} | 
-                Fit: {returnItem.sale_detail?.product_variant?.fit?.name || "N/A"}
+                Fit: {returnItem.sale_detail?.product_variant?.fit?.name || "N/A"} | 
+                Color: {returnItem.sale_detail?.product_variant?.variant_attribute_values?.[0]?.attribute_value?.value || "N/A"}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>

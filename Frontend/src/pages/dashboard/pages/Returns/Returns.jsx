@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, Filter, RefreshCw, Eye, Undo2, DollarSign, PackageOpen } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getReturns } from "../../../../api/admin/returns";
+import { API_BASE_URL } from '../../../../config/api';
 import ReturnDetailsModal from "./ReturnDetailsModal";
 import "./Returns.css";
 
@@ -187,10 +188,45 @@ export default function Returns() {
                     <td>
                       <div style={{ fontSize: '13px', fontWeight: 600 }}>{ret.sale_detail?.sale?.invoice_number || "Venta Original"}</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        {ret.sale_detail?.sale?.customer ? (ret.sale_detail.sale.customer.first_name + " " + ret.sale_detail.sale.customer.last_name) : "Cliente Anónimo"}
+                        {ret.sale_detail?.sale?.customer ? (
+                          ret.sale_detail.sale.customer.user?.profile ? 
+                            `${ret.sale_detail.sale.customer.user.profile.first_name} ${ret.sale_detail.sale.customer.user.profile.last_name_paternal || ''}` : 
+                          (ret.sale_detail.sale.customer.pos_profile || ret.sale_detail.sale.customer.posProfile) ? 
+                            `${(ret.sale_detail.sale.customer.pos_profile || ret.sale_detail.sale.customer.posProfile).first_name} ${(ret.sale_detail.sale.customer.pos_profile || ret.sale_detail.sale.customer.posProfile).last_name_paternal || ''}` :
+                          "Cliente sin perfil"
+                        ) : ret.sale_detail?.sale?.guest ? ret.sale_detail.sale.guest.name : "N/A"}
                       </div>
                     </td>
-                    <td>{ret.sale_detail?.product_variant?.product?.name || "Desconocido"}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {(() => {
+                          const variant = ret.sale_detail?.product_variant;
+                          const product = variant?.product;
+                          const colorId = variant?.variant_attribute_values?.[0]?.attribute_value_id;
+                          const colorImg = product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
+                          let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
+                          if (imageUrl && !imageUrl.startsWith('http')) {
+                            imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl}`;
+                          }
+                          
+                          return imageUrl ? (
+                            <img 
+                              src={imageUrl} 
+                              alt="Variant" 
+                              style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                            />
+                          ) : (
+                            <div style={{ width: '32px', height: '32px', background: 'var(--border-color)', borderRadius: '4px' }}></div>
+                          );
+                        })()}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span>{ret.sale_detail?.product_variant?.product?.name || "Desconocido"}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            Talla: {ret.sale_detail?.product_variant?.size?.name || "N/A"} | Fit: {ret.sale_detail?.product_variant?.fit?.name || "N/A"} | Color: {ret.sale_detail?.product_variant?.variant_attribute_values?.[0]?.attribute_value?.value || "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
                     <td style={{ fontWeight: 600 }}>{ret.quantity}</td>
                     <td>
                       <span className={`status-badge status-${ret.status}`}>

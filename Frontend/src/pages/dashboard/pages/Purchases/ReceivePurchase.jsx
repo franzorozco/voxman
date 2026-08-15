@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { getPurchase, receivePurchase } from "../../../../api/admin/purchases";
 import { getEmployees } from "../../../../api/admin/employees";
 import Spinner from "../../components/Spinner/Spinner";
+import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import { useAuthStore } from "../../../../store/authStore";
 import "./Purchases.css";
 
@@ -21,6 +22,7 @@ export default function ReceivePurchase() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [formData, setFormData] = useState({
     employee_id: "", // Who is receiving
     notes: ""
@@ -35,6 +37,27 @@ export default function ReceivePurchase() {
     const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
     const finalPath = cleanUrl.startsWith('storage/') ? cleanUrl : `storage/${cleanUrl}`;
     return `${API_BASE_URL}/${finalPath}`;
+  };
+  const extractImage = (detail) => {
+    const variant = detail.product_variant;
+    if (!variant) return null;
+
+    if (variant.variant_images?.[0]) return variant.variant_images[0].url;
+
+    const variantAttrIds = variant.variant_attribute_values?.map(v => String(v.attribute_value_id)) || [];
+    const product = variant.product;
+    if (product?.attribute_value_images) {
+      const colorImg = product.attribute_value_images.find(img => variantAttrIds.includes(String(img.attribute_value_id)) && img.is_main) 
+                    || product.attribute_value_images.find(img => variantAttrIds.includes(String(img.attribute_value_id)));
+      if (colorImg) return colorImg.url;
+    }
+
+    const pImages = product?.product_images;
+    if (pImages && pImages.length > 0) {
+      const mainImg = pImages.find(img => img.is_main) || pImages[0];
+      return mainImg.url;
+    }
+    return null;
   };
 
   useEffect(() => {
@@ -70,7 +93,7 @@ export default function ReceivePurchase() {
             accepted_quantity: detail.quantity, // Default to accepting everything
             product_name: detail.product_variant?.product?.name,
             sku: detail.product_variant?.sku,
-            image: detail.product_variant?.product?.product_images?.[0]?.url // simplificado para vista
+            image: extractImage(detail)
           })));
         }
 
@@ -114,9 +137,12 @@ export default function ReceivePurchase() {
     const hasProcessedItems = receptionItems.some(i => i.received_quantity > 0 || i.damaged_quantity > 0 || i.wrong_quantity > 0);
     if (!hasProcessedItems) return toast.error("No hay cantidades procesadas");
 
-    if (!window.confirm("¿Está seguro de finalizar la recepción? El inventario será actualizado y la orden pasará a estado 'Recepcionado'.")) {
-      return;
-    }
+      setShowConfirmModal(true);
+    };
+
+    const handleConfirmSubmit = async () => {
+
+    
 
     setSubmitting(true);
     try {
@@ -206,7 +232,7 @@ export default function ReceivePurchase() {
                 <option value="">Seleccione encargado...</option>
                 {employees.map(emp => (
                   <option key={emp.id} value={emp.id}>
-                    {emp.user?.user_profiles?.[0]?.first_name} {emp.user?.user_profiles?.[0]?.last_name} ({emp.employee_code || emp.role})
+                    {emp.user?.profile?.first_name || emp.user?.user_profiles?.[0]?.first_name} {emp.user?.profile?.last_name || emp.user?.user_profiles?.[0]?.last_name} ({emp.employee_code || emp.role})
                   </option>
                 ))}
               </CustomSelect>
@@ -347,6 +373,18 @@ export default function ReceivePurchase() {
         </div>
 
       </div>
-    </div>
-  );
-}
+    
+        {showConfirmModal && (
+          <ConfirmModal
+            isOpen={showConfirmModal}
+            onClose={() => setShowConfirmModal(false)}
+            onConfirm={handleConfirmSubmit}
+            title="Finalizar Recepción"
+            message="¿Está seguro de finalizar la recepción? El inventario será actualizado y la orden pasará a estado 'Recepcionado'."
+            confirmText="Sí, finalizar"
+            type="primary"
+          />
+        )}
+      </div>
+    );
+  }

@@ -375,7 +375,7 @@ export default function Sales() {
                   </td>
                   <td>
                     <div style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
-                      Bs. {parseFloat(sale.total).toFixed(2)}
+                      Bs. {parseFloat(sale.subtotal - (sale.discount_total || 0)).toFixed(2)}
                     </div>
                     {parseFloat(sale.discount_total) > 0 && (
                       <div style={{ fontSize: '11px', color: 'var(--status-danger)' }}>
