@@ -10,7 +10,7 @@ import DiscountInput from '../../components/DiscountInput';
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import CanAccess from '../../../../components/ui/CanAccess';
 import { API_BASE_URL } from "../../../../config/api";
-import logo from "../../../../assets/global/logo_white.png";
+const logo = `${API_BASE_URL}/storage/system/logos/logo_white.png`;
 
 const mapContainerStyle = {
   width: '100%',

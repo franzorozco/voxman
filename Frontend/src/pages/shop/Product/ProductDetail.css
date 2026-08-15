@@ -1,0 +1,36 @@
+/* Estilos específicos para la vista detallada del Producto */
+.product-detail-container {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+.product-detail-img-placeholder {
+  background-color: var(--bg-input);
+}
+
+.product-detail-title {
+  color: var(--text-main);
+}
+
+.product-detail-price {
+  color: var(--text-main);
+}
+
+.product-detail-description {
+  color: var(--text-muted);
+}
+
+.product-detail-btn {
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
+  transition: all 0.2s ease-in-out;
+}
+
+.product-detail-btn:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.product-detail-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--border-focus);
+}

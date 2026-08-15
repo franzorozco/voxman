@@ -3,13 +3,13 @@ import { Outlet, Link, NavLink, useLocation } from "react-router-dom";
 import { useThemeStore } from "../../store/themeStore";
 import { useAuthStore } from "../../store/authStore";
 import "./Dashboard.css";
-import logo_black from "../../assets/global/logo_black.png";
-import logo_white from "../../assets/global/logo_white.png";
+import { API_BASE_URL } from "../../config/api";
+const logo_black = `${API_BASE_URL}/storage/system/logos/logo_black_sinfondo.png`;
+const logo_white = `${API_BASE_URL}/storage/system/logos/logo_white_sinfondo.png`;
 import CanAccess from "../../components/ui/CanAccess";
 import AttendanceWidget from "./components/AttendanceWidget/AttendanceWidget";
 import GlobalScannerModal from "../../components/ui/GlobalScannerModal";
 import ModalProtection from "./components/ModalProtection";
-
 import {
   LayoutDashboard,
   Package,

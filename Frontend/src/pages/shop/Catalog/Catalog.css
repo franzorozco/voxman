@@ -1,0 +1,38 @@
+/* Estilos específicos para la página de Catálogo de la tienda */
+.catalog-container {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+.catalog-header-border {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.catalog-title {
+  color: var(--text-main);
+}
+
+.catalog-filter-list {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.catalog-filter-link {
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.catalog-filter-link:hover {
+  color: var(--color-primary);
+}
+
+.catalog-product-img-placeholder {
+  background-color: var(--bg-input);
+}
+
+.catalog-product-title {
+  color: var(--text-main);
+}
+
+.catalog-product-price {
+  color: var(--text-main);
+}

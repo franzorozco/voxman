@@ -3,13 +3,14 @@ import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
 import { Heart, Target, Award, Shield, Compass, Star } from "lucide-react";
 
-import navLogo from "../../assets/global/logo_black.png";
-import heroLogo from "../../assets/global/logo_sinfondo.png";
+import { API_BASE_URL } from "../../config/api";
+const navLogo = `${API_BASE_URL}/storage/system/logos/logo_black_sinfondo.png`;
+const heroLogo = `${API_BASE_URL}/storage/system/logos/logo_black_sinfondo.png`;
 import dueno1 from "../../assets/global/Franz.jpg";
 import dueno2 from "../../assets/global/Rous.jpg";
 
 import "./Nosotros.css";
-
+ 
 export default function Nosotros() {
   
   // Intersection Observer para las animaciones al hacer scroll

@@ -3,7 +3,8 @@ import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
 import Hero from "../../components/ui/Hero";
 
-import logo from "../../assets/global/logo_black.png";
+import { API_BASE_URL } from "../../config/api";
+const logo = `${API_BASE_URL}/storage/system/logos/logo_black_sinfondo.png`;
 import modelo1 from "../../assets/global/modelo_1.png";
 import modelo2 from "../../assets/global/modelo_2.png";
 import modelo3 from "../../assets/global/modelo_3.png";

@@ -1,44 +1,134 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from "react";
+import { Link, Outlet } from "react-router-dom";
+import { useAuthStore } from "../../../../store/authStore";
+import useShopCartStore from "../../../../store/shop/useShopCartStore";
+import { API_BASE_URL } from "../../../../config/api";
+const logo = `${API_BASE_URL}/storage/system/logos/logo_white_sinfondo.png`;
+import Footer from "../../../../components/layout/Footer";
+import './ShopLayout.css';
+
+const ShopNavbar = () => {
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const cartItems = useShopCartStore((state) => state.items);
+
+  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef();
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    setOpen(false);
+    setMenuOpen(false);
+  };
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+  };
+
+  const cartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  return (
+    <header className="shop-nav-header">
+      <div className="shop-nav-container">
+        {/* LOGO */}
+        <div className="shop-nav-logo">
+          <Link to="/" onClick={closeMenu}>
+            <img src={logo} alt="VOXman" style={{ height: '36px', display: 'block' }} />
+          </Link>
+        </div>
+
+        {/* MENU ÚNICO */}
+        <nav className={`shop-nav-menu ${menuOpen ? "active" : ""}`}>
+          <Link to="/shop" onClick={closeMenu}>Tienda</Link>
+          <Link to="/shop/catalog" onClick={closeMenu}>Catálogo</Link>
+          <Link to="/shop/collections" onClick={closeMenu}>Colecciones</Link>
+
+          {!user ? (
+            <div className="shop-nav-mobile-auth">
+              <Link to="/shop/login" className="shop-nav-btn shop-nav-btn-outline" onClick={closeMenu}>Iniciar sesión</Link>
+              <Link to="/shop/register" className="shop-nav-btn shop-nav-btn-solid" onClick={closeMenu}>Registrarse</Link>
+            </div>
+          ) : (
+            <div className="shop-nav-mobile-user">
+              <Link to="/shop/profile" onClick={closeMenu}>Ver perfil</Link>
+              <Link to="/shop/orders" onClick={closeMenu}>Mis pedidos</Link>
+              <button onClick={handleLogout}>Cerrar sesión</button>
+            </div>
+          )}
+        </nav>
+
+        {/* ACCIONES */}
+        <div className="shop-nav-actions">
+          
+          <Link to="/shop/cart" className="shop-nav-cart-btn" onClick={closeMenu}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            {cartItemCount > 0 && <span className="cart-badge">{cartItemCount}</span>}
+          </Link>
+
+          {!user ? (
+            <div className="shop-nav-desktop-auth">
+              <Link to="/shop/login" className="shop-nav-btn shop-nav-btn-outline">Iniciar sesión</Link>
+              <Link to="/shop/register" className="shop-nav-btn shop-nav-btn-solid">Registrarse</Link>
+            </div>
+          ) : (
+            <div className="shop-nav-user" ref={menuRef}>
+              <div onClick={() => setOpen(!open)}>
+                {user.photo ? (
+                  <img src={user.photo} className="shop-nav-avatar" alt="Avatar" />
+                ) : (
+                  <div className="shop-nav-avatar-fallback">{getInitials(user.name || user.email)}</div>
+                )}
+              </div>
+
+              {open && (
+                <div className="shop-nav-dropdown">
+                  <Link to="/shop/profile">Ver perfil</Link>
+                  <Link to="/shop/orders">Mis pedidos</Link>
+                  <div className="shop-divider" />
+                  <button onClick={handleLogout}>Cerrar sesión</button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* HAMBURGUESA */}
+          <div className={`shop-hamburger ${menuOpen ? "active" : ""}`} onClick={() => setMenuOpen(!menuOpen)}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
 
 const ShopLayout = () => {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* TODO: Add ShopHeader component */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex-shrink-0 flex items-center">
-            <span className="text-2xl font-bold tracking-tight text-gray-900">VOXMAN</span>
-          </div>
-          <nav className="hidden md:flex space-x-8">
-            <a href="/shop" className="text-gray-500 hover:text-gray-900">Inicio</a>
-            <a href="/shop/catalog" className="text-gray-500 hover:text-gray-900">Catálogo</a>
-            <a href="/shop/nosotros" className="text-gray-500 hover:text-gray-900">Nosotros</a>
-          </nav>
-          <div className="flex items-center">
-            <a href="/shop/cart" className="text-gray-500 hover:text-gray-900 relative">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              {/* Badge placeholder */}
-            </a>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-grow">
-        {/* Render nested routes here */}
+    <div className="shop-layout-wrapper">
+      <ShopNavbar />
+      <main className="shop-main-content">
         <Outlet />
       </main>
-
-      {/* TODO: Add ShopFooter component */}
-      <footer className="bg-gray-900 mt-auto">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-base text-gray-400">
-            &copy; {new Date().getFullYear()} VOXMAN. Todos los derechos reservados.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

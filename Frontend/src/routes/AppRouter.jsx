@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "../components/ui/PageTransition";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -77,17 +79,19 @@ const ThemeLayout = ({ theme }) => (
   </div>
 );
 
-export default function AppRouter() {
+const AnimatedRoutes = () => {
+  const location = useLocation();
   const { isDark } = useThemeStore();
   const adminThemeClass = isDark ? "admin-theme-dark" : "admin-theme";
   const posThemeClass = isDark ? "pos-theme-dark" : "pos-theme";
+  const shopThemeClass = isDark ? "shop-theme-dark" : "shop-theme";
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
 
         {/* ================= PUBLIC & AUTH (HOME THEME) ================= */}
-        <Route element={<ThemeLayout theme="home-theme" />}>
+        <Route element={<PageTransition><ThemeLayout theme="home-theme" /></PageTransition>}>
           <Route path="/" element={<Home />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/login" element={<Login />} />
@@ -165,14 +169,24 @@ export default function AppRouter() {
         </Route>
 
         {/* ================= SHOP (ONLINE STORE) ================= */}
-        <Route path="/shop" element={<ShopLayout />}>
-          <Route index element={<ShopHome />} />
-          <Route path="catalog" element={<ShopCatalog />} />
-          <Route path="product/:id" element={<ShopProductDetail />} />
-          <Route path="cart" element={<ShopCartView />} />
+        <Route element={<PageTransition><ThemeLayout theme={shopThemeClass} /></PageTransition>}>
+          <Route path="/shop" element={<ShopLayout />}>
+            <Route index element={<ShopHome />} />
+            <Route path="catalog" element={<ShopCatalog />} />
+            <Route path="product/:id" element={<ShopProductDetail />} />
+            <Route path="cart" element={<ShopCartView />} />
+          </Route>
         </Route>
 
       </Routes>
+    </AnimatePresence>
+  );
+};
+
+export default function AppRouter() {
+  return (
+    <BrowserRouter>
+      <AnimatedRoutes />
     </BrowserRouter>
   );
 }

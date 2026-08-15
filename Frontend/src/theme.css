@@ -1,5 +1,5 @@
 /* ========================================================
-   THEME GLOBAL TOKENS
+   DASHBOARD
 ======================================================== */
 
 /* ----------------------------------------------------
@@ -57,9 +57,11 @@
   color-scheme: dark;
 }
 
-/* ----------------------------------------------------
-   TEMA DE LAS PGINAS PBLICAS
----------------------------------------------------- */
+
+
+/* ========================================================
+   PAGINAS PBLICAS
+======================================================== */
 .home-theme {
   --color-primary: #c9a227;       /* Dorado premium */
   --color-primary-hover: #e6c65c;
@@ -81,12 +83,9 @@
 }
 
 
-
-
-
-
-
-
+/* ========================================================
+   MODULO POS
+======================================================== */
 /* ----------------------------------------------------
    TEMA DEL POS CLARO
 ---------------------------------------------------- */
@@ -136,5 +135,60 @@
   --border-color: #ffffff;        /* Bordes blancos */
   --border-focus: #ffffff;
   --bg-overlay: rgba(255, 255, 255, 0.05);
+  color-scheme: dark;
+}
+
+/* ========================================================
+   MODULO SHOP (TIENDA ONLINE)
+======================================================== */
+/* ----------------------------------------------------
+   TEMA DEL SHOP CLARO
+---------------------------------------------------- */
+.shop-theme {
+  --color-primary: #000000;       /* Negro elegante */
+  --color-primary-text: #ffffff;
+  --color-primary-hover: #333333;
+  --color-secondary: #f3f4f6;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #f59e0b;       
+  --color-success: #10b981;       
+  
+  --bg-main: #ffffff;             /* Blanco puro premium */
+  --bg-card: #ffffff;             
+  --bg-input: #f9fafb;            
+  
+  --text-main: #111827;           /* Texto muy oscuro */
+  --text-muted: #6b7280;          
+  
+  --border-color: #e5e7eb;        /* Bordes sutiles */
+  --border-focus: #000000;
+  --bg-overlay: rgba(0, 0, 0, 0.05);
+  color-scheme: light;
+}
+
+/* ----------------------------------------------------
+   TEMA DEL SHOP OSCURO
+---------------------------------------------------- */
+.shop-theme-dark {
+  --color-primary: #ffffff;       
+  --color-primary-text: #000000;       
+  --color-primary-hover: #e5e7eb;
+  --color-secondary: #1f2937;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #fbbf24;       
+  --color-success: #34d399;       
+  
+  --bg-main: #0f172a;             /* Fondo slate oscuro elegante */
+  --bg-card: #1e293b;             
+  --bg-input: #334155;            
+  
+  --text-main: #f8fafc;           
+  --text-muted: #94a3b8; 
+  
+  --border-color: #334155;        
+  --border-focus: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.4);
   color-scheme: dark;
 }
