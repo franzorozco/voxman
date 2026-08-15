@@ -233,6 +233,40 @@ class UserController extends Controller
                 }
             }
 
+            // CREACION DE TIPOS DE USUARIO PARA USUARIO NUEVO
+            $types = $request->types ?? [];
+
+            if (in_array('owner', $types)) {
+                Owner::create([
+                    'user_id' => $user->id,
+                    'is_active' => true
+                ]);
+            }
+
+            if (in_array('customer', $types)) {
+                $data = $request->customer ?? [];
+                Customer::create([
+                    'user_id' => $user->id,
+                    'is_active' => true,
+                    'customer_code' => $data['customer_code'] ?? strtoupper(\Illuminate\Support\Str::random(8)),
+                    'points' => $data['points'] ?? 0,
+                    'total_purchases' => $data['total_purchases'] ?? 0,
+                ]);
+            }
+
+            if (in_array('employee', $types)) {
+                $data = $request->employee ?? [];
+                \App\Models\Actors\Employee::create([
+                    'user_id' => $user->id,
+                    'is_active' => true,
+                    'employee_code' => $data['employee_code'] ?? strtoupper(\Illuminate\Support\Str::random(6)),
+                    'role' => $data['role'] ?? 'seller',
+                    'base_salary' => $data['base_salary'] ?? 0,
+                    'commission_percentage' => $data['commission_percentage'] ?? 0,
+                    'status' => 'active'
+                ]);
+            }
+
             DB::commit();
 
             return response()->json(

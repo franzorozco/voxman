@@ -12,7 +12,7 @@ class AttributeController extends Controller
     public function index()
     {
         return response()->json(
-            Attribute::all()
+            Attribute::with('attribute_values')->get()
         );
     }
 

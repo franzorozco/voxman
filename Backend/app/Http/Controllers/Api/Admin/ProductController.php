@@ -207,9 +207,9 @@ class ProductController extends Controller
             $product = Product::create([
                 'id'              => Str::uuid(),
                 'owner_id'        => $request->owner_id,
-                'category_id'     => $request->category_id,
-                'product_type_id' => $request->product_type_id,
-                'brand_id'        => $request->brand_id,
+                'category_id'     => empty($request->category_id) || $request->category_id === 'null' ? null : $request->category_id,
+                  'product_type_id' => empty($request->product_type_id) || $request->product_type_id === 'null' ? null : $request->product_type_id,
+                  'brand_id'        => empty($request->brand_id) || $request->brand_id === 'null' ? null : $request->brand_id,
                 'name'            => $request->name,
                 'description'     => $request->description,
                 'slug'            => Str::slug($request->name),
@@ -278,8 +278,8 @@ class ProductController extends Controller
                     $variant = ProductVariant::create([
                         'id'         => Str::uuid(),
                         'product_id' => $product->id,
-                        'size_id'    => $variantData['size_id'],
-                        'fit_id'     => $variantData['fit_id'],
+                        'size_id'    => empty($variantData['size_id']) || $variantData['size_id'] === 'null' ? null : $variantData['size_id'],
+                          'fit_id'     => empty($variantData['fit_id']) || $variantData['fit_id'] === 'null' ? null : $variantData['fit_id'],
                         'sku'        => $this->generateUniqueSku($variantData['sku'] ?? null),
                         'barcode'    => $variantData['barcode'] ?? null,
                         'weight'     => $variantData['weight'] ?? 0,
@@ -362,9 +362,9 @@ class ProductController extends Controller
 
             $product->update([
                 'owner_id'        => $request->owner_id,
-                'category_id'     => $request->category_id,
-                'product_type_id' => $request->product_type_id,
-                'brand_id'        => $request->brand_id,
+                'category_id'     => empty($request->category_id) || $request->category_id === 'null' ? null : $request->category_id,
+                  'product_type_id' => empty($request->product_type_id) || $request->product_type_id === 'null' ? null : $request->product_type_id,
+                  'brand_id'        => empty($request->brand_id) || $request->brand_id === 'null' ? null : $request->brand_id,
                 'name'            => $request->name,
                 'description'     => $request->description,
                 'slug'            => Str::slug($request->name),
@@ -471,8 +471,8 @@ class ProductController extends Controller
                         $variant = ProductVariant::find($variantData['id']);
                         if ($variant && $variant->product_id === $product->id) {
                             $variant->update([
-                                'size_id'    => $variantData['size_id'],
-                                'fit_id'     => $variantData['fit_id'],
+                                'size_id'    => empty($variantData['size_id']) || $variantData['size_id'] === 'null' ? null : $variantData['size_id'],
+                          'fit_id'     => empty($variantData['fit_id']) || $variantData['fit_id'] === 'null' ? null : $variantData['fit_id'],
                                 'sku'        => $this->generateUniqueSku($variantData['sku'] ?? null, $variant->id),
                                 'barcode'    => $variantData['barcode'] ?? null,
                                 'weight'     => $variantData['weight'] ?? 0,
@@ -492,8 +492,8 @@ class ProductController extends Controller
                         $variant = ProductVariant::create([
                             'id'         => Str::uuid(),
                             'product_id' => $product->id,
-                            'size_id'    => $variantData['size_id'],
-                            'fit_id'     => $variantData['fit_id'],
+                            'size_id'    => empty($variantData['size_id']) || $variantData['size_id'] === 'null' ? null : $variantData['size_id'],
+                          'fit_id'     => empty($variantData['fit_id']) || $variantData['fit_id'] === 'null' ? null : $variantData['fit_id'],
                             'sku'        => $this->generateUniqueSku($variantData['sku'] ?? null),
                             'barcode'    => $variantData['barcode'] ?? null,
                             'weight'     => $variantData['weight'] ?? 0,
