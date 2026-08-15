@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { usePosStore } from '../../store/usePosStore';
+import { usePosStore } from '../../store/pos/usePosStore';
 import { useThemeStore } from '../../store/themeStore';
 import { UserCircle2, ChevronDown, LogOut, LayoutDashboard, Store, X, Sun, Moon } from 'lucide-react';
 import api from '../../api/client';

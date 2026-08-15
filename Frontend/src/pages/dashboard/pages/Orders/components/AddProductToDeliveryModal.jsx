@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { X, Camera, Plus } from "lucide-react";
 import { getProducts } from "../../../../../api/admin/products";
 import useScanner from "../../../../../hooks/useScanner";
-import { useScannerStore } from "../../../../../store/useScannerStore";
+import { useScannerStore } from "../../../../../store/scanner/useScannerStore";
 import { API_BASE_URL } from "../../../../../config/api";
 import CustomSelect from "../../../../../components/ui/CustomSelect";
 import "../../Carts/Carts.css";

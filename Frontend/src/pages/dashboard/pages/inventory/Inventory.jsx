@@ -12,7 +12,7 @@ import ReceiveStockModal from "./components/ReceiveStockModal";
 import AuditInventoryModal from "./components/AuditInventoryModal";
 import QuickActionModal from "./components/QuickActionModal";
 import useScanner from "../../../../hooks/useScanner";
-import { useScannerStore } from "../../../../store/useScannerStore";
+import { useScannerStore } from "../../../../store/scanner/useScannerStore";
 import "./Inventory.css";
 import { API_BASE_URL } from "../../../../config/api";
 import { useAuthStore } from "../../../../store/authStore";

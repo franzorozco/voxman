@@ -7,7 +7,7 @@ import { getBranches } from "../../../../../api/admin/branches";
 import { API_BASE_URL } from "../../../../../config/api";
 import { useAuthStore } from "../../../../../store/authStore";
 import useScanner from "../../../../../hooks/useScanner";
-import { useScannerStore } from "../../../../../store/useScannerStore";
+import { useScannerStore } from "../../../../../store/scanner/useScannerStore";
 import { Camera } from "lucide-react";
 
 import CustomSelect from '../../../../../components/ui/CustomSelect';

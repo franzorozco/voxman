@@ -8,7 +8,7 @@ import { toast } from "react-hot-toast";
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
 import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X, MapPin, Map, User, UserCheck, CheckCircle2 } from "lucide-react";
 import useScanner from "../../../../hooks/useScanner";
-import { useScannerStore } from "../../../../store/useScannerStore";
+import { useScannerStore } from "../../../../store/scanner/useScannerStore";
 import "../Carts/Carts.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';

@@ -5,7 +5,7 @@ import { getProducts } from '../../../../api/admin/products';
 import { createCart, updateCart } from '../../../../api/admin/carts';
 import { toast } from 'react-hot-toast';
 import useScanner from '../../../../hooks/useScanner';
-import { useScannerStore } from '../../../../store/useScannerStore';
+import { useScannerStore } from '../../../../store/scanner/useScannerStore';
 import './Carts.css';
 
 export default function CartFormModal({ cart, onClose, onSuccess }) {

@@ -23,7 +23,7 @@ import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 
 import useScanner from "../../../../hooks/useScanner";
-import { useScannerStore } from "../../../../store/useScannerStore";
+import { useScannerStore } from "../../../../store/scanner/useScannerStore";
 import toast from "react-hot-toast";
 
 import ProductsTable from "./ProductsTable";

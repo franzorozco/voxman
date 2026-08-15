@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Camera, ArrowRightToLine, Infinity } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import { useScannerStore } from '../../store/useScannerStore';
+import { useScannerStore } from '../../store/scanner/useScannerStore';
 
 export default function GlobalScannerModal() {
   const { isOpen, onScanCallback, closeScanner, allowContinuous } = useScannerStore();

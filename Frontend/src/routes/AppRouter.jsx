@@ -62,6 +62,13 @@ import Returns from "../pages/dashboard/pages/Returns/Returns.jsx";
 import CashFlow from "../pages/dashboard/pages/Finance/CashFlow/CashFlow.jsx";
 import FinanceReports from "../pages/dashboard/pages/Finance/Reports/Reports.jsx";
 
+/* SHOP (ONLINE STORE) */
+import ShopLayout from "../pages/shop/components/layout/ShopLayout";
+import ShopHome from "../pages/shop/Home/Home";
+import ShopCatalog from "../pages/shop/Catalog/Catalog";
+import ShopProductDetail from "../pages/shop/Product/ProductDetail";
+import ShopCartView from "../pages/shop/Cart/CartView";
+
 import { useThemeStore } from "../store/themeStore";
 
 const ThemeLayout = ({ theme }) => (
@@ -155,6 +162,14 @@ export default function AppRouter() {
           >
             <Route index element={<Terminal />} />
           </Route>
+        </Route>
+
+        {/* ================= SHOP (ONLINE STORE) ================= */}
+        <Route path="/shop" element={<ShopLayout />}>
+          <Route index element={<ShopHome />} />
+          <Route path="catalog" element={<ShopCatalog />} />
+          <Route path="product/:id" element={<ShopProductDetail />} />
+          <Route path="cart" element={<ShopCartView />} />
         </Route>
 
       </Routes>

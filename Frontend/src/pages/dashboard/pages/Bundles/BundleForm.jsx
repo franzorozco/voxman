@@ -7,7 +7,7 @@ import { createBundle, updateBundle } from "../../../../api/admin/bundles";
 import { getProducts } from "../../../../api/admin/products";
 import { API_BASE_URL } from "../../../../config/api";
 import useScanner from "../../../../hooks/useScanner";
-import { useScannerStore } from "../../../../store/useScannerStore";
+import { useScannerStore } from "../../../../store/scanner/useScannerStore";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function BundleForm({ bundle, categories, owners, productTypes, onClose, onSuccess }) {

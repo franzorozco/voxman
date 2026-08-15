@@ -28,7 +28,7 @@ use App\Http\Controllers\Api\Admin\SupplierController;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\BrandController;
+use App\Http\Controllers\Api\Admin\BrandController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logistics\OrderNetworkController;
 
@@ -453,3 +453,8 @@ Route::middleware([
     // Route::post('/cash-register/open', [PosCashRegisterController::class, 'open']);
     
 });
+
+/* =========================================================
+   RUTAS DE LA TIENDA ONLINE (SHOP)
+========================================================= */
+require __DIR__.'/shop.php';

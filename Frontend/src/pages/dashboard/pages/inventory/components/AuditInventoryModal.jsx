@@ -3,7 +3,7 @@ import { X, Search, Save, AlertCircle, Package, Check, Camera } from "lucide-rea
 import { getInventory, submitInventoryAudit } from "../../../../../api/admin/inventory";
 import { toast } from "react-hot-toast";
 import useScanner from "../../../../../hooks/useScanner";
-import { useScannerStore } from "../../../../../store/useScannerStore";
+import { useScannerStore } from "../../../../../store/scanner/useScannerStore";
 
 export default function AuditInventoryModal({ branchId, branches, onClose, onSuccess }) {
   const [searchResults, setSearchResults] = useState([]);
