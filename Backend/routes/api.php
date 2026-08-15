@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\Admin\SizeController;
 use App\Http\Controllers\Api\Admin\CartController;
 use App\Http\Controllers\Api\Admin\SupplierController;
 use App\Http\Controllers\Api\Admin\UserController;
+use App\Http\Controllers\Api\Admin\ShopShortController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Api\Admin\BrandController;
@@ -135,6 +136,14 @@ Route::middleware([
         Route::delete('/{id}', [DiscountController::class, 'destroy']);
         Route::post('/{id}/restore', [DiscountController::class, 'restore']);
         Route::delete('/{id}/force', [DiscountController::class, 'forceDestroy']);
+    });
+
+    Route::prefix('shop-shorts')->group(function () {
+        Route::get('/', [ShopShortController::class, 'index'])->middleware('permission:view_promotions');
+        Route::post('/', [ShopShortController::class, 'store'])->middleware('permission:view_promotions');
+        Route::get('/{id}', [ShopShortController::class, 'show'])->middleware('permission:view_promotions');
+        Route::post('/{id}', [ShopShortController::class, 'update'])->middleware('permission:view_promotions'); // Using POST for file uploads with _method=PUT later if needed, but since we handle form data, POST is safer
+        Route::delete('/{id}', [ShopShortController::class, 'destroy'])->middleware('permission:view_promotions');
     });
 
     Route::prefix('checkout')->group(function () {

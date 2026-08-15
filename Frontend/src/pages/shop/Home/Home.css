@@ -34,7 +34,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-auto-rows: 420px;
-  gap: 2px;
+  gap: 0;
 }
 
 /* Variaciones de tamaño para romper la monotonía */
@@ -149,7 +149,7 @@
   .shop-collage-grid {
     grid-template-columns: repeat(2, 1fr);
     grid-auto-rows: 300px;
-    gap: 1px;
+    gap: 0;
   }
 
   .shop-collage-large {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\shop\ShopCategoryController;
 use App\Http\Controllers\Api\shop\ShopCartController;
 use App\Http\Controllers\Api\shop\ShopCheckoutController;
 use App\Http\Controllers\Api\shop\ShopAuthController;
+use App\Http\Controllers\Api\shop\ShopShortController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,8 @@ Route::prefix('v1/shop')->group(function () {
     Route::get('/products/{slug}', [ShopProductController::class, 'show']);
     
     Route::get('/categories', [ShopCategoryController::class, 'index']);
+
+    Route::get('/shorts', [ShopShortController::class, 'index']);
     
     // Autenticación de clientes
     Route::post('/login', [ShopAuthController::class, 'login']);

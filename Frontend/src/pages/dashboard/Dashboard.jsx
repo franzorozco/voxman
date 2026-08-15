@@ -39,7 +39,8 @@ import {
   Store,
   Ticket,
   AlertTriangle,
-  DollarSign
+  DollarSign,
+  Film
 } from "lucide-react";
 
 export default function DashboardLayout() {
@@ -269,6 +270,9 @@ export default function DashboardLayout() {
                 <p className="section-title">
                   {!collapsed && "MARKETING"}
                 </p>
+                <CanAccess permission="view_promotions">
+                  <NavItem to="/dashboard/shop-shorts" icon={Film} label="Shorts (Tienda)" />
+                </CanAccess>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />
                 </CanAccess>
