@@ -6,7 +6,7 @@ import ShopShortModal from "./ShopShortModal";
 import "../Products/Products.css"; 
 import "./ShopShorts.css";
 import { API_BASE_URL } from "../../../../config/api";
-import { VideoPlayer } from "../../../../utils/videoHelpers";
+import { VideoPlayer } from "../../../../components/ui/videoHelpers";
 
 export default function ShopShorts() {
   const [shorts, setShorts] = useState([]);

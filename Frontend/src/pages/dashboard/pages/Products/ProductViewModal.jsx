@@ -57,6 +57,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
   const [measurementsState, setMeasurementsState] = useState({});
   const [globalMeasValues, setGlobalMeasValues] = useState({});
   const [initialMeasValues, setInitialMeasValues] = useState({});
+  const [measMode, setMeasMode] = useState('individual'); // 'individual' or 'simple'
 
   // Measurements Logic
   const fetchMeasurements = async () => {
@@ -111,6 +112,21 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
       ...prev,
       [variantId]: { ...prev[variantId], [measurementId]: value }
     }));
+  };
+
+  const handleSimpleValueChange = (groupId, measurementId, value) => {
+    const matchingVariants = product.product_variants.filter(v => {
+      const gId = `${v.size?.name || 'Estándar'}-${v.fit?.name || 'Estándar'}`;
+      return gId === groupId;
+    });
+    
+    setMeasurementsState(prev => {
+      const newValues = { ...prev };
+      matchingVariants.forEach(v => {
+        newValues[v.id] = { ...newValues[v.id], [measurementId]: value };
+      });
+      return newValues;
+    });
   };
 
   const handleGlobalValueChange = (measurementId, value) => {
@@ -227,6 +243,25 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
   const ownerName = product.owner?.user?.profile
     ? `${product.owner.user.profile.first_name || ''} ${product.owner.user.profile.last_name_paternal || ''}`.trim()
     : product.owner?.user?.email || "Sin propietario";
+
+  const simpleMeasGroups = [];
+  if (measMode === 'simple' && product.product_variants) {
+    const map = new Map();
+    product.product_variants.forEach(v => {
+      const gId = `${v.size?.name || 'Estándar'}-${v.fit?.name || 'Estándar'}`;
+      if (!map.has(gId)) {
+        map.set(gId, {
+           id: gId,
+           sizeName: v.size?.name || 'Estándar',
+           fitName: v.fit?.name || 'Estándar',
+           variantIds: [v.id]
+        });
+      } else {
+        map.get(gId).variantIds.push(v.id);
+      }
+    });
+    simpleMeasGroups.push(...Array.from(map.values()));
+  }
 
   return (
     <div className="modal-overlay pvm-overlay" onClick={onClose} style={directVariantMode ? { background: 'transparent' } : {}}>
@@ -885,9 +920,33 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                   </p>
                 </div>
                 
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                   {isEditingMeas ? (
                     <>
+                      <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden', marginRight: '8px' }}>
+                        <button
+                          className="btn"
+                          style={{ 
+                            borderRadius: 0, border: 'none', padding: '6px 12px', fontSize: '12px',
+                            background: measMode === 'simple' ? 'var(--color-primary)' : 'transparent',
+                            color: measMode === 'simple' ? '#fff' : 'var(--text-main)'
+                          }}
+                          onClick={() => setMeasMode('simple')}
+                        >
+                          Modo Simple
+                        </button>
+                        <button
+                          className="btn"
+                          style={{ 
+                            borderRadius: 0, border: 'none', padding: '6px 12px', fontSize: '12px',
+                            background: measMode === 'individual' ? 'var(--color-primary)' : 'transparent',
+                            color: measMode === 'individual' ? '#fff' : 'var(--text-main)'
+                          }}
+                          onClick={() => setMeasMode('individual')}
+                        >
+                          Modo Individual
+                        </button>
+                      </div>
                       <button 
                         className="btn-secondary"
                         onClick={() => { setIsEditingMeas(false); setMeasurementsState(initialMeasValues); }} 
@@ -989,37 +1048,27 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                             ))}
                           </tr>
                         )}
-                        {product.product_variants.map(variant => {
-                          const attrText = variant.variant_attribute_values
-                            ?.map(vav => vav.attribute_value?.value)
-                            .filter(Boolean)
-                            .join(", ");
-                            
-                          const detailParts = [];
-                          if (variant.size?.name) detailParts.push(`Talla ${variant.size.name}`);
-                          if (variant.fit?.name) detailParts.push(variant.fit.name);
-                          if (attrText) detailParts.push(attrText);
-
-                          return (
-                            <tr key={variant.id}>
-                              <td style={{ fontFamily: "monospace", color: "var(--text-main)" }}>{variant.sku}</td>
-                              <td>
-                                <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4", display: "block" }}>
-                                  {detailParts.join(" • ") || "Estándar"}
-                                </span>
-                              </td>
-                              
-                              {requiredMeasurements.map(m => {
-                                const val = measurementsState[variant.id]?.[m.id];
-                                return (
-                                  <td key={m.id} style={{ padding: "10px", textAlign: "center" }}>
-                                    {isEditingMeas ? (
+                        {measMode === 'simple' && isEditingMeas ? (
+                          simpleMeasGroups.map(group => {
+                            const firstVariantId = group.variantIds[0];
+                            return (
+                              <tr key={group.id}>
+                                <td colSpan={2} style={{ padding: "10px", fontWeight: "500", color: "var(--text-main)" }}>
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                    <span>Talla {group.sizeName} • {group.fitName}</span>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Aplica a {group.variantIds.length} variantes con esta misma talla y fit.</span>
+                                  </div>
+                                </td>
+                                {requiredMeasurements.map(m => {
+                                  const val = measurementsState[firstVariantId]?.[m.id];
+                                  return (
+                                    <td key={m.id} style={{ padding: "10px", textAlign: "center" }}>
                                       <input 
                                         type="number" 
                                         step="0.1"
                                         placeholder="0.0"
                                         value={val || ""}
-                                        onChange={(e) => handleValueChange(variant.id, m.id, e.target.value)}
+                                        onChange={(e) => handleSimpleValueChange(group.id, m.id, e.target.value)}
                                         style={{ 
                                           width: "80px", 
                                           padding: "8px", 
@@ -1034,23 +1083,76 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                                         onFocus={(e) => e.target.style.borderColor = "var(--color-primary)"}
                                         onBlur={(e) => e.target.style.borderColor = "var(--border-color)"}
                                       />
-                                    ) : (
-                                      <span style={{ 
-                                        fontWeight: 600, 
-                                        color: val ? "var(--text-main)" : "var(--text-muted)", 
-                                        display: "inline-block",
-                                        minWidth: "40px",
-                                        fontSize: "0.95rem"
-                                      }}>
-                                        {val ? `${val} cm` : "---"}
-                                      </span>
-                                    )}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          );
-                        })}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          product.product_variants.map(variant => {
+                            const attrText = variant.variant_attribute_values
+                              ?.map(vav => vav.attribute_value?.value)
+                              .filter(Boolean)
+                              .join(", ");
+                              
+                            const detailParts = [];
+                            if (variant.size?.name) detailParts.push(`Talla ${variant.size.name}`);
+                            if (variant.fit?.name) detailParts.push(variant.fit.name);
+                            if (attrText) detailParts.push(attrText);
+
+                            return (
+                              <tr key={variant.id}>
+                                <td style={{ fontFamily: "monospace", color: "var(--text-main)" }}>{variant.sku}</td>
+                                <td>
+                                  <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4", display: "block" }}>
+                                    {detailParts.join(" • ") || "Estándar"}
+                                  </span>
+                                </td>
+                                
+                                {requiredMeasurements.map(m => {
+                                  const val = measurementsState[variant.id]?.[m.id];
+                                  return (
+                                    <td key={m.id} style={{ padding: "10px", textAlign: "center" }}>
+                                      {isEditingMeas ? (
+                                        <input 
+                                          type="number" 
+                                          step="0.1"
+                                          placeholder="0.0"
+                                          value={val || ""}
+                                          onChange={(e) => handleValueChange(variant.id, m.id, e.target.value)}
+                                          style={{ 
+                                            width: "80px", 
+                                            padding: "8px", 
+                                            borderRadius: "6px", 
+                                            border: "1px solid var(--border-color)", 
+                                            background: "var(--bg-input)", 
+                                            color: "var(--text-main)",
+                                            textAlign: "center",
+                                            outline: "none",
+                                            transition: "0.2s border"
+                                          }}
+                                          onFocus={(e) => e.target.style.borderColor = "var(--color-primary)"}
+                                          onBlur={(e) => e.target.style.borderColor = "var(--border-color)"}
+                                        />
+                                      ) : (
+                                        <span style={{ 
+                                          fontWeight: 600, 
+                                          color: val ? "var(--text-main)" : "var(--text-muted)", 
+                                          display: "inline-block",
+                                          minWidth: "40px",
+                                          fontSize: "0.95rem"
+                                        }}>
+                                          {val ? `${val} cm` : "---"}
+                                        </span>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })
+                        )}
                       </tbody>
                     </table>
                   </div>

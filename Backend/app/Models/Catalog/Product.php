@@ -35,4 +35,9 @@ class Product extends BaseProduct
     {
         return $this->hasMany(AttributeValueImage::class, 'product_id');
     }
+
+    public function shorts()
+    {
+        return $this->hasMany(\App\Models\Shop\ShopShort::class, 'product_id')->where('is_active', true);
+    }
 }

@@ -6,7 +6,7 @@ import { getProducts } from "../../../../api/admin/products";
 import { getCategories } from "../../../../api/admin/categories";
 import CustomSelect from "../../../../components/ui/CustomSelect";
 import { API_BASE_URL } from "../../../../config/api";
-import { VideoPlayer } from "../../../../utils/videoHelpers";
+import { VideoPlayer } from "../../../../components/ui/videoHelpers";
 
 export default function ShopShortModal({ short, onClose, onSaved }) {
   const isEditing = !!short;
@@ -155,36 +155,65 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
                 
                 <div style={{ display: 'flex', gap: '16px', flexDirection: 'column' }}>
                   {/* File Upload Zone */}
-                  <div className="shorts-upload-zone" style={{ opacity: videoLink ? 0.5 : 1 }}>
-                    <input 
-                      type="file" 
-                      accept="video/mp4,video/quicktime,video/webm"
-                      onChange={handleVideoChange}
-                      disabled={!!videoLink}
-                    />
-                    <Upload size={32} className="shorts-upload-icon" />
-                    {videoFile ? (
-                      <p className="shorts-upload-filename">{videoFile.name}</p>
-                    ) : isEditing && short.video_url && !short.video_url.startsWith('http') ? (
-                      <p className="shorts-upload-text">Archivo actual cargado. Click para reemplazar.</p>
-                    ) : (
-                      <p className="shorts-upload-text">Click o arrastra un archivo de video (Max 50MB)</p>
+                  <div style={{ position: 'relative' }}>
+                    <div className="shorts-upload-zone" style={{ opacity: videoLink ? 0.5 : 1 }}>
+                      <input 
+                        type="file" 
+                        accept="video/mp4,video/quicktime,video/webm"
+                        onChange={handleVideoChange}
+                        disabled={!!videoLink}
+                      />
+                      <Upload size={32} className="shorts-upload-icon" />
+                      {videoFile ? (
+                        <p className="shorts-upload-filename">{videoFile.name}</p>
+                      ) : isEditing && short.video_url && !short.video_url.startsWith('http') ? (
+                        <p className="shorts-upload-text">Archivo actual cargado. Click para reemplazar.</p>
+                      ) : (
+                        <p className="shorts-upload-text">Click o arrastra un archivo de video (Max 50MB)</p>
+                      )}
+                    </div>
+                    {(videoFile || (isEditing && short?.video_url && !short.video_url.startsWith('http'))) && !videoLink && (
+                       <button
+                         type="button"
+                         onClick={() => {
+                           setVideoFile(null);
+                           // Si estamos editando y hay un archivo antiguo, esto solo limpia el nuevo archivo subido
+                           // Para limpiar el viejo tendríamos que vaciar video_url, pero lo dejaremos así para no complicar el backend,
+                           // o podemos simplemente dejar que el usuario suba otro o ponga un link.
+                         }}
+                         style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10 }}
+                         title="Limpiar archivo"
+                       >
+                         <X size={14} />
+                       </button>
                     )}
                   </div>
 
                   <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', fontWeight: 'bold' }}>O</div>
 
                   {/* URL Input */}
-                  <div style={{ position: 'relative' }}>
-                    <LinkIcon size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input
-                      type="url"
-                      style={{ ...inputStyle, paddingLeft: '38px', opacity: videoFile ? 0.5 : 1 }}
-                      value={videoLink}
-                      onChange={handleLinkChange}
-                      placeholder="Pegar enlace de video (Ej: https://.../video.mp4)"
-                      disabled={!!videoFile}
-                    />
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <LinkIcon size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                      <input
+                        type="url"
+                        style={{ ...inputStyle, paddingLeft: '38px', opacity: videoFile ? 0.5 : 1 }}
+                        value={videoLink}
+                        onChange={handleLinkChange}
+                        placeholder="Pegar enlace de video (Ej: https://.../video.mp4)"
+                        disabled={!!videoFile}
+                      />
+                      {videoLink && (
+                        <button
+                          type="button"
+                          onClick={() => setVideoLink("")}
+                          style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}
+                          title="Limpiar enlace"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 

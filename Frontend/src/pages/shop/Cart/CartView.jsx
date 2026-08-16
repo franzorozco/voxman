@@ -42,7 +42,7 @@ const CartView = () => {
                         <p className="mt-1 text-sm cart-item-subtitle">Cantidad: {item.quantity}</p>
                       </div>
                       <div className="mt-4 flex-1 flex items-end justify-between text-sm">
-                        <p className="font-medium cart-item-price">${item.price}</p>
+                        <p className="font-medium cart-item-price">Bs {item.price}</p>
                         <button type="button" className="font-medium cart-item-remove-btn">
                           <span>Eliminar</span>
                         </button>
@@ -61,7 +61,7 @@ const CartView = () => {
               <dl className="space-y-4">
                 <div className="flex items-center justify-between">
                   <dt className="text-base font-medium cart-summary-text">Total estimado</dt>
-                  <dd className="text-base font-medium cart-summary-text">${total}</dd>
+                  <dd className="text-base font-medium cart-summary-text">Bs {total}</dd>
                 </div>
               </dl>
 

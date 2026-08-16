@@ -1,6 +1,6 @@
 import client from '../client';
 
-const BASE_URL="v1/admin/shop-shorts";
+const BASE_URL="v1/shop/shorts";
 /**
  * Fetch active shop shorts for the storefront
  */

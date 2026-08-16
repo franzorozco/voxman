@@ -88,6 +88,10 @@
   position: relative;
   background-color: var(--bg-input);
   transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .shorts-upload-zone:hover {

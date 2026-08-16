@@ -27,7 +27,14 @@ class ShopProductController extends Controller
 
         // Filtro por categoría
         if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $categoryId = $request->category_id;
+            if (is_array($categoryId)) {
+                $query->whereIn('category_id', $categoryId);
+            } elseif (str_contains((string)$categoryId, ',')) {
+                $query->whereIn('category_id', explode(',', $categoryId));
+            } else {
+                $query->where('category_id', $categoryId);
+            }
         }
 
         // Búsqueda por nombre
@@ -50,9 +57,11 @@ class ShopProductController extends Controller
             'product_variants.variant_attribute_values.attribute_value.attribute',
             'product_variants.size',
             'product_variants.fit',
+            'product_variants.variant_measurements.measurement_type',
             'product_variants.inventories.branch',
             'brand',
-            'category'
+            'category',
+            'shorts'
         ])->where('slug', $slug)
           ->orWhere('id', $slug)
           ->firstOrFail();
