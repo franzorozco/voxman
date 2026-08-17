@@ -71,6 +71,7 @@ import ShopHome from "../pages/shop/Home/Home";
 import ShopCatalog from "../pages/shop/Catalog/Catalog";
 import ShopProductDetail from "../pages/shop/Product/ProductDetail";
 import ShopCartView from "../pages/shop/Cart/CartView";
+import BundleDetail from "../pages/shop/Bundle/BundleDetail";
 
 import { useThemeStore } from "../store/themeStore";
 
@@ -180,6 +181,7 @@ const AnimatedRoutes = () => {
             <Route index element={<ShopHome />} />
             <Route path="catalog" element={<ShopCatalog />} />
             <Route path="product/:id" element={<ShopProductDetail />} />
+            <Route path="bundle/:id" element={<BundleDetail />} />
             <Route path="cart" element={<ShopCartView />} />
           </Route>
         </Route>

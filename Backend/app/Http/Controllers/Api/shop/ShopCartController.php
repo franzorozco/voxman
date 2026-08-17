@@ -4,40 +4,55 @@ namespace App\Http\Controllers\Api\shop;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductVariant;
+use Illuminate\Support\Facades\Log;
 
 class ShopCartController extends Controller
 {
-    /**
-     * Get the current cart from Redis using the cart token.
-     */
+    private function getCartData($cartToken)
+    {
+        if (!$cartToken) return null;
+        $cartData = Cache::get("cart:{$cartToken}");
+        return $cartData ? json_decode($cartData, true) : null;
+    }
+
+    private function saveCartData($cartToken, $cartData)
+    {
+        // 48 hours expiration
+        Cache::put("cart:{$cartToken}", json_encode($cartData), 48 * 60 * 60);
+    }
+
+    private function recalculateTotal(&$cartData)
+    {
+        $total = 0;
+        foreach ($cartData['items'] as $item) {
+            $total += ($item['price'] * $item['quantity']);
+        }
+        $cartData['total'] = $total;
+    }
+
     public function show(Request $request)
     {
         $cartToken = $request->header('X-Cart-Token');
-
-        if (!$cartToken) {
-            return response()->json(['items' => [], 'total' => 0]);
-        }
-
-        $cartData = Redis::get("cart:{$cartToken}");
+        $cartData = $this->getCartData($cartToken);
 
         if ($cartData) {
-            return response()->json(json_decode($cartData, true));
+            return response()->json($cartData);
         }
 
         return response()->json(['items' => [], 'total' => 0]);
     }
 
-    /**
-     * Add an item to the cart. If no token is provided, generate a new one.
-     */
     public function add(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|integer',
-            'variant_id' => 'nullable|integer',
+            'product_id' => 'required|string|exists:products,id',
+            'variant_id' => 'nullable|string|exists:product_variants,id',
             'quantity' => 'required|integer|min:1',
+            'color' => 'nullable|string',
         ]);
 
         $cartToken = $request->header('X-Cart-Token');
@@ -46,19 +61,107 @@ class ShopCartController extends Controller
             $cartToken = 'cart_' . Str::uuid()->toString();
             $cartData = ['items' => [], 'total' => 0];
         } else {
-            $cartData = json_decode(Redis::get("cart:{$cartToken}"), true) ?? ['items' => [], 'total' => 0];
+            $cartData = $this->getCartData($cartToken) ?? ['items' => [], 'total' => 0];
         }
 
-        // Simplistic add logic (you'll want to check if product already exists to increase qty)
-        $cartData['items'][] = [
-            'product_id' => $request->product_id,
-            'variant_id' => $request->variant_id,
-            'quantity' => $request->quantity,
-            // Calculate price...
-        ];
+        $productId = $request->product_id;
+        $variantId = $request->variant_id;
+        $quantity = $request->quantity;
+        $color = $request->color;
 
-        // Save back to Redis with 48 hours expiration
-        Redis::setex("cart:{$cartToken}", 48 * 60 * 60, json_encode($cartData));
+        // Load Product and Variant
+        $product = Product::with(['product_images', 'attribute_value_images.attributeValue'])->find($productId);
+        $variant = null;
+        if ($variantId) {
+            $variant = ProductVariant::with(['size', 'variant_images', 'variant_attribute_values.attribute_value.attribute'])->find($variantId);
+        }
+
+        if (!$product) {
+            return response()->json(['error' => 'Product not found'], 404);
+        }
+
+        // Determine Name, Price, Size, Color
+        $name = $product->name;
+        $price = $product->base_price;
+        $sizeName = null;
+        $colorName = $color;
+        $imageUrl = $product->cover_image;
+
+        if ($variant) {
+            if ($variant->price !== null) {
+                $price = $variant->price;
+            }
+            if ($variant->size) {
+                $sizeName = $variant->size->name;
+            }
+            
+            // Try to extract color from variant attributes if not provided directly
+            if (!$colorName && $variant->variant_attribute_values) {
+                foreach ($variant->variant_attribute_values as $vav) {
+                    if (strtolower($vav->attribute_value->attribute->name) === 'color') {
+                        $colorName = $vav->attribute_value->value;
+                    }
+                }
+            }
+        }
+
+        // Determine Image Logic
+        $finalImage = null;
+
+        // 1. Color Image
+        if ($colorName && $product->attribute_value_images) {
+            foreach ($product->attribute_value_images as $avi) {
+                if ($avi->attributeValue && $avi->attributeValue->value === $colorName) {
+                    $finalImage = $avi->url;
+                    break;
+                }
+            }
+        }
+
+        // 2. Variant Image
+        if (!$finalImage && $variant && $variant->variant_images && $variant->variant_images->count() > 0) {
+            $finalImage = $variant->variant_images->first()->url;
+        }
+
+        // 3. Product Image
+        if (!$finalImage && $product->product_images && $product->product_images->count() > 0) {
+            $finalImage = $product->product_images->first()->url;
+        }
+
+        // 4. Cover Image
+        if (!$finalImage) {
+            $finalImage = $product->cover_image;
+        }
+
+        $imageUrl = $finalImage;
+
+        // Check if item already exists
+        $foundIndex = -1;
+        foreach ($cartData['items'] as $index => $item) {
+            if ($item['product_id'] == $productId && $item['variant_id'] == $variantId) {
+                $foundIndex = $index;
+                break;
+            }
+        }
+
+        if ($foundIndex >= 0) {
+            $cartData['items'][$foundIndex]['quantity'] += $quantity;
+        } else {
+            $cartData['items'][] = [
+                'id' => Str::uuid()->toString(),
+                'product_id' => $productId,
+                'variant_id' => $variantId,
+                'name' => $name,
+                'price' => (float)$price,
+                'quantity' => $quantity,
+                'size' => $sizeName,
+                'color' => $colorName,
+                'image' => $imageUrl
+            ];
+        }
+
+        $this->recalculateTotal($cartData);
+        $this->saveCartData($cartToken, $cartData);
 
         return response()->json([
             'cart_token' => $cartToken,
@@ -68,13 +171,79 @@ class ShopCartController extends Controller
 
     public function update(Request $request)
     {
-        // Implement logic to update quantity of an item
-        return response()->json(['message' => 'Not implemented yet']);
+        $request->validate([
+            'product_id' => 'required|string',
+            'variant_id' => 'nullable|string',
+            'quantity' => 'required|integer|min:0',
+        ]);
+
+        $cartToken = $request->header('X-Cart-Token');
+        if (!$cartToken) {
+            return response()->json(['error' => 'No cart token provided'], 400);
+        }
+
+        $cartData = $this->getCartData($cartToken);
+        if (!$cartData) {
+            return response()->json(['error' => 'Cart not found'], 404);
+        }
+
+        $productId = $request->product_id;
+        $variantId = $request->variant_id;
+        $quantity = $request->quantity;
+
+        $updated = false;
+        foreach ($cartData['items'] as $index => $item) {
+            if ($item['product_id'] == $productId && $item['variant_id'] == $variantId) {
+                if ($quantity == 0) {
+                    unset($cartData['items'][$index]);
+                } else {
+                    $cartData['items'][$index]['quantity'] = $quantity;
+                }
+                $updated = true;
+                break;
+            }
+        }
+
+        if ($updated) {
+            $cartData['items'] = array_values($cartData['items']); // Re-index array
+            $this->recalculateTotal($cartData);
+            $this->saveCartData($cartToken, $cartData);
+        }
+
+        return response()->json($cartData);
     }
 
     public function remove(Request $request)
     {
-        // Implement logic to remove an item
-        return response()->json(['message' => 'Not implemented yet']);
+        $request->validate([
+            'product_id' => 'required|string',
+            'variant_id' => 'nullable|string',
+        ]);
+
+        $cartToken = $request->header('X-Cart-Token');
+        if (!$cartToken) {
+            return response()->json(['error' => 'No cart token provided'], 400);
+        }
+
+        $cartData = $this->getCartData($cartToken);
+        if (!$cartData) {
+            return response()->json(['error' => 'Cart not found'], 404);
+        }
+
+        $productId = $request->product_id;
+        $variantId = $request->variant_id;
+
+        $initialCount = count($cartData['items']);
+        $cartData['items'] = array_filter($cartData['items'], function($item) use ($productId, $variantId) {
+            return !($item['product_id'] == $productId && $item['variant_id'] == $variantId);
+        });
+
+        if (count($cartData['items']) !== $initialCount) {
+            $cartData['items'] = array_values($cartData['items']);
+            $this->recalculateTotal($cartData);
+            $this->saveCartData($cartToken, $cartData);
+        }
+
+        return response()->json($cartData);
     }
 }

@@ -14,7 +14,9 @@ const ShopNavbar = () => {
 
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bounce, setBounce] = useState(false);
   const menuRef = useRef();
+  const prevCountRef = useRef(0);
 
   const getInitials = (name) => {
     if (!name) return "?";
@@ -42,6 +44,14 @@ const ShopNavbar = () => {
   };
 
   const cartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  useEffect(() => {
+    if (cartItemCount > prevCountRef.current) {
+      setBounce(true);
+      setTimeout(() => setBounce(false), 300);
+    }
+    prevCountRef.current = cartItemCount;
+  }, [cartItemCount]);
 
   return (
     <header className="shop-nav-header">
@@ -80,7 +90,7 @@ const ShopNavbar = () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
-            {cartItemCount > 0 && <span className="cart-badge">{cartItemCount}</span>}
+            {cartItemCount > 0 && <span className={`cart-badge ${bounce ? 'bounce' : ''}`}>{cartItemCount}</span>}
           </Link>
 
           {!user ? (

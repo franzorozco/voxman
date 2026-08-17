@@ -3,7 +3,7 @@ import { useParams, useLocation, Link } from 'react-router-dom';
 import { getProduct, getProducts } from '../../../api/shop/products';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
 import { API_BASE_URL } from '../../../config/api';
-import { ChevronDown, ChevronUp, Share2, Copy } from 'lucide-react';
+import { ChevronDown, ChevronUp, Share2, Copy, Check } from 'lucide-react';
 import { VideoPlayer } from '../../../components/ui/videoHelpers';
 import './ProductDetail.css';
 
@@ -79,6 +79,9 @@ const ProductDetail = () => {
   
   // Accordions
   const [openAccordion, setOpenAccordion] = useState('description');
+  
+  // Animation State
+  const [addedAnimation, setAddedAnimation] = useState(false);
 
   const addToCart = useShopCartStore((state) => state.addToCart);
   const isCartLoading = useShopCartStore((state) => state.isLoading);
@@ -200,7 +203,7 @@ const ProductDetail = () => {
     updateDisplayImages(product, colorName);
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     let variantId = null;
     if (product.product_variants?.length > 0) {
       const matchedVariant = product.product_variants.find(v => {
@@ -208,10 +211,16 @@ const ProductDetail = () => {
         const matchesSize = selectedSize ? v.size?.name === selectedSize : true;
         return matchesColor && matchesSize;
       });
-      variantId = matchedVariant?.id;
+      variantId = matchedVariant?.id || null;
     }
     
-    addToCart(product.id, variantId, 1);
+    try {
+      await addToCart(product.id, variantId, 1, selectedColor);
+      setAddedAnimation(true);
+      setTimeout(() => setAddedAnimation(false), 2000);
+    } catch (e) {
+      console.error("Could not add to cart:", e);
+    }
   };
 
   if (isLoading) {
@@ -475,11 +484,16 @@ const ProductDetail = () => {
 
           {/* Add to Cart */}
           <button
-            className="add-to-cart-btn"
+            className={`add-to-cart-btn ${addedAnimation ? 'bg-green-500 text-white border-green-500' : ''}`}
             onClick={handleAddToCart}
-            disabled={isCartLoading || (availableSizes.length > 0 && !selectedSize)}
+            disabled={isCartLoading || (availableSizes.length > 0 && !selectedSize) || addedAnimation}
+            style={addedAnimation ? { backgroundColor: '#10b981', color: '#fff', borderColor: '#10b981' } : {}}
           >
-            {isCartLoading ? 'Añadiendo...' : 'Añadir a la cesta'}
+            {isCartLoading ? 'Añadiendo...' : addedAnimation ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Check size={18} /> ¡Añadido!
+              </span>
+            ) : 'Añadir a la cesta'}
           </button>
 
           {/* Accordions */}

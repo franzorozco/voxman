@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { getCart, addToCart as apiAddToCart } from '../../api/shop/cart';
+import { getCart, addToCart as apiAddToCart, updateCartItem as apiUpdateCartItem, removeCartItem as apiRemoveCartItem } from '../../api/shop/cart';
 
 const useShopCartStore = create(
   persist(
@@ -27,13 +27,14 @@ const useShopCartStore = create(
       },
 
       // Add a product to the cart
-      addToCart: async (productId, variantId, quantity) => {
+      addToCart: async (productId, variantId, quantity, color = null) => {
         set({ isLoading: true });
         try {
           const response = await apiAddToCart({
             product_id: productId,
             variant_id: variantId,
             quantity: quantity,
+            color: color
           });
 
           // Save the new cart token if the backend generated one
@@ -49,13 +50,51 @@ const useShopCartStore = create(
             total: response.data.cart.total || 0 
           });
         } catch (error) {
-          console.error('Failed to add to cart:', error);
+          console.error('Failed to add to cart:', error.response?.data || error);
+          throw error; // Rethrow to let the UI know it failed
         } finally {
           set({ isLoading: false });
         }
       },
 
       // Additional methods: updateQuantity, removeFromCart, clearCart...
+      updateQuantity: async (productId, variantId, quantity) => {
+        set({ isLoading: true });
+        try {
+          const response = await apiUpdateCartItem({
+            product_id: productId,
+            variant_id: variantId,
+            quantity: quantity,
+          });
+          set({ 
+            items: response.data.items || [], 
+            total: response.data.total || 0 
+          });
+        } catch (error) {
+          console.error('Failed to update quantity:', error);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      removeFromCart: async (productId, variantId) => {
+        set({ isLoading: true });
+        try {
+          const response = await apiRemoveCartItem({
+            product_id: productId,
+            variant_id: variantId,
+          });
+          set({ 
+            items: response.data.items || [], 
+            total: response.data.total || 0 
+          });
+        } catch (error) {
+          console.error('Failed to remove from cart:', error);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
       clearCart: () => {
         set({ cartToken: null, items: [], total: 0 });
         localStorage.removeItem('shop_cart_token');

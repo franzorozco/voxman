@@ -107,6 +107,11 @@
   font-weight: bold;
   border-radius: 50%;
   padding: 2px 6px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cart-badge.bounce {
+  transform: scale(1.5);
 }
 
 /* AUTH BUTTONS */

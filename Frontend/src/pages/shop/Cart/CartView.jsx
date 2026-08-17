@@ -1,15 +1,39 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Minus, Plus, Trash2 } from 'lucide-react';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
+import { API_BASE_URL } from '../../../config/api';
 import './CartView.css';
 
 const CartView = () => {
-  const { items, total, fetchCart, isLoading } = useShopCartStore();
+  const { items, total, fetchCart, updateQuantity, removeFromCart, isLoading } = useShopCartStore();
+  const [removingId, setRemovingId] = useState(null);
 
   useEffect(() => {
     fetchCart();
   }, []);
 
-  if (isLoading) return <div className="p-8 text-center cart-view-container">Cargando carrito...</div>;
+  const getImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `${API_BASE_URL}${url}`;
+  };
+
+  const handleUpdateQuantity = async (productId, variantId, qty) => {
+    if (qty < 1) return;
+    await updateQuantity(productId, variantId, qty);
+  };
+
+  const handleRemove = async (productId, variantId, uniqueId) => {
+    setRemovingId(uniqueId);
+    // Wait for animation
+    setTimeout(async () => {
+      await removeFromCart(productId, variantId);
+      setRemovingId(null);
+    }, 300);
+  };
+
+  if (isLoading && items.length === 0) return <div className="p-8 text-center cart-view-container">Cargando carrito...</div>;
 
   return (
     <div className="cart-view-container">
@@ -24,32 +48,72 @@ const CartView = () => {
               <p className="text-center cart-view-empty">Tu carrito está vacío.</p>
             ) : (
               <ul role="list" className="cart-item-list">
-                {items.map((item) => (
-                  <li key={item.id} className="flex py-6 cart-item-container">
-                    <div className="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden cart-item-img-placeholder sm:w-32 sm:h-32">
-                        {/* Placeholder image */}
-                    </div>
+                {items.map((item) => {
+                  const isRemoving = removingId === item.id;
+                  return (
+                    <li key={item.id} className={`flex py-6 cart-item-container transition-all duration-300 ${isRemoving ? 'opacity-0 translate-x-4' : 'opacity-100'}`}>
+                      <div className="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden bg-gray-100 sm:w-32 sm:h-32">
+                        {item.image ? (
+                          <img src={getImageUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Sin imagen</div>
+                        )}
+                      </div>
 
-                    <div className="ml-4 flex-1 flex flex-col sm:ml-6">
-                      <div>
-                        <div className="flex justify-between">
-                          <h4 className="text-sm">
-                            <a href={`/shop/product/${item.product_id}`} className="font-medium cart-item-title">
-                              Producto #{item.product_id}
-                            </a>
-                          </h4>
+                      <div className="ml-4 flex-1 flex flex-col sm:ml-6">
+                        <div>
+                          <div className="flex justify-between">
+                            <h4 className="text-base font-medium cart-item-title">
+                              <Link to={`/shop/product/${item.product_id}${item.color ? `?color=${encodeURIComponent(item.color)}` : ''}`}>
+                                {item.name}
+                              </Link>
+                            </h4>
+                          </div>
+                          
+                          {(item.color || item.size) && (
+                            <p className="mt-1 text-sm cart-item-subtitle">
+                              {item.color} {item.color && item.size ? '•' : ''} {item.size ? `Talla ${item.size}` : ''}
+                            </p>
+                          )}
                         </div>
-                        <p className="mt-1 text-sm cart-item-subtitle">Cantidad: {item.quantity}</p>
+                        
+                        <div className="mt-4 flex-1 flex items-end justify-between text-sm">
+                          <p className="font-medium text-base cart-item-price">Bs {parseFloat(item.price).toFixed(2)}</p>
+                          
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
+                              <button 
+                                type="button" 
+                                className="qty-btn"
+                                onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity - 1)}
+                                disabled={item.quantity <= 1 || isLoading}
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <span className="qty-display">{item.quantity}</span>
+                              <button 
+                                type="button" 
+                                className="qty-btn"
+                                onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity + 1)}
+                                disabled={isLoading}
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+
+                            <button 
+                              type="button" 
+                              className="font-medium cart-item-remove-btn flex items-center gap-1"
+                              onClick={() => handleRemove(item.product_id, item.variant_id, item.id)}
+                            >
+                              <Trash2 size={16} /> <span className="hidden sm:inline">Eliminar</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-4 flex-1 flex items-end justify-between text-sm">
-                        <p className="font-medium cart-item-price">Bs {item.price}</p>
-                        <button type="button" className="font-medium cart-item-remove-btn">
-                          <span>Eliminar</span>
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>
@@ -61,7 +125,7 @@ const CartView = () => {
               <dl className="space-y-4">
                 <div className="flex items-center justify-between">
                   <dt className="text-base font-medium cart-summary-text">Total estimado</dt>
-                  <dd className="text-base font-medium cart-summary-text">Bs {total}</dd>
+                  <dd className="text-xl font-semibold cart-summary-text">Bs {parseFloat(total).toFixed(2)}</dd>
                 </div>
               </dl>
 

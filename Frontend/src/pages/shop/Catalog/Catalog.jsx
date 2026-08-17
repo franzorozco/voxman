@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
 import { getCategories } from '../../../api/shop/categories';
 import { API_BASE_URL } from '../../../config/api';
@@ -8,6 +8,7 @@ import './Catalog.css';
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialCategory = searchParams.get('category');
 
   const [products, setProducts] = useState([]);
@@ -154,7 +155,8 @@ const Catalog = () => {
             color: mainImg.attribute_value?.value || '',
             price: product.base_price,
             image: mainImg.url,
-            image2: secondImg.url
+            image2: secondImg.url,
+            is_bundle: product.is_bundle
           });
         });
       } else {
@@ -177,7 +179,8 @@ const Catalog = () => {
                 color: attrKey,
                 price: variant.price || product.base_price,
                 image: variant.variant_images[0].url,
-                image2: secondImg.url
+                image2: secondImg.url,
+                is_bundle: product.is_bundle
               });
             }
           }
@@ -193,7 +196,8 @@ const Catalog = () => {
               name: product.name,
               price: product.base_price,
               image: imageUrl,
-              image2: imageUrl2
+              image2: imageUrl2,
+              is_bundle: product.is_bundle
             });
           }
         }
@@ -208,7 +212,11 @@ const Catalog = () => {
 
   const handleProductClick = (e, product) => {
     e.preventDefault();
-    setExpandedProductId(expandedProductId === product.id ? null : product.id);
+    if (product.is_bundle) {
+      navigate(`/shop/bundle/${product.id}`);
+    } else {
+      setExpandedProductId(expandedProductId === product.id ? null : product.id);
+    }
   };
 
   // Renderizar grid
@@ -243,9 +251,28 @@ const Catalog = () => {
                         borderRadius: '8px',
                         overflow: 'hidden',
                         outline: isExpanded ? '2px solid var(--text-main)' : 'none',
-                        transition: 'outline 0.2s ease'
+                        transition: 'outline 0.2s ease',
+                        position: 'relative'
                       }}
                     >
+                      {item.is_bundle && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          backgroundColor: '#111',
+                          color: '#fff',
+                          fontSize: '10px',
+                          fontWeight: '700',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '1px',
+                          zIndex: 2
+                        }}>
+                          Conjunto
+                        </div>
+                      )}
                       {imageUrl ? (
                         <img
                           src={getImageUrl(imageUrl)}
@@ -358,12 +385,34 @@ const Catalog = () => {
           displayItems.map((item) => {
             const isVividMode = imageMode === 'vivido';
             const imageUrl = isVividMode ? item.image2 : item.image;
+            const linkUrl = item.is_bundle 
+              ? `/shop/bundle/${item.slug}` 
+              : `/shop/product/${item.slug}${item.color ? `?color=${encodeURIComponent(item.color)}` : ''}`;
+            
             return (
-              <Link key={item.id} to={`/shop/product/${item.slug}${item.color ? `?color=${encodeURIComponent(item.color)}` : ''}`} className="group relative block">
+              <Link key={item.id} to={linkUrl} className="group relative block">
                 <div
                   className="group-hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: '#f5f5f5', aspectRatio: '1 / 1', borderRadius: '8px', overflow: 'hidden' }}
+                  style={{ backgroundColor: '#f5f5f5', aspectRatio: '1 / 1', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}
                 >
+                  {item.is_bundle && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      backgroundColor: '#111',
+                      color: '#fff',
+                      fontSize: '10px',
+                      fontWeight: '700',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      zIndex: 2
+                    }}>
+                      Conjunto
+                    </div>
+                  )}
                   {imageUrl ? (
                     <img
                       key={imageUrl}

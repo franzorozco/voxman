@@ -61,7 +61,13 @@ class ShopProductController extends Controller
             'product_variants.inventories.branch',
             'brand',
             'category',
-            'shorts'
+            'shorts',
+            'bundle_items.product.product_images',
+            'bundle_items.product.attribute_value_images.attributeValue',
+            'bundle_items.variant.variant_images',
+            'bundle_items.variant.variant_attribute_values.attribute_value.attribute',
+            'bundle_items.variant.size',
+            'bundle_items.variant.fit'
         ])->where('slug', $slug)
           ->orWhere('id', $slug)
           ->firstOrFail();
