@@ -32,6 +32,9 @@ Route::prefix('v1/shop')->group(function () {
     Route::post('/login', [ShopAuthController::class, 'login']);
     Route::post('/register', [ShopAuthController::class, 'register']);
 
+    // Rutas del checkout (Guest & User)
+    Route::post('/checkout/guest-init', [ShopCheckoutController::class, 'initGuestCheckout']);
+
     // Rutas del carrito (Protegidas por Cart Token manual vía Interceptor)
     Route::prefix('cart')->group(function () {
         // En un caso real, un middleware específico podría verificar el X-Cart-Token

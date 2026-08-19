@@ -1,112 +1,139 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
+import { useThemeStore } from '../../../store/themeStore';
 import { API_BASE_URL } from '../../../config/api';
+import CheckoutAuthModal from '../../../components/ui/CheckoutAuthModal';
+import CheckoutLoginModal from '../../../components/ui/CheckoutLoginModal';
+import CheckoutGuestModal from '../../../components/ui/CheckoutGuestModal';
 import './CartView.css';
 
 const CartView = () => {
   const { items, total, fetchCart, updateQuantity, removeFromCart, isLoading } = useShopCartStore();
+  const { isDark } = useThemeStore();
   const [removingId, setRemovingId] = useState(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [fetchCart]);
 
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return `${API_BASE_URL}${url}`;
-  };
-
-  const handleUpdateQuantity = async (productId, variantId, qty) => {
-    if (qty < 1) return;
-    await updateQuantity(productId, variantId, qty);
+  const handleUpdateQuantity = async (productId, variantId, quantity) => {
+    if (quantity < 1) return;
+    await updateQuantity(productId, variantId, quantity);
   };
 
   const handleRemove = async (productId, variantId, uniqueId) => {
     setRemovingId(uniqueId);
-    // Wait for animation
-    setTimeout(async () => {
-      await removeFromCart(productId, variantId);
+    await removeFromCart(productId, variantId);
+    setTimeout(() => {
       setRemovingId(null);
     }, 300);
   };
 
-  if (isLoading && items.length === 0) return <div className="p-8 text-center cart-view-container">Cargando carrito...</div>;
+  const handleCheckoutClick = () => {
+    // Determine if user is logged in here in the future
+    // For now, always show modal
+    setIsAuthModalOpen(true);
+  };
+
+  const handleModalOption = (option) => {
+    setIsAuthModalOpen(false);
+    if (option === 'user') {
+      setTimeout(() => setIsLoginModalOpen(true), 300);
+    } else if (option === 'guest') {
+      setTimeout(() => setIsGuestModalOpen(true), 300);
+    }
+  };
+
+  const getImageUrl = (path) => {
+    if (!path) return `${API_BASE_URL}/storage/products/default.jpg`;
+    if (path.startsWith('http')) return path;
+    return `${API_BASE_URL}/storage/${path}`;
+  };
 
   return (
-    <div className="cart-view-container">
-      <div className="max-w-2xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-0">
-        <h1 className="text-3xl font-extrabold text-center tracking-tight cart-view-title sm:text-4xl">Carrito de Compras</h1>
+    <div className="cart-page-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <h1 className="text-3xl font-extrabold tracking-tight mb-10 cart-title text-center">Cesta de Compra</h1>
 
-        <form className="mt-12">
+      <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
+        {/* CART ITEMS */}
+        <div className="lg:col-span-7">
           <section aria-labelledby="cart-heading">
-            <h2 id="cart-heading" className="sr-only">Items in your shopping cart</h2>
+            <h2 id="cart-heading" className="sr-only">
+              Artículos en tu cesta
+            </h2>
 
             {items.length === 0 ? (
-              <p className="text-center cart-view-empty">Tu carrito está vacío.</p>
+              <div className="text-center py-12">
+                <p className="text-lg cart-empty-text mb-4">Tu cesta está vacía</p>
+                <Link to="/shop" className="text-indigo-600 hover:text-indigo-500 font-medium cart-empty-link">
+                  Continuar comprando
+                </Link>
+              </div>
             ) : (
-              <ul role="list" className="cart-item-list">
-                {items.map((item) => {
-                  const isRemoving = removingId === item.id;
+              <ul role="list" className="border-t border-b border-gray-200 divide-y divide-gray-200 cart-items-list">
+                {items.map((item, index) => {
+                  const uniqueId = item.id || `${item.product_id}-${item.variant_id || 'none'}-${index}`;
                   return (
-                    <li key={item.id} className={`flex py-6 cart-item-container transition-all duration-300 ${isRemoving ? 'opacity-0 translate-x-4' : 'opacity-100'}`}>
-                      <div className="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden bg-gray-100 sm:w-32 sm:h-32">
-                        {item.image ? (
-                          <img src={getImageUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Sin imagen</div>
-                        )}
+                    <li key={uniqueId} className={`flex py-6 cart-item ${removingId === uniqueId ? 'cart-item-removing' : ''}`}>
+                      <div className="flex-shrink-0">
+                        <img
+                          src={getImageUrl(item.image)}
+                          alt={item.name}
+                          className="w-24 h-24 rounded-md object-center object-cover sm:w-32 sm:h-32 cart-item-img"
+                        />
                       </div>
 
                       <div className="ml-4 flex-1 flex flex-col sm:ml-6">
                         <div>
                           <div className="flex justify-between">
-                            <h4 className="text-base font-medium cart-item-title">
-                              <Link to={`/shop/product/${item.product_id}${item.color ? `?color=${encodeURIComponent(item.color)}` : ''}`}>
+                            <h4 className="text-sm cart-item-name">
+                              <Link to={`/shop/product/${item.product_id}`} className="font-medium hover:underline">
                                 {item.name}
                               </Link>
                             </h4>
+                            <p className="ml-4 text-sm font-medium cart-item-price">Bs {parseFloat(item.price).toFixed(2)}</p>
                           </div>
                           
                           {(item.color || item.size) && (
-                            <p className="mt-1 text-sm cart-item-subtitle">
-                              {item.color} {item.color && item.size ? '•' : ''} {item.size ? `Talla ${item.size}` : ''}
-                            </p>
+                            <div className="mt-1 text-sm cart-item-attributes space-y-1">
+                              <p>{item.color} {item.color && item.size ? '•' : ''} {item.size ? `Talla ${item.size}` : ''}</p>
+                            </div>
                           )}
                         </div>
-                        
-                        <div className="mt-4 flex-1 flex items-end justify-between text-sm">
-                          <p className="font-medium text-base cart-item-price">Bs {parseFloat(item.price).toFixed(2)}</p>
-                          
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1">
-                              <button 
-                                type="button" 
-                                className="qty-btn"
-                                onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity - 1)}
-                                disabled={item.quantity <= 1 || isLoading}
-                              >
-                                <Minus size={14} />
-                              </button>
-                              <span className="qty-display">{item.quantity}</span>
-                              <button 
-                                type="button" 
-                                className="qty-btn"
-                                onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity + 1)}
-                                disabled={isLoading}
-                              >
-                                <Plus size={14} />
-                              </button>
-                            </div>
 
-                            <button 
-                              type="button" 
-                              className="font-medium cart-item-remove-btn flex items-center gap-1"
-                              onClick={() => handleRemove(item.product_id, item.variant_id, item.id)}
+                        <div className="mt-4 flex-1 flex items-end justify-between">
+                          <div className="flex items-center border rounded-md cart-quantity-container">
+                            <button
+                              type="button"
+                              className="p-2 cart-quantity-btn"
+                              onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity - 1)}
+                              disabled={item.quantity <= 1 || isLoading}
                             >
-                              <Trash2 size={16} /> <span className="hidden sm:inline">Eliminar</span>
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="px-4 text-sm font-medium cart-quantity-text">{item.quantity}</span>
+                            <button
+                              type="button"
+                              className="p-2 cart-quantity-btn"
+                              onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity + 1)}
+                              disabled={isLoading}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="ml-4">
+                            <button
+                              type="button"
+                              className="text-sm font-medium cart-remove-btn"
+                              onClick={() => handleRemove(item.product_id, item.variant_id, uniqueId)}
+                            >
+                              <Trash2 className="h-5 w-5" />
                             </button>
                           </div>
                         </div>
@@ -117,30 +144,62 @@ const CartView = () => {
               </ul>
             )}
           </section>
+        </div>
 
-          {items.length > 0 && (
-            <section aria-labelledby="summary-heading" className="mt-10 cart-summary-container rounded-lg px-4 py-6 sm:p-6 lg:p-8">
-              <h2 id="summary-heading" className="sr-only">Order summary</h2>
+        {/* ORDER SUMMARY */}
+        <div className="mt-16 bg-gray-50 rounded-lg px-4 py-6 sm:p-6 lg:p-8 lg:mt-0 lg:col-span-5 cart-summary-box">
+          <h2 className="text-lg font-medium cart-summary-title">Resumen de compra</h2>
 
-              <dl className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <dt className="text-base font-medium cart-summary-text">Total estimado</dt>
-                  <dd className="text-xl font-semibold cart-summary-text">Bs {parseFloat(total).toFixed(2)}</dd>
-                </div>
-              </dl>
+          <dl className="mt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <dt className="text-sm cart-summary-label">Subtotal</dt>
+              <dd className="text-sm font-medium cart-summary-value">Bs {total.toFixed(2)}</dd>
+            </div>
+            
+            <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+              <dt className="text-base font-medium cart-summary-total-label">Total estimado</dt>
+              <dd className="text-base font-bold cart-summary-total-value">Bs {total.toFixed(2)}</dd>
+            </div>
+          </dl>
 
-              <div className="mt-6">
-                <button
-                  type="button"
-                  className="w-full border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium cart-summary-btn focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50"
-                >
-                  Proceder al Checkout
-                </button>
-              </div>
-            </section>
-          )}
-        </form>
+          <div className="mt-6">
+            <button
+              onClick={handleCheckoutClick}
+              disabled={items.length === 0}
+              className={`w-full cart-checkout-btn py-3 px-4 rounded-md shadow-sm text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 ${
+                items.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              Proceder al Checkout
+            </button>
+          </div>
+          <div className="mt-4 text-center">
+             <Link to="/shop" className="text-sm font-medium cart-continue-link">
+               o Continuar comprando<span aria-hidden="true"> &rarr;</span>
+             </Link>
+          </div>
+        </div>
       </div>
+
+      <CheckoutAuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        onSelectOption={handleModalOption}
+        theme={isDark ? 'dark' : 'light'} 
+      />
+
+      <CheckoutLoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        theme={isDark ? 'dark' : 'light'}
+      />
+
+      <CheckoutGuestModal 
+        isOpen={isGuestModalOpen} 
+        onClose={() => setIsGuestModalOpen(false)} 
+        onSuccessRedirect="/shop/checkout"
+        theme={isDark ? 'dark' : 'light'}
+      />
     </div>
   );
 };
