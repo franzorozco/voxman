@@ -40,7 +40,8 @@ import {
   Ticket,
   AlertTriangle,
   DollarSign,
-  Film
+  Film,
+  Settings2
 } from "lucide-react";
 
 export default function DashboardLayout() {
@@ -318,6 +319,9 @@ export default function DashboardLayout() {
 
                 <CanAccess permission="view_audit_logs">
                   <NavItem to="/dashboard/logs" icon={FileText} label="Auditoría (Logs)" />
+                </CanAccess>
+                <CanAccess permission="manage_settings">
+                  <NavItem to="/dashboard/system-settings" icon={Settings2} label="Ajustes Globales" />
                 </CanAccess>
               </div>
             </CanAccess>

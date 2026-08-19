@@ -570,16 +570,18 @@ export default function Inventory() {
                         setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
                       };
 
-                      const groupProdImg = group.product?.product_images?.find(img => img.is_main) || group.product?.product_images?.[0];
-                        const groupImgUrl = groupProdImg?.url || groupProdImg?.image_path;
-                        let groupFinalImgUrl = "/placeholder.png";
-                        if (groupImgUrl) {
-                          if (groupImgUrl.startsWith("http")) {
-                            groupFinalImgUrl = groupImgUrl;
-                          } else {
-                            groupFinalImgUrl = `${API_BASE_URL}${groupImgUrl.startsWith('/') ? '' : '/'}${groupImgUrl.replace('storage/', '')}`;
-                          }
+                      const prodImages = group.product?.images || group.product?.product_images || [];
+                      const groupProdImg = prodImages.find(img => img.is_main) || prodImages[0];
+                      const groupImgUrl = groupProdImg?.url || groupProdImg?.image_path;
+                      let groupFinalImgUrl = "/placeholder.png";
+                      if (groupImgUrl) {
+                        if (groupImgUrl.startsWith("http")) {
+                          groupFinalImgUrl = groupImgUrl;
+                        } else {
+                          // Ensure we don't strip /storage if it's required, just append to API base
+                          groupFinalImgUrl = `${API_BASE_URL}${groupImgUrl.startsWith('/') ? '' : '/'}${groupImgUrl}`;
                         }
+                      }
 
                       const isGroupLowStock = group.items.some(i => i.stock <= i.min_stock && i.stock > 0);
                       const isGroupOutOfStock = group.items.every(i => i.stock <= 0);
@@ -654,7 +656,8 @@ export default function Inventory() {
                                 if (colorImg) imgUrl = colorImg.url || colorImg.image_path;
                               }
                               if (!imgUrl) {
-                                const prodImg = product?.product_images?.find(img => img.is_main) || product?.product_images?.[0];
+                                const fallBackImages = product?.images || product?.product_images || [];
+                                const prodImg = fallBackImages.find(img => img.is_main) || fallBackImages[0];
                                 imgUrl = prodImg?.url || prodImg?.image_path;
                               }
                               let finalImgUrl = "/placeholder.png";
@@ -662,7 +665,7 @@ export default function Inventory() {
                                 if (imgUrl.startsWith("http")) {
                                   finalImgUrl = imgUrl;
                                 } else {
-                                  finalImgUrl = `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl.replace('storage/', '')}`;
+                                  finalImgUrl = `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
                                 }
                               }
 

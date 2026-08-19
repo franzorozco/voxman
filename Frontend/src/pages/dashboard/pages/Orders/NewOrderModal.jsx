@@ -13,7 +13,7 @@ import "../Carts/Carts.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import CanAccess from '../../../../components/ui/CanAccess';
-export default function NewOrderModal({ editData, onClose, onSuccess }) {
+export default function NewOrderModal({ editData, mode = "create", onClose, onSuccess }) {
   const [step, setStep] = useState(1); // 1: Products, 2: Delivery Details
   const [loading, setLoading] = useState(false);
   
@@ -350,60 +350,68 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     }
 
     setCartItems(prev => {
-      const existingItemIndex = prev.findIndex(item => item.variant.id === variant.id);
-      if (existingItemIndex >= 0) {
-        const item = prev[existingItemIndex];
+      // Find a row for this variant that can accept +1 quantity (has stock available)
+      const existingItemIndex = prev.findIndex(item => {
+        if (item.variant.id !== variant.id) return false;
         const currentQty = parseInt(item.quantity, 10);
-        
         const branchInventory = item.branch_id 
           ? item.variant.inventories?.find(inv => inv.branch_id === item.branch_id || inv.branch?.id === item.branch_id)
           : null;
-        
         const currentMaxStock = branchInventory 
           ? parseInt(branchInventory.stock || branchInventory.quantity || 0, 10)
           : totalStock;
+        return currentQty + 1 <= currentMaxStock;
+      });
 
-        if (currentQty + 1 > currentMaxStock) {
-          toast.error(`No puedes agregar más. El stock máximo disponible es ${currentMaxStock}.`);
-          return prev;
-        }
-        
+      if (existingItemIndex >= 0) {
+        const item = prev[existingItemIndex];
         const newItems = [...prev];
-        newItems[existingItemIndex] = { ...item, quantity: currentQty + 1 };
+        newItems[existingItemIndex] = { ...item, quantity: parseInt(item.quantity, 10) + 1 };
         return newItems;
       }
       
-      // Try to auto-select a branch if only one has stock
       const availableBranches = variant.inventories?.filter(inv => parseInt(inv.stock || inv.quantity || 0, 10) >= 1) || [];
       const autoBranchId = availableBranches.length === 1 ? availableBranches[0].branch?.id : null;
 
-      return [...prev, { variant, product, quantity: 1, price: variant.price, maxStock: totalStock, branch_id: autoBranchId }];
+      return [...prev, { _id: Date.now().toString() + Math.random(), variant, product, quantity: 1, price: variant.price, maxStock: totalStock, branch_id: autoBranchId }];
     });
 
     setSearchProduct('');
     setIsProductDropdownOpen(false);
   };
 
-  const updateQuantity = (variantId, delta) => {
+  const updateQuantity = (itemId, delta) => {
     setCartItems(prev => {
-      const index = prev.findIndex(item => item.variant.id === variantId);
+      const index = prev.findIndex(item => item._id === itemId);
       if (index === -1) return prev;
       
       const item = prev[index];
       const newQuantity = parseInt(item.quantity, 10) + parseInt(delta, 10);
       
       if (newQuantity > 0) {
-        const branchInventory = item.branch_id 
-          ? item.variant.inventories?.find(inv => inv.branch_id === item.branch_id || inv.branch?.id === item.branch_id)
-          : null;
-        
-        const currentMaxStock = branchInventory 
-          ? parseInt(branchInventory.stock || branchInventory.quantity || 0, 10)
-          : parseInt(item.maxStock, 10);
+        if (delta > 0) {
+          const totalRequestedOtherRows = prev
+            .filter(i => i.variant.id === item.variant.id && i._id !== itemId)
+            .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
+            
+          if (newQuantity + totalRequestedOtherRows > parseInt(item.maxStock, 10)) {
+            toast.error(`Has alcanzado el stock total disponible (${item.maxStock}) para este producto.`);
+            return prev;
+          }
 
-        if (newQuantity > currentMaxStock) {
-          toast.error(`Stock insuficiente. El máximo disponible es ${currentMaxStock}.`);
-          return prev;
+          if (item.branch_id) {
+            const branchInventory = item.variant.inventories?.find(inv => inv.branch_id === item.branch_id || inv.branch?.id === item.branch_id);
+            const branchStock = parseInt(branchInventory?.stock || branchInventory?.quantity || 0, 10);
+            
+            const branchUsedByOthers = prev
+              .filter(i => i.variant.id === item.variant.id && i._id !== itemId && i.branch_id == item.branch_id)
+              .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
+              
+            if (newQuantity + branchUsedByOthers > branchStock) {
+               toast.error(`Stock insuficiente en esta sucursal. Usa el botón "Extraer de otra" para dividir.`);
+               return prev;
+            }
+          }
         }
         
         const newItems = [...prev];
@@ -414,14 +422,32 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     });
   };
 
-  const updateItemBranch = (variantId, branchId) => {
+  const updateItemBranch = (itemId, branchId) => {
     setCartItems(prev => prev.map(item => 
-      item.variant.id === variantId ? { ...item, branch_id: branchId } : item
+      item._id === itemId ? { ...item, branch_id: branchId } : item
     ));
   };
 
-  const removeItem = (variantId) => {
-    setCartItems(prev => prev.filter(item => item.variant.id !== variantId));
+  const removeItem = (itemId) => {
+    setCartItems(prev => prev.filter(item => item._id !== itemId));
+  };
+
+  const duplicateItem = (item) => {
+    setCartItems(prev => {
+      const totalRequested = prev
+        .filter(i => i.variant.id === item.variant.id)
+        .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
+        
+      if (totalRequested >= parseInt(item.maxStock, 10)) {
+        toast.error(`Has alcanzado el stock total disponible (${item.maxStock}). No puedes agregar más.`);
+        return prev;
+      }
+
+      return [
+        ...prev,
+        { ...item, _id: Date.now().toString() + Math.random(), quantity: 1, branch_id: "" }
+      ];
+    });
   };
 
   const handleAddVariant = (product, variant) => {
@@ -477,6 +503,11 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
           recipient_phone: deliveryData.recipient_phone,
           destination_city: deliveryData.destination_city
         };
+        
+        if (mode === 'complete') {
+          updatePayload.status = 'assigned';
+        }
+        
         await updateOrder(editData.id, updatePayload);
         toast.success("Entrega actualizada correctamente");
         onSuccess();
@@ -585,7 +616,9 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
     <div className="modal-overlay">
       <div className="modal-content new-order-modal-content">
         <div className="modal-header">
-          <h2>Nueva Entrega (Redes Sociales)</h2>
+          <h2>
+            {mode === 'complete' ? 'Completar Entrega' : mode === 'edit' ? 'Editar Entrega' : 'Nueva Entrega (Redes Sociales)'}
+          </h2>
           <button className="close-btn" onClick={onClose}><X size={24} /></button>
         </div>
 
@@ -1261,9 +1294,27 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                 </div>
               ) : (
                 cartItems.map(item => {
-                  const availableBranches = item.variant.inventories?.filter(inv => parseInt(inv.stock || inv.quantity || 0, 10) >= parseInt(item.quantity, 10)) || [];
+                  const usedByOtherRowsInBranch = (branchId) => {
+                    return cartItems
+                      .filter(i => i.variant.id === item.variant.id && i._id !== item._id && i.branch_id == branchId)
+                      .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
+                  };
+
+                  const availableBranches = item.variant.inventories?.filter(inv => {
+                    const branchId = inv.branch?.id || inv.branch_id;
+                    const stock = parseInt(inv.stock || inv.quantity || 0, 10);
+                    const remaining = stock - usedByOtherRowsInBranch(branchId);
+                    return remaining >= parseInt(item.quantity, 10);
+                  }) || [];
+                  const isStockInsufficient = availableBranches.length === 0;
+
+                  const variantTotalRequested = cartItems
+                    .filter(i => i.variant.id === item.variant.id)
+                    .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
+                  const canDuplicate = variantTotalRequested < parseInt(item.maxStock, 10);
+
                   return (
-                    <div key={item.variant.id} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                    <div key={item._id} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '12px' }}>
                       
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -1272,7 +1323,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>Bs. {(item.price * item.quantity).toFixed(2)}</span>
-                          <button onClick={() => removeItem(item.variant.id)} style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '4px' }}>
+                          <button onClick={() => removeItem(item._id)} style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '4px' }} title="Eliminar">
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -1281,24 +1332,40 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Extraer stock de:</label>
                         <CustomSelect 
-                           
-                          style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '6px' }}
+                          style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '6px', border: (!item.branch_id || isStockInsufficient) ? '1px solid var(--color-danger)' : '1px solid var(--border-color)' }}
                           value={item.branch_id || ''}
-                          onChange={(e) => updateItemBranch(item.variant.id, e.target.value)}
+                          onChange={(e) => updateItemBranch(item._id, e.target.value)}
                         >
                           <option value="">Seleccionar sucursal...</option>
                           {availableBranches.map(inv => (
-                            <option key={inv.branch?.id} value={inv.branch?.id}>
-                              {inv.branch?.name} (Stock: {inv.stock || inv.quantity})
+                            <option key={inv.branch?.id || inv.branch_id} value={inv.branch?.id || inv.branch_id}>
+                              {inv.branch?.name || 'Sucursal'} (Stock: {inv.stock || inv.quantity})
                             </option>
                           ))}
                         </CustomSelect>
+                        {isStockInsufficient && (
+                           <span style={{ fontSize: '11px', color: 'var(--color-danger)', marginTop: '2px', fontWeight: 500 }}>Stock insuficiente para el pedido</span>
+                        )}
+                        {!isStockInsufficient && !item.branch_id && (
+                           <span style={{ fontSize: '11px', color: 'var(--color-warning)', marginTop: '2px', fontWeight: 500 }}>Debe seleccionar una sucursal</span>
+                        )}
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-main)', borderRadius: '6px', padding: '4px', alignSelf: 'flex-start', marginTop: '8px' }}>
-                        <button onClick={() => updateQuantity(item.variant.id, -1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '4px' }}><Minus size={14} /></button>
-                        <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.variant.id, 1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '4px' }}><Plus size={14} /></button>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-main)', borderRadius: '6px', padding: '4px' }}>
+                          <button onClick={() => updateQuantity(item._id, -1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '4px' }}><Minus size={14} /></button>
+                          <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item._id, 1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '4px' }}><Plus size={14} /></button>
+                        </div>
+                        
+                        {canDuplicate && (
+                          <button 
+                            onClick={() => duplicateItem(item)} 
+                            style={{ background: 'transparent', border: '1px dashed var(--color-primary)', color: 'var(--color-primary)', fontSize: '11px', fontWeight: 600, padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                          >
+                            + Extraer de otra
+                          </button>
+                        )}
                       </div>
 
                     </div>
@@ -1324,16 +1391,37 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                 </div>
               </div>
               
-              {step === 1 ? (
-                <button 
-                  className="action-btn primary" 
-                  style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: cartItems.length === 0 ? 0.5 : 1, cursor: cartItems.length === 0 ? 'not-allowed' : 'pointer', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)' }}
-                  onClick={handleNextStep}
-                  disabled={cartItems.length === 0}
-                >
-                  Continuar <ArrowRight size={18} />
-                </button>
-              ) : (
+              {step === 1 ? (() => {
+                const isValidToContinue = cartItems.length > 0 && cartItems.every(item => {
+                  if (!item.branch_id) return false;
+                  
+                  const usedByOtherRowsInBranch = (branchId) => {
+                    return cartItems
+                      .filter(i => i.variant.id === item.variant.id && i._id !== item._id && i.branch_id == branchId)
+                      .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
+                  };
+
+                  const availableBranches = item.variant.inventories?.filter(inv => {
+                    const branchId = inv.branch?.id || inv.branch_id;
+                    const stock = parseInt(inv.stock || inv.quantity || 0, 10);
+                    const remaining = stock - usedByOtherRowsInBranch(branchId);
+                    return remaining >= parseInt(item.quantity, 10);
+                  }) || [];
+
+                  return availableBranches.some(inv => (inv.branch?.id || inv.branch_id) == item.branch_id);
+                });
+
+                return (
+                  <button 
+                    className="action-btn primary" 
+                    style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: !isValidToContinue ? 0.5 : 1, cursor: !isValidToContinue ? 'not-allowed' : 'pointer', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)' }}
+                    onClick={handleNextStep}
+                    disabled={!isValidToContinue}
+                  >
+                    Continuar <ArrowRight size={18} />
+                  </button>
+                );
+              })() : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <CanAccess permission={editData ? 'edit_orders' : 'create_orders'}>
                     <button 
@@ -1343,7 +1431,7 @@ export default function NewOrderModal({ editData, onClose, onSuccess }) {
                       style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: 'none', background: 'var(--color-success)', color: 'white', cursor: 'pointer', opacity: loading ? 0.7 : 1, fontWeight: 600, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
                       disabled={loading}
                     >
-                      {loading ? "Procesando..." : (editData ? "Guardar Cambios" : "Finalizar Entrega")}
+                      {loading ? "Procesando..." : (mode === 'complete' ? "Completar" : mode === 'edit' ? "Guardar Cambios" : "Crear Entrega")}
                     </button>
                   </CanAccess>
                   

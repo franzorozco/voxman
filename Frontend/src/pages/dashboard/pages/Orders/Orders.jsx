@@ -26,6 +26,7 @@ export default function Orders() {
   const [isZonesModalOpen, setIsZonesModalOpen] = useState(false);
   const [isGuestHistoryModalOpen, setIsGuestHistoryModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [modalMode, setModalMode] = useState("create");
 
   const [drivers, setDrivers] = useState([]);
 
@@ -582,13 +583,27 @@ export default function Orders() {
                           >
                             <LinkIcon size={16} />
                           </button>
-                          <button 
-                            className="action-btn primary"
-                            style={{ padding: '8px 16px', borderRadius: '8px' }}
-                            onClick={() => setStatusModalSchedule(schedule)}
-                          >
-                            Ver Detalles
-                          </button>
+                          {schedule.status === 'pending' ? (
+                            <button 
+                              className="action-btn"
+                              style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-primary)', color: '#fff', border: 'none' }}
+                              onClick={() => {
+                                setEditData(schedule);
+                                setModalMode("complete");
+                                setIsNewOrderModalOpen(true);
+                              }}
+                            >
+                              Completar
+                            </button>
+                          ) : (
+                            <button 
+                              className="action-btn primary"
+                              style={{ padding: '8px 16px', borderRadius: '8px' }}
+                              onClick={() => setStatusModalSchedule(schedule)}
+                            >
+                              Ver Detalles
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -633,6 +648,7 @@ export default function Orders() {
           }}
           onEditRequest={(data) => {
             setEditData(data);
+            setModalMode("edit");
             setStatusModalSchedule(null);
             setIsNewOrderModalOpen(true);
           }}
@@ -642,13 +658,16 @@ export default function Orders() {
       {isNewOrderModalOpen && (
         <NewOrderModal 
           editData={editData}
+          mode={modalMode}
           onClose={() => {
             setIsNewOrderModalOpen(false);
             setEditData(null);
+            setModalMode("create");
           }}
           onSuccess={() => {
             fetchSchedules();
             setEditData(null);
+            setModalMode("create");
           }}
         />
       )}

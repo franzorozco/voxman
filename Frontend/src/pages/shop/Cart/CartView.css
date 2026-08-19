@@ -113,3 +113,5 @@
   font-weight: 500;
   color: var(--text-main);
 }
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }

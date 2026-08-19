@@ -101,7 +101,10 @@ export default function Login() {
               />
             </div>
             {errors.email && (
-              <span className="error"><AlertCircle size={14}/> {errors.email}</span>
+              <div className="error" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }} /> 
+                <span>{errors.email}</span>
+              </div>
             )}
 
             {/* PASSWORD */}
@@ -123,7 +126,10 @@ export default function Login() {
               </button>
             </div>
             {errors.password && (
-              <span className="error"><AlertCircle size={14}/> {errors.password}</span>
+              <div className="error" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }} /> 
+                <span>{errors.password}</span>
+              </div>
             )}
 
             <button type="submit" className={`auth-btn-primary ${loading ? "loading" : ""}`}>

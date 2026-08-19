@@ -166,11 +166,22 @@ const CartView = () => {
             <button
               onClick={handleCheckoutClick}
               disabled={items.length === 0}
-              className={`w-full cart-checkout-btn py-3 px-4 rounded-md shadow-sm text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 ${
-                items.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+              className={`w-full py-4 px-6 rounded-md text-base font-bold uppercase tracking-[0.1em] transition-all duration-300 flex items-center justify-center gap-3 relative group overflow-hidden ${
+                items.length === 0 
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                  : 'bg-black text-white hover:bg-gray-900 active:scale-[0.98] shadow-sm hover:shadow-md'
               }`}
             >
-              Proceder al Checkout
+              <span className="relative z-10">Realizar Orden</span>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-5 w-5 relative z-10 transition-transform duration-300 ${items.length === 0 ? '' : 'group-hover:translate-x-1.5'}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
             </button>
           </div>
           <div className="mt-4 text-center">

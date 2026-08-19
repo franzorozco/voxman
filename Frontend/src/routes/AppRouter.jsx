@@ -58,6 +58,7 @@ import DeletedEmployees from "../pages/dashboard/pages/Employees/DeletedEmployee
 import Payroll from "../pages/dashboard/pages/Payroll/Payroll.jsx";
 import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
 import Sales from "../pages/dashboard/pages/Sales/Sales.jsx";
+import SystemSettings from "../pages/dashboard/pages/SystemSettings/SystemSettings.jsx";
 import Finance from "../pages/dashboard/pages/Finance/Finance.jsx";
 import Carts from "../pages/dashboard/pages/Carts/Carts.jsx";
 import Orders from "../pages/dashboard/pages/Orders/Orders.jsx";
@@ -159,6 +160,7 @@ const AnimatedRoutes = () => {
             <Route path="finance/reports" element={<ProtectedRoute permissions={["view_finance_reports"]}><FinanceReports /></ProtectedRoute>} />
             <Route path="carts" element={<ProtectedRoute permissions={["view_carts"]}><Carts /></ProtectedRoute>} />
             <Route path="returns" element={<ProtectedRoute permissions={["view_returns"]}><Returns /></ProtectedRoute>} />
+            <Route path="system-settings" element={<ProtectedRoute permissions={["manage_settings"]}><SystemSettings /></ProtectedRoute>} />
 
           </Route>
         </Route>

@@ -47,7 +47,10 @@ class ShopCheckoutController extends Controller
             ]);
 
             // 2. Generate Reference Number & Create Cart
-            $referenceNumber = 'ORD-' . strtoupper(Str::random(6));
+            do {
+                $uniqueId = mt_rand(10000, 99999);
+                $referenceNumber = 'ORD-' . $uniqueId;
+            } while (Cart::where('reference_number', $referenceNumber)->exists());
             
             $cart = Cart::create([
                 'guest_id' => $guest->id,
@@ -81,11 +84,15 @@ class ShopCheckoutController extends Controller
 
             DB::commit();
 
+            $waSetting = \App\Models\System\SystemSetting::where('key', 'whatsapp_orders')->first();
+            $waNumber = $waSetting ? $waSetting->value : '59157003312';
+
             return response()->json([
                 'message' => 'Checkout iniciado correctamente',
                 'cart_id' => $cart->id,
                 'guest_id' => $guest->id,
-                'reference_number' => $cart->reference_number
+                'reference_number' => $cart->reference_number,
+                'whatsapp_number' => $waNumber
             ]);
 
         } catch (\Exception $e) {

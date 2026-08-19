@@ -416,7 +416,7 @@ export default function Tracking() {
             </div>
           )}
 
-          {(schedule.shipment?.delivery_type === 'external' || schedule.shipment?.recipient_name || schedule.shipment?.recipient_ci || schedule.shipment?.recipient_edit_session?.is_shared) && (
+          {isExternal && (
             <div style={{ marginTop: '20px', padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#0f172a', fontSize: '16px' }}>

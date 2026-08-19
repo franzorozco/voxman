@@ -1168,6 +1168,11 @@ if ($request->status === 'shipped') {
             $schedule->latitude = $request->latitude;
             $schedule->longitude = $request->longitude;
             $schedule->driver_id = $request->driver_id;
+            
+            if ($request->has('status')) {
+                $schedule->status = $request->status;
+            }
+            
             $schedule->save();
 
             // Update guest

@@ -429,6 +429,9 @@ Route::middleware([
         Route::get('/destinations', [OrderNetworkController::class, 'getDestinations'])->middleware('permission:view_orders|view_orders_own_branch|view_orders_all_branches');
         Route::post('/delivery-zones', [OrderNetworkController::class, 'createDeliveryZone'])->middleware('permission:manage_settings');
         Route::put('/delivery-zones/{id}', [OrderNetworkController::class, 'updateDeliveryZone'])->middleware('permission:manage_settings');
+        Route::delete('/delivery-zones/{id}', [OrderNetworkController::class, 'deleteDeliveryZone'])->middleware('permission:manage_settings');
+        
+
         Route::get('/drivers', [OrderNetworkController::class, 'getDrivers'])->middleware('permission:view_orders|view_orders_own_branch|view_orders_all_branches');
         Route::post('/convert', [OrderNetworkController::class, 'convertToOrder'])->middleware('permission:create_orders');
         Route::post('/convert-draft', [OrderNetworkController::class, 'convertToOrderDraft'])->middleware('permission:create_orders');
@@ -445,6 +448,10 @@ Route::middleware([
         Route::post('/{id}/toggle-recipient-edit', [OrderNetworkController::class, 'toggleRecipientEdit'])->middleware('permission:edit_orders');
         Route::delete('/{id}', [OrderNetworkController::class, 'cancelOrder'])->middleware('permission:cancel_orders');
     });
+
+    // Settings routes
+    Route::get('/system-settings', [\App\Http\Controllers\Api\Admin\SystemSettingController::class, 'index'])->middleware('permission:manage_settings');
+    Route::put('/system-settings/{key}', [\App\Http\Controllers\Api\Admin\SystemSettingController::class, 'update'])->middleware('permission:manage_settings');
 
 });
 

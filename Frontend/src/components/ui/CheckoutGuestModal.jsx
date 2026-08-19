@@ -102,7 +102,10 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
       });
 
       const refNumber = response.data.reference_number || "DESCONOCIDO";
-      const waNumber = "59157003312";
+      let waNumber = response.data.whatsapp_number || "59157003312";
+      // Limpiar el número de espacios, el signo +, guiones, etc. para que sea compatible con wa.me
+      waNumber = waNumber.replace(/\D/g, ''); 
+      
       const msg = `Hola VOXman, te escribe ${form.name} y quisiera coordinar la entrega de mi pedido por favor. este es mi codigo: ${refNumber}`;
       const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
 
