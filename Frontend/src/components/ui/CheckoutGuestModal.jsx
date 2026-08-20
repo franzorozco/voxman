@@ -71,7 +71,7 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
     validate(name, value);
   };
 
-  const handleNextStep = (e) => {
+  const handleNextStep = async (e) => {
     e.preventDefault();
     if (!form.name || !form.whatsapp_phone || !form.country_code || Object.values(errors).some((err) => err)) {
       toast.error("Por favor completa los campos correctamente");
@@ -81,6 +81,26 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
       toast.error("Tu carrito está vacío");
       return;
     }
+
+    try {
+      setLoading(true);
+      const res = await api.post('/v1/shop/cart/validate');
+      if (!res.data.valid) {
+        toast.error(res.data.message, { duration: 5000 });
+        useShopCartStore.setState({ 
+          items: res.data.cart.items || [], 
+          total: res.data.cart.total || 0 
+        });
+        if (!res.data.cart.items || res.data.cart.items.length === 0) {
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Error validando stock", err);
+    } finally {
+      setLoading(false);
+    }
+
     setStep(2);
   };
 

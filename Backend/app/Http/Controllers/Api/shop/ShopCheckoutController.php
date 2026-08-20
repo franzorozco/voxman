@@ -10,7 +10,7 @@ use App\Models\Base\Guest;
 use App\Models\Sales\Cart;
 use App\Models\Sales\CartItem;
 use App\Models\Inventory\StockReservation;
-
+use App\Models\Catalog\ProductVariant;
 use Illuminate\Support\Str;
 
 class ShopCheckoutController extends Controller
@@ -40,11 +40,25 @@ class ShopCheckoutController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Create Guest
-            $guest = Guest::create([
-                'name' => $request->name,
-                'whatsapp_phone' => $request->whatsapp_phone,
-            ]);
+            // 1. Validate Stock in real-time
+            foreach ($cartData['items'] as $item) {
+                if (isset($item['variant_id'])) {
+                    $variant = ProductVariant::with(['inventories', 'product'])->find($item['variant_id']);
+                    if (!$variant) {
+                        return response()->json(['message' => 'Un producto del carrito ya no existe'], 400);
+                    }
+                    $availableStock = $variant->inventories->sum('stock');
+                    if ($availableStock < $item['quantity']) {
+                        return response()->json(['message' => 'No hay stock suficiente para ' . $variant->product->name], 400);
+                    }
+                }
+            }
+
+            // 2. Find or Create Guest by whatsapp_phone
+            $guest = Guest::updateOrCreate(
+                ['whatsapp_phone' => $request->whatsapp_phone],
+                ['name' => $request->name]
+            );
 
             // 2. Generate Reference Number & Create Cart
             do {
@@ -60,7 +74,7 @@ class ShopCheckoutController extends Controller
                 'expires_at' => now()->addHours(24),
             ]);
 
-            // 3. Process Items
+            // 4. Process Items
             foreach ($cartData['items'] as $item) {
                 // Insert cart item
                 CartItem::create([
@@ -68,15 +82,6 @@ class ShopCheckoutController extends Controller
                     'variant_id' => $item['variant_id'] ?? null,
                     'quantity' => $item['quantity'],
                 ]);
-
-                // Create stock reservation
-                if (isset($item['variant_id'])) {
-                    StockReservation::create([
-                        'variant_id' => $item['variant_id'],
-                        'quantity' => $item['quantity'],
-                        'status' => 'reserved',
-                    ]);
-                }
             }
 
             // 4. Remove cart from Cache

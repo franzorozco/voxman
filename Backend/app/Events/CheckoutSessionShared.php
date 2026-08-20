@@ -19,6 +19,8 @@ class CheckoutSessionShared implements ShouldBroadcastNow
     public $qrAmount;
     public $saleTotal;
 
+    public $isAdvancePayment;
+
     /**
      * Create a new event instance.
      *
@@ -27,11 +29,12 @@ class CheckoutSessionShared implements ShouldBroadcastNow
     public function __construct($scheduleId, $data)
     {
         $this->scheduleId = $scheduleId;
-        $this->paymentMethod = $data['payment_method'];
-        $this->montoReal = $data['monto_real'];
-        $this->cashAmount = $data['cash_amount'] ?? null;
-        $this->qrAmount = $data['qr_amount'] ?? null;
-        $this->saleTotal = $data['sale_total'] ?? null;
+        $this->paymentMethod = $data ? $data['payment_method'] : null;
+        $this->montoReal = $data ? $data['monto_real'] : null;
+        $this->cashAmount = $data ? ($data['cash_amount'] ?? null) : null;
+        $this->qrAmount = $data ? ($data['qr_amount'] ?? null) : null;
+        $this->saleTotal = $data ? ($data['sale_total'] ?? null) : null;
+        $this->isAdvancePayment = $data ? ($data['is_advance_payment'] ?? false) : false;
     }
 
     /**

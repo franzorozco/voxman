@@ -5,7 +5,8 @@ import { createCart } from "../../../../api/admin/carts";
 import { convertToOrder, getDeliveryZones, getDeliveryDrivers, updateOrder, getHistoricalDestinations } from "../../../../api/admin/orderNetwork";
 import { getCustomers } from "../../../../api/admin/customers";
 import { toast } from "react-hot-toast";
-import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
+import { MarkerF } from '@react-google-maps/api';
+import GoogleMapWrapper from '../../../../components/ui/GoogleMapWrapper';
 import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X, MapPin, Map, User, UserCheck, CheckCircle2 } from "lucide-react";
 import useScanner from "../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../store/scanner/useScannerStore";
@@ -61,7 +62,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
   const [meetingPointType, setMeetingPointType] = useState("predefined");
   const [predefinedMeetingPoints, setPredefinedMeetingPoints] = useState([]);
   const [deliveryDrivers, setDeliveryDrivers] = useState([]);
-  const [mapCenter, setMapCenter] = useState({ lat: -17.3895, lng: -66.1568 }); // Cochabamba
+  const [mapCenter, setMapCenter] = useState({ lat: -16.4897, lng: -68.1193 }); // La Paz default
   
   // Customer Search State
   const [customerSearchType, setCustomerSearchType] = useState("guest"); // "guest" | "registered"
@@ -82,10 +83,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
   const [historicalDestinations, setHistoricalDestinations] = useState([]);
   const [isDestinationsDropdownOpen, setIsDestinationsDropdownOpen] = useState(false);
   
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M"
-  });
+
 
   // Public Link to show at the end
   const [generatedLink, setGeneratedLink] = useState(null);
@@ -916,26 +914,23 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                             </div>
                             
                             <div className="map-container">
-                              {isLoaded ? (
-                                <GoogleMap
-                                  mapContainerStyle={{ width: '100%', height: '300px' }}
-                                  center={deliveryData.latitude && deliveryData.longitude ? { lat: Number(deliveryData.latitude), lng: Number(deliveryData.longitude) } : mapCenter}
-                                  zoom={13}
-                                  onClick={(e) => {
-                                    setDeliveryData({
-                                      ...deliveryData,
-                                      latitude: e.latLng.lat(),
-                                      longitude: e.latLng.lng()
-                                    });
-                                  }}
-                                >
-                                  {deliveryData.latitude && deliveryData.longitude && (
-                                    <MarkerF position={{ lat: Number(deliveryData.latitude), lng: Number(deliveryData.longitude) }} />
-                                  )}
-                                </GoogleMap>
-                              ) : (
-                                <div style={{ padding: '2rem', textAlign: 'center' }}>Cargando mapa...</div>
-                              )}
+                              <GoogleMapWrapper
+                                mapContainerStyle={{ width: '100%', height: '300px' }}
+                                center={deliveryData.latitude && deliveryData.longitude ? { lat: Number(deliveryData.latitude), lng: Number(deliveryData.longitude) } : mapCenter}
+                                zoom={13}
+                                onClick={(e) => {
+                                  setDeliveryData({
+                                    ...deliveryData,
+                                    latitude: e.latLng.lat(),
+                                    longitude: e.latLng.lng()
+                                  });
+                                }}
+                                loadingElement={<div style={{ padding: '2rem', textAlign: 'center' }}>Cargando mapa...</div>}
+                              >
+                                {deliveryData.latitude && deliveryData.longitude && (
+                                  <MarkerF position={{ lat: Number(deliveryData.latitude), lng: Number(deliveryData.longitude) }} />
+                                )}
+                              </GoogleMapWrapper>
                             </div>
                             <small>
                               * Haz clic en el mapa para marcar el punto exacto de entrega. 

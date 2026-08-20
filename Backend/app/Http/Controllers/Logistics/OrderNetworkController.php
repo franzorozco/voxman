@@ -708,8 +708,10 @@ if ($request->status === 'shipped') {
 
             $shipment = $schedule->shipment;
             $isExternal = $shipment->delivery_type === 'external';
+            $isAdvancePayment = $request->boolean('is_advance_payment', false);
             $isPaymentStage = ($request->status === 'completed' && !$isExternal) || 
-                              ($request->status === 'prepared' && $isExternal);
+                              ($request->status === 'prepared' && $isExternal) || 
+                              $isAdvancePayment;
 
             if ($isPaymentStage) {
                 $sale = $shipment->sale;
@@ -717,10 +719,14 @@ if ($request->status === 'shipped') {
                 // --- PAYMENT AND DISCOUNT LOGIC ---
                 $amountPaid = $request->input('monto_real');
                 if ($amountPaid !== null && $sale->status !== 'paid') {
-                    $sale->status = 'paid';
+                    
+                    if (!$isAdvancePayment) {
+                        $sale->status = 'paid';
+                    }
                     
                     $amountPaid = (float) $amountPaid;
-                    $discountDiff = max(0, $sale->total - $amountPaid);
+                    $totalPreviouslyPaid = $sale->payments()->sum('amount');
+                    $discountDiff = !$isAdvancePayment ? max(0, $sale->total - $totalPreviouslyPaid - $amountPaid) : 0;
 
                     $appliedCode = $request->input('applied_code');
                     if ($appliedCode) {
@@ -778,7 +784,7 @@ if ($request->status === 'shipped') {
                         }
 
                         $sale->discount_total = ($sale->discount_total ?? 0) + $discountDiff;
-                        $sale->total = $amountPaid;
+                        $sale->total = $totalPreviouslyPaid + $amountPaid;
                     }
 
                     // Create Payment Records
@@ -834,10 +840,19 @@ if ($request->status === 'shipped') {
                     
                     $sale->save();
                     // ----------------------------------
+                    // Confirm stock reservations only if not an advance payment
+                    if (!$isAdvancePayment) {
+                        \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)
+                            ->update(['status' => 'confirmed']);
+                    }
+
+                    // Clear the checkout session since it has been fulfilled
+                    $schedule->checkout_session = null;
+                    $schedule->save();
                     
-                    // Confirm stock reservations
-                    \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)
-                        ->update(['status' => 'confirmed']);
+                    try {
+                        event(new \App\Events\CheckoutSessionShared($schedule->id, null));
+                    } catch (\Throwable $eventError) {}
                 }
             }
 
@@ -1312,9 +1327,12 @@ if ($request->status === 'shipped') {
 
             if ($schedule->checkout_session) {
                 $session = $schedule->checkout_session;
-                $session['monto_real'] = $sale->total;
-                $schedule->checkout_session = $session;
-                $schedule->save();
+                if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
+                    $totalPaid = $sale->payments()->sum('amount');
+                    $session['monto_real'] = max(0, $sale->total - $totalPaid);
+                    $schedule->checkout_session = $session;
+                    $schedule->save();
+                }
             }
 
             event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
@@ -1430,9 +1448,12 @@ if ($request->status === 'shipped') {
 
             if ($schedule->checkout_session) {
                 $session = $schedule->checkout_session;
-                $session['monto_real'] = $sale->total;
-                $schedule->checkout_session = $session;
-                $schedule->save();
+                if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
+                    $totalPaid = $sale->payments()->sum('amount');
+                    $session['monto_real'] = max(0, $sale->total - $totalPaid);
+                    $schedule->checkout_session = $session;
+                    $schedule->save();
+                }
             }
 
             event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
@@ -1529,9 +1550,12 @@ if ($request->status === 'shipped') {
 
             if ($schedule->checkout_session) {
                 $session = $schedule->checkout_session;
-                $session['monto_real'] = $sale->total;
-                $schedule->checkout_session = $session;
-                $schedule->save();
+                if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
+                    $totalPaid = $sale->payments()->sum('amount');
+                    $session['monto_real'] = max(0, $sale->total - $totalPaid);
+                    $schedule->checkout_session = $session;
+                    $schedule->save();
+                }
             }
 
             // Restore the soft-deleted detail
@@ -1631,9 +1655,12 @@ if ($request->status === 'shipped') {
 
         if ($schedule->checkout_session) {
             $session = $schedule->checkout_session;
-            $session['monto_real'] = $sale->total;
-            $schedule->checkout_session = $session;
-            $schedule->save();
+            if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
+                $totalPaid = $sale->payments()->sum('amount');
+                $session['monto_real'] = max(0, $sale->total - $totalPaid);
+                $schedule->checkout_session = $session;
+                $schedule->save();
+            }
         }
 
         // Broadcast back to admin
@@ -1664,9 +1691,12 @@ if ($request->status === 'shipped') {
 
         if ($schedule->checkout_session) {
             $session = $schedule->checkout_session;
-            $session['monto_real'] = $sale->total;
-            $schedule->checkout_session = $session;
-            $schedule->save();
+            if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
+                $totalPaid = $sale->payments()->sum('amount');
+                $session['monto_real'] = max(0, $sale->total - $totalPaid);
+                $schedule->checkout_session = $session;
+                $schedule->save();
+            }
         }
 
         // Broadcast to clients

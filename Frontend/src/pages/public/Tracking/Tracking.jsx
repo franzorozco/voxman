@@ -103,8 +103,11 @@ export default function Tracking() {
             montoReal: fetchedSchedule.checkout_session.monto_real,
             cashAmount: fetchedSchedule.checkout_session.cash_amount,
             qrAmount: fetchedSchedule.checkout_session.qr_amount,
-            saleTotal: fetchedSchedule.checkout_session.sale_total
+            saleTotal: fetchedSchedule.checkout_session.sale_total,
+            isAdvancePayment: fetchedSchedule.checkout_session.is_advance_payment
           });
+        } else {
+          setCheckoutSession(null);
         }
       } catch (err) {
         setError("No se pudo encontrar la información de este envío. Verifica que el enlace sea correcto.");
@@ -124,16 +127,25 @@ export default function Tracking() {
       fetchTracking();
     });
     privateChannel.listen('.checkout.session.shared', (data) => {
-      setCheckoutSession(data);
+      const montoReal = data?.montoReal || data?.monto_real;
+      if (!montoReal) {
+        setCheckoutSession(null);
+      } else {
+        setCheckoutSession({
+          paymentMethod: data.paymentMethod || data.payment_method,
+          montoReal: montoReal,
+          cashAmount: data.cashAmount || data.cash_amount,
+          qrAmount: data.qrAmount || data.qr_amount,
+          saleTotal: data.saleTotal || data.sale_total,
+          isAdvancePayment: data.isAdvancePayment || data.is_advance_payment
+        });
+      }
     });
-    privateChannel.listen('.delivery.discount.applied', (data) => {
+    privateChannel.listen('.delivery.discount.applied', () => {
       fetchTracking();
-      // Update local checkout session total if we had one active
-      setCheckoutSession(prev => prev ? { ...prev, montoReal: data.sale.total } : null);
     });
-    privateChannel.listen('.delivery.discount.removed', (data) => {
+    privateChannel.listen('.delivery.discount.removed', () => {
       fetchTracking();
-      setCheckoutSession(prev => prev ? { ...prev, montoReal: data.sale.total } : null);
       setDiscountMessage(null);
     });
     privateChannel.listen('.DeliveryNotesUpdated', (data) => {
@@ -719,26 +731,56 @@ export default function Tracking() {
               </div>
             )}
 
-            {checkoutSession && Number(checkoutSession.montoReal) < Number(sale?.total || 0) && !(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) && (
-              <div className="summary-row" style={{ color: '#f59e0b', fontWeight: 600 }}>
-                <span>Ajuste Especial</span>
-                <span>- Bs. {(Number(sale?.total || 0) - Number(checkoutSession.montoReal)).toFixed(2)}</span>
-              </div>
-            )}
+            {(() => {
+              const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+              const isFullyPaid = sale?.status === 'paid';
+              const isAdvance = checkoutSession?.isAdvancePayment;
 
-            <div className="summary-row total" style={{ borderTop: '2px solid #e5e7eb', paddingTop: '16px', marginTop: '8px', textTransform: 'uppercase' }}>
-              <span style={{ fontSize: '18px' }}>
-                {schedule.status === 'completed' || shipment?.shipping_payment_type === 'paid' ? 'TOTAL PAGADO' : 'TOTAL A PAGAR'}
-              </span>
-              <span style={{ fontSize: '22px', color: checkoutSession ? '#4f46e5' : '#111827' }}>
-                Bs. {checkoutSession ? Number(checkoutSession.montoReal).toFixed(2) : Number(sale?.total || 0).toFixed(2)}
-              </span>
-            </div>
+              return (
+                <>
+                  {!isFullyPaid && totalPaid > 0 && (
+                    <div className="summary-row" style={{ color: '#4f46e5', fontWeight: 600 }}>
+                      <span>Adelanto Registrado</span>
+                      <span>- Bs. {Number(totalPaid).toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  {checkoutSession && !isAdvance && Number(checkoutSession.montoReal) < (Number(sale?.total || 0) - totalPaid) && !(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) && (
+                    <div className="summary-row" style={{ color: '#f59e0b', fontWeight: 600 }}>
+                      <span>Ajuste Especial</span>
+                      <span>- Bs. {((Number(sale?.total || 0) - totalPaid) - Number(checkoutSession.montoReal)).toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  <div className="summary-row total" style={{ borderTop: '2px solid #e5e7eb', paddingTop: '16px', marginTop: '8px', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '18px' }}>
+                      {isFullyPaid ? 'TOTAL PAGADO' : 'TOTAL A PAGAR'}
+                    </span>
+                    <span style={{ fontSize: '22px', color: (checkoutSession && !isAdvance) ? '#4f46e5' : '#111827' }}>
+                      Bs. {
+                        (checkoutSession && !isAdvance) 
+                          ? Number(checkoutSession.montoReal).toFixed(2) 
+                          : Number((sale?.total || 0) - (!isFullyPaid ? totalPaid : 0)).toFixed(2)
+                      }
+                    </span>
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
-          {checkoutSession && ((!isExternal && statusInfo.activeStep === 4) || (isExternal && statusInfo.activeStep === 1)) && (
+          {checkoutSession && (checkoutSession.isAdvancePayment || (!isExternal && statusInfo.activeStep === 4) || (isExternal && statusInfo.activeStep === 1)) && (
             <div className="checkout-session-card" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #e5e7eb' }}>
               
+              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                <span style={{ display: 'inline-block', background: checkoutSession.isAdvancePayment ? '#e0e7ff' : '#dcfce7', color: checkoutSession.isAdvancePayment ? '#4338ca' : '#166534', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 }}>
+                  {checkoutSession.isAdvancePayment ? 'Por favor realiza el pago de tu adelanto' : 'Por favor realiza tu pago para completar la entrega'}
+                </span>
+                <div style={{ marginTop: '12px', fontSize: '24px', fontWeight: 800, color: checkoutSession.isAdvancePayment ? '#4338ca' : '#166534' }}>
+                  Bs. {Number(checkoutSession.montoReal).toFixed(2)}
+                </div>
+              </div>
+
               {checkoutSession.paymentMethod === 'ambos' && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '15px', padding: '12px', background: '#f9fafb', borderRadius: '10px', border: '1px solid #e5e7eb' }}>
                   <span style={{ color: '#4b5563', fontWeight: 600 }}>Efectivo: Bs. {checkoutSession.cashAmount}</span>
@@ -757,7 +799,8 @@ export default function Tracking() {
                 </div>
               )}
 
-              <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
+              {!checkoutSession.isAdvancePayment && (
+                <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
                 {(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
@@ -800,6 +843,7 @@ export default function Tracking() {
                   </div>
                 )}
               </div>
+              )}
             </div>
           )}
           </div>

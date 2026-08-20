@@ -98,6 +98,7 @@
 
 .products-table {
     width: 100%;
+    min-width: 650px;
     border-collapse: collapse;
 }
 
@@ -110,6 +111,7 @@
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .products-table td {
@@ -117,6 +119,7 @@
     border-bottom: 1px solid var(--border-color);
     color: var(--text-main);
     font-size: 14px;
+    white-space: nowrap;
 }
 
 .products-table tbody tr:last-child td {
@@ -574,6 +577,14 @@
   gap: 10px;
   padding-top: 16px;
   border-top: 1px solid var(--border-color);
+  justify-content: flex-end;
+}
+
+@media (min-width: 769px) {
+  .modal-action-delete {
+    order: -1;
+    margin-right: auto;
+  }
 }
 
 .modal-action-btn {

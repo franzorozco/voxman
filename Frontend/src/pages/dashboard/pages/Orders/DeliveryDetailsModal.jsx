@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
 import AddProductToDeliveryModal from "./components/AddProductToDeliveryModal";
 import api from "../../../../api/client";
 import echo from "../../../../echo";
 import { toast } from "react-hot-toast";
-import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
+import { MarkerF } from '@react-google-maps/api';
+import GoogleMapWrapper from '../../../../components/ui/GoogleMapWrapper';
 import DiscountInput from '../../components/DiscountInput';
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import CanAccess from '../../../../components/ui/CanAccess';
@@ -19,8 +20,8 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = {
-  lat: -17.3895,
-  lng: -66.1568
+  lat: -16.4897,
+  lng: -68.1193 // La Paz
 };
 
 const STEPS_LOCAL = [
@@ -82,20 +83,21 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const [appliedCode, setAppliedCode] = useState(null);
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [isAdvancePayment, setIsAdvancePayment] = useState(false);
   
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
 
   useEffect(() => {
     if (showPaymentModal && details) {
-      setMontoReal(details.shipment?.sale?.total || '');
+      const sale = details.shipment?.sale;
+      const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+      const remaining = Number((sale?.total || 0) - totalPaid).toFixed(2);
+      setMontoReal(remaining > 0 ? remaining : '');
     }
   }, [showPaymentModal, details]);
 
-  const { isLoaded: googleMapsLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M"
-  });
+
 
   const fetchDetails = async () => {
     try {
@@ -240,7 +242,8 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         monto_real: montoReal,
         cash_amount: cashAmount || null,
         qr_amount: qrAmount || null,
-        sale_total: details?.shipment?.sale?.total
+        sale_total: details?.shipment?.sale?.total,
+        is_advance_payment: isAdvancePayment
       });
       toast.success("Detalles de cobro compartidos con el cliente");
     } catch (err) {
@@ -272,24 +275,27 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     setUpdating(true);
     // Optimistic UI update
     const prevDetails = { ...details };
-    setDetails(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        status: newStatus,
-        shipment: {
-          ...prev.shipment,
-          status: newStatus === 'completed' ? 'delivered' : newStatus
-        }
-      };
-    });
+    
+    if (!paymentData?.is_advance_payment) {
+      setDetails(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          status: newStatus,
+          shipment: {
+            ...prev.shipment,
+            status: newStatus === 'completed' ? 'delivered' : newStatus
+          }
+        };
+      });
+    }
 
     try {
-      const payload = paymentData ? { status: newStatus, ...paymentData } : newStatus;
+      const payload = paymentData ? { status: newStatus, ...paymentData } : { status: newStatus };
       await updateDeliveryStatus(scheduleId, payload);
       const { data } = await getDeliveryDetails(scheduleId);
       setDetails(data.schedule);
-      toast.success(newStatus === 'cancelled' ? "Entrega cancelada" : "Estado actualizado exitosamente");
+      toast.success(newStatus === 'cancelled' ? "Entrega cancelada" : "Actualización exitosa");
       onStatusChange();
     } catch (error) {
       toast.error("Error al actualizar estado");
@@ -312,6 +318,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       const isExternalPaymentStage = isExternal && nextStatus === 'prepared';
       
       if ((isLocalPaymentStage || isExternalPaymentStage) && !isSalePaid) {
+        setIsAdvancePayment(false);
         setPaymentNextStatus(nextStatus);
         setShowPaymentModal(true);
       } else if (isExternal && nextStatus === 'shipped') {
@@ -586,6 +593,14 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     }
   };
 
+  const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+  
+  // A sale is considered fully paid if its status is 'paid'.
+  // External shipments might be paid at the 'prepared' stage, local at 'completed'.
+  const isFullyPaid = sale?.status === 'paid';
+  
+  const canShowAdelanto = !isCompleted && !isCancelled && !isFullyPaid && details?.status !== 'at_the_meeting_point';
+
   return (
     <div className="modal-overlay fade-in" style={overlayBg}>
       <style>{`
@@ -608,6 +623,23 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {canShowAdelanto && (
+              <CanAccess permission="update_order_status">
+                <button 
+                  className="action-btn"
+                  style={{ padding: '6px 12px', background: 'var(--bg-input)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                  onClick={() => {
+                    setIsAdvancePayment(true);
+                    setPaymentNextStatus(details.status);
+                    setShowPaymentModal(true);
+                  }}
+                  disabled={updating}
+                  title="Registrar un adelanto"
+                >
+                  <DollarSign size={14} /> Adelanto
+                </button>
+              </CanAccess>
+            )}
             <button 
               className="action-btn" 
               style={{ padding: '6px 12px', background: 'var(--bg-input)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
@@ -869,9 +901,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       <span>Bs. {Number(details?.shipment?.shipping_cost || 0).toFixed(2)}</span>
                     </div>
                   )}
+                  {!isFullyPaid && totalPaid > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--color-primary)', fontWeight: 600 }}>
+                      <span>Adelanto Registrado:</span>
+                      <span>- Bs. {Number(totalPaid).toFixed(2)}</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)', textTransform: 'uppercase' }}>
-                    <span>{details?.status === 'completed' || details?.shipment?.shipping_payment_type === 'paid' ? 'Total Pagado:' : 'Total a Pagar:'}</span>
-                    <span style={{ color: 'var(--color-primary)' }}>Bs. {Number(sale?.total || 0).toFixed(2)}</span>
+                    <span>{isFullyPaid ? 'Total Pagado:' : 'Total a Pagar:'}</span>
+                    <span style={{ color: 'var(--color-primary)' }}>Bs. {Number((sale?.total || 0) - (!isFullyPaid ? totalPaid : 0)).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -1083,20 +1121,14 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 
                 {!isExternal && (
                   <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', overflow: 'hidden', marginTop: '12px' }}>
-                    {googleMapsLoaded ? (
-                      <GoogleMap
-                        mapContainerStyle={mapContainerStyle}
-                        center={mapCenter}
-                        zoom={15}
-                        options={{ disableDefaultUI: true, zoomControl: true }}
-                      >
-                        <MarkerF position={mapCenter} />
-                      </GoogleMap>
-                    ) : (
-                      <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Cargando mapa...</span>
-                      </div>
-                    )}
+                    <GoogleMapWrapper
+                      mapContainerStyle={mapContainerStyle}
+                      center={mapCenter}
+                      zoom={15}
+                      options={{ disableDefaultUI: true, zoomControl: true }}
+                    >
+                      <MarkerF position={mapCenter} />
+                    </GoogleMapWrapper>
                   </div>
                 )}
               </div>
@@ -1356,23 +1388,24 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="modal-content" style={{ maxWidth: '500px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
-              <CheckCircle size={20} style={{ color: 'var(--color-success)' }} /> {paymentNextStatus === 'prepared' ? 'Cobrar y Preparar Pedido' : 'Completar Entrega'}
+              <CheckCircle size={20} style={{ color: 'var(--color-success)' }} /> 
+              {isAdvancePayment ? 'Registrar Adelanto' : (paymentNextStatus === 'prepared' ? 'Cobrar y Preparar Pedido' : 'Completar Entrega')}
             </h3>
             
             <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Total Original:</span>
-                <strong style={{ color: 'var(--text-muted)', textDecoration: Number(montoReal) < Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) ? 'line-through' : 'none' }}>Bs. {Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)).toFixed(2)}</strong>
+                <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{isAdvancePayment ? 'Total de la Venta:' : 'Total Original:'}</span>
+                <strong style={{ color: 'var(--text-muted)', textDecoration: (!isAdvancePayment && Number(montoReal) < Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0))) ? 'line-through' : 'none' }}>Bs. {Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)).toFixed(2)}</strong>
               </div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: 600 }}>Monto Real a Cobrar:</span>
+                <span style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: 600 }}>{isAdvancePayment ? 'Monto a Adelantar:' : 'Monto Real a Cobrar:'}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Bs.</span>
                   <input 
                     type="number"
                     value={montoReal}
-                    disabled={!!(details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)}
+                    disabled={!isAdvancePayment && !!(details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)}
                     onChange={(e) => {
                       setMontoReal(e.target.value);
                       if (paymentMethod === 'ambos') {
@@ -1384,25 +1417,25 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       padding: '6px 8px', 
                       borderRadius: '6px', 
                       border: '1px solid var(--border-color)', 
-                      background: (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? 'var(--bg-card)' : '#fff', 
-                      color: (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? 'var(--text-muted)' : 'var(--color-primary)', 
+                      background: (!isAdvancePayment && (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)) ? 'var(--bg-card)' : '#fff', 
+                      color: (!isAdvancePayment && (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)) ? 'var(--text-muted)' : 'var(--color-primary)', 
                       fontWeight: 700, 
                       fontSize: '15px', 
                       textAlign: 'right',
-                      cursor: (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? 'not-allowed' : 'text'
+                      cursor: (!isAdvancePayment && (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)) ? 'not-allowed' : 'text'
                     }}
                   />
                 </div>
               </div>
               
-              {Number(montoReal) < Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
+              {!isAdvancePayment && Number(montoReal) < Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
                 <div style={{ marginTop: '8px', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, textAlign: 'right' }}>
                   Descuento manual aplicado: -Bs. {(Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) - Number(montoReal)).toFixed(2)}
                 </div>
               )}
             </div>
 
-            {(details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? (
+            {!isAdvancePayment && ((details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? (
               <div style={{ padding: '16px', background: 'var(--color-success-alpha)', borderRadius: '8px', border: '1px solid var(--color-success)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                 <div>
                   <span style={{ fontWeight: 600, color: 'var(--color-success)', display: 'block', marginBottom: '4px' }}>Descuento Guardado</span>
@@ -1482,7 +1515,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   </div>
                 )}
               </div>
-            )}
+            ))}
 
             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', marginTop: '16px' }}>
               <button 
@@ -1584,13 +1617,14 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                         payment_method: paymentMethod,
                         amount_cash: cashAmount,
                         amount_qr: qrAmount,
-                        applied_code: appliedCode
+                        applied_code: appliedCode,
+                        is_advance_payment: isAdvancePayment
                       });
                     }}
                     className="btn-confirm-payment"
                     disabled={updating}
                   >
-                    <CheckCircle size={18} /> {paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega'}
+                    <CheckCircle size={18} /> {isAdvancePayment ? 'Confirmar Adelanto' : (paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega')}
                   </button>
                 </CanAccess>
               </div>

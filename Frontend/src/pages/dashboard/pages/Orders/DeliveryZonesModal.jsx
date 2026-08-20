@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getDeliveryZones, createDeliveryZone, updateDeliveryZone } from '../../../../api/admin/orderNetwork';
 import { toast } from 'react-hot-toast';
-import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
+import { MarkerF } from '@react-google-maps/api';
+import GoogleMapWrapper from '../../../../components/ui/GoogleMapWrapper';
 import { X, MapPin, Plus, ArrowLeft, Edit3, Globe, Share2, CheckSquare, Square, Copy } from 'lucide-react';
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import '../Carts/Carts.css';
@@ -24,7 +25,7 @@ export default function DeliveryZonesModal({ onClose }) {
     longitude: null
   });
   
-  const [mapCenter, setMapCenter] = useState({ lat: -17.3895, lng: -66.1568 }); // Cochabamba default
+  const [mapCenter, setMapCenter] = useState({ lat: -16.4897, lng: -68.1193 }); // La Paz default
 
   const cityCoordinates = {
     "El Alto": { lat: -16.5000, lng: -68.1500 },
@@ -48,10 +49,7 @@ export default function DeliveryZonesModal({ onClose }) {
     }
   };
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M"
-  });
+
 
   const fetchZones = async () => {
     setLoading(true);
@@ -303,33 +301,32 @@ export default function DeliveryZonesModal({ onClose }) {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Ubicación en el Mapa</label>
-                {isLoaded ? (
-                  <div style={{ height: '300px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                    <GoogleMap
-                      mapContainerStyle={{ width: '100%', height: '100%' }}
-                      center={mapCenter}
-                      zoom={13}
-                      onClick={handleMapClick}
-                      options={{
-                        disableDefaultUI: true,
-                        zoomControl: true,
-                        styles: document.body.getAttribute('data-theme') === 'dark' ? [
-                          { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                          { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                          { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] }
-                        ] : []
-                      }}
-                    >
-                      {formData.latitude && formData.longitude && (
-                        <MarkerF position={{ lat: formData.latitude, lng: formData.longitude }} />
-                      )}
-                    </GoogleMap>
-                  </div>
-                ) : (
-                  <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)', borderRadius: '12px' }}>
-                    Cargando mapa...
-                  </div>
-                )}
+                <div style={{ height: '300px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                  <GoogleMapWrapper
+                    mapContainerStyle={{ width: '100%', height: '100%' }}
+                    center={mapCenter}
+                    zoom={13}
+                    onClick={handleMapClick}
+                    options={{
+                      disableDefaultUI: true,
+                      zoomControl: true,
+                      styles: document.body.getAttribute('data-theme') === 'dark' ? [
+                        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] }
+                      ] : []
+                    }}
+                    loadingElement={
+                      <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-input)', borderRadius: '12px' }}>
+                        Cargando mapa...
+                      </div>
+                    }
+                  >
+                    {formData.latitude && formData.longitude && (
+                      <MarkerF position={{ lat: formData.latitude, lng: formData.longitude }} />
+                    )}
+                  </GoogleMapWrapper>
+                </div>
                 {!formData.latitude && (
                   <span style={{ fontSize: '12px', color: 'var(--color-danger)' }}>* Haz clic en el mapa para marcar la ubicación.</span>
                 )}

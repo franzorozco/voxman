@@ -475,10 +475,10 @@ const ProductDetail = () => {
           )}
 
           {/* Low Stock Notifier */}
-          {selectedSize && selectedVariantStock > 0 && selectedVariantStock <= 5 && (
+          {selectedSize && selectedVariantStock === 1 && (
             <div style={{ marginTop: '-20px', marginBottom: '24px', fontSize: '13px', color: '#ef4444', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }}></span>
-              ¡Date prisa, solo quedan {selectedVariantStock} unidades!
+              ¡Date prisa, quedan pocas unidades!
             </div>
           )}
 

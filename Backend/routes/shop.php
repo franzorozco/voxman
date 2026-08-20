@@ -42,6 +42,7 @@ Route::prefix('v1/shop')->group(function () {
         Route::post('/add', [ShopCartController::class, 'add']);
         Route::put('/update', [ShopCartController::class, 'update']);
         Route::delete('/remove', [ShopCartController::class, 'remove']);
+        Route::post('/validate', [ShopCartController::class, 'validateStock']);
         Route::post('/checkout', [ShopCheckoutController::class, 'process']);
     });
 

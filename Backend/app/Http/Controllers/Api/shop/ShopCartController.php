@@ -246,4 +246,59 @@ class ShopCartController extends Controller
 
         return response()->json($cartData);
     }
+    public function validateStock(Request $request)
+    {
+        $cartToken = $request->header('X-Cart-Token');
+        if (!$cartToken) {
+            return response()->json(['error' => 'No cart token provided'], 400);
+        }
+
+        $cartData = $this->getCartData($cartToken);
+        if (!$cartData || empty($cartData['items'])) {
+            return response()->json(['valid' => true, 'cart' => $cartData]);
+        }
+
+        $adjusted = false;
+        $messages = [];
+
+        foreach ($cartData['items'] as $index => $item) {
+            $variantId = $item['variant_id'];
+            if (!$variantId) continue;
+
+            $variant = ProductVariant::with('inventories')->find($variantId);
+            if (!$variant) {
+                unset($cartData['items'][$index]);
+                $adjusted = true;
+                $messages[] = "El producto {$item['name']} ya no está disponible.";
+                continue;
+            }
+
+            $availableStock = $variant->inventories->sum('stock');
+            if ($availableStock < $item['quantity']) {
+                if ($availableStock <= 0) {
+                    unset($cartData['items'][$index]);
+                    $messages[] = "El producto {$item['name']} está agotado.";
+                } else {
+                    $cartData['items'][$index]['quantity'] = $availableStock;
+                    $messages[] = "Solo quedan {$availableStock} unidades de {$item['name']}.";
+                }
+                $adjusted = true;
+            }
+        }
+
+        if ($adjusted) {
+            $cartData['items'] = array_values($cartData['items']);
+            $this->recalculateTotal($cartData);
+            $this->saveCartData($cartToken, $cartData);
+            
+            return response()->json([
+                'valid' => false,
+                'message' => 'No pudimos acompletar el stock que deseas, te podemos ofrecer lo que actualmente esta en el carrito',
+                'details' => $messages,
+                'cart' => $cartData
+            ]);
+        }
+
+        return response()->json(['valid' => true, 'cart' => $cartData]);
+    }
 }
