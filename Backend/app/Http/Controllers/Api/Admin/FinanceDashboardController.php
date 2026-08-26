@@ -175,11 +175,23 @@ class FinanceDashboardController extends Controller
             $ownerBranches = [];
 
             // We calculate per branch
-            foreach ($allBranches as $branch) {
+            // Add a virtual branch to catch sales with null branch_id
+            $branchesWithVirtual = clone $allBranches;
+            $branchesWithVirtual->push((object)[
+                'id' => 'na',
+                'name' => 'N/A'
+            ]);
+
+            foreach ($branchesWithVirtual as $branch) {
                 // Sales
                 $salesQuery = SaleDetail::with('sale.payments')
                     ->whereHas('sale', function($q) use ($branch, $startDate, $endDate) {
-                        $q->where('status', 'paid')->where('branch_id', $branch->id);
+                        $q->where('status', 'paid');
+                        if ($branch->id === 'na') {
+                            $q->whereNull('branch_id');
+                        } else {
+                            $q->where('branch_id', $branch->id);
+                        }
                         if ($startDate && $endDate) {
                             $q->whereBetween('created_at', [$startDate, $endDate]);
                         }
@@ -221,7 +233,11 @@ class FinanceDashboardController extends Controller
                 // Expenses
                 $expensesCashQuery = ExpenseSplit::where('owner_id', $owner->id)
                     ->whereHas('expense', function($q) use ($branch) {
-                        $q->where('branch_id', $branch->id);
+                        if ($branch->id === 'na') {
+                            $q->whereNull('branch_id');
+                        } else {
+                            $q->where('branch_id', $branch->id);
+                        }
                     })
                     ->whereIn('status', ['paid', 'archived'])
                     ->where('deducted_from_wallet', true)
@@ -229,7 +245,11 @@ class FinanceDashboardController extends Controller
                     
                 $expensesBankQuery = ExpenseSplit::where('owner_id', $owner->id)
                     ->whereHas('expense', function($q) use ($branch) {
-                        $q->where('branch_id', $branch->id);
+                        if ($branch->id === 'na') {
+                            $q->whereNull('branch_id');
+                        } else {
+                            $q->where('branch_id', $branch->id);
+                        }
                     })
                     ->whereIn('status', ['paid', 'archived'])
                     ->where('deducted_from_wallet', true)
@@ -237,7 +257,11 @@ class FinanceDashboardController extends Controller
                     
                 $expensesLegacyQuery = ExpenseSplit::where('owner_id', $owner->id)
                     ->whereHas('expense', function($q) use ($branch) {
-                        $q->where('branch_id', $branch->id);
+                        if ($branch->id === 'na') {
+                            $q->whereNull('branch_id');
+                        } else {
+                            $q->where('branch_id', $branch->id);
+                        }
                     })
                     ->whereIn('status', ['paid', 'archived'])
                     ->where('deducted_from_wallet', true)
@@ -245,7 +269,11 @@ class FinanceDashboardController extends Controller
 
                 $pendingDebtsQuery = ExpenseSplit::where('owner_id', $owner->id)
                     ->whereHas('expense', function($q) use ($branch) {
-                        $q->where('branch_id', $branch->id);
+                        if ($branch->id === 'na') {
+                            $q->whereNull('branch_id');
+                        } else {
+                            $q->where('branch_id', $branch->id);
+                        }
                     })
                     ->where('status', 'pending');
 
@@ -272,10 +300,22 @@ class FinanceDashboardController extends Controller
                 $branchExpensesAssumed = $expensesCash + $expensesBank;
 
                 // Withdrawals / Deposits
-                $withdrawalsCashQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'cash')->where('branch_id', $branch->id);
-                $withdrawalsBankQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'bank')->where('branch_id', $branch->id);
-                $depositsCashQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'cash')->where('branch_id', $branch->id);
-                $depositsBankQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'bank')->where('branch_id', $branch->id);
+                $withdrawalsCashQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'cash');
+                $withdrawalsBankQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'withdrawal')->where('fund_source', 'bank');
+                $depositsCashQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'cash');
+                $depositsBankQuery = OwnerPayment::whereIn('status', ['paid', 'archived'])->where('owner_id', $owner->id)->where('type', 'deposit')->where('fund_source', 'bank');
+
+                if ($branch->id === 'na') {
+                    $withdrawalsCashQuery->whereNull('branch_id');
+                    $withdrawalsBankQuery->whereNull('branch_id');
+                    $depositsCashQuery->whereNull('branch_id');
+                    $depositsBankQuery->whereNull('branch_id');
+                } else {
+                    $withdrawalsCashQuery->where('branch_id', $branch->id);
+                    $withdrawalsBankQuery->where('branch_id', $branch->id);
+                    $depositsCashQuery->where('branch_id', $branch->id);
+                    $depositsBankQuery->where('branch_id', $branch->id);
+                }
 
                 if ($startDate && $endDate) {
                     $withdrawalsCashQuery->whereBetween('created_at', [$startDate, $endDate]);

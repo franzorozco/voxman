@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\shop\ShopCartController;
 use App\Http\Controllers\Api\shop\ShopCheckoutController;
 use App\Http\Controllers\Api\shop\ShopAuthController;
 use App\Http\Controllers\Api\shop\ShopShortController;
+use App\Http\Controllers\Api\shop\ShopSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +22,7 @@ use App\Http\Controllers\Api\shop\ShopShortController;
 
 Route::prefix('v1/shop')->group(function () {
     // Rutas públicas
+    Route::get('/settings', [ShopSettingsController::class, 'index']);
     Route::get('/products', [ShopProductController::class, 'index']);
     Route::get('/products/{slug}', [ShopProductController::class, 'show']);
     

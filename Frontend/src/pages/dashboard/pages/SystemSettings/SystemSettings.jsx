@@ -33,8 +33,18 @@ export default function SystemSettings() {
   const handleSave = async (setting) => {
     try {
       setSaving({ ...saving, [setting.key]: true });
-      await updateSystemSetting(setting.key, { value: setting.value });
+      
+      let payload;
+      if (setting.value instanceof File) {
+        payload = new FormData();
+        payload.append('value_file', setting.value);
+      } else {
+        payload = { value: setting.value };
+      }
+      
+      await updateSystemSetting(setting.key, payload);
       toast.success('Configuración actualizada');
+      fetchSettings(); // Refresh to get the updated URL
     } catch (error) {
       toast.error('Error al actualizar la configuración');
     } finally {
@@ -73,13 +83,31 @@ export default function SystemSettings() {
             </div>
             
             <div className="flex items-center gap-3 w-full md:w-[45%] lg:w-[40%] shrink-0">
-              <input
-                type="text"
-                value={setting.value || ''}
-                onChange={(e) => handleValueChange(setting.key, e.target.value)}
-                className={`flex-1 w-full p-3 text-[15px] rounded-lg border outline-none transition-all focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`}
-                placeholder="Ingresa un valor..."
-              />
+              {setting.type === 'image' ? (
+                <div className="flex-1 flex items-center gap-3 w-full">
+                  {setting.value && (
+                    <img 
+                      src={setting.value instanceof File ? URL.createObjectURL(setting.value) : `${(import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace('/api/v1', '').replace('/api', '')}${setting.value}`} 
+                      alt="Setting Preview" 
+                      className="w-12 h-12 rounded object-cover border"
+                    />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleValueChange(setting.key, e.target.files[0])}
+                    className={`flex-1 w-full text-[13px] rounded-lg border outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 ${isDark ? 'bg-gray-900 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
+                  />
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={setting.value || ''}
+                  onChange={(e) => handleValueChange(setting.key, e.target.value)}
+                  className={`flex-1 w-full p-3 text-[15px] rounded-lg border outline-none transition-all focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`}
+                  placeholder="Ingresa un valor..."
+                />
+              )}
               <button
                 onClick={() => handleSave(setting)}
                 disabled={saving[setting.key]}

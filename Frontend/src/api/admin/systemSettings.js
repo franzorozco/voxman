@@ -6,6 +6,13 @@ export const getSystemSettings = async () => {
 };
 
 export const updateSystemSetting = async (key, data) => {
+  if (data instanceof FormData) {
+    data.append("_method", "PUT");
+    const response = await api.post(`/v1/admin/system-settings/${key}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  }
   const response = await api.put(`/v1/admin/system-settings/${key}`, data);
   return response.data;
 };

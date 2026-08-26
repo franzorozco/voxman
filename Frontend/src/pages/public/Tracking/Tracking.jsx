@@ -4,6 +4,7 @@ import axios from "axios";
 import { Package, Truck, MapPin, CheckCircle, Clock, AlertCircle, ShoppingBag, User, Phone, Map, Box, StickyNote, Check, Edit2, X as XIcon, Save } from "lucide-react";
 import { GoogleMap, useJsApiLoader, MarkerF } from "@react-google-maps/api";
 import echo from "../../../echo";
+import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
 import "./Tracking.css";
 import { API_BASE_URL as BASE_URL, API_URL } from "../../../config/api";
 
@@ -54,6 +55,12 @@ export default function Tracking() {
       setSavingNotes(false);
     }
   };
+
+  const { settings, fetchSettings } = useShopSettingsStore();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   useEffect(() => {
     if (schedule?.shipment) {
@@ -792,9 +799,9 @@ export default function Tracking() {
                 <div style={{ textAlign: 'center', marginBottom: '24px', background: '#f9fafb', padding: '20px', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
                   <p style={{ margin: '0 0 12px 0', fontWeight: 700, color: '#111827', fontSize: '16px' }}>Escanea este QR para pagar</p>
                   <img 
-                    src={`${BASE_URL}/storage/payments/QRBCP.jpeg`} 
-                    alt="QR de Pago" 
-                    style={{ maxWidth: '200px', borderRadius: '12px', border: '2px solid #e5e7eb' }}
+                    src={settings?.payment_qr ? `${(BASE_URL).replace('/api/v1', '').replace('/api', '')}${settings.payment_qr}` : `${(BASE_URL).replace('/api/v1', '').replace('/api', '')}/storage/default/default.png`} 
+                    alt="QR Code" 
+                    style={{ width: '200px', height: '200px', margin: '0 auto', display: 'block', borderRadius: '12px' }} 
                   />
                 </div>
               )}

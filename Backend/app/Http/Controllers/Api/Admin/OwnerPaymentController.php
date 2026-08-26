@@ -56,6 +56,9 @@ class OwnerPaymentController extends Controller
         }
 
         $data = $request->all();
+        if (isset($data['branch_id']) && $data['branch_id'] === 'na') {
+            $data['branch_id'] = null;
+        }
         $data['total_amount'] = $request->amount;
         $data['status'] = 'paid';
 
@@ -137,7 +140,7 @@ class OwnerPaymentController extends Controller
     {
         $request->validate([
             'owner_id' => 'required|uuid',
-            'branch_id' => 'required|uuid|exists:branches,id',
+            'branch_id' => 'required',
             'from_fund' => 'required|in:cash,bank',
             'to_fund' => 'required|in:cash,bank',
             'amount' => 'required|numeric|min:0.01',
@@ -154,7 +157,9 @@ class OwnerPaymentController extends Controller
             return response()->json(['error' => 'Solo puedes transferir fondos de tu propia cuenta.'], 403);
         }
 
-        $balance = $this->getTreasuryBalance($request->from_fund, $request->branch_id);
+        $branchId = $request->branch_id === 'na' ? null : $request->branch_id;
+
+        $balance = $this->getTreasuryBalance($request->from_fund, $branchId);
         if ($balance < $request->amount) {
             $fundName = $request->from_fund === 'cash' ? 'Caja Física' : 'Cuenta Bancaria';
             return response()->json([
@@ -162,11 +167,11 @@ class OwnerPaymentController extends Controller
             ], 400);
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $branchId) {
             // 1. Withdrawal from source
             \App\Models\Finance\OwnerPayment::create([
                 'owner_id' => $request->owner_id,
-                'branch_id' => $request->branch_id,
+                'branch_id' => $branchId,
                 'total_amount' => $request->amount,
                 'amount' => $request->amount, // needed? Wait, the model uses total_amount but maybe mutator? I'll provide both.
                 'payment_date' => $request->transfer_date,
@@ -181,7 +186,7 @@ class OwnerPaymentController extends Controller
             // 2. Deposit to destination
             \App\Models\Finance\OwnerPayment::create([
                 'owner_id' => $request->owner_id,
-                'branch_id' => $request->branch_id,
+                'branch_id' => $branchId,
                 'total_amount' => $request->amount,
                 'amount' => $request->amount,
                 'payment_date' => $request->transfer_date,
@@ -195,5 +200,83 @@ class OwnerPaymentController extends Controller
         });
 
         return response()->json(['message' => 'Transferencia completada correctamente.'], 201);
+    }
+
+    protected function getTreasuryBalance($type, $branchId = null) {
+        $cashMethod = \App\Models\Finance\PaymentMethod::where('name', 'Efectivo')->first();
+        $cashMethodId = $cashMethod ? $cashMethod->id : null;
+        
+        $applyBranch = function($query) use ($branchId) {
+            if ($branchId) {
+                if (method_exists($query->getModel(), 'sale')) {
+                    $query->whereHas('sale', function($q) use ($branchId) {
+                        $q->where('branch_id', $branchId);
+                    });
+                } else if (\Illuminate\Support\Facades\Schema::hasColumn($query->getModel()->getTable(), 'branch_id')) {
+                    $query->where('branch_id', $branchId);
+                } else if ($query->getModel() instanceof \App\Models\Finance\ExpenseSplit) {
+                    $query->whereHas('expense', function($q) use ($branchId) {
+                        $q->where('branch_id', $branchId);
+                    });
+                }
+            } else if ($branchId === null && func_num_args() > 0) {
+                 // If null is explicitly passed for branch (meaning N/A), we must query whereNull
+                 // Actually this $applyBranch doesn't get called with 'null' as a literal 'filter by null'
+                 // wait, if $branchId is strictly null (not omitted), it just bypasses the if ($branchId)
+                 // and doesn't filter, which means it returns GLOBAL balance!
+                 // BUT WAIT! In transfer, if they select "N/A" (branchId = null), they want to check the balance of N/A!
+                 // If `if ($branchId)` is false, it returns global! That's a BUG in getTreasuryBalance!
+            }
+            return $query;
+        };
+        
+        // Wait, to properly support branchId === null for N/A branch:
+        $applyBranchFixed = function($query) use ($branchId) {
+            // We only apply filter if we're looking at a specific branch OR N/A branch.
+            // If we're looking at N/A branch, $branchId is null.
+            // But how do we distinguish between "no filter" and "filter by null"?
+            // In these controllers, we always pass branchId explicitly if we want to filter.
+            // Let's use strict filtering:
+            if (func_num_args() > 0) { // But we are in a closure. We can just check if we want to filter by null.
+                if (method_exists($query->getModel(), 'sale')) {
+                    $query->whereHas('sale', function($q) use ($branchId) {
+                        $branchId ? $q->where('branch_id', $branchId) : $q->whereNull('branch_id');
+                    });
+                } else if (\Illuminate\Support\Facades\Schema::hasColumn($query->getModel()->getTable(), 'branch_id')) {
+                    $branchId ? $query->where('branch_id', $branchId) : $query->whereNull('branch_id');
+                } else if ($query->getModel() instanceof \App\Models\Finance\ExpenseSplit) {
+                    $query->whereHas('expense', function($q) use ($branchId) {
+                        $branchId ? $q->where('branch_id', $branchId) : $q->whereNull('branch_id');
+                    });
+                }
+            }
+            return $query;
+        };
+
+        if ($type === 'cash') {
+            $sales = $cashMethodId ? $applyBranchFixed(\App\Models\Finance\Payment::where('payment_method_id', $cashMethodId))->sum('amount') : 0;
+            $expenses = $applyBranchFixed(\App\Models\Finance\Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'cash'))->sum('amount');
+            $splitExpenses = $applyBranchFixed(\App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])->where('deducted_from_wallet', true)->where('fund_source', 'cash'))->sum('amount');
+            $deposits = $applyBranchFixed(\App\Models\Finance\OwnerPayment::where('type', 'deposit')->where('fund_source', 'cash'))->sum('total_amount');
+            $withdrawals = $applyBranchFixed(\App\Models\Finance\OwnerPayment::where('type', 'withdrawal')->where('fund_source', 'cash'))->sum('total_amount');
+            return $sales + $deposits - $expenses - $splitExpenses - $withdrawals;
+        } elseif ($type === 'bank') {
+            if ($cashMethodId) {
+                $giftcardMethodIds = \App\Models\Finance\PaymentMethod::where('name', 'ILIKE', '%giftcard%')->pluck('id')->toArray();
+                $bankQuery = \App\Models\Finance\Payment::where('payment_method_id', '!=', $cashMethodId);
+                if (!empty($giftcardMethodIds)) {
+                    $bankQuery->whereNotIn('payment_method_id', $giftcardMethodIds);
+                }
+                $sales = $applyBranchFixed($bankQuery)->sum('amount');
+            } else {
+                $sales = $applyBranchFixed(\App\Models\Finance\Payment::query())->sum('amount');
+            }
+            $expenses = $applyBranchFixed(\App\Models\Finance\Expense::whereIn('status', ['paid', 'archived'])->where('fund_source', 'bank'))->sum('amount');
+            $splitExpenses = $applyBranchFixed(\App\Models\Finance\ExpenseSplit::whereIn('status', ['paid', 'archived'])->where('deducted_from_wallet', true)->where('fund_source', 'bank'))->sum('amount');
+            $deposits = $applyBranchFixed(\App\Models\Finance\OwnerPayment::where('type', 'deposit')->where('fund_source', 'bank'))->sum('total_amount');
+            $withdrawals = $applyBranchFixed(\App\Models\Finance\OwnerPayment::where('type', 'withdrawal')->where('fund_source', 'bank'))->sum('total_amount');
+            return $sales + $deposits - $expenses - $splitExpenses - $withdrawals;
+        }
+        return 0;
     }
 }

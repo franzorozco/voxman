@@ -53,6 +53,7 @@ const CartView = () => {
   const getImageUrl = (path) => {
     if (!path) return `${API_BASE_URL}/storage/products/default.jpg`;
     if (path.startsWith('http')) return path;
+    if (path.startsWith('/storage/')) return `${API_BASE_URL}${path}`;
     return `${API_BASE_URL}/storage/${path}`;
   };
 

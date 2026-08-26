@@ -6,7 +6,8 @@ import api from "../../../../api/client";
 import echo from "../../../../echo";
 import { toast } from "react-hot-toast";
 import { MarkerF } from '@react-google-maps/api';
-import GoogleMapWrapper from '../../../../components/ui/GoogleMapWrapper';
+import GoogleMapWrapper from "../../../../components/ui/GoogleMapWrapper";
+import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
 import DiscountInput from '../../components/DiscountInput';
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import CanAccess from '../../../../components/ui/CanAccess';
@@ -81,6 +82,12 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const [cashAmount, setCashAmount] = useState('');
   const [montoReal, setMontoReal] = useState('');
   const [appliedCode, setAppliedCode] = useState(null);
+
+  const { settings, fetchSettings } = useShopSettingsStore();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [isAdvancePayment, setIsAdvancePayment] = useState(false);
@@ -1583,7 +1590,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   Escanea para pagar {paymentMethod === 'ambos' && qrAmount ? `Bs. ${Number(qrAmount).toFixed(2)}` : ''}
                 </p>
                 <img 
-                  src={`${(import.meta.env.VITE_API_URL || API_BASE_URL).replace('/api', '').replace('/v1', '')}/storage/payments/QRBCP.jpeg`} 
+                  src={settings?.payment_qr ? `${(import.meta.env.VITE_API_URL || API_BASE_URL).replace('/api/v1', '').replace('/api', '')}${settings.payment_qr}` : `${(import.meta.env.VITE_API_URL || API_BASE_URL).replace('/api', '').replace('/v1', '')}/storage/default/default.png`} 
                   alt="QR de Pago" 
                   style={{ maxWidth: '200px', borderRadius: '8px', border: '2px solid var(--border-color)' }}
                 />

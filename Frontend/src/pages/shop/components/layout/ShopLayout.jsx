@@ -67,7 +67,7 @@ const ShopNavbar = () => {
         <nav className={`shop-nav-menu ${menuOpen ? "active" : ""}`}>
           <Link to="/shop" onClick={closeMenu}>Tienda</Link>
           <Link to="/shop/catalog" onClick={closeMenu}>Catálogo</Link>
-          <Link to="/shop/collections" onClick={closeMenu}>Colecciones</Link>
+          {/* <Link to="/shop/collections" onClick={closeMenu}>Colecciones</Link> */}
 
           {!user ? (
             <div className="shop-nav-mobile-auth">
