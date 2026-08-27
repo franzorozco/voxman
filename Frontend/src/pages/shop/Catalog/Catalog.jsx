@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
@@ -76,11 +77,7 @@ const Catalog = () => {
     }
   }, [expandedProductId]);
 
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return `${API_BASE_URL}${url}`;
-  };
+  
 
   // Extraer las variantes de un producto específico
   const getVariantsForProduct = (product) => {

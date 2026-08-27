@@ -1,7 +1,8 @@
+import { getImageUrl } from '../../utils/imageUtils';
 import React from "react";
 import { Link } from "react-router-dom";
 import { API_BASE_URL } from "../../config/api";
-const logo = `${API_BASE_URL}/storage/system/logos/logo_black_sinfondo.png`;
+const logo = getImageUrl('/system/logos/logo_black_sinfondo.png');
 import modelo1 from "../../assets/global/modelo_1.png";
 import modelo2 from "../../assets/global/modelo_2.png";
 import modelo3 from "../../assets/global/modelo_3.png";

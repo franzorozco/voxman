@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
@@ -306,13 +307,13 @@ export default function DeletedProducts() {
                               const imgUrl = p.product_images?.find((img) => img.is_main)?.url ||
                                             p.product_images?.[0]?.url;
                               if (!imgUrl) return "/placeholder.png";
-                              return imgUrl.startsWith("http") ? imgUrl : `${API_BASE_URL}${imgUrl}`;
+                              return imgUrl.startsWith("http") ? imgUrl : getImageUrl(imgUrl);
                             })()
                           }
                           alt={p.name}
                           className="product-img"
                           onError={(e) => {
-                            e.target.src = `${API_BASE_URL}/storage/products/default.png`;
+                            e.target.src = getImageUrl('/catalog/products/default.png');
                           }}
                         />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>

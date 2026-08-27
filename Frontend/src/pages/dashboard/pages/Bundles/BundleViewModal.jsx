@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React from 'react';
 import { X, Package, DollarSign, Target, CheckCircle2, AlertCircle, TrendingDown, Users, PieChart, Tag, Hash, Building2 } from 'lucide-react';
 import { API_BASE_URL } from '../../../../config/api';
@@ -5,13 +6,9 @@ import { API_BASE_URL } from '../../../../config/api';
 export default function BundleViewModal({ bundle, onClose }) {
   if (!bundle) return null;
 
-  const DEFAULT_IMAGE = `${API_BASE_URL}/storage/product_images/default.png`;
+  const DEFAULT_IMAGE = getImageUrl('/catalog/products/default.png');
 
-  const getImageUrl = (url) => {
-    if (!url) return DEFAULT_IMAGE;
-    if (url.startsWith("http")) return url;
-    return `${API_BASE_URL}${url}`;
-  };
+  
 
   const mainImage = getImageUrl(
     bundle.product_images?.find(img => img.is_main)?.url || 

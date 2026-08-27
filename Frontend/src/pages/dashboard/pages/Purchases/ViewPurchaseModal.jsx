@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState } from "react";
 import { X, FileText, ShoppingCart, Info, MapPin, User, Hash, Printer, DollarSign, Plus } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
@@ -17,15 +18,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
 
   if (!purchase) return null;
 
-  const getImageUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http")) return url;
-    
-    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-    const finalPath = cleanUrl.startsWith('storage/') ? cleanUrl : `storage/${cleanUrl}`;
-    
-    return `${API_BASE_URL}/${finalPath}`;
-  };
+  
 
   const extractImage = (item) => {
     const variant = item.product_variant;

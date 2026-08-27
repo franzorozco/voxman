@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { getQuarantineItems } from "../../../../api/admin/quarantine";
@@ -138,9 +139,9 @@ const QuarantineList = () => {
                                   || item.variant?.product?.product_images?.[0]?.url 
                                   || item.variant?.product?.product_images?.[0]?.image_url;
                 
-                let finalImageUrl = `${API_BASE_URL}/storage/attributes/default.png`;
+                let finalImageUrl = getImageUrl('/catalog/attributes/default.png');
                 if (rawImageUrl) {
-                  finalImageUrl = rawImageUrl.startsWith('http') ? rawImageUrl : `${API_BASE_URL}${rawImageUrl.startsWith('/') ? '' : '/storage/'}${rawImageUrl}`;
+                  finalImageUrl = rawImageUrl.startsWith('http') ? rawImageUrl : getImageUrl(rawImageUrl);
                 }
                 
                 return (
@@ -154,7 +155,7 @@ const QuarantineList = () => {
                           style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover', marginRight: 10, border: '1px solid var(--border-color)' }} 
                           onError={(e) => { 
                             e.target.onerror = null; 
-                            e.target.src = `${API_BASE_URL}/storage/attributes/default.png`; 
+                            e.target.src = getImageUrl('/catalog/attributes/default.png'); 
                           }}
                         />
                         <div>

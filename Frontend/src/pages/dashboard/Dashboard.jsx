@@ -1,11 +1,12 @@
+import { getImageUrl } from '../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { Outlet, Link, NavLink, useLocation } from "react-router-dom";
 import { useThemeStore } from "../../store/themeStore";
 import { useAuthStore } from "../../store/authStore";
 import "./Dashboard.css";
 import { API_BASE_URL } from "../../config/api";
-const logo_black = `${API_BASE_URL}/storage/system/logos/logo_black_sinfondo.png`;
-const logo_white = `${API_BASE_URL}/storage/system/logos/logo_white_sinfondo.png`;
+const logo_black = getImageUrl('/system/logos/logo_black_sinfondo.png');
+const logo_white = getImageUrl('/system/logos/logo_white_sinfondo.png');
 import CanAccess from "../../components/ui/CanAccess";
 import AttendanceWidget from "./components/AttendanceWidget/AttendanceWidget";
 import GlobalScannerModal from "../../components/ui/GlobalScannerModal";

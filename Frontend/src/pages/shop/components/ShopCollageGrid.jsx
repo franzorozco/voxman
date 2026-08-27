@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../../../config/api';
@@ -35,11 +36,7 @@ const ShopCollageGrid = ({ items }) => {
     return () => observer.disconnect();
   }, [items]);
 
-  const getImageUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return `${API_BASE_URL}${url}`;
-  };
+  
 
   if (!items || items.length === 0) {
     return (

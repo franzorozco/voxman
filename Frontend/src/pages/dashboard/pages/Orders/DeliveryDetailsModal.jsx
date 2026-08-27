@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
@@ -12,7 +13,7 @@ import DiscountInput from '../../components/DiscountInput';
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import CanAccess from '../../../../components/ui/CanAccess';
 import { API_BASE_URL } from "../../../../config/api";
-const logo = `${API_BASE_URL}/storage/system/logos/logo_white.png`;
+const logo = getImageUrl('/system/logos/logo_white.png');
 
 const mapContainerStyle = {
   width: '100%',
@@ -786,7 +787,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       }
 
                       if (imageUrl && !imageUrl.startsWith('http')) {
-                        imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl.replace('storage/', '')}`;
+                        imageUrl = getImageUrl(imageUrl);
                       }
 
                     const allReservations = sale?.stock_reservations || sale?.stockReservations || [];
@@ -1590,7 +1591,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   Escanea para pagar {paymentMethod === 'ambos' && qrAmount ? `Bs. ${Number(qrAmount).toFixed(2)}` : ''}
                 </p>
                 <img 
-                  src={settings?.payment_qr ? `${(import.meta.env.VITE_API_URL || API_BASE_URL).replace('/api/v1', '').replace('/api', '')}${settings.payment_qr}` : `${(import.meta.env.VITE_API_URL || API_BASE_URL).replace('/api', '').replace('/v1', '')}/storage/default/default.png`} 
+                  src={settings?.payment_qr ? getImageUrl(settings.payment_qr) : getImageUrl('/system/payments/default.png')} 
                   alt="QR de Pago" 
                   style={{ maxWidth: '200px', borderRadius: '8px', border: '2px solid var(--border-color)' }}
                 />

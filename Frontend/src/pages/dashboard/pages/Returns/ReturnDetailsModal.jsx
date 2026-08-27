@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState } from "react";
 import { X, Undo2, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -92,7 +93,7 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
               const colorImg = product?.attribute_value_images?.find(img => img.attribute_value_id === colorId);
               let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
               if (imageUrl && !imageUrl.startsWith('http')) {
-                imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl}`;
+                imageUrl = getImageUrl(imageUrl);
               }
               
               return imageUrl ? (

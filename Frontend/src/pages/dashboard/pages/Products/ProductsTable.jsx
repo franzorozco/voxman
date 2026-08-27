@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import {
   API_BASE_URL
 } from "../../../../config/api";
@@ -37,15 +38,9 @@ export default function ProductsTable({
   };
 
   const DEFAULT_IMAGE =
-    `${API_BASE_URL}/storage/product_images/default.png`;
+    getImageUrl('/catalog/products/default.png');
 
-  const getImageUrl = (url) => {
-    if (!url) return DEFAULT_IMAGE;
-
-    if (url.startsWith("http")) return url;
-
-    return `${API_BASE_URL}${url}`;
-  };
+  
 
   const formatMoney = (value) => {
     const num = Number(value || 0);

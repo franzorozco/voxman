@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { getProduct, getProducts } from '../../../api/shop/products';
@@ -7,11 +8,7 @@ import { ChevronDown, ChevronUp, Share2, Copy, Check } from 'lucide-react';
 import { VideoPlayer } from '../../../components/ui/videoHelpers';
 import './ProductDetail.css';
 
-const getImageUrl = (url) => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
-};
+
 
 const ZoomableImage = ({ src, alt, className }) => {
   const [isZoomed, setIsZoomed] = useState(false);

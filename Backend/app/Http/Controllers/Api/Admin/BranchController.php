@@ -81,7 +81,7 @@ class BranchController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $file) {
                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('branches', $filename, 'public');
+                    $filePath = $file->storeAs('branches', $filename, 's3');
 
                     $isPrimary = false;
                     if ($request->has('primary_image_index') && $request->primary_image_index == $index) {
@@ -92,7 +92,7 @@ class BranchController extends Controller
 
                     $image = new BranchImage([
                         'branch_id' => $branch->id,
-                        'image_url' => '/storage/' . $filePath,
+                        'image_url' => $filePath,
                         'is_primary' => $isPrimary,
                         'display_order' => $index,
                     ]);
@@ -202,11 +202,11 @@ class BranchController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $file) {
                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('branches', $filename, 'public');
+                    $filePath = $file->storeAs('branches', $filename, 's3');
 
                     $image = new BranchImage([
                         'branch_id' => $branch->id,
-                        'image_url' => '/storage/' . $filePath,
+                        'image_url' => $filePath,
                         'is_primary' => false,
                         'display_order' => $index,
                     ]);

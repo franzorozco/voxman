@@ -1,8 +1,9 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React from 'react';
 import { Printer, X } from 'lucide-react';
 import './ThermalReceiptModal.css';
 import { API_BASE_URL } from '../../../../config/api';
-const logo = `${API_BASE_URL}/storage/system/logos/logo_white.png`;
+const logo = getImageUrl('/system/logos/logo_white.png');
 
 export default function ThermalReceiptModal({ sale, onClose }) {
   if (!sale) return null;

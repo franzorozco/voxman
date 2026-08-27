@@ -47,7 +47,7 @@ class ShopShortController extends Controller
         if ($request->hasFile('video')) {
             $file = $request->file('video');
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $videoPath = $file->storeAs('system/shorts', $filename, 'public');
+            $videoPath = $file->storeAs('system/shorts', $filename, 's3');
             $videoUrl = '/storage/' . $videoPath;
         } elseif ($request->video_link) {
             $videoUrl = $request->video_link;
@@ -112,7 +112,7 @@ class ShopShortController extends Controller
 
             $file = $request->file('video');
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $videoPath = $file->storeAs('system/shorts', $filename, 'public');
+            $videoPath = $file->storeAs('system/shorts', $filename, 's3');
             $short->video_url = '/storage/' . $videoPath;
         } elseif ($request->video_link) {
              // Delete old video if it's a local file and we are replacing it with a link

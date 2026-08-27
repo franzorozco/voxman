@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Package, ArrowLeft, CheckCircle, AlertTriangle, XCircle, Info, Save } from "lucide-react";
@@ -31,13 +32,7 @@ export default function ReceivePurchase() {
   // State array to hold reception data for each item
   const [receptionItems, setReceptionItems] = useState([]);
 
-  const getImageUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http")) return url;
-    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-    const finalPath = cleanUrl.startsWith('storage/') ? cleanUrl : `storage/${cleanUrl}`;
-    return `${API_BASE_URL}/${finalPath}`;
-  };
+  
   const extractImage = (detail) => {
     const variant = detail.product_variant;
     if (!variant) return null;

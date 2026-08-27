@@ -1,9 +1,10 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { useAuthStore } from "../../../../store/authStore";
 import useShopCartStore from "../../../../store/shop/useShopCartStore";
 import { API_BASE_URL } from "../../../../config/api";
-const logo = `${API_BASE_URL}/storage/system/logos/logo_white_sinfondo.png`;
+const logo = getImageUrl('/system/logos/logo_white_sinfondo.png');
 import Footer from "../../../../components/layout/Footer";
 import './ShopLayout.css';
 

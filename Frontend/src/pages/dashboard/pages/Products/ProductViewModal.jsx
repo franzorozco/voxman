@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { X, Package, Tag, DollarSign, Activity, Link as LinkIcon, Info, Users, ArrowUpRight, BarChart3, Image as ImageIcon, Ruler, Save, Edit2, Copy, Check, PenTool, ExternalLink, Box, CheckCircle, AlertCircle, ShoppingBag } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
@@ -186,11 +187,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
     }
   };
 
-  const getImageUrl = (url) => {
-    if (!url) return `${API_BASE_URL}/storage/product_images/default.png`;
-    if (url.startsWith("http")) return url;
-    return `${API_BASE_URL}${url}`;
-  };
+  
 
   const handleTagUpdate = async (newTags) => {
     try {
@@ -275,7 +272,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                 src={getImageUrl(primaryImage)} 
                 alt={product.name} 
                 className="pvm-image"
-                onError={(e) => e.target.src = `${API_BASE_URL}/storage/product_images/default.png`}
+                onError={(e) => e.target.src = getImageUrl('/catalog/products/default.png')}
               />
             </div>
             <div>

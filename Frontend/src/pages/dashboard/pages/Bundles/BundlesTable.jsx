@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
@@ -28,13 +29,9 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
     }
   };
 
-  const DEFAULT_IMAGE = `${API_BASE_URL}/storage/product_images/default.png`;
+  const DEFAULT_IMAGE = getImageUrl('/catalog/products/default.png');
 
-  const getImageUrl = (url) => {
-    if (!url) return DEFAULT_IMAGE;
-    if (url.startsWith("http")) return url;
-    return `${API_BASE_URL}${url}`;
-  };
+  
 
   return (
     <div className="table-wrapper">

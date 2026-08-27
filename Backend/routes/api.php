@@ -452,6 +452,7 @@ Route::middleware([
     // Settings routes
     Route::get('/system-settings', [\App\Http\Controllers\Api\Admin\SystemSettingController::class, 'index'])->middleware('permission:manage_settings');
     Route::put('/system-settings/{key}', [\App\Http\Controllers\Api\Admin\SystemSettingController::class, 'update'])->middleware('permission:manage_settings');
+    Route::post('/system-settings/{key}', [\App\Http\Controllers\Api\Admin\SystemSettingController::class, 'update'])->middleware('permission:manage_settings');
 
 });
 

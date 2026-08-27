@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
@@ -50,12 +51,7 @@ const CartView = () => {
     }
   };
 
-  const getImageUrl = (path) => {
-    if (!path) return `${API_BASE_URL}/storage/products/default.jpg`;
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('/storage/')) return `${API_BASE_URL}${path}`;
-    return `${API_BASE_URL}/storage/${path}`;
-  };
+  
 
   return (
     <div className="cart-page-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

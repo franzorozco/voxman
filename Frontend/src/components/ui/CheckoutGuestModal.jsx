@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { User, Phone, ArrowRight, ArrowLeft, CheckCircle, X, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
@@ -6,11 +7,7 @@ import useShopCartStore from "../../store/shop/useShopCartStore";
 import api from "../../api/client"; 
 import { API_BASE_URL } from "../../config/api";
 
-const getImageUrl = (path) => {
-  if (!path) return `${API_BASE_URL}/storage/products/default.jpg`;
-  if (path.startsWith('http')) return path;
-  return `${API_BASE_URL}/storage/${path}`;
-};
+
 
 export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect, theme = 'light' }) {
   const navigate = useNavigate();

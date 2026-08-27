@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect, useRef } from "react";
 import { Plus, Search, Trash2, ArrowLeft, Save, ShoppingCart, Box, X } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -42,15 +43,7 @@ export default function CreatePurchase() {
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef(null);
 
-  const getImageUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith("http")) return url;
-    
-    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-    const finalPath = cleanUrl.startsWith('storage/') ? cleanUrl : `storage/${cleanUrl}`;
-    
-    return `${API_BASE_URL}/${finalPath}`;
-  };
+  
 
   useEffect(() => {
     const loadInitialData = async () => {

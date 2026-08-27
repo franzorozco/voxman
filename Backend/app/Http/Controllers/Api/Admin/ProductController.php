@@ -226,11 +226,11 @@ class ProductController extends Controller
                 foreach ($request->file('product_images') as $file) {
 
                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('products', $filename, 'public');
+                    $filePath = $file->storeAs('catalog/products', $filename, 's3');
 
                     $image = new ProductImage([
                         'product_id' => $product->id,
-                        'url'        => '/storage/' . $filePath,
+                        'url' => $filePath,
                         'is_main'    => false,
                     ]);
                     $image->id = Str::uuid()->toString();
@@ -246,12 +246,12 @@ class ProductController extends Controller
                     if (is_array($files)) {
                         foreach ($files as $idx => $file) {
                             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('attributes', $filename, 'public');
+                            $filePath = $file->storeAs('catalog/attributes', $filename, 's3');
 
                             $image = new AttributeValueImage([
                                 'attribute_value_id' => $colorId,
                                 'product_id' => $product->id,
-                                'url'        => '/storage/' . $filePath,
+                                'url' => $filePath,
                                 'is_main'    => $idx === 0,
                                 'sort_order' => $idx,
                             ]);
@@ -294,11 +294,11 @@ class ProductController extends Controller
                     if ($request->hasFile("variant_images.{$index}")) {
                         foreach ($request->file("variant_images.{$index}") as $file) {
                             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('variants', $filename, 'public');
+                            $filePath = $file->storeAs('catalog/variants', $filename, 's3');
 
                             $image = new VariantImage([
                                 'variant_id' => $variant->id,
-                                'url'        => '/storage/' . $filePath,
+                                'url' => $filePath,
                             ]);
                             $image->id = Str::uuid()->toString();
                             $image->save();
@@ -384,11 +384,11 @@ class ProductController extends Controller
                 foreach ($request->file('product_images') as $file) {
 
                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('products', $filename, 'public');
+                    $filePath = $file->storeAs('catalog/products', $filename, 's3');
 
                     $image = new ProductImage([
                         'product_id' => $product->id,
-                        'url'        => '/storage/' . $filePath,
+                        'url' => $filePath,
                         'is_main'    => false,
                     ]);
                     $image->id = Str::uuid()->toString();
@@ -423,12 +423,12 @@ class ProductController extends Controller
                     if (is_array($files)) {
                         foreach ($files as $idx => $file) {
                             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('attributes', $filename, 'public');
+                            $filePath = $file->storeAs('catalog/attributes', $filename, 's3');
 
                             $image = new AttributeValueImage([
                                 'attribute_value_id' => $colorId,
                                 'product_id' => $product->id,
-                                'url'        => '/storage/' . $filePath,
+                                'url' => $filePath,
                                 'is_main'    => !isset($request->input('kept_color_images')[$colorId]) && $idx === 0,
                             ]);
                             $image->id = Str::uuid()->toString();
@@ -548,11 +548,11 @@ class ProductController extends Controller
                     if ($request->hasFile("variant_images.{$index}")) {
                         foreach ($request->file("variant_images.{$index}") as $file) {
                             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('variants', $filename, 'public');
+                            $filePath = $file->storeAs('catalog/variants', $filename, 's3');
 
                             $image = new VariantImage([
                                 'variant_id' => $variant->id,
-                                'url'        => '/storage/' . $filePath,
+                                'url' => $filePath,
                             ]);
                             $image->id = Str::uuid()->toString();
                             $image->save();
@@ -605,11 +605,11 @@ class ProductController extends Controller
                 ProductImage::where('product_id', $product->id)->delete();
                 foreach ($request->file('product_images') as $file) {
                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('products', $filename, 'public');
+                    $filePath = $file->storeAs('catalog/products', $filename, 's3');
 
                     $image = new ProductImage([
                         'product_id' => $product->id,
-                        'url'        => '/storage/' . $filePath,
+                        'url' => $filePath,
                         'is_main'    => false,
                     ]);
                     $image->id = Str::uuid()->toString();
@@ -645,12 +645,12 @@ class ProductController extends Controller
                     if (is_array($files)) {
                         foreach ($files as $idx => $file) {
                             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('attributes', $filename, 'public');
+                            $filePath = $file->storeAs('catalog/attributes', $filename, 's3');
 
                             $image = new AttributeValueImage([
                                 'attribute_value_id' => $colorId,
                                 'product_id' => $product->id,
-                                'url'        => '/storage/' . $filePath,
+                                'url' => $filePath,
                                 'is_main'    => !isset($request->input('kept_color_images')[$colorId]) && $idx === 0,
                                 'sort_order' => (isset($request->input('kept_color_images')[$colorId]) ? count($request->input('kept_color_images')[$colorId]) : 0) + $idx,
                             ]);
@@ -698,11 +698,11 @@ class ProductController extends Controller
                         if (is_array($files)) {
                             foreach ($files as $idx => $file) {
                                 $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                                $filePath = $file->storeAs('variants', $filename, 'public');
+                                $filePath = $file->storeAs('catalog/variants', $filename, 's3');
 
                                 $image = new VariantImage([
                                     'variant_id' => $variant->id,
-                                    'url'        => '/storage/' . $filePath,
+                                    'url' => $filePath,
                                     'is_main'    => !isset($request->input('kept_variant_images')[$variantIndex]) && $idx === 0,
                                     'sort_order' => (isset($request->input('kept_variant_images')[$variantIndex]) ? count($request->input('kept_variant_images')[$variantIndex]) : 0) + $idx,
                                 ]);

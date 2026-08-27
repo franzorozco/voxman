@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { getBranches, deleteBranch } from "../../../../api/admin/branches";
@@ -179,7 +180,7 @@ export default function Branches() {
               || branch.images?.[0]?.image_url 
               || "/storage/branches/default.png";
               
-            const imageUrl = primaryImage.startsWith("http") ? primaryImage : `${API_BASE_URL}${primaryImage}`;
+            const imageUrl = primaryImage.startsWith("http") ? primaryImage : getImageUrl(primaryImage);
 
             const managerName = branch.manager?.user?.profile
               ? `${branch.manager.user.profile.first_name || ''} ${branch.manager.user.profile.last_name_paternal || ''}`.trim() || branch.manager.user.email
@@ -193,7 +194,7 @@ export default function Branches() {
             return (
               <div className="branch-card" key={branch.id}>
                 <div className="branch-card-image">
-                  <img src={imageUrl} alt={branch.name} onError={(e) => e.target.src = `${API_BASE_URL}/storage/branches/default.png`} />
+                  <img src={imageUrl} alt={branch.name} onError={(e) => e.target.src = getImageUrl('/branches/default.png')} />
                   <span className={`branch-status-badge ${branch.is_active ? 'active' : 'inactive'}`}>
                     {branch.is_active ? 'Activa' : 'Inactiva'}
                   </span>

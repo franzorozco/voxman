@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { X, Box, Tag, DollarSign, Image as ImageIcon, CheckCircle, XCircle, Info, Hash, PackageSearch, Edit2, Save, Copy, Check } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
@@ -137,11 +138,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
     }
   };
 
-  const getImageUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    return `${API_BASE_URL}${url}`;
-  };
+  
 
   // Extraer todos los IDs de atributos de esta variante para buscar coincidencias de imágenes (como strings para IDs UUID)
   const variantAttrIds = variant.variant_attribute_values?.map(vav => String(vav.attribute_value_id)) || [];

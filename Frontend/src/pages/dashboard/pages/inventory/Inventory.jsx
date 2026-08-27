@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getInventory, getInventoryStats } from "../../../../api/admin/inventory";
@@ -227,7 +228,7 @@ export default function Inventory() {
                         <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                           {primaryImg ? (
                             <img 
-                              src={primaryImg.image_url.startsWith('http') ? primaryImg.image_url : `${API_BASE_URL}${primaryImg.image_url.startsWith('/') ? '' : '/storage/'}${primaryImg.image_url}`} 
+                              src={primaryImg.image_url.startsWith('http') ? primaryImg.image_url : getImageUrl(primaryImg.image_url)} 
                               alt={branch.name} 
                               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
@@ -304,7 +305,7 @@ export default function Inventory() {
                   {primaryImg ? (
                     <>
                       <img 
-                        src={primaryImg.image_url.startsWith('http') ? primaryImg.image_url : `${API_BASE_URL}${primaryImg.image_url.startsWith('/') ? '' : '/storage/'}${primaryImg.image_url}`} 
+                        src={primaryImg.image_url.startsWith('http') ? primaryImg.image_url : getImageUrl(primaryImg.image_url)} 
                         alt={branch.name} 
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
@@ -579,7 +580,7 @@ export default function Inventory() {
                           groupFinalImgUrl = groupImgUrl;
                         } else {
                           // Ensure we don't strip /storage if it's required, just append to API base
-                          groupFinalImgUrl = `${API_BASE_URL}${groupImgUrl.startsWith('/') ? '' : '/'}${groupImgUrl}`;
+                          groupFinalImgUrl = getImageUrl(groupImgUrl);
                         }
                       }
 
@@ -601,7 +602,7 @@ export default function Inventory() {
                                   alt={group.product?.name}
                                   className="product-img"
                                   style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px' }}
-                                  onError={(e) => { e.target.src = `${API_BASE_URL}/storage/products/default.png`; }}
+                                  onError={(e) => { e.target.src = getImageUrl('/catalog/products/default.png'); }}
                                 />
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                   <div style={{ fontWeight: 600, lineHeight: '1.2', color: 'var(--text-main)' }}>{group.product?.name || "Desconocido"}</div>
@@ -665,7 +666,7 @@ export default function Inventory() {
                                 if (imgUrl.startsWith("http")) {
                                   finalImgUrl = imgUrl;
                                 } else {
-                                  finalImgUrl = `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
+                                  finalImgUrl = getImageUrl(imgUrl);
                                 }
                               }
 
@@ -700,7 +701,7 @@ export default function Inventory() {
                                       alt={attributesText}
                                       className="product-img"
                                       style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px' }}
-                                      onError={(e) => { e.target.src = `${API_BASE_URL}/storage/products/default.png`; }}
+                                      onError={(e) => { e.target.src = getImageUrl('/catalog/products/default.png'); }}
                                     />
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                       <div style={{ fontWeight: 500, lineHeight: '1.2', color: 'var(--text-main)', fontSize: '13px' }}>

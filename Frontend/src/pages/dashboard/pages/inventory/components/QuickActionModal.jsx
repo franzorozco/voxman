@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../../utils/imageUtils';
 import React from 'react';
 import { PenTool, ArrowRightLeft, History, X, Package, Tag, MapPin } from 'lucide-react';
 import { API_BASE_URL } from '../../../../../config/api';
@@ -20,7 +21,7 @@ export default function QuickActionModal({ item, onClose, onAdjust, onTransfer }
   if (!imgUrl) {
     imgUrl = product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
   }
-  const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : `${API_BASE_URL}${imgUrl}`) : "/placeholder.png";
+  const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : getImageUrl(imgUrl)) : "/placeholder.png";
 
   const handleHistory = () => {
     navigate(`/dashboard/inventory/movements?search=${variant?.sku}`);

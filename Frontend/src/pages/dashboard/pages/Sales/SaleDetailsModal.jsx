@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle, Printer, CalendarClock, StickyNote } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -251,7 +252,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                     }
 
                     if (!imageUrl.startsWith('http')) {
-                      imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl}`;
+                      imageUrl = getImageUrl(imageUrl);
                     }
 
                     return (

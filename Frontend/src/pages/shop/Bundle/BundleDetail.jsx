@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProduct } from '../../../api/shop/products';
@@ -61,11 +62,7 @@ const BundleDetail = () => {
     }
   };
 
-  const getImageUrl = (path) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-  };
+  
 
   if (isLoading) {
     return (

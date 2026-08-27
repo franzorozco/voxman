@@ -74,7 +74,7 @@ class BundleController extends Controller
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $file) {
                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('products', $filename, 'public');
+                    $filePath = $file->storeAs('catalog/bundles', $filename, 's3');
 
                     $image = new \App\Models\Catalog\ProductImage([
                         'product_id' => $bundle->id,
@@ -150,7 +150,7 @@ class BundleController extends Controller
                 \App\Models\Catalog\ProductImage::where('product_id', $bundle->id)->delete();
                 foreach ($request->file('product_images') as $file) {
                     $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('products', $filename, 'public');
+                    $filePath = $file->storeAs('catalog/bundles', $filename, 's3');
 
                     $image = new \App\Models\Catalog\ProductImage([
                         'product_id' => $bundle->id,

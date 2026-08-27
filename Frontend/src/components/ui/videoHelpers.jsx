@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../utils/imageUtils';
 import React from 'react';
 import { API_BASE_URL } from '../../config/api';
 
@@ -5,9 +6,7 @@ export const getVideoInfo = (url) => {
   if (!url) return { type: 'none', url: '' };
 
   // Local uploaded video
-  if (url.startsWith('/storage/')) {
-    return { type: 'html5', url: `${API_BASE_URL}${url}` };
-  }
+  if (!url.startsWith('http')) { return { type: 'html5', url: getImageUrl(url) }; }
 
   // YouTube
   const ytShortsMatch = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);

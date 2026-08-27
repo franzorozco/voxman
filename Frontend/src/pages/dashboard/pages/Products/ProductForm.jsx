@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { API_BASE_URL } from "../../../../config/api";
 import { useEffect, useState, useRef } from "react";
 import { getAttributes } from "../../../../api/admin/attributes";
@@ -618,7 +619,7 @@ const getAttributeValueName = (valueId) => {
       const initialColorImages = {};
       const initialVariantImages = {};
 
-      const getImageUrl = (url) => url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+      
 
       if (product.attribute_value_images && product.attribute_value_images.length > 0) {
         strategy = "color";
@@ -2390,10 +2391,6 @@ const getAttributeValueName = (valueId) => {
                 <div className="create-modal-footer">
                   <button
                     type="button"
-                    className="cancel-btn"
-                    onClick={() =>
-                      setShowCreateColor(false)
-                    }
                     className="cancel-btn btn-secondary"
                     onClick={() =>
                       setShowCreateColor(false)

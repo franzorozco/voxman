@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { X, Package, Edit, CheckCircle, Truck, Bell, Trash2 } from "lucide-react";
 import "./Carts.css";
 import { API_BASE_URL } from "../../../../config/api";
@@ -6,11 +7,7 @@ import CanAccess from "../../../../components/ui/CanAccess";
 export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onConvertOrder, onReminder, onDelete }) {
   if (!cart) return null;
 
-  const getImageUrl = (path) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-  };
+  
 
   const getVariantImage = (variant) => {
     if (!variant) return null;

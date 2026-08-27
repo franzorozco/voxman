@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Camera } from "lucide-react";
 import AsyncSelect from "react-select/async";
@@ -56,7 +57,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
         } else {
           mainImage = item.product?.product_images?.find(img => img.is_main)?.url || item.product?.product_images?.[0]?.url;
         }
-        const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : `${API_BASE_URL}${mainImage}`) : null;
+        const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : getImageUrl(mainImage)) : null;
 
         let price = 0;
         let cost = 0;
@@ -123,7 +124,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
       let options = [];
       products.forEach(p => {
         const mainImage = p.product_images?.find(img => img.is_main)?.url || p.product_images?.[0]?.url;
-        const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : `${API_BASE_URL}${mainImage}`) : null;
+        const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : getImageUrl(mainImage)) : null;
 
         // Opción de elegir el producto completo (dinámico)
         const productCost = p.product_variants?.length > 0 ? parseFloat(p.product_variants[0].cost || 0) : 0;
@@ -147,7 +148,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                const avi = p.attribute_value_images.find(img => img.attribute_value_id === colorId);
                if (avi) variantImage = avi.url;
             }
-            const finalVariantImage = variantImage ? (variantImage.startsWith('http') ? variantImage : `${API_BASE_URL}${variantImage}`) : imageUrl;
+            const finalVariantImage = variantImage ? (variantImage.startsWith('http') ? variantImage : getImageUrl(variantImage)) : imageUrl;
             
             const sizeName = v.size?.name || '';
             const fitName = v.fit?.name || '';
@@ -267,8 +268,8 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
             if (avi) variantImage = avi.url;
         }
         const mainImage = p.product_images?.find(img => img.is_main)?.url || p.product_images?.[0]?.url;
-        const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : `${API_BASE_URL}${mainImage}`) : null;
-        const finalVariantImage = variantImage ? (variantImage.startsWith('http') ? variantImage : `${API_BASE_URL}${variantImage}`) : imageUrl;
+        const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : getImageUrl(mainImage)) : null;
+        const finalVariantImage = variantImage ? (variantImage.startsWith('http') ? variantImage : getImageUrl(variantImage)) : imageUrl;
         
         const sizeName = v.size?.name || '';
         const colorName = v.variant_attribute_values?.[0]?.attribute_value?.value || '';

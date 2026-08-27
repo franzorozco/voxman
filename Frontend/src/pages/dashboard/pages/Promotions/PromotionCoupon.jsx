@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useRef } from 'react';
 import { API_BASE_URL } from "../../../../config/api";
 import { X, Download } from 'lucide-react';
@@ -56,7 +57,7 @@ export default function PromotionCoupon({ promotion, onClose }) {
           <div className="promo-coupon-circle right"></div>
 
           <img 
-            src={`${API_BASE_URL}/storage/system/logos/logo_black_sinfondo.png`} 
+            src={getImageUrl('/system/logos/logo_black_sinfondo.png')} 
             alt="Logo" 
             className="promo-coupon-logo"
           />

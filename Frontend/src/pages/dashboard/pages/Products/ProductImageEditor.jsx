@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { Camera, Image as ImageIcon } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
@@ -5,11 +6,7 @@ import { updateProductImages } from "../../../../api/admin/products";
 import ImageGalleryModal from "./ImageGalleryModal";
 import toast from "react-hot-toast";
 
-const getImageUrl = (url) => {
-  if (!url) return "";
-  if (url.startsWith("http")) return url;
-  return `${API_BASE_URL}${url}`;
-};
+
 
 export default function ProductImageEditor({ product, onSaved, onCancel }) {
   const [isSubmitting, setIsSubmitting] = useState(false);

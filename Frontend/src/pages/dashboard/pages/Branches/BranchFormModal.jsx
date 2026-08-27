@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect, useRef } from "react";
 import { createBranch, updateBranch } from "../../../../api/admin/branches";
 import { getEmployees } from "../../../../api/admin/employees";
@@ -270,7 +271,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
                     className={`image-preview-item ${primaryImageId === img.id ? 'primary' : ''}`}
                     onClick={() => { setPrimaryImageId(img.id); setPrimaryImageIndex(null); }}
                   >
-                    <img src={img?.image_url?.startsWith('http') ? img.image_url : `${API_BASE_URL}${img?.image_url || ''}`} alt="Branch" />
+                    <img src={img?.image_url?.startsWith('http') ? img.image_url : getImageUrl(img?.image_url)} alt="Branch" />
                     <button type="button" className="image-remove-btn" onClick={(e) => { e.stopPropagation(); handleRemoveExistingImage(img.id); }}>✕</button>
                     {primaryImageId === img.id && <span className="primary-badge">Portada</span>}
                   </div>

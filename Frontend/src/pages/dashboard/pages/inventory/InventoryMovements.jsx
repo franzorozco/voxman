@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getMovements } from "../../../../api/admin/inventory";
@@ -220,7 +221,7 @@ export default function InventoryMovements() {
                   if (imgUrl.startsWith("http")) {
                     finalImgUrl = imgUrl;
                   } else {
-                    finalImgUrl = `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl.replace('storage/', '')}`;
+                    finalImgUrl = getImageUrl(imgUrl);
                   }
                 }
 
@@ -258,7 +259,7 @@ export default function InventoryMovements() {
                           alt={mov.variant?.product?.name}
                           className="product-img"
                           style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '6px' }}
-                          onError={(e) => { e.target.src = `${API_BASE_URL}/storage/products/default.png`; }}
+                          onError={(e) => { e.target.src = getImageUrl('/catalog/products/default.png'); }}
                         />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                           <div style={{ fontWeight: 600, lineHeight: '1.2' }}>{mov.variant?.product?.name || "Desconocido"}</div>

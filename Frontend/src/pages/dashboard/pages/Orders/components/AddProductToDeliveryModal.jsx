@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { X, Camera, Plus } from "lucide-react";
 import { getProducts } from "../../../../../api/admin/products";
@@ -104,7 +105,7 @@ export default function AddProductToDeliveryModal({ onClose, onAddProduct }) {
     }
     
     if (imageUrl && !imageUrl.startsWith('http')) {
-      imageUrl = `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || import.meta.env.VITE_API_URL?.replace('/api', '') || API_BASE_URL}${imageUrl}`;
+      imageUrl = getImageUrl(imageUrl);
     }
     return imageUrl;
   };

@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -305,14 +306,11 @@ export default function Tracking() {
     if (!imageUrl) {
       const fallbackPath = variant?.variant_images?.[0]?.image_path || colorImg?.image_path || product?.product_images?.[0]?.image_path;
       if (fallbackPath) {
-        imageUrl = `/storage/${fallbackPath}`;
+        imageUrl = fallbackPath;
       }
     }
 
-    if (imageUrl && !imageUrl.startsWith('http')) {
-      imageUrl = `${BASE_URL}${imageUrl}`;
-    }
-    return imageUrl;
+    return imageUrl ? getImageUrl(imageUrl) : null;
   };
 
   // Calculate Progress width
@@ -799,7 +797,7 @@ export default function Tracking() {
                 <div style={{ textAlign: 'center', marginBottom: '24px', background: '#f9fafb', padding: '20px', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
                   <p style={{ margin: '0 0 12px 0', fontWeight: 700, color: '#111827', fontSize: '16px' }}>Escanea este QR para pagar</p>
                   <img 
-                    src={settings?.payment_qr ? `${(BASE_URL).replace('/api/v1', '').replace('/api', '')}${settings.payment_qr}` : `${(BASE_URL).replace('/api/v1', '').replace('/api', '')}/storage/default/default.png`} 
+                    src={settings?.payment_qr ? getImageUrl(settings.payment_qr) : getImageUrl("/system/payments/default.png")} 
                     alt="QR Code" 
                     style={{ width: '200px', height: '200px', margin: '0 auto', display: 'block', borderRadius: '12px' }} 
                   />

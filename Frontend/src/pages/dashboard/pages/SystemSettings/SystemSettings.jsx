@@ -1,25 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { Settings2, Save } from 'lucide-react';
+import { getImageUrl } from '../../../../utils/imageUtils';
+import React, { useState, useEffect, useRef } from 'react';
+import { Settings2, Save, Image, Type, Hash, ToggleLeft, Link2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getSystemSettings, updateSystemSetting } from '../../../../api/admin/systemSettings';
 import { useThemeStore } from '../../../../store/themeStore';
 
+const TYPE_ICONS = {
+  image:   <Image   size={13} />,
+  string:  <Type    size={13} />,
+  integer: <Hash    size={13} />,
+  boolean: <ToggleLeft size={13} />,
+  url:     <Link2   size={13} />,
+};
+
+const TYPE_LABELS = {
+  image:   'Imagen',
+  string:  'Texto',
+  integer: 'Número',
+  boolean: 'Booleano',
+  url:     'URL',
+};
+
 export default function SystemSettings() {
-  const [settings, setSettings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState({});
+  const [settings, setSettings]   = useState([]);
+  const [loading,  setLoading]    = useState(true);
+  const [isSavingAll, setIsSavingAll] = useState(false);
+  const [dirtyFields, setDirtyFields] = useState(new Set());
   const isDark = useThemeStore((state) => state.isDark);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  useEffect(() => { fetchSettings(); }, []);
 
   const fetchSettings = async () => {
     try {
       setLoading(true);
       const data = await getSystemSettings();
       setSettings(data);
-    } catch (error) {
+      setDirtyFields(new Set());
+    } catch {
       toast.error('Error al cargar configuraciones');
     } finally {
       setLoading(false);
@@ -28,105 +45,306 @@ export default function SystemSettings() {
 
   const handleValueChange = (key, newValue) => {
     setSettings(settings.map(s => s.key === key ? { ...s, value: newValue } : s));
+    setDirtyFields(prev => new Set(prev).add(key));
   };
 
-  const handleSave = async (setting) => {
+  const handleSaveAll = async () => {
+    if (dirtyFields.size === 0) return;
     try {
-      setSaving({ ...saving, [setting.key]: true });
-      
-      let payload;
-      if (setting.value instanceof File) {
-        payload = new FormData();
-        payload.append('value_file', setting.value);
-      } else {
-        payload = { value: setting.value };
-      }
-      
-      await updateSystemSetting(setting.key, payload);
-      toast.success('Configuración actualizada');
-      fetchSettings(); // Refresh to get the updated URL
-    } catch (error) {
-      toast.error('Error al actualizar la configuración');
+      setIsSavingAll(true);
+      const updates = Array.from(dirtyFields).map(async (key) => {
+        const setting = settings.find(s => s.key === key);
+        let payload;
+        if (setting.value instanceof File) {
+          payload = new FormData();
+          payload.append('value_file', setting.value);
+        } else {
+          payload = { value: setting.value };
+        }
+        return updateSystemSetting(key, payload);
+      });
+      await Promise.all(updates);
+      toast.success('Todos los cambios guardados correctamente');
+      fetchSettings(); // Refresh to get the updated URLs for images
+    } catch {
+      toast.error('Ocurrió un error al guardar algunos cambios');
     } finally {
-      setSaving({ ...saving, [setting.key]: false });
+      setIsSavingAll(false);
     }
   };
 
-  if (loading) return <div className="p-6">Cargando configuraciones...</div>;
+  // Group settings by category
+  const grouped = settings.reduce((acc, s) => {
+    const cat = s.category || 'General';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(s);
+    return acc;
+  }, {});
+
+  const categoryOrder = ['Apariencia', 'General', 'Pagos y Pedidos', 'Redes Sociales', 'Avanzado'];
+  const orderedGroups = Object.entries(grouped).sort((a, b) => {
+    let indexA = categoryOrder.indexOf(a[0]);
+    let indexB = categoryOrder.indexOf(b[0]);
+    if (indexA === -1) indexA = 99;
+    if (indexB === -1) indexB = 99;
+    return indexA - indexB;
+  });
+
+  const theme = isDark ? 'admin-theme-dark' : 'admin-theme';
+
+  if (loading) {
+    return (
+      <div className={`${theme} flex items-center justify-center h-64`} style={{ background: 'var(--bg-main)', color: 'var(--text-muted)' }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
+          <span className="text-sm">Cargando configuraciones...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`p-6 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
-      <div className="flex items-center gap-3 mb-6">
-        <Settings2 size={28} className="text-blue-500" />
-        <h1 className="text-2xl font-bold">Ajustes Globales del Sistema</h1>
+    <div className={theme} style={{ background: 'var(--bg-main)', minHeight: '100%', color: 'var(--text-main)' }}>
+      <div className="max-w-4xl mx-auto p-6 md:p-8 pb-28">
+
+        {/* ── Header ── */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg" style={{ background: 'var(--color-primary)', color: 'var(--color-primary-text)' }}>
+              <Settings2 size={18} />
+            </div>
+            <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-main)' }}>
+              Configuración del Sistema
+            </h1>
+          </div>
+          <p className="mt-1 text-sm ml-12" style={{ color: 'var(--text-muted)' }}>
+            Administra los parámetros globales de tu plataforma
+          </p>
+        </div>
+
+        {/* ── Grouped Settings ── */}
+        {orderedGroups.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3 rounded-xl border" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}>
+            <Settings2 size={40} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+            <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>No hay configuraciones registradas</p>
+          </div>
+        ) : (
+          orderedGroups.map(([category, items]) => (
+            <div key={category} className="mb-8">
+              {/* Category label */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  {category}
+                </span>
+                <div className="flex-1 h-px" style={{ background: 'var(--border-color)' }} />
+              </div>
+
+              {/* Setting rows */}
+              <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}>
+                {items.map((setting, idx) => (
+                  <SettingRow
+                    key={setting.key}
+                    setting={setting}
+                    isDark={isDark}
+                    isDirty={dirtyFields.has(setting.key)}
+                    isLast={idx === items.length - 1}
+                    onChange={(val) => handleValueChange(setting.key, val)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
-      <div className="flex flex-col gap-4 max-w-5xl">
-        {settings.map((setting) => (
-          <div 
-            key={setting.key} 
-            className={`flex flex-col md:flex-row md:items-center justify-between p-5 rounded-xl border transition-all ${isDark ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-gray-300'} shadow-sm gap-4`}
-          >
-            <div className="flex-1 pr-4">
-              <h3 className="text-[16px] font-bold text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-2">
-                {setting.display_name || setting.key}
-                <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-500'}`}>
-                  {setting.type}
-                </span>
-              </h3>
-              <p className={`text-[14px] leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {setting.description}
-              </p>
-              <p className="text-[12px] font-mono text-gray-400 mt-2">
-                Llave interna: {setting.key}
-              </p>
+      {/* ── Floating Save Bar ── */}
+      {dirtyFields.size > 0 && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 p-4 border-t flex justify-center z-50 transition-all duration-300"
+          style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)', boxShadow: '0 -4px 12px rgba(0,0,0,0.05)' }}
+        >
+          <div className="w-full max-w-4xl flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-main)' }}>
+                Tienes {dirtyFields.size} cambio{dirtyFields.size !== 1 ? 's' : ''} sin guardar
+              </span>
+              <span className="text-xs hidden md:inline-block" style={{ color: 'var(--text-muted)' }}>
+                Recuerda guardarlos.
+              </span>
             </div>
-            
-            <div className="flex items-center gap-3 w-full md:w-[45%] lg:w-[40%] shrink-0">
-              {setting.type === 'image' ? (
-                <div className="flex-1 flex items-center gap-3 w-full">
-                  {setting.value && (
-                    <img 
-                      src={setting.value instanceof File ? URL.createObjectURL(setting.value) : `${(import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace('/api/v1', '').replace('/api', '')}${setting.value}`} 
-                      alt="Setting Preview" 
-                      className="w-12 h-12 rounded object-cover border"
-                    />
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleValueChange(setting.key, e.target.files[0])}
-                    className={`flex-1 w-full text-[13px] rounded-lg border outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 ${isDark ? 'bg-gray-900 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
-                  />
-                </div>
-              ) : (
-                <input
-                  type="text"
-                  value={setting.value || ''}
-                  onChange={(e) => handleValueChange(setting.key, e.target.value)}
-                  className={`flex-1 w-full p-3 text-[15px] rounded-lg border outline-none transition-all focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 ${isDark ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`}
-                  placeholder="Ingresa un valor..."
-                />
-              )}
+            <div className="flex gap-2 sm:gap-3">
               <button
-                onClick={() => handleSave(setting)}
-                disabled={saving[setting.key]}
-                className={`flex items-center justify-center gap-2 px-5 py-3 rounded-lg font-semibold transition-all whitespace-nowrap shadow-sm ${saving[setting.key] ? 'bg-blue-400 cursor-not-allowed text-white' : 'bg-blue-600 hover:bg-blue-700 active:scale-95 text-white hover:shadow-md'}`}
+                onClick={() => fetchSettings()}
+                className="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors"
+                style={{ background: 'var(--bg-overlay)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
               >
-                <Save size={18} className={saving[setting.key] ? 'animate-pulse' : ''} />
-                {saving[setting.key] ? 'Guardando' : 'Guardar'}
+                Descartar
+              </button>
+              <button
+                onClick={handleSaveAll}
+                disabled={isSavingAll}
+                className="flex items-center gap-2 px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all"
+                style={{
+                  background: isSavingAll ? 'var(--border-color)' : 'var(--color-primary)',
+                  color: isSavingAll ? 'var(--text-muted)' : 'var(--color-primary-text)',
+                  cursor: isSavingAll ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSavingAll ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block"
+                    style={{ borderColor: 'var(--text-muted)', borderTopColor: 'transparent' }} />
+                ) : (
+                  <Save size={16} />
+                )}
+                {isSavingAll ? 'Guardando...' : 'Guardar Todo'}
               </button>
             </div>
           </div>
-        ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-        {settings.length === 0 && (
-          <div className="p-12 text-center border-2 border-dashed rounded-2xl border-gray-300 dark:border-gray-700 text-gray-500 flex flex-col items-center justify-center gap-3">
-            <Settings2 size={48} className="text-gray-400 opacity-50" />
-            <p className="text-lg font-medium">No hay configuraciones registradas</p>
-          </div>
+/* ────────────────────────────────────────
+   Single Setting Row
+──────────────────────────────────────── */
+function SettingRow({ setting, isDark, isDirty, isLast, onChange }) {
+  const fileRef = useRef(null);
+  const previewSrc = setting.value instanceof File
+    ? URL.createObjectURL(setting.value)
+    : (setting.value && setting.value !== '0' ? getImageUrl(setting.value) : null);
+
+  return (
+    <div
+      style={{
+        borderBottom: isLast ? 'none' : '1px solid var(--border-color)',
+        background: isDirty ? 'var(--bg-overlay)' : 'var(--bg-card)',
+        borderLeft: isDirty ? '3px solid var(--color-primary)' : '3px solid transparent'
+      }}
+      className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4 transition-all"
+    >
+      {/* ── Left: label + description ── */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-sm font-semibold truncate" style={{ color: 'var(--text-main)' }}>
+            {setting.display_name || setting.key}
+          </span>
+          <span
+            className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded"
+            style={{ background: 'var(--bg-overlay)', color: 'var(--text-muted)', border: '1px solid var(--border-color)' }}
+          >
+            {TYPE_ICONS[setting.type] || <Type size={11} />}
+            {TYPE_LABELS[setting.type] || setting.type}
+          </span>
+          {isDirty && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 ml-2">
+              Modificado
+            </span>
+          )}
+        </div>
+        {setting.description && (
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            {setting.description}
+          </p>
+        )}
+      </div>
+
+      {/* ── Right: control ── */}
+      <div className="flex items-center justify-end gap-2 sm:w-[52%] shrink-0">
+        {setting.type === 'image' ? (
+          <ImageField
+            previewSrc={previewSrc}
+            fileRef={fileRef}
+            onChange={onChange}
+            isDark={isDark}
+          />
+        ) : setting.type === 'boolean' ? (
+          <BooleanField value={setting.value} onChange={onChange} />
+        ) : (
+          <TextInput value={setting.value || ''} onChange={onChange} isDark={isDark} />
         )}
       </div>
     </div>
   );
 }
+
+/* ── Image Field ── */
+function ImageField({ previewSrc, fileRef, onChange, isDark }) {
+  return (
+    <div className="flex items-center gap-2 flex-1">
+      {/* Preview thumbnail */}
+      <div
+        className="w-10 h-10 rounded-lg overflow-hidden shrink-0 flex items-center justify-center"
+        style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-color)' }}
+      >
+        {previewSrc
+          ? <img src={previewSrc} alt="preview" className="w-full h-full object-cover" onError={e => { e.target.style.display='none'; }} />
+          : <Image size={16} style={{ color: 'var(--text-muted)', opacity: 0.4 }} />
+        }
+      </div>
+
+      {/* Custom file button */}
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg transition-colors"
+        style={{
+          background: 'var(--bg-input)',
+          border: '1px solid var(--border-color)',
+          color: 'var(--text-main)',
+        }}
+      >
+        <Upload size={13} />
+        Subir imagen
+      </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => onChange(e.target.files[0])}
+      />
+    </div>
+  );
+}
+
+/* ── Text Input ── */
+function TextInput({ value, onChange, isDark }) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder="Ingresar valor..."
+      className="flex-1 min-w-0 text-sm px-3 py-2 rounded-lg outline-none transition-all"
+      style={{
+        background: 'var(--bg-input)',
+        border: '1px solid var(--border-color)',
+        color: 'var(--text-main)',
+      }}
+      onFocus={e => { e.target.style.borderColor = 'var(--color-primary)'; e.target.style.boxShadow = '0 0 0 3px var(--border-focus)'; }}
+      onBlur={e  => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
+    />
+  );
+}
+
+/* ── Boolean Toggle ── */
+function BooleanField({ value, onChange }) {
+  const active = value === 'true' || value === true || value === 1 || value === '1';
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(active ? 'false' : 'true')}
+      className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+      style={{ background: active ? 'var(--color-success)' : 'var(--border-color)' }}
+    >
+      <span
+        className="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+        style={{ transform: active ? 'translateX(22px)' : 'translateX(4px)' }}
+      />
+    </button>
+  );
+}
+
+

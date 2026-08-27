@@ -6,3 +6,4 @@ export const API_BASE_URL =
 
 export const API_URL =
   `${API_BASE_URL}/api`;
+export const URL_BASE_IMG = 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev';

@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { X, Upload, Link as LinkIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -127,7 +128,7 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
   const getPreviewUrl = () => {
     if (videoFile) return URL.createObjectURL(videoFile);
     if (videoLink) return videoLink;
-    if (short?.video_url) return short.video_url.startsWith('http') ? short.video_url : `${API_BASE_URL}${short.video_url}`;
+    if (short?.video_url) return short.video_url.startsWith('http') ? short.video_url : getImageUrl(short.video_url);
     return null;
   };
 

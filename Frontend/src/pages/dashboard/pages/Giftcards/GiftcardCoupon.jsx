@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useRef } from 'react';
 import { API_BASE_URL } from "../../../../config/api";
 import { X, Download } from 'lucide-react';
@@ -68,7 +69,7 @@ export default function GiftcardCoupon({ isOpen, giftcard, onClose }) {
           <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '60px', height: '60px', borderRadius: '50%', background: 'var(--bg-main)' }}></div>
 
           <img 
-            src={`${API_BASE_URL}/storage/system/logos/logo_black_sinfondo.png`} 
+            src={getImageUrl('/system/logos/logo_black_sinfondo.png')} 
             alt="Logo" 
             style={{ height: '60px', objectFit: 'contain', marginBottom: '20px' }}
           />

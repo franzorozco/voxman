@@ -1,3 +1,4 @@
+import { getImageUrl } from '../../../../../utils/imageUtils';
 import { useState, useEffect, useRef } from "react";
 import { X, Search, Package, Check, ChevronDown, Plus } from "lucide-react";
 import { adjustStock, batchAdjustStock, getInventory } from "../../../../../api/admin/inventory";
@@ -354,7 +355,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
                         >
                           <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--bg-main)', overflow: 'hidden', flexShrink: 0 }}>
                             {prod.product_images && prod.product_images.length > 0 ? (
-                              <img src={`${API_BASE_URL}${prod.product_images[0].url}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img src={getImageUrl(prod.product_images[0].url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Package size={20} color="var(--text-muted)" />
@@ -376,7 +377,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid var(--color-success)' }}>
                 <div style={{ width: '50px', height: '50px', borderRadius: '10px', background: 'var(--bg-main)', overflow: 'hidden', flexShrink: 0 }}>
                   {selectedProduct.product_images && selectedProduct.product_images.length > 0 ? (
-                    <img src={`${API_BASE_URL}${selectedProduct.product_images[0].url}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={getImageUrl(selectedProduct.product_images[0].url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Package size={24} color="var(--text-muted)" />
@@ -429,7 +430,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
                   if (!imgUrl) {
                     imgUrl = selectedProduct?.product_images?.find(img => img.is_main)?.url || selectedProduct?.product_images?.[0]?.url;
                   }
-                  const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/storage/'}${imgUrl}`) : null;
+                  const finalImgUrl = imgUrl ? (imgUrl.startsWith("http") ? imgUrl : getImageUrl(imgUrl)) : null;
 
                   return (
                     <div 
