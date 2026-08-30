@@ -13,7 +13,7 @@ api.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
   config.headers.Accept = "application/json";
 
-  if (token && !config.url?.includes('/v1/shop')) {
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 

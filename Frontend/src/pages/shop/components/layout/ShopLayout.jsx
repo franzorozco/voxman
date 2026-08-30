@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { useAuthStore } from "../../../../store/authStore";
 import useShopCartStore from "../../../../store/shop/useShopCartStore";
+import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
+import { useThemeStore } from "../../../../store/themeStore";
 import { API_BASE_URL } from "../../../../config/api";
-const logo = getImageUrl('/system/logos/logo_white_sinfondo.png');
 import Footer from "../../../../components/layout/Footer";
 import './ShopLayout.css';
 
@@ -12,6 +13,8 @@ const ShopNavbar = () => {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const cartItems = useShopCartStore((state) => state.items);
+  const { isDark } = useThemeStore();
+  const { settings, fetchSettings } = useShopSettingsStore();
 
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,6 +26,10 @@ const ShopNavbar = () => {
     if (!name) return "?";
     return name.slice(0, 2).toUpperCase();
   };
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -54,13 +61,15 @@ const ShopNavbar = () => {
     prevCountRef.current = cartItemCount;
   }, [cartItemCount]);
 
+  const logoUrl = isDark ? (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : getImageUrl('/system/logos/logo_white_sinfondo.png')) : (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : getImageUrl('/system/logos/logo_black_sinfondo.png'));
+
   return (
     <header className="shop-nav-header">
       <div className="shop-nav-container">
         {/* LOGO */}
         <div className="shop-nav-logo">
           <Link to="/" onClick={closeMenu}>
-            <img src={logo} alt="VOXman" style={{ height: '36px', display: 'block' }} />
+            <img src={logoUrl} alt={settings.store_name || "VOXman"} style={{ height: '36px', display: 'block', objectFit: 'contain' }} />
           </Link>
         </div>
 

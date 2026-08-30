@@ -108,4 +108,89 @@ class ShopCheckoutController extends Controller
             ], 500);
         }
     }
+
+    public function initAuthCheckout(Request $request)
+    {
+        $user = $request->user();
+        
+        $cartToken = $request->header('X-Cart-Token');
+        if (!$cartToken) {
+            return response()->json(['message' => 'No cart token provided'], 400);
+        }
+
+        $cartDataJson = Cache::get("cart:{$cartToken}");
+        if (!$cartDataJson) {
+            return response()->json(['message' => 'El carrito está vacío o ha expirado'], 400);
+        }
+
+        $cartData = json_decode($cartDataJson, true);
+        if (empty($cartData['items'])) {
+            return response()->json(['message' => 'El carrito está vacío'], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Validate Stock in real-time
+            foreach ($cartData['items'] as $item) {
+                if (isset($item['variant_id'])) {
+                    $variant = ProductVariant::with(['inventories', 'product'])->find($item['variant_id']);
+                    if (!$variant) {
+                        return response()->json(['message' => 'Un producto del carrito ya no existe'], 400);
+                    }
+                    $availableStock = $variant->inventories->sum('stock');
+                    if ($availableStock < $item['quantity']) {
+                        return response()->json(['message' => 'No hay stock suficiente para ' . $variant->product->name], 400);
+                    }
+                }
+            }
+
+            // 2. Generate Reference Number & Create Cart
+            do {
+                $uniqueId = mt_rand(10000, 99999);
+                $referenceNumber = 'ORD-' . $uniqueId;
+            } while (Cart::where('reference_number', $referenceNumber)->exists());
+            
+            $cart = Cart::create([
+                'user_id' => $user->id,
+                'reference_number' => $referenceNumber,
+                'source' => 'web',
+                'status' => 'active',
+                'expires_at' => now()->addHours(24),
+            ]);
+
+            // 3. Process Items
+            foreach ($cartData['items'] as $item) {
+                // Insert cart item
+                CartItem::create([
+                    'cart_id' => $cart->id,
+                    'variant_id' => $item['variant_id'] ?? null,
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+
+            // 4. Remove cart from Cache
+            Cache::forget("cart:{$cartToken}");
+
+            DB::commit();
+
+            $waSetting = \App\Models\System\SystemSetting::where('key', 'whatsapp_orders')->first();
+            $waNumber = $waSetting ? $waSetting->value : '59157003312';
+
+            return response()->json([
+                'message' => 'Checkout iniciado correctamente',
+                'cart_id' => $cart->id,
+                'user_id' => $user->id,
+                'reference_number' => $cart->reference_number,
+                'whatsapp_number' => $waNumber
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al procesar el checkout',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

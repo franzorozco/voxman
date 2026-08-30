@@ -31,8 +31,7 @@ Route::prefix('v1/shop')->group(function () {
     Route::get('/shorts', [ShopShortController::class, 'index']);
     
     // Autenticación de clientes
-    Route::post('/login', [ShopAuthController::class, 'login']);
-    Route::post('/register', [ShopAuthController::class, 'register']);
+    // Login y Register ahora usan las rutas globales /api/login y /api/register
 
     // Rutas del checkout (Guest & User)
     Route::post('/checkout/guest-init', [ShopCheckoutController::class, 'initGuestCheckout']);
@@ -52,6 +51,8 @@ Route::prefix('v1/shop')->group(function () {
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/logout', [ShopAuthController::class, 'logout']);
         Route::get('/profile', [ShopAuthController::class, 'profile']);
+        Route::post('/customer-profile', [ShopAuthController::class, 'updateCustomerProfile']);
+        Route::post('/checkout/auth-init', [ShopCheckoutController::class, 'initAuthCheckout']);
         // Historial de compras, wishlist, etc.
     });
 });

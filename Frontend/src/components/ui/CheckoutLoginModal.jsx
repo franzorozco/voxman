@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, X, User } from "lucide-react";
-import { loginUser, registerUser } from "../../api/admin/auth";
-import { useAuthStore } from "../../store/authStore";
+import { loginShopUser, registerShopUser } from "../../api/shopAuth";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
 
 export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect, theme = 'light' }) {
-  const navigate = useNavigate();
-  const { login } = useAuthStore();
-
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   
   const [form, setForm] = useState({
@@ -83,23 +79,26 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await loginUser({ email: form.email, password: form.password });
+      const res = await loginShopUser({ email: form.email, password: form.password });
       const token = res.data?.token;
       const user = res.data?.user;
 
       if (!token) throw new Error("No llegó token del backend");
 
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("shop_auth_token", token);
+      localStorage.setItem("shop_user", JSON.stringify(user));
+      
+      // Update global session
+      useAuthStore.getState().login({ user, token });
 
-      login({ user, token });
       setSuccessMessage("¡Bienvenido de vuelta!");
       setSuccess(true);
 
       setTimeout(() => {
         onClose();
         if (onSuccessRedirect) {
-          navigate(onSuccessRedirect);
+          onSuccessRedirect(user);
         }
       }, 1200);
 
@@ -120,15 +119,28 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
     try {
       setLoading(true);
-      const res = await registerUser(form);
+      const res = await registerShopUser(form);
+      const token = res.data?.token;
+      const user = res.data?.user;
+
+      if (!token) throw new Error("No llegó token del backend");
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("shop_auth_token", token);
+      localStorage.setItem("shop_user", JSON.stringify(user));
+      
+      // Update global session
+      useAuthStore.getState().login({ user, token });
+
       if (res && res.data) {
         setSuccessMessage("¡Cuenta creada con éxito!");
         setSuccess(true);
-        // Switch to login after a brief moment
+        // Automatically login
         setTimeout(() => {
-          setSuccess(false);
-          setMode('login');
-          // Keep email prefilled
+          onClose();
+          if (onSuccessRedirect) {
+            onSuccessRedirect(user);
+          }
         }, 1500);
       }
     } catch (error) {

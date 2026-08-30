@@ -3,10 +3,9 @@ import { useState, useEffect } from "react";
 import { Outlet, Link, NavLink, useLocation } from "react-router-dom";
 import { useThemeStore } from "../../store/themeStore";
 import { useAuthStore } from "../../store/authStore";
+import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import "./Dashboard.css";
 import { API_BASE_URL } from "../../config/api";
-const logo_black = getImageUrl('/system/logos/logo_black_sinfondo.png');
-const logo_white = getImageUrl('/system/logos/logo_white_sinfondo.png');
 import CanAccess from "../../components/ui/CanAccess";
 import AttendanceWidget from "./components/AttendanceWidget/AttendanceWidget";
 import GlobalScannerModal from "../../components/ui/GlobalScannerModal";
@@ -51,6 +50,7 @@ export default function DashboardLayout() {
 
   const { logout, user } = useAuthStore();
   const { isDark, toggleTheme } = useThemeStore();
+  const { settings, fetchSettings } = useShopSettingsStore();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -58,6 +58,10 @@ export default function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(
     window.innerWidth <= 1024
   );
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   useEffect(() => {
     if (window.innerWidth <= 1024) {
@@ -142,8 +146,9 @@ export default function DashboardLayout() {
           <div className="sidebar-logo">
             {!collapsed && (
               <img
-                src={isDark ? logo_black : logo_white}
-                alt="VOXman"
+                src={isDark ? (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : getImageUrl('/system/logos/logo_white_sinfondo.png')) : (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : getImageUrl('/system/logos/logo_black_sinfondo.png'))}
+                alt={settings.store_name || "VOXman"}
+                style={{ maxHeight: '40px', objectFit: 'contain' }}
               />
             )}
           </div>

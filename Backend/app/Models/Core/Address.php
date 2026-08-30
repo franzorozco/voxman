@@ -8,6 +8,7 @@ class Address extends BaseAddress
 {
 	protected $fillable = [
 		'user_id',
+		'customer_id',
 		'branch_id',
 		'address_type',
 		'country',
@@ -15,6 +16,8 @@ class Address extends BaseAddress
 		'city',
 		'zone',
 		'street',
-		'reference'
+		'reference',
+		'latitude',
+		'longitude'
 	];
 }

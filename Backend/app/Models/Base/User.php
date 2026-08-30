@@ -6,7 +6,7 @@
 
 namespace App\Models\Base;
 
-use App\Models\Address;
+use App\Models\Core\Address;
 use App\Models\AuditLog;
 use App\Models\Cart;
 use App\Models\CashRegister;

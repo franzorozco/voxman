@@ -1,12 +1,17 @@
+import { getImageUrl } from '../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { useThemeStore } from "../../store/themeStore";
+import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import "./Navbar.css";
 
-export default function Navbar({ logo }) {
+export default function Navbar({ logo: _propLogo }) {
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const { isDark } = useThemeStore();
+  const { settings, fetchSettings } = useShopSettingsStore();
 
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,6 +32,10 @@ export default function Navbar({ logo }) {
     if (!username) return "?";
     return username.slice(0, 2).toUpperCase();
   };
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   useEffect(() => {
 
@@ -54,6 +63,11 @@ export default function Navbar({ logo }) {
     setMenuOpen(false);
   };
 
+  // Invertimos la lógica para que muestre "el otro" logo en la página principal, según lo solicitado.
+  const logoUrl = isDark 
+    ? (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : getImageUrl('/system/logos/logo_black_sinfondo.png')) 
+    : (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : getImageUrl('/system/logos/logo_white_sinfondo.png'));
+
   return (
     <header className="nav-header">
 
@@ -61,7 +75,9 @@ export default function Navbar({ logo }) {
 
         {/* LOGO */}
         <div className="nav-logo">
-          <img src={logo} alt="VOXman" />
+          <Link to="/" onClick={closeMenu}>
+            <img src={logoUrl} alt={settings.store_name || "VOXman"} style={{ maxHeight: '36px', objectFit: 'contain' }} />
+          </Link>
         </div>
 
         {/* MENU ÚNICO */}

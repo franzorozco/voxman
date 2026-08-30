@@ -3,20 +3,27 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
+import { useAuthStore } from '../../../store/authStore';
 import { useThemeStore } from '../../../store/themeStore';
-import { API_BASE_URL } from '../../../config/api';
+import { getShopProfile } from '../../../api/shopAuth';
 import CheckoutAuthModal from '../../../components/ui/CheckoutAuthModal';
 import CheckoutLoginModal from '../../../components/ui/CheckoutLoginModal';
 import CheckoutGuestModal from '../../../components/ui/CheckoutGuestModal';
+import CheckoutCustomerModal from '../../../components/ui/CheckoutCustomerModal';
+import CheckoutUserModal from '../../../components/ui/CheckoutUserModal';
 import './CartView.css';
 
 const CartView = () => {
   const { items, total, fetchCart, updateQuantity, removeFromCart, isLoading } = useShopCartStore();
+  const globalUser = useAuthStore((state) => state.user);
   const { isDark } = useThemeStore();
   const [removingId, setRemovingId] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,10 +43,39 @@ const CartView = () => {
     }, 300);
   };
 
-  const handleCheckoutClick = () => {
-    // Determine if user is logged in here in the future
-    // For now, always show modal
-    setIsAuthModalOpen(true);
+  const handleCheckoutClick = async () => {
+    const shopAuthToken = localStorage.getItem('shop_auth_token');
+    
+    // Check if user is already logged in (Shop Session)
+    if (shopAuthToken) {
+      try {
+        const res = await getShopProfile();
+        const fullUser = res.data.user;
+        localStorage.setItem("shop_user", JSON.stringify(fullUser));
+        handleLoginSuccess(fullUser);
+      } catch (e) {
+        // Token invalid or expired
+        localStorage.removeItem("shop_auth_token");
+        localStorage.removeItem("shop_user");
+        setIsAuthModalOpen(true);
+      }
+    } 
+    // Check if user is already logged in (Global Session)
+    else if (globalUser) {
+      try {
+        const res = await getShopProfile();
+        const fullUser = res.data.user;
+        localStorage.setItem("shop_user", JSON.stringify(fullUser));
+        handleLoginSuccess(fullUser);
+      } catch (e) {
+        setIsAuthModalOpen(true);
+      }
+    } 
+    // Not logged in at all
+    else {
+      localStorage.removeItem("shop_user");
+      setIsAuthModalOpen(true);
+    }
   };
 
   const handleModalOption = (option) => {
@@ -51,7 +87,25 @@ const CartView = () => {
     }
   };
 
-  
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+    setIsLoginModalOpen(false);
+    
+    // Check if user has customer profile
+    const hasCustomer = user.customers && user.customers.length > 0;
+    
+    if (!hasCustomer) {
+      setTimeout(() => setIsCustomerModalOpen(true), 300);
+    } else {
+      setTimeout(() => setIsUserModalOpen(true), 300);
+    }
+  };
+
+  const handleCustomerSuccess = (updatedUser) => {
+    setCurrentUser(updatedUser);
+    setIsCustomerModalOpen(false);
+    setTimeout(() => setIsUserModalOpen(true), 300);
+  };
 
   return (
     <div className="cart-page-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -199,15 +253,31 @@ const CartView = () => {
       <CheckoutLoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
+        onSuccessRedirect={handleLoginSuccess}
         theme={isDark ? 'dark' : 'light'}
       />
 
       <CheckoutGuestModal 
         isOpen={isGuestModalOpen} 
         onClose={() => setIsGuestModalOpen(false)} 
-        onSuccessRedirect="/shop/checkout"
         theme={isDark ? 'dark' : 'light'}
       />
+
+      <CheckoutCustomerModal
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
+        onSuccess={handleCustomerSuccess}
+        theme={isDark ? 'dark' : 'light'}
+        initialData={currentUser?.profile || {}}
+      />
+
+      <CheckoutUserModal
+        isOpen={isUserModalOpen}
+        onClose={() => setIsUserModalOpen(false)}
+        user={currentUser}
+        theme={isDark ? 'dark' : 'light'}
+      />
+
     </div>
   );
 };

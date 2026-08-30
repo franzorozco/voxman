@@ -33,6 +33,8 @@ class LoginController extends Controller
         $user->last_login = now();
         $user->save();
 
+        $user->loadMissing('profile', 'customers.addresses', 'employee.branch');
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -56,6 +58,10 @@ class LoginController extends Controller
                 // 👇 ROLES Y PERMISOS
                 'roles' => $user->getRoleNames(), 
                 'permissions' => $user->getAllPermissions()->pluck('name'),
+                
+                // 👇 DATOS DE CLIENTE/PERFIL PARA LA TIENDA
+                'profile' => $user->profile,
+                'customers' => $user->customers,
             ],
             'token' => $token
         ]);
