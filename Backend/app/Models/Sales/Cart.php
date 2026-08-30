@@ -10,10 +10,11 @@ class Cart extends BaseCart
 {
 	use HasUuids;
 	protected $fillable = [
-		'user_id',
+		'customer_id',
 		'reference_number',
 		'status',
 		'source',
+		'delivery_details',
 		'expires_at',
 		'updated_at',
 		'discount_id',
@@ -44,3 +45,5 @@ class Cart extends BaseCart
 		return max(0, $subtotal - $discount);
 	}
 }
+
+

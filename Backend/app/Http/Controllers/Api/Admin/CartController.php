@@ -312,14 +312,111 @@ class CartController extends Controller
 
     public function convert($id)
     {
-        $cart = Cart::findOrFail($id);
-        $cart->status = 'converted';
-        $cart->save();
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
 
-        return response()->json([
-            'message' => 'Carrito convertido a venta.',
-            'cart' => $cart
-        ]);
+            $cart = Cart::with('items.product_variant')->findOrFail($id);
+
+            if ($cart->status === 'converted') {
+                return response()->json(['error' => 'El carrito ya fue convertido.'], 400);
+            }
+
+            $adminUser = auth()->user();
+            $adminBranchId = $adminUser && $adminUser->employee ? $adminUser->employee->branch_id : null;
+
+            // Create a sale
+            $sale = \App\Models\Sales\Sale::create([
+                'customer_id' => $cart->customer_id,
+                'guest_id' => $cart->guest_id,
+                'user_id' => $adminUser ? $adminUser->id : null,
+                'branch_id' => $adminBranchId,
+                'invoice_number' => 'VNT-' . strtoupper(Str::random(6)),
+                'sale_type' => 'in_store',
+                'status' => 'completed',
+                'source' => 'web_conversion',
+                'subtotal' => 0,
+                'discount_total' => $cart->total_discount ?? 0,
+                'discount_id' => $cart->discount_id ?? null,
+                'total' => 0,
+                'notes' => 'Convertido desde carrito ' . $cart->reference_number
+            ]);
+
+            $subtotal = 0;
+
+            foreach ($cart->items as $item) {
+                $price = $item->product_variant->price ?? 0;
+                $discountAmount = $item->discount_amount ?? 0;
+                $finalPrice = max(0, $price - $discountAmount);
+                $lineTotal = $finalPrice * $item->quantity;
+                $subtotal += $lineTotal;
+
+                \App\Models\Sales\SaleDetail::create([
+                    'sale_id' => $sale->id,
+                    'variant_id' => $item->variant_id,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $price,
+                    'discount' => $discountAmount,
+                    'final_price' => $finalPrice,
+                    'subtotal' => $lineTotal
+                ]);
+
+                // Find Stock Reservations for this cart and confirm them
+                $reservations = \App\Models\Inventory\StockReservation::where('variant_id', $item->variant_id)
+                    ->where('cart_id', $cart->id)
+                    ->where('status', 'reserved')
+                    ->get();
+                
+                $quantityToDeduct = $item->quantity;
+
+                foreach ($reservations as $reservation) {
+                    $reservation->status = 'confirmed';
+                    $reservation->sale_id = $sale->id;
+                    $reservation->save();
+
+                    // Deduct stock
+                    $inventory = \App\Models\Inventory\Inventory::where('branch_id', $reservation->branch_id)
+                        ->where('variant_id', $reservation->variant_id)
+                        ->first();
+                        
+                    if ($inventory) {
+                        $inventory->stock = max(0, $inventory->stock - $reservation->quantity);
+                        $inventory->save();
+                        $quantityToDeduct -= $reservation->quantity;
+                    }
+                }
+
+                // If no reservations were found (e.g. manual proforma), deduct from the current admin's branch
+                if ($quantityToDeduct > 0 && $adminBranchId) {
+                    $inventory = \App\Models\Inventory\Inventory::where('branch_id', $adminBranchId)
+                        ->where('variant_id', $item->variant_id)
+                        ->first();
+                    if ($inventory) {
+                        $inventory->stock = max(0, $inventory->stock - $quantityToDeduct);
+                        $inventory->save();
+                    }
+                }
+            }
+
+            $sale->subtotal = $subtotal;
+            $sale->total = max(0, $subtotal - ($sale->discount_total ?? 0));
+            $sale->save();
+
+            $cart->status = 'converted';
+            $cart->save();
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'message' => 'Carrito convertido a venta exitosamente.',
+                'cart' => $cart,
+                'sale' => $sale
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error("Cart Convert Error: " . $e->getMessage() . " trace: " . $e->getTraceAsString());
+            return response()->json(['error' => 'Error al convertir a venta: ' . $e->getMessage()], 500);
+        }
     }
 
     public function sendReminder($id)

@@ -24,7 +24,7 @@ class RegisterController extends Controller
 
                 UserProfile::create([
                     'user_id' => $user->id,
-                    'first_name' => $request->first_name,
+                    'first_name' => $request->first_name ?? $request->username,
                     'last_name_paternal' => $request->last_name_paternal,
                     'phone' => $request->phone,
                 ]);

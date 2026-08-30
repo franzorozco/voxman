@@ -3,10 +3,16 @@ import { User, Phone, MapPin, Map, CheckCircle, X, Navigation, Crosshair, Map as
 import toast from "react-hot-toast";
 import { updateCustomerProfile } from "../../api/shopAuth";
 import GoogleMapWrapper from "./GoogleMapWrapper";
+import CustomSelect from "./CustomSelect";
 import { Marker } from "@react-google-maps/api";
 
 export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, theme = 'light', initialData = {} }) {
   const [form, setForm] = useState({
+    first_name: "",
+    last_name_paternal: "",
+    last_name_maternal: "",
+    birthdate: "",
+    gender: "",
     customer_code: "",
     phoneCode: "+591",
     phoneNumber: "",
@@ -45,7 +51,17 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
         }
       }
 
+      let profileFirstName = initialData.first_name || initialData.profile?.first_name || "";
+      if (initialData.username && profileFirstName === initialData.username) {
+        profileFirstName = "";
+      }
+
       setForm({
+        first_name: profileFirstName,
+        last_name_paternal: initialData.last_name_paternal || initialData.profile?.last_name_paternal || "",
+        last_name_maternal: initialData.last_name_maternal || initialData.profile?.last_name_maternal || "",
+        birthdate: initialData.birthdate || initialData.profile?.birthdate || "",
+        gender: initialData.gender || initialData.profile?.gender || "",
         customer_code: initialData.customer_code || "",
         phoneCode: initialPhoneCode,
         phoneNumber: initialPhoneNumber,
@@ -68,17 +84,43 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
 
   if (!isOpen) return null;
 
-  const validate = (name, value) => {
+  const validate = (name, value, currentForm = form) => {
     let error = "";
+    
+    if (name === "first_name" && value.trim().length < 2) error = "El nombre es requerido";
+    
+    if (name === "last_name_paternal" || name === "last_name_maternal") {
+      const paternal = name === "last_name_paternal" ? value : currentForm.last_name_paternal;
+      const maternal = name === "last_name_maternal" ? value : currentForm.last_name_maternal;
+      
+      if (!paternal.trim() && !maternal.trim()) {
+        setErrors((prev) => ({ 
+          ...prev, 
+          last_name_paternal: "Se requiere al menos un apellido",
+          last_name_maternal: "Se requiere al menos un apellido"
+        }));
+        return;
+      } else {
+        setErrors((prev) => ({ 
+          ...prev, 
+          last_name_paternal: "",
+          last_name_maternal: ""
+        }));
+        return;
+      }
+    }
+
     if (name === "customer_code" && value.trim().length < 5) error = "Cédula de identidad es requerida";
     if (name === "phoneNumber" && value.trim().length < 7) error = "Teléfono es requerido";
+    
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-    validate(name, value);
+    const newForm = { ...form, [name]: value };
+    setForm(newForm);
+    validate(name, value, newForm);
   };
 
   const handleMapClick = (e) => {
@@ -154,8 +196,15 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.customer_code || !form.phoneNumber) {
-      toast.error("Por favor completa tu carnet y teléfono");
+    if (!form.first_name || (!form.last_name_paternal && !form.last_name_maternal) || !form.customer_code || !form.phoneNumber) {
+      toast.error("Por favor completa los campos requeridos (mínimo un apellido)");
+      setErrors({
+        first_name: !form.first_name ? "El nombre es requerido" : "",
+        last_name_paternal: (!form.last_name_paternal && !form.last_name_maternal) ? "Se requiere al menos un apellido" : "",
+        last_name_maternal: (!form.last_name_paternal && !form.last_name_maternal) ? "Se requiere al menos un apellido" : "",
+        customer_code: !form.customer_code ? "Cédula de identidad es requerida" : "",
+        phoneNumber: !form.phoneNumber ? "Teléfono es requerido" : ""
+      });
       return;
     }
 
@@ -237,6 +286,39 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
             
             <div>
               <h3 style={{ fontSize: '15px', fontWeight: '600', color: textColor, marginBottom: '12px' }}>Datos Personales (Requerido)</h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                {renderInput("first_name", "Nombres", "text", User)}
+                {renderInput("last_name_paternal", "Apellido Paterno", "text", User)}
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                {renderInput("last_name_maternal", "Apellido Materno", "text", User)}
+                {renderInput("birthdate", "Fecha de nacimiento (Opcional)", "date", null)}
+              </div>
+              
+              <div style={{ 
+                marginBottom: '16px',
+                '--bg-input': inputBg,
+                '--border-color': borderColor,
+                '--text-main': textColor,
+                '--bg-card': modalBg,
+                '--color-primary': '#C9A227',
+                '--color-primary-alpha': 'rgba(201, 162, 39, 0.1)',
+                '--text-muted': mutedColor
+              }}>
+                <CustomSelect
+                  name="gender"
+                  value={form.gender || ""}
+                  onChange={handleChange}
+                  placeholder="Seleccionar género (Opcional)"
+                >
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Prefiero no decirlo">Prefiero no decirlo</option>
+                </CustomSelect>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {renderInput("customer_code", "Cédula de Identidad (CI)", "text", User)}
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -251,26 +333,13 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
             </div>
 
             <div style={{ borderTop: `1px solid ${borderColor}`, paddingTop: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <div>
-                  <h3 style={{ fontSize: '15px', fontWeight: '600', color: textColor, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <MapIcon size={16} /> Ubicación de Envío (Opcional)
-                  </h3>
-                  <p style={{ fontSize: '13px', color: mutedColor, margin: '4px 0 0 0' }}>
-                    Necesitamos que nos confirme su ubicación para lograr entregas a domicilio en un futuro.
-                  </p>
-                </div>
-                <button 
-                  type="button" 
-                  onClick={getUserLocation}
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: '6px', background: isDark ? '#374151' : '#f3f4f6', 
-                    color: textColor, border: `1px solid ${borderColor}`, padding: '8px 12px', borderRadius: '6px', 
-                    fontSize: '13px', fontWeight: '500', cursor: 'pointer' 
-                  }}
-                >
-                  <Crosshair size={14} /> Mi Ubicación
-                </button>
+              <div style={{ marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: '600', color: textColor, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapIcon size={16} /> Ubicación de Envío (Opcional)
+                </h3>
+                <p style={{ fontSize: '13px', color: mutedColor, margin: '4px 0 0 0' }}>
+                  Necesitamos que nos confirme su ubicación para lograr entregas a domicilio en un futuro.
+                </p>
               </div>
 
               <div style={{ borderRadius: '8px', overflow: 'hidden', border: `1px solid ${borderColor}`, marginBottom: '16px', position: 'relative' }}>
@@ -293,6 +362,19 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                   </div>
                 ) : (
                   <>
+                    <button 
+                      type="button" 
+                      onClick={getUserLocation}
+                      style={{ 
+                        position: 'absolute', top: '10px', right: '10px', zIndex: 10,
+                        display: 'flex', alignItems: 'center', gap: '6px', background: modalBg, 
+                        color: textColor, border: `1px solid ${borderColor}`, padding: '8px 12px', borderRadius: '6px', 
+                        fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      <Crosshair size={14} /> Usar mi ubicación actual
+                    </button>
                     <GoogleMapWrapper 
                       mapContainerStyle={{ width: '100%', height: '200px' }} 
                       center={mapCenter} 

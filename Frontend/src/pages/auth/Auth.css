@@ -221,7 +221,7 @@ body {
 ========================= */
 .error {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   text-align: left;
   font-size: 12px;
@@ -230,6 +230,11 @@ body {
   margin-bottom: 12px;
   padding-left: 4px;
   animation: slideDown 0.3s ease;
+}
+
+.error svg {
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 @keyframes slideDown {

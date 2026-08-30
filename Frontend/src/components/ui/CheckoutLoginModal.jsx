@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, X, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, X, User, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
 import { loginShopUser, registerShopUser } from "../../api/shopAuth";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
@@ -11,7 +11,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     email: "",
     username: "",
     password: "",
-    first_name: "",
+    password_confirmation: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -20,14 +20,17 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
   const [successMessage, setSuccessMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const [passwordStrength, setPasswordStrength] = useState("");
+
   // Reset state when opening/closing or switching modes
   useEffect(() => {
     if (isOpen) {
       setMode('login');
-      setForm({ email: "", username: "", password: "", first_name: "" });
+      setForm({ email: "", username: "", password: "", password_confirmation: "" });
       setErrors({});
       setSuccess(false);
       setShowPassword(false);
+      setPasswordStrength("");
     }
   }, [isOpen]);
 
@@ -51,8 +54,31 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       if (!regex.test(value)) error = "Correo inválido";
     }
     if (name === "password") {
+      if (mode === 'register') {
+        let strength = "Débil";
+        const hasUpper = /[A-Z]/.test(value);
+        const hasNumber = /[0-9]/.test(value);
+        const hasSymbol = /[^A-Za-z0-9]/.test(value);
+
+        if (value.length >= 6) strength = "Media";
+        if (value.length >= 8 && hasUpper && hasNumber && hasSymbol) {
+          strength = "Fuerte";
+        }
+        setPasswordStrength(strength);
+      }
+
       if (value.length < 6) {
         error = "Mínimo 6 caracteres";
+      }
+      if (mode === 'register' && form.password_confirmation && value !== form.password_confirmation) {
+        setErrors((prev) => ({ ...prev, password_confirmation: "Las contraseñas no coinciden" }));
+      } else if (mode === 'register' && form.password_confirmation && value === form.password_confirmation) {
+        setErrors((prev) => ({ ...prev, password_confirmation: "" }));
+      }
+    }
+    if (name === "password_confirmation") {
+      if (value !== form.password) {
+        error = "Las contraseñas no coinciden";
       }
     }
     if (name === "username") {
@@ -61,18 +87,26 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         error = "Solo letras, números y _";
       }
     }
-    if (name === "first_name") {
-      if (value.length < 2) {
-        error = "Mínimo 2 caracteres";
-      }
-    }
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    
+    setForm(prev => {
+      const newForm = { ...prev, [name]: value };
+      if (name === "email" && mode === 'register') {
+        const prefix = value.split("@")[0].replace(/[^a-zA-Z0-9_]/g, '');
+        newForm.username = prefix;
+      }
+      return newForm;
+    });
+    
     validate(name, value);
+    if (name === "email" && mode === 'register') {
+      const prefix = value.split("@")[0].replace(/[^a-zA-Z0-9_]/g, '');
+      validate("username", prefix);
+    }
   };
 
   const handleLoginSubmit = async (e) => {
@@ -112,7 +146,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    if (Object.values(errors).some((err) => err) || !form.username || !form.email || !form.password || !form.first_name) {
+    if (Object.values(errors).some((err) => err) || !form.username || !form.email || !form.password || !form.password_confirmation) {
       toast.error("Corrige los errores antes de continuar");
       return;
     }
@@ -148,6 +182,15 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     } finally {
       setLoading(false);
     }
+  };
+
+  const renderStrengthIcon = () => {
+    if (!passwordStrength) return null;
+    const str = passwordStrength.toLowerCase();
+    if (str === "débil") return <ShieldAlert size={14} />;
+    if (str === "media") return <Shield size={14} />;
+    if (str === "fuerte") return <ShieldCheck size={14} />;
+    return null;
   };
 
   const isDark = theme === 'dark';
@@ -205,10 +248,49 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
           </button>
         )}
       </div>
+      {name === "password" && mode === 'register' && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: '8px',
+          padding: '0 4px'
+        }}>
+          <div style={{
+            flex: 1,
+            height: '4px',
+            background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            marginRight: '12px'
+          }}>
+            <div style={{
+              height: '100%',
+              width: passwordStrength === 'Débil' ? '33%' : passwordStrength === 'Media' ? '66%' : passwordStrength === 'Fuerte' ? '100%' : '0%',
+              backgroundColor: passwordStrength === 'Débil' ? '#ef4444' : passwordStrength === 'Media' ? '#f59e0b' : passwordStrength === 'Fuerte' ? '#10b981' : 'transparent',
+              borderRadius: '4px',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}></div>
+          </div>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            color: passwordStrength === 'Débil' ? '#ef4444' : passwordStrength === 'Media' ? '#f59e0b' : passwordStrength === 'Fuerte' ? '#10b981' : mutedColor
+          }}>
+            {renderStrengthIcon()} {passwordStrength || "—"}
+          </div>
+        </div>
+      )}
       {errors[name] && (
-        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px', marginTop: '6px' }}>
-          <AlertCircle size={12}/> {errors[name]}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px', marginTop: '6px' }}>
+          <AlertCircle size={14} style={{ flexShrink: 0 }} />
+          <span>{errors[name]}</span>
+        </div>
       )}
     </div>
   );
@@ -291,15 +373,10 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         ) : (
           <form onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            {mode === 'register' && (
-              <>
-                {renderInput("first_name", "Nombre personal", "text", User)}
-                {renderInput("username", "Nombre de usuario", "text", User)}
-              </>
-            )}
-            
             {renderInput("email", "Correo electrónico", "email", Mail)}
+            {mode === 'register' && renderInput("username", "Nombre de usuario", "text", User)}
             {renderInput("password", "Contraseña", showPassword ? "text" : "password", Lock)}
+            {mode === 'register' && renderInput("password_confirmation", "Confirmar contraseña", showPassword ? "text" : "password", Lock)}
 
             <button 
               type="submit" 

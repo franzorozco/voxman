@@ -1,7 +1,7 @@
 import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, Loader2 } from 'lucide-react';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
 import { useAuthStore } from '../../../store/authStore';
 import { useThemeStore } from '../../../store/themeStore';
@@ -10,6 +10,7 @@ import CheckoutAuthModal from '../../../components/ui/CheckoutAuthModal';
 import CheckoutLoginModal from '../../../components/ui/CheckoutLoginModal';
 import CheckoutGuestModal from '../../../components/ui/CheckoutGuestModal';
 import CheckoutCustomerModal from '../../../components/ui/CheckoutCustomerModal';
+import CheckoutDeliveryModal from '../../../components/ui/CheckoutDeliveryModal';
 import CheckoutUserModal from '../../../components/ui/CheckoutUserModal';
 import './CartView.css';
 
@@ -18,10 +19,13 @@ const CartView = () => {
   const globalUser = useAuthStore((state) => state.user);
   const { isDark } = useThemeStore();
   const [removingId, setRemovingId] = useState(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [deliveryType, setDeliveryType] = useState(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
@@ -44,6 +48,7 @@ const CartView = () => {
   };
 
   const handleCheckoutClick = async () => {
+    setIsCheckingOut(true);
     const shopAuthToken = localStorage.getItem('shop_auth_token');
     
     // Check if user is already logged in (Shop Session)
@@ -76,6 +81,8 @@ const CartView = () => {
       localStorage.removeItem("shop_user");
       setIsAuthModalOpen(true);
     }
+    
+    setIsCheckingOut(false);
   };
 
   const handleModalOption = (option) => {
@@ -91,19 +98,24 @@ const CartView = () => {
     setCurrentUser(user);
     setIsLoginModalOpen(false);
     
-    // Check if user has customer profile
     const hasCustomer = user.customers && user.customers.length > 0;
     
     if (!hasCustomer) {
       setTimeout(() => setIsCustomerModalOpen(true), 300);
     } else {
-      setTimeout(() => setIsUserModalOpen(true), 300);
+      setTimeout(() => setIsDeliveryModalOpen(true), 300);
     }
   };
 
   const handleCustomerSuccess = (updatedUser) => {
     setCurrentUser(updatedUser);
     setIsCustomerModalOpen(false);
+    setTimeout(() => setIsDeliveryModalOpen(true), 300);
+  };
+
+  const handleDeliverySuccess = (selectedType) => {
+    setDeliveryType(selectedType);
+    setIsDeliveryModalOpen(false);
     setTimeout(() => setIsUserModalOpen(true), 300);
   };
 
@@ -216,23 +228,32 @@ const CartView = () => {
           <div className="mt-6">
             <button
               onClick={handleCheckoutClick}
-              disabled={items.length === 0}
+              disabled={items.length === 0 || isCheckingOut}
               className={`w-full py-4 px-6 rounded-md text-base font-bold uppercase tracking-[0.1em] transition-all duration-300 flex items-center justify-center gap-3 relative group overflow-hidden ${
-                items.length === 0 
+                items.length === 0 || isCheckingOut
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
                   : 'bg-black text-white hover:bg-gray-900 active:scale-[0.98] shadow-sm hover:shadow-md'
               }`}
             >
-              <span className="relative z-10">Realizar Orden</span>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-5 w-5 relative z-10 transition-transform duration-300 ${items.length === 0 ? '' : 'group-hover:translate-x-1.5'}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
+              {isCheckingOut ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="relative z-10">Procesando...</span>
+                </>
+              ) : (
+                <>
+                  <span className="relative z-10">Realizar Orden</span>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-5 w-5 relative z-10 transition-transform duration-300 ${items.length === 0 ? '' : 'group-hover:translate-x-1.5'}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </>
+              )}
             </button>
           </div>
           <div className="mt-4 text-center">
@@ -268,14 +289,27 @@ const CartView = () => {
         onClose={() => setIsCustomerModalOpen(false)}
         onSuccess={handleCustomerSuccess}
         theme={isDark ? 'dark' : 'light'}
-        initialData={currentUser?.profile || {}}
+        initialData={currentUser || {}}
+      />
+
+      <CheckoutDeliveryModal
+        isOpen={isDeliveryModalOpen}
+        onClose={() => setIsDeliveryModalOpen(false)}
+        onSuccess={handleDeliverySuccess}
+        user={currentUser}
+        theme={isDark ? 'dark' : 'light'}
       />
 
       <CheckoutUserModal
         isOpen={isUserModalOpen}
         onClose={() => setIsUserModalOpen(false)}
         user={currentUser}
+        deliveryType={deliveryType}
         theme={isDark ? 'dark' : 'light'}
+        cartItems={items}
+        totalAmount={total}
+        isAuth={!!currentUser}
+        cartToken={localStorage.getItem('shop_cart_token')}
       />
 
     </div>

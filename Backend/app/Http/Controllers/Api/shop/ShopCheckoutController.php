@@ -29,12 +29,12 @@ class ShopCheckoutController extends Controller
 
         $cartDataJson = Cache::get("cart:{$cartToken}");
         if (!$cartDataJson) {
-            return response()->json(['message' => 'El carrito está vacío o ha expirado'], 400);
+            return response()->json(['message' => 'El carrito estÃ¡ vacÃ­o o ha expirado'], 400);
         }
 
         $cartData = json_decode($cartDataJson, true);
         if (empty($cartData['items'])) {
-            return response()->json(['message' => 'El carrito está vacío'], 400);
+            return response()->json(['message' => 'El carrito estÃ¡ vacÃ­o'], 400);
         }
 
         try {
@@ -100,7 +100,7 @@ class ShopCheckoutController extends Controller
                 'whatsapp_number' => $waNumber
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Exception $e) { \Log::error("Checkout Error: " . $e->getMessage()); \Log::error($e->getTraceAsString());
             DB::rollBack();
             return response()->json([
                 'message' => 'Error al procesar el checkout',
@@ -109,10 +109,15 @@ class ShopCheckoutController extends Controller
         }
     }
 
-    public function initAuthCheckout(Request $request)
+        public function initAuthCheckout(Request $request)
     {
         $user = $request->user();
         
+        $customer = $user->customers()->first();
+        if (!$customer) {
+            return response()->json(['message' => 'El usuario no tiene perfil de cliente'], 400);
+        }
+
         $cartToken = $request->header('X-Cart-Token');
         if (!$cartToken) {
             return response()->json(['message' => 'No cart token provided'], 400);
@@ -128,48 +133,72 @@ class ShopCheckoutController extends Controller
             return response()->json(['message' => 'El carrito está vacío'], 400);
         }
 
+        $deliveryType = $request->input('delivery_type'); // pickup, meetup, national, delivery
+        $branchId = $request->input('branch_id'); // Optional, if pickup
+
         try {
             DB::beginTransaction();
 
-            // 1. Validate Stock in real-time
-            foreach ($cartData['items'] as $item) {
-                if (isset($item['variant_id'])) {
-                    $variant = ProductVariant::with(['inventories', 'product'])->find($item['variant_id']);
-                    if (!$variant) {
-                        return response()->json(['message' => 'Un producto del carrito ya no existe'], 400);
-                    }
-                    $availableStock = $variant->inventories->sum('stock');
-                    if ($availableStock < $item['quantity']) {
-                        return response()->json(['message' => 'No hay stock suficiente para ' . $variant->product->name], 400);
-                    }
-                }
-            }
-
-            // 2. Generate Reference Number & Create Cart
+            // 1. Generate Reference Number & Create Cart
             do {
                 $uniqueId = mt_rand(10000, 99999);
                 $referenceNumber = 'ORD-' . $uniqueId;
-            } while (Cart::where('reference_number', $referenceNumber)->exists());
+            } while (\App\Models\Sales\Cart::where('reference_number', $referenceNumber)->exists());
             
-            $cart = Cart::create([
-                'user_id' => $user->id,
+            $cart = \App\Models\Sales\Cart::create([
+                'customer_id' => $customer->id,
                 'reference_number' => $referenceNumber,
                 'source' => 'web',
+                'delivery_details' => $request->input('delivery_details', null),
                 'status' => 'active',
-                'expires_at' => now()->addHours(24),
+                'expires_at' => now()->addMinutes(20),
             ]);
 
-            // 3. Process Items
+            // 2. Process Items and Reservations
             foreach ($cartData['items'] as $item) {
-                // Insert cart item
-                CartItem::create([
-                    'cart_id' => $cart->id,
-                    'variant_id' => $item['variant_id'] ?? null,
-                    'quantity' => $item['quantity'],
-                ]);
+                if (isset($item['variant_id'])) {
+                    $variant = \App\Models\Catalog\ProductVariant::with(['inventories', 'product'])->find($item['variant_id']);
+                    if (!$variant) {
+                        return response()->json(['message' => 'Un producto del carrito ya no existe'], 400);
+                    }
+
+                    $selectedBranchId = null;
+
+                    if ($deliveryType === 'pickup' && $branchId) {
+                        $inventory = $variant->inventories->where('branch_id', $branchId)->first();
+                        if (!$inventory || $inventory->stock < $item['quantity']) {
+                            DB::rollBack();
+                            return response()->json(['message' => 'No hay stock suficiente para ' . $variant->product->name . ' en la sucursal seleccionada'], 400);
+                        }
+                        $selectedBranchId = $branchId;
+                    } else {
+                        $inventory = $variant->inventories->sortByDesc('stock')->first();
+                        if (!$inventory || $inventory->stock < $item['quantity']) {
+                            DB::rollBack();
+                            return response()->json(['message' => 'No hay stock suficiente para ' . $variant->product->name], 400);
+                        }
+                        $selectedBranchId = $inventory->branch_id;
+                    }
+
+                    // Create Reservation
+                    \App\Models\Inventory\StockReservation::create([
+                        'branch_id' => $selectedBranchId,
+                        'variant_id' => $item['variant_id'],
+                        'quantity' => $item['quantity'],
+                        'cart_id' => $cart->id,
+                        'status' => 'reserved'
+                    ]);
+
+                    // Insert cart item
+                    \App\Models\Sales\CartItem::create([
+                        'cart_id' => $cart->id,
+                        'variant_id' => $item['variant_id'],
+                        'quantity' => $item['quantity'],
+                    ]);
+                }
             }
 
-            // 4. Remove cart from Cache
+            // Remove cart from Cache
             Cache::forget("cart:{$cartToken}");
 
             DB::commit();
@@ -180,12 +209,12 @@ class ShopCheckoutController extends Controller
             return response()->json([
                 'message' => 'Checkout iniciado correctamente',
                 'cart_id' => $cart->id,
-                'user_id' => $user->id,
+                'customer_id' => $customer->id,
                 'reference_number' => $cart->reference_number,
                 'whatsapp_number' => $waNumber
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Exception $e) { \Log::error("Checkout Error: " . $e->getMessage()); \Log::error($e->getTraceAsString());
             DB::rollBack();
             return response()->json([
                 'message' => 'Error al procesar el checkout',
@@ -193,4 +222,66 @@ class ShopCheckoutController extends Controller
             ], 500);
         }
     }
+
+    public function getDeliveryZones()
+    {
+        $zones = \App\Models\Logistics\DeliveryZone::orderBy('city')->get();
+        return response()->json($zones);
+    }
+
+    public function getAvailableBranches(Request $request)
+    {
+        $cartToken = $request->header('X-Cart-Token');
+        if (!$cartToken) {
+            return response()->json(['message' => 'No cart token provided'], 400);
+        }
+
+        $cartDataJson = Cache::get("cart:{$cartToken}");
+        if (!$cartDataJson) {
+            return response()->json(['message' => 'El carrito estÃ¡ vacÃ­o o ha expirado'], 400);
+        }
+
+        $cartData = json_decode($cartDataJson, true);
+        if (empty($cartData['items'])) {
+            return response()->json(['message' => 'El carrito estÃ¡ vacÃ­o'], 400);
+        }
+
+        // Obtener IDs de las variantes
+        $variantIds = collect($cartData['items'])->pluck('variant_id')->filter()->unique();
+
+        // Si no hay variantes, devolvemos sucursales vacias
+        if ($variantIds->isEmpty()) {
+            return response()->json([]);
+        }
+
+        // Necesitamos las sucursales donde TODAS estas variantes tengan stock > 0
+        // PodrÃ­amos hacerlo buscando sucursales que tengan inventario para cada variante.
+        // Pero el requerimiento dice: "donde se encuentren los productos seleccionados, (no repitas sucursal)"
+        // Vamos a buscar todas las sucursales que tengan stock > 0 de CUALQUIER variante en el carrito, o TODAS? 
+        // Si el cliente pide 3 productos, la sucursal deberÃ­a tener los 3? Lo ideal es que tenga los 3.
+        // Contamos cuÃ¡ntas variantes de las que estÃ¡n en el carrito tienen stock > 0 en cada sucursal.
+        $totalVariants = $variantIds->count();
+
+        $branches = \App\Models\Branch\Branch::with(['images', 'address'])
+            ->whereHas('inventories', function($query) use ($variantIds) {
+                $query->whereIn('variant_id', $variantIds)
+                      ->where('stock', '>', 0);
+            }, '>=', $totalVariants)->get();
+
+        // format output
+        $formattedBranches = $branches->map(function($branch) {
+            return [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'phone' => $branch->phone,
+                'address' => $branch->address ? ($branch->address->street . ' ' . $branch->address->reference) : null,
+                'image' => $branch->images->first() ? $branch->images->first()->image_url : null
+            ];
+        });
+
+        return response()->json($formattedBranches);
+    }
 }
+
+
+

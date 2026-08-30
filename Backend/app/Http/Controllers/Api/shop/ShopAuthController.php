@@ -46,6 +46,11 @@ class ShopAuthController extends Controller
         $request->validate([
             'customer_code' => 'required|string|max:50',
             'phone' => 'required|string|max:50',
+            'first_name' => 'required|string|max:100',
+            'last_name_paternal' => 'required_without:last_name_maternal|nullable|string|max:100',
+            'last_name_maternal' => 'required_without:last_name_paternal|nullable|string|max:100',
+            'birthdate' => 'nullable|date',
+            'gender' => 'nullable|string|in:Masculino,Femenino,Prefiero no decirlo',
             'country' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'city' => 'nullable|string|max:100',
@@ -62,11 +67,22 @@ class ShopAuthController extends Controller
             \Illuminate\Support\Facades\DB::transaction(function () use ($request, $user) {
                 // Update UserProfile phone if missing
                 if ($user->profile) {
-                    $user->profile->update(['phone' => $request->phone]);
+                    $user->profile->update([
+                        'phone' => $request->phone,
+                        'first_name' => $request->first_name,
+                        'last_name_paternal' => $request->last_name_paternal,
+                        'last_name_maternal' => $request->last_name_maternal,
+                        'birthdate' => $request->birthdate,
+                        'gender' => $request->gender
+                    ]);
                 } else {
                     \App\Models\Core\UserProfile::create([
                         'user_id' => $user->id,
-                        'first_name' => $user->username, // Fallback
+                        'first_name' => $request->first_name,
+                        'last_name_paternal' => $request->last_name_paternal,
+                        'last_name_maternal' => $request->last_name_maternal,
+                        'birthdate' => $request->birthdate,
+                        'gender' => $request->gender,
                         'phone' => $request->phone
                     ]);
                 }
@@ -124,6 +140,46 @@ class ShopAuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function addShippingAddress(Request $request)
+    {
+        $request->validate([
+            'country' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:100',
+            'zone' => 'nullable|string|max:150',
+            'street' => 'nullable|string|max:150',
+            'reference' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric'
+        ]);
+
+        $user = $request->user();
+        if (!$user) return response()->json(['message' => 'No autorizado'], 401);
+
+        $customer = $user->customers()->first();
+        if (!$customer) return response()->json(['message' => 'El usuario no tiene un perfil de cliente'], 400);
+
+        \App\Models\Core\Address::create([
+            'customer_id' => $customer->id,
+            'address_type' => 'shipping',
+            'country' => $request->country,
+            'state' => $request->state,
+            'city' => $request->city,
+            'zone' => $request->zone,
+            'street' => $request->street,
+            'reference' => $request->reference,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude
+        ]);
+
+        $user->load('profile', 'customers.addresses', 'employee.branch');
+
+        return response()->json([
+            'message' => 'Dirección guardada exitosamente',
+            'user' => $this->formatUser($user)
+        ]);
     }
 
     public function logout(Request $request)

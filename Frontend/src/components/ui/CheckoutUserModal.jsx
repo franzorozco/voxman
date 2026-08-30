@@ -1,48 +1,43 @@
+import React, { useState } from 'react';
+import { X, ShoppingBag, MapPin, CheckCircle, Truck, Store, MapIcon, Home, User as UserIcon } from 'lucide-react';
+import { initAuthCheckout } from '../../api/shopAuth';
+import useShopCartStore from '../../store/shop/useShopCartStore';
 import { getImageUrl } from '../../utils/imageUtils';
-import React, { useState, useEffect } from "react";
-import { CheckCircle, X, ShoppingBag } from "lucide-react";
-import toast from "react-hot-toast";
-import useShopCartStore from "../../store/shop/useShopCartStore";
-import { initAuthCheckout } from "../../api/shopAuth";
+import toast from 'react-hot-toast';
 
-export default function CheckoutUserModal({ isOpen, onClose, user, theme = 'light' }) {
-  const { items, total, cartToken, fetchCart } = useShopCartStore();
+export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmount, cartToken, deliveryType, isAuth, user, theme = 'light' }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [successData, setSuccessData] = useState({ waUrl: '', message: '' });
-
-  // Reset state
-  useEffect(() => {
-    if (isOpen) {
-      setSuccess(false);
-      setSuccessData({ waUrl: '', message: '' });
-    }
-  }, [isOpen]);
+  const [successData, setSuccessData] = useState(null);
 
   if (!isOpen) return null;
 
   const handleConfirmOrder = async () => {
-    if (items.length === 0) {
-      toast.error("Tu carrito está vacío");
-      return;
-    }
-
     try {
       setLoading(true);
-      const res = await initAuthCheckout();
+      
+      const payload = isAuth ? {
+        delivery_type: typeof deliveryType === 'object' ? deliveryType.type : deliveryType,
+        branch_id: typeof deliveryType === 'object' ? deliveryType.branchId : null,
+        delivery_details: typeof deliveryType === 'object' ? deliveryType : { type: deliveryType }
+      } : {};
+
+      const res = await initAuthCheckout(payload);
       
       const refNumber = res.data.reference_number || "DESCONOCIDO";
       let waNumber = res.data.whatsapp_number || "59157003312";
       waNumber = waNumber.replace(/\D/g, ''); 
       
       const userName = user?.profile?.first_name || user?.username || "Cliente";
-      const msg = `Hola VOXman, te escribe ${userName} y quisiera coordinar la entrega de mi pedido por favor. este es mi codigo: ${refNumber}`;
+      
+      const deliveryMethodStr = typeof deliveryType === 'object' ? deliveryType.text : deliveryType;
+
+      const msg = `Hola te escribe ${userName}, y quisiera hacer mi pedido de unos productos de su tienda, el código de mi carrito es ${refNumber} y elegí la opción de entrega: ${deliveryMethodStr} por favor.`;
       const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
 
       setSuccessData({ waUrl, message: msg });
       setSuccess(true);
       
-      // Vaciar carrito localmente tras el exito
       useShopCartStore.setState({ items: [], total: 0 });
 
     } catch (error) {
@@ -63,6 +58,13 @@ export default function CheckoutUserModal({ isOpen, onClose, user, theme = 'ligh
   const warningBg = isDark ? "rgba(245, 158, 11, 0.1)" : "#fffbeb";
   const warningBorder = isDark ? "rgba(245, 158, 11, 0.3)" : "#fde68a";
   const warningText = isDark ? "#fbbf24" : "#92400e";
+
+  const deliveryMethodStr = typeof deliveryType === 'object' ? deliveryType.text : deliveryType;
+  
+  const customerProfile = user?.profile || {};
+  const customer = user?.customers?.[0] || {};
+  const primaryPhone = customerProfile.phone || 'No registrado';
+  const customerCode = customer.customer_code || 'No asignado';
 
   return (
     <div style={{
@@ -85,7 +87,7 @@ export default function CheckoutUserModal({ isOpen, onClose, user, theme = 'ligh
           )}
         </div>
 
-        <div style={{ padding: '0 24px 32px 24px' }}>
+        <div style={{ padding: '0 24px 32px 24px', maxHeight: '80vh', overflowY: 'auto' }}>
           {success ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 0', textAlign: 'center' }}>
               <CheckCircle size={56} color="#10b981" style={{ marginBottom: '16px' }} />
@@ -93,7 +95,7 @@ export default function CheckoutUserModal({ isOpen, onClose, user, theme = 'ligh
 
               <div style={{ backgroundColor: warningBg, border: `1px solid ${warningBorder}`, padding: '16px', borderRadius: '8px', marginBottom: '24px', width: '100%' }}>
                 <p style={{ margin: 0, fontSize: '14px', color: warningText, fontWeight: '500', lineHeight: '1.5' }}>
-                  ⚠️ <strong>IMPORTANTE:</strong> Debes enviar el mensaje de WhatsApp si quieres continuar con tu entrega. Si no envías el mensaje, perderás el seguimiento.
+                  ⚠️ <strong>IMPORTANTE:</strong> Tu reserva expira en 20 minutos. Debes enviar el mensaje de WhatsApp para que procesemos tu orden.
                 </p>
               </div>
 
@@ -103,20 +105,18 @@ export default function CheckoutUserModal({ isOpen, onClose, user, theme = 'ligh
                     navigator.clipboard.writeText(successData.message);
                     toast.success("Mensaje copiado al portapapeles");
                   }}
-                  style={{ background: inputBg, color: textColor, border: `1px solid ${borderColor}`, padding: '14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '15px' }}
+                  style={{ background: 'transparent', border: `1px solid ${borderColor}`, color: textColor, padding: '14px', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', width: '100%' }}
                 >
-                  Copiar mensaje
+                  Copiar Mensaje
                 </button>
-
                 <button 
                   onClick={() => window.open(successData.waUrl, '_blank')}
-                  style={{ background: '#25D366', color: '#fff', border: 'none', padding: '14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '15px' }}
+                  style={{ background: '#25D366', border: 'none', color: '#fff', padding: '14px', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
-                  Enviar a WhatsApp
+                  Continuar al Chat
                 </button>
-
                 <button 
-                  onClick={onClose}
+                  onClick={onClose} 
                   style={{ background: 'transparent', color: mutedColor, border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', marginTop: '4px' }}
                 >
                   Cerrar
@@ -127,18 +127,53 @@ export default function CheckoutUserModal({ isOpen, onClose, user, theme = 'ligh
             <>
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                 <h2 style={{ margin: '0 0 4px 0', fontSize: '24px', fontWeight: '700', letterSpacing: '0.05em', color: textColor }}>CONFIRMA TU ORDEN</h2>
-                <p style={{ margin: 0, color: mutedColor, fontSize: '14px' }}>Verifica los datos de tu compra</p>
+                <p style={{ margin: 0, color: mutedColor, fontSize: '14px' }}>Verifica que todos los datos sean correctos</p>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ border: `1px solid ${borderColor}`, borderRadius: '12px', padding: '16px', backgroundColor: inputBg, maxHeight: '250px', overflowY: 'auto' }}>
+                
+                {/* Datos del Cliente */}
+                {isAuth && (
+                  <div style={{ border: `1px solid ${borderColor}`, borderRadius: '12px', padding: '16px', backgroundColor: inputBg }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: textColor, fontWeight: '600' }}>
+                      <UserIcon size={18} /> Datos del Cliente
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '14px' }}>
+                      <div>
+                        <p style={{ margin: '0 0 4px', color: mutedColor, fontSize: '12px' }}>Nombre completo</p>
+                        <p style={{ margin: 0, color: textColor, fontWeight: '500' }}>{customerProfile.first_name || ''} {customerProfile.last_name_paternal || ''} {customerProfile.last_name_maternal || ''}</p>
+                      </div>
+                      <div>
+                        <p style={{ margin: '0 0 4px', color: mutedColor, fontSize: '12px' }}>Código de Cliente</p>
+                        <p style={{ margin: 0, color: textColor, fontWeight: '500' }}>{customerCode}</p>
+                      </div>
+                      <div>
+                        <p style={{ margin: '0 0 4px', color: mutedColor, fontSize: '12px' }}>Teléfono</p>
+                        <p style={{ margin: 0, color: textColor, fontWeight: '500' }}>{primaryPhone}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Datos de Entrega */}
+                <div style={{ border: `1px solid ${borderColor}`, borderRadius: '12px', padding: '16px', backgroundColor: inputBg }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: textColor, fontWeight: '600' }}>
+                    <MapPin size={18} /> Detalles de Entrega
+                  </div>
+                  <p style={{ margin: 0, color: textColor, fontSize: '14px', lineHeight: '1.5' }}>
+                    {deliveryMethodStr || 'No especificado'}
+                  </p>
+                </div>
+
+                {/* Resumen del carrito */}
+                <div style={{ border: `1px solid ${borderColor}`, borderRadius: '12px', padding: '16px', backgroundColor: inputBg }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: textColor, fontWeight: '600' }}>
-                    <ShoppingBag size={18} /> Resumen de tu Carrito
+                    <ShoppingBag size={18} /> Resumen de Productos
                   </div>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {items.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '12px', borderBottom: idx !== items.length - 1 ? `1px solid ${borderColor}` : 'none' }}>
+                    {cartItems.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '12px', borderBottom: idx !== cartItems.length - 1 ? `1px solid ${borderColor}` : 'none' }}>
                         <img src={getImageUrl(item.image)} alt={item.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }} />
                         <div style={{ flex: 1 }}>
                           <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: textColor, lineHeight: '1.2' }}>{item.name}</p>
@@ -156,7 +191,7 @@ export default function CheckoutUserModal({ isOpen, onClose, user, theme = 'ligh
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px' }}>
                   <span style={{ color: mutedColor, fontSize: '15px', fontWeight: '500' }}>Total a pagar</span>
-                  <span style={{ color: textColor, fontSize: '24px', fontWeight: '700' }}>Bs {total.toFixed(2)}</span>
+                  <span style={{ color: textColor, fontSize: '24px', fontWeight: '700' }}>Bs {totalAmount.toFixed(2)}</span>
                 </div>
 
                 <button 
@@ -168,7 +203,7 @@ export default function CheckoutUserModal({ isOpen, onClose, user, theme = 'ligh
                     cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
                   }}
                 >
-                  {loading ? "Procesando..." : "Confirmar Orden"}
+                  {loading ? 'Procesando...' : 'Confirmar orden'}
                 </button>
               </div>
             </>

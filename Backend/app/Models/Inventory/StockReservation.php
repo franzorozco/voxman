@@ -12,6 +12,7 @@ class StockReservation extends BaseStockReservation
 		'variant_id',
 		'branch_id',
 		'sale_id',
+		'cart_id',
 		'quantity',
 		'status'
 	];

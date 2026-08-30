@@ -162,8 +162,8 @@ export default function CustomSelect({
             bottom: dropdownPos.direction === 'up' ? `${window.innerHeight - dropdownPos.top + 4}px` : 'auto',
             left: `${dropdownPos.left}px`,
             width: `${dropdownPos.width}px`,
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
+            background: 'var(--bg-card, #ffffff)',
+            border: '1px solid var(--border-color, #e5e7eb)',
             borderRadius: '8px',
             boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
             zIndex: 999999,
@@ -179,7 +179,7 @@ export default function CustomSelect({
                 key={`${opt.value}-${index}`}
                 onClick={() => handleSelect(opt.value)}
                 onMouseEnter={(e) => {
-                  if (!isSelected) e.currentTarget.style.background = 'var(--bg-input)';
+                  if (!isSelected) e.currentTarget.style.background = 'var(--bg-input, #f9fafb)';
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) e.currentTarget.style.background = 'transparent';
@@ -189,8 +189,8 @@ export default function CustomSelect({
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  color: isSelected ? 'var(--color-primary)' : 'var(--text-main)',
-                  background: isSelected ? 'var(--color-primary-alpha)' : 'transparent',
+                  color: isSelected ? 'var(--color-primary, #000)' : 'var(--text-main, #333)',
+                  background: isSelected ? 'var(--color-primary-alpha, #f3f4f6)' : 'transparent',
                   fontWeight: isSelected ? 600 : 400,
                   display: 'flex',
                   alignItems: 'center',

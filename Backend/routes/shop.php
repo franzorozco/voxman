@@ -36,6 +36,10 @@ Route::prefix('v1/shop')->group(function () {
     // Rutas del checkout (Guest & User)
     Route::post('/checkout/guest-init', [ShopCheckoutController::class, 'initGuestCheckout']);
 
+    // Opciones de entrega
+    Route::get('/delivery-options/branches', [ShopCheckoutController::class, 'getAvailableBranches']);
+    Route::get('/delivery-options/zones', [ShopCheckoutController::class, 'getDeliveryZones']);
+
     // Rutas del carrito (Protegidas por Cart Token manual vía Interceptor)
     Route::prefix('cart')->group(function () {
         // En un caso real, un middleware específico podría verificar el X-Cart-Token
@@ -52,6 +56,7 @@ Route::prefix('v1/shop')->group(function () {
         Route::post('/logout', [ShopAuthController::class, 'logout']);
         Route::get('/profile', [ShopAuthController::class, 'profile']);
         Route::post('/customer-profile', [ShopAuthController::class, 'updateCustomerProfile']);
+        Route::post('/delivery-options/add-address', [ShopAuthController::class, 'addShippingAddress']);
         Route::post('/checkout/auth-init', [ShopCheckoutController::class, 'initAuthCheckout']);
         // Historial de compras, wishlist, etc.
     });

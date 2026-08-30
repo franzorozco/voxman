@@ -19,7 +19,7 @@ export default function Register() {
     email: "",
     username: "",
     password: "",
-    first_name: "",
+    password_confirmation: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -41,12 +41,6 @@ export default function Register() {
       }
     }
 
-    if (name === "first_name") {
-      if (value.length < 2) {
-        error = "Debe tener al menos 2 caracteres";
-      }
-    }
-
     if (name === "password") {
       let strength = "Débil";
       const hasUpper = /[A-Z]/.test(value);
@@ -63,6 +57,19 @@ export default function Register() {
       if (value.length < 6) {
         error = "Mínimo 6 caracteres";
       }
+      
+      // Also validate confirmation if it's already filled
+      if (form.password_confirmation && value !== form.password_confirmation) {
+        setErrors((prev) => ({ ...prev, password_confirmation: "Las contraseñas no coinciden" }));
+      } else if (form.password_confirmation && value === form.password_confirmation) {
+        setErrors((prev) => ({ ...prev, password_confirmation: "" }));
+      }
+    }
+
+    if (name === "password_confirmation") {
+      if (value !== form.password) {
+        error = "Las contraseñas no coinciden";
+      }
     }
 
     setErrors((prev) => ({ ...prev, [name]: error }));
@@ -70,14 +77,27 @@ export default function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    
+    setForm(prev => {
+      const newForm = { ...prev, [name]: value };
+      if (name === "email") {
+        const prefix = value.split("@")[0].replace(/[^a-zA-Z0-9_]/g, '');
+        newForm.username = prefix;
+      }
+      return newForm;
+    });
+    
     validate(name, value);
+    if (name === "email") {
+      const prefix = value.split("@")[0].replace(/[^a-zA-Z0-9_]/g, '');
+      validate("username", prefix);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (Object.values(errors).some((err) => err) || !form.username || !form.email || !form.password) {
+    if (Object.values(errors).some((err) => err) || !form.username || !form.email || !form.password || !form.password_confirmation) {
       toast.error("Corrige los errores");
       return;
     }
@@ -130,10 +150,16 @@ export default function Register() {
               <input
                 name="email"
                 placeholder="Correo electrónico"
+                value={form.email}
                 onChange={handleChange}
               />
             </div>
-            {errors.email && <span className="error"><AlertCircle size={14}/> {errors.email}</span>}
+            {errors.email && (
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '12px', marginTop: '-8px', marginBottom: '12px', paddingLeft: '4px' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }}/>
+                <span>{errors.email}</span>
+              </div>
+            )}
 
             {/* USERNAME */}
             <div className="input-group">
@@ -141,22 +167,15 @@ export default function Register() {
               <input
                 name="username"
                 placeholder="Nombre de la cuenta"
+                value={form.username}
                 onChange={handleChange}
               />
             </div>
-            {errors.username && <span className="error"><AlertCircle size={14}/> {errors.username}</span>}
-
-            {/* NOMBRE */}
-            <div className="input-group">
-              <UserCheck size={18} className="input-icon" />
-              <input
-                name="first_name"
-                placeholder="Nombre personal"
-                onChange={handleChange}
-              />
-            </div>
-            {errors.first_name && (
-              <span className="error"><AlertCircle size={14}/> {errors.first_name}</span>
+            {errors.username && (
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '12px', marginTop: '-8px', marginBottom: '12px', paddingLeft: '4px' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }}/>
+                <span>{errors.username}</span>
+              </div>
             )}
 
             {/* PASSWORD */}
@@ -191,7 +210,27 @@ export default function Register() {
             </div>
 
             {errors.password && (
-              <span className="error"><AlertCircle size={14}/> {errors.password}</span>
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '12px', marginTop: '-8px', marginBottom: '12px', paddingLeft: '4px' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }}/>
+                <span>{errors.password}</span>
+              </div>
+            )}
+
+            {/* CONFIRM PASSWORD */}
+            <div className="input-group" style={{ marginTop: '16px' }}>
+              <Lock size={18} className="input-icon" />
+              <input
+                name="password_confirmation"
+                type={showPassword ? "text" : "password"}
+                placeholder="Confirmar contraseña"
+                onChange={handleChange}
+              />
+            </div>
+            {errors.password_confirmation && (
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '12px', marginTop: '-8px', marginBottom: '12px', paddingLeft: '4px' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }}/>
+                <span>{errors.password_confirmation}</span>
+              </div>
             )}
 
             <button type="submit" className={`auth-btn-primary ${loading ? "loading" : ""}`}>

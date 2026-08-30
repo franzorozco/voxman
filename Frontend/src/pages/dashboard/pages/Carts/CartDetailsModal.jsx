@@ -119,6 +119,22 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
             </div>
           </div>
 
+          {cart.delivery_details && (
+            <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-highlight)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--color-primary)' }}>Detalles de Entrega</h4>
+              <div style={{ fontSize: '14px' }}>
+                <strong>Tipo:</strong> {cart.delivery_details.text || cart.delivery_details.type}<br/>
+                {cart.delivery_details.address && (
+                  <>
+                    <strong>Ciudad:</strong> {cart.delivery_details.address.city} - {cart.delivery_details.address.zone}<br/>
+                    <strong>Calle:</strong> {cart.delivery_details.address.street}<br/>
+                    {cart.delivery_details.address.reference && <span><strong>Referencia:</strong> {cart.delivery_details.address.reference}</span>}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           <h3 className="modal-section-title">Productos Seleccionados</h3>
           
           <div style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch', paddingBottom: '12px' }}>
