@@ -52,6 +52,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
     customer_id: "",
     driver_id: "",
     delivery_type: "scheduled_point",
+    pickup_branch_id: "",
     address_id: "",
     recipient_name: "",
     recipient_ci: "",
@@ -256,7 +257,11 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       }
       setIsSearchingDriver(true);
       try {
-        const response = await getDeliveryDrivers({ search: driverSearchQuery });
+        const params = { search: driverSearchQuery };
+        if (meetingPointType === 'pickup' && deliveryData.pickup_branch_id) {
+          params.branch_id = deliveryData.pickup_branch_id;
+        }
+        const response = await getDeliveryDrivers(params);
         setDeliveryDrivers(response.data || []);
       } catch (error) {
         console.error('Error fetching drivers:', error);
@@ -271,7 +276,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       }, 300);
       return () => clearTimeout(timeoutId);
     }
-  }, [driverSearchQuery, selectedDriver]);
+  }, [driverSearchQuery, selectedDriver, meetingPointType, deliveryData.pickup_branch_id]);
 
   // Fetch Historical Destinations
   useEffect(() => {
@@ -421,9 +426,15 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
   };
 
   const updateItemBranch = (itemId, branchId) => {
-    setCartItems(prev => prev.map(item => 
-      item._id === itemId ? { ...item, branch_id: branchId } : item
-    ));
+    if (meetingPointType === 'pickup') {
+      setCartItems(prev => prev.map(item => ({ ...item, branch_id: branchId })));
+      setDeliveryData(prev => ({ ...prev, pickup_branch_id: branchId }));
+      toast.success("Sucursal de recojo sincronizada para todos los productos.");
+    } else {
+      setCartItems(prev => prev.map(item => 
+        item._id === itemId ? { ...item, branch_id: branchId } : item
+      ));
+    }
   };
 
   const removeItem = (itemId) => {
@@ -539,6 +550,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
           branch_id: item.branch_id
         })),
         delivery_type: deliveryData.delivery_type,
+        pickup_branch_id: deliveryData.pickup_branch_id || null,
         address_id: deliveryData.address_id || null,
         meeting_point: deliveryData.meeting_point,
         scheduled_date: deliveryData.scheduled_date,
@@ -721,6 +733,20 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                             <button 
                               type="button" 
                               onClick={() => {
+                                setMeetingPointType('pickup');
+                                const targetBranch = cartItems.length > 0 ? (cartItems[0].branch_id || branches[0]?.id || "") : (branches[0]?.id || "");
+                                setDeliveryData({...deliveryData, meeting_point: "Recojo en sucursal", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'pickup', address_id: "", pickup_branch_id: targetBranch});
+                                setCartItems(prev => prev.map(item => ({ ...item, branch_id: targetBranch })));
+                              }}
+                              className={`tab-btn ${meetingPointType === 'pickup' ? 'active' : ''}`}
+                            >
+                              <ShoppingCart size={16} />
+                              <span>Recojo en Sucursal</span>
+                              {meetingPointType === 'pickup' && <CheckCircle2 size={14} />}
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => {
                                 setMeetingPointType('predefined');
                                 setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
                               }}
@@ -799,7 +825,31 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                           </div>
                         </div>
                         
-                        {meetingPointType === 'predefined' ? (
+                        {meetingPointType === 'pickup' ? (
+                          <div className="form-group">
+                            <label>Selecciona la Sucursal de Recojo *</label>
+                            <CustomSelect 
+                              required
+                              value={deliveryData.pickup_branch_id}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setDeliveryData({
+                                  ...deliveryData, 
+                                  pickup_branch_id: val
+                                });
+                                setCartItems(prev => prev.map(item => ({ ...item, branch_id: val })));
+                                toast.success("Stock reasignado a esta sucursal.");
+                              }}
+                            >
+                              <option value="">-- Selecciona una sucursal --</option>
+                              {branches.map(branch => (
+                                <option key={branch.id} value={branch.id}>
+                                  {branch.name}
+                                </option>
+                              ))}
+                            </CustomSelect>
+                          </div>
+                        ) : meetingPointType === 'predefined' ? (
                           <CustomSelect 
                             required
                             value={deliveryData.meeting_point}
@@ -1193,9 +1243,9 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                         </div>
                       )}
 
-                      {/* CARD 3: Detalles de Envío */}
+                      {/* CARD 3: Información de entrega */}
                       <div className="delivery-card">
-                        <h4 style={{ margin: 0 }}>Detalles de Envío</h4>
+                        <h4 style={{ margin: 0 }}>Información de entrega</h4>
                         
                         <div className="form-group">
                           <label>Encargado de la Entrega (Opcional)</label>

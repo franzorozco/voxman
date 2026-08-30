@@ -141,19 +141,24 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
 
   const handleFinalSubmit = async () => {
     let finalSelection = selectedMethod;
+    let detailData = {};
+    
     if (selectedMethod === 'pickup') {
       if (!selectedBranch) return toast.error("Selecciona una sucursal");
       const b = branches.find(x => x.id === selectedBranch);
       finalSelection = `Recojo en sucursal (${b.name})`;
+      detailData = { branch_id: b.id, branch_name: b.name, address: b.address };
     } else if (selectedMethod === 'meetup') {
       if (!selectedZone) return toast.error("Selecciona un punto de encuentro");
       const z = zones.find(x => x.id === selectedZone);
       finalSelection = `Encuentro en punto definido (${z.city} - ${z.name} - Bs ${parseFloat(z.base_cost).toFixed(2)})`;
+      detailData = { zone_id: z.id, city: z.city, zone_name: z.name, base_cost: z.base_cost };
     } else if (selectedMethod === 'national') {
       if (!nationalForm.destination || !nationalForm.company || !nationalForm.date) {
         return toast.error("Por favor completa los detalles del envío");
       }
       finalSelection = `Envío a nivel nacional (Destino: ${nationalForm.destination}, Empresa: ${nationalForm.company}, Fecha: ${nationalForm.date})`;
+      detailData = { ...nationalForm };
     } else if (selectedMethod === 'delivery') {
       if (isAddingAddress) {
         if (!markerPos) return toast.error("Por favor marca tu ubicación en el mapa");
@@ -162,9 +167,10 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
         try {
           setLoading(true);
           const payload = { ...addressForm, latitude: markerPos.lat, longitude: markerPos.lng };
-          await addDeliveryAddress(payload);
+          const res = await addDeliveryAddress(payload);
           // If successful, pass the string
           finalSelection = `Delivery a hogar (${addressForm.street}, ${addressForm.zone || addressForm.city}. Lat: ${markerPos.lat.toFixed(5)}, Lng: ${markerPos.lng.toFixed(5)})`;
+          detailData = { address_id: res.data?.address?.id, ...payload };
         } catch (error) {
           setLoading(false);
           return toast.error(error.response?.data?.message || "Error al guardar la dirección");
@@ -173,13 +179,15 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
         if (!selectedAddress) return toast.error("Selecciona una dirección de entrega");
         const a = addresses.find(x => x.id === selectedAddress);
         finalSelection = `Delivery a hogar (${a.street}, ${a.zone || a.city})`;
+        detailData = { address_id: a.id, city: a.city, zone: a.zone, street: a.street, latitude: a.latitude, longitude: a.longitude };
       }
     }
     
     onSuccess({
       type: selectedMethod,
       branchId: selectedMethod === 'pickup' ? selectedBranch : null,
-      text: finalSelection
+      text: finalSelection,
+      ...detailData
     });
   };
 

@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign, Store } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
 import AddProductToDeliveryModal from "./components/AddProductToDeliveryModal";
 import api from "../../../../api/client";
@@ -40,6 +40,14 @@ const STEPS_EXTERNAL = [
   { key: 'packaged', label: 'Empaquetado' },
   { key: 'shipped', label: 'Remitido' },
   { key: 'completed', label: 'Entregado' }
+];
+
+const STEPS_PICKUP = [
+  { key: 'requested', label: 'Solicitado', description: 'Esperando confirmación o pago.' },
+  { key: 'reserved', label: 'Reservado', description: 'Pago confirmado, inventario reservado.' },
+  { key: 'preparing', label: 'Preparando', description: 'El pedido se está alistando.' },
+  { key: 'ready_for_pickup', label: 'Listo para recoger', description: 'El pedido está listo en la sucursal.' },
+  { key: 'completed', label: 'Completado', description: 'El pedido fue entregado.' }
 ];
 
 const TRANSPORT_COMPANIES = [
@@ -316,23 +324,27 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
 
   const handleNextStatus = async () => {
     const isExternal = details?.shipment?.delivery_type === 'external';
-    const currentSteps = isExternal ? STEPS_EXTERNAL : STEPS_LOCAL;
+    const isPickup = details?.shipment?.delivery_type === 'pickup';
+    const currentSteps = isPickup ? STEPS_PICKUP : (isExternal ? STEPS_EXTERNAL : STEPS_LOCAL);
     const nextStepIndex = getStepIndex(details.status, currentSteps) + 1;
     if (nextStepIndex < currentSteps.length) {
       const nextStatus = currentSteps[nextStepIndex].key;
-      
-      const isSalePaid = details?.shipment?.sale?.status === 'paid';
-      const isLocalPaymentStage = !isExternal && nextStatus === 'completed';
-      const isExternalPaymentStage = isExternal && nextStatus === 'prepared';
-      
-      if ((isLocalPaymentStage || isExternalPaymentStage) && !isSalePaid) {
-        setIsAdvancePayment(false);
-        setPaymentNextStatus(nextStatus);
-        setShowPaymentModal(true);
-      } else if (isExternal && nextStatus === 'shipped') {
-        setShowShippedModal(true);
-      } else {
-        handleUpdateStatus(nextStatus);
+      if (nextStatus) {
+        const isSalePaid = details?.shipment?.sale?.status === 'paid';
+        const isLocalPaymentStage = !isExternal && !isPickup && nextStatus === 'completed';
+        const isExternalPaymentStage = isExternal && nextStatus === 'prepared';
+        const isPickupAdvanceStage = isPickup && nextStatus === 'reserved';
+        const isPickupFinalPaymentStage = isPickup && nextStatus === 'completed';
+        
+        if ((isLocalPaymentStage || isExternalPaymentStage || isPickupAdvanceStage || isPickupFinalPaymentStage) && !isSalePaid) {
+          setIsAdvancePayment(isPickupAdvanceStage);
+          setPaymentNextStatus(nextStatus);
+          setShowPaymentModal(true);
+        } else if (isExternal && nextStatus === 'shipped') {
+          setShowShippedModal(true);
+        } else {
+          handleUpdateStatus(nextStatus);
+        }
       }
     }
   };
@@ -401,12 +413,26 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     clientPhone = guest.phone || guest.whatsapp_phone || "No especificado";
   }
 
-  const mapCenter = details.latitude && details.longitude 
-    ? { lat: parseFloat(details.latitude), lng: parseFloat(details.longitude) } 
-    : defaultCenter;
-
   const isExternal = details?.shipment?.delivery_type === 'external';
-  const currentSteps = isExternal ? STEPS_EXTERNAL : STEPS_LOCAL;
+  const isPickup = details?.shipment?.delivery_type === 'pickup';
+
+  let branchCoords = null;
+  let pickupAddressStr = '';
+  if (isPickup && details?.shipment?.pickup_branch?.address) {
+    const bAddress = details.shipment.pickup_branch.address;
+    pickupAddressStr = `${bAddress.city || ''}, ${bAddress.zone || ''} - ${bAddress.street || ''}`;
+    if (bAddress.latitude && bAddress.longitude) {
+      branchCoords = { lat: parseFloat(bAddress.latitude), lng: parseFloat(bAddress.longitude) };
+    }
+  }
+
+  const mapCenter = branchCoords || (details.latitude && details.longitude 
+    ? { lat: parseFloat(details.latitude), lng: parseFloat(details.longitude) } 
+    : defaultCenter);
+
+  const shouldShowMap = isPickup ? !!branchCoords : !!(details.latitude && details.longitude);
+
+  const currentSteps = isPickup ? STEPS_PICKUP : (isExternal ? STEPS_EXTERNAL : STEPS_LOCAL);
   const currentStepIndex = getStepIndex(details.status, currentSteps);
   const isOnTheWay = details.status === 'on_the_way' || details.status === 'at_the_meeting_point';
   const isCancelled = details.status === 'cancelled';
@@ -415,6 +441,12 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const canEdit = !isOnTheWay && !isFinal;
 
   const statusTheme = {
+    // Pickup states
+    requested: { color: '#eab308', rgb: '234, 179, 8', title: 'SOLICITADO', icon: <Clock size={24} />, pulse: false },
+    reserved: { color: '#3b82f6', rgb: '59, 130, 246', title: 'RESERVADO', icon: <CheckCircle size={24} />, pulse: false },
+    preparing: { color: '#f97316', rgb: '249, 115, 22', title: 'PREPARANDO', icon: <Package size={24} />, pulse: true },
+    ready_for_pickup: { color: '#10b981', rgb: '16, 185, 129', title: 'LISTO PARA RECOGER', icon: <Store size={28} className="pulse-anim" />, pulse: true },
+    // Local states
     pending: { color: '#eab308', rgb: '234, 179, 8', title: 'ENTREGA PENDIENTE', icon: <Clock size={24} />, pulse: false },
     assigned: { color: '#3b82f6', rgb: '59, 130, 246', title: 'ENTREGA AGENDADA', icon: <CalendarClock size={24} />, pulse: false },
     on_the_way: { color: '#8b5cf6', rgb: '139, 92, 246', title: '¡EL PEDIDO ESTÁ EN CAMINO!', icon: <Truck size={28} className="pulse-anim" />, pulse: true },
@@ -1005,9 +1037,11 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                     <MapPin size={16} style={{ color: 'var(--text-muted)', marginTop: '2px' }} />
                     <div style={{ fontWeight: 500 }}>
-                      {details.shipment?.delivery_type === 'home_delivery' && details.shipment?.address 
-                        ? `${details.shipment.address.street}, ${details.shipment.address.zone}` 
-                        : details.meeting_point}
+                      {isPickup && pickupAddressStr 
+                        ? pickupAddressStr
+                        : (details.shipment?.delivery_type === 'home_delivery' && details.shipment?.address 
+                          ? `${details.shipment.address.street}, ${details.shipment.address.zone}` 
+                          : details.meeting_point)}
                     </div>
                   </div>
                 </div>
@@ -1127,7 +1161,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   </div>
                 )}
                 
-                {!isExternal && (
+                {!isExternal && shouldShowMap && (
                   <div style={{ background: 'var(--bg-card)', border: `1px solid ${isCancelled ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`, borderRadius: '12px', overflow: 'hidden', marginTop: '12px' }}>
                     <GoogleMapWrapper
                       mapContainerStyle={mapContainerStyle}
@@ -1397,7 +1431,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
           <div className="modal-content" style={{ maxWidth: '500px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
               <CheckCircle size={20} style={{ color: 'var(--color-success)' }} /> 
-              {isAdvancePayment ? 'Registrar Adelanto' : (paymentNextStatus === 'prepared' ? 'Cobrar y Preparar Pedido' : 'Completar Entrega')}
+              {isAdvancePayment ? (isPickup && paymentNextStatus === 'reserved' ? 'Pago de la reserva' : 'Registrar Adelanto') : (paymentNextStatus === 'prepared' ? 'Cobrar y Preparar Pedido' : 'Completar Entrega')}
             </h3>
             
             <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
@@ -1632,7 +1666,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     className="btn-confirm-payment"
                     disabled={updating}
                   >
-                    <CheckCircle size={18} /> {isAdvancePayment ? 'Confirmar Adelanto' : (paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega')}
+                    <CheckCircle size={18} /> {isAdvancePayment ? (isPickup && paymentNextStatus === 'reserved' ? 'Confirmar Reserva' : 'Confirmar Adelanto') : (paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega')}
                   </button>
                 </CanAccess>
               </div>

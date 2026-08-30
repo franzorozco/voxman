@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getCarts } from "../../../../api/admin/carts";
 import { getDeliverySchedules, getDeliveryDrivers } from "../../../../api/admin/orderNetwork";
-import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle } from "lucide-react";
+import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle, Store } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 
@@ -107,11 +107,15 @@ export default function Orders() {
 
   const getStatusLabel = (status) => {
     const labels = {
+      requested: "Solicitado",
+      reserved: "Reservado",
+      preparing: "Preparando",
+      ready_for_pickup: "Listo para recoger",
       pending: "Pendiente",
       assigned: "Agendado",
       on_the_way: "En Camino",
       at_the_meeting_point: "En el Punto",
-      completed: "Entregado",
+      completed: "Completado/Entregado",
       cancelled: "Cancelado",
       prepared: "Preparado",
       packaged: "Empaquetado",
@@ -522,6 +526,23 @@ export default function Orders() {
                                     boxShadow: '0 4px 10px rgba(14, 165, 233, 0.3)'
                                   }}>
                                     <MapPin size={14} /> Nacional
+                                  </span>
+                                )}
+                                {schedule.shipment?.delivery_type === 'pickup' && (
+                                  <span style={{ 
+                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', 
+                                    color: 'white', 
+                                    padding: '4px 12px', 
+                                    borderRadius: '20px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    boxShadow: '0 4px 10px rgba(139, 92, 246, 0.3)'
+                                  }}>
+                                    <Store size={14} /> Recojo
                                   </span>
                                 )}
                               <span className={`status-badge status-${schedule.status}`}>

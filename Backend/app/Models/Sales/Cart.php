@@ -24,6 +24,11 @@ class Cart extends BaseCart
 
 	protected $appends = ['total_amount'];
 
+	protected $casts = [
+		'delivery_details' => 'array',
+		'expires_at' => 'datetime'
+	];
+
 	public function guest()
 	{
 		return $this->belongsTo(\App\Models\Base\Guest::class, 'guest_id');

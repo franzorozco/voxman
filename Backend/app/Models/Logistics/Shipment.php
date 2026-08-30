@@ -17,6 +17,7 @@ class Shipment extends BaseShipment
 		'delivered_at',
 		'delivery_code',
 		'delivery_type',
+		'pickup_branch_id',
 		'shipping_cost',
         'agency_dispatch_cost',
         'external_company',
@@ -42,5 +43,10 @@ class Shipment extends BaseShipment
     public function tracking_history()
     {
         return $this->hasMany(\App\Models\Logistics\ShipmentTracking::class, 'shipment_id')->orderBy('created_at', 'asc');
+    }
+
+    public function pickupBranch()
+    {
+        return $this->belongsTo(\App\Models\Branch\Branch::class, 'pickup_branch_id');
     }
 }

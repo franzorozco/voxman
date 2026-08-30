@@ -70,8 +70,9 @@ class ShopCheckoutController extends Controller
                 'guest_id' => $guest->id,
                 'reference_number' => $referenceNumber,
                 'source' => 'web',
+                'delivery_details' => $request->input('delivery_details', null),
                 'status' => 'active',
-                'expires_at' => now()->addHours(24),
+                'expires_at' => now()->addMinutes(60),
             ]);
 
             // 4. Process Items
@@ -151,10 +152,10 @@ class ShopCheckoutController extends Controller
                 'source' => 'web',
                 'delivery_details' => $request->input('delivery_details', null),
                 'status' => 'active',
-                'expires_at' => now()->addMinutes(20),
+                'expires_at' => now()->addMinutes(60),
             ]);
 
-            // 2. Process Items and Reservations
+            // 2. Process Items and Verify Stock (without reserving)
             foreach ($cartData['items'] as $item) {
                 if (isset($item['variant_id'])) {
                     $variant = \App\Models\Catalog\ProductVariant::with(['inventories', 'product'])->find($item['variant_id']);
@@ -179,15 +180,6 @@ class ShopCheckoutController extends Controller
                         }
                         $selectedBranchId = $inventory->branch_id;
                     }
-
-                    // Create Reservation
-                    \App\Models\Inventory\StockReservation::create([
-                        'branch_id' => $selectedBranchId,
-                        'variant_id' => $item['variant_id'],
-                        'quantity' => $item['quantity'],
-                        'cart_id' => $cart->id,
-                        'status' => 'reserved'
-                    ]);
 
                     // Insert cart item
                     \App\Models\Sales\CartItem::create([

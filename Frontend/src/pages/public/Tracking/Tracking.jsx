@@ -265,9 +265,35 @@ export default function Tracking() {
   }
 
   const isExternal = schedule?.shipment?.delivery_type === 'external';
+  const isPickup = schedule?.shipment?.delivery_type === 'pickup';
+
+  let branchCoords = null;
+  let pickupAddressStr = '';
+  if (isPickup && schedule?.shipment?.pickup_branch?.address) {
+    const bAddress = schedule.shipment.pickup_branch.address;
+    pickupAddressStr = `${bAddress.city || ''}, ${bAddress.zone || ''} - ${bAddress.street || ''}`;
+    if (bAddress.latitude && bAddress.longitude) {
+      branchCoords = { lat: parseFloat(bAddress.latitude), lng: parseFloat(bAddress.longitude) };
+    }
+  }
+
+  const mapLat = isPickup ? branchCoords?.lat : schedule?.latitude;
+  const mapLng = isPickup ? branchCoords?.lng : schedule?.longitude;
 
   const getStatusInfo = (status) => {
-    if (isExternal) {
+    if (isPickup) {
+      switch (status) {
+        case 'pending':
+        case 'assigned':
+        case 'requested': return { label: 'Solicitado', icon: <Clock size={28} />, color: '#64748b', activeStep: 1 };
+        case 'reserved': return { label: 'Reservado', icon: <CheckCircle size={28} />, color: '#3b82f6', activeStep: 2 };
+        case 'preparing': return { label: 'Preparando', icon: <Package size={28} />, color: '#f97316', activeStep: 3 };
+        case 'ready_for_pickup': return { label: 'Listo para recoger', icon: <MapPin size={28} />, color: '#8b5cf6', activeStep: 4 };
+        case 'completed': return { label: 'Entregado', icon: <CheckCircle size={28} />, color: '#10b981', activeStep: 5 };
+        case 'cancelled': return { label: 'Cancelado', icon: <AlertCircle size={28} />, color: '#ef4444', activeStep: 0 };
+        default: return { label: 'Desconocido', icon: <Package size={28} />, color: '#6b7280', activeStep: 0 };
+      }
+    } else if (isExternal) {
       switch (status) {
         case 'pending': 
         case 'assigned': 
@@ -362,6 +388,29 @@ export default function Tracking() {
                   <p>Completado</p>
                 </div>
               </>
+            ) : isPickup ? (
+              <>
+                <div className={`timeline-step ${statusInfo.activeStep >= 1 ? 'active' : ''} ${statusInfo.activeStep === 1 ? 'current' : ''}`}>
+                  <div className="step-icon"><Clock size={16} /></div>
+                  <p>Solicitado</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 2 ? 'active' : ''} ${statusInfo.activeStep === 2 ? 'current' : ''}`}>
+                  <div className="step-icon"><CheckCircle size={16} /></div>
+                  <p>Reservado</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 3 ? 'active' : ''} ${statusInfo.activeStep === 3 ? 'current' : ''}`}>
+                  <div className="step-icon"><Package size={16} /></div>
+                  <p>Preparando</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 4 ? 'active' : ''} ${statusInfo.activeStep === 4 ? 'current' : ''}`}>
+                  <div className="step-icon"><MapPin size={16} /></div>
+                  <p>Listo para recoger</p>
+                </div>
+                <div className={`timeline-step ${statusInfo.activeStep >= 5 ? 'active' : ''} ${statusInfo.activeStep === 5 ? 'current' : ''}`}>
+                  <div className="step-icon"><CheckCircle size={16} /></div>
+                  <p>Entregado</p>
+                </div>
+              </>
             ) : (
               <>
                 <div className={`timeline-step ${statusInfo.activeStep >= 1 ? 'active' : ''} ${statusInfo.activeStep === 1 ? 'current' : ''}`}>
@@ -406,9 +455,15 @@ export default function Tracking() {
             <div className="detail-item">
               <span className="detail-label">{schedule.shipment?.delivery_type === 'home_delivery' ? 'Dirección de Entrega' : 'Lugar de Entrega'}</span>
               <span className="detail-value">
-                {schedule.shipment?.delivery_type === 'home_delivery' && schedule.shipment?.address 
+                {isPickup && pickupAddressStr ? (
+                  <>
+                    <strong>{schedule.shipment.pickup_branch?.name ? `Sucursal ${schedule.shipment.pickup_branch.name}` : 'Sucursal'}</strong>
+                    <br />
+                    {pickupAddressStr}
+                  </>
+                ) : (schedule.shipment?.delivery_type === 'home_delivery' && schedule.shipment?.address 
                   ? `${schedule.shipment.address.street}, ${schedule.shipment.address.zone}` 
-                  : schedule.meeting_point}
+                  : schedule.meeting_point)}
               </span>
             </div>
             <div className="detail-item">
@@ -420,15 +475,15 @@ export default function Tracking() {
               <span className="detail-value">{schedule.time_window || "A convenir"}</span>
             </div>
           </div>
-          {schedule.latitude && schedule.longitude && isLoaded && !isExternal && (
+          {mapLat && mapLng && isLoaded && !isExternal && (
             <div style={{ marginTop: '20px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', height: '250px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
               <GoogleMap
                 mapContainerStyle={{ width: '100%', height: '100%' }}
-                center={{ lat: Number(schedule.latitude), lng: Number(schedule.longitude) }}
+                center={{ lat: Number(mapLat), lng: Number(mapLng) }}
                 zoom={16}
                 options={{ disableDefaultUI: true, gestureHandling: 'greedy' }}
               >
-                <MarkerF position={{ lat: Number(schedule.latitude), lng: Number(schedule.longitude) }} />
+                <MarkerF position={{ lat: Number(mapLat), lng: Number(mapLng) }} />
               </GoogleMap>
             </div>
           )}

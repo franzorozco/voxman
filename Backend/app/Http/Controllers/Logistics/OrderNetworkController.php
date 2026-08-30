@@ -28,6 +28,7 @@ class OrderNetworkController extends Controller
     {
         $query = DeliverySchedule::with([
             'shipment.address',
+            'shipment.pickupBranch.address',
             'shipment.sale.guest',
             'shipment.sale.customer.user.profile',
             'shipment.sale.customer.posProfile',
@@ -112,9 +113,27 @@ class OrderNetworkController extends Controller
     /**
      * List delivery drivers.
      */
-    public function getDrivers()
+    public function getDrivers(\Illuminate\Http\Request $request)
     {
-        $employees = \App\Models\Actors\Employee::with('user.profile')->where('is_active', true)->get();
+        $query = \App\Models\Actors\Employee::with('user.profile')->where('is_active', true);
+        
+        if ($request->has('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
+        }
+        
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($qBuilder) use ($search) {
+                $qBuilder->whereHas('user.profile', function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name_paternal', 'like', "%{$search}%")
+                      ->orWhere('last_name_maternal', 'like', "%{$search}%");
+                })->orWhere('employee_code', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        
+        $employees = $query->get();
         return response()->json($employees);
     }
 
@@ -245,6 +264,7 @@ class OrderNetworkController extends Controller
             'save_as_draft' => 'nullable|boolean',
             'shipping_cost' => 'nullable|numeric|min:0',
             'delivery_type' => 'nullable|string|in:home_delivery,scheduled_point,pickup,external',
+            'pickup_branch_id' => 'nullable|uuid|exists:branches,id',
             'address_id' => 'nullable|uuid|exists:addresses,id',
             'recipient_name' => 'nullable|string|max:150',
             'recipient_ci' => 'nullable|string|max:50',
@@ -376,11 +396,12 @@ class OrderNetworkController extends Controller
             // Create Shipment
             $shipment = Shipment::create([
                 'sale_id' => $sale->id,
-                'status' => 'pending',
+                'status' => 'requested', // Social Network orders start at requested
                 'shipping_cost' => $shippingCost,
                 'agency_dispatch_cost' => $request->input('agency_dispatch_cost', null),
                 'delivery_code' => str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT),
                 'delivery_type' => $request->input('delivery_type', 'scheduled_point'),
+                'pickup_branch_id' => $request->input('pickup_branch_id', null),
                 'address_id' => $request->input('address_id', null),
                 'recipient_name' => $request->input('recipient_name', null),
                 'recipient_ci' => $request->input('recipient_ci', null),
@@ -536,6 +557,7 @@ class OrderNetworkController extends Controller
     {
         $schedule = DeliverySchedule::with([
             'shipment.address',
+            'shipment.pickupBranch.address',
             'shipment.sale.sale_details' => function($q) { 
                 $q->withTrashed()->with([
                     'product_variant.product.product_images',
@@ -616,7 +638,7 @@ class OrderNetworkController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,assigned,on_the_way,at_the_meeting_point,completed,cancelled,prepared,packaged,shipped'
+            'status' => 'required|in:requested,reserved,preparing,ready_for_pickup,pending,assigned,on_the_way,at_the_meeting_point,completed,cancelled,prepared,packaged,shipped'
         ]);
 
         try {
@@ -628,17 +650,21 @@ class OrderNetworkController extends Controller
 
             // Track the status change
             if ($schedule->shipment) {
-                $description = 'El estado de la entrega cambiÃƒÂ³ a ' . $request->status;
+                $description = 'El estado de la entrega cambió a ' . $request->status;
+                if ($request->status === 'requested') $description = 'Pedido solicitado. Esperando confirmación de pago/adelanto.';
+                if ($request->status === 'reserved') $description = 'Adelanto confirmado. Inventario reservado en sucursal.';
+                if ($request->status === 'preparing') $description = 'El pedido se está preparando en sucursal.';
+                if ($request->status === 'ready_for_pickup') $description = 'El pedido está listo para ser recogido por el cliente.';
                 if ($request->status === 'prepared') $description = 'Pedido preparado y listo para empaque.';
-                if ($request->status === 'packaged') $description = 'Pedido empaquetado y listo para envÃƒÂ­o.';
+                if ($request->status === 'packaged') $description = 'Pedido empaquetado y listo para envío.';
                 if ($request->status === 'shipped') {
                     $company = $request->input('external_company', 'Agencia');
                     $guide = $request->input('external_guide', 'S/N');
-                    $description = "Pedido remitido a la transportadora {$company} (GuÃƒÂ­a: {$guide}).";
+                    $description = "Pedido remitido a la transportadora {$company} (Guía: {$guide}).";
                 }
                 if ($request->status === 'completed') $description = 'Pedido entregado exitosamente al cliente.';
-                if ($request->status === 'on_the_way') $description = 'El pedido estÃƒÂ¡ en camino.';
-                if ($request->status === 'at_the_meeting_point') $description = 'El repartidor llegÃƒÂ³ al punto de encuentro.';
+                if ($request->status === 'on_the_way') $description = 'El pedido está en camino.';
+                if ($request->status === 'at_the_meeting_point') $description = 'El repartidor llegó al punto de encuentro.';
                 
                 \App\Models\Logistics\ShipmentTracking::create([
                     'shipment_id' => $schedule->shipment->id,
@@ -646,7 +672,52 @@ class OrderNetworkController extends Controller
                     'description' => $description
                 ]);
             }
-if ($request->status === 'shipped') {
+
+            if (in_array($request->status, ['requested', 'reserved', 'preparing', 'ready_for_pickup'])) {
+                $shipment = $schedule->shipment;
+                $shipment->status = $request->status;
+                $shipment->save();
+            }
+
+            if ($request->status === 'reserved') {
+                $sale = $schedule->shipment->sale ?? null;
+                if ($sale) {
+                    $branchId = $schedule->shipment->pickup_branch_id ?? $sale->branch_id;
+                    if (!$branchId) {
+                        $firstBranch = \App\Models\Branch\Branch::first();
+                        $branchId = $firstBranch ? $firstBranch->id : null;
+                    }
+
+                    if ($branchId) {
+                        foreach ($sale->sale_details()->whereNull('deleted_at')->get() as $detail) {
+                            $exists = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)
+                                ->where('variant_id', $detail->variant_id)
+                                ->exists();
+
+                            if (!$exists) {
+                                \App\Models\Inventory\StockReservation::create([
+                                    'sale_id' => $sale->id,
+                                    'variant_id' => $detail->variant_id,
+                                    'branch_id' => $branchId,
+                                    'quantity' => $detail->quantity,
+                                    'status' => 'confirmed'
+                                ]);
+
+                                $inventory = \App\Models\Inventory\Inventory::where('branch_id', $branchId)
+                                    ->where('variant_id', $detail->variant_id)
+                                    ->first();
+                                    
+                                if ($inventory) {
+                                    $inventory->stock = max(0, $inventory->stock - $detail->quantity);
+                                    $inventory->save();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($request->status === 'shipped') {
                 $shipment = $schedule->shipment;
                 $shipment->status = 'shipped';
                 $shipment->shipped_at = now();
@@ -797,7 +868,7 @@ if ($request->status === 'shipped') {
                         // Default to cash register of the branch, if available
                         $cashRegisterId = \App\Models\Finance\CashRegister::where('branch_id', $sale->branch_id)->where('status', 'open')->value('id');
                         
-                        if ($paymentMethodType === 'efectivo' && $cashMethodId) {
+                        if ($paymentMethodType === 'efectivo' && $cashMethodId && $amountPaid > 0) {
                             \App\Models\Finance\Payment::create([
                                 'sale_id' => $sale->id,
                                 'payment_method_id' => $cashMethodId,
@@ -805,7 +876,7 @@ if ($request->status === 'shipped') {
                                 'amount' => $amountPaid,
                                 'status' => 'completed'
                             ]);
-                        } elseif ($paymentMethodType === 'qr' && $qrMethodId) {
+                        } elseif ($paymentMethodType === 'qr' && $qrMethodId && $amountPaid > 0) {
                             \App\Models\Finance\Payment::create([
                                 'sale_id' => $sale->id,
                                 'payment_method_id' => $qrMethodId,
