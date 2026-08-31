@@ -49,6 +49,29 @@ const CartView = () => {
 
   const handleCheckoutClick = async () => {
     setIsCheckingOut(true);
+
+    try {
+      const { default: api } = await import('../../../api/client');
+      const res = await api.post('/v1/shop/cart/validate');
+      if (!res.data.valid) {
+        import('react-hot-toast').then(({ default: toast }) => {
+          toast.error(res.data.message, { duration: 5000 });
+        });
+        useShopCartStore.setState({ 
+          items: res.data.cart.items || [], 
+          total: res.data.cart.total || 0 
+        });
+        if (!res.data.cart.items || res.data.cart.items.length === 0) {
+          setIsCheckingOut(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Error validando stock", err);
+      setIsCheckingOut(false);
+      return;
+    }
+
     const shopAuthToken = localStorage.getItem('shop_auth_token');
     
     // Check if user is already logged in (Shop Session)

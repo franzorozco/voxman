@@ -9,8 +9,12 @@ import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import "./Carts.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
+import { useNavigate } from 'react-router-dom';
+
 export default function Carts() {
+  const navigate = useNavigate();
   const [carts, setCarts] = useState([]);
+  const [successModalData, setSuccessModalData] = useState({ isOpen: false, scheduleId: null, details: null, mappedType: null });
   const [summary, setSummary] = useState({
     abandoned_value: 0,
     active_proformas: 0,
@@ -115,7 +119,13 @@ export default function Carts() {
       }
     } else if (type === 'convert_order') {
       try {
-        await convertCartToOrder(cartId);
+        const response = await convertCartToOrder(cartId);
+        setSuccessModalData({
+          isOpen: true,
+          scheduleId: response.data.schedule_id,
+          details: response.data.applied_details,
+          mappedType: response.data.mapped_type
+        });
         toast.success("Convertido a entrega pendiente exitosamente");
         fetchCarts(filters);
       } catch (error) {
@@ -137,6 +147,19 @@ export default function Carts() {
   const handleViewDetails = (cart) => {
     setSelectedCart(cart);
     setIsDetailsOpen(true);
+  };
+
+  const handleReopenSuccessModal = (cart) => {
+    if (cart.delivery_details && cart.delivery_details.converted_schedule_id) {
+      setSuccessModalData({
+        isOpen: true,
+        scheduleId: cart.delivery_details.converted_schedule_id,
+        details: cart.delivery_details,
+        mappedType: cart.delivery_details.converted_mapped_type
+      });
+    } else {
+      toast.error("Datos de conversión no encontrados.");
+    }
   };
 
   const handleOpenForm = (cart = null) => {
@@ -335,14 +358,15 @@ export default function Carts() {
                 <th>Total</th>
                 <th>Estado</th>
                 <th>Origen</th>
-                <th>Fecha</th>
+                <th>Fecha Creado</th>
+                <th>Vencimiento</th>
                 <th style={{ textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {carts.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
                     No se encontraron carritos ni proformas.
                   </td>
                 </tr>
@@ -364,18 +388,26 @@ export default function Carts() {
                         {cart.status === 'abandoned' && 'Abandonado'}
                         {cart.status === 'proforma' && 'Proforma (Manual)'}
                         {cart.status === 'converted' && 'Venta Concretada'}
+                        {cart.status === 'ordered' && 'Convertido a Entrega'}
                       </span>
                     </td>
                     <td>
                       <span className="source-badge">{cart.source}</span>
                     </td>
-                    <td>{new Date(cart.created_at).toLocaleDateString()}</td>
+                    <td>
+                      {new Date(cart.created_at).toLocaleDateString()} {new Date(cart.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                    <td style={{ color: cart.expires_at && new Date(cart.expires_at) < new Date() ? '#ef4444' : 'inherit' }}>
+                      {cart.expires_at 
+                        ? `${new Date(cart.expires_at).toLocaleDateString()} ${new Date(cart.expires_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
+                        : '-'}
+                    </td>
                     <td style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                       <button className="btn-view" onClick={() => handleViewDetails(cart)} title="Ver Detalles">
                         <Eye size={18} />
                       </button>
                       <CanAccess permission="edit_carts">
-                        {cart.status !== 'converted' && (
+                        {(cart.status !== 'converted' && cart.status !== 'ordered') && (
                           <button className="btn-edit" onClick={() => handleOpenForm(cart)} title="Editar Proforma" style={{ background: 'none', border: 'none', color: 'var(--color-warning)', cursor: 'pointer' }}>
                             <Edit size={18} />
                           </button>
@@ -394,6 +426,11 @@ export default function Carts() {
                             </button>
                           </CanAccess>
                         </>
+                      )}
+                      {cart.status === 'ordered' && (
+                        <button className="btn-convert-order" onClick={() => handleReopenSuccessModal(cart)} title="Ver detalles de la conversión">
+                          <Truck size={18} />
+                        </button>
                       )}
                       {cart.status === 'abandoned' && (
                         <CanAccess permission="send_cart_reminders">
@@ -445,6 +482,47 @@ export default function Carts() {
         type={confirmModal.type === 'delete' ? 'danger' : 'success'}
         confirmText={confirmModal.type === 'delete' ? 'Eliminar' : 'Convertir'}
       />
+
+      {successModalData.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px', textAlign: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <CheckCircle size={48} color="#10b981" />
+            </div>
+            <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>Aplicación correcta</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+              La entrega se ha creado correctamente. A continuación los datos aplicados:
+            </p>
+            
+            <div style={{ background: 'var(--bg-input)', padding: '16px', borderRadius: '8px', textAlign: 'left', marginBottom: '24px', fontSize: '14px' }}>
+              <div style={{ marginBottom: '8px' }}><strong>Tipo asignado:</strong> <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>{successModalData.mappedType}</span></div>
+              {successModalData.details && Object.entries(successModalData.details).map(([key, value]) => (
+                <div key={key} style={{ marginTop: '4px' }}>
+                  <strong>{key}:</strong> {value}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                className="btn-secondary" 
+                onClick={() => setSuccessModalData({ isOpen: false, scheduleId: null, details: null, mappedType: null })}
+              >
+                Cerrar
+              </button>
+              <button 
+                className="btn-primary" 
+                onClick={() => {
+                  setSuccessModalData({ isOpen: false, scheduleId: null, details: null, mappedType: null });
+                  navigate(`/dashboard/orders?open_schedule=${successModalData.scheduleId}`);
+                }}
+              >
+                Ir a la Entrega
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

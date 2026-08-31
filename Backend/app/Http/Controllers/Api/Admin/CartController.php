@@ -82,7 +82,7 @@ class CartController extends Controller
         $proformasValue = $allCarts->where('status', 'proforma')->sum('total_amount');
         
         $totalCarts = $allCarts->count();
-        $convertedCarts = $allCarts->where('status', 'converted');
+        $convertedCarts = $allCarts->whereIn('status', ['converted', 'ordered']);
         $convertedCount = $convertedCarts->count();
         $convertedValue = $convertedCarts->sum('total_amount');
         $conversionRate = $totalCarts > 0 ? round(($convertedCount / $totalCarts) * 100, 2) : 0;
@@ -236,8 +236,8 @@ class CartController extends Controller
 
         $cart = Cart::findOrFail($id);
         
-        if ($cart->status === 'converted') {
-            return response()->json(['message' => 'No se puede editar un carrito ya convertido a venta.'], 400);
+        if ($cart->status === 'converted' || $cart->status === 'ordered') {
+            return response()->json(['message' => 'No se puede editar un carrito ya convertido.'], 400);
         }
 
         $cart->customer_id = $request->customer_id;
@@ -317,7 +317,7 @@ class CartController extends Controller
 
             $cart = Cart::with('items.product_variant')->findOrFail($id);
 
-            if ($cart->status === 'converted') {
+            if ($cart->status === 'converted' || $cart->status === 'ordered') {
                 return response()->json(['error' => 'El carrito ya fue convertido.'], 400);
             }
 

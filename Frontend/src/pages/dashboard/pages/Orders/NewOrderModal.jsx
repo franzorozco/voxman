@@ -102,7 +102,22 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
     const fetchZones = async () => {
       try {
         const data = await getDeliveryZones();
-        setPredefinedMeetingPoints(data.data || data);
+        const zones = data.data || data;
+        setPredefinedMeetingPoints(zones);
+        
+        if (editData && editData.meeting_point) {
+           const zone = zones.find(z => z.name === editData.meeting_point);
+           if (zone) {
+             setDeliveryData(prev => ({
+               ...prev,
+               city: prev.city || zone.city,
+               original_delivery_zone_id: prev.original_delivery_zone_id || zone.id,
+               latitude: prev.latitude || zone.latitude,
+               longitude: prev.longitude || zone.longitude,
+               shipping_cost: prev.shipping_cost || Number(zone.base_cost)
+             }));
+           }
+        }
       } catch (error) {
         console.error("Error al cargar zonas de entrega");
       }
@@ -120,12 +135,25 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         const activeDetails = sale.sale_details.filter(d => !d.deleted_at);
         const items = activeDetails.map(detail => {
           const reservation = sale.stock_reservations?.find(res => res.variant_id === detail.variant_id && res.status !== 'released');
+          
+          let autoBranchId = "";
+          if (reservation) {
+            autoBranchId = reservation.branch_id;
+          } else if (detail.product_variant?.inventories?.length > 0) {
+            const sortedInvs = [...detail.product_variant.inventories].sort((a, b) => 
+              parseInt(b.stock || b.quantity || 0, 10) - parseInt(a.stock || a.quantity || 0, 10)
+            );
+            autoBranchId = sortedInvs[0].branch_id || sortedInvs[0].branch?.id || "";
+          }
+
           return {
+            _id: Date.now().toString() + Math.random(),
             variant: detail.product_variant,
             product: detail.product_variant?.product,
             price: Number(detail.unit_price) || detail.product_variant?.price || 0,
             quantity: detail.quantity,
-            branch_id: reservation ? reservation.branch_id : (branches[0]?.id || "")
+            maxStock: detail.product_variant?.inventories?.reduce((sum, inv) => sum + parseInt(inv.stock || inv.quantity || 0, 10), 0) || 0,
+            branch_id: autoBranchId
           };
         });
         setCartItems(items);
@@ -182,7 +210,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
           const name = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}` :
                       (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` : 
                       (c.user?.username || c.customer_code));
-          setSelectedCustomer({ id: c.id, name: name.trim() });
+          setSelectedCustomer({ id: c.id, name: name.trim(), addresses: c.addresses || [] });
           setCustomerSearchQuery(name.trim());
         }
       } else {
@@ -374,7 +402,13 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       }
       
       const availableBranches = variant.inventories?.filter(inv => parseInt(inv.stock || inv.quantity || 0, 10) >= 1) || [];
-      const autoBranchId = availableBranches.length === 1 ? availableBranches[0].branch?.id : null;
+      let autoBranchId = null;
+      if (availableBranches.length > 0) {
+        const sortedBranches = [...availableBranches].sort((a, b) => 
+          parseInt(b.stock || b.quantity || 0, 10) - parseInt(a.stock || a.quantity || 0, 10)
+        );
+        autoBranchId = sortedBranches[0].branch_id || sortedBranches[0].branch?.id || null;
+      }
 
       return [...prev, { _id: Date.now().toString() + Math.random(), variant, product, quantity: 1, price: variant.price, maxStock: totalStock, branch_id: autoBranchId }];
     });

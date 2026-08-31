@@ -66,7 +66,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content cart-details-modal-container">
+      <div className="modal-content cart-details-modal-container" style={{ width: '95%', maxWidth: '1100px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 0 }}>
@@ -89,51 +89,95 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
 
         <div className="modal-body-content">
           
-          <div className="modal-info-grid">
-            <div>
-              <div className="modal-info-label">Cliente</div>
-              <div className="modal-info-value">
-                {cart.customer 
-                  ? (cart.customer.user 
-                      ? (cart.customer.user.profile?.first_name + " " + (cart.customer.user.profile?.last_name_paternal || "")) 
-                      : (cart.customer.posProfile?.first_name + " " + (cart.customer.posProfile?.last_name_paternal || ""))) 
-                  : "Usuario Anónimo"}
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 calc(50% - 8px)', minWidth: '300px' }}>
+              <div className="modal-info-grid" style={{ height: '100%', margin: 0 }}>
+                <div>
+                  <div className="modal-info-label">Cliente</div>
+                  <div className="modal-info-value">
+                    {cart.customer 
+                      ? (cart.customer.user 
+                          ? (cart.customer.user.profile?.first_name + " " + (cart.customer.user.profile?.last_name_paternal || "")) 
+                          : (cart.customer.posProfile?.first_name + " " + (cart.customer.posProfile?.last_name_paternal || ""))) 
+                      : "Usuario Anónimo"}
+                  </div>
+                </div>
+                <div>
+                  <div className="modal-info-label">Origen</div>
+                  <div className="modal-info-value">{cart.source}</div>
+                </div>
+                <div>
+                  <div className="modal-info-label">Estado</div>
+                  <div className="modal-info-value">
+                    {cart.status === 'active' && 'Carrito Web (Activo)'}
+                    {cart.status === 'abandoned' && 'Abandonado'}
+                    {cart.status === 'proforma' && 'Proforma (Manual)'}
+                    {cart.status === 'converted' && 'Venta Concretada'}
+                    {cart.status === 'ordered' && 'Convertido a Entrega'}
+                  </div>
+                </div>
+                <div>
+                  <div className="modal-info-label">Fecha de Creación</div>
+                  <div className="font-semibold">{new Date(cart.created_at).toLocaleString()}</div>
+                </div>
+                <div>
+                  <div className="modal-info-label">Fecha de Vencimiento</div>
+                  <div className="font-semibold" style={{ color: cart.expires_at && new Date(cart.expires_at) < new Date() ? '#ef4444' : 'inherit' }}>
+                    {cart.expires_at ? new Date(cart.expires_at).toLocaleString() : '-'}
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="modal-info-label">Origen</div>
-              <div className="modal-info-value">{cart.source}</div>
-            </div>
-            <div>
-              <div className="modal-info-label">Estado</div>
-              <div className="modal-info-value">
-                {cart.status === 'active' && 'Carrito Web (Activo)'}
-                {cart.status === 'abandoned' && 'Abandonado'}
-                {cart.status === 'proforma' && 'Proforma (Manual)'}
-                {cart.status === 'converted' && 'Venta Concretada'}
-              </div>
-            </div>
-            <div>
-              <div className="modal-info-label">Fecha de Creación</div>
-              <div className="font-semibold">{new Date(cart.created_at).toLocaleString()}</div>
-            </div>
-          </div>
 
-          {cart.delivery_details && (
-            <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-highlight)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--color-primary)' }}>Detalles de Entrega</h4>
-              <div style={{ fontSize: '14px' }}>
-                <strong>Tipo:</strong> {cart.delivery_details.text || cart.delivery_details.type}<br/>
-                {cart.delivery_details.address && (
-                  <>
-                    <strong>Ciudad:</strong> {cart.delivery_details.address.city} - {cart.delivery_details.address.zone}<br/>
-                    <strong>Calle:</strong> {cart.delivery_details.address.street}<br/>
-                    {cart.delivery_details.address.reference && <span><strong>Referencia:</strong> {cart.delivery_details.address.reference}</span>}
-                  </>
-                )}
+            {cart.delivery_details && (
+              <div style={{ flex: '1 1 calc(50% - 8px)', minWidth: '300px' }}>
+                <div style={{ height: '100%', padding: '16px', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Truck size={16} className="text-primary" />
+                    Información de Entrega
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                    <div>
+                      <div className="modal-info-label">Tipo</div>
+                      <div className="modal-info-value">{cart.delivery_details.text || cart.delivery_details.type}</div>
+                    </div>
+                    
+                    {cart.delivery_details.type === 'pickup' && (
+                      <>
+                        {cart.delivery_details.branch_name && <div><div className="modal-info-label">Sucursal</div><div className="modal-info-value">{cart.delivery_details.branch_name}</div></div>}
+                        {cart.delivery_details.address && <div><div className="modal-info-label">Dirección</div><div className="modal-info-value">{cart.delivery_details.address}</div></div>}
+                      </>
+                    )}
+
+                    {cart.delivery_details.type === 'meetup' && (
+                      <>
+                        {cart.delivery_details.city && <div><div className="modal-info-label">Ciudad</div><div className="modal-info-value">{cart.delivery_details.city}</div></div>}
+                        {cart.delivery_details.zone_name && <div><div className="modal-info-label">Zona</div><div className="modal-info-value">{cart.delivery_details.zone_name}</div></div>}
+                      </>
+                    )}
+
+                    {cart.delivery_details.type === 'delivery' && (
+                      <>
+                        {cart.delivery_details.city && <div><div className="modal-info-label">Ciudad</div><div className="modal-info-value">{cart.delivery_details.city}</div></div>}
+                        {cart.delivery_details.zone && <div><div className="modal-info-label">Zona</div><div className="modal-info-value">{cart.delivery_details.zone}</div></div>}
+                        {cart.delivery_details.street && <div><div className="modal-info-label">Calle</div><div className="modal-info-value">{cart.delivery_details.street}</div></div>}
+                        {cart.delivery_details.reference && <div><div className="modal-info-label">Referencia</div><div className="modal-info-value">{cart.delivery_details.reference}</div></div>}
+                        {cart.delivery_details.address && <div><div className="modal-info-label">Dirección</div><div className="modal-info-value">{cart.delivery_details.address}</div></div>}
+                      </>
+                    )}
+
+                    {cart.delivery_details.type === 'national' && (
+                      <>
+                        {cart.delivery_details.destination && <div><div className="modal-info-label">Destino</div><div className="modal-info-value">{cart.delivery_details.destination}</div></div>}
+                        {cart.delivery_details.company && <div><div className="modal-info-label">Agencia</div><div className="modal-info-value">{cart.delivery_details.company}</div></div>}
+                        {cart.delivery_details.date && <div><div className="modal-info-label">Fecha de Envío</div><div className="modal-info-value">{cart.delivery_details.date}</div></div>}
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <h3 className="modal-section-title">Productos Seleccionados</h3>
           
@@ -150,7 +194,11 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
               </thead>
               <tbody>
                 {cart.items && cart.items.length > 0 ? (
-                  cart.items.map((item) => (
+                  cart.items.map((item) => {
+                    const availableStock = item.product_variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
+                    const isOutOfStock = availableStock < item.quantity;
+                    
+                    return (
                     <tr key={item.id}>
                       <td>
                         <div className="modal-product-cell">
@@ -163,7 +211,14 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                           ) : (
                             <div className="modal-product-placeholder"></div>
                           )}
-                          <span className="modal-product-name">{item.product_variant?.product?.name || "Desconocido"}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className="modal-product-name">{item.product_variant?.product?.name || "Desconocido"}</span>
+                            {isOutOfStock && cart.status !== 'converted' && (
+                              <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 'bold', background: '#fee2e2', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px' }}>
+                                {availableStock === 0 ? 'Agotado' : `Stock Insuficiente (Hay ${availableStock})`}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td>
@@ -175,7 +230,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                       <td className="text-right">Bs. {Number(item.product_variant?.price || 0).toFixed(2)}</td>
                       <td className="text-right font-semibold">Bs. {((item.product_variant?.price || 0) * item.quantity).toFixed(2)}</td>
                     </tr>
-                  ))
+                  )})
                 ) : (
                   <tr>
                     <td colSpan="5" className="text-center modal-empty-state">No hay productos en este carrito</td>
@@ -195,11 +250,27 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
 
           {/* Action Buttons */}
           <div className="modal-actions-bar">
+            {onDelete && (
+              <CanAccess permission="delete_carts">
+                <button className="modal-action-btn modal-action-delete" onClick={() => { onClose(); onDelete(cart.id); }}>
+                  <Trash2 size={16} />
+                  <span>Eliminar</span>
+                </button>
+              </CanAccess>
+            )}
             {isNotConverted && onEdit && (
               <CanAccess permission="edit_carts">
                 <button className="modal-action-btn modal-action-edit" onClick={() => { onClose(); onEdit(cart); }}>
                   <Edit size={16} />
                   <span>Editar</span>
+                </button>
+              </CanAccess>
+            )}
+            {isAbandoned && onReminder && (
+              <CanAccess permission="send_cart_reminders">
+                <button className="modal-action-btn modal-action-reminder" onClick={() => { onReminder(cart.id); }}>
+                  <Bell size={16} />
+                  <span>Enviar Recordatorio</span>
                 </button>
               </CanAccess>
             )}
@@ -216,22 +287,6 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                 <button className="modal-action-btn modal-action-order" onClick={() => { onClose(); onConvertOrder(cart.id); }}>
                   <Truck size={16} />
                   <span>Convertir a Entrega</span>
-                </button>
-              </CanAccess>
-            )}
-            {isAbandoned && onReminder && (
-              <CanAccess permission="send_cart_reminders">
-                <button className="modal-action-btn modal-action-reminder" onClick={() => { onReminder(cart.id); }}>
-                  <Bell size={16} />
-                  <span>Enviar Recordatorio</span>
-                </button>
-              </CanAccess>
-            )}
-            {onDelete && (
-              <CanAccess permission="delete_carts">
-                <button className="modal-action-btn modal-action-delete" onClick={() => { onClose(); onDelete(cart.id); }}>
-                  <Trash2 size={16} />
-                  <span>Eliminar</span>
                 </button>
               </CanAccess>
             )}

@@ -14,8 +14,11 @@ import "./Orders.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import CanAccess from '../../../../components/ui/CanAccess';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Orders() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -41,6 +44,16 @@ export default function Orders() {
     };
     fetchDrivers();
   }, []);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const openScheduleId = searchParams.get('open_schedule');
+    if (openScheduleId) {
+      setStatusModalSchedule({ id: openScheduleId });
+      searchParams.delete('open_schedule');
+      navigate({ search: searchParams.toString() }, { replace: true });
+    }
+  }, [location, navigate]);
 
   // Filters state
   const [search, setSearch] = useState("");
@@ -756,11 +769,18 @@ export default function Orders() {
           mode={modalMode}
           onClose={() => {
             setIsNewOrderModalOpen(false);
+            if (modalMode === "edit" && editData) {
+              setStatusModalSchedule({ id: editData.id });
+            }
             setEditData(null);
             setModalMode("create");
           }}
           onSuccess={() => {
             fetchSchedules();
+            setIsNewOrderModalOpen(false);
+            if (modalMode === "edit" && editData) {
+              setStatusModalSchedule({ id: editData.id });
+            }
             setEditData(null);
             setModalMode("create");
           }}

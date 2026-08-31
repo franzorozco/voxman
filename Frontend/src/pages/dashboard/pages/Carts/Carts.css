@@ -160,6 +160,11 @@
     color: #43a047;
 }
 
+.status-ordered {
+    background: rgba(92, 107, 192, 0.1);
+    color: #5c6bc0;
+}
+
 .source-badge {
     padding: 2px 8px;
     border-radius: 6px;
@@ -561,8 +566,8 @@
 
 /* ===== Modal Container Widths (PC) ===== */
 .cart-details-modal-container {
-  width: 90%;
-  max-width: 950px;
+  width: 95%;
+  max-width: 1100px;
 }
 
 .cart-form-modal-container {
@@ -574,27 +579,22 @@
 .modal-actions-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 16px;
+  gap: 12px;
+  padding-top: 20px;
+  margin-top: 20px;
   border-top: 1px solid var(--border-color);
   justify-content: flex-end;
-}
-
-@media (min-width: 769px) {
-  .modal-action-delete {
-    order: -1;
-    margin-right: auto;
-  }
+  align-items: center;
 }
 
 .modal-action-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 18px;
-  border: none;
+  padding: 10px 20px;
+  border: 1px solid transparent;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -602,44 +602,46 @@
 }
 
 .modal-action-edit {
-  background: rgba(255, 152, 0, 0.12);
-  color: #f57c00;
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-main);
 }
 .modal-action-edit:hover {
-  background: rgba(255, 152, 0, 0.22);
+  background: var(--bg-input);
+  border-color: var(--text-muted);
 }
 
 .modal-action-convert {
-  background: rgba(76, 175, 80, 0.12);
-  color: #43a047;
+  background: #10b981;
+  color: #fff;
 }
 .modal-action-convert:hover {
-  background: rgba(76, 175, 80, 0.22);
+  background: #059669;
 }
 
 .modal-action-order {
-  background: rgba(92, 107, 192, 0.12);
-  color: #5c6bc0;
+  background: var(--color-primary);
+  color: #fff;
 }
 .modal-action-order:hover {
-  background: rgba(92, 107, 192, 0.22);
+  background: var(--color-primary-hover, #4338ca);
 }
 
 .modal-action-reminder {
-  background: rgba(255, 152, 0, 0.12);
-  color: #ff9800;
+  background: #f59e0b;
+  color: #fff;
 }
 .modal-action-reminder:hover {
-  background: rgba(255, 152, 0, 0.22);
+  background: #d97706;
 }
 
 .modal-action-delete {
-  background: rgba(244, 67, 54, 0.10);
-  color: #e53935;
-  margin-left: auto;
+  background: transparent;
+  border-color: transparent;
+  color: #ef4444;
 }
 .modal-action-delete:hover {
-  background: rgba(244, 67, 54, 0.20);
+  background: #fee2e2;
 }
 
 /* ===== Responsive ===== */

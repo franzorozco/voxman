@@ -461,6 +461,9 @@ class OrderNetworkController extends Controller
             if ($cart->items->isEmpty()) {
                 return response()->json(['error' => 'El carrito no tiene productos.'], 422);
             }
+            if ($cart->status === 'converted' || $cart->status === 'ordered') {
+                return response()->json(['error' => 'El carrito ya fue convertido.'], 400);
+            }
 
             // Use existing guest/customer from the cart
             $guestId = $cart->guest_id;
@@ -483,6 +486,85 @@ class OrderNetworkController extends Controller
                 'notes' => 'Convertido desde proforma ' . ($cart->reference_number ?? $cart->id)
             ]);
 
+            $deliveryDetails = $cart->delivery_details ?? [];
+            $mappedDeliveryType = 'scheduled_point';
+            $pickupBranchId = null;
+            $externalCompany = null;
+            $destinationCity = null;
+            $notes = '';
+            $addressId = null;
+            $meetingPoint = 'Por definir';
+            $scheduledDate = now()->addDays(1)->toDateString();
+
+            if (!empty($deliveryDetails)) {
+                $type = $deliveryDetails['type'] ?? '';
+                if ($type === 'pickup') {
+                    $mappedDeliveryType = 'pickup';
+                    if (!empty($deliveryDetails['branch_id'])) {
+                        $pickupBranchId = $deliveryDetails['branch_id'];
+                    }
+                } elseif ($type === 'meetup') {
+                    $mappedDeliveryType = 'scheduled_point';
+                    $destinationCity = $deliveryDetails['city'] ?? null;
+                    if (!empty($deliveryDetails['zone_name'])) {
+                        $meetingPoint = $deliveryDetails['zone_name'];
+                    }
+                } elseif ($type === 'delivery') {
+                    $mappedDeliveryType = 'home_delivery';
+                    $destinationCity = $deliveryDetails['city'] ?? null;
+                    
+                    if (!empty($deliveryDetails['address']) || !empty($deliveryDetails['street']) || !empty($deliveryDetails['zone'])) {
+                        $address = \App\Models\Core\Address::create([
+                            'address_type' => 'shipping',
+                            'addressable_type' => $sale->customer_id ? 'App\Models\Sales\Customer' : null,
+                            'addressable_id' => $sale->customer_id,
+                            'city' => $destinationCity,
+                            'zone' => $deliveryDetails['zone'] ?? null,
+                            'street' => $deliveryDetails['street'] ?? $deliveryDetails['address'] ?? null,
+                            'reference' => $deliveryDetails['reference'] ?? null,
+                            'country' => 'Bolivia',
+                        ]);
+                        $addressId = $address->id;
+                    }
+                    if (!empty($deliveryDetails['address'])) {
+                        $notes .= "Dirección manual: " . $deliveryDetails['address'] . "\n";
+                    }
+                } elseif ($type === 'national') {
+                    $mappedDeliveryType = 'external';
+                    $externalCompany = $deliveryDetails['company'] ?? null;
+                    $destinationCity = $deliveryDetails['destination'] ?? null;
+                    if ($destinationCity) {
+                        $meetingPoint = $destinationCity;
+                    }
+                    if (!empty($deliveryDetails['date'])) {
+                        $scheduledDate = $deliveryDetails['date'];
+                    }
+                }
+            }
+
+            // Create Shipment
+            $shipment = Shipment::create([
+                'sale_id' => $sale->id,
+                'status' => 'pending',
+                'shipping_cost' => 0,
+                'delivery_code' => str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT),
+                'delivery_type' => $mappedDeliveryType,
+                'pickup_branch_id' => $pickupBranchId,
+                'external_company' => $externalCompany,
+                'destination_city' => $destinationCity,
+                'address_id' => $addressId,
+                'notes' => trim($notes) ?: null,
+            ]);
+
+            // Create DeliverySchedule
+            $schedule = DeliverySchedule::create([
+                'shipment_id' => $shipment->id,
+                'scheduled_date' => $scheduledDate,
+                'time_window' => 'Por definir',
+                'meeting_point' => $meetingPoint,
+                'status' => 'pending',
+            ]);
+
             $subtotal = 0;
 
             foreach ($cart->items as $item) {
@@ -502,8 +584,40 @@ class OrderNetworkController extends Controller
                     'subtotal' => $lineTotal
                 ]);
 
-                // NOTE: No stock reservation here. That happens when
-                // the user assigns branch + items in dashboard/orders.
+                // Auto-assign branch with highest stock
+                $inventory = \App\Models\Inventory\Inventory::where('variant_id', $item->variant_id)
+                    ->orderBy('stock', 'desc')
+                    ->lockForUpdate()
+                    ->first();
+
+                $branchId = $inventory ? $inventory->branch_id : env('MAIN_BRANCH_ID', 1);
+
+                if ($inventory && $inventory->stock > 0) {
+                    $stockBefore = $inventory->stock;
+                    // Prevent going completely negative if not enough, though allow it if required
+                    $inventory->stock -= $item->quantity;
+                    $inventory->save();
+
+                    \App\Models\Inventory\InventoryMovement::create([
+                        'variant_id' => $item->variant_id,
+                        'branch_id' => $branchId,
+                        'movement_type' => 'sale',
+                        'quantity' => (int) $item->quantity,
+                        'stock_before' => $stockBefore,
+                        'stock_after' => $inventory->stock,
+                        'reference_type' => 'delivery_schedule',
+                        'reference_id' => $schedule->id,
+                        'created_by' => auth()->id() ?? null,
+                    ]);
+                }
+
+                \App\Models\Inventory\StockReservation::create([
+                    'variant_id' => $item->variant_id,
+                    'branch_id' => $branchId,
+                    'sale_id' => $sale->id,
+                    'quantity' => $item->quantity,
+                    'status' => 'reserved'
+                ]);
             }
 
             // Update sale totals
@@ -511,36 +625,25 @@ class OrderNetworkController extends Controller
             $sale->total = max(0, $subtotal - ($sale->discount_total ?? 0));
             $sale->save();
 
-            // Create Shipment (minimal, pending)
-            $shipment = Shipment::create([
-                'sale_id' => $sale->id,
-                'status' => 'pending',
-                'shipping_cost' => 0,
-                'delivery_code' => str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT),
-                'delivery_type' => 'scheduled_point',
-            ]);
-
-            // Create DeliverySchedule (pending, placeholder values)
-            $schedule = DeliverySchedule::create([
-                'shipment_id' => $shipment->id,
-                'scheduled_date' => now()->addDays(1)->toDateString(),
-                'time_window' => 'Por definir',
-                'meeting_point' => 'Por definir',
-                'status' => 'pending',
-            ]);
-
-            // Mark cart as converted and delete
-            $cart->status = 'converted';
+            // Mark cart as ordered and do not delete
+            $cart->status = 'ordered';
+            $cart->expires_at = null;
+            
+            // Save converted info into delivery_details so frontend can show the success modal later
+            $deliveryDetails['converted_schedule_id'] = $schedule->id;
+            $deliveryDetails['converted_mapped_type'] = $mappedDeliveryType;
+            $cart->delivery_details = $deliveryDetails;
+            
             $cart->save();
-            $cart->items()->delete();
-            $cart->delete();
-
+            
             DB::commit();
 
             return response()->json([
                 'message' => 'Carrito convertido a entrega pendiente exitosamente.',
                 'schedule_id' => $schedule->id,
-                'sale_id' => $sale->id
+                'sale_id' => $sale->id,
+                'applied_details' => $deliveryDetails,
+                'mapped_type' => $mappedDeliveryType
             ], 201);
 
         } catch (\Exception $e) {
@@ -573,6 +676,7 @@ class OrderNetworkController extends Controller
             'shipment.sale.guest', 
             'shipment.sale.customer.user.profile',
             'shipment.sale.customer.posProfile',
+            'shipment.sale.customer.addresses',
             'shipment.sale.discount',
             'shipment.sale.payments.payment_method',
             'shipment.sale.giftcard_transactions.giftcard',

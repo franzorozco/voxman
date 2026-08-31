@@ -1040,7 +1040,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       {isPickup && pickupAddressStr 
                         ? pickupAddressStr
                         : (details.shipment?.delivery_type === 'home_delivery' && details.shipment?.address 
-                          ? `${details.shipment.address.street}, ${details.shipment.address.zone}` 
+                          ? [details.shipment.address.street, details.shipment.address.zone].filter(Boolean).join(', ')
                           : details.meeting_point)}
                     </div>
                   </div>
