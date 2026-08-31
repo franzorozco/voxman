@@ -189,7 +189,7 @@ export default function Orders() {
     if (!phone || phone === "N/A") return "#";
     const cleanPhone = phone.replace(/\D/g, '');
     
-    // Extract first name for a friendly greeting
+    // Extraer primer nombre
     const firstName = name && name !== "Anónimo" ? name.split(" ")[0] : "";
     const greeting = firstName ? `Hola ${firstName}` : "Hola";
     
@@ -208,27 +208,100 @@ export default function Orders() {
     }
     
     const trackingUrl = `${window.location.origin}/tracking/${schedule.id}`;
+    const deliveryType = schedule.shipment?.delivery_type || 'scheduled_point';
+    const meetPoint = schedule.meeting_point || "la ubicación acordada";
+    const time = schedule.time_window || "una hora a convenir";
+    const date = schedule.scheduled_date || "hoy";
+    
     let message = "";
     
-    const isDelivery = schedule.shipment?.delivery_type === 'home_delivery';
-    const placeText = isDelivery ? "tu domicilio" : "el punto de encuentro";
-    const agreedPlaceText = isDelivery ? "tu domicilio" : "el punto acordado";
-    
-    switch (schedule.status) {
-      case "assigned":
-        message = `${greeting}, te escribimos de VOXman para confirmarte ${productDetails}, para hacerte la entrega el día ${schedule.scheduled_date} a las ${schedule.time_window || "una hora a convenir"} en ${schedule.meeting_point || agreedPlaceText}. ¿Me confirmas esto por favor? \n\nPuedes ver el estado de tu entrega aquí: ${trackingUrl}`;
-        break;
-      case "on_the_way":
-        message = `${greeting}, te comento que ya estamos en camino a realizar tu entrega amigo.`;
-        break;
-      case "at_the_meeting_point":
-        message = `${greeting}, ya nos encontramos en ${placeText} (${schedule.meeting_point || ""}). Te esperamos.`;
-        break;
-      case "completed":
-        message = `${greeting}, muchas gracias por tu compra de ${productDetails}. ¡Esperamos que lo disfrutes!`;
-        break;
-      default:
-        message = `${greeting}, te escribimos de VOXman respecto a tu pedido. Puedes ver los detalles aquí: ${trackingUrl}`;
+    // 1. RECOJO EN SUCURSAL (PICKUP)
+    if (deliveryType === 'pickup') {
+      switch (schedule.status) {
+        case "requested":
+          message = `${greeting}, te escribimos de VOXman respecto a tu solicitud de compra de ${productDetails}. Por favor, confírmanos cuando realices el pago para reservar tu pedido. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          break;
+        case "reserved":
+          message = `${greeting}, ¡pago confirmado! Hemos reservado tu pedido de ${productDetails}. Pronto comenzaremos a prepararlo.`;
+          break;
+        case "preparing":
+          message = `${greeting}, estamos alistando y preparando tu pedido de ${productDetails} en sucursal. Te avisaremos apenas esté listo para recoger.`;
+          break;
+        case "ready_for_pickup":
+          message = `${greeting}, ¡buenas noticias! Tu pedido de ${productDetails} ya está listo y esperando en la sucursal. Puedes pasar a recogerlo cuando gustes. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          break;
+        case "completed":
+          message = `${greeting}, gracias por visitarnos en sucursal y llevarte ${productDetails}. ¡Que lo disfrutes mucho!`;
+          break;
+        default:
+          message = `${greeting}, te escribimos de VOXman respecto a tu pedido de ${productDetails} (Recojo en sucursal). Puedes ver todos los detalles aquí: ${trackingUrl}`;
+      }
+    } 
+    // 2. ENVÍO NACIONAL (EXTERNAL)
+    else if (deliveryType === 'external') {
+      switch (schedule.status) {
+        case "pending":
+          message = `${greeting}, recibimos tu pedido nacional de ${productDetails}. Por favor envíanos el comprobante de pago para procesarlo. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          break;
+        case "prepared":
+          message = `${greeting}, ¡tu pedido de ${productDetails} ya está preparado! En breve lo empacaremos para llevarlo a la agencia.`;
+          break;
+        case "packaged":
+          message = `${greeting}, ya empaquetamos y aseguramos tu pedido de ${productDetails}. Estamos listos para llevarlo a la agencia de envío.`;
+          break;
+        case "shipped":
+          message = `${greeting}, ¡ya dejamos tu paquete en la agencia (Remitido)! Aquí tienes los detalles del envío en tu enlace de seguimiento: ${trackingUrl}`;
+          break;
+        case "completed":
+          message = `${greeting}, damos por finalizado tu pedido de ${productDetails}. ¡Muchísimas gracias por confiar en VOXman! Esperamos que llegue todo excelente y disfrutes tu compra.`;
+          break;
+        default:
+          message = `${greeting}, te escribimos de VOXman respecto a tu envío nacional de ${productDetails}. Puedes ver todos los detalles aquí: ${trackingUrl}`;
+      }
+    } 
+    // 3. DELIVERY A HOGAR (HOME_DELIVERY)
+    else if (deliveryType === 'home_delivery') {
+      switch (schedule.status) {
+        case "pending":
+          message = `${greeting}, recibimos tu pedido de ${productDetails} para envío a domicilio. Por favor envíanos el comprobante de pago para agendar la entrega. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          break;
+        case "assigned":
+          message = `${greeting}, te escribimos de VOXman. Tu pedido de ${productDetails} fue agendado para llevarlo a tu domicilio el día ${date} a las ${time}. ¿Nos confirmas que habrá alguien para recibirlo? \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          break;
+        case "on_the_way":
+          message = `${greeting}, ¡ya estamos en camino! Nuestro repartidor va rumbo a tu domicilio con tu pedido de ${productDetails}. Espéranos por favor.`;
+          break;
+        case "at_the_meeting_point":
+          message = `${greeting}, ¡ya estamos afuera de tu domicilio! Por favor sal a recibir tu paquete.`;
+          break;
+        case "completed":
+          message = `${greeting}, muchas gracias por tu compra de ${productDetails}. ¡Esperamos que lo disfrutes y verte pronto por VOXman!`;
+          break;
+        default:
+          message = `${greeting}, te escribimos de VOXman respecto a tu delivery de ${productDetails}. Puedes ver todos los detalles aquí: ${trackingUrl}`;
+      }
+    } 
+    // 4. RECOJO EN PUNTO FIJO/MANUAL (SCHEDULED_POINT)
+    else {
+      switch (schedule.status) {
+        case "pending":
+          message = `${greeting}, recibimos tu pedido de ${productDetails} para entrega en punto. Por favor envíanos el comprobante de pago para agendar la entrega. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          break;
+        case "assigned":
+          message = `${greeting}, te escribimos de VOXman para confirmar tu entrega (Agendado) de ${productDetails} el día ${date} a las ${time} en ${meetPoint}. ¿Me confirmas tu asistencia por favor? \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          break;
+        case "on_the_way":
+          message = `${greeting}, ¡ya estamos en camino al punto de encuentro! Nos vemos en ${meetPoint} para entregarte ${productDetails}.`;
+          break;
+        case "at_the_meeting_point":
+          message = `${greeting}, ya nos encontramos en el punto de encuentro (${meetPoint}). ¡Te estamos esperando!`;
+          break;
+        case "completed":
+          message = `${greeting}, muchas gracias por tu compra de ${productDetails}. ¡Esperamos que lo disfrutes y verte pronto por VOXman!`;
+          break;
+        default:
+          message = `${greeting}, te escribimos de VOXman respecto a tu entrega en ${meetPoint}. Puedes ver todos los detalles aquí: ${trackingUrl}`;
+      }
     }
     
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
@@ -673,6 +746,7 @@ export default function Orders() {
             setStatusModalSchedule(null);
             setIsNewOrderModalOpen(true);
           }}
+          generateWhatsAppLink={generateWhatsAppLink}
         />
       )}
 

@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign, Store } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign, Store, MessageCircle } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
 import AddProductToDeliveryModal from "./components/AddProductToDeliveryModal";
 import api from "../../../../api/client";
@@ -71,7 +71,7 @@ const getStepIndex = (status, stepsArr = STEPS_LOCAL) => {
   return idx === -1 ? 0 : idx;
 };
 
-export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChange, onEditRequest }) {
+export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChange, onEditRequest, generateWhatsAppLink }) {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -1226,7 +1226,20 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             )}
           </div>
 
-          <button className="action-btn btn-cerrar" style={{ padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', background: 'var(--bg-input)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }} onClick={onClose} disabled={updating}>Cerrar</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              className="action-btn"
+              style={{ padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', background: '#25D366', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '6px' }} 
+              onClick={() => {
+                const link = generateWhatsAppLink ? generateWhatsAppLink(details, clientPhone, clientName) : `https://wa.me/${clientPhone.replace(/\D/g, '')}`;
+                if (link && link !== "#") window.open(link, '_blank');
+              }}
+              title={clientPhone === "No especificado" ? "El cliente no tiene teléfono registrado" : "Enviar mensaje de estado"}
+            >
+              <MessageCircle size={18} /> WhatsApp
+            </button>
+            <button className="action-btn btn-cerrar" style={{ padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', background: 'var(--bg-input)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }} onClick={onClose} disabled={updating}>Cerrar</button>
+          </div>
         </div>
       </div>
 
