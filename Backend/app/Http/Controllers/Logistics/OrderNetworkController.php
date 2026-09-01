@@ -273,6 +273,22 @@ class OrderNetworkController extends Controller
         ]);
 
         try {
+            if ($request->has('delivery_type')) {
+                $typeMap = [
+                    'home_delivery' => 'delivery_home',
+                    'scheduled_point' => 'delivery_scheduled_point',
+                    'pickup' => 'delivery_pickup',
+                    'external' => 'delivery_national'
+                ];
+                $settingKey = $typeMap[$request->delivery_type] ?? null;
+                if ($settingKey) {
+                    $isActive = \App\Models\System\SystemSetting::where('key', $settingKey)->value('value');
+                    if ($isActive === 'false') {
+                        return response()->json(['error' => 'El método de entrega seleccionado no está disponible en este momento.'], 400);
+                    }
+                }
+            }
+
             DB::beginTransaction();
 
             $cart = Cart::with('items.product_variant')->findOrFail($request->cart_id);
@@ -1210,6 +1226,22 @@ class OrderNetworkController extends Controller
         ]);
 
         try {
+            if ($request->has('delivery_type')) {
+                $typeMap = [
+                    'home_delivery' => 'delivery_home',
+                    'scheduled_point' => 'delivery_scheduled_point',
+                    'pickup' => 'delivery_pickup',
+                    'external' => 'delivery_national'
+                ];
+                $settingKey = $typeMap[$request->delivery_type] ?? null;
+                if ($settingKey) {
+                    $isActive = \App\Models\System\SystemSetting::where('key', $settingKey)->value('value');
+                    if ($isActive === 'false') {
+                        return response()->json(['error' => 'El método de entrega seleccionado no está disponible en este momento.'], 400);
+                    }
+                }
+            }
+            
             DB::beginTransaction();
 
             $schedule = DeliverySchedule::with('shipment.sale')->findOrFail($id);

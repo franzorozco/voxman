@@ -5,11 +5,15 @@ import { getImageUrl } from "../../utils/imageUtils";
 import GoogleMapWrapper from "./GoogleMapWrapper";
 import { Marker } from "@react-google-maps/api";
 import toast from "react-hot-toast";
+import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 
 export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user, theme = 'light' }) {
   const [step, setStep] = useState(1);
   const [selectedMethod, setSelectedMethod] = useState(null);
   
+  // Settings for delivery visibility
+  const settings = useShopSettingsStore(state => state.settings);
+
   // States for step 2
   const [loading, setLoading] = useState(false);
   const [branches, setBranches] = useState([]);
@@ -69,11 +73,11 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
   const activeBorder = "#C9A227"; 
 
   const deliveryMethods = [
-    { id: "pickup", title: "Recojo en sucursal", description: "Recoge tu pedido personalmente en nuestra tienda física.", icon: Store },
-    { id: "meetup", title: "Encuentro en punto definido", description: "Acordamos un lugar céntrico para entregarte tu pedido.", icon: MapPin },
-    { id: "national", title: "Envío a nivel nacional", description: "Envíos a todo el país mediante encomienda.", icon: Truck },
-    { id: "delivery", title: "Delivery a hogar", description: "Recibe tu pedido directamente en la puerta de tu casa.", icon: Home }
-  ];
+    { id: "pickup", title: "Recojo en sucursal", description: "Recoge tu pedido personalmente en nuestra tienda física.", icon: Store, settingKey: "delivery_pickup" },
+    { id: "meetup", title: "Encuentro en punto definido", description: "Acordamos un lugar céntrico para entregarte tu pedido.", icon: MapPin, settingKey: "delivery_scheduled_point" },
+    { id: "national", title: "Envío a nivel nacional", description: "Envíos a todo el país mediante encomienda.", icon: Truck, settingKey: "delivery_national" },
+    { id: "delivery", title: "Delivery a hogar", description: "Recibe tu pedido directamente en la puerta de tu casa.", icon: Home, settingKey: "delivery_home" }
+  ].filter(m => settings[m.settingKey] !== "false");
 
   const handleMethodSelect = async (methodId) => {
     setSelectedMethod(methodId);

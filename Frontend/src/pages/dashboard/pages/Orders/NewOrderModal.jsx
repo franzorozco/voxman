@@ -10,11 +10,15 @@ import GoogleMapWrapper from '../../../../components/ui/GoogleMapWrapper';
 import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X, XCircle, MapPin, Map, User, UserCheck, CheckCircle2 } from "lucide-react";
 import useScanner from "../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../store/scanner/useScannerStore";
+import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
 import "../Carts/Carts.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import CanAccess from '../../../../components/ui/CanAccess';
 export default function NewOrderModal({ editData, mode = "create", onClose, onSuccess }) {
+  const settings = useShopSettingsStore(state => state.settings);
+  const fetchSettings = useShopSettingsStore(state => state.fetchSettings);
+
   const [step, setStep] = useState(1); // 1: Products, 2: Delivery Details
   const [loading, setLoading] = useState(false);
   
@@ -126,6 +130,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
     
     fetchBranches();
     fetchZones();
+    fetchSettings();
   }, []);
 
   // Initialize with editData if provided
@@ -782,98 +787,108 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                         <div className="form-group">
                           <label className="delivery-label">Lugar de Entrega *</label>
                           <div className="delivery-type-tabs">
-                            <button 
-                              type="button" 
-                              onClick={() => {
-                                setMeetingPointType('pickup');
-                                const targetBranch = cartItems.length > 0 ? (cartItems[0].branch_id || branches[0]?.id || "") : (branches[0]?.id || "");
-                                setDeliveryData({...deliveryData, meeting_point: "Recojo en sucursal", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'pickup', address_id: "", pickup_branch_id: targetBranch});
-                                setCartItems(prev => prev.map(item => ({ ...item, branch_id: targetBranch })));
-                              }}
-                              className={`tab-btn ${meetingPointType === 'pickup' ? 'active' : ''}`}
-                            >
-                              <ShoppingCart size={16} />
-                              <span>Recojo en Sucursal</span>
-                              {meetingPointType === 'pickup' && <CheckCircle2 size={14} />}
-                            </button>
-                            <button 
-                              type="button" 
-                              onClick={() => {
-                                setMeetingPointType('predefined');
-                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
-                              }}
-                              className={`tab-btn ${meetingPointType === 'predefined' ? 'active' : ''}`}
-                            >
-                              <MapPin size={16} />
-                              <span>Punto Fijo</span>
-                              {meetingPointType === 'predefined' && <CheckCircle2 size={14} />}
-                            </button>
-                            <button 
-                              type="button" 
-                              onClick={() => {
-                                setMeetingPointType('manual');
-                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
-                              }}
-                              className={`tab-btn ${meetingPointType === 'manual' ? 'active' : ''}`}
-                            >
-                              <Map size={16} />
-                              <span>Manual (Mapa)</span>
-                              {meetingPointType === 'manual' && <CheckCircle2 size={14} />}
-                            </button>
-                            <button 
-                              type="button" 
-                              onClick={() => {
-                                setMeetingPointType('delivery');
-                                setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'home_delivery', address_id: ""});
-                              }}
-                              className={`tab-btn ${meetingPointType === 'delivery' ? 'active' : ''}`}
-                            >
-                              <MapPin size={16} />
-                              <span>A Domicilio</span>
-                              {meetingPointType === 'delivery' && <CheckCircle2 size={14} />}
-                            </button>
-                            <button 
-                              type="button" 
-                              onClick={() => {
-                                setMeetingPointType('external');
-                                let recName = "";
-                                let recPhone = "";
-                                let recCi = "";
-                                if (customerSearchType === 'guest') {
-                                  recName = deliveryData.guest_name;
-                                  recPhone = (deliveryData.guest_country_code || "") + " " + (deliveryData.guest_phone || "");
-                                  recPhone = recPhone.trim();
-                                } else if (selectedCustomer) {
-                                  const c = customersList.find(x => x.id === selectedCustomer.id);
-                                  if (c) {
-                                    recName = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}`.trim() :
-                                                (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}`.trim() : 
-                                                (c.user?.username || c.customer_code));
-                                    recPhone = c.pos_profile?.whatsapp_phone || c.user?.profile?.phone || "";
-                                    recCi = c.customer_code || "";
-                                  } else {
-                                    recName = selectedCustomer.name;
+                            {settings.delivery_pickup !== 'false' && (
+                              <button 
+                                type="button" 
+                                onClick={() => {
+                                  setMeetingPointType('pickup');
+                                  const targetBranch = cartItems.length > 0 ? (cartItems[0].branch_id || branches[0]?.id || "") : (branches[0]?.id || "");
+                                  setDeliveryData({...deliveryData, meeting_point: "Recojo en sucursal", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'pickup', address_id: "", pickup_branch_id: targetBranch});
+                                  setCartItems(prev => prev.map(item => ({ ...item, branch_id: targetBranch })));
+                                }}
+                                className={`tab-btn ${meetingPointType === 'pickup' ? 'active' : ''}`}
+                              >
+                                <ShoppingCart size={16} />
+                                <span>Recojo en Sucursal</span>
+                                {meetingPointType === 'pickup' && <CheckCircle2 size={14} />}
+                              </button>
+                            )}
+                            {settings.delivery_scheduled_point !== 'false' && (
+                              <>
+                                <button 
+                                  type="button" 
+                                  onClick={() => {
+                                    setMeetingPointType('predefined');
+                                    setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
+                                  }}
+                                  className={`tab-btn ${meetingPointType === 'predefined' ? 'active' : ''}`}
+                                >
+                                  <MapPin size={16} />
+                                  <span>Punto Fijo</span>
+                                  {meetingPointType === 'predefined' && <CheckCircle2 size={14} />}
+                                </button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => {
+                                    setMeetingPointType('manual');
+                                    setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
+                                  }}
+                                  className={`tab-btn ${meetingPointType === 'manual' ? 'active' : ''}`}
+                                >
+                                  <Map size={16} />
+                                  <span>Manual (Mapa)</span>
+                                  {meetingPointType === 'manual' && <CheckCircle2 size={14} />}
+                                </button>
+                              </>
+                            )}
+                            {settings.delivery_home !== 'false' && (
+                              <button 
+                                type="button" 
+                                onClick={() => {
+                                  setMeetingPointType('delivery');
+                                  setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'home_delivery', address_id: ""});
+                                }}
+                                className={`tab-btn ${meetingPointType === 'delivery' ? 'active' : ''}`}
+                              >
+                                <MapPin size={16} />
+                                <span>A Domicilio</span>
+                                {meetingPointType === 'delivery' && <CheckCircle2 size={14} />}
+                              </button>
+                            )}
+                            {settings.delivery_national !== 'false' && (
+                              <button 
+                                type="button" 
+                                onClick={() => {
+                                  setMeetingPointType('external');
+                                  let recName = "";
+                                  let recPhone = "";
+                                  let recCi = "";
+                                  if (customerSearchType === 'guest') {
+                                    recName = deliveryData.guest_name;
+                                    recPhone = (deliveryData.guest_country_code || "") + " " + (deliveryData.guest_phone || "");
+                                    recPhone = recPhone.trim();
+                                  } else if (selectedCustomer) {
+                                    const c = customersList.find(x => x.id === selectedCustomer.id);
+                                    if (c) {
+                                      recName = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}`.trim() :
+                                                  (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}`.trim() : 
+                                                  (c.user?.username || c.customer_code));
+                                      recPhone = c.pos_profile?.whatsapp_phone || c.user?.profile?.phone || "";
+                                      recCi = c.customer_code || "";
+                                    } else {
+                                      recName = selectedCustomer.name;
+                                    }
                                   }
-                                }
-                                setDeliveryData({
-                                  ...deliveryData, 
-                                  meeting_point: "", 
-                                  latitude: null, 
-                                  longitude: null, 
-                                  shipping_cost: 0, 
-                                  delivery_type: 'external', 
-                                  address_id: "",
-                                  recipient_name: recName,
-                                  recipient_phone: recPhone,
-                                  recipient_ci: recCi
-                                });
-                              }}
-                              className={`tab-btn ${meetingPointType === 'external' ? 'active' : ''}`}
-                            >
-                              <MapPin size={16} />
-                              <span>Nacional</span>
-                              {meetingPointType === 'external' && <CheckCircle2 size={14} />}
-                            </button>
+                                  setDeliveryData({
+                                    ...deliveryData, 
+                                    meeting_point: "", 
+                                    latitude: null, 
+                                    longitude: null, 
+                                    shipping_cost: 0, 
+                                    delivery_type: 'external', 
+                                    address_id: "",
+                                    recipient_name: recName,
+                                    recipient_phone: recPhone,
+                                    recipient_ci: recCi
+                                  });
+                                }}
+                                className={`tab-btn ${meetingPointType === 'external' ? 'active' : ''}`}
+                              >
+                                <MapPin size={16} />
+                                <span>Nacional</span>
+                                {meetingPointType === 'external' && <CheckCircle2 size={14} />}
+                              </button>
+                            )}
                           </div>
                         </div>
                         

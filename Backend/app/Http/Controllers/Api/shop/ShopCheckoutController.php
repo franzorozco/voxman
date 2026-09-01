@@ -22,6 +22,24 @@ class ShopCheckoutController extends Controller
             'whatsapp_phone' => 'required|string|min:7',
         ]);
 
+        $deliveryDetails = $request->input('delivery_details', []);
+        $deliveryType = is_array($deliveryDetails) ? ($deliveryDetails['type'] ?? null) : null;
+        if ($deliveryType) {
+            $typeMap = [
+                'delivery' => 'delivery_home',
+                'meetup' => 'delivery_scheduled_point',
+                'pickup' => 'delivery_pickup',
+                'national' => 'delivery_national'
+            ];
+            $settingKey = $typeMap[$deliveryType] ?? null;
+            if ($settingKey) {
+                $isActive = \App\Models\System\SystemSetting::where('key', $settingKey)->value('value');
+                if ($isActive === 'false') {
+                    return response()->json(['message' => 'El método de entrega seleccionado no está disponible.'], 400);
+                }
+            }
+        }
+
         $cartToken = $request->header('X-Cart-Token');
         if (!$cartToken) {
             return response()->json(['message' => 'No cart token provided'], 400);
@@ -117,6 +135,24 @@ class ShopCheckoutController extends Controller
         $customer = $user->customers()->first();
         if (!$customer) {
             return response()->json(['message' => 'El usuario no tiene perfil de cliente'], 400);
+        }
+
+        $deliveryDetails = $request->input('delivery_details', []);
+        $deliveryType = is_array($deliveryDetails) ? ($deliveryDetails['type'] ?? null) : null;
+        if ($deliveryType) {
+            $typeMap = [
+                'delivery' => 'delivery_home',
+                'meetup' => 'delivery_scheduled_point',
+                'pickup' => 'delivery_pickup',
+                'national' => 'delivery_national'
+            ];
+            $settingKey = $typeMap[$deliveryType] ?? null;
+            if ($settingKey) {
+                $isActive = \App\Models\System\SystemSetting::where('key', $settingKey)->value('value');
+                if ($isActive === 'false') {
+                    return response()->json(['message' => 'El método de entrega seleccionado no está disponible.'], 400);
+                }
+            }
         }
 
         $cartToken = $request->header('X-Cart-Token');

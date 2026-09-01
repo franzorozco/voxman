@@ -81,7 +81,7 @@ export default function SystemSettings() {
     return acc;
   }, {});
 
-  const categoryOrder = ['Apariencia', 'General', 'Pagos y Pedidos', 'Redes Sociales', 'Avanzado'];
+  const categoryOrder = ['Apariencia', 'General', 'Pagos y Pedidos', 'Entregas', 'Redes Sociales', 'Avanzado'];
   const orderedGroups = Object.entries(grouped).sort((a, b) => {
     let indexA = categoryOrder.indexOf(a[0]);
     let indexB = categoryOrder.indexOf(b[0]);
