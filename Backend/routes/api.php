@@ -33,8 +33,13 @@ use App\Http\Controllers\Api\Admin\BrandController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logistics\OrderNetworkController;
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 // Public Order Network routes (for customers to confirm delivery via link)
 Route::prefix('v1/delivery')->group(function () {

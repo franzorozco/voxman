@@ -5,10 +5,11 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Base\User as BaseUser;
 use Illuminate\Support\Str;
+use Illuminate\Notifications\Notifiable;
 
 class User extends BaseUser
 {
-	use HasApiTokens, HasRoles, \App\Traits\Auditable;
+	use HasApiTokens, HasRoles, \App\Traits\Auditable, Notifiable;
 	protected $guard_name = 'web';
 	protected $hidden = [
 		'password'
@@ -33,6 +34,11 @@ class User extends BaseUser
 				$model->id = (string) Str::uuid();
 			}
 		});
+	}
+
+	public function sendPasswordResetNotification($token)
+	{
+		$this->notify(new \App\Notifications\CustomResetPasswordNotification($token, $this->email));
 	}
 
 	public function profile()
