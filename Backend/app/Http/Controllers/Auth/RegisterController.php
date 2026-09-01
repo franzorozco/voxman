@@ -29,7 +29,6 @@ class RegisterController extends Controller
                     'phone' => $request->phone,
                 ]);
 
-                // ✅ AQUÍ asignas el rol correctamente
                 $user->assignRole('Usuario');
 
                 $user->loadMissing('profile', 'customers.addresses', 'employee.branch');

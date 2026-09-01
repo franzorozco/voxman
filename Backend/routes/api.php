@@ -35,11 +35,15 @@ use App\Http\Controllers\Logistics\OrderNetworkController;
 
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\SocialAuthController;
 
 Route::post('/register', RegisterController::class);
 Route::post('/login', LoginController::class);
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+
+Route::get('/auth/google', [SocialAuthController::class, 'redirect']);
+Route::get('/auth/google/callback', [SocialAuthController::class, 'callback']);
 
 // Public Order Network routes (for customers to confirm delivery via link)
 Route::prefix('v1/delivery')->group(function () {
@@ -54,6 +58,12 @@ Route::prefix('v1/delivery')->group(function () {
 Route::middleware([
     'auth:sanctum',
 ])->prefix('v1/admin')->group(function () {
+
+    Route::get('/me', function (Illuminate\Http\Request $request) {
+        $user = $request->user();
+        $user->loadMissing('profile', 'customers.addresses', 'employee.branch');
+        return response()->json(['user' => $user]);
+    });
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->middleware('permission:view_users');

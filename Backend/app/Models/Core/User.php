@@ -20,7 +20,9 @@ class User extends BaseUser
 		'username',
 		'password',
 		'last_login',
-		'is_active'
+		'is_active',
+		'google_id',
+		'avatar'
 	];
 
 

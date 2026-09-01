@@ -51,7 +51,8 @@ class LoginController extends Controller
 
         $user->loadMissing('profile', 'customers.addresses', 'employee.branch');
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $expiresAt = $request->boolean('remember') ? now()->addMonth() : now()->addHours(24);
+        $token = $user->createToken('auth_token', ['*'], $expiresAt)->plainTextToken;
 
         return response()->json([
             'user' => [
@@ -61,7 +62,7 @@ class LoginController extends Controller
                 'full_name' => optional($user->profile)->first_name . ' ' . optional($user->profile)->last_name_paternal,
                 'photo' => optional($user->profile)->photo ?? null,
 
-                // 👇 INFORMACION DE EMPLEADO (SI APLICA)
+                //INFORMACION DE EMPLEADO (SI APLICA)
                 'employee' => $user->employee ? [
                     'id' => $user->employee->id,
                     'branch_id' => $user->employee->branch_id,
@@ -71,11 +72,11 @@ class LoginController extends Controller
                     ] : null,
                 ] : null,
 
-                // 👇 ROLES Y PERMISOS
+                //ROLES Y PERMISOS
                 'roles' => $user->getRoleNames(), 
                 'permissions' => $user->getAllPermissions()->pluck('name'),
                 
-                // 👇 DATOS DE CLIENTE/PERFIL PARA LA TIENDA
+                //DATOS DE CLIENTE/PERFIL PARA LA TIENDA
                 'profile' => $user->profile,
                 'customers' => $user->customers,
             ],

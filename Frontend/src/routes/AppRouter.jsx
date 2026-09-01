@@ -14,6 +14,7 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
+import OAuthCallback from "../pages/auth/OAuthCallback";
 
 /* DASHBOARD LAYOUT */
 import DashboardLayout from "../pages/dashboard/Dashboard";
@@ -103,6 +104,7 @@ const AnimatedRoutes = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/auth/callback" element={<OAuthCallback />} />
           <Route path="/tracking/:id" element={<Tracking />} />
           {/* fallback opcional */}
           <Route path="*" element={<Home />} />
