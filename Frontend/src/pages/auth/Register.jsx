@@ -24,6 +24,8 @@ export default function Register() {
 
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // VALIDACIONES
   const validate = (name, value) => {
@@ -35,34 +37,29 @@ export default function Register() {
     }
 
     if (name === "username") {
-      const userRegex = /^[a-zA-Z0-9_]+$/;
-      if (!userRegex.test(value)) {
-        error = "Solo letras, números y _ (sin espacios)";
+      if (value.length < 3) error = "Mínimo 3 caracteres";
+      else if (/\s/.test(value)) error = "Sin espacios";
+      else {
+        const userRegex = /^[a-zA-Z0-9_]+$/;
+        if (!userRegex.test(value)) error = "Solo letras, números y guiones bajos";
       }
     }
 
     if (name === "password") {
-      let strength = "Débil";
-      const hasUpper = /[A-Z]/.test(value);
-      const hasNumber = /[0-9]/.test(value);
-      const hasSymbol = /[^A-Za-z0-9]/.test(value);
-
-      if (value.length >= 6) strength = "Media";
-      if (value.length >= 8 && hasUpper && hasNumber && hasSymbol) {
-        strength = "Fuerte";
-      }
-
-      setPasswordStrength(strength);
-
       if (value.length < 6) {
         error = "Mínimo 6 caracteres";
-      }
-      
-      // Also validate confirmation if it's already filled
-      if (form.password_confirmation && value !== form.password_confirmation) {
-        setErrors((prev) => ({ ...prev, password_confirmation: "Las contraseñas no coinciden" }));
-      } else if (form.password_confirmation && value === form.password_confirmation) {
-        setErrors((prev) => ({ ...prev, password_confirmation: "" }));
+      } else {
+        const hasNumbers = /\d/.test(value);
+        const hasLetters = /[a-zA-Z]/.test(value);
+        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+
+        if (hasLetters && hasNumbers && hasSpecial && value.length >= 8) {
+          setPasswordStrength("Fuerte");
+        } else if ((hasLetters && hasNumbers) || (hasLetters && hasSpecial)) {
+          setPasswordStrength("Media");
+        } else {
+          setPasswordStrength("Débil");
+        }
       }
     }
 
@@ -72,20 +69,17 @@ export default function Register() {
       }
     }
 
+    if (name === "username") {
+      if (value.length < 3) error = "Mínimo 3 caracteres";
+      else if (/\s/.test(value)) error = "Sin espacios";
+    }
+
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    setForm(prev => {
-      const newForm = { ...prev, [name]: value };
-      if (name === "email") {
-        const prefix = value.split("@")[0].replace(/[^a-zA-Z0-9_]/g, '');
-        newForm.username = prefix;
-      }
-      return newForm;
-    });
+    setForm({ ...form, [name]: value });
     
     validate(name, value);
     if (name === "email") {
@@ -96,6 +90,11 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!acceptedTerms) {
+      toast.error("Debes aceptar los términos y condiciones");
+      return;
+    }
 
     if (Object.values(errors).some((err) => err) || !form.username || !form.email || !form.password || !form.password_confirmation) {
       toast.error("Corrige los errores");
@@ -233,6 +232,20 @@ export default function Register() {
               </div>
             )}
 
+            {/* TERMS AND CONDITIONS */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', marginTop: '16px' }}>
+              <input 
+                type="checkbox" 
+                id="terms" 
+                checked={acceptedTerms} 
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
+              />
+              <label htmlFor="terms" style={{ fontSize: '13px', color: 'var(--text-main)', cursor: 'pointer' }}>
+                Acepto los <span style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'underline' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }}>Términos y Condiciones</span>
+              </label>
+            </div>
+
             <button type="submit" className={`auth-btn-primary ${loading ? "loading" : ""}`}>
               {loading ? "Creando..." : "Crear cuenta"}
             </button>
@@ -244,6 +257,29 @@ export default function Register() {
           </form>
         )}
       </div>
+
+      {/* TERMS MODAL */}
+      {showTermsModal && (
+        <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ maxWidth: '500px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '20px', color: 'var(--text-main)' }}>Términos y Condiciones</h3>
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px', color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
+              <p>1. <strong>Aceptación:</strong> Al crear una cuenta, aceptas estar sujeto a estos términos y condiciones.</p>
+              <p>2. <strong>Uso de cuenta:</strong> Eres responsable de mantener la confidencialidad de tu contraseña.</p>
+              <p>3. <strong>Privacidad:</strong> Tu información personal será tratada conforme a nuestra política de privacidad.</p>
+              <p><em>(Aquí puedes agregar todo el texto legal de tu empresa más adelante...)</em></p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button 
+                onClick={() => setShowTermsModal(false)}
+                style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

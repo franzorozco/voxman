@@ -132,6 +132,12 @@ export default function Login() {
               </div>
             )}
 
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+              <Link to="/forgot-password" style={{ color: 'var(--color-primary)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+
             <button type="submit" className={`auth-btn-primary ${loading ? "loading" : ""}`}>
               {loading ? "Ingresando..." : "Ingresar"}
             </button>

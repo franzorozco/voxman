@@ -12,6 +12,8 @@ import Tracking from "../pages/public/Tracking/Tracking";
 /* AUTH */
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 /* DASHBOARD LAYOUT */
 import DashboardLayout from "../pages/dashboard/Dashboard";
@@ -99,6 +101,8 @@ const AnimatedRoutes = () => {
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/tracking/:id" element={<Tracking />} />
           {/* fallback opcional */}
           <Route path="*" element={<Home />} />
