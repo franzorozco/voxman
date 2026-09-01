@@ -379,20 +379,50 @@ class CartController extends Controller
                         ->first();
                         
                     if ($inventory) {
+                        $stockBefore = $inventory->stock;
                         $inventory->stock = max(0, $inventory->stock - $reservation->quantity);
                         $inventory->save();
+
+                        \App\Models\Inventory\InventoryMovement::create([
+                            'variant_id' => $item->variant_id,
+                            'branch_id' => $reservation->branch_id,
+                            'movement_type' => 'sale',
+                            'quantity' => (int) $reservation->quantity,
+                            'stock_before' => $stockBefore,
+                            'stock_after' => $inventory->stock,
+                            'reference_type' => 'sale',
+                            'reference_id' => $sale->id,
+                            'created_by' => $adminUser ? $adminUser->id : null,
+                            'notes' => 'Conversión a Venta desde Proforma'
+                        ]);
+
                         $quantityToDeduct -= $reservation->quantity;
                     }
                 }
 
-                // If no reservations were found (e.g. manual proforma), deduct from the current admin's branch
-                if ($quantityToDeduct > 0 && $adminBranchId) {
-                    $inventory = \App\Models\Inventory\Inventory::where('branch_id', $adminBranchId)
-                        ->where('variant_id', $item->variant_id)
+                // If no reservations were found (e.g. manual proforma) or quantity still missing, deduct from branch with highest stock
+                if ($quantityToDeduct > 0) {
+                    $inventory = \App\Models\Inventory\Inventory::where('variant_id', $item->variant_id)
+                        ->orderBy('stock', 'desc')
                         ->first();
+                    
                     if ($inventory) {
+                        $stockBefore = $inventory->stock;
                         $inventory->stock = max(0, $inventory->stock - $quantityToDeduct);
                         $inventory->save();
+
+                        \App\Models\Inventory\InventoryMovement::create([
+                            'variant_id' => $item->variant_id,
+                            'branch_id' => $inventory->branch_id,
+                            'movement_type' => 'sale',
+                            'quantity' => (int) $quantityToDeduct,
+                            'stock_before' => $stockBefore,
+                            'stock_after' => $inventory->stock,
+                            'reference_type' => 'sale',
+                            'reference_id' => $sale->id,
+                            'created_by' => $adminUser ? $adminUser->id : null,
+                            'notes' => 'Conversión a Venta (Auto-asignación de sucursal)'
+                        ]);
                     }
                 }
             }
@@ -400,6 +430,20 @@ class CartController extends Controller
             $sale->subtotal = $subtotal;
             $sale->total = max(0, $subtotal - ($sale->discount_total ?? 0));
             $sale->save();
+
+            // Create Payment using Efectivo (Cash) as default for admin manual conversions
+            $cashMethod = \App\Models\Finance\PaymentMethod::whereRaw('LOWER(name) = ?', ['efectivo'])->first();
+            if ($cashMethod && $sale->total > 0) {
+                \App\Models\Finance\Payment::create([
+                    'sale_id' => $sale->id,
+                    'cash_register_id' => null,
+                    'payment_method_id' => $cashMethod->id,
+                    'amount' => $sale->total,
+                    'currency' => 'BOB',
+                    'status' => 'completed',
+                    'transaction_reference' => 'PYM-' . str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT)
+                ]);
+            }
 
             $cart->status = 'converted';
             $cart->save();
@@ -425,6 +469,33 @@ class CartController extends Controller
         
         return response()->json([
             'message' => 'Recordatorio enviado exitosamente al cliente.'
+        ]);
+    }
+
+    public function restore($id)
+    {
+        $cart = Cart::findOrFail($id);
+        
+        $isExpired = $cart->expires_at && \Carbon\Carbon::parse($cart->expires_at)->isPast();
+        if (!$isExpired) {
+            return response()->json(['message' => 'Este carrito no ha expirado.'], 400);
+        }
+
+        if ($cart->status === 'converted' || $cart->status === 'ordered') {
+            return response()->json(['message' => 'No se puede restaurar un carrito ya convertido.'], 400);
+        }
+
+        $cart->expires_at = now()->addDays(3);
+        
+        if ($cart->status === 'abandoned') {
+            $cart->status = in_array($cart->source, ['pos', 'admin']) ? 'proforma' : 'active';
+        }
+
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Carrito restaurado exitosamente.',
+            'cart' => $cart
         ]);
     }
 

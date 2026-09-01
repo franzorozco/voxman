@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { getProducts } from "../../../../api/admin/products";
 import { getBranches } from "../../../../api/admin/branches";
 import { createCart } from "../../../../api/admin/carts";
-import { convertToOrder, getDeliveryZones, getDeliveryDrivers, updateOrder, getHistoricalDestinations } from "../../../../api/admin/orderNetwork";
+import { convertToOrder, getDeliveryZones, getDeliveryDrivers, updateOrder, getHistoricalDestinations, updateDeliveryStatus } from "../../../../api/admin/orderNetwork";
 import { getCustomers } from "../../../../api/admin/customers";
 import { toast } from "react-hot-toast";
 import { MarkerF } from '@react-google-maps/api';
 import GoogleMapWrapper from '../../../../components/ui/GoogleMapWrapper';
-import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X, MapPin, Map, User, UserCheck, CheckCircle2 } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X, XCircle, MapPin, Map, User, UserCheck, CheckCircle2 } from "lucide-react";
 import useScanner from "../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../store/scanner/useScannerStore";
 import "../Carts/Carts.css";
@@ -24,6 +24,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]); // { variant, quantity, price }
   const [branches, setBranches] = useState([]);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   
   const getDefaultDate = () => {
     const d = new Date();
@@ -190,6 +191,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
           driver_id: editData.driver_id || "",
           delivery_type: dType || "scheduled_point",
           address_id: editData.shipment?.address_id || "",
+          pickup_branch_id: editData.shipment?.pickup_branch_id || "",
           recipient_name: editData.shipment?.recipient_name || "",
           recipient_ci: editData.shipment?.recipient_ci || "",
           recipient_phone: editData.shipment?.recipient_phone || "",
@@ -622,6 +624,22 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       toast.error(error.response?.data?.error || error.response?.data?.message || "Error al procesar la orden");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelDelivery = async () => {
+    if (!editData) return;
+    setLoading(true);
+    try {
+      await updateDeliveryStatus(editData.id, { status: 'cancelled' });
+      toast.success("Entrega cancelada");
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (error) {
+      toast.error("Error al cancelar entrega");
+    } finally {
+      setLoading(false);
+      setShowCancelModal(false);
     }
   };
 
@@ -1491,14 +1509,29 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                 });
 
                 return (
-                  <button 
-                    className="action-btn primary" 
-                    style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: !isValidToContinue ? 0.5 : 1, cursor: !isValidToContinue ? 'not-allowed' : 'pointer', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)' }}
-                    onClick={handleNextStep}
-                    disabled={!isValidToContinue}
-                  >
-                    Continuar <ArrowRight size={18} />
-                  </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <button 
+                      className="action-btn primary" 
+                      style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: !isValidToContinue ? 0.5 : 1, cursor: !isValidToContinue ? 'not-allowed' : 'pointer', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)' }}
+                      onClick={handleNextStep}
+                      disabled={!isValidToContinue}
+                    >
+                      Continuar <ArrowRight size={18} />
+                    </button>
+                    {editData && (
+                      <CanAccess permission="cancel_orders">
+                        <button 
+                          type="button"
+                          className="btn-cancelar" 
+                          style={{ width: '100%', padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontWeight: 500, transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                          onClick={() => setShowCancelModal(true)}
+                          disabled={loading}
+                        >
+                          <XCircle size={16} /> Cancelar Entrega
+                        </button>
+                      </CanAccess>
+                    )}
+                  </div>
                 );
               })() : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -1537,6 +1570,19 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                         </button>
                       </CanAccess>
                     )}
+                    {editData && (
+                      <CanAccess permission="cancel_orders">
+                        <button 
+                          type="button"
+                          className="btn-cancelar" 
+                          style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontWeight: 500, transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                          onClick={() => setShowCancelModal(true)}
+                          disabled={loading}
+                        >
+                          <XCircle size={16} /> Cancelar Entrega
+                        </button>
+                      </CanAccess>
+                    )}
                   </div>
                 </div>
               )}
@@ -1545,6 +1591,39 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
 
         </div>
       </div>
+
+      {showCancelModal && (
+        <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-content" style={{ maxWidth: '400px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '30px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: '#ef4444' }}>
+              <XCircle size={48} />
+            </div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: 'var(--text-main)' }}>Cancelar Entrega</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '24px', lineHeight: '1.5' }}>
+              ¿Estás seguro de que deseas cancelar esta entrega? <br/><strong>Esta acción no se puede deshacer.</strong>
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+                disabled={loading}
+              >
+                Cerrar
+              </button>
+              <button 
+                type="button"
+                onClick={handleCancelDelivery}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+                disabled={loading}
+              >
+                {loading ? 'Cancelando...' : 'Sí, Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -22,6 +22,10 @@ export const sendCartReminder = (id) => {
   return api.post(`${BASE_URL}/${id}/reminder`);
 };
 
+export const restoreCart = (id) => {
+  return api.post(`${BASE_URL}/${id}/restore`);
+};
+
 export const deleteCart = (id) => {
   return api.delete(`${BASE_URL}/${id}`);
 };

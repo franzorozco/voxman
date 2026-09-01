@@ -1201,6 +1201,7 @@ class OrderNetworkController extends Controller
             'guest_phone' => 'nullable|string',
             'shipping_cost' => 'nullable|numeric|min:0',
             'delivery_type' => 'nullable|string|in:home_delivery,scheduled_point,pickup,external',
+            'pickup_branch_id' => 'nullable|uuid|exists:branches,id',
             'address_id' => 'nullable|uuid|exists:addresses,id',
             'recipient_name' => 'nullable|string|max:150',
             'recipient_ci' => 'nullable|string|max:50',
@@ -1332,6 +1333,9 @@ class OrderNetworkController extends Controller
                 }
                 if ($request->has('delivery_type')) {
                     $schedule->shipment->delivery_type = $request->delivery_type;
+                }
+                if ($request->has('pickup_branch_id')) {
+                    $schedule->shipment->pickup_branch_id = $request->pickup_branch_id;
                 }
                 if ($request->has('address_id')) {
                     $schedule->shipment->address_id = $request->address_id;

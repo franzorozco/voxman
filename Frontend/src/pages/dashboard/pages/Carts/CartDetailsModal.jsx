@@ -1,10 +1,10 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
-import { X, Package, Edit, CheckCircle, Truck, Bell, Trash2 } from "lucide-react";
+import { X, Package, Edit, CheckCircle, Truck, Bell, Trash2, RefreshCw } from "lucide-react";
 import "./Carts.css";
 import { API_BASE_URL } from "../../../../config/api";
 import CanAccess from "../../../../components/ui/CanAccess";
 
-export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onConvertOrder, onReminder, onDelete }) {
+export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onConvertOrder, onReminder, onDelete, onRestore }) {
   if (!cart) return null;
 
   
@@ -62,7 +62,8 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
 
   const isActionable = cart.status === 'proforma' || cart.status === 'active';
   const isAbandoned = cart.status === 'abandoned';
-  const isNotConverted = cart.status !== 'converted';
+  const isNotConverted = cart.status !== 'converted' && cart.status !== 'ordered';
+
 
   return (
     <div className="modal-overlay">
@@ -266,11 +267,19 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                 </button>
               </CanAccess>
             )}
-            {isAbandoned && onReminder && (
+            {(isAbandoned || cart.status === 'active') && onReminder && (
               <CanAccess permission="send_cart_reminders">
-                <button className="modal-action-btn modal-action-reminder" onClick={() => { onReminder(cart.id); }}>
+                <button className="modal-action-btn modal-action-reminder" onClick={() => { onReminder(cart); }}>
                   <Bell size={16} />
                   <span>Enviar Recordatorio</span>
+                </button>
+              </CanAccess>
+            )}
+            {cart.expires_at && new Date(cart.expires_at) < new Date() && cart.status !== 'converted' && cart.status !== 'ordered' && onRestore && (
+              <CanAccess permission="edit_carts">
+                <button className="modal-action-btn modal-action-restore" onClick={() => { onClose(); onRestore(cart.id); }}>
+                  <RefreshCw size={16} />
+                  <span>Restaurar Carrito</span>
                 </button>
               </CanAccess>
             )}

@@ -389,39 +389,80 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   let clientPhone = "No especificado";
   let clientType = "Desconocido";
   let clientCode = "N/A";
-
+  let hasValidClient = false;
   if (customer) {
     clientCode = customer.customer_code || "N/A";
     if (customer.pos_profile) {
       clientType = "POS";
       clientName = `${customer.pos_profile.first_name || ''} ${customer.pos_profile.last_name_paternal || ''} ${customer.pos_profile.last_name_maternal || ''}`.trim() || 'Sin Nombre';
       clientPhone = customer.pos_profile.phone || "No especificado";
+      hasValidClient = true;
     } else if (customer.user?.profile) {
       clientType = "WEB";
       clientName = `${customer.user.profile.first_name || ''} ${customer.user.profile.last_name_paternal || ''} ${customer.user.profile.last_name_maternal || ''}`.trim() || 'Sin Nombre';
-      clientPhone = customer.user.profile.phone || customer.user.profile.whatsapp_number || "No especificado";
-    } else if (customer.user) {
-      clientType = "WEB";
-      clientName = customer.user.username || customer.user.email;
-    } else {
-      clientType = "POS";
-      clientName = `Cliente ${customer.customer_code}`;
+      clientPhone = customer.user.profile.phone || "No especificado";
+      hasValidClient = true;
     }
   } else if (guest) {
     clientType = "Invitado";
-    clientName = guest.name || guest.first_name || "Invitado";
-    clientPhone = guest.phone || guest.whatsapp_phone || "No especificado";
+    clientName = guest.name || 'Sin Nombre';
+    clientPhone = guest.whatsapp_phone || "No especificado";
+    hasValidClient = true;
   }
 
   const isExternal = details?.shipment?.delivery_type === 'external';
   const isPickup = details?.shipment?.delivery_type === 'pickup';
 
+  let hasValidLocation = false;
+  let hasValidTime = false;
+
+  if (isExternal) {
+    hasValidLocation = !!details?.shipment?.destination_city;
+    hasValidTime = !!details?.scheduled_date;
+  } else if (isPickup) {
+    hasValidLocation = !!details?.shipment?.pickup_branch_id;
+    hasValidTime = !!details?.scheduled_date;
+  } else {
+    hasValidLocation = !!details?.meeting_point || !!details?.shipment?.address;
+    hasValidTime = !!details?.scheduled_date && !!details?.scheduled_time;
+  }
+
+  let hasValidStock = true;
+  const activeItems = sale?.sale_details?.filter(item => !item.deleted_at) || [];
+  for (const item of activeItems) {
+      const variant = item.product_variant;
+      const totalPhysicalStock = variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
+      if (totalPhysicalStock < item.quantity) {
+          hasValidStock = false;
+      } else {
+          const allReservations = sale?.stock_reservations || sale?.stockReservations || [];
+          const variantReservations = allReservations.filter(res => res.variant_id === item.variant_id && (res.status === 'reserved' || res.status === 'confirmed' || !res.status));
+          if (variantReservations.length === 0) {
+              hasValidStock = false;
+          } else {
+              for (const res of variantReservations) {
+                  if (!res.branch || !res.branch.id) {
+                      hasValidStock = false;
+                  }
+              }
+          }
+      }
+  }
+
+  const isDeliveryValid = hasValidClient && hasValidLocation && hasValidTime && hasValidStock;
+
   let branchCoords = null;
   let pickupAddressStr = '';
-  if (isPickup && details?.shipment?.pickup_branch?.address) {
+  if (isPickup && details?.shipment?.pickup_branch) {
+    const branchName = details.shipment.pickup_branch.name || 'Sucursal';
     const bAddress = details.shipment.pickup_branch.address;
-    pickupAddressStr = `${bAddress.city || ''}, ${bAddress.zone || ''} - ${bAddress.street || ''}`;
-    if (bAddress.latitude && bAddress.longitude) {
+    if (bAddress) {
+      const parts = [bAddress.city, bAddress.zone, bAddress.street].filter(Boolean);
+      pickupAddressStr = parts.length > 0 ? `${branchName} (${parts.join(', ')})` : branchName;
+    } else {
+      pickupAddressStr = branchName;
+    }
+    if (bAddress && bAddress.latitude && bAddress.longitude) {
       branchCoords = { lat: parseFloat(bAddress.latitude), lng: parseFloat(bAddress.longitude) };
     }
   }
@@ -837,8 +878,16 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       const qty = res.quantity;
                       const subtotal = (item.unit_price || item.final_price) * qty;
 
+                      const totalPhysicalStock = variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
+                      const isOutOfStock = totalPhysicalStock < item.quantity || branchName === "Sin Sucursal asignada";
+
                       return (
                         <div key={`${item.id}-${index}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', opacity: isCancelled || item.deleted_at ? 0.6 : 1 }}>
+                          {isOutOfStock && (
+                            <div style={{ background: 'var(--color-danger)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', alignSelf: 'flex-start' }}>
+                              <AlertTriangle size={14} /> SIN STOCK / AGOTADO
+                            </div>
+                          )}
                           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                             {imageUrl ? (
                               <img src={imageUrl} alt="Variant" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
@@ -862,9 +911,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                                 ))}
                               </div>
                               <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
-                                <span style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                                  Extraído de: <strong>{branchName}</strong>
-                                </span>
+                                {isOutOfStock ? (
+                                  <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                                    <AlertTriangle size={12} /> Agotado / Sin Asignar
+                                  </span>
+                                ) : (
+                                  <span style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                                    Extraído de: <strong>{branchName}</strong>
+                                  </span>
+                                )}
                                 {item.notes && (
                                   <span style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#ca8a04', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
                                     {item.notes}
@@ -1046,6 +1101,20 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   </div>
                 </div>
                 
+                {currentStepIndex === 0 && !isDeliveryValid && (
+                  <div style={{ marginTop: '16px', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid #eab308', borderRadius: '8px', padding: '12px' }}>
+                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#ca8a04', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangle size={14} /> Faltan datos para proceder
+                    </h4>
+                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#a16207', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {!hasValidClient && <li>Falta asignar un cliente válido.</li>}
+                      {!hasValidLocation && <li>Falta definir el lugar de entrega o destino.</li>}
+                      {!hasValidTime && <li>Falta definir la fecha o el horario.</li>}
+                      {!hasValidStock && <li>Faltan resolver problemas de stock en los productos.</li>}
+                    </ul>
+                  </div>
+                )}
+                
                 {(isExternal || details.shipment?.recipient_name || details.shipment?.recipient_phone || details.shipment?.recipient_ci) && (
                   <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -1192,24 +1261,42 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             ) : (
               <>
                 <CanAccess permission="update_order_status">
-                  <button 
-                    className="action-btn btn-marcar"
-                    style={{ 
-                      padding: '12px 24px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', border: 'none',
-                      display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px',
-                      background: details.status === 'pending' || details.status === 'assigned' ? '#8b5cf6' : (details.status === 'on_the_way' ? '#f97316' : 'var(--color-success)'),
-                      color: '#fff',
-                      boxShadow: isOnTheWay ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onClick={handleNextStatus}
-                    disabled={updating}
-                  >
-                    <Truck size={20} />
-                    {updating ? 'Actualizando...' : 
-                      (isExternal && currentSteps[currentStepIndex + 1]?.key === 'shipped') ? 'Remitir a Transportadora' : 
-                      `Marcar como ${currentSteps[currentStepIndex + 1]?.label || 'Completado'}`}
-                  </button>
+                  {currentStepIndex === 0 && !isDeliveryValid ? (
+                    <button 
+                      className="action-btn btn-marcar"
+                      style={{ 
+                        padding: '12px 24px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', border: 'none',
+                        display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px',
+                        background: '#eab308',
+                        color: '#fff',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={startEditing}
+                      disabled={updating}
+                    >
+                      <AlertTriangle size={20} />
+                      Completar información
+                    </button>
+                  ) : (
+                    <button 
+                      className="action-btn btn-marcar"
+                      style={{ 
+                        padding: '12px 24px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', border: 'none',
+                        display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px',
+                        background: details.status === 'pending' || details.status === 'assigned' ? '#8b5cf6' : (details.status === 'on_the_way' ? '#f97316' : 'var(--color-success)'),
+                        color: '#fff',
+                        boxShadow: isOnTheWay ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={handleNextStatus}
+                      disabled={updating}
+                    >
+                      <Truck size={20} />
+                      {updating ? 'Actualizando...' : 
+                        (isExternal && currentSteps[currentStepIndex + 1]?.key === 'shipped') ? 'Remitir a Transportadora' : 
+                        `Marcar como ${currentSteps[currentStepIndex + 1]?.label || 'Completado'}`}
+                    </button>
+                  )}
                 </CanAccess>
                 
                 <CanAccess permission="cancel_orders">

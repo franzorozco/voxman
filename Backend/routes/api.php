@@ -371,6 +371,7 @@ Route::middleware([
         Route::put('/{id}', [CartController::class, 'update'])->middleware('permission:edit_carts');
         Route::post('/{id}/convert', [CartController::class, 'convert'])->middleware('permission:convert_carts');
         Route::post('/{id}/reminder', [CartController::class, 'sendReminder'])->middleware('permission:send_cart_reminders');
+        Route::post('/{id}/restore', [CartController::class, 'restore'])->middleware('permission:edit_carts');
         Route::delete('/{id}', [CartController::class, 'destroy'])->middleware('permission:delete_carts');
     });
 

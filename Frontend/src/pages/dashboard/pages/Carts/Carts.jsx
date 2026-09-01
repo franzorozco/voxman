@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit, Truck } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { getCarts, deleteCart, convertCartToSale, sendCartReminder, convertCartToOrder } from "../../../../api/admin/carts";
+import { getCarts, deleteCart, convertCartToSale, sendCartReminder, convertCartToOrder, restoreCart } from "../../../../api/admin/carts";
 import CartDetailsModal from "./CartDetailsModal";
 import CartFormModal from "./CartFormModal";
 import CanAccess from "../../../../components/ui/CanAccess";
@@ -54,10 +54,6 @@ export default function Carts() {
   useEffect(() => {
     fetchCarts(filters);
   }, [filters]);
-
-  useEffect(() => {
-    toast.error("Atención: Falta implementar la lógica final de conversión a ventas.", { duration: 5000, icon: '🚧' });
-  }, []);
 
   const [confirmModal, setConfirmModal] = useState({ 
     isOpen: false, 
@@ -135,12 +131,49 @@ export default function Carts() {
     }
   };
 
-  const handleReminder = async (id) => {
+  const handleReminder = async (cart) => {
+    let phone = "";
+    let name = "Cliente";
+    
+    if (cart.customer) {
+      if (cart.customer.user?.profile) {
+         phone = cart.customer.user.profile.phone;
+         name = cart.customer.user.profile.first_name || name;
+      } else if (cart.customer.posProfile) {
+         phone = cart.customer.posProfile.whatsapp_phone || cart.customer.posProfile.phone;
+         name = cart.customer.posProfile.first_name || name;
+      }
+    } else if (cart.guest) {
+      phone = cart.guest.whatsapp_phone;
+      name = cart.guest.name || name;
+    }
+
+    if (!phone) {
+      toast.error("El cliente no tiene un número de WhatsApp registrado.");
+      return;
+    }
+
+    const cleanPhone = phone.replace(/\D/g, '');
+    const message = `Hola ${name}, te contactamos de VOXman. Notamos que tienes un carrito de compras activo con algunos artículos. ¿Podemos ayudarte en algo para que concretes tu pedido?`;
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+
     try {
-      await sendCartReminder(id);
-      toast.success("Recordatorio enviado al cliente");
+      await sendCartReminder(cart.id);
+      toast.success("Redirigiendo a WhatsApp...");
     } catch (error) {
-      toast.error("Error al enviar recordatorio");
+      console.error(error);
+    }
+  };
+
+  const handleRestore = async (id) => {
+    if (window.confirm("¿Seguro que deseas restaurar este carrito? Se extenderá su fecha de vencimiento.")) {
+      try {
+        await restoreCart(id);
+        toast.success("Carrito restaurado exitosamente.");
+        fetchCarts(filters);
+      } catch (error) {
+        toast.error(error?.response?.data?.message || "Error al restaurar carrito.");
+      }
     }
   };
 
@@ -432,10 +465,17 @@ export default function Carts() {
                           <Truck size={18} />
                         </button>
                       )}
-                      {cart.status === 'abandoned' && (
+                      {(cart.status === 'abandoned' || cart.status === 'active') && (
                         <CanAccess permission="send_cart_reminders">
-                          <button className="btn-reminder" onClick={() => handleReminder(cart.id)} title="Enviar Recordatorio">
+                          <button className="btn-reminder" onClick={() => handleReminder(cart)} title="Enviar Recordatorio">
                             <Bell size={18} />
+                          </button>
+                        </CanAccess>
+                      )}
+                      {cart.expires_at && new Date(cart.expires_at) < new Date() && cart.status !== 'converted' && cart.status !== 'ordered' && (
+                        <CanAccess permission="edit_carts">
+                          <button className="btn-restore" onClick={() => handleRestore(cart.id)} title="Restaurar Carrito" style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}>
+                            <RefreshCw size={18} />
                           </button>
                         </CanAccess>
                       )}
@@ -460,8 +500,9 @@ export default function Carts() {
           onEdit={(cart) => handleOpenForm(cart)}
           onConvert={(id) => handleConvertClick(id)}
           onConvertOrder={(id) => handleConvertToOrderClick(id)}
-          onReminder={(id) => handleReminder(id)}
+          onReminder={(cartObj) => handleReminder(cartObj)}
           onDelete={(id) => handleDeleteClick(id)}
+          onRestore={(id) => handleRestore(id)}
         />
       )}
 
