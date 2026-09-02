@@ -110,7 +110,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
       });
 
       if (bundle.product_images) {
-        setImagePreviews(bundle.product_images.map(img => img.url));
+        setImagePreviews(bundle.product_images.map(img => img.url.startsWith('blob:') ? img.url : getImageUrl(img.url)));
       }
     }
   }, [bundle]);
@@ -457,7 +457,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
           {/* Columna Izquierda: Info Principal */}
           <div className="form-info-col">
             <h3 className="bfm-section-title">Información del Conjunto</h3>
-            <div className="form-grid bfm-form-grid">
+            <div className="bfm-form-grid">
               <div className="form-group">
                 <label>Nombre del Conjunto</label>
                 <input type="text" className="form-control" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />

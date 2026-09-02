@@ -7,8 +7,8 @@ export const useShopSettingsStore = create((set, get) => ({
   loading: false,
   fetched: false,
   
-  fetchSettings: async () => {
-    if (get().fetched || get().loading) return;
+  fetchSettings: async (force = false) => {
+    if (!force && (get().fetched || get().loading)) return;
     
     set({ loading: true });
     try {

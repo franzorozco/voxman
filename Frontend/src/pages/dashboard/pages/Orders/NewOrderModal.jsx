@@ -130,7 +130,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
     
     fetchBranches();
     fetchZones();
-    fetchSettings();
+    fetchSettings(true);
   }, []);
 
   // Initialize with editData if provided

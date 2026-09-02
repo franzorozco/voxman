@@ -78,7 +78,7 @@ class BundleController extends Controller
 
                     $image = new \App\Models\Catalog\ProductImage([
                         'product_id' => $bundle->id,
-                        'url'        => '/storage/' . $filePath,
+                        'url'        => $filePath,
                         'is_main'    => false,
                     ]);
                     $image->id = Str::uuid()->toString();
@@ -154,7 +154,7 @@ class BundleController extends Controller
 
                     $image = new \App\Models\Catalog\ProductImage([
                         'product_id' => $bundle->id,
-                        'url'        => '/storage/' . $filePath,
+                        'url'        => $filePath,
                         'is_main'    => false,
                     ]);
                     $image->id = Str::uuid()->toString();

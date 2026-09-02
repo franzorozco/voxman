@@ -13,6 +13,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
   
   // Settings for delivery visibility
   const settings = useShopSettingsStore(state => state.settings);
+  const fetchSettings = useShopSettingsStore(state => state.fetchSettings);
 
   // States for step 2
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
 
   useEffect(() => {
     if (isOpen) {
+      fetchSettings(true);
       setStep(1);
       setSelectedMethod(null);
       setSelectedBranch(null);

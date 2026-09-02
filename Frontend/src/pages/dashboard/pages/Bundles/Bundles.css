@@ -1076,15 +1076,67 @@
    BUNDLE FORM REFACTOR (PREMIUM UX)
 ======================================== */
 
-.bundle-modal-content {
+.bundle-modal-content, #bundle-form-modal {
   display: flex;
   flex-direction: column;
   max-height: 90vh;
   border-radius: 20px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  background: var(--bg-body);
+  background: var(--bg-card); /* FIXED: use bg-card instead of bg-body */
+  width: 95% !important;
+  max-width: 1100px !important;
+  overflow: hidden !important; /* Keep outer modal hidden, scroll inner body */
 }
 
+/* ========================================
+   FORM INPUTS STYLES
+======================================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.form-control, .form-group input, .form-group textarea {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-control:focus, .form-group input:focus, .form-group textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+#bundle-form-modal .bundle-modal-grid {
+  display: grid !important; /* Override .modal-body's display: flex */
+  grid-template-columns: 1fr 1.2fr !important;
+  gap: 32px;
+  padding: 32px;
+  align-items: start;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.bundle-form-row-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
 
 .bfm-section-title {
   margin: 0 0 24px 0;
