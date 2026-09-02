@@ -49,10 +49,13 @@ class ShopCartController extends Controller
     public function add(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|string|exists:products,id',
-            'variant_id' => 'nullable|string|exists:product_variants,id',
-            'quantity' => 'required|integer|min:1',
-            'color' => 'nullable|string',
+            'product_id'      => 'required|string|exists:products,id',
+            'variant_id'      => 'nullable|string|exists:product_variants,id',
+            'quantity'        => 'required|integer|min:1',
+            'color'           => 'nullable|string',
+            'bundle_group_id' => 'nullable|string',
+            'original_price'  => 'nullable|numeric|min:0',
+            'override_price'  => 'nullable|numeric|min:0',
         ]);
 
         $cartToken = $request->header('X-Cart-Token');
@@ -64,10 +67,13 @@ class ShopCartController extends Controller
             $cartData = $this->getCartData($cartToken) ?? ['items' => [], 'total' => 0];
         }
 
-        $productId = $request->product_id;
-        $variantId = $request->variant_id;
-        $quantity = $request->quantity;
-        $color = $request->color;
+        $productId     = $request->product_id;
+        $variantId     = $request->variant_id;
+        $quantity      = $request->quantity;
+        $color         = $request->color;
+        $bundleGroupId = $request->bundle_group_id;
+        $originalPrice = $request->original_price;   // original price before bundle discount
+        $overridePrice = $request->override_price;   // proportional bundle price to use instead
 
         // Load Product and Variant
         $product = Product::with(['product_images', 'attribute_value_images.attributeValue'])->find($productId);
@@ -135,6 +141,14 @@ class ShopCartController extends Controller
 
         $imageUrl = $finalImage;
 
+        // Apply bundle override price if provided
+        if ($overridePrice !== null) {
+            $price = $overridePrice;
+        }
+
+        // The stored original_price: if explicitly provided use it, else the natural price
+        $storedOriginalPrice = ($originalPrice !== null) ? (float)$originalPrice : (float)$price;
+
         // Check if item already exists
         $foundIndex = -1;
         foreach ($cartData['items'] as $index => $item) {
@@ -148,15 +162,17 @@ class ShopCartController extends Controller
             $cartData['items'][$foundIndex]['quantity'] += $quantity;
         } else {
             $cartData['items'][] = [
-                'id' => Str::uuid()->toString(),
-                'product_id' => $productId,
-                'variant_id' => $variantId,
-                'name' => $name,
-                'price' => (float)$price,
-                'quantity' => $quantity,
-                'size' => $sizeName,
-                'color' => $colorName,
-                'image' => $imageUrl
+                'id'              => Str::uuid()->toString(),
+                'product_id'      => $productId,
+                'variant_id'      => $variantId,
+                'name'            => $name,
+                'price'           => (float)$price,
+                'original_price'  => $storedOriginalPrice,
+                'bundle_group_id' => $bundleGroupId,
+                'quantity'        => $quantity,
+                'size'            => $sizeName,
+                'color'           => $colorName,
+                'image'           => $imageUrl
             ];
         }
 
@@ -233,6 +249,15 @@ class ShopCartController extends Controller
         $productId = $request->product_id;
         $variantId = $request->variant_id;
 
+        // Store removed item before filtering, to check bundle_group_id
+        $removedItem = null;
+        foreach ($cartData['items'] as $item) {
+            if ($item['product_id'] == $productId && $item['variant_id'] == $variantId) {
+                $removedItem = $item;
+                break;
+            }
+        }
+
         $initialCount = count($cartData['items']);
         $cartData['items'] = array_filter($cartData['items'], function($item) use ($productId, $variantId) {
             return !($item['product_id'] == $productId && $item['variant_id'] == $variantId);
@@ -240,6 +265,20 @@ class ShopCartController extends Controller
 
         if (count($cartData['items']) !== $initialCount) {
             $cartData['items'] = array_values($cartData['items']);
+
+            // Anti-manipulation: if the removed item was part of a bundle,
+            // revert all remaining sibling items back to their original_price
+            if ($removedItem && !empty($removedItem['bundle_group_id'])) {
+                $bundleGroupId = $removedItem['bundle_group_id'];
+                foreach ($cartData['items'] as &$cartItem) {
+                    if (isset($cartItem['bundle_group_id']) && $cartItem['bundle_group_id'] === $bundleGroupId) {
+                        $cartItem['price'] = $cartItem['original_price'] ?? $cartItem['price'];
+                        $cartItem['bundle_group_id'] = null; // remove group tag so further removals don't cascade
+                    }
+                }
+                unset($cartItem);
+            }
+
             $this->recalculateTotal($cartData);
             $this->saveCartData($cartToken, $cartData);
         }

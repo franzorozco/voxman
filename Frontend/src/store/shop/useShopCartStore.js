@@ -37,11 +37,8 @@ const useShopCartStore = create(
             color: color
           });
 
-          // Save the new cart token if the backend generated one
           if (response.data.cart_token) {
             set({ cartToken: response.data.cart_token });
-            // The persist middleware will automatically save this to localStorage
-            // But we also manually save it so the Axios interceptor can read it synchronously
             localStorage.setItem('shop_cart_token', response.data.cart_token);
           }
 
@@ -51,7 +48,51 @@ const useShopCartStore = create(
           });
         } catch (error) {
           console.error('Failed to add to cart:', error.response?.data || error);
-          throw error; // Rethrow to let the UI know it failed
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      // Add all bundle items proportionally priced
+      // items = [{ productId, variantId, originalPrice, color, size }]
+      addBundleToCart: async (bundleId, items) => {
+        set({ isLoading: true });
+        try {
+          const totalOriginal = items.reduce((sum, item) => sum + item.originalPrice, 0);
+          const bundlePrice = items.reduce((sum, item) => sum + item.bundleItemPrice, 0);
+          // bundleItemPrice is already the proportional price computed by the caller
+          // We use bundleId + timestamp as a unique group ID for this purchase event
+          const bundleGroupId = `${bundleId}_${Date.now()}`;
+
+          let lastResponse = null;
+          for (const item of items) {
+            const response = await apiAddToCart({
+              product_id: item.productId,
+              variant_id: item.variantId || null,
+              quantity: 1,
+              color: item.color || null,
+              bundle_group_id: bundleGroupId,
+              original_price: item.originalPrice,
+              override_price: item.bundleItemPrice,
+            });
+            lastResponse = response;
+            // Update token after first item
+            if (response.data.cart_token) {
+              set({ cartToken: response.data.cart_token });
+              localStorage.setItem('shop_cart_token', response.data.cart_token);
+            }
+          }
+
+          if (lastResponse) {
+            set({
+              items: lastResponse.data.cart.items || [],
+              total: lastResponse.data.cart.total || 0
+            });
+          }
+        } catch (error) {
+          console.error('Failed to add bundle to cart:', error.response?.data || error);
+          throw error;
         } finally {
           set({ isLoading: false });
         }

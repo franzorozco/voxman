@@ -8,7 +8,7 @@ import { Check, Copy, Share2, ChevronDown, ChevronUp } from 'lucide-react';
 import './BundleDetail.css';
 
 
-const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange }) => {
+const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange, onSelectionChange }) => {
   const [selectedColor, setSelectedColor] = React.useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
   const [selectedSize, setSelectedSize] = React.useState(null);
@@ -79,7 +79,24 @@ const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange }) => {
       const isValid = (availableSizes.length === 0 || selectedSize !== null);
       onValidationChange(isValid);
     }
-  }, [selectedColor, selectedSize, availableSizes.length, onValidationChange]);
+    if (onSelectionChange) {
+      // Find the matched variant for the current selection
+      let variantId = null;
+      let originalPrice = prod.base_price;
+      if (prod.product_variants?.length > 0) {
+        const matched = prod.product_variants.find(v => {
+          const matchesColor = selectedColor ? v.variant_attribute_values?.some(a => a.attribute_value?.value === selectedColor) : true;
+          const matchesSize  = selectedSize  ? v.size?.name === selectedSize : true;
+          return matchesColor && matchesSize;
+        });
+        if (matched) {
+          variantId = matched.id;
+          originalPrice = (matched.price !== null && matched.price !== undefined) ? matched.price : prod.base_price;
+        }
+      }
+      onSelectionChange({ productId: prod.id, variantId, originalPrice: parseFloat(originalPrice || 0), color: selectedColor, size: selectedSize });
+    }
+  }, [selectedColor, selectedSize, availableSizes.length, onValidationChange, onSelectionChange]);
 
   const handleAdd = () => {
     let variantId = null;
@@ -484,8 +501,9 @@ const BundleDetail = () => {
   
   const [addedBundle, setAddedBundle] = useState(false);
   const [addedItems, setAddedItems] = useState({});
-
   const [itemsValidState, setItemsValidState] = useState({});
+  // Tracks the selected variant/price for each configurable item
+  const [selectionsMap, setSelectionsMap] = useState({});
 
   const handleItemValidation = React.useCallback((productId, isValid) => {
     setItemsValidState(prev => {
@@ -494,8 +512,13 @@ const BundleDetail = () => {
     });
   }, []);
 
+  const handleSelectionChange = React.useCallback((selection) => {
+    setSelectionsMap(prev => ({ ...prev, [selection.productId]: selection }));
+  }, []);
+
   
   const addToCart = useShopCartStore((state) => state.addToCart);
+  const addBundleToCart = useShopCartStore((state) => state.addBundleToCart);
 
   useEffect(() => {
     const fetchBundle = async () => {
