@@ -64,10 +64,16 @@ class ShopProductController extends Controller
             'shorts',
             'bundle_items.product.product_images',
             'bundle_items.product.attribute_value_images.attributeValue',
+            'bundle_items.product.product_variants.variant_images',
+            'bundle_items.product.product_variants.variant_attribute_values.attribute_value.attribute',
+            'bundle_items.product.product_variants.size',
+            'bundle_items.product.product_variants.inventories.branch',
+            'bundle_items.product.product_variants.variant_measurements.measurement_type',
             'bundle_items.variant.variant_images',
             'bundle_items.variant.variant_attribute_values.attribute_value.attribute',
             'bundle_items.variant.size',
-            'bundle_items.variant.fit'
+            'bundle_items.variant.fit',
+            'bundle_items.variant.variant_measurements.measurement_type',
         ])->where('slug', $slug)
           ->orWhere('id', $slug)
           ->firstOrFail();
