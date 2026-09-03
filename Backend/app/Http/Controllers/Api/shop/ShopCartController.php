@@ -186,10 +186,144 @@ class ShopCartController extends Controller
         ]);
     }
 
+    public function addBundle(Request $request)
+    {
+        $request->validate([
+            'bundle_id' => 'required|string',
+            'quantity' => 'required|integer|min:1',
+            'items' => 'required|array',
+            'items.*.product_id' => 'required|string',
+            'items.*.variant_id' => 'nullable|string',
+            'items.*.color' => 'nullable|string',
+        ]);
+
+        $bundleId = $request->bundle_id;
+        $quantity = $request->quantity;
+        $items = $request->items;
+
+        $bundle = Product::find($bundleId);
+        if (!$bundle || !$bundle->is_bundle) {
+            return response()->json(['error' => 'Conjunto no encontrado'], 404);
+        }
+
+        $bundlePrice = $bundle->base_price;
+        $bundleGroupId = Str::uuid()->toString();
+
+        $cartToken = $request->header('X-Cart-Token') ?: Str::uuid()->toString();
+        $cartData = $this->getCartData($cartToken) ?: ['total' => 0, 'items' => []];
+
+        // For proportional pricing (optional)
+        // If we want the bundle total price to be split among items, we can calculate total original price first
+        $totalOriginalPrice = 0;
+        $processedItems = [];
+
+        foreach ($items as $itemReq) {
+            $product = Product::with(['product_images', 'attribute_value_images.attributeValue'])->find($itemReq['product_id']);
+            $variant = null;
+            if (!empty($itemReq['variant_id'])) {
+                $variant = ProductVariant::with(['size', 'variant_images', 'variant_attribute_values.attribute_value.attribute'])->find($itemReq['variant_id']);
+            }
+
+            if (!$product) continue;
+
+            $price = $product->base_price;
+            $sizeName = null;
+            $colorName = $itemReq['color'] ?? null;
+            
+            if ($variant) {
+                if ($variant->price !== null) $price = $variant->price;
+                if ($variant->size) $sizeName = $variant->size->name;
+                
+                if (!$colorName && $variant->variant_attribute_values) {
+                    foreach ($variant->variant_attribute_values as $vav) {
+                        if (strtolower($vav->attribute_value->attribute->name) === 'color') {
+                            $colorName = $vav->attribute_value->value;
+                        }
+                    }
+                }
+            }
+
+            $totalOriginalPrice += $price;
+
+            $finalImage = null;
+            if ($colorName && $product->attribute_value_images) {
+                foreach ($product->attribute_value_images as $avi) {
+                    if ($avi->attributeValue && $avi->attributeValue->value === $colorName) {
+                        $finalImage = $avi->url;
+                        break;
+                    }
+                }
+            }
+            if (!$finalImage && $variant && $variant->variant_images && $variant->variant_images->count() > 0) {
+                $finalImage = $variant->variant_images->first()->url;
+            }
+            if (!$finalImage && $product->product_images && $product->product_images->count() > 0) {
+                $finalImage = $product->product_images->first()->url;
+            }
+            if (!$finalImage) $finalImage = $product->cover_image;
+
+            $processedItems[] = [
+                'product_id' => $product->id,
+                'variant_id' => $variant ? $variant->id : null,
+                'name' => $product->name,
+                'original_price' => (float)$price,
+                'size' => $sizeName,
+                'color' => $colorName,
+                'image' => $finalImage
+            ];
+        }
+
+        // Add to cart with distributed override price
+        $remainingBundlePrice = (float)$bundlePrice;
+        $itemCount = count($processedItems);
+
+        foreach ($processedItems as $index => $pItem) {
+            // Proportional split
+            if ($totalOriginalPrice > 0) {
+                $ratio = $pItem['original_price'] / $totalOriginalPrice;
+                $overridePrice = round($bundlePrice * $ratio, 2);
+            } else {
+                $overridePrice = round($bundlePrice / $itemCount, 2);
+            }
+
+            // Adjust last item to avoid rounding errors
+            if ($index === $itemCount - 1) {
+                $overridePrice = round($remainingBundlePrice, 2);
+            } else {
+                $remainingBundlePrice -= $overridePrice;
+            }
+
+            $cartData['items'][] = [
+                'id'              => Str::uuid()->toString(),
+                'product_id'      => $pItem['product_id'],
+                'variant_id'      => $pItem['variant_id'],
+                'name'            => $pItem['name'],
+                'price'           => (float)$overridePrice,
+                'original_price'  => $pItem['original_price'],
+                'override_price'  => (float)$overridePrice,
+                'bundle_group_id' => $bundleGroupId,
+                'quantity'        => $quantity,
+                'size'            => $pItem['size'],
+                'color'           => $pItem['color'],
+                'image'           => $pItem['image'],
+                'bundle_name'     => $bundle->name // helpful for display
+            ];
+        }
+
+        $this->recalculateTotal($cartData);
+        $this->saveCartData($cartToken, $cartData);
+
+        return response()->json([
+            'cart_token' => $cartToken,
+            'cart' => $cartData
+        ]);
+    }
+
     public function update(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|string',
+            'cart_item_id' => 'nullable|string',
+            'product_id' => 'required_without:cart_item_id|string',
             'variant_id' => 'nullable|string',
             'quantity' => 'required|integer|min:0',
         ]);
@@ -204,13 +338,21 @@ class ShopCartController extends Controller
             return response()->json(['error' => 'Cart not found'], 404);
         }
 
+        $cartItemId = $request->cart_item_id;
         $productId = $request->product_id;
         $variantId = $request->variant_id;
         $quantity = $request->quantity;
 
         $updated = false;
         foreach ($cartData['items'] as $index => $item) {
-            if ($item['product_id'] == $productId && $item['variant_id'] == $variantId) {
+            $match = false;
+            if ($cartItemId) {
+                $match = ($item['id'] === $cartItemId);
+            } else {
+                $match = ($item['product_id'] == $productId && $item['variant_id'] == $variantId);
+            }
+
+            if ($match) {
                 if ($quantity == 0) {
                     unset($cartData['items'][$index]);
                 } else {
@@ -233,7 +375,8 @@ class ShopCartController extends Controller
     public function remove(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|string',
+            'cart_item_id' => 'nullable|string',
+            'product_id' => 'required_without:cart_item_id|string',
             'variant_id' => 'nullable|string',
         ]);
 
@@ -247,20 +390,30 @@ class ShopCartController extends Controller
             return response()->json(['error' => 'Cart not found'], 404);
         }
 
+        $cartItemId = $request->cart_item_id;
         $productId = $request->product_id;
         $variantId = $request->variant_id;
 
         // Store removed item before filtering, to check bundle_group_id
         $removedItem = null;
         foreach ($cartData['items'] as $item) {
-            if ($item['product_id'] == $productId && $item['variant_id'] == $variantId) {
+            $match = false;
+            if ($cartItemId) {
+                $match = ($item['id'] === $cartItemId);
+            } else {
+                $match = ($item['product_id'] == $productId && $item['variant_id'] == $variantId);
+            }
+            if ($match) {
                 $removedItem = $item;
                 break;
             }
         }
 
         $initialCount = count($cartData['items']);
-        $cartData['items'] = array_filter($cartData['items'], function($item) use ($productId, $variantId) {
+        $cartData['items'] = array_filter($cartData['items'], function($item) use ($cartItemId, $productId, $variantId) {
+            if ($cartItemId) {
+                return $item['id'] !== $cartItemId;
+            }
             return !($item['product_id'] == $productId && $item['variant_id'] == $variantId);
         });
 

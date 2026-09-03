@@ -45,6 +45,7 @@ Route::prefix('v1/shop')->group(function () {
         // En un caso real, un middleware específico podría verificar el X-Cart-Token
         Route::get('/', [ShopCartController::class, 'show']);
         Route::post('/add', [ShopCartController::class, 'add']);
+        Route::post('/add-bundle', [ShopCartController::class, 'addBundle']);
         Route::put('/update', [ShopCartController::class, 'update']);
         Route::delete('/remove', [ShopCartController::class, 'remove']);
         Route::post('/validate', [ShopCartController::class, 'validateStock']);
