@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { getCart, addToCart as apiAddToCart, updateCartItem as apiUpdateCartItem, removeCartItem as apiRemoveCartItem } from '../../api/shop/cart';
+import { getCart, addToCart as apiAddToCart, addBundleToCart as apiAddBundleToCart, updateCartItem as apiUpdateCartItem, removeCartItem as apiRemoveCartItem } from '../../api/shop/cart';
 
 const useShopCartStore = create(
   persist(
@@ -26,6 +26,38 @@ const useShopCartStore = create(
         }
       },
 
+      addBundleToCart: async (bundleId, items) => {
+        set({ isLoading: true });
+        try {
+          // Map items to match backend requirements
+          const payloadItems = items.map(i => ({
+            product_id: i.productId,
+            variant_id: i.variantId || null,
+            color: i.color || null
+          }));
+
+          const response = await apiAddBundleToCart({
+            bundle_id: bundleId,
+            quantity: 1,
+            items: payloadItems
+          });
+
+          if (response.data.cart_token) {
+            set({ cartToken: response.data.cart_token });
+            localStorage.setItem('shop_cart_token', response.data.cart_token);
+          }
+
+          set({ 
+            items: response.data.cart.items || [], 
+            total: response.data.cart.total || 0 
+          });
+        } catch (error) {
+          console.error('Failed to add bundle to cart:', error.response?.data || error);
+          throw error;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
       // Add a product to the cart
       addToCart: async (productId, variantId, quantity, color = null) => {
         set({ isLoading: true });
@@ -54,55 +86,11 @@ const useShopCartStore = create(
         }
       },
 
-      // Add all bundle items proportionally priced
-      // items = [{ productId, variantId, originalPrice, color, size }]
-      addBundleToCart: async (bundleId, items) => {
-        set({ isLoading: true });
-        try {
-          const totalOriginal = items.reduce((sum, item) => sum + item.originalPrice, 0);
-          const bundlePrice = items.reduce((sum, item) => sum + item.bundleItemPrice, 0);
-          // bundleItemPrice is already the proportional price computed by the caller
-          // We generate a valid UUID for this group so it inserts cleanly into Postgres
-          const bundleGroupId = crypto.randomUUID();
-
-          let lastResponse = null;
-          for (const item of items) {
-            const response = await apiAddToCart({
-              product_id: item.productId,
-              variant_id: item.variantId || null,
-              quantity: 1,
-              color: item.color || null,
-              bundle_group_id: bundleGroupId,
-              original_price: item.originalPrice,
-              override_price: item.bundleItemPrice,
-            });
-            lastResponse = response;
-            // Update token after first item
-            if (response.data.cart_token) {
-              set({ cartToken: response.data.cart_token });
-              localStorage.setItem('shop_cart_token', response.data.cart_token);
-            }
-          }
-
-          if (lastResponse) {
-            set({
-              items: lastResponse.data.cart.items || [],
-              total: lastResponse.data.cart.total || 0
-            });
-          }
-        } catch (error) {
-          console.error('Failed to add bundle to cart:', error.response?.data || error);
-          throw error;
-        } finally {
-          set({ isLoading: false });
-        }
-      },
-
-      // Additional methods: updateQuantity, removeFromCart, clearCart...
-      updateQuantity: async (productId, variantId, quantity) => {
+      updateQuantity: async (productId, variantId, quantity, cartItemId = null) => {
         set({ isLoading: true });
         try {
           const response = await apiUpdateCartItem({
+            cart_item_id: cartItemId,
             product_id: productId,
             variant_id: variantId,
             quantity: quantity,
@@ -118,10 +106,11 @@ const useShopCartStore = create(
         }
       },
 
-      removeFromCart: async (productId, variantId) => {
+      removeFromCart: async (productId, variantId, cartItemId = null) => {
         set({ isLoading: true });
         try {
           const response = await apiRemoveCartItem({
+            cart_item_id: cartItemId,
             product_id: productId,
             variant_id: variantId,
           });

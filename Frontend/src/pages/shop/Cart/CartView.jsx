@@ -34,14 +34,14 @@ const CartView = () => {
     fetchCart();
   }, [fetchCart]);
 
-  const handleUpdateQuantity = async (productId, variantId, quantity) => {
+  const handleUpdateQuantity = async (productId, variantId, quantity, cartItemId) => {
     if (quantity < 1) return;
-    await updateQuantity(productId, variantId, quantity);
+    await updateQuantity(productId, variantId, quantity, cartItemId);
   };
 
   const handleRemove = async (productId, variantId, uniqueId) => {
     setRemovingId(uniqueId);
-    await removeFromCart(productId, variantId);
+    await removeFromCart(productId, variantId, uniqueId);
     setTimeout(() => {
       setRemovingId(null);
     }, 300);
@@ -198,7 +198,7 @@ const CartView = () => {
                             <button
                               type="button"
                               className="p-2 cart-quantity-btn"
-                              onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity - 1)}
+                              onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity - 1, item.id)}
                               disabled={item.quantity <= 1 || isLoading}
                             >
                               <Minus className="h-4 w-4" />
@@ -207,7 +207,7 @@ const CartView = () => {
                             <button
                               type="button"
                               className="p-2 cart-quantity-btn"
-                              onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity + 1)}
+                              onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity + 1, item.id)}
                               disabled={isLoading}
                             >
                               <Plus className="h-4 w-4" />
