@@ -73,14 +73,21 @@ const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange, onSele
     });
   }
 
-  
+
+  // Stabilize callbacks in refs so the useEffect doesn't need them as dependencies
+  const onValidationRef = React.useRef(onValidationChange);
+  const onSelectionRef  = React.useRef(onSelectionChange);
+  React.useEffect(() => { onValidationRef.current = onValidationChange; }, [onValidationChange]);
+  React.useEffect(() => { onSelectionRef.current = onSelectionChange; }, [onSelectionChange]);
+
+  const hasSizes = availableSizes.length > 0;
+
   React.useEffect(() => {
-    if (onValidationChange) {
-      const isValid = (availableSizes.length === 0 || selectedSize !== null);
-      onValidationChange(isValid);
+    if (onValidationRef.current) {
+      const isValid = (!hasSizes || selectedSize !== null);
+      onValidationRef.current(isValid);
     }
-    if (onSelectionChange) {
-      // Find the matched variant for the current selection
+    if (onSelectionRef.current) {
       let variantId = null;
       let originalPrice = prod.base_price;
       if (prod.product_variants?.length > 0) {
@@ -94,9 +101,10 @@ const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange, onSele
           originalPrice = (matched.price !== null && matched.price !== undefined) ? matched.price : prod.base_price;
         }
       }
-      onSelectionChange({ productId: prod.id, variantId, originalPrice: parseFloat(originalPrice || 0), color: selectedColor, size: selectedSize });
+      onSelectionRef.current({ productId: prod.id, variantId, originalPrice: parseFloat(originalPrice || 0), color: selectedColor, size: selectedSize });
     }
-  }, [selectedColor, selectedSize, availableSizes.length, onValidationChange, onSelectionChange]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedColor, selectedSize, hasSizes, prod.id]);
 
   const handleAdd = () => {
     let variantId = null;
@@ -543,11 +551,64 @@ const BundleDetail = () => {
 
   const handleAddBundle = async () => {
     try {
-      await addToCart(bundle.id, null, 1);
+      // 1. Recopilar todos los ítems del bundle con sus precios originales
+      const itemsToAdd = [];
+
+      for (const item of bundle.bundle_items) {
+        const prod = item.product;
+        const variant = item.variant;
+        if (!prod) continue;
+
+        const isConfigurable =
+          !variant &&
+          (prod.product_variants?.length > 0 || prod.attribute_value_images?.length > 0);
+
+        if (isConfigurable) {
+          // Ítem configurable: usa la selección actual del usuario
+          const sel = selectionsMap[prod.id];
+          itemsToAdd.push({
+            productId: prod.id,
+            variantId: sel?.variantId || null,
+            originalPrice: sel?.originalPrice ?? parseFloat(prod.base_price || 0),
+            color: sel?.color || null,
+            size: sel?.size || null,
+          });
+        } else {
+          // Ítem fijo (variante preseleccionada)
+          const variantPrice =
+            variant?.price !== null && variant?.price !== undefined
+              ? parseFloat(variant.price)
+              : parseFloat(prod.base_price || 0);
+          itemsToAdd.push({
+            productId: prod.id,
+            variantId: variant?.id || null,
+            originalPrice: variantPrice,
+            color: null,
+            size: null,
+          });
+        }
+      }
+
+      if (itemsToAdd.length === 0) return;
+
+      // 2. Distribuir el precio del bundle proporcionalmente según el precio original de cada ítem
+      const bundlePrice = parseFloat(bundle.base_price || 0);
+      const totalOriginal = itemsToAdd.reduce((sum, i) => sum + i.originalPrice, 0);
+
+      const itemsWithBundlePrice = itemsToAdd.map((i) => ({
+        ...i,
+        bundleItemPrice:
+          totalOriginal > 0
+            ? parseFloat(((i.originalPrice / totalOriginal) * bundlePrice).toFixed(2))
+            : parseFloat((bundlePrice / itemsToAdd.length).toFixed(2)),
+      }));
+
+      // 3. Agregar al carrito (cada ítem individualmente, compartiendo bundle_group_id)
+      await addBundleToCart(bundle.id, itemsWithBundlePrice);
       setAddedBundle(true);
       setTimeout(() => setAddedBundle(false), 2000);
     } catch (e) {
-      console.error("No se pudo añadir el conjunto:", e);
+      console.error('No se pudo añadir el conjunto:', e);
     }
   };
 
@@ -729,6 +790,7 @@ const BundleDetail = () => {
                       added={addedItems[prod.id]}
                       onAdd={handleAddIndividualItem}
                       onValidationChange={(isValid) => handleItemValidation(prod.id, isValid)}
+                      onSelectionChange={handleSelectionChange}
                     />
                   );
                 }

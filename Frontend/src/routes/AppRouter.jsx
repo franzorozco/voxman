@@ -93,7 +93,7 @@ const AnimatedRoutes = () => {
   const shopThemeClass = isDark ? "shop-theme-dark" : "shop-theme";
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="sync">
       <Routes location={location} key={location.pathname}>
 
         {/* ================= PUBLIC & AUTH (HOME THEME) ================= */}
