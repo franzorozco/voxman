@@ -534,9 +534,10 @@ class OrderNetworkController extends Controller
                 } elseif ($type === 'delivery') {
                     $mappedDeliveryType = 'home_delivery';
                     $destinationCity = $deliveryDetails['city'] ?? null;
-                      
-                      // Only create Address record if there is a customer, due to DB constraint (customer_id OR branch_id required)
-                      if ($sale->customer_id && (!empty($deliveryDetails['address']) || !empty($deliveryDetails['street']) || !empty($deliveryDetails['zone']))) {
+                      // Use existing address if provided, otherwise create a new Address record
+                      if (!empty($deliveryDetails['address_id'])) {
+                          $addressId = $deliveryDetails['address_id'];
+                      } elseif ($sale->customer_id && (!empty($deliveryDetails['address']) || !empty($deliveryDetails['street']) || !empty($deliveryDetails['zone']))) {
                           $address = \App\Models\Core\Address::create([
                               'address_type' => 'shipping',
                               'customer_id' => $sale->customer_id,

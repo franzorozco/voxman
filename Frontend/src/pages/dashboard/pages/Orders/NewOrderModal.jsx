@@ -177,6 +177,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         const dType = editData.shipment?.delivery_type;
         if (dType === 'home_delivery') initialMeetingPointType = 'delivery';
         else if (dType === 'external') initialMeetingPointType = 'external';
+        else if (dType === 'pickup') initialMeetingPointType = 'pickup';
         else if (!editData.meeting_point && !editData.latitude && !editData.longitude) initialMeetingPointType = 'predefined';
         else if (editData.latitude && editData.longitude && dType !== 'home_delivery') initialMeetingPointType = 'manual';
         
