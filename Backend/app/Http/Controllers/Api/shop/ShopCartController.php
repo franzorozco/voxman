@@ -168,6 +168,7 @@ class ShopCartController extends Controller
                 'name'            => $name,
                 'price'           => (float)$price,
                 'original_price'  => $storedOriginalPrice,
+                'override_price'  => $overridePrice !== null ? (float)$overridePrice : null,
                 'bundle_group_id' => $bundleGroupId,
                 'quantity'        => $quantity,
                 'size'            => $sizeName,

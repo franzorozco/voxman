@@ -62,8 +62,8 @@ const useShopCartStore = create(
           const totalOriginal = items.reduce((sum, item) => sum + item.originalPrice, 0);
           const bundlePrice = items.reduce((sum, item) => sum + item.bundleItemPrice, 0);
           // bundleItemPrice is already the proportional price computed by the caller
-          // We use bundleId + timestamp as a unique group ID for this purchase event
-          const bundleGroupId = `${bundleId}_${Date.now()}`;
+          // We generate a valid UUID for this group so it inserts cleanly into Postgres
+          const bundleGroupId = crypto.randomUUID();
 
           let lastResponse = null;
           for (const item of items) {

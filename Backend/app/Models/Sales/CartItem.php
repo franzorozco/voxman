@@ -13,7 +13,18 @@ class CartItem extends BaseCartItem
 		'cart_id',
 		'variant_id',
 		'quantity',
-		'discount_amount'
+		'discount_amount',
+		// Bundle pricing fields
+		'override_price',   // precio preferencial del conjunto que el cliente paga
+		'original_price',   // precio normal del item en product_variants al momento de la compra
+		'bundle_group_id',  // agrupa items del mismo conjunto en el mismo pedido
+	];
+
+	protected $casts = [
+		'quantity'       => 'integer',
+		'override_price' => 'decimal:2',
+		'original_price' => 'decimal:2',
+		'discount_amount'=> 'decimal:2',
 	];
 
 	public function variant()

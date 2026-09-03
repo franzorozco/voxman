@@ -344,7 +344,11 @@ class CartController extends Controller
             $subtotal = 0;
 
             foreach ($cart->items as $item) {
-                $price = $item->product_variant->price ?? 0;
+                // If override_price exists (bundle item), use it. Otherwise use normal variant price.
+                $price = $item->override_price !== null 
+                    ? (float) $item->override_price 
+                    : ($item->product_variant->price ?? 0);
+                    
                 $discountAmount = $item->discount_amount ?? 0;
                 $finalPrice = max(0, $price - $discountAmount);
                 $lineTotal = $finalPrice * $item->quantity;

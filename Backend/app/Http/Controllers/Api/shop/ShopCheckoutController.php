@@ -95,11 +95,17 @@ class ShopCheckoutController extends Controller
 
             // 4. Process Items
             foreach ($cartData['items'] as $item) {
-                // Insert cart item
+                $isBundle = !empty($item['bundle_group_id']);
+                $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
+                
+                // Insert cart item — preserve bundle pricing if present
                 CartItem::create([
-                    'cart_id' => $cart->id,
-                    'variant_id' => $item['variant_id'] ?? null,
-                    'quantity' => $item['quantity'],
+                    'cart_id'         => $cart->id,
+                    'variant_id'      => $item['variant_id'] ?? null,
+                    'quantity'        => $item['quantity'],
+                    'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
+                    'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
+                    'bundle_group_id' => $item['bundle_group_id'] ?? null,
                 ]);
             }
 
@@ -217,11 +223,17 @@ class ShopCheckoutController extends Controller
                         $selectedBranchId = $inventory->branch_id;
                     }
 
-                    // Insert cart item
+                    $isBundle = !empty($item['bundle_group_id']);
+                    $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
+                    
+                    // Insert cart item — preserve bundle pricing if present
                     \App\Models\Sales\CartItem::create([
-                        'cart_id' => $cart->id,
-                        'variant_id' => $item['variant_id'],
-                        'quantity' => $item['quantity'],
+                        'cart_id'         => $cart->id,
+                        'variant_id'      => $item['variant_id'],
+                        'quantity'        => $item['quantity'],
+                        'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
+                        'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
+                        'bundle_group_id' => $item['bundle_group_id'] ?? null,
                     ]);
                 }
             }
