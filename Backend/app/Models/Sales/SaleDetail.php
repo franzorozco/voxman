@@ -16,6 +16,9 @@ class SaleDetail extends BaseSaleDetail
 		'unit_price',
 		'discount',
 		'discount_amount',
+		'original_price',
+        'bundle_price',
+		'bundle_group_id',
 		'final_price',
 		'subtotal'
 	];

@@ -690,27 +690,13 @@ export default function Orders() {
                           >
                             <LinkIcon size={16} />
                           </button>
-                          {schedule.status === 'pending' ? (
-                            <button 
-                              className="action-btn"
-                              style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-primary)', color: '#fff', border: 'none' }}
-                              onClick={() => {
-                                setEditData(schedule);
-                                setModalMode("complete");
-                                setIsNewOrderModalOpen(true);
-                              }}
-                            >
-                              Completar
-                            </button>
-                          ) : (
                             <button 
                               className="action-btn primary"
-                              style={{ padding: '8px 16px', borderRadius: '8px' }}
+                              style={{ padding: '8px 16px', borderRadius: '8px', background: schedule.status === 'pending' ? 'var(--color-primary)' : '', color: schedule.status === 'pending' ? '#fff' : '' }}
                               onClick={() => setStatusModalSchedule(schedule)}
                             >
                               Ver Detalles
                             </button>
-                          )}
                         </div>
                       </div>
                     </div>

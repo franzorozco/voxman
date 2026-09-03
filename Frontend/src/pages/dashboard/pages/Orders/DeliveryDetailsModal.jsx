@@ -424,7 +424,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     hasValidTime = !!details?.scheduled_date;
   } else {
     hasValidLocation = !!details?.meeting_point || !!details?.shipment?.address;
-    hasValidTime = !!details?.scheduled_date && !!details?.scheduled_time;
+    hasValidTime = !!details?.scheduled_date && !!details?.time_window && details.time_window !== 'Por definir';
   }
 
   let hasValidStock = true;
@@ -876,16 +876,24 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     return relevantReservations.map((res, index) => {
                       const branchName = res.branch?.name || "Sin Sucursal asignada";
                       const qty = res.quantity;
-                      const subtotal = (item.unit_price || item.final_price) * qty;
+                      const isBundleItem = item.bundle_group_id !== null && item.bundle_group_id !== undefined;
+                      const unitPrice = item.unit_price || item.final_price;
+                      const originalPrice = item.original_price || unitPrice;
+                      const subtotal = unitPrice * qty;
 
                       const totalPhysicalStock = variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
                       const isOutOfStock = totalPhysicalStock < item.quantity || branchName === "Sin Sucursal asignada";
 
                       return (
-                        <div key={`${item.id}-${index}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', opacity: isCancelled || item.deleted_at ? 0.6 : 1 }}>
+                        <div key={`${item.id}-${index}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', opacity: isCancelled || item.deleted_at ? 0.6 : 1, ...(isBundleItem ? { background: 'var(--bg-hover)', padding: '8px', borderRadius: '8px', borderLeft: '3px solid #f59e0b' } : {}) }}>
                           {isOutOfStock && (
                             <div style={{ background: 'var(--color-danger)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', alignSelf: 'flex-start' }}>
                               <AlertTriangle size={14} /> SIN STOCK / AGOTADO
+                            </div>
+                          )}
+                          {isBundleItem && (
+                            <div style={{ alignSelf: 'flex-start', fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>
+                              ✨ Ítem de Conjunto
                             </div>
                           )}
                           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
@@ -930,7 +938,18 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                           </div>
                           
                           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>{qty}x Bs. {Number(item.unit_price || item.final_price).toFixed(2)}</span>
+                            {isBundleItem ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: '12px' }}>
+                                  {qty}x Bs. {Number(originalPrice).toFixed(2)}
+                                </span>
+                                <span style={{ color: '#059669', fontWeight: 600 }}>
+                                  {qty}x Bs. {Number(unitPrice).toFixed(2)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>{qty}x Bs. {Number(unitPrice).toFixed(2)}</span>
+                            )}
                             {Number(item.discount) > 0 && !item.deleted_at && (
                               <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                                 -Bs. {Number(item.discount).toFixed(2)}

@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
-import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle, Printer, CalendarClock, StickyNote } from "lucide-react";
+import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle, Printer, CalendarClock, StickyNote, Sparkles } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSale, updateSaleStatus, cancelSale } from "../../../../api/admin/sales";
 import Spinner from "../../components/Spinner/Spinner";
@@ -256,24 +256,28 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                     }
 
                     return (
-                    <tr key={detail.id} style={{ opacity: detail.deleted_at ? 0.6 : 1 }}>
+                    <tr key={detail.id} style={{ opacity: detail.deleted_at ? 0.6 : 1, ...(detail.bundle_group_id ? { background: 'var(--bg-hover)' } : {}) }}>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           {imageUrl && (
-                            <img src={imageUrl} alt="Variant" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
+                            <img src={imageUrl} alt="Variant" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: detail.bundle_group_id ? '2px solid #f59e0b' : '1px solid var(--border-color)' }} />
                           )}
                           <div>
                             <div style={{ fontWeight: 500, textDecoration: detail.deleted_at ? 'line-through' : 'none' }}>
                               {detail.giftcard ? `Giftcard ${detail.giftcard.code || ''}` : 
-                              detail.bundle ? `Conjunto: ${detail.bundle.name}` :
                               (variant?.product?.name || 'Producto Desconocido')}
                             </div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              {detail.giftcard ? 'Tarjeta de Regalo' : 
-                              detail.bundle ? 'Conjunto Promocional' :
-                              (variant?.sku || '')}
-                              {!detail.giftcard && !detail.bundle && sale.stock_reservations && sale.stock_reservations.find(sr => sr.variant_id === detail.variant_id) && (
-                                <span style={{ fontSize: '10px', background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px', marginLeft: '4px' }}>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              {detail.giftcard ? 'Tarjeta de Regalo' : (variant?.sku || '')}
+                              
+                              {detail.bundle_group_id && (
+                                <span style={{ color: '#d97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>
+                                  <Sparkles size={10} /> Ítem de Conjunto
+                                </span>
+                              )}
+
+                              {!detail.giftcard && sale.stock_reservations && sale.stock_reservations.find(sr => sr.variant_id === detail.variant_id) && (
+                                <span style={{ fontSize: '10px', background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px' }}>
                                   Sucursal: {sale.stock_reservations.find(sr => sr.variant_id === detail.variant_id).branch?.name || 'Desconocida'}
                                 </span>
                               )}
@@ -289,7 +293,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                               )}
                               {((detail.return_request && detail.return_request.status === 'approved') || (detail.deleted_at && !detail.return_request)) && (
                                 <span style={{ fontSize: '10px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                                  {detail.return_request ? 'Devuelto' : 'Rechazado'}
+                                  {detail.return_request ? 'Devuelto' : 'Quitado'}
                                 </span>
                               )}
                             </div>
@@ -297,7 +301,20 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                         </div>
                       </td>
                       <td style={{textAlign: 'center', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>{detail.quantity}</td>
-                      <td style={{textAlign: 'right', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>Bs. {parseFloat(detail.unit_price).toFixed(2)}</td>
+                      <td style={{textAlign: 'right', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>
+                        {detail.bundle_group_id ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                              Bs. {parseFloat(detail.original_price || detail.unit_price).toFixed(2)}
+                            </span>
+                            <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
+                              Bs. {parseFloat(detail.unit_price).toFixed(2)}
+                            </span>
+                          </div>
+                        ) : (
+                          `Bs. ${parseFloat(detail.unit_price).toFixed(2)}`
+                        )}
+                      </td>
                       <td style={{textAlign: 'right', color: parseFloat(detail.discount || 0) > 0 ? 'var(--status-danger)' : 'var(--text-muted)', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>
                         {parseFloat(detail.discount || 0) > 0 ? (
                           <>

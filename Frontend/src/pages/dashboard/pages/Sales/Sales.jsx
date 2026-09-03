@@ -351,7 +351,7 @@ export default function Sales() {
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
                           {[
-                            ...(sale.sale_details || []).map(d => d.giftcard ? `Giftcard ${d.giftcard.code || ''}` : d.bundle ? `Conjunto: ${d.bundle.name}` : d.product_variant?.product?.name),
+                            ...(sale.sale_details || []).map(d => d.giftcard ? `Giftcard ${d.giftcard.code || ''}` : d.bundle_group_id ? `Conjunto (${d.product_variant?.product?.name})` : d.product_variant?.product?.name),
                             ...(sale.giftcard_transactions || []).map(t => `Giftcard ${t.giftcard?.code || ''}`)
                           ].filter(Boolean).join(', ')}
                         </div>

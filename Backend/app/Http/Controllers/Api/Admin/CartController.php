@@ -379,13 +379,16 @@ class CartController extends Controller
                 $subtotal += $lineTotal;
 
                 \App\Models\Sales\SaleDetail::create([
-                    'sale_id' => $sale->id,
-                    'variant_id' => $item->variant_id,
-                    'quantity' => $item->quantity,
-                    'unit_price' => $price,
-                    'discount' => $discountAmount,
-                    'final_price' => $finalPrice,
-                    'subtotal' => $lineTotal
+                    'sale_id'         => $sale->id,
+                    'variant_id'      => $item->variant_id,
+                    'quantity'        => $item->quantity,
+                    'unit_price'      => $price,
+                    'discount'        => $discountAmount,
+                    'final_price'     => $finalPrice,
+                    'subtotal'        => $lineTotal,
+                    'original_price'  => $item->original_price,
+                    'bundle_price'    => $item->bundle_group_id ? $price : null,
+                    'bundle_group_id' => $item->bundle_group_id,
                 ]);
 
                 // Find Stock Reservations for this cart and confirm them

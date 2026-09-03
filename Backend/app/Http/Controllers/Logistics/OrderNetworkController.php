@@ -342,7 +342,10 @@ class OrderNetworkController extends Controller
             $itemsBranches = collect($request->input('items_branches', []))->keyBy('variant_id');
 
             foreach ($cart->items as $item) {
-                $price = $item->product_variant->price ?? 0;
+                // Respect bundle pricing: use override_price if set
+                $price = $item->override_price !== null
+                    ? (float) $item->override_price
+                    : ($item->product_variant->price ?? 0);
                 $discountAmount = $item->discount_amount ?? 0;
                 $finalPrice = max(0, $price - $discountAmount);
                 $lineTotal = $finalPrice * $item->quantity;
@@ -351,13 +354,16 @@ class OrderNetworkController extends Controller
 
                 // Create Sale Detail
                 SaleDetail::create([
-                    'sale_id' => $sale->id,
-                    'variant_id' => $item->variant_id,
-                    'quantity' => $item->quantity,
-                    'unit_price' => $price,
-                    'discount' => $discountAmount,
-                    'final_price' => $finalPrice,
-                    'subtotal' => $lineTotal
+                    'sale_id'         => $sale->id,
+                    'variant_id'      => $item->variant_id,
+                    'quantity'        => $item->quantity,
+                    'unit_price'      => $price,
+                    'discount'        => $discountAmount,
+                    'final_price'     => $finalPrice,
+                    'subtotal'        => $lineTotal,
+                    'original_price'  => $item->original_price,
+                    'bundle_price'    => $item->bundle_group_id ? $price : null,
+                    'bundle_group_id' => $item->bundle_group_id,
                 ]);
 
                 // Determine branch to reserve from (per item fallback to main branch)
@@ -528,23 +534,32 @@ class OrderNetworkController extends Controller
                 } elseif ($type === 'delivery') {
                     $mappedDeliveryType = 'home_delivery';
                     $destinationCity = $deliveryDetails['city'] ?? null;
-                    
-                    if (!empty($deliveryDetails['address']) || !empty($deliveryDetails['street']) || !empty($deliveryDetails['zone'])) {
-                        $address = \App\Models\Core\Address::create([
-                            'address_type' => 'shipping',
-                            'addressable_type' => $sale->customer_id ? 'App\Models\Sales\Customer' : null,
-                            'addressable_id' => $sale->customer_id,
-                            'city' => $destinationCity,
-                            'zone' => $deliveryDetails['zone'] ?? null,
-                            'street' => $deliveryDetails['street'] ?? $deliveryDetails['address'] ?? null,
-                            'reference' => $deliveryDetails['reference'] ?? null,
-                            'country' => 'Bolivia',
-                        ]);
-                        $addressId = $address->id;
-                    }
-                    if (!empty($deliveryDetails['address'])) {
-                        $notes .= "Dirección manual: " . $deliveryDetails['address'] . "\n";
-                    }
+                      
+                      // Only create Address record if there is a customer, due to DB constraint (customer_id OR branch_id required)
+                      if ($sale->customer_id && (!empty($deliveryDetails['address']) || !empty($deliveryDetails['street']) || !empty($deliveryDetails['zone']))) {
+                          $address = \App\Models\Core\Address::create([
+                              'address_type' => 'shipping',
+                              'customer_id' => $sale->customer_id,
+                              'city' => $destinationCity,
+                              'zone' => $deliveryDetails['zone'] ?? null,
+                              'street' => $deliveryDetails['street'] ?? $deliveryDetails['address'] ?? null,
+                              'reference' => $deliveryDetails['reference'] ?? null,
+                              'country' => 'Bolivia',
+                          ]);
+                          $addressId = $address->id;
+                      }
+                      
+                      // For guests, or as a fallback, store the address in notes
+                      if (!empty($deliveryDetails['address']) || !empty($deliveryDetails['street']) || !empty($deliveryDetails['zone'])) {
+                          $addressParts = array_filter([
+                              $deliveryDetails['city'] ?? '',
+                              $deliveryDetails['zone'] ?? '',
+                              $deliveryDetails['street'] ?? $deliveryDetails['address'] ?? '',
+                              $deliveryDetails['reference'] ?? ''
+                          ]);
+                          $notes .= "Dirección de entrega: " . implode(', ', $addressParts) . "\n";
+                          $meetingPoint = $deliveryDetails['street'] ?? $deliveryDetails['address'] ?? $deliveryDetails['zone'] ?? 'Por definir';
+                      }
                 } elseif ($type === 'national') {
                     $mappedDeliveryType = 'external';
                     $externalCompany = $deliveryDetails['company'] ?? null;
@@ -584,20 +599,26 @@ class OrderNetworkController extends Controller
             $subtotal = 0;
 
             foreach ($cart->items as $item) {
-                $price = $item->product_variant->price ?? 0;
+                // Respect bundle pricing: use override_price if set
+                $price = $item->override_price !== null
+                    ? (float) $item->override_price
+                    : ($item->product_variant->price ?? 0);
                 $discountAmount = $item->discount_amount ?? 0;
                 $finalPrice = max(0, $price - $discountAmount);
                 $lineTotal = $finalPrice * $item->quantity;
                 $subtotal += $lineTotal;
 
                 SaleDetail::create([
-                    'sale_id' => $sale->id,
-                    'variant_id' => $item->variant_id,
-                    'quantity' => $item->quantity,
-                    'unit_price' => $price,
-                    'discount' => $discountAmount,
-                    'final_price' => $finalPrice,
-                    'subtotal' => $lineTotal
+                    'sale_id'         => $sale->id,
+                    'variant_id'      => $item->variant_id,
+                    'quantity'        => $item->quantity,
+                    'unit_price'      => $price,
+                    'discount'        => $discountAmount,
+                    'final_price'     => $finalPrice,
+                    'subtotal'        => $lineTotal,
+                    'original_price'  => $item->original_price,
+                    'bundle_price'    => $item->bundle_group_id ? $price : null,
+                    'bundle_group_id' => $item->bundle_group_id,
                 ]);
 
                 // Auto-assign branch with highest stock
@@ -1293,14 +1314,17 @@ class OrderNetworkController extends Controller
                 $variant = \App\Models\Catalog\ProductVariant::findOrFail($item['variant_id']);
                 $price = $variant->price ?? 0;
                 $lineTotal = $price * $item['quantity'];
-                $subtotal += $lineTotal;
 
                 $detail = SaleDetail::withTrashed()->where('sale_id', $sale->id)->where('variant_id', $item['variant_id'])->first();
                 if ($detail) {
+                    // If it was a bundle, respect its bundle_price even when updated
+                    $effectivePrice = ($detail->bundle_group_id && $detail->bundle_price) ? $detail->bundle_price : $price;
+                    $lineTotal = $effectivePrice * $item['quantity'];
+                    
                     $detail->update([
                         'quantity' => $item['quantity'],
-                        'unit_price' => $price,
-                        'final_price' => $price,
+                        'unit_price' => $effectivePrice,
+                        'final_price' => $effectivePrice,
                         'subtotal' => $lineTotal,
                         'deleted_at' => null
                     ]);
@@ -1316,6 +1340,8 @@ class OrderNetworkController extends Controller
                         'subtotal' => $lineTotal
                     ]);
                 }
+                
+                $subtotal += $lineTotal;
 
                 // Deduct new stock for reservation
                 $inventory = \App\Models\Inventory\Inventory::where('branch_id', $item['branch_id'])
@@ -1652,10 +1678,37 @@ class OrderNetworkController extends Controller
 
             // Update Sale totals
             $sale->subtotal -= $detail->unit_price;
-            $sale->total -= $detail->unit_price; 
+            $sale->total -= $detail->unit_price;
             if ($sale->total < 0) $sale->total = 0;
             if ($sale->subtotal < 0) $sale->subtotal = 0;
             $sale->save();
+
+            // --- Bundle disintegration ---
+            // If the removed item belonged to a bundle, the remaining siblings
+            // must revert to their original_price (their bundle discount is gone).
+            if ($detail->bundle_group_id) {
+                $siblings = $sale->sale_details()
+                    ->whereNull('deleted_at')
+                    ->where('bundle_group_id', $detail->bundle_group_id)
+                    ->get();
+
+                foreach ($siblings as $sibling) {
+                    $restoredPrice = $sibling->original_price ?? $sibling->unit_price;
+                    $priceDiff = $restoredPrice - $sibling->unit_price;
+
+                    // Update price fields
+                    $sibling->unit_price  = $restoredPrice;
+                    $sibling->final_price = max(0, $restoredPrice - ($sibling->discount ?? 0));
+                    $sibling->subtotal    = $sibling->final_price * $sibling->quantity;
+                    $sibling->bundle_group_id = null; // No longer part of a bundle
+                    $sibling->save();
+
+                    // Adjust sale totals for the price difference
+                    $sale->subtotal += $priceDiff * $sibling->quantity;
+                    $sale->total    += $priceDiff * $sibling->quantity;
+                }
+                $sale->save();
+            }
 
             if ($schedule->checkout_session) {
                 $session = $schedule->checkout_session;
@@ -1708,6 +1761,17 @@ class OrderNetworkController extends Controller
                 }
             }
 
+            // If still not found, it might have been hard-deleted by updateOrder. Recreate a released reservation.
+            if (!$res && isset($detailFallback)) {
+                $res = \App\Models\Inventory\StockReservation::create([
+                    'sale_id'    => $sale->id,
+                    'variant_id' => $detailFallback->variant_id,
+                    'branch_id'  => $schedule->shipment->origin_branch_id ?? $sale->branch_id ?? \App\Models\Company\Branch::where('is_active', true)->first()->id ?? null,
+                    'quantity'   => 1,
+                    'status'     => 'released'
+                ]);
+            }
+
             if (!$res) {
                 return response()->json(['error' => 'Reserva de stock no encontrada.'], 404);
             }
@@ -1754,10 +1818,58 @@ class OrderNetworkController extends Controller
 
             $res->update(['status' => 'reserved']); // It was released, quantity is 1
 
-            // Update Sale totals
+            // Update Sale totals (using original_price since the item was stored at bundle price when deleted)
             $sale->subtotal += $detail->unit_price;
             $sale->total += $detail->unit_price;
             $sale->save();
+
+            // Restore the soft-deleted detail
+            $detail->restore();
+
+            // --- Bundle reintegration ---
+            // The restored detail still has its original bundle_group_id stored (it was never cleared from the
+            // soft-deleted record). Siblings had their bundle_group_id set to null and their price reverted to
+            // original_price when the item was removed. We identify those sibling candidates by finding active
+            // sale_details in this sale where unit_price == original_price (i.e., they were reverted).
+            // Re-marking them with the bundle_group_id is enough to restore the visual grouping in the UI.
+            // Note: the actual bundle unit prices were already reverted to original on removal; this only
+            // re-applies the grouping badge — not the discounted price (which is now their regular price since
+            // the bundle was broken). We just sync the bundle_group_id so the UI shows them connected again.
+            $originalBundleGroupId = $detail->bundle_group_id;
+
+            if ($originalBundleGroupId) {
+                $potentialSiblings = $sale->sale_details()
+                    ->whereNull('deleted_at')
+                    ->whereNotNull('original_price')
+                    ->whereColumn('unit_price', 'original_price')
+                    ->where('id', '!=', $detail->id)
+                    ->get();
+
+                foreach ($potentialSiblings as $sibling) {
+                    $sibling->bundle_group_id = $originalBundleGroupId;
+                    if ($sibling->bundle_price) {
+                        $diff = $sibling->unit_price - $sibling->bundle_price;
+                        $sibling->unit_price = $sibling->bundle_price;
+                        $sibling->final_price = max(0, $sibling->bundle_price - ($sibling->discount ?? 0));
+                        $sibling->subtotal = $sibling->final_price * $sibling->quantity;
+                        $sale->subtotal -= $diff * $sibling->quantity;
+                        $sale->total -= $diff * $sibling->quantity;
+                    }
+                    $sibling->save();
+                }
+
+                $detail->bundle_group_id = $originalBundleGroupId;
+                if ($detail->bundle_price && $detail->unit_price != $detail->bundle_price) {
+                    $diff = $detail->unit_price - $detail->bundle_price;
+                    $detail->unit_price = $detail->bundle_price;
+                    $detail->final_price = max(0, $detail->bundle_price - ($detail->discount ?? 0));
+                    $detail->subtotal = $detail->final_price * $detail->quantity;
+                    $sale->subtotal -= $diff * $detail->quantity;
+                    $sale->total -= $diff * $detail->quantity;
+                }
+                $detail->save();
+                $sale->save();
+            }
 
             if ($schedule->checkout_session) {
                 $session = $schedule->checkout_session;
@@ -1768,9 +1880,6 @@ class OrderNetworkController extends Controller
                     $schedule->save();
                 }
             }
-
-            // Restore the soft-deleted detail
-            $detail->restore();
 
             event(new \App\Events\DeliveryStatusUpdated($schedule->id, $schedule->status, $schedule->shipment->delivery_code ?? null));
 
