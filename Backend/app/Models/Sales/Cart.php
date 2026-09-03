@@ -42,7 +42,7 @@ class Cart extends BaseCart
 	public function getTotalAmountAttribute()
 	{
 		$subtotal = $this->items->sum(function ($item) {
-			$price = $item->product_variant->price ?? 0;
+			$price = $item->override_price !== null ? $item->override_price : ($item->product_variant->price ?? 0);
 			return $price * $item->quantity;
 		});
 

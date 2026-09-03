@@ -141,6 +141,9 @@ class CartController extends Controller
             'items' => 'required|array|min:1',
             'items.*.variant_id' => 'required|uuid|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.override_price' => 'nullable|numeric|min:0',
+            'items.*.original_price' => 'nullable|numeric|min:0',
+            'items.*.bundle_group_id' => 'nullable|string',
             'discount_id' => 'nullable|uuid|exists:discounts,id'
         ]);
 
@@ -162,11 +165,17 @@ class CartController extends Controller
         foreach ($request->items as $itemData) {
             $variant = \App\Models\Catalog\ProductVariant::find($itemData['variant_id']);
             if (!$variant) continue;
-            $lineSubtotal = $variant->price * $itemData['quantity'];
+            
+            $priceToUse = isset($itemData['override_price']) ? $itemData['override_price'] : $variant->price;
+            $lineSubtotal = $priceToUse * $itemData['quantity'];
             $subtotal += $lineSubtotal;
+            
             $cartItemsData[] = [
                 'variant_id' => $variant->id,
                 'quantity' => $itemData['quantity'],
+                'override_price' => $itemData['override_price'] ?? null,
+                'original_price' => $itemData['original_price'] ?? null,
+                'bundle_group_id' => $itemData['bundle_group_id'] ?? null,
                 'line_subtotal' => $lineSubtotal
             ];
         }
@@ -198,6 +207,9 @@ class CartController extends Controller
             $cartItem->cart_id = $cart->id;
             $cartItem->variant_id = $itemData['variant_id'];
             $cartItem->quantity = $itemData['quantity'];
+            $cartItem->override_price = $itemData['override_price'];
+            $cartItem->original_price = $itemData['original_price'];
+            $cartItem->bundle_group_id = $itemData['bundle_group_id'];
             
             if ($totalDiscount > 0) {
                 if ($index === $totalItems - 1) {
@@ -227,6 +239,9 @@ class CartController extends Controller
             'items' => 'required|array|min:1',
             'items.*.variant_id' => 'required|uuid|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.override_price' => 'nullable|numeric|min:0',
+            'items.*.original_price' => 'nullable|numeric|min:0',
+            'items.*.bundle_group_id' => 'nullable|string',
             'discount_id' => 'nullable|uuid|exists:discounts,id'
         ]);
 
@@ -253,11 +268,17 @@ class CartController extends Controller
         foreach ($request->items as $itemData) {
             $variant = \App\Models\Catalog\ProductVariant::find($itemData['variant_id']);
             if (!$variant) continue;
-            $lineSubtotal = $variant->price * $itemData['quantity'];
+            
+            $priceToUse = isset($itemData['override_price']) ? $itemData['override_price'] : $variant->price;
+            $lineSubtotal = $priceToUse * $itemData['quantity'];
             $subtotal += $lineSubtotal;
+            
             $cartItemsData[] = [
                 'variant_id' => $variant->id,
                 'quantity' => $itemData['quantity'],
+                'override_price' => $itemData['override_price'] ?? null,
+                'original_price' => $itemData['original_price'] ?? null,
+                'bundle_group_id' => $itemData['bundle_group_id'] ?? null,
                 'line_subtotal' => $lineSubtotal
             ];
         }
@@ -289,6 +310,9 @@ class CartController extends Controller
             $cartItem->cart_id = $cart->id;
             $cartItem->variant_id = $itemData['variant_id'];
             $cartItem->quantity = $itemData['quantity'];
+            $cartItem->override_price = $itemData['override_price'];
+            $cartItem->original_price = $itemData['original_price'];
+            $cartItem->bundle_group_id = $itemData['bundle_group_id'];
             
             if ($totalDiscount > 0) {
                 if ($index === $totalItems - 1) {

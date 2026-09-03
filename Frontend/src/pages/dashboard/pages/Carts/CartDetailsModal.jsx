@@ -199,8 +199,12 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                     const availableStock = item.product_variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
                     const isOutOfStock = availableStock < item.quantity;
                     
+                    const isBundleItem = item.override_price !== null && item.override_price !== undefined;
+                    const itemPrice = isBundleItem ? Number(item.override_price) : Number(item.product_variant?.price || 0);
+                    const originalPrice = Number(item.original_price || item.product_variant?.price || 0);
+
                     return (
-                    <tr key={item.id}>
+                    <tr key={item.id} style={isBundleItem ? { backgroundColor: 'var(--bg-hover)' } : {}}>
                       <td>
                         <div className="modal-product-cell">
                           {getVariantImage(item.product_variant) ? (
@@ -214,6 +218,11 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                           )}
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span className="modal-product-name">{item.product_variant?.product?.name || "Desconocido"}</span>
+                            {isBundleItem && (
+                              <span style={{ fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px', border: '1px solid #fde68a' }}>
+                                ✨ Ítem de Conjunto
+                              </span>
+                            )}
                             {isOutOfStock && cart.status !== 'converted' && (
                               <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 'bold', background: '#fee2e2', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px' }}>
                                 {availableStock === 0 ? 'Agotado' : `Stock Insuficiente (Hay ${availableStock})`}
@@ -228,8 +237,21 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                         </div>
                       </td>
                       <td className="font-semibold">{item.quantity}</td>
-                      <td className="text-right">Bs. {Number(item.product_variant?.price || 0).toFixed(2)}</td>
-                      <td className="text-right font-semibold">Bs. {((item.product_variant?.price || 0) * item.quantity).toFixed(2)}</td>
+                      <td className="text-right">
+                        {isBundleItem ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '12px' }}>
+                              Bs. {originalPrice.toFixed(2)}
+                            </span>
+                            <span style={{ color: '#059669', fontWeight: 'bold' }}>
+                              Bs. {itemPrice.toFixed(2)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span>Bs. {itemPrice.toFixed(2)}</span>
+                        )}
+                      </td>
+                      <td className="text-right font-semibold">Bs. {(itemPrice * item.quantity).toFixed(2)}</td>
                     </tr>
                   )})
                 ) : (

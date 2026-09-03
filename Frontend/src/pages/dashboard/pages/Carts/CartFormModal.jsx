@@ -30,8 +30,11 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
         quantity: item.quantity,
         product: item.product_variant?.product,
         variant: item.product_variant,
-        price: item.product_variant?.price || 0,
-        maxStock: item.product_variant?.inventories?.reduce((sum, inv) => sum + (inv.stock || 0), 0) || 0
+        price: item.override_price !== null && item.override_price !== undefined ? item.override_price : (item.product_variant?.price || 0),
+        maxStock: item.product_variant?.inventories?.reduce((sum, inv) => sum + (inv.stock || 0), 0) || 0,
+        override_price: item.override_price,
+        original_price: item.original_price,
+        bundle_group_id: item.bundle_group_id
       }));
       setItems(initialItems);
     }
@@ -171,7 +174,20 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
 
   const removeItem = (index) => {
     const newItems = [...items];
+    const removedItem = newItems[index];
     newItems.splice(index, 1);
+    
+    // Si era parte de un conjunto, romper el conjunto para los ítems restantes
+    if (removedItem.bundle_group_id) {
+       newItems.forEach(item => {
+           if (item.bundle_group_id === removedItem.bundle_group_id) {
+               item.price = item.original_price || item.variant?.price || 0;
+               item.override_price = null;
+               item.bundle_group_id = null;
+           }
+       });
+    }
+
     setItems(newItems);
   };
 
@@ -190,7 +206,10 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
         customer_id: selectedCustomer?.id || null,
         items: items.map(item => ({
           variant_id: item.variant_id,
-          quantity: item.quantity
+          quantity: item.quantity,
+          override_price: item.override_price,
+          original_price: item.original_price,
+          bundle_group_id: item.bundle_group_id
         }))
       };
 
@@ -367,13 +386,37 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
                     </td>
                   </tr>
                 ) : (
-                  items.map((item, index) => (
-                    <tr key={index}>
-                      <td className="cart-form-font-bold">{item.product?.name || 'Producto'}</td>
+                  items.map((item, index) => {
+                    const isBundleItem = item.override_price !== null && item.override_price !== undefined;
+                    return (
+                    <tr key={index} style={isBundleItem ? { backgroundColor: 'var(--bg-hover)' } : {}}>
+                      <td className="cart-form-font-bold">
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span>{item.product?.name || 'Producto'}</span>
+                          {isBundleItem && (
+                            <span style={{ fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px', border: '1px solid #fde68a' }}>
+                              ✨ Ítem de Conjunto
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="cart-form-sku-td">
                         SKU: {item.variant?.sku}
                       </td>
-                      <td>{Number(item.price).toFixed(2)}</td>
+                      <td>
+                        {isBundleItem ? (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '12px' }}>
+                              Bs. {Number(item.original_price || item.variant?.price || 0).toFixed(2)}
+                            </span>
+                            <span style={{ color: '#059669', fontWeight: 'bold' }}>
+                              Bs. {Number(item.price).toFixed(2)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span>{Number(item.price).toFixed(2)}</span>
+                        )}
+                      </td>
                       <td>
                         <div className="quantity-controls cart-form-quantity-controls">
                           <button type="button" onClick={() => updateQuantity(index, -1)} className="cart-form-qty-btn">-</button>
@@ -390,7 +433,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
                         </button>
                       </td>
                     </tr>
-                  ))
+                  )})
                 )}
               </tbody>
             </table>
