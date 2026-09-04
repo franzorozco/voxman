@@ -91,7 +91,33 @@ class ShopCheckoutController extends Controller
                 'delivery_details' => $request->input('delivery_details', null),
                 'status' => 'active',
                 'expires_at' => now()->addMinutes(60),
+                'discount_id' => $request->input('discount_id'),
+                'total_discount' => $request->input('discount_amount') ?? 0,
             ]);
+
+            // Re-prorate discount if valid
+            $totalDiscount = $cart->total_discount;
+            $proratedDiscounts = [];
+            if ($cart->discount_id && $totalDiscount > 0) {
+                $subtotal = 0;
+                $discountItems = [];
+                foreach ($cartData['items'] as $item) {
+                    $isBundle = !empty($item['bundle_group_id']);
+                    $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
+                    $priceToUse = $overridePrice !== null ? (float) $overridePrice : (float) ($item['price'] ?? 0);
+                    $lineSubtotal = $priceToUse * $item['quantity'];
+                    $subtotal += $lineSubtotal;
+                    
+                    $discountItems[] = [
+                        'variant_id' => $item['variant_id'],
+                        'quantity' => $item['quantity'],
+                        'line_subtotal' => $lineSubtotal
+                    ];
+                }
+                
+                $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+                $proratedDiscounts = $discountService->prorateDiscountToItems($discountItems, $totalDiscount, $subtotal);
+            }
 
             // 4. Process Items
             foreach ($cartData['items'] as $item) {
@@ -106,6 +132,7 @@ class ShopCheckoutController extends Controller
                     'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
                     'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
                     'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                    'discount_amount' => $proratedDiscounts[$item['variant_id']] ?? 0,
                 ]);
             }
 
@@ -195,7 +222,33 @@ class ShopCheckoutController extends Controller
                 'delivery_details' => $request->input('delivery_details', null),
                 'status' => 'active',
                 'expires_at' => now()->addMinutes(60),
+                'discount_id' => $request->input('discount_id'),
+                'total_discount' => $request->input('discount_amount') ?? 0,
             ]);
+
+            // Re-prorate discount if valid
+            $totalDiscount = $cart->total_discount;
+            $proratedDiscounts = [];
+            if ($cart->discount_id && $totalDiscount > 0) {
+                $subtotal = 0;
+                $discountItems = [];
+                foreach ($cartData['items'] as $item) {
+                    $isBundle = !empty($item['bundle_group_id']);
+                    $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
+                    $priceToUse = $overridePrice !== null ? (float) $overridePrice : (float) ($item['price'] ?? 0);
+                    $lineSubtotal = $priceToUse * $item['quantity'];
+                    $subtotal += $lineSubtotal;
+                    
+                    $discountItems[] = [
+                        'variant_id' => $item['variant_id'],
+                        'quantity' => $item['quantity'],
+                        'line_subtotal' => $lineSubtotal
+                    ];
+                }
+                
+                $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+                $proratedDiscounts = $discountService->prorateDiscountToItems($discountItems, $totalDiscount, $subtotal);
+            }
 
             // 2. Process Items and Verify Stock (without reserving)
             foreach ($cartData['items'] as $item) {
@@ -234,6 +287,7 @@ class ShopCheckoutController extends Controller
                         'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
                         'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
                         'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                        'discount_amount' => $proratedDiscounts[$item['variant_id']] ?? 0,
                     ]);
                 }
             }

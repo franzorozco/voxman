@@ -180,29 +180,30 @@ class CartController extends Controller
             ];
         }
 
+        // Validate discount through centralized service
         $totalDiscount = 0;
+        $proratedDiscounts = [];
         if ($cart->discount_id && $subtotal > 0) {
-            $discount = \App\Models\Discount\Discount::find($cart->discount_id);
-            if ($discount) {
-                if ($discount->type === 'percentage') {
-                    $totalDiscount = $subtotal * ($discount->value / 100);
-                } else {
-                    $totalDiscount = $discount->value;
-                }
-                if ($discount->max_discount_amount) {
-                    $totalDiscount = min($totalDiscount, $discount->max_discount_amount);
-                }
-                $totalDiscount = min($totalDiscount, $subtotal); // Cannot discount more than subtotal
+            $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+            $result = $discountService->validateCode(
+                $cart->discount_id,
+                $subtotal,
+                $cartItemsData,
+                $request->customer_id,
+                null
+            );
+            if (!$result['valid']) {
+                $cart->delete();
+                return response()->json(['message' => $result['message']], 422);
             }
+            $totalDiscount = $result['discount_amount'];
+            $proratedDiscounts = $discountService->prorateDiscountToItems($cartItemsData, $totalDiscount, $subtotal);
         }
 
         $cart->total_discount = $totalDiscount;
         $cart->save();
 
-        $remainingDiscount = $totalDiscount;
-        $totalItems = count($cartItemsData);
-
-        foreach ($cartItemsData as $index => $itemData) {
+        foreach ($cartItemsData as $itemData) {
             $cartItem = new \App\Models\Sales\CartItem();
             $cartItem->cart_id = $cart->id;
             $cartItem->variant_id = $itemData['variant_id'];
@@ -211,16 +212,8 @@ class CartController extends Controller
             $cartItem->original_price = $itemData['original_price'];
             $cartItem->bundle_group_id = $itemData['bundle_group_id'];
             
-            if ($totalDiscount > 0) {
-                if ($index === $totalItems - 1) {
-                    // Last item takes whatever is left of the discount to avoid rounding cent issues
-                    $itemDiscount = $remainingDiscount;
-                } else {
-                    $weight = $itemData['line_subtotal'] / $subtotal;
-                    $itemDiscount = round($totalDiscount * $weight, 2);
-                    $remainingDiscount -= $itemDiscount;
-                }
-                $cartItem->discount_amount = max(0, $itemDiscount);
+            if (isset($proratedDiscounts[$itemData['variant_id']])) {
+                $cartItem->discount_amount = $proratedDiscounts[$itemData['variant_id']];
             }
 
             $cartItem->save();
@@ -284,28 +277,30 @@ class CartController extends Controller
         }
 
         $totalDiscount = 0;
+        $proratedDiscounts = [];
         if ($cart->discount_id && $subtotal > 0) {
-            $discount = \App\Models\Discount\Discount::find($cart->discount_id);
-            if ($discount) {
-                if ($discount->type === 'percentage') {
-                    $totalDiscount = $subtotal * ($discount->value / 100);
-                } else {
-                    $totalDiscount = $discount->value;
-                }
-                if ($discount->max_discount_amount) {
-                    $totalDiscount = min($totalDiscount, $discount->max_discount_amount);
-                }
-                $totalDiscount = min($totalDiscount, $subtotal); // Cannot discount more than subtotal
+            $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+            $result = $discountService->validateCode(
+                $cart->discount_id,
+                $subtotal,
+                $cartItemsData,
+                $request->customer_id,
+                null
+            );
+            if (!$result['valid']) {
+                // Reset discount if no longer valid (e.g. expired after proforma was created)
+                $cart->discount_id = null;
+                $cart->save();
+                return response()->json(['message' => $result['message']], 422);
             }
+            $totalDiscount = $result['discount_amount'];
+            $proratedDiscounts = $discountService->prorateDiscountToItems($cartItemsData, $totalDiscount, $subtotal);
         }
 
         $cart->total_discount = $totalDiscount;
         $cart->save();
 
-        $remainingDiscount = $totalDiscount;
-        $totalItems = count($cartItemsData);
-
-        foreach ($cartItemsData as $index => $itemData) {
+        foreach ($cartItemsData as $itemData) {
             $cartItem = new \App\Models\Sales\CartItem();
             $cartItem->cart_id = $cart->id;
             $cartItem->variant_id = $itemData['variant_id'];
@@ -314,15 +309,8 @@ class CartController extends Controller
             $cartItem->original_price = $itemData['original_price'];
             $cartItem->bundle_group_id = $itemData['bundle_group_id'];
             
-            if ($totalDiscount > 0) {
-                if ($index === $totalItems - 1) {
-                    $itemDiscount = $remainingDiscount;
-                } else {
-                    $weight = $itemData['line_subtotal'] / $subtotal;
-                    $itemDiscount = round($totalDiscount * $weight, 2);
-                    $remainingDiscount -= $itemDiscount;
-                }
-                $cartItem->discount_amount = max(0, $itemDiscount);
+            if (isset($proratedDiscounts[$itemData['variant_id']])) {
+                $cartItem->discount_amount = $proratedDiscounts[$itemData['variant_id']];
             }
 
             $cartItem->save();
@@ -365,6 +353,10 @@ class CartController extends Controller
                 'notes' => 'Convertido desde carrito ' . $cart->reference_number
             ]);
 
+            if ($sale->discount_id) {
+                \App\Models\Discount\Discount::where('id', $sale->discount_id)->increment('used_count');
+            }
+
             $subtotal = 0;
 
             foreach ($cart->items as $item) {
@@ -378,7 +370,7 @@ class CartController extends Controller
                 $lineTotal = $finalPrice * $item->quantity;
                 $subtotal += $lineTotal;
 
-                \App\Models\Sales\SaleDetail::create([
+                $detail = \App\Models\Sales\SaleDetail::create([
                     'sale_id'         => $sale->id,
                     'variant_id'      => $item->variant_id,
                     'quantity'        => $item->quantity,
@@ -390,6 +382,15 @@ class CartController extends Controller
                     'bundle_price'    => $item->bundle_group_id ? $price : null,
                     'bundle_group_id' => $item->bundle_group_id,
                 ]);
+
+                if ($sale->discount_id && $discountAmount > 0) {
+                    \App\Models\Sales\SaleAppliedDiscount::create([
+                        'sale_id'         => $sale->id,
+                        'sale_detail_id'  => $detail->id,
+                        'discount_id'     => $sale->discount_id,
+                        'discount_amount' => $discountAmount,
+                    ]);
+                }
 
                 // Find Stock Reservations for this cart and confirm them
                 $reservations = \App\Models\Inventory\StockReservation::where('variant_id', $item->variant_id)

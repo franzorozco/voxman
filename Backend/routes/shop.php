@@ -49,6 +49,7 @@ Route::prefix('v1/shop')->group(function () {
         Route::put('/update', [ShopCartController::class, 'update']);
         Route::delete('/remove', [ShopCartController::class, 'remove']);
         Route::post('/validate', [ShopCartController::class, 'validateStock']);
+        Route::post('/validate-code', [\App\Http\Controllers\Api\shop\ShopDiscountController::class, 'validateCode']);
         Route::post('/checkout', [ShopCheckoutController::class, 'process']);
     });
 

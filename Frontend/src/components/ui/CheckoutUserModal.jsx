@@ -19,7 +19,9 @@ export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmo
       const payload = isAuth ? {
         delivery_type: typeof deliveryType === 'object' ? deliveryType.type : deliveryType,
         branch_id: typeof deliveryType === 'object' ? deliveryType.branchId : null,
-        delivery_details: typeof deliveryType === 'object' ? deliveryType : { type: deliveryType }
+        delivery_details: typeof deliveryType === 'object' ? deliveryType : { type: deliveryType },
+        discount_id: window.appliedShopDiscount?.id || null,
+        discount_amount: window.appliedShopDiscount?.discount_amount || 0
       } : {};
 
       const res = await initAuthCheckout(payload);

@@ -28,7 +28,14 @@ const CartView = () => {
   const [deliveryType, setDeliveryType] = useState(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.appliedShopDiscount = appliedDiscount;
+  }, [appliedDiscount]);
 
   useEffect(() => {
     fetchCart();
@@ -45,6 +52,53 @@ const CartView = () => {
     setTimeout(() => {
       setRemovingId(null);
     }, 300);
+  };
+
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) return;
+    setDiscountLoading(true);
+    try {
+      const { default: api } = await import('../../../api/client');
+      // Prepare items as {variant_id, quantity, line_subtotal}
+      const mappedItems = items.map(item => ({
+        variant_id: item.variant_id,
+        quantity: item.quantity,
+        line_subtotal: parseFloat(item.price) * item.quantity
+      }));
+      
+      const payload = {
+        code: discountCode,
+        subtotal: total,
+        items: mappedItems,
+        customer_id: currentUser?.id || globalUser?.id || null
+      };
+      
+      const res = await api.post('/v1/shop/cart/validate-code', payload);
+      if (res.data.valid) {
+        setAppliedDiscount(res.data);
+        import('react-hot-toast').then(({ default: toast }) => {
+          toast.success("Cupón aplicado exitosamente");
+        });
+      } else {
+        setAppliedDiscount(null);
+        import('react-hot-toast').then(({ default: toast }) => {
+          toast.error(res.data.message || "Cupón inválido");
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setAppliedDiscount(null);
+      import('react-hot-toast').then(({ default: toast }) => {
+        toast.error(err.response?.data?.message || "Error al validar el cupón");
+      });
+    } finally {
+      setDiscountLoading(false);
+    }
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountCode('');
   };
 
   const handleCheckoutClick = async () => {
@@ -236,15 +290,66 @@ const CartView = () => {
         <div className="mt-16 bg-gray-50 rounded-lg px-4 py-6 sm:p-6 lg:p-8 lg:mt-0 lg:col-span-5 cart-summary-box">
           <h2 className="text-lg font-medium cart-summary-title">Resumen de compra</h2>
 
-          <dl className="mt-6 space-y-4">
+          {/* Discount Input Area */}
+          <div className="mt-6 border-t border-gray-200 pt-4">
+            <label htmlFor="discount-code" className="block text-sm font-medium text-gray-700 mb-2">
+              Código de descuento
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                id="discount-code"
+                value={discountCode}
+                onChange={(e) => setDiscountCode(e.target.value)}
+                disabled={appliedDiscount !== null || discountLoading}
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-gray-100 disabled:text-gray-500 uppercase"
+                placeholder="Ingresa tu cupón"
+              />
+              {appliedDiscount ? (
+                <button
+                  type="button"
+                  onClick={handleRemoveDiscount}
+                  className="rounded-md bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                >
+                  Quitar
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleApplyDiscount}
+                  disabled={!discountCode.trim() || discountLoading}
+                  className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors disabled:cursor-not-allowed"
+                >
+                  {discountLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
+                </button>
+              )}
+            </div>
+            {appliedDiscount && (
+              <p className="mt-2 text-sm text-green-600 font-medium flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                {appliedDiscount.message || "Descuento aplicado"}
+              </p>
+            )}
+          </div>
+
+          <dl className="mt-4 space-y-4 border-t border-gray-200 pt-4">
             <div className="flex items-center justify-between">
               <dt className="text-sm cart-summary-label">Subtotal</dt>
               <dd className="text-sm font-medium cart-summary-value">Bs {total.toFixed(2)}</dd>
             </div>
             
+            {appliedDiscount && (
+              <div className="flex items-center justify-between text-green-600">
+                <dt className="text-sm font-medium">Descuento ({appliedDiscount.code})</dt>
+                <dd className="text-sm font-medium">-Bs {parseFloat(appliedDiscount.discount_amount).toFixed(2)}</dd>
+              </div>
+            )}
+            
             <div className="flex items-center justify-between border-t border-gray-200 pt-4">
               <dt className="text-base font-medium cart-summary-total-label">Total estimado</dt>
-              <dd className="text-base font-bold cart-summary-total-value">Bs {total.toFixed(2)}</dd>
+              <dd className="text-base font-bold cart-summary-total-value">
+                Bs {appliedDiscount ? parseFloat(appliedDiscount.new_total).toFixed(2) : total.toFixed(2)}
+              </dd>
             </div>
           </dl>
 

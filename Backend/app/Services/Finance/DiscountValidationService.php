@@ -218,6 +218,30 @@ class DiscountValidationService
             return ['valid' => false, 'message' => 'No se alcanzó el monto mínimo ('. $discount->min_purchase_amount .' Bs) para este cupón.'];
         }
 
+        // Check minimum quantity
+        if ($discount->min_quantity) {
+            $validItemsQty = 0;
+            foreach ($items as $item) {
+                $variantId = is_array($item) ? $item['variant_id'] : $item->variant_id;
+                $qty = is_array($item) ? ($item['quantity'] ?? 1) : ($item->quantity ?? 1);
+                $variant = \App\Models\Catalog\ProductVariant::with('product')->find($variantId);
+                if (!$variant) continue;
+
+                $itemValid = true;
+                if ($hasItemRestrictions) {
+                    $itemValid = false;
+                    if (in_array($variant->id, $discountVariants)) $itemValid = true;
+                    elseif (in_array($variant->product_id, $discountProducts)) $itemValid = true;
+                    elseif (in_array($variant->product->brand_id, $discountBrands)) $itemValid = true;
+                    elseif (in_array($variant->product->category_id, $discountCategories)) $itemValid = true;
+                }
+                if ($itemValid) $validItemsQty += $qty;
+            }
+            if ($validItemsQty < $discount->min_quantity) {
+                return ['valid' => false, 'message' => 'Se requieren al menos ' . $discount->min_quantity . ' unidades para este cupón.'];
+            }
+        }
+
         // Calculate discount amount based on VALID items
         $discountAmount = 0;
         if ($discount->type === 'percentage') {
@@ -245,5 +269,43 @@ class DiscountValidationService
             'original_total' => $subtotal,
             'new_total' => $newTotal
         ];
+    }
+
+    /**
+     * Prorates a total discount amount across a list of items by weight (line_subtotal / total).
+     * Returns an array of [ variant_id => prorated_discount ] pairs.
+     * The last item absorbs any rounding difference.
+     *
+     * @param array $items  Each item must have 'variant_id' and 'line_subtotal'
+     * @param float $totalDiscount
+     * @param float $subtotal
+     * @return array [ variant_id => float ]
+     */
+    public function prorateDiscountToItems(array $items, float $totalDiscount, float $subtotal): array
+    {
+        if ($totalDiscount <= 0 || $subtotal <= 0) {
+            return [];
+        }
+
+        $result = [];
+        $remaining = $totalDiscount;
+        $count = count($items);
+
+        foreach ($items as $i => $item) {
+            $variantId = is_array($item) ? $item['variant_id'] : $item->variant_id;
+            $lineSubtotal = is_array($item) ? ($item['line_subtotal'] ?? 0) : ($item->line_subtotal ?? $item->subtotal ?? 0);
+
+            if ($i === $count - 1) {
+                $itemDiscount = $remaining;
+            } else {
+                $weight = $subtotal > 0 ? $lineSubtotal / $subtotal : 0;
+                $itemDiscount = round($totalDiscount * $weight, 2);
+                $remaining -= $itemDiscount;
+            }
+
+            $result[$variantId] = max(0, $itemDiscount);
+        }
+
+        return $result;
     }
 }

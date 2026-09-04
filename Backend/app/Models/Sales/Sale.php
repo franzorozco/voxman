@@ -28,7 +28,6 @@ class Sale extends BaseSale
 		'source',
 		'subtotal',
 		'discount_total',
-		'total_discount',
 		'total',
 		'invoice_number',
 		'notes',

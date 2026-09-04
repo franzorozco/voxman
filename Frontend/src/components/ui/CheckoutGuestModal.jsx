@@ -112,6 +112,8 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
       const response = await api.post("/v1/shop/checkout/guest-init", {
         name: form.name,
         whatsapp_phone: fullPhoneNumber,
+        discount_id: window.appliedShopDiscount?.id || null,
+        discount_amount: window.appliedShopDiscount?.discount_amount || 0
       }, {
         headers: {
           'X-Cart-Token': token
