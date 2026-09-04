@@ -38,8 +38,8 @@ class DiscountController extends Controller
             'min_purchase_amount' => 'nullable|numeric|min:0',
             'min_quantity' => 'nullable|integer|min:0',
             'max_discount_amount' => 'nullable|numeric|min:0',
-            'usage_limit' => 'nullable|integer|min:1',
-            'usage_limit_per_customer' => 'nullable|integer|min:1',
+            'usage_limit' => 'nullable|integer|min:0',
+            'usage_limit_per_customer' => 'nullable|integer|min:0',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'active' => 'boolean',
@@ -63,7 +63,12 @@ class DiscountController extends Controller
 
         DB::beginTransaction();
         try {
-            $discount = Discount::create($request->except(['brands', 'categories', 'products', 'variants', 'branches', 'customers', 'employees']));
+            $data = $request->except(['brands', 'categories', 'products', 'variants', 'branches', 'customers', 'employees']);
+            if (isset($data['usage_limit']) && $data['usage_limit'] == 0) $data['usage_limit'] = null;
+            if (isset($data['usage_limit_per_customer']) && $data['usage_limit_per_customer'] == 0) $data['usage_limit_per_customer'] = null;
+            if (isset($data['code']) && trim($data['code']) === '') $data['code'] = null;
+
+            $discount = Discount::create($data);
 
             if (!empty($validated['brands'])) $discount->brands()->sync($validated['brands']);
             if (!empty($validated['categories']) && method_exists($discount, 'categories')) $discount->categories()->sync($validated['categories']);
@@ -81,6 +86,7 @@ class DiscountController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Discount create error: ' . $e->getMessage());
             return response()->json(['message' => 'Error al crear', 'error' => $e->getMessage()], 500);
         }
     }
@@ -98,8 +104,8 @@ class DiscountController extends Controller
             'min_purchase_amount' => 'nullable|numeric|min:0',
             'min_quantity' => 'nullable|integer|min:0',
             'max_discount_amount' => 'nullable|numeric|min:0',
-            'usage_limit' => 'nullable|integer|min:1',
-            'usage_limit_per_customer' => 'nullable|integer|min:1',
+            'usage_limit' => 'nullable|integer|min:0',
+            'usage_limit_per_customer' => 'nullable|integer|min:0',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'active' => 'boolean',
@@ -123,7 +129,12 @@ class DiscountController extends Controller
 
         DB::beginTransaction();
         try {
-            $discount->update($request->except(['brands', 'categories', 'products', 'variants', 'branches', 'customers', 'employees']));
+            $data = $request->except(['brands', 'categories', 'products', 'variants', 'branches', 'customers', 'employees']);
+            if (isset($data['usage_limit']) && $data['usage_limit'] == 0) $data['usage_limit'] = null;
+            if (isset($data['usage_limit_per_customer']) && $data['usage_limit_per_customer'] == 0) $data['usage_limit_per_customer'] = null;
+            if (isset($data['code']) && trim($data['code']) === '') $data['code'] = null;
+
+            $discount->update($data);
 
             if (isset($validated['brands'])) $discount->brands()->sync($validated['brands']);
             if (isset($validated['categories']) && method_exists($discount, 'categories')) $discount->categories()->sync($validated['categories']);
@@ -141,6 +152,7 @@ class DiscountController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Discount create error: ' . $e->getMessage());
             return response()->json(['message' => 'Error al actualizar', 'error' => $e->getMessage()], 500);
         }
     }

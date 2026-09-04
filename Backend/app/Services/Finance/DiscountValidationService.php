@@ -40,8 +40,75 @@ class DiscountValidationService
                 $bestDiscountAmount = $result['discount_amount'];
                 $bestDiscount = $discount;
                 $bestResult = $result;
+                /**
+     * Gets all active automatic discounts that apply to a specific product.
+     * 
+     * @param \App\Models\Catalog\Product $product
+     * @return \Illuminate\Support\Collection
+     */
+    public function getActiveDiscountsForProduct($product)
+    {
+        $automaticDiscounts = Discount::where('is_automatic', true)
+            ->where('active', true)
+            ->where(function($q) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+            })
+            ->where(function($q) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+            })
+            ->get();
+
+        $applicableDiscounts = collect();
+
+        foreach ($automaticDiscounts as $discount) {
+            // Check usage limits
+            if ($discount->usage_limit && $discount->used_count >= $discount->usage_limit) {
+                continue;
+            }
+
+            // Exclude discounts that require a registered customer
+            if ($discount->usage_limit_per_customer || $discount->customers()->exists()) {
+                continue;
+            }
+
+            $discountCategories = $discount->categories()->pluck('categories.id')->toArray();
+            $discountBrands = $discount->brands()->pluck('brands.id')->toArray();
+            $discountProducts = $discount->products()->pluck('products.id')->toArray();
+            $discountVariants = $discount->variants()->pluck('product_variants.id')->toArray();
+            
+            $hasItemRestrictions = !empty($discountCategories) || !empty($discountBrands) || !empty($discountProducts) || !empty($discountVariants);
+
+            if (!$hasItemRestrictions) {
+                // It applies to all products
+                $applicableDiscounts->push($discount);
+                continue;
+            }
+
+            // Check if product matches restrictions
+            $matches = false;
+            if (in_array($product->id, $discountProducts)) {
+                $matches = true;
+            } elseif (in_array($product->brand_id, $discountBrands)) {
+                $matches = true;
+            } elseif (in_array($product->category_id, $discountCategories)) {
+                $matches = true;
+            } elseif (!empty($discountVariants)) {
+                // Check if any of the product variants are in the discount variants
+                $productVariantIds = $product->product_variants()->pluck('id')->toArray();
+                if (!empty(array_intersect($productVariantIds, $discountVariants))) {
+                    $matches = true;
+                }
+            }
+
+            if ($matches) {
+                $applicableDiscounts->push($discount);
             }
         }
+
+        return $applicableDiscounts;
+    }
+
+}        }
 
         return $bestResult;
     }
@@ -308,4 +375,72 @@ class DiscountValidationService
 
         return $result;
     }
+    /**
+     * Gets all active automatic discounts that apply to a specific product.
+     * 
+     * @param \App\Models\Catalog\Product $product
+     * @return \Illuminate\Support\Collection
+     */
+    public function getActiveDiscountsForProduct($product)
+    {
+        $automaticDiscounts = Discount::where('is_automatic', true)
+            ->where('active', true)
+            ->where(function($q) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+            })
+            ->where(function($q) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+            })
+            ->get();
+
+        $applicableDiscounts = collect();
+
+        foreach ($automaticDiscounts as $discount) {
+            // Check usage limits
+            if ($discount->usage_limit && $discount->used_count >= $discount->usage_limit) {
+                continue;
+            }
+
+            // Exclude discounts that require a registered customer
+            if ($discount->usage_limit_per_customer || $discount->customers()->exists()) {
+                continue;
+            }
+
+            $discountCategories = $discount->categories()->pluck('categories.id')->toArray();
+            $discountBrands = $discount->brands()->pluck('brands.id')->toArray();
+            $discountProducts = $discount->products()->pluck('products.id')->toArray();
+            $discountVariants = $discount->variants()->pluck('product_variants.id')->toArray();
+            
+            $hasItemRestrictions = !empty($discountCategories) || !empty($discountBrands) || !empty($discountProducts) || !empty($discountVariants);
+
+            if (!$hasItemRestrictions) {
+                // It applies to all products
+                $applicableDiscounts->push($discount);
+                continue;
+            }
+
+            // Check if product matches restrictions
+            $matches = false;
+            if (in_array($product->id, $discountProducts)) {
+                $matches = true;
+            } elseif (in_array($product->brand_id, $discountBrands)) {
+                $matches = true;
+            } elseif (in_array($product->category_id, $discountCategories)) {
+                $matches = true;
+            } elseif (!empty($discountVariants)) {
+                // Check if any of the product variants are in the discount variants
+                $productVariantIds = $product->product_variants()->pluck('id')->toArray();
+                if (!empty(array_intersect($productVariantIds, $discountVariants))) {
+                    $matches = true;
+                }
+            }
+
+            if ($matches) {
+                $applicableDiscounts->push($discount);
+            }
+        }
+
+        return $applicableDiscounts;
+    }
+
 }

@@ -153,6 +153,7 @@ const Catalog = () => {
             price: product.base_price,
             image: mainImg.url,
             image2: secondImg.url,
+            active_discounts: product.active_discounts,
             is_bundle: product.is_bundle
           });
         });
@@ -177,6 +178,7 @@ const Catalog = () => {
                 price: variant.price || product.base_price,
                 image: variant.variant_images[0].url,
                 image2: secondImg.url,
+            active_discounts: product.active_discounts,
                 is_bundle: product.is_bundle
               });
             }
