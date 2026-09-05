@@ -387,7 +387,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
                   </tr>
                 ) : (
                   items.map((item, index) => {
-                    const isBundleItem = item.override_price !== null && item.override_price !== undefined;
+                    const isBundleItem = item.bundle_group_id !== null && item.bundle_group_id !== undefined;
                     return (
                     <tr key={index} style={isBundleItem ? { backgroundColor: 'var(--bg-hover)' } : {}}>
                       <td className="cart-form-font-bold">

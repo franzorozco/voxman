@@ -11,7 +11,7 @@ import { API_BASE_URL } from "../../config/api";
 
 export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect, theme = 'light' }) {
   const navigate = useNavigate();
-  const { items, total, cartToken } = useShopCartStore();
+  const { items, total, cartToken, appliedGlobalDiscount } = useShopCartStore();
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -377,9 +377,25 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px' }}>
-                    <span style={{ color: mutedColor, fontSize: '15px', fontWeight: '500' }}>Total a pagar</span>
-                    <span style={{ color: textColor, fontSize: '24px', fontWeight: '700' }}>Bs {total.toFixed(2)}</span>
+                  <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: mutedColor, fontSize: '15px' }}>Subtotal</span>
+                      <span style={{ color: textColor, fontSize: '16px', fontWeight: '500' }}>Bs {total.toFixed(2)}</span>
+                    </div>
+                    
+                    {appliedGlobalDiscount && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#16a34a' }}>
+                        <span style={{ fontSize: '15px' }}>Descuento ({appliedGlobalDiscount.code})</span>
+                        <span style={{ fontSize: '16px', fontWeight: '500' }}>-Bs {parseFloat(appliedGlobalDiscount.amount).toFixed(2)}</span>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '8px', borderTop: `1px solid ${borderColor}` }}>
+                      <span style={{ color: textColor, fontSize: '16px', fontWeight: '600' }}>Total a pagar</span>
+                      <span style={{ color: textColor, fontSize: '24px', fontWeight: '700' }}>
+                        Bs {appliedGlobalDiscount ? (total - parseFloat(appliedGlobalDiscount.amount)).toFixed(2) : total.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
 
                   <button 

@@ -8,6 +8,7 @@ const useShopCartStore = create(
       cartToken: null,
       items: [],
       total: 0,
+      appliedGlobalDiscount: null,
       isLoading: false,
 
       // Initialize the cart from the backend using the stored token
@@ -17,7 +18,8 @@ const useShopCartStore = create(
           const response = await getCart();
           set({ 
             items: response.data.items || [], 
-            total: response.data.total || 0 
+            total: response.data.total || 0,
+            appliedGlobalDiscount: response.data.applied_global_discount || null
           });
         } catch (error) {
           console.error('Failed to fetch cart:', error);

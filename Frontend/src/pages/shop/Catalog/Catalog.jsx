@@ -88,12 +88,28 @@ const Catalog = () => {
     if (mainColorImages.length > 0) {
       mainColorImages.forEach((mainImg) => {
         if (mainImg.attribute_value) {
+          let matchedVariant = null;
+          if (product.product_variants) {
+            const colorVariants = product.product_variants.filter(v => 
+              v.variant_attribute_values?.some(vav => vav.attribute_value_id === mainImg.attribute_value_id)
+            );
+            if (colorVariants.length > 0) {
+              matchedVariant = colorVariants.reduce((best, curr) => 
+                (curr.discounted_price < best.discounted_price) ? curr : best
+              , colorVariants[0]);
+            }
+          }
+
           variants.push({
             id: `img-${mainImg.id}`,
             name: mainImg.attribute_value.value,
             image: mainImg.url,
+            color: mainImg.attribute_value.value,
             price: product.base_price,
-            color: mainImg.attribute_value.value
+            base_price: product.base_price,
+            discounted_price: product.discounted_price,
+            has_discount: product.has_discount,
+            discount_label: product.discount_label
           });
         }
       });
@@ -110,7 +126,11 @@ const Catalog = () => {
               id: `var-${variant.id}`,
               name: attrKey || 'Variante',
               image: variant.variant_images[0].url,
-              price: variant.price || product.base_price
+              price: product.base_price,
+              base_price: product.base_price,
+              discounted_price: product.discounted_price,
+              has_discount: product.has_discount,
+              discount_label: product.discount_label
             });
           }
         }
@@ -124,13 +144,16 @@ const Catalog = () => {
           id: `prod-${product.id}`,
           name: product.name,
           image: imageUrl,
-          price: product.base_price
+          price: product.base_price,
+          base_price: product.base_price,
+          discounted_price: product.discounted_price,
+          has_discount: product.has_discount,
+          discount_label: product.discount_label
         });
       }
     }
     return variants;
   };
-
   // Extraer prendas (colores/variantes) con segunda imagen
   const getPrendas = () => {
     const prendas = [];
@@ -144,6 +167,19 @@ const Catalog = () => {
           const secondImg = allImgsForColor.length > 1
             ? (allImgsForColor.find(img => !img.is_main) || allImgsForColor[1])
             : mainImg;
+            
+          let matchedVariant = null;
+          if (product.product_variants) {
+            const colorVariants = product.product_variants.filter(v => 
+              v.variant_attribute_values?.some(vav => vav.attribute_value_id === mainImg.attribute_value_id)
+            );
+            if (colorVariants.length > 0) {
+              matchedVariant = colorVariants.reduce((best, curr) => 
+                (curr.discounted_price < best.discounted_price) ? curr : best
+              , colorVariants[0]);
+            }
+          }
+          
           prendas.push({
             id: `img-${mainImg.id}`,
             product_id: product.id,
@@ -151,6 +187,10 @@ const Catalog = () => {
             name: `${product.name} - ${mainImg.attribute_value?.value || ''}`,
             color: mainImg.attribute_value?.value || '',
             price: product.base_price,
+            base_price: product.base_price,
+            discounted_price: product.discounted_price,
+            has_discount: product.has_discount,
+            discount_label: product.discount_label,
             image: mainImg.url,
             image2: secondImg.url,
             active_discounts: product.active_discounts,
@@ -170,15 +210,19 @@ const Catalog = () => {
               addedVariant = true;
               const secondImg = variant.variant_images.length > 1 ? variant.variant_images[1] : variant.variant_images[0];
               prendas.push({
-                id: `var-${variant.variant_images[0].id}`,
+                id: `var-${variant.variant_images[0] ? variant.variant_images[0].id : variant.id}`,
                 product_id: product.id,
                 slug: product.id,
                 name: `${product.name} ${attrKey ? '- ' + attrKey : ''}`,
                 color: attrKey,
-                price: variant.price || product.base_price,
+                price: product.base_price,
+                base_price: product.base_price,
+                discounted_price: product.discounted_price,
+                has_discount: product.has_discount,
+                discount_label: product.discount_label,
                 image: variant.variant_images[0].url,
                 image2: secondImg.url,
-            active_discounts: product.active_discounts,
+                active_discounts: product.active_discounts,
                 is_bundle: product.is_bundle
               });
             }
@@ -194,6 +238,10 @@ const Catalog = () => {
               slug: product.id,
               name: product.name,
               price: product.base_price,
+              base_price: product.base_price,
+              discounted_price: product.discounted_price,
+              has_discount: product.has_discount,
+              discount_label: product.discount_label,
               image: imageUrl,
               image2: imageUrl2,
               is_bundle: product.is_bundle
@@ -285,13 +333,27 @@ const Catalog = () => {
                         </div>
                       )}
                     </div>
-                    <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between' }}>
+                                        <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <h3 style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-main)', paddingRight: '8px' }}>
                         {item.name}
                       </h3>
-                      <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                        Bs {parseFloat(item.base_price || 0).toFixed(2)}
-                      </p>
+                      <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {item.has_discount ? (
+                          <>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'line-through', margin: '0 0 2px 0' }}>
+                              Bs {parseFloat(item.base_price || 0).toFixed(2)}
+                            </p>
+                            <p style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444', margin: 0, display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                              <span style={{ fontSize: '10px', background: '#ef4444', color: 'white', padding: '2px 4px', borderRadius: '4px' }}>{item.discount_label}</span>
+                              Bs {parseFloat(item.discounted_price || 0).toFixed(2)}
+                            </p>
+                          </>
+                        ) : (
+                          <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
+                            Bs {parseFloat(item.base_price || 0).toFixed(2)}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     {isExpanded && (
                       <div style={{
@@ -354,13 +416,27 @@ const Catalog = () => {
                             loading="lazy"
                           />
                         </div>
-                        <div style={{ padding: '10px 12px' }}>
+                                                <div style={{ padding: '10px 12px' }}>
                           <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
                             {variant.name}
                           </p>
-                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                            Bs {parseFloat(variant.price || 0).toFixed(2)}
-                          </p>
+                          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {variant.has_discount ? (
+                              <>
+                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                                  Bs {parseFloat(variant.base_price || variant.price || 0).toFixed(2)}
+                                </span>
+                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span style={{ fontSize: '10px', background: '#ef4444', color: 'white', padding: '2px 4px', borderRadius: '4px' }}>{variant.discount_label}</span>
+                                  Bs {parseFloat(variant.discounted_price || 0).toFixed(2)}
+                                </span>
+                              </>
+                            ) : (
+                              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                Bs {parseFloat(variant.base_price || variant.price || 0).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Link>
@@ -426,13 +502,27 @@ const Catalog = () => {
                     </div>
                   )}
                 </div>
-                <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between' }}>
+                                <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <h3 style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-main)', paddingRight: '8px' }}>
                     {item.name}
                   </h3>
-                  <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                    Bs {parseFloat(item.price || 0).toFixed(2)}
-                  </p>
+                  <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    {item.has_discount ? (
+                      <>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'line-through', margin: '0 0 2px 0' }}>
+                          Bs {parseFloat(item.base_price || item.price || 0).toFixed(2)}
+                        </p>
+                        <p style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444', margin: 0, display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                          <span style={{ fontSize: '10px', background: '#ef4444', color: 'white', padding: '2px 4px', borderRadius: '4px' }}>{item.discount_label}</span>
+                          Bs {parseFloat(item.discounted_price || 0).toFixed(2)}
+                        </p>
+                      </>
+                    ) : (
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
+                        Bs {parseFloat(item.base_price || item.price || 0).toFixed(2)}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </Link>
             );

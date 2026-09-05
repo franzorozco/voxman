@@ -2003,12 +2003,29 @@ class OrderNetworkController extends Controller
             return response()->json(['error' => 'No hay descuento para quitar.'], 400);
         }
 
+        $removedDiscountId = $sale->discount_id;
+
         // Revert total
         $sale->total += $sale->discount_total;
         $sale->discount_total = 0;
         $sale->discount_id = null;
         $sale->giftcard_id = null;
         $sale->save();
+
+        if ($removedDiscountId) {
+            $cartQuery = \App\Models\Sales\Cart::where('status', 'ordered')->where('discount_id', $removedDiscountId);
+            
+            if ($sale->customer_id) {
+                $cartQuery->where('customer_id', $sale->customer_id);
+            } elseif ($sale->guest_id) {
+                $cartQuery->where('guest_id', $sale->guest_id);
+            }
+
+            $cartQuery->update([
+                'discount_id' => null,
+                'total_discount' => 0
+            ]);
+        }
 
         if ($schedule->checkout_session) {
             $session = $schedule->checkout_session;

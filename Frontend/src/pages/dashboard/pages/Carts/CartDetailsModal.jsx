@@ -199,9 +199,10 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                     const availableStock = item.product_variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
                     const isOutOfStock = availableStock < item.quantity;
                     
-                    const isBundleItem = item.override_price !== null && item.override_price !== undefined;
-                    const itemPrice = isBundleItem ? Number(item.override_price) : Number(item.product_variant?.price || 0);
+                    const isBundleItem = item.bundle_group_id !== null && item.bundle_group_id !== undefined;
+                    const itemPrice = (item.override_price !== null && item.override_price !== undefined) ? Number(item.override_price) : Number(item.product_variant?.price || 0);
                     const originalPrice = Number(item.original_price || item.product_variant?.price || 0);
+                    const hasDiscount = !isBundleItem && item.discount_label;
 
                     return (
                     <tr key={item.id} style={isBundleItem ? { backgroundColor: 'var(--bg-hover)' } : {}}>
@@ -223,6 +224,11 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                                 ✨ Ítem de Conjunto
                               </span>
                             )}
+                            {hasDiscount && (
+                              <span style={{ fontSize: '11px', color: '#fff', fontWeight: '600', background: '#ef4444', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px' }}>
+                                {item.discount_label}
+                              </span>
+                            )}
                             {isOutOfStock && cart.status !== 'converted' && (
                               <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 'bold', background: '#fee2e2', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px' }}>
                                 {availableStock === 0 ? 'Agotado' : `Stock Insuficiente (Hay ${availableStock})`}
@@ -238,12 +244,12 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                       </td>
                       <td className="font-semibold">{item.quantity}</td>
                       <td className="text-right">
-                        {isBundleItem ? (
+                        {(isBundleItem || hasDiscount) ? (
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '12px' }}>
                               Bs. {originalPrice.toFixed(2)}
                             </span>
-                            <span style={{ color: '#059669', fontWeight: 'bold' }}>
+                            <span style={{ color: isBundleItem ? '#059669' : '#ef4444', fontWeight: 'bold' }}>
                               Bs. {itemPrice.toFixed(2)}
                             </span>
                           </div>
@@ -261,6 +267,22 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                 )}
               </tbody>
               <tfoot>
+                <tr>
+                  <td colSpan="4" className="text-right font-bold modal-footer-label">Subtotal:</td>
+                  <td className="text-right font-bold modal-footer-value">
+                    Bs. {(Number(cart.total_amount_calculated) + Number(cart.total_discount || 0)).toFixed(2)}
+                  </td>
+                </tr>
+                {Number(cart.total_discount) > 0 && (
+                  <tr>
+                    <td colSpan="4" className="text-right font-bold modal-footer-label text-red-600">
+                      Descuento {cart.discount ? `(${cart.discount.code})` : ''}:
+                    </td>
+                    <td className="text-right font-bold modal-footer-value text-red-600">
+                      -Bs. {Number(cart.total_discount).toFixed(2)}
+                    </td>
+                  </tr>
+                )}
                 <tr>
                   <td colSpan="4" className="text-right font-bold modal-footer-label">Total a Pagar:</td>
                   <td className="text-right font-bold modal-footer-value">

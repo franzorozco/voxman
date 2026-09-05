@@ -11,9 +11,16 @@ class CartController extends Controller
 {
     public function index(Request $request)
     {
+        // Auto-expire active carts whose expiration time has passed
+        \App\Models\Sales\Cart::where('status', 'active')
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<', now())
+            ->update(['status' => 'abandoned']);
+
         $query = Cart::with([
             'customer.user.profile', 
             'customer.posProfile', 
+            'discount',
             'items.product_variant.product.product_images',
             'items.product_variant.product.attribute_value_images',
             'items.product_variant.variant_images',

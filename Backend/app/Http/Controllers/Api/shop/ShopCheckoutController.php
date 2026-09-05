@@ -78,12 +78,56 @@ class ShopCheckoutController extends Controller
                 ['name' => $request->name]
             );
 
-            // 2. Generate Reference Number & Create Cart
+            // 2. Generate Reference Number
             do {
                 $uniqueId = mt_rand(10000, 99999);
                 $referenceNumber = 'ORD-' . $uniqueId;
             } while (Cart::where('reference_number', $referenceNumber)->exists());
-            
+
+            // Calculate Subtotal & Extract Discount Data from Session
+            $subtotal = 0;
+            $discountItems = [];
+            foreach ($cartData['items'] as $item) {
+                $isBundle = !empty($item['bundle_group_id']);
+                $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
+                $priceToUse = $overridePrice !== null ? (float) $overridePrice : (float) ($item['price'] ?? 0);
+                $lineSubtotal = $priceToUse * $item['quantity'];
+                $subtotal += $lineSubtotal;
+                
+                $discountItems[] = [
+                    'variant_id' => $item['variant_id'],
+                    'quantity' => $item['quantity'],
+                    'line_subtotal' => $lineSubtotal,
+                    'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                    'discount_label' => $item['discount_label'] ?? null
+                ];
+            }
+
+            // Secure Discount Validation
+            $discountId = null;
+            $totalDiscount = 0;
+            $proratedDiscounts = [];
+
+            if (isset($cartData['applied_global_discount'])) {
+                $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+                $discountResult = $discountService->validateCode(
+                    $cartData['applied_global_discount']['code'],
+                    $subtotal,
+                    $discountItems,
+                    null, // No customer ID for guest
+                    null
+                );
+
+                if (!$discountResult['valid']) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'El cupón aplicado ya no es válido: ' . $discountResult['message']], 400);
+                }
+
+                $discountId = $discountResult['id'];
+                $totalDiscount = $discountResult['discount_amount'];
+                $proratedDiscounts = $discountService->prorateDiscountToItems($discountItems, $totalDiscount, $subtotal);
+            }
+
             $cart = Cart::create([
                 'guest_id' => $guest->id,
                 'reference_number' => $referenceNumber,
@@ -91,40 +135,16 @@ class ShopCheckoutController extends Controller
                 'delivery_details' => $request->input('delivery_details', null),
                 'status' => 'active',
                 'expires_at' => now()->addMinutes(60),
-                'discount_id' => $request->input('discount_id'),
-                'total_discount' => $request->input('discount_amount') ?? 0,
+                'discount_id' => $discountId,
+                'total_discount' => $totalDiscount,
             ]);
-
-            // Re-prorate discount if valid
-            $totalDiscount = $cart->total_discount;
-            $proratedDiscounts = [];
-            if ($cart->discount_id && $totalDiscount > 0) {
-                $subtotal = 0;
-                $discountItems = [];
-                foreach ($cartData['items'] as $item) {
-                    $isBundle = !empty($item['bundle_group_id']);
-                    $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
-                    $priceToUse = $overridePrice !== null ? (float) $overridePrice : (float) ($item['price'] ?? 0);
-                    $lineSubtotal = $priceToUse * $item['quantity'];
-                    $subtotal += $lineSubtotal;
-                    
-                    $discountItems[] = [
-                        'variant_id' => $item['variant_id'],
-                        'quantity' => $item['quantity'],
-                        'line_subtotal' => $lineSubtotal
-                    ];
-                }
-                
-                $discountService = app(\App\Services\Finance\DiscountValidationService::class);
-                $proratedDiscounts = $discountService->prorateDiscountToItems($discountItems, $totalDiscount, $subtotal);
-            }
 
             // 4. Process Items
             foreach ($cartData['items'] as $item) {
                 $isBundle = !empty($item['bundle_group_id']);
-                $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
+                $overridePrice = $item['override_price'] ?? (isset($item['original_price']) && $item['price'] != $item['original_price'] ? $item['price'] : null);
                 
-                // Insert cart item — preserve bundle pricing if present
+                // Insert cart item – preserve bundle pricing if present
                 CartItem::create([
                     'cart_id'         => $cart->id,
                     'variant_id'      => $item['variant_id'] ?? null,
@@ -132,7 +152,9 @@ class ShopCheckoutController extends Controller
                     'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
                     'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
                     'bundle_group_id' => $item['bundle_group_id'] ?? null,
-                    'discount_amount' => $proratedDiscounts[$item['variant_id']] ?? 0,
+                    'discount_amount' => $proratedDiscounts[$item['variant_id'] ?? ''] ?? 0,
+                    'applied_discount_id' => $item['applied_discount_id'] ?? null,
+                    'discount_label'  => $item['discount_label'] ?? null,
                 ]);
             }
 
@@ -209,12 +231,56 @@ class ShopCheckoutController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Generate Reference Number & Create Cart
+            // 1. Generate Reference Number
             do {
                 $uniqueId = mt_rand(10000, 99999);
                 $referenceNumber = 'ORD-' . $uniqueId;
             } while (\App\Models\Sales\Cart::where('reference_number', $referenceNumber)->exists());
-            
+
+            // Calculate Subtotal & Extract Discount Data from Session
+            $subtotal = 0;
+            $discountItems = [];
+            foreach ($cartData['items'] as $item) {
+                $isBundle = !empty($item['bundle_group_id']);
+                $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
+                $priceToUse = $overridePrice !== null ? (float) $overridePrice : (float) ($item['price'] ?? 0);
+                $lineSubtotal = $priceToUse * $item['quantity'];
+                $subtotal += $lineSubtotal;
+                
+                $discountItems[] = [
+                    'variant_id' => $item['variant_id'],
+                    'quantity' => $item['quantity'],
+                    'line_subtotal' => $lineSubtotal,
+                    'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                    'discount_label' => $item['discount_label'] ?? null
+                ];
+            }
+
+            // Secure Discount Validation
+            $discountId = null;
+            $totalDiscount = 0;
+            $proratedDiscounts = [];
+
+            if (isset($cartData['applied_global_discount'])) {
+                $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+                $discountResult = $discountService->validateCode(
+                    $cartData['applied_global_discount']['code'],
+                    $subtotal,
+                    $discountItems,
+                    $customer->id,
+                    null
+                );
+
+                if (!$discountResult['valid']) {
+                    DB::rollBack();
+                    return response()->json(['message' => 'El cupón aplicado ya no es válido: ' . $discountResult['message']], 400);
+                }
+
+                $discountId = $discountResult['id'];
+                $totalDiscount = $discountResult['discount_amount'];
+                $proratedDiscounts = $discountService->prorateDiscountToItems($discountItems, $totalDiscount, $subtotal);
+            }
+
             $cart = \App\Models\Sales\Cart::create([
                 'customer_id' => $customer->id,
                 'reference_number' => $referenceNumber,
@@ -222,33 +288,9 @@ class ShopCheckoutController extends Controller
                 'delivery_details' => $request->input('delivery_details', null),
                 'status' => 'active',
                 'expires_at' => now()->addMinutes(60),
-                'discount_id' => $request->input('discount_id'),
-                'total_discount' => $request->input('discount_amount') ?? 0,
+                'discount_id' => $discountId,
+                'total_discount' => $totalDiscount,
             ]);
-
-            // Re-prorate discount if valid
-            $totalDiscount = $cart->total_discount;
-            $proratedDiscounts = [];
-            if ($cart->discount_id && $totalDiscount > 0) {
-                $subtotal = 0;
-                $discountItems = [];
-                foreach ($cartData['items'] as $item) {
-                    $isBundle = !empty($item['bundle_group_id']);
-                    $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
-                    $priceToUse = $overridePrice !== null ? (float) $overridePrice : (float) ($item['price'] ?? 0);
-                    $lineSubtotal = $priceToUse * $item['quantity'];
-                    $subtotal += $lineSubtotal;
-                    
-                    $discountItems[] = [
-                        'variant_id' => $item['variant_id'],
-                        'quantity' => $item['quantity'],
-                        'line_subtotal' => $lineSubtotal
-                    ];
-                }
-                
-                $discountService = app(\App\Services\Finance\DiscountValidationService::class);
-                $proratedDiscounts = $discountService->prorateDiscountToItems($discountItems, $totalDiscount, $subtotal);
-            }
 
             // 2. Process Items and Verify Stock (without reserving)
             foreach ($cartData['items'] as $item) {
@@ -276,19 +318,21 @@ class ShopCheckoutController extends Controller
                         $selectedBranchId = $inventory->branch_id;
                     }
 
-                    $isBundle = !empty($item['bundle_group_id']);
-                    $overridePrice = $item['override_price'] ?? ($isBundle ? $item['price'] : null);
-                    
-                    // Insert cart item — preserve bundle pricing if present
-                    \App\Models\Sales\CartItem::create([
-                        'cart_id'         => $cart->id,
-                        'variant_id'      => $item['variant_id'],
-                        'quantity'        => $item['quantity'],
-                        'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
-                        'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
-                        'bundle_group_id' => $item['bundle_group_id'] ?? null,
-                        'discount_amount' => $proratedDiscounts[$item['variant_id']] ?? 0,
-                    ]);
+                $isBundle = !empty($item['bundle_group_id']);
+                $overridePrice = $item['override_price'] ?? (isset($item['original_price']) && $item['price'] != $item['original_price'] ? $item['price'] : null);
+                
+                // Insert cart item – preserve bundle/discount pricing if present
+                CartItem::create([
+                    'cart_id'         => $cart->id,
+                    'variant_id'      => $item['variant_id'] ?? null,
+                    'quantity'        => $item['quantity'],
+                    'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
+                    'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
+                    'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                    'discount_amount' => $proratedDiscounts[$item['variant_id'] ?? ''] ?? 0,
+                    'applied_discount_id' => $item['applied_discount_id'] ?? null,
+                    'discount_label'  => $item['discount_label'] ?? null,
+                ]);
                 }
             }
 

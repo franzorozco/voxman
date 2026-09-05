@@ -14,6 +14,8 @@ class CartItem extends BaseCartItem
 		'variant_id',
 		'quantity',
 		'discount_amount',
+		'applied_discount_id',
+		'discount_label',
 		// Bundle pricing fields
 		'override_price',   // precio preferencial del conjunto que el cliente paga
 		'original_price',   // precio normal del item en product_variants al momento de la compra

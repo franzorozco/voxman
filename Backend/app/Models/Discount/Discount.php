@@ -6,6 +6,8 @@ use App\Models\Base\Discount as BaseDiscount;
 
 class Discount extends BaseDiscount
 {
+    use \Illuminate\Database\Eloquent\Concerns\HasUuids;
+
 	protected $fillable = [
 		'name',
 		'type',

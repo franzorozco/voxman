@@ -113,7 +113,10 @@ const ProductDetail = () => {
                     colorName: img.attribute_value?.value || '',
                     productName: prod.name,
                     image: img.url,
-                    price: prod.price || prod.base_price
+                    price: prod.price || prod.base_price,
+                    hasDiscount: prod.has_discount || false,
+                    discountedPrice: prod.discounted_price || prod.base_price,
+                    discountLabel: prod.discount_label || null
                   });
                 });
               } else {
@@ -123,7 +126,10 @@ const ProductDetail = () => {
                   colorName: '',
                   productName: prod.name,
                   image: prod.cover_image || (prod.product_images && prod.product_images[0]?.url) || '',
-                  price: prod.price || prod.base_price
+                  price: prod.price || prod.base_price,
+                  hasDiscount: prod.has_discount || false,
+                  discountedPrice: prod.discounted_price || prod.base_price,
+                  discountLabel: prod.discount_label || null
                 });
               }
             });
@@ -287,12 +293,6 @@ const ProductDetail = () => {
     });
   }
 
-  let displayPrice = product.price || product.base_price;
-  if (selectedColor && product.product_variants) {
-    const variant = product.product_variants.find(v => v.variant_attribute_values?.some(a => a.attribute_value?.value === selectedColor));
-    if (variant && (variant.price || variant.price === 0)) displayPrice = variant.price;
-  }
-
   let selectedVariant = null;
   let selectedVariantStock = 0;
   if (product.product_variants?.length > 0) {
@@ -312,6 +312,22 @@ const ProductDetail = () => {
         selectedVariantStock = Number(selectedVariant.stock);
       }
     }
+  }
+
+  let originalPrice = product.price || product.base_price;
+  let displayPrice = originalPrice;
+  let hasDiscount = product.has_discount || false;
+  let discountLabel = product.discount_label || null;
+
+  if (product.has_discount) {
+    displayPrice = product.discounted_price;
+  }
+
+  if (selectedVariant && (selectedVariant.price || selectedVariant.price === 0)) {
+      originalPrice = selectedVariant.base_price || selectedVariant.price;
+      displayPrice = selectedVariant.has_discount ? selectedVariant.discounted_price : originalPrice;
+      hasDiscount = selectedVariant.has_discount || false;
+      discountLabel = selectedVariant.discount_label || null;
   }
 
   let allSizesMeasurements = null;
@@ -427,7 +443,17 @@ const ProductDetail = () => {
               </a>
             </div>
           </div>
-          <p className="product-price">Bs {parseFloat(displayPrice || 0).toFixed(2)}</p>
+          {hasDiscount ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <p className="product-price">Bs {parseFloat(displayPrice || 0).toFixed(2)}</p>
+              <p style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '1.25rem' }}>Bs {parseFloat(originalPrice || 0).toFixed(2)}</p>
+              <span style={{ backgroundColor: 'var(--color-danger)', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '0.875rem', fontWeight: 600 }}>
+                {discountLabel}
+              </span>
+            </div>
+          ) : (
+            <p className="product-price">Bs {parseFloat(displayPrice || 0).toFixed(2)}</p>
+          )}
 
           {/* Color Selector */}
           {colors.length > 0 && (
@@ -580,15 +606,29 @@ const ProductDetail = () => {
               const linkUrl = `/shop/product/${rel.productId}${rel.colorName ? `?color=${encodeURIComponent(rel.colorName)}` : ''}`;
               return (
                 <Link to={linkUrl} key={rel.id} className="related-product-card">
-                  <div className="related-product-image-wrapper">
-                    {rel.image ? (
-                      <img src={getImageUrl(rel.image)} alt={rel.productName} />
+                  <div className="related-product-card" style={{ position: 'relative' }}>
+                    <div className="related-product-image-wrapper">
+                      {rel.image ? (
+                        <img src={getImageUrl(rel.image)} alt={rel.productName} />
+                      ) : (
+                        <div className="related-product-no-image">Sin imagen</div>
+                      )}
+                      {rel.hasDiscount && (
+                        <div style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: 'var(--color-danger)', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
+                          {rel.discountLabel}
+                        </div>
+                      )}
+                    </div>
+                    <h4 className="related-product-name">{rel.productName}</h4>
+                    {rel.hasDiscount ? (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
+                        <p className="related-product-price" style={{ color: 'var(--color-danger)', margin: 0 }}>Bs {parseFloat(rel.discountedPrice || 0).toFixed(2)}</p>
+                        <p style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '12px', margin: 0 }}>Bs {parseFloat(rel.price || 0).toFixed(2)}</p>
+                      </div>
                     ) : (
-                      <div className="related-product-no-image">Sin imagen</div>
+                      <p className="related-product-price">Bs {parseFloat(rel.price || 0).toFixed(2)}</p>
                     )}
                   </div>
-                  <h4 className="related-product-name">{rel.productName}</h4>
-                  <p className="related-product-price">Bs {parseFloat(rel.price || 0).toFixed(2)}</p>
                 </Link>
               );
             })}

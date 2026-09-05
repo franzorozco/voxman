@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use App\Models\Catalog\Product;
 use App\Models\Catalog\ProductVariant;
+use App\Services\Finance\DiscountValidationService;
 use Illuminate\Support\Facades\Log;
 
 class ShopCartController extends Controller
@@ -141,18 +142,60 @@ class ShopCartController extends Controller
 
         $imageUrl = $finalImage;
 
+        $discountAmount = 0;
+        $discountLabel = null;
+        $appliedDiscountId = null;
+
+        // Apply automatic discount if not a bundle
+        if ($overridePrice === null) {
+            $discountService = app(DiscountValidationService::class);
+            $activeDiscounts = $discountService->getActiveDiscountsForProduct($product);
+            foreach ($activeDiscounts as $discount) {
+                $appliesToVariant = true;
+                $discountVariants = $discount->variants()->pluck('product_variants.id')->toArray();
+                if (!empty($discountVariants) && $variant) {
+                    $appliesToVariant = in_array($variant->id, $discountVariants);
+                }
+
+                if ($appliesToVariant) {
+                    $amount = 0;
+                    if ($discount->type === 'percentage') {
+                        $amount = $price * ($discount->value / 100);
+                        $label = "-".floatval($discount->value)."%";
+                    } else {
+                        $amount = $discount->value;
+                        $label = "-Bs ".floatval($discount->value);
+                    }
+
+                    if ($discount->max_discount_amount) {
+                        $amount = min($amount, $discount->max_discount_amount);
+                    }
+                    $amount = min($amount, $price);
+
+                    if ($amount > $discountAmount) {
+                        $discountAmount = $amount;
+                        $discountLabel = $label;
+                        $appliedDiscountId = $discount->id;
+                    }
+                }
+            }
+        }
+
         // Apply bundle override price if provided
         if ($overridePrice !== null) {
             $price = $overridePrice;
+        } else if ($discountAmount > 0) {
+            $price = max(0, $price - $discountAmount);
         }
 
         // The stored original_price: if explicitly provided use it, else the natural price
-        $storedOriginalPrice = ($originalPrice !== null) ? (float)$originalPrice : (float)$price;
+        $storedOriginalPrice = ($originalPrice !== null) ? (float)$originalPrice : (float)($price + $discountAmount);
 
         // Check if item already exists
         $foundIndex = -1;
         foreach ($cartData['items'] as $index => $item) {
-            if ($item['product_id'] == $productId && $item['variant_id'] == $variantId) {
+            $itemBundleId = isset($item['bundle_group_id']) ? $item['bundle_group_id'] : null;
+            if ($item['product_id'] == $productId && $item['variant_id'] == $variantId && $itemBundleId == $bundleGroupId) {
                 $foundIndex = $index;
                 break;
             }
@@ -168,12 +211,14 @@ class ShopCartController extends Controller
                 'name'            => $name,
                 'price'           => (float)$price,
                 'original_price'  => $storedOriginalPrice,
-                'override_price'  => $overridePrice !== null ? (float)$overridePrice : null,
+                'override_price'  => ($price != $storedOriginalPrice) ? (float)$price : null,
                 'bundle_group_id' => $bundleGroupId,
                 'quantity'        => $quantity,
                 'size'            => $sizeName,
                 'color'           => $colorName,
-                'image'           => $imageUrl
+                'image'           => $imageUrl,
+                'discount_label'  => $discountLabel,
+                'applied_discount_id' => $appliedDiscountId
             ];
         }
 
@@ -439,6 +484,56 @@ class ShopCartController extends Controller
 
         return response()->json($cartData);
     }
+
+    public function applyDiscount(Request $request)
+    {
+        $request->validate([
+            'discount_code' => 'required|string',
+            'discount_id' => 'required|uuid',
+            'discount_amount' => 'required|numeric|min:0'
+        ]);
+
+        $cartToken = $request->header('X-Cart-Token');
+        if (!$cartToken) {
+            return response()->json(['error' => 'No cart token provided'], 400);
+        }
+
+        $cartData = $this->getCartData($cartToken);
+        if (!$cartData) {
+            return response()->json(['error' => 'Cart not found'], 404);
+        }
+
+        $cartData['applied_global_discount'] = [
+            'code' => $request->discount_code,
+            'id' => $request->discount_id,
+            'amount' => $request->discount_amount
+        ];
+        
+        $this->saveCartData($cartToken, $cartData);
+
+        return response()->json($cartData);
+    }
+
+    public function removeDiscount(Request $request)
+    {
+        $cartToken = $request->header('X-Cart-Token');
+        if (!$cartToken) {
+            return response()->json(['error' => 'No cart token provided'], 400);
+        }
+
+        $cartData = $this->getCartData($cartToken);
+        if (!$cartData) {
+            return response()->json(['error' => 'Cart not found'], 404);
+        }
+
+        if (isset($cartData['applied_global_discount'])) {
+            unset($cartData['applied_global_discount']);
+            $this->saveCartData($cartToken, $cartData);
+        }
+
+        return response()->json($cartData);
+    }
+
     public function validateStock(Request $request)
     {
         $cartToken = $request->header('X-Cart-Token');

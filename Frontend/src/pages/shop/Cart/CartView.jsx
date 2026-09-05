@@ -15,7 +15,7 @@ import CheckoutUserModal from '../../../components/ui/CheckoutUserModal';
 import './CartView.css';
 
 const CartView = () => {
-  const { items, total, fetchCart, updateQuantity, removeFromCart, isLoading } = useShopCartStore();
+  const { items, total, fetchCart, updateQuantity, removeFromCart, isLoading, appliedGlobalDiscount } = useShopCartStore();
   const globalUser = useAuthStore((state) => state.user);
   const { isDark } = useThemeStore();
   const [removingId, setRemovingId] = useState(null);
@@ -41,6 +41,17 @@ const CartView = () => {
     fetchCart();
   }, [fetchCart]);
 
+  useEffect(() => {
+    if (appliedGlobalDiscount && !appliedDiscount) {
+      setAppliedDiscount({
+        id: appliedGlobalDiscount.id,
+        code: appliedGlobalDiscount.code,
+        discount_amount: appliedGlobalDiscount.amount
+      });
+      setDiscountCode(appliedGlobalDiscount.code);
+    }
+  }, [appliedGlobalDiscount]);
+
   const handleUpdateQuantity = async (productId, variantId, quantity, cartItemId) => {
     if (quantity < 1) return;
     await updateQuantity(productId, variantId, quantity, cartItemId);
@@ -59,28 +70,57 @@ const CartView = () => {
     setDiscountLoading(true);
     try {
       const { default: api } = await import('../../../api/client');
-      // Prepare items as {variant_id, quantity, line_subtotal}
+      // Prepare items as {variant_id, quantity, line_subtotal, bundle_group_id}
       const mappedItems = items.map(item => ({
         variant_id: item.variant_id,
         quantity: item.quantity,
-        line_subtotal: parseFloat(item.price) * item.quantity
+        line_subtotal: parseFloat(item.price) * item.quantity,
+        bundle_group_id: item.bundle_group_id || null
       }));
+      
+      // Extract actual Customer ID
+      let actualCustomerId = null;
+      const userSource = currentUser || globalUser;
+      if (userSource) {
+        if (userSource.customers && userSource.customers.length > 0) {
+          actualCustomerId = userSource.customers[0].id;
+        } else {
+          actualCustomerId = userSource.id;
+        }
+      }
       
       const payload = {
         code: discountCode,
         subtotal: total,
         items: mappedItems,
-        customer_id: currentUser?.id || globalUser?.id || null
+        customer_id: actualCustomerId
       };
       
       const res = await api.post('/v1/shop/cart/validate-code', payload);
       if (res.data.valid) {
+        // Save the discount in the backend cart session
+        await api.post('/v1/shop/cart/apply-discount', {
+          discount_code: res.data.code,
+          discount_id: res.data.id,
+          discount_amount: res.data.discount_amount
+        });
+        
+        const appliedData = {
+          id: res.data.id,
+          code: res.data.code,
+          amount: res.data.discount_amount,
+          new_total: res.data.new_total || (total - res.data.discount_amount)
+        };
+
         setAppliedDiscount(res.data);
+        useShopCartStore.setState({ appliedGlobalDiscount: appliedData });
+        
         import('react-hot-toast').then(({ default: toast }) => {
           toast.success("Cupón aplicado exitosamente");
         });
       } else {
         setAppliedDiscount(null);
+        useShopCartStore.setState({ appliedGlobalDiscount: null });
         import('react-hot-toast').then(({ default: toast }) => {
           toast.error(res.data.message || "Cupón inválido");
         });
@@ -88,6 +128,7 @@ const CartView = () => {
     } catch (err) {
       console.error(err);
       setAppliedDiscount(null);
+      useShopCartStore.setState({ appliedGlobalDiscount: null });
       import('react-hot-toast').then(({ default: toast }) => {
         toast.error(err.response?.data?.message || "Error al validar el cupón");
       });
@@ -96,8 +137,15 @@ const CartView = () => {
     }
   };
 
-  const handleRemoveDiscount = () => {
+  const handleRemoveDiscount = async () => {
+    try {
+      const { default: api } = await import('../../../api/client');
+      await api.post('/v1/shop/cart/remove-discount');
+    } catch (e) {
+      console.error(e);
+    }
     setAppliedDiscount(null);
+    useShopCartStore.setState({ appliedGlobalDiscount: null });
     setDiscountCode('');
   };
 
@@ -232,12 +280,35 @@ const CartView = () => {
                       <div className="ml-4 flex-1 flex flex-col sm:ml-6">
                         <div>
                           <div className="flex justify-between">
-                            <h4 className="text-sm cart-item-name">
-                              <Link to={`/shop/product/${item.product_id}`} className="font-medium hover:underline">
-                                {item.name}
-                              </Link>
-                            </h4>
-                            <p className="ml-4 text-sm font-medium cart-item-price">Bs {parseFloat(item.price).toFixed(2)}</p>
+                            <div className="flex flex-col">
+                              <h4 className="text-sm cart-item-name">
+                                <Link to={`/shop/product/${item.product_id}`} className="font-medium hover:underline">
+                                  {item.name}
+                                </Link>
+                              </h4>
+                              {item.bundle_group_id && (
+                                <span style={{ fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '6px', border: '1px solid #fde68a' }}>
+                                  📦 Ítem de Conjunto
+                                </span>
+                              )}
+                            </div>
+                            <div className="ml-4 text-right">
+                              {item.discount_label ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                  <p style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.85rem' }}>
+                                    Bs {parseFloat(item.original_price || item.price).toFixed(2)}
+                                  </p>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ backgroundColor: 'var(--color-danger)', color: 'white', padding: '2px 4px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 }}>
+                                      {item.discount_label}
+                                    </span>
+                                    <p className="text-sm font-bold text-red-600">Bs {parseFloat(item.price).toFixed(2)}</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-sm font-medium cart-item-price">Bs {parseFloat(item.price).toFixed(2)}</p>
+                              )}
+                            </div>
                           </div>
                           
                           {(item.color || item.size) && (
@@ -348,7 +419,7 @@ const CartView = () => {
             <div className="flex items-center justify-between border-t border-gray-200 pt-4">
               <dt className="text-base font-medium cart-summary-total-label">Total estimado</dt>
               <dd className="text-base font-bold cart-summary-total-value">
-                Bs {appliedDiscount ? parseFloat(appliedDiscount.new_total).toFixed(2) : total.toFixed(2)}
+                Bs {appliedDiscount ? (total - parseFloat(appliedDiscount.discount_amount)).toFixed(2) : total.toFixed(2)}
               </dd>
             </div>
           </dl>
@@ -436,6 +507,7 @@ const CartView = () => {
         theme={isDark ? 'dark' : 'light'}
         cartItems={items}
         totalAmount={total}
+        appliedGlobalDiscount={appliedGlobalDiscount}
         isAuth={!!currentUser}
         cartToken={localStorage.getItem('shop_cart_token')}
       />
