@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
-import useShopCartStore from '../../../store/shop/useShopCartStore';
+import useShopCartStore from '../../store/shop/useShopCartStore';
 
 const CheckoutConflictModal = ({ isOpen, onClose, conflicts, theme = 'light' }) => {
   const [resolving, setResolving] = useState(false);

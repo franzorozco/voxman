@@ -35,27 +35,29 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
     return null;
   };
 
-  const renderVariantAttributes = (variant) => {
+    const renderVariantAttributes = (variant) => {
     if (!variant) return null;
     
-    // Si tiene atributos dinámicos, los usamos
-    if (variant.variant_attribute_values && variant.variant_attribute_values.length > 0) {
-      return variant.variant_attribute_values.map((vav, idx) => {
-        const attrName = vav.attribute_value?.attribute?.name || "Atributo";
-        const attrValue = vav.attribute_value?.value || "N/A";
-        return (
-          <div key={idx}>
-            {attrName}: {attrValue}
-          </div>
-        );
-      });
-    }
+    const hasDynamicSize = variant.variant_attribute_values?.some(v => v.attribute_value?.attribute?.name?.toLowerCase() === 'talla' || v.attribute_value?.attribute?.name?.toLowerCase() === 'size');
+    const hasDynamicColorFit = variant.variant_attribute_values?.some(v => v.attribute_value?.attribute?.name?.toLowerCase() === 'color' || v.attribute_value?.attribute?.name?.toLowerCase() === 'fit');
 
-    // Fallback a los atributos legacy (size_id, fit_id) si no hay dinámicos
     return (
       <>
-        Talla: {variant.size?.name || "N/A"}<br />
-        Color/Fit: {variant.fit?.name || "N/A"}
+        {variant.variant_attribute_values?.map((vav, idx) => {
+          const attrName = vav.attribute_value?.attribute?.name || "Atributo";
+          const attrValue = vav.attribute_value?.value || "N/A";
+          return (
+            <div key={`dyn-${idx}`}>
+              {attrName}: {attrValue}
+            </div>
+          );
+        })}
+        {!hasDynamicSize && variant.size && (
+          <div>Talla: {variant.size.name}</div>
+        )}
+        {!hasDynamicColorFit && variant.fit && (
+          <div>Color/Fit: {variant.fit.name}</div>
+        )}
       </>
     );
   };

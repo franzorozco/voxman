@@ -239,7 +239,16 @@ export default function Tracking() {
   const sale = shipment?.sale;
   const details = sale?.sale_details || [];
   
-  const customer = sale?.customer;
+  
+    const computedShippingCost = shipment?.shipping_payment_type !== 'collect' ? Number(shipment?.shipping_cost || 0) : 0;
+    const computedAgencyCost = Number(shipment?.agency_dispatch_cost || 0);
+    const grandTotal = Number(sale?.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
+
+  const hasGlobalDiscount = (sale?.discount_id != null) || (sale?.sale_applied_discounts?.some(d => d.sale_detail_id == null));
+  const hasGiftcard = sale?.giftcard_id != null;
+  const hasDiscountOrGiftcard = hasGlobalDiscount || hasGiftcard;
+
+    const customer = sale?.customer;
   const guest = sale?.guest;
 
   let customerName = "Cliente";
@@ -731,28 +740,58 @@ export default function Tracking() {
                         {variant?.product?.name || 'Producto'}
                       </div>
                       <div className="product-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {variant?.size && <span className="product-badge">Talla: {variant.size.name}</span>}
-                        {variant?.fit && <span className="product-badge">Fit: {variant.fit.name}</span>}
-                        {variant?.variant_attribute_values?.map(attrVal => (
-                          <span key={attrVal.attribute_value_id} className="product-badge">
-                            {attrVal.attribute_value?.attribute?.name}: {attrVal.attribute_value?.value}
-                          </span>
-                        ))}
-                      </div>
+                          {(() => {
+                            const dynamicAttrs = variant?.variant_attribute_values || [];
+                            const hasDynamicTalla = dynamicAttrs.some(attrVal => attrVal.attribute_value?.attribute?.name?.toLowerCase() === 'talla');
+                            const hasDynamicColor = dynamicAttrs.some(attrVal => attrVal.attribute_value?.attribute?.name?.toLowerCase() === 'color');
+                            return (
+                              <>
+                                {item.bundle_group_id && (
+                                  <span className="product-badge" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
+                                    ⭐ tem de Conjunto
+                                  </span>
+                                )}
+                                {!hasDynamicTalla && variant?.size && <span className="product-badge">Talla: {variant.size.name}</span>}
+                                {!hasDynamicColor && variant?.fit && <span className="product-badge">Color: {variant.fit.name}</span>}
+                                {dynamicAttrs.map(attrVal => (
+                                  <span key={attrVal.attribute_value_id} className="product-badge">
+                                    {attrVal.attribute_value?.attribute?.name}: {attrVal.attribute_value?.value}
+                                  </span>
+                                ))}
+                              </>
+                            );
+                          })()}
+                        </div>
                     </div>
                     
                     <div className="product-price-block" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
-                      <span className="product-qty" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '13px', color: '#64748b' }}>
-                        {item.quantity}x Bs. {Number(item.unit_price).toFixed(2)}
-                      </span>
-                      {Number(item.discount) > 0 && !item.deleted_at && (
-                        <span style={{ fontSize: '13px', color: '#059669', fontWeight: 600, background: '#d1fae5', padding: '2px 8px', borderRadius: '12px' }}>
-                          Desc: -Bs. {Number(item.discount).toFixed(2)}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                          {item.original_price && item.original_price > (item.dynamic_unit_price || item.unit_price) && !item.deleted_at && (
+                            <span style={{ textDecoration: 'line-through', fontSize: '12px', color: '#94a3b8' }}>
+                              {item.quantity}x Bs. {Number(item.original_price).toFixed(2)}
+                            </span>
+                          )}
+                          <span className="product-qty" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '13px', color: '#64748b' }}>
+                            {item.quantity}x Bs. {Number(item.dynamic_unit_price || item.unit_price).toFixed(2)}
+                          </span>
+                        </div>
+                        {(() => {
+                          const effPrice = item.dynamic_unit_price || item.unit_price;
+                          const origPrice = (item.original_price && item.original_price > effPrice) ? item.original_price : effPrice;
+                          const dynamicItemDiscount = (origPrice - effPrice) * item.quantity;
+                          
+                          if (dynamicItemDiscount > 0 && !item.deleted_at) {
+                            return (
+                              <span style={{ fontSize: '13px', color: '#059669', fontWeight: 600, background: '#d1fae5', padding: '2px 8px', borderRadius: '12px' }}>
+                                Desc: -Bs. {dynamicItemDiscount.toFixed(2)}
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
+                        <span className="product-subtotal" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>
+                          Bs. {Number(item.dynamic_subtotal || item.subtotal).toFixed(2)}
                         </span>
-                      )}
-                      <span className="product-subtotal" style={{ textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>
-                        Bs. {Number(item.subtotal).toFixed(2)}
-                      </span>
                       {item.deleted_at && (
                         <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, display: 'block' }}>
                           Rechazado
@@ -768,7 +807,7 @@ export default function Tracking() {
           <div className="financial-summary">
             <div className="summary-row">
               <span>Subtotal del Pedido</span>
-              <span>Bs. {Number(sale?.subtotal || 0).toFixed(2)}</span>
+              <span>Bs. {Number(sale?.dynamic_subtotal || sale?.subtotal || 0).toFixed(2)}</span>
             </div>
             {Number(shipment?.agency_dispatch_cost) > 0 && (
               <div className="summary-row">
@@ -784,10 +823,10 @@ export default function Tracking() {
               </div>
             )}
             
-            {Number(schedule?.shipment?.sale?.discount_total) > 0 && (
+            {Number(sale?.dynamic_global_discount) > 0 && (
               <div className="summary-row" style={{ color: '#10b981', fontWeight: 600 }}>
                 <span>Descuento Aplicado</span>
-                <span>- Bs. {Number(schedule.shipment.sale.discount_total).toFixed(2)}</span>
+                <span>- Bs. {Number(sale?.dynamic_global_discount).toFixed(2)}</span>
               </div>
             )}
 
@@ -795,51 +834,56 @@ export default function Tracking() {
               const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
               const isFullyPaid = sale?.status === 'paid';
               const isAdvance = checkoutSession?.isAdvancePayment;
-
-              return (
-                <>
-                  {!isFullyPaid && totalPaid > 0 && (
-                    <div className="summary-row" style={{ color: '#4f46e5', fontWeight: 600 }}>
-                      <span>Adelanto Registrado</span>
-                      <span>- Bs. {Number(totalPaid).toFixed(2)}</span>
+                const defaultToPay = grandTotal - (!isFullyPaid ? totalPaid : 0);
+                const isAjusteEspecial = checkoutSession && !isAdvance && Number(checkoutSession.montoReal) < defaultToPay && !hasDiscountOrGiftcard;
+                const finalMontoReal = (checkoutSession && !isAdvance && !isAjusteEspecial) 
+                  ? defaultToPay 
+                  : (checkoutSession ? Number(checkoutSession.montoReal) : defaultToPay);
+  
+                return (
+                  <>
+                    {!isFullyPaid && totalPaid > 0 && (
+                      <div className="summary-row" style={{ color: '#4f46e5', fontWeight: 600 }}>
+                        <span>Adelanto Registrado</span>
+                        <span>- Bs. {Number(totalPaid).toFixed(2)}</span>
+                      </div>
+                    )}
+  
+                    {isAjusteEspecial && (
+                      <div className="summary-row" style={{ color: '#f59e0b', fontWeight: 600 }}>
+                        <span>Ajuste Especial</span>
+                        <span>- Bs. {(defaultToPay - finalMontoReal).toFixed(2)}</span>
+                      </div>
+                    )}
+  
+                    <div className="summary-row total" style={{ borderTop: '2px solid #e5e7eb', paddingTop: '16px', marginTop: '8px', textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: '18px' }}>
+                        {isFullyPaid ? 'TOTAL PAGADO' : 'TOTAL A PAGAR'}
+                      </span>
+                      <span style={{ fontSize: '22px', color: (checkoutSession && !isAdvance) ? '#4f46e5' : '#111827' }}>
+                        Bs. {finalMontoReal.toFixed(2)}
+                      </span>
                     </div>
-                  )}
-
-                  {checkoutSession && !isAdvance && Number(checkoutSession.montoReal) < (Number(sale?.total || 0) - totalPaid) && !(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) && (
-                    <div className="summary-row" style={{ color: '#f59e0b', fontWeight: 600 }}>
-                      <span>Ajuste Especial</span>
-                      <span>- Bs. {((Number(sale?.total || 0) - totalPaid) - Number(checkoutSession.montoReal)).toFixed(2)}</span>
-                    </div>
-                  )}
-
-                  <div className="summary-row total" style={{ borderTop: '2px solid #e5e7eb', paddingTop: '16px', marginTop: '8px', textTransform: 'uppercase' }}>
-                    <span style={{ fontSize: '18px' }}>
-                      {isFullyPaid ? 'TOTAL PAGADO' : 'TOTAL A PAGAR'}
-                    </span>
-                    <span style={{ fontSize: '22px', color: (checkoutSession && !isAdvance) ? '#4f46e5' : '#111827' }}>
-                      Bs. {
-                        (checkoutSession && !isAdvance) 
-                          ? Number(checkoutSession.montoReal).toFixed(2) 
-                          : Number((sale?.total || 0) - (!isFullyPaid ? totalPaid : 0)).toFixed(2)
-                      }
-                    </span>
+                  </>
+                );
+              })()}
+            </div>
+  
+            {checkoutSession && (checkoutSession.isAdvancePayment || (!isExternal && statusInfo.activeStep === 4) || (isExternal && statusInfo.activeStep === 1)) && (
+              <div className="checkout-session-card" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #e5e7eb' }}>
+                
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <span style={{ display: 'inline-block', background: checkoutSession.isAdvancePayment ? '#e0e7ff' : '#dcfce7', color: checkoutSession.isAdvancePayment ? '#4338ca' : '#166534', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 }}>
+                    {checkoutSession.isAdvancePayment ? 'Por favor realiza el pago de tu adelanto' : 'Por favor realiza tu pago para completar la entrega'}
+                  </span>
+                  <div style={{ marginTop: '12px', fontSize: '24px', fontWeight: 800, color: checkoutSession.isAdvancePayment ? '#4338ca' : '#166534' }}>
+                    Bs. {(() => {
+                        const defaultToPay = grandTotal - (sale?.status !== 'paid' ? (sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0) : 0);
+                        const isAjusteEspecial = !checkoutSession.isAdvancePayment && Number(checkoutSession.montoReal) < defaultToPay && !hasDiscountOrGiftcard;
+                        return (!checkoutSession.isAdvancePayment && !isAjusteEspecial) ? defaultToPay.toFixed(2) : Number(checkoutSession.montoReal).toFixed(2);
+                    })()}
                   </div>
-                </>
-              );
-            })()}
-          </div>
-
-          {checkoutSession && (checkoutSession.isAdvancePayment || (!isExternal && statusInfo.activeStep === 4) || (isExternal && statusInfo.activeStep === 1)) && (
-            <div className="checkout-session-card" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #e5e7eb' }}>
-              
-              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                <span style={{ display: 'inline-block', background: checkoutSession.isAdvancePayment ? '#e0e7ff' : '#dcfce7', color: checkoutSession.isAdvancePayment ? '#4338ca' : '#166534', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 }}>
-                  {checkoutSession.isAdvancePayment ? 'Por favor realiza el pago de tu adelanto' : 'Por favor realiza tu pago para completar la entrega'}
-                </span>
-                <div style={{ marginTop: '12px', fontSize: '24px', fontWeight: 800, color: checkoutSession.isAdvancePayment ? '#4338ca' : '#166534' }}>
-                  Bs. {Number(checkoutSession.montoReal).toFixed(2)}
                 </div>
-              </div>
 
               {checkoutSession.paymentMethod === 'ambos' && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '15px', padding: '12px', background: '#f9fafb', borderRadius: '10px', border: '1px solid #e5e7eb' }}>
@@ -861,7 +905,7 @@ export default function Tracking() {
 
               {!checkoutSession.isAdvancePayment && (
                 <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '16px', border: '1px solid #e5e7eb' }}>
-                {(schedule?.shipment?.sale?.discount_id || schedule?.shipment?.sale?.giftcard_id) ? (
+                {hasDiscountOrGiftcard ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <span style={{ fontWeight: 700, color: '#10b981', display: 'block' }}>¡Cupón aplicado con éxito!</span>

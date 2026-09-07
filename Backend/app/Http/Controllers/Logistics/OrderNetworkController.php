@@ -1994,8 +1994,11 @@ class OrderNetworkController extends Controller
         if ($schedule->checkout_session) {
             $session = $schedule->checkout_session;
             if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
+                $computedShippingCost = $schedule->shipment->shipping_payment_type !== 'collect' ? ($schedule->shipment->shipping_cost ?? 0) : 0;
+                $computedAgencyCost = $schedule->shipment->agency_dispatch_cost ?? 0;
+                $trueTotal = max(0, $sale->dynamic_total + $computedShippingCost + $computedAgencyCost);
                 $totalPaid = $sale->payments()->sum('amount');
-                $session['monto_real'] = max(0, $sale->total - $totalPaid);
+                $session['monto_real'] = max(0, $trueTotal - $totalPaid);
                 $schedule->checkout_session = $session;
                 $schedule->save();
             }
@@ -2013,7 +2016,7 @@ class OrderNetworkController extends Controller
 
     public function removeDiscount($id)
     {
-        $schedule = DeliverySchedule::with(['shipment.sale.sale_applied_discounts'])->findOrFail($id);
+        $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);
         $sale = $schedule->shipment->sale;
 
         $globalDiscount = $sale ? $sale->sale_applied_discounts->whereNull('sale_detail_id')->first() : null;
@@ -2054,8 +2057,11 @@ class OrderNetworkController extends Controller
         if ($schedule->checkout_session) {
             $session = $schedule->checkout_session;
             if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
+                $computedShippingCost = $schedule->shipment->shipping_payment_type !== 'collect' ? ($schedule->shipment->shipping_cost ?? 0) : 0;
+                $computedAgencyCost = $schedule->shipment->agency_dispatch_cost ?? 0;
+                $trueTotal = max(0, $sale->dynamic_total + $computedShippingCost + $computedAgencyCost);
                 $totalPaid = $sale->payments()->sum('amount');
-                $session['monto_real'] = max(0, $sale->total - $totalPaid);
+                $session['monto_real'] = max(0, $trueTotal - $totalPaid);
                 $schedule->checkout_session = $session;
                 $schedule->save();
             }

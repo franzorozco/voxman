@@ -92,6 +92,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const [montoReal, setMontoReal] = useState('');
   const [appliedCode, setAppliedCode] = useState(null);
 
+  const sale = details?.shipment?.sale;
+  const computedShippingCost = details?.shipment?.shipping_payment_type !== 'collect' ? Number(details?.shipment?.shipping_cost || 0) : 0;
+  const computedAgencyCost = Number(details?.shipment?.agency_dispatch_cost || 0);
+  const grandTotal = Number(sale?.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
+
+  const hasGlobalDiscount = (sale?.discount_id != null) || (sale?.sale_applied_discounts?.some(d => d.sale_detail_id == null));
+  const hasGiftcard = sale?.giftcard_id != null;
+  const hasDiscountOrGiftcard = hasGlobalDiscount || hasGiftcard;
+
   const { settings, fetchSettings } = useShopSettingsStore();
 
   useEffect(() => {
@@ -108,7 +117,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     if (showPaymentModal && details) {
       const sale = details.shipment?.sale;
       const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      const remaining = Number((sale?.dynamic_total || 0) - totalPaid).toFixed(2);
+      const remaining = Number(grandTotal - totalPaid).toFixed(2);
       setMontoReal(remaining > 0 ? remaining : '');
     }
   }, [showPaymentModal, details]);
@@ -258,7 +267,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         monto_real: montoReal,
         cash_amount: cashAmount || null,
         qr_amount: qrAmount || null,
-        sale_total: details?.shipment?.sale?.dynamic_total,
+        sale_total: grandTotal,
         is_advance_payment: isAdvancePayment
       });
       toast.success("Detalles de cobro compartidos con el cliente");
@@ -381,7 +390,6 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     );
   }
 
-  const sale = details.shipment?.sale;
   const customer = sale?.customer;
   const guest = sale?.guest;
 
@@ -528,7 +536,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     const recipientPhone = details.shipment?.recipient_phone || 'Sin teléfono';
     const recipientCI = details.shipment?.recipient_ci || 'Sin CI';
     const destination = details.shipment?.destination_city || 'Sin destino';
-    const total = parseFloat(sale?.dynamic_total || 0).toFixed(2);
+    const total = parseFloat(grandTotal).toFixed(2);
     const discount = parseFloat(sale?.discount || 0);
     const deliveryCode = details.shipment?.delivery_code || details.id.slice(0,8);
     const saleCode = sale?.invoice_number ? sale.invoice_number : (sale?.id?.slice(0,8) || '');
@@ -843,161 +851,128 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   )}
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {sale?.sale_details?.flatMap(item => {
-                    const variant = item.product_variant;
-                    const product = variant?.product;
-                    const variantAttrIds = variant?.variant_attribute_values?.map(v => v.attribute_value_id) || [];
+                  {sale?.sale_details?.map((item, index) => {
+                      const variant = item.product_variant;
+                      const product = variant?.product;
+                      const variantAttrIds = variant?.variant_attribute_values?.map(v => v.attribute_value_id) || [];
                       const colorImgs = product?.attribute_value_images?.filter(img => variantAttrIds.includes(img.attribute_value_id)) || [];
                       const colorImg = colorImgs.find(img => img.is_main) || colorImgs[0];
-                      
+                        
                       let imageUrl = variant?.variant_images?.[0]?.url || colorImg?.url || product?.product_images?.find(img => img.is_main)?.url || product?.product_images?.[0]?.url;
-                      
+                        
                       if (!imageUrl) {
                         const fallbackPath = variant?.variant_images?.[0]?.image_path || colorImg?.image_path || product?.product_images?.find(img => img.is_main)?.image_path || product?.product_images?.[0]?.image_path;
                         if (fallbackPath) {
                           imageUrl = `/storage/${fallbackPath}`;
                         }
                       }
-
+  
                       if (imageUrl && !imageUrl.startsWith('http')) {
                         imageUrl = getImageUrl(imageUrl);
                       }
 
-                    const allReservations = sale?.stock_reservations || sale?.stockReservations || [];
-                    const variantReservations = allReservations.filter(res => res.variant_id === item.variant_id);
-                    
-                    const relevantStatuses = item.deleted_at ? ['released'] : ['reserved', 'confirmed'];
-                    let relevantReservations = variantReservations.filter(res => relevantStatuses.includes(res.status) || (!item.deleted_at && !res.status));
-                    
-                    if (relevantReservations.length === 0) {
-                        relevantReservations = [{ id: item.id, quantity: item.quantity, branch: null, subtotal: item.subtotal }];
-                    }
-
-                    return relevantReservations.map((res, index) => {
-                      const branchName = res.branch?.name || "Sin Sucursal asignada";
-                      const qty = res.quantity;
+                      // Only grab the reservations for this variant.
+                      // Since we don't have sale_detail_id in reservations, we just show the branch from the first matching reservation.
+                      const allReservations = sale?.stock_reservations || sale?.stockReservations || [];
+                      const variantReservations = allReservations.filter(res => res.variant_id === item.variant_id);
+                      const relevantStatuses = item.deleted_at ? ['released'] : ['reserved', 'confirmed'];
+                      let relevantReservations = variantReservations.filter(res => relevantStatuses.includes(res.status) || (!item.deleted_at && !res.status));
+                      
+                      const branchName = relevantReservations[0]?.branch?.name || "Sin Sucursal asignada";
+                      const qty = item.quantity;
                       const isBundleItem = item.bundle_group_id !== null && item.bundle_group_id !== undefined;
                       const unitPrice = item.dynamic_unit_price || item.unit_price || item.final_price;
                       const originalPrice = item.original_price || item.unit_price;
                       const subtotal = item.dynamic_subtotal || (unitPrice * qty);
 
                       const totalPhysicalStock = variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
-                      const isOutOfStock = totalPhysicalStock < item.quantity || branchName === "Sin Sucursal asignada";
+                      const isOutOfStock = relevantReservations.length === 0;
 
                       return (
                         <div key={`${item.id}-${index}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', opacity: isCancelled || item.deleted_at ? 0.6 : 1, ...(isBundleItem ? { background: 'var(--bg-hover)', padding: '8px', borderRadius: '8px', borderLeft: '3px solid #f59e0b' } : {}) }}>
-                          {isOutOfStock && (
-                            <div style={{ background: 'var(--color-danger)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', alignSelf: 'flex-start' }}>
-                              <AlertTriangle size={14} /> SIN STOCK / AGOTADO
-                            </div>
-                          )}
-                          {isBundleItem && (
-                            <div style={{ alignSelf: 'flex-start', fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>
-                              ✨ Ítem de Conjunto
-                            </div>
-                          )}
-                          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                            {imageUrl ? (
-                              <img src={imageUrl} alt="Variant" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
-                            ) : (
-                              <div style={{ width: '50px', height: '50px', background: 'var(--bg-input)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
-                                <Package size={20} style={{ color: 'var(--text-muted)' }} />
+                            {isOutOfStock && (
+                              <div style={{ background: 'var(--color-danger)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', alignSelf: 'flex-start' }}>
+                                <AlertTriangle size={14} /> SIN STOCK / AGOTADO
                               </div>
                             )}
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              <span style={{ color: 'var(--text-main)', fontWeight: 500, textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
-                                {qty}x {variant?.product?.name} {variant?.name && `(${variant.name})`}
-                              </span>
-                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: '4px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
-                                <span>SKU: <strong>{variant?.sku || 'N/A'}</strong></span>
-                                {variant?.size?.name && <span>• Talla: {variant.size.name}</span>}
-                                {variant?.fit?.name && <span>• Fit: {variant.fit.name}</span>}
-                                {variant?.variant_attribute_values?.map((attr, idx) => (
-                                  <span key={idx}>
-                                    • {attr.attribute_value?.attribute?.name}: {attr.attribute_value?.value}
-                                  </span>
-                                ))}
+                            {isBundleItem && (
+                              <div style={{ alignSelf: 'flex-start', fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>
+                                ⭐ Ítem de Conjunto
                               </div>
-                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', textDecoration: item.deleted_at ? 'line-through' : 'none' }}>
-                                {isOutOfStock ? (
-                                  <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                                    <AlertTriangle size={12} /> Agotado / Sin Asignar
-                                  </span>
-                                ) : (
-                                  <span style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                                    Extraído de: <strong>{branchName}</strong>
-                                  </span>
+                            )}
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                              {imageUrl ? (
+                                <img src={imageUrl} alt="Variant" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
+                              ) : (
+                                <div style={{ width: '50px', height: '50px', background: 'var(--bg-input)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
+                                  <Package size={20} style={{ color: 'var(--text-muted)' }} />
+                                </div>
+                              )}
+                              
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600 }}>{qty}x {product?.name || 'Producto Desconocido'}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                  SKU: <b>{variant?.sku || 'N/A'}</b>
+                                  {variant?.variant_attribute_values?.map((v, i) => (
+                                    <span key={i}> • {v.attribute_value?.attribute?.name || 'Atributo'}: {v.attribute_value?.value || 'N/A'}</span>
+                                  ))}
+                                  {!variant?.variant_attribute_values?.some(v => v.attribute_value?.attribute?.name?.toLowerCase() === 'talla' || v.attribute_value?.attribute?.name?.toLowerCase() === 'size') && variant?.size && (
+                                    <span> • Talla: {variant.size.name}</span>
+                                  )}
+                                  {!variant?.variant_attribute_values?.some(v => v.attribute_value?.attribute?.name?.toLowerCase() === 'color' || v.attribute_value?.attribute?.name?.toLowerCase() === 'fit') && variant?.fit && (
+                                    <span> • Color/Fit: {variant.fit.name}</span>
+                                  )}
+                                </div>
+                                {!isOutOfStock && !item.deleted_at && (
+                                  <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '4px' }}>
+                                    Extraído de <b>{branchName}</b>
+                                  </div>
                                 )}
-                                {item.notes && (
-                                  <span style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#ca8a04', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                                    {item.notes}
-                                  </span>
+                                {item.deleted_at && (
+                                  <div style={{ fontSize: '11px', color: 'var(--color-danger)', marginTop: '4px', fontWeight: 600 }}>
+                                    Rechazado de <b>{branchName}</b>
+                                  </div>
                                 )}
                               </div>
                             </div>
-                          </div>
-                          
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
-                            {isBundleItem ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: '12px' }}>
-                                  {qty}x Bs. {Number(originalPrice).toFixed(2)}
-                                </span>
-                                <span style={{ color: '#059669', fontWeight: 600 }}>
-                                  {qty}x Bs. {Number(unitPrice).toFixed(2)}
-                                </span>
-                              </div>
-                            ) : originalPrice > unitPrice ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: '12px' }}>
-                                  {qty}x Bs. {Number(originalPrice).toFixed(2)}
-                                </span>
-                                <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-                                  {qty}x Bs. {Number(unitPrice).toFixed(2)}
-                                </span>
-                              </div>
-                            ) : (
-                              <span style={{ color: 'var(--text-muted)' }}>{qty}x Bs. {Number(unitPrice).toFixed(2)}</span>
-                            )}
-                            {(originalPrice > unitPrice) && !isBundleItem && !item.deleted_at && (
-                              <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                                -Bs. {Number((originalPrice - unitPrice) * qty).toFixed(2)}
-                              </span>
-                            )}
-                            <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '14px' }}>Bs. {Number(subtotal).toFixed(2)}</span>
                             
-                            {item.deleted_at ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', textDecoration: 'none' }}>
-                                  Rechazado
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
+                              {isBundleItem ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                  <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: '12px' }}>
+                                    {qty}x Bs. {Number(originalPrice).toFixed(2)}
+                                  </span>
+                                  <span style={{ color: '#059669', fontWeight: 600 }}>
+                                    {qty}x Bs. {Number(unitPrice).toFixed(2)}
+                                  </span>
+                                </div>
+                              ) : originalPrice > unitPrice ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                  <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: '12px' }}>
+                                    {qty}x Bs. {Number(originalPrice).toFixed(2)}
+                                  </span>
+                                  <span style={{ color: '#059669', fontWeight: 600 }}>
+                                    {qty}x Bs. {Number(unitPrice).toFixed(2)}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>{qty}x Bs. {Number(unitPrice).toFixed(2)}</span>
+                              )}
+                              
+                              {(originalPrice > unitPrice) && !isBundleItem && !item.deleted_at && (
+                                <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                  -Bs. {Number((originalPrice - unitPrice) * qty).toFixed(2)}
                                 </span>
-                                {['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
-                                  <CanAccess permission="manage_order_items">
-                                    <button
-                                      onClick={() => handleRestoreItem(res.id)}
-                                      style={{ background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
-                                    >
-                                      Reintegrar ↩
-                                    </button>
-                                  </CanAccess>
-                                )}
-                              </div>
-                            ) : (
-                              ['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
-                                <CanAccess permission="manage_order_items">
-                                  <button
-                                    onClick={() => handleRemoveItem(res.id)}
-                                    style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, padding: '0' }}
-                                  >
-                                    <XCircle size={14} /> Quitar
-                                  </button>
-                                </CanAccess>
-                              )
-                            )}
-                          </div>
+                              )}
+                              
+                              <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '14px' }}>Bs. {Number(subtotal).toFixed(2)}</span>
+                              
+                              {item.deleted_at && (
+                                <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600 }}>Quitar</span>
+                              )}
+                            </div>
                         </div>
                       );
-                    });
                   })}
                 </div>
 
@@ -1032,7 +1007,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)', textTransform: 'uppercase' }}>
                     <span>{isFullyPaid ? 'Total Pagado:' : 'Total a Pagar:'}</span>
-                    <span style={{ color: 'var(--color-primary)' }}>Bs. {Number((sale?.dynamic_total || 0) - (!isFullyPaid ? totalPaid : 0)).toFixed(2)}</span>
+                    <span style={{ color: 'var(--color-primary)' }}>Bs. {Number(grandTotal - (!isFullyPaid ? totalPaid : 0)).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -1565,7 +1540,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{isAdvancePayment ? 'Total de la Venta:' : 'Total Original:'}</span>
-                <strong style={{ color: 'var(--text-muted)', textDecoration: (!isAdvancePayment && Number(montoReal) < Number(details.shipment?.sale?.dynamic_total + (details.shipment?.sale?.dynamic_global_discount || 0))) ? 'line-through' : 'none' }}>Bs. {Number(details.shipment?.sale?.dynamic_total + (details.shipment?.sale?.dynamic_global_discount || 0)).toFixed(2)}</strong>
+                <strong style={{ color: 'var(--text-muted)', textDecoration: (!isAdvancePayment && Number(montoReal) < grandTotal) ? 'line-through' : 'none' }}>Bs. {grandTotal.toFixed(2)}</strong>
               </div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1575,7 +1550,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   <input 
                     type="number"
                     value={montoReal}
-                    disabled={!isAdvancePayment && !!(details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)}
+                    disabled={!isAdvancePayment && hasDiscountOrGiftcard}
                     onChange={(e) => {
                       setMontoReal(e.target.value);
                       if (paymentMethod === 'ambos') {
@@ -1587,25 +1562,25 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       padding: '6px 8px', 
                       borderRadius: '6px', 
                       border: '1px solid var(--border-color)', 
-                      background: (!isAdvancePayment && (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)) ? 'var(--bg-card)' : '#fff', 
-                      color: (!isAdvancePayment && (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)) ? 'var(--text-muted)' : 'var(--color-primary)', 
+                      background: (!isAdvancePayment && hasDiscountOrGiftcard) ? 'var(--bg-card)' : '#fff', 
+                      color: (!isAdvancePayment && hasDiscountOrGiftcard) ? 'var(--text-muted)' : 'var(--color-primary)', 
                       fontWeight: 700, 
                       fontSize: '15px', 
                       textAlign: 'right',
-                      cursor: (!isAdvancePayment && (details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id)) ? 'not-allowed' : 'text'
+                      cursor: (!isAdvancePayment && hasDiscountOrGiftcard) ? 'not-allowed' : 'text'
                     }}
                   />
                 </div>
               </div>
               
-              {!isAdvancePayment && Number(montoReal) < Number(details.shipment?.sale?.dynamic_total + (details.shipment?.sale?.dynamic_global_discount || 0)) && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
+              {!isAdvancePayment && Number(montoReal) < grandTotal && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
                 <div style={{ marginTop: '8px', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, textAlign: 'right' }}>
-                  Descuento manual aplicado: -Bs. {(Number(details.shipment?.sale?.dynamic_total + (details.shipment?.sale?.dynamic_global_discount || 0)) - Number(montoReal)).toFixed(2)}
+                  Descuento manual aplicado: -Bs. {(grandTotal - Number(montoReal)).toFixed(2)}
                 </div>
               )}
             </div>
 
-            {!isAdvancePayment && ((details.shipment?.sale?.discount_id || details.shipment?.sale?.giftcard_id) ? (
+            {!isAdvancePayment && (hasDiscountOrGiftcard ? (
               <div style={{ padding: '16px', background: 'var(--color-success-alpha)', borderRadius: '8px', border: '1px solid var(--color-success)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                 <div>
                   <span style={{ fontWeight: 600, color: 'var(--color-success)', display: 'block', marginBottom: '4px' }}>Descuento Guardado</span>
@@ -1658,7 +1633,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       </button>
                     </div>
                     <DiscountInput 
-                      subtotal={details.shipment?.sale?.dynamic_total}
+                      subtotal={grandTotal}
                       items={details.shipment?.sale?.sale_details || []}
                       customerId={details.shipment?.sale?.customer_id}
                       branchId={details.shipment?.sale?.branch_id}
@@ -1677,7 +1652,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                             setUpdating(false);
                           }
                         } else {
-                          setMontoReal(details.shipment?.sale?.dynamic_total);
+                          setMontoReal(grandTotal);
                           setAppliedCode(null);
                         }
                       }}
@@ -1719,7 +1694,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     value={cashAmount}
                     onChange={(e) => {
                       setCashAmount(e.target.value);
-                      const total = Number(montoReal || details.shipment?.sale?.dynamic_total || 0);
+                      const total = Number(montoReal || grandTotal);
                       const cash = Number(e.target.value);
                       if (cash <= total) {
                         setQrAmount((total - cash).toFixed(2));
@@ -1736,7 +1711,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     value={qrAmount}
                     onChange={(e) => {
                       setQrAmount(e.target.value);
-                      const total = Number(montoReal || details.shipment?.sale?.dynamic_total || 0);
+                      const total = Number(montoReal || grandTotal);
                       const qr = Number(e.target.value);
                       if (qr <= total) {
                         setCashAmount((total - qr).toFixed(2));
