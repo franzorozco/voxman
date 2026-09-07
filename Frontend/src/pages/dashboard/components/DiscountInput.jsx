@@ -48,7 +48,7 @@ export default function DiscountInput({
     try {
       const mappedItems = items.map(item => ({
         variant_id: item.product_variant_id || item.variant_id,
-        line_subtotal: item.subtotal || item.line_subtotal
+        line_subtotal: item.dynamic_subtotal || item.subtotal || item.line_subtotal
       }));
 
       const response = await api.post('/v1/admin/checkout/validate-code', {

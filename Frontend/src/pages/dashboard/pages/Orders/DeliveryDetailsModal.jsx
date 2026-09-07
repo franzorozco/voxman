@@ -108,7 +108,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     if (showPaymentModal && details) {
       const sale = details.shipment?.sale;
       const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      const remaining = Number((sale?.total || 0) - totalPaid).toFixed(2);
+      const remaining = Number((sale?.dynamic_total || 0) - totalPaid).toFixed(2);
       setMontoReal(remaining > 0 ? remaining : '');
     }
   }, [showPaymentModal, details]);
@@ -258,7 +258,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         monto_real: montoReal,
         cash_amount: cashAmount || null,
         qr_amount: qrAmount || null,
-        sale_total: details?.shipment?.sale?.total,
+        sale_total: details?.shipment?.sale?.dynamic_total,
         is_advance_payment: isAdvancePayment
       });
       toast.success("Detalles de cobro compartidos con el cliente");
@@ -528,7 +528,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     const recipientPhone = details.shipment?.recipient_phone || 'Sin teléfono';
     const recipientCI = details.shipment?.recipient_ci || 'Sin CI';
     const destination = details.shipment?.destination_city || 'Sin destino';
-    const total = parseFloat(sale?.total || 0).toFixed(2);
+    const total = parseFloat(sale?.dynamic_total || 0).toFixed(2);
     const discount = parseFloat(sale?.discount || 0);
     const deliveryCode = details.shipment?.delivery_code || details.id.slice(0,8);
     const saleCode = sale?.invoice_number ? sale.invoice_number : (sale?.id?.slice(0,8) || '');
@@ -877,9 +877,9 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       const branchName = res.branch?.name || "Sin Sucursal asignada";
                       const qty = res.quantity;
                       const isBundleItem = item.bundle_group_id !== null && item.bundle_group_id !== undefined;
-                      const unitPrice = item.unit_price || item.final_price;
-                      const originalPrice = item.original_price || unitPrice;
-                      const subtotal = unitPrice * qty;
+                      const unitPrice = item.dynamic_unit_price || item.unit_price || item.final_price;
+                      const originalPrice = item.original_price || item.unit_price;
+                      const subtotal = item.dynamic_subtotal || (unitPrice * qty);
 
                       const totalPhysicalStock = variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
                       const isOutOfStock = totalPhysicalStock < item.quantity || branchName === "Sin Sucursal asignada";
@@ -947,12 +947,21 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                                   {qty}x Bs. {Number(unitPrice).toFixed(2)}
                                 </span>
                               </div>
+                            ) : originalPrice > unitPrice ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                <span style={{ color: 'var(--text-muted)', textDecoration: 'line-through', fontSize: '12px' }}>
+                                  {qty}x Bs. {Number(originalPrice).toFixed(2)}
+                                </span>
+                                <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                                  {qty}x Bs. {Number(unitPrice).toFixed(2)}
+                                </span>
+                              </div>
                             ) : (
                               <span style={{ color: 'var(--text-muted)' }}>{qty}x Bs. {Number(unitPrice).toFixed(2)}</span>
                             )}
-                            {Number(item.discount) > 0 && !item.deleted_at && (
+                            {(originalPrice > unitPrice) && !isBundleItem && !item.deleted_at && (
                               <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                                -Bs. {Number(item.discount).toFixed(2)}
+                                -Bs. {Number((originalPrice - unitPrice) * qty).toFixed(2)}
                               </span>
                             )}
                             <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '14px' }}>Bs. {Number(subtotal).toFixed(2)}</span>
@@ -995,12 +1004,12 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
                     <span>Subtotal:</span>
-                    <span>Bs. {Number(sale?.subtotal || 0).toFixed(2)}</span>
+                    <span>Bs. {Number(sale?.dynamic_subtotal || 0).toFixed(2)}</span>
                   </div>
-                  {Number(sale?.discount_total || 0) > 0 && (
+                  {Number(sale?.dynamic_global_discount || 0) > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--color-danger)' }}>
                       <span>Descuento Aplicado:</span>
-                      <span>- Bs. {Number(sale?.discount_total || 0).toFixed(2)}</span>
+                      <span>- Bs. {Number(sale?.dynamic_global_discount || 0).toFixed(2)}</span>
                     </div>
                   )}
                   {Number(details?.shipment?.agency_dispatch_cost) > 0 && (
@@ -1023,7 +1032,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)', textTransform: 'uppercase' }}>
                     <span>{isFullyPaid ? 'Total Pagado:' : 'Total a Pagar:'}</span>
-                    <span style={{ color: 'var(--color-primary)' }}>Bs. {Number((sale?.total || 0) - (!isFullyPaid ? totalPaid : 0)).toFixed(2)}</span>
+                    <span style={{ color: 'var(--color-primary)' }}>Bs. {Number((sale?.dynamic_total || 0) - (!isFullyPaid ? totalPaid : 0)).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -1556,7 +1565,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{isAdvancePayment ? 'Total de la Venta:' : 'Total Original:'}</span>
-                <strong style={{ color: 'var(--text-muted)', textDecoration: (!isAdvancePayment && Number(montoReal) < Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0))) ? 'line-through' : 'none' }}>Bs. {Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)).toFixed(2)}</strong>
+                <strong style={{ color: 'var(--text-muted)', textDecoration: (!isAdvancePayment && Number(montoReal) < Number(details.shipment?.sale?.dynamic_total + (details.shipment?.sale?.dynamic_global_discount || 0))) ? 'line-through' : 'none' }}>Bs. {Number(details.shipment?.sale?.dynamic_total + (details.shipment?.sale?.dynamic_global_discount || 0)).toFixed(2)}</strong>
               </div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1589,9 +1598,9 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </div>
               </div>
               
-              {!isAdvancePayment && Number(montoReal) < Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
+              {!isAdvancePayment && Number(montoReal) < Number(details.shipment?.sale?.dynamic_total + (details.shipment?.sale?.dynamic_global_discount || 0)) && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
                 <div style={{ marginTop: '8px', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, textAlign: 'right' }}>
-                  Descuento manual aplicado: -Bs. {(Number(details.shipment?.sale?.total + (details.shipment?.sale?.discount_total || 0)) - Number(montoReal)).toFixed(2)}
+                  Descuento manual aplicado: -Bs. {(Number(details.shipment?.sale?.dynamic_total + (details.shipment?.sale?.dynamic_global_discount || 0)) - Number(montoReal)).toFixed(2)}
                 </div>
               )}
             </div>
@@ -1600,7 +1609,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               <div style={{ padding: '16px', background: 'var(--color-success-alpha)', borderRadius: '8px', border: '1px solid var(--color-success)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                 <div>
                   <span style={{ fontWeight: 600, color: 'var(--color-success)', display: 'block', marginBottom: '4px' }}>Descuento Guardado</span>
-                  <div style={{ color: 'var(--color-success)', fontWeight: 800, fontSize: '16px' }}>- Bs. {Number(details.shipment.sale.discount_total).toFixed(2)}</div>
+                  <div style={{ color: 'var(--color-success)', fontWeight: 800, fontSize: '16px' }}>- Bs. {Number(details.shipment.sale.dynamic_global_discount).toFixed(2)}</div>
                 </div>
                 <CanAccess permission="manage_order_discounts">
                   <button 
@@ -1649,7 +1658,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       </button>
                     </div>
                     <DiscountInput 
-                      subtotal={details.shipment?.sale?.total}
+                      subtotal={details.shipment?.sale?.dynamic_total}
                       items={details.shipment?.sale?.sale_details || []}
                       customerId={details.shipment?.sale?.customer_id}
                       branchId={details.shipment?.sale?.branch_id}
@@ -1668,7 +1677,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                             setUpdating(false);
                           }
                         } else {
-                          setMontoReal(details.shipment?.sale?.total);
+                          setMontoReal(details.shipment?.sale?.dynamic_total);
                           setAppliedCode(null);
                         }
                       }}
@@ -1710,7 +1719,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     value={cashAmount}
                     onChange={(e) => {
                       setCashAmount(e.target.value);
-                      const total = Number(montoReal || details.shipment?.sale?.total || 0);
+                      const total = Number(montoReal || details.shipment?.sale?.dynamic_total || 0);
                       const cash = Number(e.target.value);
                       if (cash <= total) {
                         setQrAmount((total - cash).toFixed(2));
@@ -1727,7 +1736,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     value={qrAmount}
                     onChange={(e) => {
                       setQrAmount(e.target.value);
-                      const total = Number(montoReal || details.shipment?.sale?.total || 0);
+                      const total = Number(montoReal || details.shipment?.sale?.dynamic_total || 0);
                       const qr = Number(e.target.value);
                       if (qr <= total) {
                         setCashAmount((total - qr).toFixed(2));

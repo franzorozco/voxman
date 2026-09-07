@@ -71,12 +71,19 @@ class PosSaleController extends Controller
             $sale->source = 'store';
             $sale->subtotal = $request->subtotal;
             $sale->discount_total = $request->discount_total ?? 0;
-            $sale->total_discount = $request->discount_total ?? 0;
-            $sale->discount_id = $request->discount_id;
             $sale->total = $request->total;
             // Generate simple invoice number
             $sale->invoice_number = 'POS-' . time() . '-' . rand(1000, 9999);
             $sale->save();
+
+            if ($request->discount_id && $sale->discount_total > 0) {
+                \App\Models\Sales\SaleAppliedDiscount::create([
+                    'sale_id'         => $sale->id,
+                    'sale_detail_id'  => null,
+                    'discount_id'     => $request->discount_id,
+                    'discount_amount' => $sale->discount_total,
+                ]);
+            }
 
             // 2. Process Items
             foreach ($request->items as $item) {

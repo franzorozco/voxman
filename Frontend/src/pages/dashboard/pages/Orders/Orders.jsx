@@ -540,7 +540,7 @@ export default function Orders() {
                     nameToDisplay = guest.name || "Invitado";
                     phoneToDisplay = guest.whatsapp_phone || "N/A";
                   }
-                  const totalAmount = schedule.shipment?.sale?.total || 0;
+                  const totalAmount = schedule.shipment?.sale?.dynamic_total || 0;
                   const isCompleted = schedule.status === 'completed';
                   
                   return (

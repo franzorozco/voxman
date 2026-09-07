@@ -100,7 +100,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                       ? (cart.customer.user 
                           ? (cart.customer.user.profile?.first_name + " " + (cart.customer.user.profile?.last_name_paternal || "")) 
                           : (cart.customer.posProfile?.first_name + " " + (cart.customer.posProfile?.last_name_paternal || ""))) 
-                      : "Usuario Anónimo"}
+                      : (cart.guest ? (cart.guest.name || "Invitado") : "Usuario Anónimo")}
                   </div>
                 </div>
                 <div>
@@ -200,9 +200,10 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                     const isOutOfStock = availableStock < item.quantity;
                     
                     const isBundleItem = item.bundle_group_id !== null && item.bundle_group_id !== undefined;
-                    const itemPrice = (item.override_price !== null && item.override_price !== undefined) ? Number(item.override_price) : Number(item.product_variant?.price || 0);
+                    const itemPrice = item.dynamic_unit_price !== undefined ? Number(item.dynamic_unit_price) : (item.override_price !== null && item.override_price !== undefined ? Number(item.override_price) : Number(item.product_variant?.price || 0));
                     const originalPrice = Number(item.original_price || item.product_variant?.price || 0);
-                    const hasDiscount = !isBundleItem && item.discount_label;
+                    const hasDiscount = !isBundleItem && item.applied_discount;
+                    const discountLabel = item.applied_discount ? (item.applied_discount.type === 'percentage' ? `-${Number(item.applied_discount.value)}%` : `-Bs ${Number(item.applied_discount.value)}`) : item.discount_label;
 
                     return (
                     <tr key={item.id} style={isBundleItem ? { backgroundColor: 'var(--bg-hover)' } : {}}>
@@ -226,7 +227,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                             )}
                             {hasDiscount && (
                               <span style={{ fontSize: '11px', color: '#fff', fontWeight: '600', background: '#ef4444', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px' }}>
-                                {item.discount_label}
+                                {discountLabel}
                               </span>
                             )}
                             {isOutOfStock && cart.status !== 'converted' && (
@@ -270,23 +271,23 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                 <tr>
                   <td colSpan="4" className="text-right font-bold modal-footer-label">Subtotal:</td>
                   <td className="text-right font-bold modal-footer-value">
-                    Bs. {(Number(cart.total_amount_calculated) + Number(cart.total_discount || 0)).toFixed(2)}
+                    Bs. {Number(cart.dynamic_subtotal ?? (Number(cart.total_amount_calculated) + Number(cart.total_discount || 0))).toFixed(2)}
                   </td>
                 </tr>
-                {Number(cart.total_discount) > 0 && (
+                {Number(cart.dynamic_global_discount ?? cart.total_discount) > 0 && (
                   <tr>
                     <td colSpan="4" className="text-right font-bold modal-footer-label text-red-600">
                       Descuento {cart.discount ? `(${cart.discount.code})` : ''}:
                     </td>
                     <td className="text-right font-bold modal-footer-value text-red-600">
-                      -Bs. {Number(cart.total_discount).toFixed(2)}
+                      -Bs. {Number(cart.dynamic_global_discount ?? cart.total_discount).toFixed(2)}
                     </td>
                   </tr>
                 )}
                 <tr>
                   <td colSpan="4" className="text-right font-bold modal-footer-label">Total a Pagar:</td>
                   <td className="text-right font-bold modal-footer-value">
-                    Bs. {Number(cart.total_amount_calculated).toFixed(2)}
+                    Bs. {Number(cart.total_amount ?? cart.total_amount_calculated).toFixed(2)}
                   </td>
                 </tr>
               </tfoot>

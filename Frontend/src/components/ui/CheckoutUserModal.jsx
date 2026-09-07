@@ -19,9 +19,7 @@ export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmo
       const payload = isAuth ? {
         delivery_type: typeof deliveryType === 'object' ? deliveryType.type : deliveryType,
         branch_id: typeof deliveryType === 'object' ? deliveryType.branchId : null,
-        delivery_details: typeof deliveryType === 'object' ? deliveryType : { type: deliveryType },
-        discount_id: window.appliedShopDiscount?.id || null,
-        discount_amount: window.appliedShopDiscount?.discount_amount || 0
+        delivery_details: typeof deliveryType === 'object' ? deliveryType : { type: deliveryType }
       } : {};
 
       const res = await initAuthCheckout(payload);
@@ -183,8 +181,26 @@ export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmo
                             {item.color} {item.size ? `• Talla ${item.size}` : ''} • Cant: {item.quantity}
                           </p>
                         </div>
-                        <div style={{ fontWeight: '600', fontSize: '14px', color: textColor }}>
-                          Bs {(parseFloat(item.price) * item.quantity).toFixed(2)}
+                        <div style={{ textAlign: 'right' }}>
+                          {item.discount_label ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                              <p style={{ margin: 0, textDecoration: 'line-through', color: mutedColor, fontSize: '12px' }}>
+                                Bs {(parseFloat(item.original_price || item.price) * item.quantity).toFixed(2)}
+                              </p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ backgroundColor: '#dc2626', color: 'white', padding: '2px 4px', borderRadius: '4px', fontSize: '10px', fontWeight: 600 }}>
+                                  {item.discount_label}
+                                </span>
+                                <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#dc2626' }}>
+                                  Bs {(parseFloat(item.price) * item.quantity).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ fontWeight: '600', fontSize: '14px', color: textColor }}>
+                              Bs {(parseFloat(item.price) * item.quantity).toFixed(2)}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}

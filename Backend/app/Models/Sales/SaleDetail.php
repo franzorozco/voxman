@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 class SaleDetail extends BaseSaleDetail
 {
     use HasUuids;
+
+	protected $appends = [
+		'dynamic_unit_price',
+		'dynamic_subtotal'
+	];
+
 	protected $fillable = [
 		'sale_id',
 		'variant_id',
@@ -54,5 +60,33 @@ class SaleDetail extends BaseSaleDetail
 	public function giftcard()
 	{
 		return $this->belongsTo(\App\Models\Finance\Giftcard::class, 'gift_card_id');
+	}
+
+	public function sale_applied_discount()
+	{
+		return $this->hasOne(\App\Models\Sales\SaleAppliedDiscount::class, 'sale_detail_id');
+	}
+
+	public function getDynamicUnitPriceAttribute()
+	{
+		if ($this->bundle_group_id) {
+			return (float) ($this->bundle_price ?? $this->unit_price);
+		}
+
+		$basePrice = (float) ($this->original_price ?? $this->unit_price);
+		
+		if ($this->relationLoaded('sale_applied_discount') && $this->sale_applied_discount) {
+			$discountAmount = (float) $this->sale_applied_discount->discount_amount;
+			if ($this->quantity > 0) {
+				return max(0, $basePrice - ($discountAmount / $this->quantity));
+			}
+		}
+
+		return $basePrice;
+	}
+
+	public function getDynamicSubtotalAttribute()
+	{
+		return $this->dynamic_unit_price * $this->quantity;
 	}
 }

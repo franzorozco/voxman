@@ -40,7 +40,7 @@ class OrderNetworkController extends Controller
                     'product_variant.fit',
                     'product_variant.variant_attribute_values.attribute_value.attribute',
                     'product_variant.variant_images',
-                    'product_variant.inventories.branch',
+                    'product_variant.inventories.branch', 'sale_applied_discount',
                     'return_request'
                 ]);
             },
@@ -329,42 +329,57 @@ class OrderNetworkController extends Controller
                 'sale_type' => 'delivery',
                 'status' => 'pending',
                 'source' => 'order_network',
-                'subtotal' => 0, // Will calculate below
-                'discount_total' => $cart->total_discount ?? 0,
-                'discount_id' => $cart->discount_id ?? null,
-                'total' => 0,
+                'subtotal' => collect($cart->items)->sum('dynamic_subtotal'),
+                'discount_total' => $cart->dynamic_global_discount,
+                'total' => $cart->total_amount,
                 'notes' => null
             ]);
 
-            $subtotal = 0;
-            $itemsForDiscount = [];
+            // Insert global cart discount ONE time
+            if ($cart->discount_id && $cart->dynamic_global_discount > 0) {
+                \App\Models\Sales\SaleAppliedDiscount::create([
+                    'sale_id'         => $sale->id,
+                    'sale_detail_id'  => null,
+                    'discount_id'     => $cart->discount_id,
+                    'discount_amount' => $cart->dynamic_global_discount,
+                ]);
+            }
 
             $itemsBranches = collect($request->input('items_branches', []))->keyBy('variant_id');
 
-            foreach ($cart->items as $item) {
-                // Respect bundle pricing: use override_price if set
-                $price = $item->override_price !== null
-                    ? (float) $item->override_price
-                    : ($item->product_variant->price ?? 0);
-                $discountAmount = $item->discount_amount ?? 0;
-                $finalPrice = max(0, $price - $discountAmount);
-                $lineTotal = $finalPrice * $item->quantity;
+            foreach ($cart->items as $index => $item) {
+                $price = $item->dynamic_unit_price;
+                $lineTotalBeforeGlobal = $item->dynamic_subtotal;
+                $originalPrice = $item->variant ? $item->variant->price : ($item->original_price ?? $price);
                 
-                $subtotal += $lineTotal;
-
-                // Create Sale Detail
-                SaleDetail::create([
+                // Create Sale Detail (stores native price, not global discount)
+                $detail = SaleDetail::create([
                     'sale_id'         => $sale->id,
                     'variant_id'      => $item->variant_id,
                     'quantity'        => $item->quantity,
                     'unit_price'      => $price,
-                    'discount'        => $discountAmount,
-                    'final_price'     => $finalPrice,
-                    'subtotal'        => $lineTotal,
-                    'original_price'  => $item->original_price,
+                    'discount'        => 0, // native discount only, global goes to sale_sale_applied_discounts
+                    'final_price'     => $price,
+                    'subtotal'        => $lineTotalBeforeGlobal,
+                    'original_price'  => $originalPrice,
                     'bundle_price'    => $item->bundle_group_id ? $price : null,
                     'bundle_group_id' => $item->bundle_group_id,
                 ]);
+
+                // Insert item-level native discount to applied discounts
+                if ($item->applied_discount_id) {
+                    $nativeUnitDiscount = max(0, $originalPrice - $price);
+                    $nativeLineDiscount = $nativeUnitDiscount * $item->quantity;
+                    
+                    if ($nativeLineDiscount > 0) {
+                        \App\Models\Sales\SaleAppliedDiscount::create([
+                            'sale_id'         => $sale->id,
+                            'sale_detail_id'  => $detail->id,
+                            'discount_id'     => $item->applied_discount_id,
+                            'discount_amount' => $nativeLineDiscount,
+                        ]);
+                    }
+                }
 
                 // Determine branch to reserve from (per item fallback to main branch)
                 $reserveBranchId = $request->branch_id;
@@ -372,47 +387,13 @@ class OrderNetworkController extends Controller
                     $reserveBranchId = $itemsBranches->get($item->variant_id)['branch_id'];
                 }
 
-                // Deduct stock for reservation
-                $inventory = \App\Models\Inventory\Inventory::where('branch_id', $reserveBranchId)
-                    ->where('variant_id', $item->variant_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$inventory || $inventory->stock < $item->quantity) {
-                    throw new \Exception("Stock insuficiente para el producto.");
-                }
-
-                $stockBefore = $inventory->stock;
-                $inventory->stock -= $item->quantity;
-                $inventory->save();
-
-                InventoryMovement::create([
-                    'variant_id' => $item->variant_id,
-                    'branch_id' => $reserveBranchId,
-                    'movement_type' => 'sale',
-                    'quantity' => (int) $item->quantity,
-                    'stock_before' => $stockBefore,
-                    'stock_after' => $inventory->stock,
-                    'reference_type' => 'sale',
-                    'reference_id' => $sale->id,
-                    'created_by' => auth()->id() ?? null,
-                ]);
-
-                // Create Stock Reservation
-                \App\Models\Inventory\StockReservation::create([
-                    'variant_id' => $item->variant_id,
-                    'branch_id' => $reserveBranchId,
-                    'sale_id' => $sale->id,
-                    'quantity' => $item->quantity,
-                    'status' => 'reserved'
-                ]);
+                
             }
 
             // Update sale totals
             $shippingCost = (float)$request->input('shipping_cost', 0);
             $agencyDispatchCost = (float)$request->input('agency_dispatch_cost', 0);
-            $sale->subtotal = $subtotal;
-            $sale->total = max(0, $subtotal + $shippingCost + $agencyDispatchCost - ($sale->discount_total ?? 0));
+            $sale->total = max(0, $sale->subtotal + $shippingCost + $agencyDispatchCost - ($sale->discount_total ?? 0));
             $sale->save();
 
             // Create Shipment
@@ -444,6 +425,10 @@ class OrderNetworkController extends Controller
                 'driver_id' => $request->driver_id,
                 'status' => $request->boolean('save_as_draft') ? 'pending' : 'assigned'
             ]);
+
+
+            // Ensure stock is reserved immediately if it starts in an applicable state
+            $this->checkAndReserveStock($schedule, $schedule->status);
 
             // Clear Cart (or delete it)
             $cart->items()->delete();
@@ -501,12 +486,21 @@ class OrderNetworkController extends Controller
                 'sale_type' => 'delivery',
                 'status' => 'pending',
                 'source' => 'order_network',
-                'subtotal' => 0,
-                'discount_total' => $cart->total_discount ?? 0,
-                'discount_id' => $cart->discount_id ?? null,
-                'total' => 0,
+                'subtotal' => collect($cart->items)->sum('dynamic_subtotal'),
+                'discount_total' => $cart->dynamic_global_discount,
+                'total' => $cart->total_amount,
                 'notes' => 'Convertido desde proforma ' . ($cart->reference_number ?? $cart->id)
             ]);
+
+            // Insert global cart discount ONE time
+            if ($cart->discount_id && $cart->dynamic_global_discount > 0) {
+                \App\Models\Sales\SaleAppliedDiscount::create([
+                    'sale_id'         => $sale->id,
+                    'sale_detail_id'  => null,
+                    'discount_id'     => $cart->discount_id,
+                    'discount_amount' => $cart->dynamic_global_discount,
+                ]);
+            }
 
             $deliveryDetails = $cart->delivery_details ?? [];
             $mappedDeliveryType = 'scheduled_point';
@@ -545,7 +539,7 @@ class OrderNetworkController extends Controller
                               'zone' => $deliveryDetails['zone'] ?? null,
                               'street' => $deliveryDetails['street'] ?? $deliveryDetails['address'] ?? null,
                               'reference' => $deliveryDetails['reference'] ?? null,
-                              'country' => 'Bolivia',
+                              'is_default' => false
                           ]);
                           $addressId = $address->id;
                       }
@@ -562,12 +556,9 @@ class OrderNetworkController extends Controller
                           $meetingPoint = $deliveryDetails['street'] ?? $deliveryDetails['address'] ?? $deliveryDetails['zone'] ?? 'Por definir';
                       }
                 } elseif ($type === 'national') {
-                    $mappedDeliveryType = 'external';
-                    $externalCompany = $deliveryDetails['company'] ?? null;
+                    $mappedDeliveryType = 'delivery_national';
                     $destinationCity = $deliveryDetails['destination'] ?? null;
-                    if ($destinationCity) {
-                        $meetingPoint = $destinationCity;
-                    }
+                    $externalCompany = $deliveryDetails['company'] ?? null;
                     if (!empty($deliveryDetails['date'])) {
                         $scheduledDate = $deliveryDetails['date'];
                     }
@@ -597,71 +588,43 @@ class OrderNetworkController extends Controller
                 'status' => 'pending',
             ]);
 
-            $subtotal = 0;
-
             foreach ($cart->items as $item) {
-                // Respect bundle pricing: use override_price if set
-                $price = $item->override_price !== null
-                    ? (float) $item->override_price
-                    : ($item->product_variant->price ?? 0);
-                $discountAmount = $item->discount_amount ?? 0;
-                $finalPrice = max(0, $price - $discountAmount);
-                $lineTotal = $finalPrice * $item->quantity;
-                $subtotal += $lineTotal;
+                $price = $item->dynamic_unit_price;
+                $lineTotalBeforeGlobal = $item->dynamic_subtotal;
+                $originalPrice = $item->variant ? $item->variant->price : ($item->original_price ?? $price);
 
-                SaleDetail::create([
+                $detail = SaleDetail::create([
                     'sale_id'         => $sale->id,
                     'variant_id'      => $item->variant_id,
                     'quantity'        => $item->quantity,
                     'unit_price'      => $price,
-                    'discount'        => $discountAmount,
-                    'final_price'     => $finalPrice,
-                    'subtotal'        => $lineTotal,
-                    'original_price'  => $item->original_price,
+                    'discount'        => 0,
+                    'final_price'     => $price,
+                    'subtotal'        => $lineTotalBeforeGlobal,
+                    'original_price'  => $originalPrice,
                     'bundle_price'    => $item->bundle_group_id ? $price : null,
                     'bundle_group_id' => $item->bundle_group_id,
                 ]);
 
-                // Auto-assign branch with highest stock
-                $inventory = \App\Models\Inventory\Inventory::where('variant_id', $item->variant_id)
-                    ->orderBy('stock', 'desc')
-                    ->lockForUpdate()
-                    ->first();
-
-                $branchId = $inventory ? $inventory->branch_id : env('MAIN_BRANCH_ID', 1);
-
-                if ($inventory && $inventory->stock > 0) {
-                    $stockBefore = $inventory->stock;
-                    // Prevent going completely negative if not enough, though allow it if required
-                    $inventory->stock -= $item->quantity;
-                    $inventory->save();
-
-                    \App\Models\Inventory\InventoryMovement::create([
-                        'variant_id' => $item->variant_id,
-                        'branch_id' => $branchId,
-                        'movement_type' => 'sale',
-                        'quantity' => (int) $item->quantity,
-                        'stock_before' => $stockBefore,
-                        'stock_after' => $inventory->stock,
-                        'reference_type' => 'delivery_schedule',
-                        'reference_id' => $schedule->id,
-                        'created_by' => auth()->id() ?? null,
-                    ]);
+                // Insert item-level native discount to applied discounts
+                if ($item->applied_discount_id) {
+                    $nativeUnitDiscount = max(0, $originalPrice - $price);
+                    $nativeLineDiscount = $nativeUnitDiscount * $item->quantity;
+                    
+                    if ($nativeLineDiscount > 0) {
+                        \App\Models\Sales\SaleAppliedDiscount::create([
+                            'sale_id'         => $sale->id,
+                            'sale_detail_id'  => $detail->id,
+                            'discount_id'     => $item->applied_discount_id,
+                            'discount_amount' => $nativeLineDiscount,
+                        ]);
+                    }
                 }
 
-                \App\Models\Inventory\StockReservation::create([
-                    'variant_id' => $item->variant_id,
-                    'branch_id' => $branchId,
-                    'sale_id' => $sale->id,
-                    'quantity' => $item->quantity,
-                    'status' => 'reserved'
-                ]);
+                
             }
 
-            // Update sale totals
-            $sale->subtotal = $subtotal;
-            $sale->total = max(0, $subtotal - ($sale->discount_total ?? 0));
-            $sale->save();
+            // Update sale totals not needed, already handled on creation
 
             // Mark cart as ordered and do not delete
             $cart->status = 'ordered';
@@ -707,7 +670,7 @@ class OrderNetworkController extends Controller
                     'product_variant.fit',
                     'product_variant.variant_attribute_values.attribute_value.attribute',
                     'product_variant.variant_images',
-                    'product_variant.inventories.branch',
+                    'product_variant.inventories.branch', 'sale_applied_discount',
                     'return_request'
                 ]); 
             },
@@ -715,6 +678,7 @@ class OrderNetworkController extends Controller
             'shipment.sale.customer.user.profile',
             'shipment.sale.customer.posProfile',
             'shipment.sale.customer.addresses',
+            'shipment.sale.sale_applied_discounts.discount',
             'shipment.sale.discount',
             'shipment.sale.payments.payment_method',
             'shipment.sale.giftcard_transactions.giftcard',
@@ -777,6 +741,82 @@ class OrderNetworkController extends Controller
     /**
      * Update delivery status (Driver/Admin endpoint).
      */
+    
+    protected function checkAndReserveStock($schedule, $status)
+    {
+        $deliveryType = $schedule->shipment->delivery_type ?? 'scheduled_point';
+        $shouldReserve = false;
+        
+        $localReserveStates = ['assigned', 'on_the_way', 'at_the_meeting_point', 'completed'];
+        $externalReserveStates = ['prepared', 'packaged', 'shipped', 'completed'];
+        $pickupReserveStates = ['reserved', 'preparing', 'ready_for_pickup', 'completed'];
+
+        if ($deliveryType === 'store_pickup' && in_array($status, $pickupReserveStates)) {
+            $shouldReserve = true;
+        } elseif ($deliveryType === 'agency_shipping' && in_array($status, $externalReserveStates)) {
+            $shouldReserve = true;
+        } elseif (in_array($deliveryType, ['home_delivery', 'scheduled_point']) && in_array($status, $localReserveStates)) {
+            $shouldReserve = true;
+        }
+        
+        // Fallback for safety
+        if (in_array($status, ['completed', 'shipped'])) {
+            $shouldReserve = true;
+        }
+
+        if ($shouldReserve) {
+            $sale = $schedule->shipment->sale ?? null;
+            if ($sale) {
+                $branchId = $schedule->shipment->origin_branch_id ?? $schedule->shipment->pickup_branch_id ?? $sale->branch_id;
+                if (!$branchId) {
+                    $firstBranch = \App\Models\Branch\Branch::first();
+                    $branchId = $firstBranch ? $firstBranch->id : null;
+                }
+
+                if ($branchId) {
+                    foreach ($sale->sale_details()->whereNull('deleted_at')->get() as $detail) {
+                        $exists = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)
+                            ->where('variant_id', $detail->variant_id)
+                            ->exists();
+
+                        if (!$exists) {
+                            \App\Models\Inventory\StockReservation::create([
+                                'sale_id' => $sale->id,
+                                'variant_id' => $detail->variant_id,
+                                'branch_id' => $branchId,
+                                'quantity' => $detail->quantity,
+                                'status' => 'reserved'
+                            ]);
+
+                            $inventory = \App\Models\Inventory\Inventory::where('branch_id', $branchId)
+                                ->where('variant_id', $detail->variant_id)
+                                ->first();
+                                
+                            if ($inventory) {
+                                $stockBefore = $inventory->stock;
+                                $inventory->stock = max(0, $inventory->stock - $detail->quantity);
+                                $inventory->save();
+                                
+                                \App\Models\Inventory\InventoryMovement::create([
+                                    'variant_id' => $detail->variant_id,
+                                    'branch_id' => $branchId,
+                                    'movement_type' => 'sale',
+                                    'quantity' => (int) $detail->quantity,
+                                    'stock_before' => $stockBefore,
+                                    'stock_after' => $inventory->stock,
+                                    'reference_type' => 'sale',
+                                    'reference_id' => $sale->id,
+                                    'created_by' => auth()->id() ?? null,
+                                    'notes' => 'Reserva de stock en entrega ' . $schedule->shipment->delivery_code
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
@@ -821,43 +861,7 @@ class OrderNetworkController extends Controller
                 $shipment->save();
             }
 
-            if ($request->status === 'reserved') {
-                $sale = $schedule->shipment->sale ?? null;
-                if ($sale) {
-                    $branchId = $schedule->shipment->pickup_branch_id ?? $sale->branch_id;
-                    if (!$branchId) {
-                        $firstBranch = \App\Models\Branch\Branch::first();
-                        $branchId = $firstBranch ? $firstBranch->id : null;
-                    }
-
-                    if ($branchId) {
-                        foreach ($sale->sale_details()->whereNull('deleted_at')->get() as $detail) {
-                            $exists = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)
-                                ->where('variant_id', $detail->variant_id)
-                                ->exists();
-
-                            if (!$exists) {
-                                \App\Models\Inventory\StockReservation::create([
-                                    'sale_id' => $sale->id,
-                                    'variant_id' => $detail->variant_id,
-                                    'branch_id' => $branchId,
-                                    'quantity' => $detail->quantity,
-                                    'status' => 'confirmed'
-                                ]);
-
-                                $inventory = \App\Models\Inventory\Inventory::where('branch_id', $branchId)
-                                    ->where('variant_id', $detail->variant_id)
-                                    ->first();
-                                    
-                                if ($inventory) {
-                                    $inventory->stock = max(0, $inventory->stock - $detail->quantity);
-                                    $inventory->save();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            $this->checkAndReserveStock($schedule, $request->status);
 
             if ($request->status === 'shipped') {
                 $shipment = $schedule->shipment;
@@ -1146,6 +1150,8 @@ class OrderNetworkController extends Controller
         $schedule->driver_id = $request->driver_id;
         $schedule->status = 'assigned';
         $schedule->save();
+        
+        $this->checkAndReserveStock($schedule, 'assigned');
 
         return response()->json([
             'message' => 'Driver assigned successfully.',
@@ -1425,8 +1431,9 @@ class OrderNetworkController extends Controller
             if ($request->has('status')) {
                 $schedule->status = $request->status;
             }
-            
             $schedule->save();
+            
+            $this->checkAndReserveStock($schedule, $schedule->status);
 
             // Update guest
             if ($request->guest_name || $request->guest_phone) {
@@ -1922,25 +1929,29 @@ class OrderNetworkController extends Controller
             'code' => 'required|string'
         ]);
 
-        $schedule = DeliverySchedule::with(['shipment.sale.sale_details'])->findOrFail($id);
+        $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);
         $sale = $schedule->shipment->sale;
 
         if (!$sale) {
-            return response()->json(['error' => 'No se encontrÃƒÂ³ la venta asociada a esta entrega.'], 404);
+            return response()->json(['error' => 'No se encontró la venta asociada a esta entrega.'], 404);
         }
 
         // Rule: Solo uno (Only one discount/giftcard per sale)
-        if ($sale->discount_id || $sale->giftcard_id) {
+        $hasGlobalDiscount = $sale->sale_applied_discounts->whereNull('sale_detail_id')->isNotEmpty();
+        if ($hasGlobalDiscount || $sale->giftcard_id) {
             return response()->json(['error' => 'Esta venta ya tiene un descuento o giftcard aplicado.'], 400);
         }
 
         $code = trim($request->code);
 
         // Build items for validation service
-        $items = $sale->sale_details->map(function($detail) {
+        $items = $sale->sale_details->map(function($detail) use ($sale) {
+            $hasNativeDiscount = $sale->sale_applied_discounts->where('sale_detail_id', $detail->id)->isNotEmpty();
             return [
                 'variant_id' => $detail->variant_id,
-                'line_subtotal' => $detail->subtotal
+                'line_subtotal' => $detail->subtotal,
+                'bundle_group_id' => $detail->bundle_group_id,
+                'applied_discount_id' => $hasNativeDiscount ? 'has_native' : null
             ];
         })->toArray();
 
@@ -1967,7 +1978,13 @@ class OrderNetworkController extends Controller
         if ($result['type'] === 'giftcard') {
             $sale->giftcard_id = $result['id'];
         } else {
-            $sale->discount_id = $result['id'];
+            // Un solo registro de descuento global
+            \App\Models\Sales\SaleAppliedDiscount::create([
+                'sale_id' => $sale->id,
+                'sale_detail_id' => null,
+                'discount_id' => $result['id'],
+                'discount_amount' => $discountAmount
+            ]);
         }
 
         $sale->discount_total += $discountAmount;
@@ -1996,19 +2013,26 @@ class OrderNetworkController extends Controller
 
     public function removeDiscount($id)
     {
-        $schedule = DeliverySchedule::with('shipment.sale')->findOrFail($id);
+        $schedule = DeliverySchedule::with(['shipment.sale.sale_applied_discounts'])->findOrFail($id);
         $sale = $schedule->shipment->sale;
 
-        if (!$sale || (!$sale->discount_id && !$sale->giftcard_id)) {
+        $globalDiscount = $sale ? $sale->sale_applied_discounts->whereNull('sale_detail_id')->first() : null;
+
+        if (!$sale || (!$globalDiscount && !$sale->giftcard_id)) {
             return response()->json(['error' => 'No hay descuento para quitar.'], 400);
         }
 
-        $removedDiscountId = $sale->discount_id;
+        $removedDiscountId = $globalDiscount ? $globalDiscount->discount_id : null;
+
+        // Remove from applied discounts
+        if ($globalDiscount) {
+            \App\Models\Sales\SaleAppliedDiscount::where('id', $globalDiscount->id)->delete();
+        }
 
         // Revert total
         $sale->total += $sale->discount_total;
         $sale->discount_total = 0;
-        $sale->discount_id = null;
+        // $sale->discount_id = null; // No longer exists in sales table
         $sale->giftcard_id = null;
         $sale->save();
 

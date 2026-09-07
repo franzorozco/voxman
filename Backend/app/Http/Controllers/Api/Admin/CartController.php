@@ -20,7 +20,9 @@ class CartController extends Controller
         $query = Cart::with([
             'customer.user.profile', 
             'customer.posProfile', 
+            'guest',
             'discount',
+            'items.appliedDiscount',
             'items.product_variant.product.product_images',
             'items.product_variant.product.attribute_value_images',
             'items.product_variant.variant_images',
@@ -121,6 +123,9 @@ class CartController extends Controller
         $cart = Cart::with([
             'customer.user.profile',
             'customer.posProfile',
+            'guest',
+            'discount',
+            'items.appliedDiscount',
             'items.product_variant.product.product_images',
             'items.product_variant.product.attribute_value_images',
             'items.product_variant.variant_images',
@@ -183,13 +188,13 @@ class CartController extends Controller
                 'override_price' => $itemData['override_price'] ?? null,
                 'original_price' => $itemData['original_price'] ?? null,
                 'bundle_group_id' => $itemData['bundle_group_id'] ?? null,
+                'applied_discount_id' => $itemData['applied_discount_id'] ?? null,
+                'discount_label' => $itemData['discount_label'] ?? null,
                 'line_subtotal' => $lineSubtotal
             ];
         }
 
-        // Validate discount through centralized service
         $totalDiscount = 0;
-        $proratedDiscounts = [];
         if ($cart->discount_id && $subtotal > 0) {
             $discountService = app(\App\Services\Finance\DiscountValidationService::class);
             $result = $discountService->validateCode(
@@ -204,13 +209,12 @@ class CartController extends Controller
                 return response()->json(['message' => $result['message']], 422);
             }
             $totalDiscount = $result['discount_amount'];
-            $proratedDiscounts = $discountService->prorateDiscountToItems($cartItemsData, $totalDiscount, $subtotal);
         }
 
         $cart->total_discount = $totalDiscount;
         $cart->save();
 
-        foreach ($cartItemsData as $itemData) {
+        foreach ($cartItemsData as $index => $itemData) {
             $cartItem = new \App\Models\Sales\CartItem();
             $cartItem->cart_id = $cart->id;
             $cartItem->variant_id = $itemData['variant_id'];
@@ -218,11 +222,9 @@ class CartController extends Controller
             $cartItem->override_price = $itemData['override_price'];
             $cartItem->original_price = $itemData['original_price'];
             $cartItem->bundle_group_id = $itemData['bundle_group_id'];
-            
-            if (isset($proratedDiscounts[$itemData['variant_id']])) {
-                $cartItem->discount_amount = $proratedDiscounts[$itemData['variant_id']];
-            }
-
+            $cartItem->applied_discount_id = $itemData['applied_discount_id'];
+            $cartItem->discount_label = $itemData['discount_label'];
+            $cartItem->discount_amount = 0; // Pure representation
             $cartItem->save();
         }
 
@@ -239,10 +241,7 @@ class CartController extends Controller
             'items' => 'required|array|min:1',
             'items.*.variant_id' => 'required|uuid|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.override_price' => 'nullable|numeric|min:0',
-            'items.*.original_price' => 'nullable|numeric|min:0',
-            'items.*.bundle_group_id' => 'nullable|string',
-            'discount_id' => 'nullable|uuid|exists:discounts,id'
+            'discount_id' => 'nullable|uuid|exists:discounts,id',
         ]);
 
         if ($request->filled('discount_id')) {
@@ -279,12 +278,13 @@ class CartController extends Controller
                 'override_price' => $itemData['override_price'] ?? null,
                 'original_price' => $itemData['original_price'] ?? null,
                 'bundle_group_id' => $itemData['bundle_group_id'] ?? null,
+                'applied_discount_id' => $itemData['applied_discount_id'] ?? null,
+                'discount_label' => $itemData['discount_label'] ?? null,
                 'line_subtotal' => $lineSubtotal
             ];
         }
 
         $totalDiscount = 0;
-        $proratedDiscounts = [];
         if ($cart->discount_id && $subtotal > 0) {
             $discountService = app(\App\Services\Finance\DiscountValidationService::class);
             $result = $discountService->validateCode(
@@ -301,13 +301,12 @@ class CartController extends Controller
                 return response()->json(['message' => $result['message']], 422);
             }
             $totalDiscount = $result['discount_amount'];
-            $proratedDiscounts = $discountService->prorateDiscountToItems($cartItemsData, $totalDiscount, $subtotal);
         }
 
         $cart->total_discount = $totalDiscount;
         $cart->save();
 
-        foreach ($cartItemsData as $itemData) {
+        foreach ($cartItemsData as $index => $itemData) {
             $cartItem = new \App\Models\Sales\CartItem();
             $cartItem->cart_id = $cart->id;
             $cartItem->variant_id = $itemData['variant_id'];
@@ -315,11 +314,9 @@ class CartController extends Controller
             $cartItem->override_price = $itemData['override_price'];
             $cartItem->original_price = $itemData['original_price'];
             $cartItem->bundle_group_id = $itemData['bundle_group_id'];
-            
-            if (isset($proratedDiscounts[$itemData['variant_id']])) {
-                $cartItem->discount_amount = $proratedDiscounts[$itemData['variant_id']];
-            }
-
+            $cartItem->applied_discount_id = $itemData['applied_discount_id'];
+            $cartItem->discount_label = $itemData['discount_label'];
+            $cartItem->discount_amount = 0; // Pure representation
             $cartItem->save();
         }
 
@@ -353,50 +350,56 @@ class CartController extends Controller
                 'sale_type' => 'in_store',
                 'status' => 'completed',
                 'source' => 'web_conversion',
-                'subtotal' => 0,
-                'discount_total' => $cart->total_discount ?? 0,
-                'discount_id' => $cart->discount_id ?? null,
-                'total' => 0,
+                'subtotal' => collect($cart->items)->sum('dynamic_subtotal'),
+                'discount_total' => $cart->dynamic_global_discount,
+                'total' => $cart->total_amount,
                 'notes' => 'Convertido desde carrito ' . $cart->reference_number
             ]);
 
-            if ($sale->discount_id) {
-                \App\Models\Discount\Discount::where('id', $sale->discount_id)->increment('used_count');
+            if ($cart->discount_id) {
+                \App\Models\Discount\Discount::where('id', $cart->discount_id)->increment('used_count');
+                
+                if ($cart->dynamic_global_discount > 0) {
+                    \App\Models\Sales\SaleAppliedDiscount::create([
+                        'sale_id'         => $sale->id,
+                        'sale_detail_id'  => null,
+                        'discount_id'     => $cart->discount_id,
+                        'discount_amount' => $cart->dynamic_global_discount,
+                    ]);
+                }
             }
 
-            $subtotal = 0;
-
-            foreach ($cart->items as $item) {
-                // If override_price exists (bundle item), use it. Otherwise use normal variant price.
-                $price = $item->override_price !== null 
-                    ? (float) $item->override_price 
-                    : ($item->product_variant->price ?? 0);
-                    
-                $discountAmount = $item->discount_amount ?? 0;
-                $finalPrice = max(0, $price - $discountAmount);
-                $lineTotal = $finalPrice * $item->quantity;
-                $subtotal += $lineTotal;
+            foreach ($cart->items as $index => $item) {
+                $price = $item->dynamic_unit_price;
+                $lineTotalBeforeGlobal = $item->dynamic_subtotal;
+                $originalPrice = $item->variant ? $item->variant->price : ($item->original_price ?? $price);
 
                 $detail = \App\Models\Sales\SaleDetail::create([
                     'sale_id'         => $sale->id,
                     'variant_id'      => $item->variant_id,
                     'quantity'        => $item->quantity,
                     'unit_price'      => $price,
-                    'discount'        => $discountAmount,
-                    'final_price'     => $finalPrice,
-                    'subtotal'        => $lineTotal,
-                    'original_price'  => $item->original_price,
+                    'discount'        => 0, // native discount only, global goes to sale_applied_discounts
+                    'final_price'     => $price,
+                    'subtotal'        => $lineTotalBeforeGlobal,
+                    'original_price'  => $originalPrice,
                     'bundle_price'    => $item->bundle_group_id ? $price : null,
                     'bundle_group_id' => $item->bundle_group_id,
                 ]);
 
-                if ($sale->discount_id && $discountAmount > 0) {
-                    \App\Models\Sales\SaleAppliedDiscount::create([
-                        'sale_id'         => $sale->id,
-                        'sale_detail_id'  => $detail->id,
-                        'discount_id'     => $sale->discount_id,
-                        'discount_amount' => $discountAmount,
-                    ]);
+                // Insert item-level native discount to applied discounts
+                if ($item->applied_discount_id) {
+                    $nativeUnitDiscount = max(0, $originalPrice - $price);
+                    $nativeLineDiscount = $nativeUnitDiscount * $item->quantity;
+                    
+                    if ($nativeLineDiscount > 0) {
+                        \App\Models\Sales\SaleAppliedDiscount::create([
+                            'sale_id'         => $sale->id,
+                            'sale_detail_id'  => $detail->id,
+                            'discount_id'     => $item->applied_discount_id,
+                            'discount_amount' => $nativeLineDiscount,
+                        ]);
+                    }
                 }
 
                 // Find Stock Reservations for this cart and confirm them

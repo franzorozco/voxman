@@ -29,8 +29,36 @@ class CartItem extends BaseCartItem
 		'discount_amount'=> 'decimal:2',
 	];
 
+	protected $appends = ['dynamic_unit_price', 'dynamic_subtotal'];
+
 	public function variant()
 	{
 		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();
+	}
+
+	public function appliedDiscount()
+	{
+		return $this->belongsTo(\App\Models\Discount\Discount::class, 'applied_discount_id');
+	}
+
+	public function getDynamicUnitPriceAttribute()
+	{
+		$price = $this->variant->price ?? 0;
+		if ($this->override_price !== null) {
+			return (float) $this->override_price;
+		}
+		if ($this->appliedDiscount) {
+			if ($this->appliedDiscount->type === 'percentage') {
+				return $price - ($price * $this->appliedDiscount->value / 100);
+			} else {
+				return max(0, $price - $this->appliedDiscount->value);
+			}
+		}
+		return $price;
+	}
+
+	public function getDynamicSubtotalAttribute()
+	{
+		return $this->dynamic_unit_price * $this->quantity;
 	}
 }

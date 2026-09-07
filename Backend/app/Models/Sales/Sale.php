@@ -19,6 +19,12 @@ class Sale extends BaseSale
         });
     }
     
+	protected $appends = [
+		'dynamic_subtotal',
+		'dynamic_global_discount',
+		'dynamic_total'
+	];
+
 	protected $fillable = [
 		'customer_id',
 		'branch_id',
@@ -64,5 +70,26 @@ class Sale extends BaseSale
 	public function stockReservations()
 	{
 		return $this->hasMany(\App\Models\Inventory\StockReservation::class, 'sale_id');
+	}
+
+	public function getDynamicSubtotalAttribute()
+	{
+		if ($this->relationLoaded('sale_details')) {
+			return $this->sale_details->sum('dynamic_subtotal');
+		}
+		return (float) $this->subtotal;
+	}
+
+	public function getDynamicGlobalDiscountAttribute()
+	{
+		if ($this->relationLoaded('sale_applied_discounts')) {
+			return $this->sale_applied_discounts->whereNull('sale_detail_id')->sum('discount_amount');
+		}
+		return (float) $this->discount_total;
+	}
+
+	public function getDynamicTotalAttribute()
+	{
+		return max(0, $this->dynamic_subtotal - $this->dynamic_global_discount);
 	}
 }

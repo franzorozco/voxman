@@ -140,11 +140,15 @@ class ShopCheckoutController extends Controller
             ]);
 
             // 4. Process Items
-            foreach ($cartData['items'] as $item) {
+            foreach ($cartData['items'] as $index => $item) {
                 $isBundle = !empty($item['bundle_group_id']);
-                $overridePrice = $item['override_price'] ?? (isset($item['original_price']) && $item['price'] != $item['original_price'] ? $item['price'] : null);
                 
-                // Insert cart item – preserve bundle pricing if present
+                $overridePrice = null;
+                if ($isBundle) {
+                    $overridePrice = $item['override_price'] ?? (isset($item['original_price']) && $item['price'] != $item['original_price'] ? $item['price'] : null);
+                }
+                
+                // Insert cart item adhering to strict rules
                 CartItem::create([
                     'cart_id'         => $cart->id,
                     'variant_id'      => $item['variant_id'] ?? null,
@@ -152,7 +156,7 @@ class ShopCheckoutController extends Controller
                     'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
                     'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
                     'bundle_group_id' => $item['bundle_group_id'] ?? null,
-                    'discount_amount' => $proratedDiscounts[$item['variant_id'] ?? ''] ?? 0,
+                    'discount_amount' => 0, // Global prorated discounts do NOT go here
                     'applied_discount_id' => $item['applied_discount_id'] ?? null,
                     'discount_label'  => $item['discount_label'] ?? null,
                 ]);
@@ -293,7 +297,7 @@ class ShopCheckoutController extends Controller
             ]);
 
             // 2. Process Items and Verify Stock (without reserving)
-            foreach ($cartData['items'] as $item) {
+            foreach ($cartData['items'] as $index => $item) {
                 if (isset($item['variant_id'])) {
                     $variant = \App\Models\Catalog\ProductVariant::with(['inventories', 'product'])->find($item['variant_id']);
                     if (!$variant) {
@@ -319,9 +323,13 @@ class ShopCheckoutController extends Controller
                     }
 
                 $isBundle = !empty($item['bundle_group_id']);
-                $overridePrice = $item['override_price'] ?? (isset($item['original_price']) && $item['price'] != $item['original_price'] ? $item['price'] : null);
                 
-                // Insert cart item – preserve bundle/discount pricing if present
+                $overridePrice = null;
+                if ($isBundle) {
+                    $overridePrice = $item['override_price'] ?? (isset($item['original_price']) && $item['price'] != $item['original_price'] ? $item['price'] : null);
+                }
+                
+                // Insert cart item adhering to strict rules
                 CartItem::create([
                     'cart_id'         => $cart->id,
                     'variant_id'      => $item['variant_id'] ?? null,
@@ -329,7 +337,7 @@ class ShopCheckoutController extends Controller
                     'override_price'  => $overridePrice !== null ? (float) $overridePrice : null,
                     'original_price'  => isset($item['original_price'])  ? (float) $item['original_price']  : null,
                     'bundle_group_id' => $item['bundle_group_id'] ?? null,
-                    'discount_amount' => $proratedDiscounts[$item['variant_id'] ?? ''] ?? 0,
+                    'discount_amount' => 0, // Global prorated discounts do NOT go here
                     'applied_discount_id' => $item['applied_discount_id'] ?? null,
                     'discount_label'  => $item['discount_label'] ?? null,
                 ]);

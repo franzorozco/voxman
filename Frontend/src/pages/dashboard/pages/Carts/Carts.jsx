@@ -412,9 +412,9 @@ export default function Carts() {
                         ? (cart.customer.user 
                             ? (cart.customer.user.profile?.first_name + " " + (cart.customer.user.profile?.last_name_paternal || "")) 
                             : (cart.customer.posProfile?.first_name + " " + (cart.customer.posProfile?.last_name_paternal || ""))) 
-                        : "Anónimo"}
+                        : (cart.guest ? (cart.guest.name || "Invitado") : "Anónimo")}
                     </td>
-                    <td style={{ fontWeight: 600 }}>Bs. {Number(cart.total_amount_calculated).toFixed(2)}</td>
+                    <td style={{ fontWeight: 600 }}>Bs. {Number(cart.total_amount ?? cart.total_amount_calculated).toFixed(2)}</td>
                     <td>
                       <span className={`status-badge status-${cart.status}`}>
                         {cart.status === 'active' && 'Carrito Web (Activo)'}

@@ -323,26 +323,48 @@ class DiscountValidationService
     public function prorateDiscountToItems(array $items, float $totalDiscount, float $subtotal): array
     {
         if ($totalDiscount <= 0 || $subtotal <= 0) {
-            return [];
+            return array_fill(0, count($items), 0);
         }
 
-        $result = [];
-        $remaining = $totalDiscount;
-        $count = count($items);
+        $result = array_fill(0, count($items), 0);
+
+        // Find eligible items and their subtotal sum
+        $eligibleIndexes = [];
+        $eligibleSubtotal = 0;
 
         foreach ($items as $i => $item) {
-            $variantId = is_array($item) ? $item['variant_id'] : $item->variant_id;
+            $isBundleItem = is_array($item) ? !empty($item['bundle_group_id']) : !empty($item->bundle_group_id);
+            if ($isBundleItem) continue;
+
+            $hasNativeDiscount = is_array($item) ? !empty($item['applied_discount_id']) : !empty($item->applied_discount_id);
+            if ($hasNativeDiscount) continue;
+
+            $lineSubtotal = is_array($item) ? ($item['line_subtotal'] ?? 0) : ($item->line_subtotal ?? $item->subtotal ?? 0);
+            
+            $eligibleIndexes[] = $i;
+            $eligibleSubtotal += $lineSubtotal;
+        }
+
+        if (empty($eligibleIndexes) || $eligibleSubtotal <= 0) {
+            return $result;
+        }
+
+        $remaining = $totalDiscount;
+        $count = count($eligibleIndexes);
+
+        foreach ($eligibleIndexes as $idx => $i) {
+            $item = $items[$i];
             $lineSubtotal = is_array($item) ? ($item['line_subtotal'] ?? 0) : ($item->line_subtotal ?? $item->subtotal ?? 0);
 
-            if ($i === $count - 1) {
+            if ($idx === $count - 1) {
                 $itemDiscount = $remaining;
             } else {
-                $weight = $subtotal > 0 ? $lineSubtotal / $subtotal : 0;
+                $weight = $eligibleSubtotal > 0 ? $lineSubtotal / $eligibleSubtotal : 0;
                 $itemDiscount = round($totalDiscount * $weight, 2);
                 $remaining -= $itemDiscount;
             }
 
-            $result[$variantId] = max(0, $itemDiscount);
+            $result[$i] = max(0, $itemDiscount);
         }
 
         return $result;

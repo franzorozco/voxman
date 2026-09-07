@@ -13,7 +13,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
   
   const [customers, setCustomers] = useState([]);
   const [searchCustomer, setSearchCustomer] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState(cart?.customer || null);
+  const [selectedCustomer, setSelectedCustomer] = useState(cart?.customer || cart?.guest || null);
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
 
   const [products, setProducts] = useState([]);
@@ -30,11 +30,13 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
         quantity: item.quantity,
         product: item.product_variant?.product,
         variant: item.product_variant,
-        price: item.override_price !== null && item.override_price !== undefined ? item.override_price : (item.product_variant?.price || 0),
+        price: item.dynamic_unit_price !== undefined ? item.dynamic_unit_price : (item.override_price !== null && item.override_price !== undefined ? item.override_price : (item.product_variant?.price || 0)),
         maxStock: item.product_variant?.inventories?.reduce((sum, inv) => sum + (inv.stock || 0), 0) || 0,
         override_price: item.override_price,
         original_price: item.original_price,
-        bundle_group_id: item.bundle_group_id
+        bundle_group_id: item.bundle_group_id,
+        applied_discount_id: item.applied_discount_id,
+        discount_label: item.discount_label
       }));
       setItems(initialItems);
     }
@@ -202,14 +204,17 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
 
     setIsSubmitting(true);
     try {
+      const isGuest = selectedCustomer && selectedCustomer.whatsapp_phone;
       const payload = {
-        customer_id: selectedCustomer?.id || null,
+        customer_id: isGuest ? null : (selectedCustomer?.id || null),
         items: items.map(item => ({
           variant_id: item.variant_id,
           quantity: item.quantity,
           override_price: item.override_price,
           original_price: item.original_price,
-          bundle_group_id: item.bundle_group_id
+          bundle_group_id: item.bundle_group_id,
+          applied_discount_id: item.applied_discount_id,
+          discount_label: item.discount_label
         }))
       };
 
@@ -233,6 +238,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
     if (cust.user?.profile) return `${cust.user.profile.first_name} ${cust.user.profile.last_name_paternal || ''}`;
     if (cust.posProfile) return `${cust.posProfile.first_name} ${cust.posProfile.last_name_paternal || ''}`;
     if (cust.pos_profile) return `${cust.pos_profile.first_name} ${cust.pos_profile.last_name_paternal || ''}`;
+    if (cust.whatsapp_phone) return `${cust.name || 'Invitado'}`; // Para guest
     return 'Cliente Anónimo';
   };
 

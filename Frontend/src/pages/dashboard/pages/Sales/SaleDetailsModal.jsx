@@ -149,7 +149,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                         Acumulados: <strong>{sale.customer.points || 0} pts</strong>
                       </div>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        Generados en esta venta: +{Math.floor(sale.total / 10)} pts
+                        Generados en esta venta: +{Math.floor((sale.dynamic_total || sale.total) / 10)} pts
                       </div>
                     </div>
                   </CanAccess>
@@ -490,13 +490,13 @@ export default function SaleDetailsModal({ saleId, onClose }) {
             <div className="sale-detail-section" style={{ width: '100%', maxWidth: '300px', border: 'none', padding: '10px 0', background: 'transparent' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
-                <span>Bs. {parseFloat(sale.subtotal).toFixed(2)}</span>
+                <span>Bs. {parseFloat((sale.dynamic_subtotal || sale.subtotal)).toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Descuento / Giftcard:</span>
                 <div style={{ textAlign: 'right' }}>
-                  <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat(sale.discount_total || 0).toFixed(2)}</span>
-                  {parseFloat(sale.discount_total) > 0 && (
+                  <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat((sale.dynamic_global_discount || sale.discount_total) || 0).toFixed(2)}</span>
+                  {parseFloat((sale.dynamic_global_discount || sale.discount_total)) > 0 && (
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'right' }}>
                         {sale?.discount && (
                             <div style={{ marginBottom: '2px', fontWeight: 600 }}>Cupón aplicado: {sale.discount.code} ({sale.discount.name})</div>
@@ -510,7 +510,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '2px solid var(--border-color)' }}>
                 <span style={{ fontWeight: 700, fontSize: '16px' }}>TOTAL:</span>
-                <span style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-primary)' }}>Bs. {parseFloat(sale.subtotal - (sale.discount_total || 0)).toFixed(2)}</span>
+                <span style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-primary)' }}>Bs. {parseFloat((sale.dynamic_subtotal || sale.subtotal) - ((sale.dynamic_global_discount || sale.discount_total) || 0)).toFixed(2)}</span>
               </div>
             </div>
           </div>

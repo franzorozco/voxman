@@ -214,7 +214,7 @@ export default function GuestDetails({ guestId, onClose }) {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Pagado</div>
-                              <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '18px' }}>Bs. {Number(sale.total).toFixed(2)}</div>
+                              <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '18px' }}>Bs. {Number((sale.dynamic_total || sale.total)).toFixed(2)}</div>
                             </div>
                             <div style={{ color: 'var(--text-muted)' }}>
                               {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -271,7 +271,7 @@ export default function GuestDetails({ guestId, onClose }) {
                                     <div style={{ paddingTop: '8px' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
                                         <span>Subtotal:</span>
-                                        <span>Bs. {Number(sale.subtotal).toFixed(2)}</span>
+                                        <span>Bs. {Number((sale.dynamic_subtotal || sale.subtotal)).toFixed(2)}</span>
                                       </div>
                                       {shipment && shipment.delivery_type === 'external' && Number(shipment.agency_dispatch_cost || 0) > 0 && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
@@ -281,7 +281,7 @@ export default function GuestDetails({ guestId, onClose }) {
                                       )}
                                       <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '2px solid var(--border-color)', fontWeight: 800, fontSize: '16px', color: 'var(--text-main)' }}>
                                         <span>{sale.status === 'paid' ? 'TOTAL PAGADO:' : 'TOTAL A PAGAR:'}</span>
-                                        <span>Bs. {Number(sale.total).toFixed(2)}</span>
+                                        <span>Bs. {Number((sale.dynamic_total || sale.total)).toFixed(2)}</span>
                                       </div>
                                     </div>
                                   </div>
