@@ -270,6 +270,22 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                             <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                               {detail.giftcard ? 'Tarjeta de Regalo' : (variant?.sku || '')}
                               
+                              {variant?.variant_attribute_values?.map((v, i) => (
+                                <span key={i} style={{ background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>
+                                  {v.attribute_value?.attribute?.name || 'Atributo'}: {v.attribute_value?.value || 'N/A'}
+                                </span>
+                              ))}
+                              {!variant?.variant_attribute_values?.some(v => v.attribute_value?.attribute?.name?.toLowerCase() === 'talla' || v.attribute_value?.attribute?.name?.toLowerCase() === 'size') && variant?.size && (
+                                <span style={{ background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>
+                                  Talla: {variant.size.name}
+                                </span>
+                              )}
+                              {!variant?.variant_attribute_values?.some(v => v.attribute_value?.attribute?.name?.toLowerCase() === 'color' || v.attribute_value?.attribute?.name?.toLowerCase() === 'fit') && variant?.fit && (
+                                <span style={{ background: 'var(--bg-body)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>
+                                  Color/Fit: {variant.fit.name}
+                                </span>
+                              )}
+                              
                               {detail.bundle_group_id && (
                                 <span style={{ color: '#d97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>
                                   <Sparkles size={10} /> Ítem de Conjunto
@@ -302,32 +318,38 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                       </td>
                       <td style={{textAlign: 'center', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>{detail.quantity}</td>
                       <td style={{textAlign: 'right', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>
-                        {detail.bundle_group_id ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                          {(detail.original_price && detail.original_price > (detail.dynamic_unit_price || detail.unit_price) && !detail.deleted_at) && (
                             <span style={{ fontSize: '11px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                              Bs. {parseFloat(detail.original_price || detail.unit_price).toFixed(2)}
+                              Bs. {parseFloat(detail.original_price).toFixed(2)}
                             </span>
-                            <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
-                              Bs. {parseFloat(detail.unit_price).toFixed(2)}
-                            </span>
-                          </div>
-                        ) : (
-                          `Bs. ${parseFloat(detail.unit_price).toFixed(2)}`
-                        )}
+                          )}
+                          <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>
+                            Bs. {parseFloat(detail.dynamic_unit_price || detail.unit_price).toFixed(2)}
+                          </span>
+                        </div>
                       </td>
-                      <td style={{textAlign: 'right', color: parseFloat(detail.discount || 0) > 0 ? 'var(--status-danger)' : 'var(--text-muted)', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>
-                        {parseFloat(detail.discount || 0) > 0 ? (
-                          <>
-                            <div style={{ fontWeight: 600 }}>-Bs. {(parseFloat(detail.discount || 0) * detail.quantity).toFixed(2)}</div>
-                            <div style={{ fontSize: '11px', opacity: 0.8 }}>
-                              {sale.sale_applied_discounts?.find(d => d.sale_detail_id === detail.id)?.discount?.code 
-                                ? `Promo: ${sale.sale_applied_discounts.find(d => d.sale_detail_id === detail.id).discount.code}`
-                                : 'Manual'}
-                            </div>
-                          </>
-                        ) : '-'}
+                      <td style={{textAlign: 'right', color: 'var(--status-danger)', textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>
+                        {(() => {
+                          const effPrice = detail.dynamic_unit_price || detail.unit_price;
+                          const origPrice = (detail.original_price && detail.original_price > effPrice) ? detail.original_price : effPrice;
+                          const dynamicItemDiscount = (origPrice - effPrice) * detail.quantity;
+                          if (dynamicItemDiscount > 0 && !detail.deleted_at) {
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <div style={{ fontWeight: 600 }}>-Bs. {dynamicItemDiscount.toFixed(2)}</div>
+                                <div style={{ fontSize: '11px', opacity: 0.8 }}>
+                                  {sale.sale_applied_discounts?.find(d => d.sale_detail_id === detail.id)?.discount?.code 
+                                    ? `Promo: ${sale.sale_applied_discounts.find(d => d.sale_detail_id === detail.id).discount.code}`
+                                    : (detail.bundle_group_id ? 'Conjunto' : 'Descuento')}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return '-';
+                        })()}
                       </td>
-                      <td style={{textAlign: 'right', fontWeight: 600, textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>Bs. {parseFloat(detail.subtotal).toFixed(2)}</td>
+                      <td style={{textAlign: 'right', fontWeight: 600, textDecoration: detail.deleted_at ? 'line-through' : 'none'}}>Bs. {parseFloat(detail.dynamic_subtotal || detail.subtotal).toFixed(2)}</td>
                       <td style={{textAlign: 'center'}}>
                         {detail.quantity > 0 && !detail.giftcard && !detail.deleted_at ? (
                           <CanAccess permission="create_returns" fallback={<span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>-</span>}>
@@ -489,31 +511,53 @@ export default function SaleDetailsModal({ saleId, onClose }) {
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <div className="sale-detail-section" style={{ width: '100%', maxWidth: '300px', border: 'none', padding: '10px 0', background: 'transparent' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
-                <span>Bs. {parseFloat((sale.dynamic_subtotal || sale.subtotal)).toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Descuento / Giftcard:</span>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat((sale.dynamic_global_discount || sale.discount_total) || 0).toFixed(2)}</span>
-                  {parseFloat((sale.dynamic_global_discount || sale.discount_total)) > 0 && (
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'right' }}>
-                        {sale?.discount && (
-                            <div style={{ marginBottom: '2px', fontWeight: 600 }}>Cupón aplicado: {sale.discount.code} ({sale.discount.name})</div>
-                        )}
-                        {sale?.giftcard_transactions?.map(tx => (
-                            <div key={tx.id} style={{ marginBottom: '2px', fontWeight: 600 }}>Giftcard usada: {tx.giftcard?.code} (-Bs. {Number(tx.amount).toFixed(2)})</div>
-                        ))}
+                  <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
+                  <span>Bs. {parseFloat(sale.dynamic_subtotal || sale.subtotal).toFixed(2)}</span>
+                </div>
+                
+                {sale.shipments?.[0]?.agency_dispatch_cost > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Costo de Envío a Agencia:</span>
+                    <span>Bs. {parseFloat(sale.shipments[0].agency_dispatch_cost).toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {sale.shipments?.[0] && sale.shipments[0].shipping_payment_type !== 'collect' && Number(sale.shipments[0].shipping_cost) > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Costo de Envío:</span>
+                    <span>Bs. {parseFloat(sale.shipments[0].shipping_cost).toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {parseFloat(sale.dynamic_global_discount || sale.discount_total || 0) > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Descuento / Giftcard:</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat(sale.dynamic_global_discount || sale.discount_total).toFixed(2)}</span>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'right' }}>
+                          {sale?.sale_applied_discounts?.find(d => d.sale_detail_id == null)?.discount?.code && (
+                              <div style={{ marginBottom: '2px', fontWeight: 600 }}>Cupón aplicado: {sale.sale_applied_discounts.find(d => d.sale_detail_id == null).discount.code}</div>
+                          )}
+                          {sale?.giftcard_transactions?.map(tx => (
+                              <div key={tx.id} style={{ marginBottom: '2px', fontWeight: 600 }}>Giftcard usada: {tx.giftcard?.code} (-Bs. {Number(tx.amount).toFixed(2)})</div>
+                          ))}
+                      </div>
                     </div>
-                  )}
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '2px solid var(--border-color)' }}>
+                  <span style={{ fontWeight: 700, fontSize: '16px' }}>TOTAL:</span>
+                  <span style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-primary)' }}>
+                    Bs. {(() => {
+                        const computedShippingCost = sale.shipments?.[0]?.shipping_payment_type !== 'collect' ? Number(sale.shipments?.[0]?.shipping_cost || 0) : 0;
+                        const computedAgencyCost = Number(sale.shipments?.[0]?.agency_dispatch_cost || 0);
+                        return (Number(sale.dynamic_total || 0) + computedShippingCost + computedAgencyCost).toFixed(2);
+                    })()}
+                  </span>
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '2px solid var(--border-color)' }}>
-                <span style={{ fontWeight: 700, fontSize: '16px' }}>TOTAL:</span>
-                <span style={{ fontWeight: 700, fontSize: '18px', color: 'var(--color-primary)' }}>Bs. {parseFloat((sale.dynamic_subtotal || sale.subtotal) - ((sale.dynamic_global_discount || sale.discount_total) || 0)).toFixed(2)}</span>
-              </div>
             </div>
-          </div>
         </div>
 
         {/* Footer actions */}

@@ -375,11 +375,17 @@ export default function Sales() {
                   </td>
                   <td>
                     <div style={{ fontWeight: 600, color: 'var(--color-primary)' }}>
-                      Bs. {parseFloat(sale.subtotal - (sale.discount_total || 0)).toFixed(2)}
+                      Bs. {(() => {
+                        const computedShippingCost = sale.shipments?.[0]?.shipping_payment_type !== 'collect' ? Number(sale.shipments?.[0]?.shipping_cost || 0) : 0;
+                        const computedAgencyCost = Number(sale.shipments?.[0]?.agency_dispatch_cost || 0);
+                        const grandTotal = Number(sale.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
+                        const totalPaid = sale.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+                        return (sale.status === 'paid' ? grandTotal : (grandTotal - totalPaid)).toFixed(2);
+                      })()}
                     </div>
-                    {parseFloat(sale.discount_total) > 0 && (
+                    {parseFloat(sale.dynamic_global_discount || sale.discount_total) > 0 && (
                       <div style={{ fontSize: '11px', color: 'var(--status-danger)' }}>
-                        Desc: -Bs. {parseFloat(sale.discount_total).toFixed(2)}
+                        Desc: -Bs. {parseFloat(sale.dynamic_global_discount || sale.discount_total).toFixed(2)}
                       </div>
                     )}
                   </td>

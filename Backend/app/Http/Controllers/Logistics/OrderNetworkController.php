@@ -45,6 +45,8 @@ class OrderNetworkController extends Controller
                 ]);
             },
             'shipment.sale.stock_reservations',
+            'shipment.sale.payments',
+            'shipment.sale.sale_applied_discounts',
             'driver.user.profile'
         ])->orderBy('created_at', 'desc');
 

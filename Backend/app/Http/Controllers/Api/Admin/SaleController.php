@@ -18,6 +18,8 @@ class SaleController extends Controller
             'branch',
             'sale_details.product_variant.product',
             'sale_details.giftcard',
+            'sale_details.sale_applied_discount',
+            'sale_applied_discounts',
             'payments.payment_method',
             'giftcard_transactions.giftcard',
             'guest',
@@ -114,10 +116,12 @@ class SaleController extends Controller
                     'product_variant.size',
                     'product_variant.fit',
                     'product_variant.variant_attribute_values.attribute_value.attribute',
+                    'sale_applied_discount',
                     'return_request'
                 ]); 
             },
             'sale_details.giftcard',
+            'sale_details.sale_applied_discount',
             'sale_details.owner.user.profile',
             'payments.payment_method',
             'shipments.address',

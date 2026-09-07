@@ -537,11 +537,17 @@ export default function Orders() {
                       nameToDisplay = `Cliente ${customer.customer_code}`;
                     }
                   } else if (guest) {
-                    nameToDisplay = guest.name || "Invitado";
-                    phoneToDisplay = guest.whatsapp_phone || "N/A";
-                  }
-                  const totalAmount = schedule.shipment?.sale?.dynamic_total || 0;
-                  const isCompleted = schedule.status === 'completed';
+                      nameToDisplay = guest.name || "Invitado";
+                      phoneToDisplay = guest.whatsapp_phone || "N/A";
+                    }
+                    const sale = schedule.shipment?.sale;
+                    const computedShippingCost = schedule.shipment?.shipping_payment_type !== 'collect' ? Number(schedule.shipment?.shipping_cost || 0) : 0;
+                    const computedAgencyCost = Number(schedule.shipment?.agency_dispatch_cost || 0);
+                    const grandTotal = Number(sale?.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
+                    const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+                    const isFullyPaid = sale?.status === 'paid';
+                    const totalAmount = grandTotal - (!isFullyPaid ? totalPaid : 0);
+                    const isCompleted = schedule.status === 'completed';
                   
                   return (
                     <div key={schedule.id} className={`bubble-row bubble-status-${schedule.status} ${isCompleted ? 'is-completed' : ''}`}>
