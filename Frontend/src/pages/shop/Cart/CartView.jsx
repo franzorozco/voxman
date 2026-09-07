@@ -12,6 +12,7 @@ import CheckoutGuestModal from '../../../components/ui/CheckoutGuestModal';
 import CheckoutCustomerModal from '../../../components/ui/CheckoutCustomerModal';
 import CheckoutDeliveryModal from '../../../components/ui/CheckoutDeliveryModal';
 import CheckoutUserModal from '../../../components/ui/CheckoutUserModal';
+import CheckoutConflictModal from '../../../components/ui/CheckoutConflictModal';
 import './CartView.css';
 
 const CartView = () => {
@@ -31,6 +32,8 @@ const CartView = () => {
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [discountLoading, setDiscountLoading] = useState(false);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+  const [stockConflicts, setStockConflicts] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -510,6 +513,13 @@ const CartView = () => {
         appliedGlobalDiscount={appliedGlobalDiscount}
         isAuth={!!currentUser}
         cartToken={localStorage.getItem('shop_cart_token')}
+      />
+
+      <CheckoutConflictModal
+        isOpen={isConflictModalOpen}
+        onClose={() => setIsConflictModalOpen(false)}
+        conflicts={stockConflicts}
+        theme={isDark ? 'dark' : 'light'}
       />
 
     </div>

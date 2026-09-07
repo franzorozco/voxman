@@ -35,12 +35,120 @@ class ShopCartController extends Controller
         $cartData['total'] = $total;
     }
 
+public function syncCartPrices(&$cartData)
+    {
+        if (empty($cartData['items'])) return false;
+
+        // Fetch all active automatic discounts
+        $automaticDiscounts = \App\Models\Discount\Discount::with(['categories', 'brands', 'products', 'variants', 'customers'])
+            ->where('is_automatic', true)
+            ->where('active', true)
+            ->where(function($q) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+            })
+            ->where(function($q) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+            })
+            ->get();
+
+        $changed = false;
+
+        foreach ($cartData['items'] as &$item) {
+            // We only dynamically update prices for non-bundle items
+            // (Bundles have override_price proportionally computed at the time of adding)
+            if (!empty($item['bundle_group_id'])) {
+                continue;
+            }
+
+            $product = \App\Models\Catalog\Product::find($item['product_id']);
+            $variant = null;
+            if (!empty($item['variant_id'])) {
+                $variant = \App\Models\Catalog\ProductVariant::find($item['variant_id']);
+            }
+
+            if (!$product) continue;
+
+            $basePrice = $product->base_price;
+            if ($variant && $variant->price !== null) {
+                $basePrice = $variant->price;
+            }
+
+            // Find best automatic discount for this item
+            $bestDiscountPrice = $basePrice;
+            $bestDiscountLabel = null;
+
+            foreach ($automaticDiscounts as $discount) {
+                // Ignore if usage limits exceeded or requires a specific customer
+                if ($discount->usage_limit && $discount->used_count >= $discount->usage_limit) continue;
+                if ($discount->usage_limit_per_customer || $discount->customers->isNotEmpty()) continue;
+
+                $discountCategories = $discount->categories->pluck('id')->toArray();
+                $discountBrands = $discount->brands->pluck('id')->toArray();
+                $discountProducts = $discount->products->pluck('id')->toArray();
+                $discountVariants = $discount->variants->pluck('id')->toArray();
+                
+                $hasItemRestrictions = !empty($discountCategories) || !empty($discountBrands) || !empty($discountProducts) || !empty($discountVariants);
+
+                $productApplies = false;
+                if (!$hasItemRestrictions) {
+                    $productApplies = true;
+                } elseif (in_array($product->id, $discountProducts) || in_array($product->brand_id, $discountBrands) || in_array($product->category_id, $discountCategories)) {
+                    $productApplies = true;
+                } elseif ($variant && in_array($variant->id, $discountVariants)) {
+                    $productApplies = true;
+                }
+
+                if ($productApplies) {
+                    if ($discount->type === 'percentage') {
+                        $discounted = $basePrice - ($basePrice * ($discount->value / 100));
+                        $currentLabel = "-" . floatval($discount->value) . "%";
+                    } else {
+                        $discounted = $basePrice - $discount->value;
+                        $currentLabel = "-Bs " . floatval($discount->value);
+                    }
+                    if ($discounted < $bestDiscountPrice) {
+                        $bestDiscountPrice = max(0, $discounted);
+                        $bestDiscountLabel = $currentLabel;
+                    }
+                }
+            }
+
+            // If the price or original price changed, update the cart item
+            if ((float)$item['original_price'] !== (float)$basePrice || (float)$item['price'] !== (float)$bestDiscountPrice || ($item['discount_label'] ?? null) !== $bestDiscountLabel) {
+                $item['original_price'] = (float)$basePrice;
+                $item['price'] = (float)$bestDiscountPrice;
+                if ($bestDiscountLabel) {
+                    $item['discount_label'] = $bestDiscountLabel;
+                    $item['has_discount'] = true;
+                } else {
+                    $item['discount_label'] = null;
+                    $item['has_discount'] = false;
+                }
+                $changed = true;
+            }
+        }
+        unset($item);
+
+        if ($changed) {
+            $this->recalculateTotal($cartData);
+        }
+
+        return $changed;
+    }
+
     public function show(Request $request)
     {
         $cartToken = $request->header('X-Cart-Token');
         $cartData = $this->getCartData($cartToken);
 
         if ($cartData) {
+            $changed = $this->syncCartPrices($cartData);
+            if ($changed) {
+                        $this->syncCartPrices($cartData);
+        $this->recalculateTotal($cartData);
+        $this->syncCartPrices($cartData);
+        $this->saveCartData($cartToken, $cartData);
+            }
             return response()->json($cartData);
         }
 
@@ -223,6 +331,9 @@ class ShopCartController extends Controller
         }
 
         $this->recalculateTotal($cartData);
+                $this->syncCartPrices($cartData);
+        $this->recalculateTotal($cartData);
+        $this->syncCartPrices($cartData);
         $this->saveCartData($cartToken, $cartData);
 
         return response()->json([
@@ -356,6 +467,9 @@ class ShopCartController extends Controller
         }
 
         $this->recalculateTotal($cartData);
+                $this->syncCartPrices($cartData);
+        $this->recalculateTotal($cartData);
+        $this->syncCartPrices($cartData);
         $this->saveCartData($cartToken, $cartData);
 
         return response()->json([
@@ -411,7 +525,10 @@ class ShopCartController extends Controller
         if ($updated) {
             $cartData['items'] = array_values($cartData['items']); // Re-index array
             $this->recalculateTotal($cartData);
-            $this->saveCartData($cartToken, $cartData);
+                    $this->syncCartPrices($cartData);
+        $this->recalculateTotal($cartData);
+        $this->syncCartPrices($cartData);
+        $this->saveCartData($cartToken, $cartData);
         }
 
         return response()->json($cartData);
@@ -479,7 +596,10 @@ class ShopCartController extends Controller
             }
 
             $this->recalculateTotal($cartData);
-            $this->saveCartData($cartToken, $cartData);
+                    $this->syncCartPrices($cartData);
+        $this->recalculateTotal($cartData);
+        $this->syncCartPrices($cartData);
+        $this->saveCartData($cartToken, $cartData);
         }
 
         return response()->json($cartData);
@@ -509,6 +629,9 @@ class ShopCartController extends Controller
             'amount' => $request->discount_amount
         ];
         
+                $this->syncCartPrices($cartData);
+        $this->recalculateTotal($cartData);
+        $this->syncCartPrices($cartData);
         $this->saveCartData($cartToken, $cartData);
 
         return response()->json($cartData);
@@ -528,13 +651,16 @@ class ShopCartController extends Controller
 
         if (isset($cartData['applied_global_discount'])) {
             unset($cartData['applied_global_discount']);
-            $this->saveCartData($cartToken, $cartData);
+                    $this->syncCartPrices($cartData);
+        $this->recalculateTotal($cartData);
+        $this->syncCartPrices($cartData);
+        $this->saveCartData($cartToken, $cartData);
         }
 
         return response()->json($cartData);
     }
 
-    public function validateStock(Request $request)
+public function validateStock(Request $request)
     {
         $cartToken = $request->header('X-Cart-Token');
         if (!$cartToken) {
@@ -548,39 +674,102 @@ class ShopCartController extends Controller
 
         $adjusted = false;
         $messages = [];
+        $requiresResolution = false;
+        $conflicts = [];
 
+        // 1. Calculate requested quantities grouped by variant_id
+        $requestedQuantities = [];
         foreach ($cartData['items'] as $index => $item) {
             $variantId = $item['variant_id'];
             if (!$variantId) continue;
+            
+            if (!isset($requestedQuantities[$variantId])) {
+                $requestedQuantities[$variantId] = [
+                    'total' => 0,
+                    'items' => []
+                ];
+            }
+            $requestedQuantities[$variantId]['total'] += $item['quantity'];
+            $requestedQuantities[$variantId]['items'][] = [
+                'index' => $index,
+                'cart_item_id' => $item['id'] ?? null,
+                'name' => $item['name'],
+                'quantity' => $item['quantity'],
+                'is_bundle' => !empty($item['bundle_group_id'])
+            ];
+        }
 
-            $variant = ProductVariant::with('inventories')->find($variantId);
+        // 2. Validate stock against requested totals
+        foreach ($requestedQuantities as $variantId => $group) {
+            $variant = \App\Models\Catalog\ProductVariant::with('inventories')->find($variantId);
             if (!$variant) {
-                unset($cartData['items'][$index]);
+                // Remove all items for this invalid variant
+                foreach ($group['items'] as $groupItem) {
+                    unset($cartData['items'][$groupItem['index']]);
+                }
                 $adjusted = true;
-                $messages[] = "El producto {$item['name']} ya no está disponible.";
+                $messages[] = "Un producto ya no estǭ disponible y fue removido del carrito.";
                 continue;
             }
 
             $availableStock = $variant->inventories->sum('stock');
-            if ($availableStock < $item['quantity']) {
-                if ($availableStock <= 0) {
-                    unset($cartData['items'][$index]);
-                    $messages[] = "El producto {$item['name']} está agotado.";
+
+            if ($group['total'] > $availableStock) {
+                if (count($group['items']) > 1) {
+                    // Conflict: Multiple line items requesting the same variant, exceeding stock!
+                    $requiresResolution = true;
+                    $conflicts[] = [
+                        'variant_id' => $variantId,
+                        'name' => $group['items'][0]['name'], // Use first item's name
+                        'available_stock' => $availableStock,
+                        'total_requested' => $group['total'],
+                        'competing_items' => array_map(function($i) use ($cartData) {
+                            $cartItem = $cartData['items'][$i['index']];
+                            return [
+                                'cart_item_id' => $cartItem['id'] ?? null,
+                                'product_id' => $cartItem['product_id'],
+                                'variant_id' => $cartItem['variant_id'],
+                                'name' => $cartItem['name'],
+                                'quantity' => $cartItem['quantity'],
+                                'is_bundle' => !empty($cartItem['bundle_group_id'])
+                            ];
+                        }, $group['items'])
+                    ];
                 } else {
-                    $cartData['items'][$index]['quantity'] = $availableStock;
-                    $messages[] = "Solo quedan {$availableStock} unidades de {$item['name']}.";
+                    // Single line item, just adjust it automatically
+                    $idx = $group['items'][0]['index'];
+                    if ($availableStock <= 0) {
+                        unset($cartData['items'][$idx]);
+                        $messages[] = "El producto {$cartData['items'][$idx]['name']} estǭ agotado.";
+                    } else {
+                        $cartData['items'][$idx]['quantity'] = $availableStock;
+                        $messages[] = "Solo quedan {$availableStock} unidades de {$cartData['items'][$idx]['name']}.";
+                    }
+                    $adjusted = true;
                 }
-                $adjusted = true;
             }
+        }
+
+        // If there are conflicts that require manual resolution by the user, we return early
+        if ($requiresResolution) {
+            return response()->json([
+                'valid' => false,
+                'requires_resolution' => true,
+                'message' => 'Conflicto de inventario detectado. Debes decidir qu artculos conservar.',
+                'conflicts' => $conflicts,
+                'cart' => $cartData
+            ]);
         }
 
         if ($adjusted) {
             $cartData['items'] = array_values($cartData['items']);
+            $this->syncCartPrices($cartData);
             $this->recalculateTotal($cartData);
             $this->saveCartData($cartToken, $cartData);
             
             return response()->json([
                 'valid' => false,
+                'requires_resolution' => false,
                 'message' => 'No pudimos acompletar el stock que deseas, te podemos ofrecer lo que actualmente esta en el carrito',
                 'details' => $messages,
                 'cart' => $cartData

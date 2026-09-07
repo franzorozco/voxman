@@ -128,7 +128,7 @@ const useShopCartStore = create(
       },
 
       clearCart: () => {
-        set({ cartToken: null, items: [], total: 0 });
+        set({ cartToken: null, items: [], total: 0, appliedGlobalDiscount: null });
         localStorage.removeItem('shop_cart_token');
       }
     }),
