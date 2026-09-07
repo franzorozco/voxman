@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Tag, Settings2, CalendarClock, Target, Zap } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
@@ -58,10 +58,6 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
 
-  const [brandsList, setBrands] = useState([]);
-  const [categoriesList, setCategories] = useState([]);
-  const [branchesList, setBranches] = useState([]);
-
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -101,9 +97,10 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
         start_date: promotion.start_date ? promotion.start_date.split("T")[0] : "",
         end_date: promotion.end_date ? promotion.end_date.split("T")[0] : "",
         active: promotion.active !== undefined ? promotion.active : true,
-        brands: promotion.brands ? promotion.brands.map(b => b.id) : [],
-        categories: promotion.categories ? promotion.categories.map(c => c.id) : (promotion.discount_categories ? promotion.discount_categories.map(dc => dc.category_id) : []),
-        branches: promotion.branches ? promotion.branches.map(b => b.id) : [],
+        
+        brands: promotion.brands ? promotion.brands.map(b => ({ value: b.id, label: b.name })) : [],
+        categories: promotion.categories ? promotion.categories.map(c => ({ value: c.id, label: c.name })) : (promotion.discount_categories ? promotion.discount_categories.map(dc => ({ value: dc.category_id, label: dc.category?.name || 'Categoría' })) : []),
+        branches: promotion.branches ? promotion.branches.map(b => ({ value: b.id, label: b.name })) : [],
         
         // These are now handled by AsyncSelect, so we store the {value, label} object array directly
         products: promotion.products ? promotion.products.map(p => ({ value: p.id, label: `${p.name} (${p.slug})` })) : [],
@@ -118,26 +115,8 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
         }) : [],
       });
     }
-    fetchData();
+    setDataLoading(false);
   }, [promotion]);
-
-  const fetchData = async () => {
-    setDataLoading(true);
-    try {
-      const [resBrands, resCat, resBranch] = await Promise.all([
-        getBrands(),
-        api.get("/v1/admin/categories"),
-        api.get("/v1/admin/branches")
-      ]);
-      setBrands(Array.isArray(resBrands.data) ? resBrands.data.filter(b => b.is_active !== false) : (resBrands.data.data || []).filter(b => b.is_active !== false));
-      setCategories(Array.isArray(resCat.data) ? resCat.data.filter(c => c.is_active !== false) : (resCat.data.data || []).filter(c => c.is_active !== false));
-      setBranches(Array.isArray(resBranch.data) ? resBranch.data.filter(b => b.is_active !== false) : (resBranch.data.data || []).filter(b => b.is_active !== false));
-    } catch (error) {
-      toast.error("Error al cargar datos base");
-    } finally {
-      setDataLoading(false);
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -164,6 +143,9 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
         end_date: formData.end_date || null,
         code: formData.is_automatic ? null : (formData.code || null),
         // Map AsyncSelect arrays of {value, label} back to array of IDs
+        brands: formData.brands.map(b => b.value),
+        categories: formData.categories.map(c => c.value),
+        branches: formData.branches.map(b => b.value),
         products: formData.products.map(p => p.value),
         variants: formData.variants.map(v => v.value),
         customers: formData.customers.map(c => c.value),
@@ -186,25 +168,83 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
   };
 
   // Debounced loaders for AsyncSelect
-  const loadProducts = (inputValue, callback) => {
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
+
+  const fetchBrandsApi = (inputValue, callback) => {
+    api.get(`/v1/admin/brands?search=${inputValue}&per_page=10`).then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+      callback(data.map(b => ({ value: b.id, label: b.name })));
+    }).catch(() => callback([]));
+  };
+  const fetchBrandsDebounced = useState(() => debounce(fetchBrandsApi, 300))[0];
+
+  const loadBrands = (inputValue, callback) => {
     if (!inputValue) return callback([]);
-    api.get(`/v1/admin/products?search=${inputValue}`).then(res => {
+    fetchBrandsDebounced(inputValue, callback);
+  };
+
+  const fetchCategoriesApi = (inputValue, callback) => {
+    api.get(`/v1/admin/categories?search=${inputValue}&per_page=10`).then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+      callback(data.map(c => ({ value: c.id, label: c.name })));
+    }).catch(() => callback([]));
+  };
+  const fetchCategoriesDebounced = useState(() => debounce(fetchCategoriesApi, 300))[0];
+
+  const loadCategories = (inputValue, callback) => {
+    if (!inputValue) return callback([]);
+    fetchCategoriesDebounced(inputValue, callback);
+  };
+
+  const fetchBranchesApi = (inputValue, callback) => {
+    api.get(`/v1/admin/branches?search=${inputValue}&per_page=10`).then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+      callback(data.map(b => ({ value: b.id, label: b.name })));
+    }).catch(() => callback([]));
+  };
+  const fetchBranchesDebounced = useState(() => debounce(fetchBranchesApi, 300))[0];
+
+  const loadBranches = (inputValue, callback) => {
+    if (!inputValue) return callback([]);
+    fetchBranchesDebounced(inputValue, callback);
+  };
+
+  const fetchProductsApi = (inputValue, callback) => {
+    api.get(`/v1/admin/products?search=${inputValue}&per_page=10`).then(res => {
       const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
       callback(data.map(p => ({ value: p.id, label: `${p.name} (${p.slug})` })));
     }).catch(() => callback([]));
   };
+  const fetchProductsDebounced = useState(() => debounce(fetchProductsApi, 300))[0];
 
-  const loadVariants = (inputValue, callback) => {
+  const loadProducts = (inputValue, callback) => {
     if (!inputValue) return callback([]);
-    api.get(`/v1/admin/variants?search=${inputValue}`).then(res => {
+    fetchProductsDebounced(inputValue, callback);
+  };
+
+  const fetchVariantsApi = (inputValue, callback) => {
+    api.get(`/v1/admin/variants?search=${inputValue}&per_page=10`).then(res => {
       const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
       callback(data.map(v => ({ value: v.id, label: `${v.product?.name} - ${v.sku}` })));
     }).catch(() => callback([]));
   };
+  const fetchVariantsDebounced = useState(() => debounce(fetchVariantsApi, 300))[0];
 
-  const loadCustomers = (inputValue, callback) => {
+  const loadVariants = (inputValue, callback) => {
     if (!inputValue) return callback([]);
-    api.get(`/v1/admin/customers?search=${inputValue}`).then(res => {
+    fetchVariantsDebounced(inputValue, callback);
+  };
+
+  const fetchCustomersApi = (inputValue, callback) => {
+    api.get(`/v1/admin/customers?search=${inputValue}&per_page=10`).then(res => {
       const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
       callback(data.map(c => {
         const profile = c.user?.profile || {};
@@ -212,10 +252,15 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
       }));
     }).catch(() => callback([]));
   };
+  const fetchCustomersDebounced = useState(() => debounce(fetchCustomersApi, 300))[0];
 
-  const loadEmployees = (inputValue, callback) => {
+  const loadCustomers = (inputValue, callback) => {
     if (!inputValue) return callback([]);
-    api.get(`/v1/admin/employees?search=${inputValue}`).then(res => {
+    fetchCustomersDebounced(inputValue, callback);
+  };
+
+  const fetchEmployeesApi = (inputValue, callback) => {
+    api.get(`/v1/admin/employees?search=${inputValue}&per_page=10`).then(res => {
       const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
       callback(data.map(e => {
         const profile = e.user?.profile || {};
@@ -223,321 +268,248 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
       }));
     }).catch(() => callback([]));
   };
+  const fetchEmployeesDebounced = useState(() => debounce(fetchEmployeesApi, 300))[0];
+
+  const loadEmployees = (inputValue, callback) => {
+    if (!inputValue) return callback([]);
+    fetchEmployeesDebounced(inputValue, callback);
+  };
 
   return (
     <div className="modal-overlay">
-      <div className="modal">
-        <h2 className="promo-modal-header">
+      <div className="modal" style={{ maxWidth: '1000px', width: '95%' }}>
+        <h2 className="promo-modal-header" style={{ padding: '20px 30px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Tag className="text-primary" size={24} />
           {promotion ? "Editar Promoción" : "Nueva Promoción"}
-          <button type="button" className="promo-modal-close-btn" onClick={onClose}>
+          <button type="button" className="promo-modal-close-btn" style={{ marginLeft: 'auto' }} onClick={onClose}>
             <X size={20} />
           </button>
         </h2>
 
-        <form onSubmit={handleSubmit} className="promo-modal-form">
+        <form onSubmit={handleSubmit} className="promo-modal-form" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {dataLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: '300px' }}>
               <Spinner size={48} color="var(--primary-color)" />
             </div>
           ) : (
             <>
-              <div className="promo-modal-body">
+              <div className="promo-modal-body" style={{ 
+                padding: '30px', 
+                background: 'var(--bg-main)', 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+                gap: '24px',
+                overflowY: 'auto'
+              }}>
                 
-                <p className="promo-section-title">Información General</p>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Nombre de la Promoción *</label>
-                <input 
-                  type="text" 
-                  name="name" 
-                  required 
-                  value={formData.name} 
-                  onChange={handleChange} 
-                  placeholder="Ej: Oferta de Verano"
-                />
-              </div>
-              <div className="form-group" style={{justifyContent: "center"}}>
-                <div className="promo-toggle-wrapper">
-                  <label className="promo-toggle-label">
-                    <input 
-                      type="checkbox" 
-                      name="active" 
-                      checked={formData.active} 
-                      onChange={handleChange} 
-                      className="promo-toggle-input"
-                    />
-                    <span className="promo-toggle-slider">
+                {/* Left Column: Basic Info & Limits */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  
+                  {/* Card 1: Configuración Básica */}
+                  <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                      <Settings2 size={20} className="text-primary" /> Configuración Principal
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label>Nombre de la Promoción *</label>
+                        <input 
+                          type="text" 
+                          name="name" 
+                          required 
+                          value={formData.name} 
+                          onChange={handleChange} 
+                          placeholder="Ej: Oferta Especial de Verano"
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                        />
+                      </div>
                       
-                    </span>
-                  </label>
-                  <span className="promo-toggle-text">Promoción Activa</span>
+                      <div className="form-group">
+                        <label>Tipo de Descuento *</label>
+                        <CustomSelect name="type" value={formData.type} onChange={handleChange}>
+                          <option value="percentage">Porcentaje (%)</option>
+                          <option value="fixed">Monto Fijo (Bs)</option>
+                        </CustomSelect>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Valor *</label>
+                        <div style={{ position: 'relative' }}>
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            name="value" 
+                            required 
+                            value={formData.value} 
+                            onChange={handleChange} 
+                            placeholder="Ej: 10"
+                            style={{ paddingLeft: '32px', width: '100%', boxSizing: 'border-box' }}
+                          />
+                          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                            {formData.type === 'percentage' ? '%' : 'Bs'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {formData.type === 'percentage' && (
+                        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                          <label>Límite de Descuento (Monto Máximo en Bs.)</label>
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            name="max_discount_amount" 
+                            value={formData.max_discount_amount} 
+                            onChange={handleChange} 
+                            placeholder="Ej: 100 (Dejar vacío para no tener límite)"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                          />
+                          <small className="promo-helper-text" style={{ fontSize: '11px', marginTop: '4px' }}>
+                            Establece un tope monetario máximo. Si el 50% de un producto de 1000 Bs es 500 Bs, pero el límite es 100 Bs, el descuento será 100 Bs.
+                          </small>
+                        </div>
+                      )}
+
+                      <div className="form-group" style={{ gridColumn: '1 / -1', marginTop: '8px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                        <div className="promo-toggle-wrapper">
+                          <label className="promo-toggle-label">
+                            <input type="checkbox" name="active" checked={formData.active} onChange={handleChange} className="promo-toggle-input" />
+                            <span className="promo-toggle-slider"></span>
+                          </label>
+                          <span className="promo-toggle-text">Promoción Activa</span>
+                        </div>
+                        
+                        <div className="promo-toggle-wrapper">
+                          <label className="promo-toggle-label">
+                            <input type="checkbox" name="is_automatic" checked={formData.is_automatic} onChange={handleChange} className="promo-toggle-input" />
+                            <span className="promo-toggle-slider"></span>
+                          </label>
+                          <span className="promo-toggle-text">Aplicar Automáticamente</span>
+                        </div>
+                      </div>
+
+                      {!formData.is_automatic && (
+                        <div className="form-group" style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={14} className="text-primary"/> Código del Cupón *</label>
+                          <input 
+                            type="text" 
+                            name="code" 
+                            required={!formData.is_automatic}
+                            value={formData.code} 
+                            maxLength={6}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                              setFormData({...formData, code: val});
+                            }} 
+                            placeholder="Ej: VRN20X (Max 6 caracteres)"
+                            style={{ fontSize: '16px', letterSpacing: '2px', fontWeight: 'bold', textTransform: 'uppercase', border: '2px dashed var(--color-primary)', textAlign: 'center', color: 'var(--text-main)', width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Card 2: Condiciones y Límites */}
+                  <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                      <CalendarClock size={20} className="text-primary" /> Condiciones y Límites
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      <div className="form-group">
+                        <label>Compra Mínima (Bs)</label>
+                        <input type="number" step="0.01" name="min_purchase_amount" value={formData.min_purchase_amount} onChange={handleChange} placeholder="Sin mínimo" style={{ width: '100%', boxSizing: 'border-box' }} />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Cant. Mínima (Items)</label>
+                        <input type="number" name="min_quantity" value={formData.min_quantity} onChange={handleChange} placeholder="Sin mínimo" style={{ width: '100%', boxSizing: 'border-box' }} />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Usos Totales</label>
+                        <input type="number" name="usage_limit" value={formData.usage_limit} onChange={handleChange} placeholder="Ilimitado" style={{ width: '100%', boxSizing: 'border-box' }} />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Usos por Cliente</label>
+                        <input type="number" name="usage_limit_per_customer" value={formData.usage_limit_per_customer} onChange={handleChange} placeholder="Ilimitado" style={{ width: '100%', boxSizing: 'border-box' }} />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Válido Desde</label>
+                        <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} style={{ width: '100%', boxSizing: 'border-box', colorScheme: 'dark' }} />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Válido Hasta</label>
+                        <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} style={{ width: '100%', boxSizing: 'border-box', colorScheme: 'dark' }} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Tipo de Descuento *</label>
-                <CustomSelect name="type" value={formData.type} onChange={handleChange}>
-                  <option value="percentage">Porcentaje (%)</option>
-                  <option value="fixed">Monto Fijo (Bs)</option>
-                </CustomSelect>
-              </div>
-              <div className="form-group">
-                <label>Valor *</label>
-                <input 
-                  type="number" 
-                  step="0.01"
-                  name="value" 
-                  required 
-                  value={formData.value} 
-                  onChange={handleChange} 
-                  placeholder="Ej: 10"
-                />
-              </div>
-            </div>
-
-            {formData.type === 'percentage' && (
-              <div className="form-grid">
-                <div className="form-group promo-form-group-full">
-                  <label>Límite de Descuento (Monto Máximo en Bs.)</label>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    name="max_discount_amount" 
-                    value={formData.max_discount_amount} 
-                    onChange={handleChange} 
-                    placeholder="Ej: 100 (Dejar vacío para no tener límite)"
-                  />
-                  <small className="promo-helper-text">
-                    Establece un tope monetario máximo. Si el 50% de descuento de un producto de 1000 Bs es 500 Bs, pero el límite es 100 Bs, el descuento final será 100 Bs.
-                  </small>
-                </div>
-              </div>
-            )}
-
-            <p className="promo-section-title">Código y Automatización</p>
-            <div className="form-grid">
-              <div className="form-group">
-                <div className="promo-toggle-wrapper">
-                  <label className="promo-toggle-label">
-                    <input 
-                      type="checkbox" 
-                      name="is_automatic" 
-                      checked={formData.is_automatic} 
-                      onChange={handleChange} 
-                      className="promo-toggle-input"
-                    />
-                    <span className="promo-toggle-slider">
+                {/* Right Column: Targets */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {/* Card 3: Filtros */}
+                  <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px' }}>
+                      <Target size={20} className="text-primary" /> Objetivos Específicos (Filtros)
+                    </div>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)' }}>
+                      Si dejas estos campos vacíos, el descuento se aplicará de forma global. Selecciona opciones específicas para restringir la promoción.
+                    </p>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       
-                    </span>
-                  </label>
-                  <span className="promo-toggle-text">Aplicar Automáticamente</span>
+                      <div className="form-group">
+                        <label>Marcas</label>
+                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.brands} loadOptions={loadBrands} value={formData.brands} onChange={(selected) => setFormData({...formData, brands: selected || []})} placeholder="Buscar marcas..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Categorías</label>
+                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.categories} loadOptions={loadCategories} value={formData.categories} onChange={(selected) => setFormData({...formData, categories: selected || []})} placeholder="Buscar categorías..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Sucursales</label>
+                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.branches} loadOptions={loadBranches} value={formData.branches} onChange={(selected) => setFormData({...formData, branches: selected || []})} placeholder="Buscar sucursales..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Productos Específicos</label>
+                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.products} loadOptions={loadProducts} value={formData.products} onChange={(selected) => setFormData({...formData, products: selected || []})} placeholder="Buscar productos..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Variantes (SKUs)</label>
+                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.variants} loadOptions={loadVariants} value={formData.variants} onChange={(selected) => setFormData({...formData, variants: selected || []})} placeholder="Buscar variantes..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Exclusivo para Clientes</label>
+                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.customers} loadOptions={loadCustomers} value={formData.customers} onChange={(selected) => setFormData({...formData, customers: selected || []})} placeholder="Buscar clientes..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Exclusivo para Empleados</label>
+                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.employees} loadOptions={loadEmployees} value={formData.employees} onChange={(selected) => setFormData({...formData, employees: selected || []})} placeholder="Buscar empleados..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
+                      </div>
+                      
+                    </div>
+                  </div>
                 </div>
-              </div>
-              {!formData.is_automatic && (
-                <div className="form-group">
-                  <label>Código del Cupón *</label>
-                  <input 
-                    type="text" 
-                    name="code" 
-                    required={!formData.is_automatic}
-                    value={formData.code} 
-                    maxLength={6}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-                      setFormData({...formData, code: val});
-                    }} 
-                    placeholder="Ej: VRN20X (Max 6)"
-                    style={{ textTransform: 'uppercase' }}
-                  />
-                </div>
-              )}
-            </div>
 
-            <p className="promo-section-title">Condiciones y Límites (Opcional)</p>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Compra Mínima (Bs)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  name="min_purchase_amount" 
-                  value={formData.min_purchase_amount} 
-                  onChange={handleChange}
-                  placeholder="Dejar vacío si no aplica"
-                />
               </div>
-
-              <div className="form-group">
-                <label>Cantidad Mínima de Productos (Opcional)</label>
-                <input 
-                  type="number" 
-                  name="min_quantity" 
-                  value={formData.min_quantity} 
-                  onChange={handleChange}
-                  placeholder="Dejar vacío si no aplica"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Límite de Usos Totales (Opcional)</label>
-                <input 
-                  type="number" 
-                  name="usage_limit" 
-                  value={formData.usage_limit} 
-                  onChange={handleChange}
-                  placeholder="Ej: 100 primeros clientes"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Límite de Uso por Cliente (Opcional)</label>
-                <input 
-                  type="number" 
-                  name="usage_limit_per_customer" 
-                  value={formData.usage_limit_per_customer} 
-                  onChange={handleChange}
-                  placeholder="Ej: 1 (Para 1 solo uso)"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Fecha de Inicio (Opcional)</label>
-                <input 
-                  type="date" 
-                  name="start_date" 
-                  value={formData.start_date} 
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Fecha de Fin (Opcional)</label>
-                <input 
-                  type="date" 
-                  name="end_date" 
-                  value={formData.end_date} 
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <p className="promo-section-title">Objetivos Específicos (Dejar vacío para aplicar a todo)</p>
-            <div className="form-grid">
               
-              <div className="form-group">
-                <label>Marcas</label>
-                <Select
-                  isMulti
-                  options={brandsList.map(b => ({ value: b.id, label: b.name }))}
-                  value={brandsList.filter(b => formData.brands.includes(b.id)).map(b => ({ value: b.id, label: b.name }))}
-                  onChange={(selected) => setFormData({...formData, brands: selected ? selected.map(s => s.value) : []})}
-                  placeholder="Selecciona marcas..."
-                  styles={customStyles}
-                  menuPosition="fixed"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Categorías</label>
-                <Select
-                  isMulti
-                  options={categoriesList.map(c => ({ value: c.id, label: c.name }))}
-                  value={categoriesList.filter(c => formData.categories.includes(c.id)).map(c => ({ value: c.id, label: c.name }))}
-                  onChange={(selected) => setFormData({...formData, categories: selected ? selected.map(s => s.value) : []})}
-                  placeholder="Selecciona categorías..."
-                  styles={customStyles}
-                  menuPosition="fixed"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Sucursales</label>
-                <Select
-                  isMulti
-                  options={branchesList.map(b => ({ value: b.id, label: b.name }))}
-                  value={branchesList.filter(b => formData.branches.includes(b.id)).map(b => ({ value: b.id, label: b.name }))}
-                  onChange={(selected) => setFormData({...formData, branches: selected ? selected.map(s => s.value) : []})}
-                  placeholder="Selecciona sucursales..."
-                  styles={customStyles}
-                  menuPosition="fixed"
-                />
-              </div>
-
-              <div className="form-group promo-form-group-full">
-                <label>Productos (Búsqueda Asyncrona)</label>
-                <AsyncSelect
-                  isMulti
-                  cacheOptions
-                  defaultOptions={formData.products}
-                  loadOptions={loadProducts}
-                  value={formData.products}
-                  onChange={(selected) => setFormData({...formData, products: selected || []})}
-                  placeholder="Escribe para buscar productos..."
-                  noOptionsMessage={() => "Escribe para buscar..."}
-                  styles={customStyles}
-                  menuPosition="fixed"
-                />
-              </div>
-
-              <div className="form-group promo-form-group-full">
-                <label>Variantes o SKUs (Búsqueda Asyncrona)</label>
-                <AsyncSelect
-                  isMulti
-                  cacheOptions
-                  defaultOptions={formData.variants}
-                  loadOptions={loadVariants}
-                  value={formData.variants}
-                  onChange={(selected) => setFormData({...formData, variants: selected || []})}
-                  placeholder="Escribe para buscar variantes..."
-                  noOptionsMessage={() => "Escribe para buscar..."}
-                  styles={customStyles}
-                  menuPosition="fixed"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Clientes (Búsqueda Asyncrona)</label>
-                <AsyncSelect
-                  isMulti
-                  cacheOptions
-                  defaultOptions={formData.customers}
-                  loadOptions={loadCustomers}
-                  value={formData.customers}
-                  onChange={(selected) => setFormData({...formData, customers: selected || []})}
-                  placeholder="Escribe para buscar clientes..."
-                  noOptionsMessage={() => "Escribe para buscar..."}
-                  styles={customStyles}
-                  menuPosition="fixed"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Empleados (Búsqueda Asyncrona)</label>
-                <AsyncSelect
-                  isMulti
-                  cacheOptions
-                  defaultOptions={formData.employees}
-                  loadOptions={loadEmployees}
-                  value={formData.employees}
-                  onChange={(selected) => setFormData({...formData, employees: selected || []})}
-                  placeholder="Escribe para buscar empleados..."
-                  noOptionsMessage={() => "Escribe para buscar..."}
-                  styles={customStyles}
-                  menuPosition="fixed"
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="promo-modal-footer">
-            <button type="button" className="promo-btn-cancel" onClick={onClose} disabled={loading}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn-primary promo-btn-submit" disabled={loading}>
-              {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Guardar Promoción"}
-            </button>
+              <div className="promo-modal-footer" style={{ padding: '20px 30px', background: 'var(--bg-card)' }}>
+                <button type="button" className="promo-btn-cancel" onClick={onClose} disabled={loading} style={{ fontSize: '14px', height: '42px' }}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary promo-btn-submit" disabled={loading} style={{ fontSize: '14px', height: '42px', fontWeight: 600 }}>
+                  {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Guardar Promoción"}
+                </button>
               </div>
             </>
           )}

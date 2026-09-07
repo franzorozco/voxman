@@ -437,74 +437,76 @@ export default function SaleDetailsModal({ saleId, onClose }) {
             </div>
           )}
 
-          {/* Envíos */}
-          {sale.shipments && sale.shipments.length > 0 && (
-            <div className="sale-detail-section">
-              <div className="sale-detail-title">
-                <Truck size={18} /> Detalles de Entrega
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                {sale.shipments.map((shipment) => (
-                  <div key={shipment.id} style={{ padding: '12px', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ fontWeight: 500 }}>Código de Entrega: {shipment.delivery_code || 'N/A'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '8px' }}>(Tracking: {shipment.tracking_code || 'N/A'})</span></div>
-                      <span className={`status-badge ${shipment.status === 'delivered' ? 'status-success' : 'status-warning'}`}>
-                        {shipment.status}
-                      </span>
-                    </div>
-                    {shipment.address && (
-                      <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                        <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }}/>
-                        {shipment.address.street}, {shipment.address.city}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+            {/* Envíos */}
+            {sale.shipments && sale.shipments.length > 0 && (
+              <div className="sale-detail-section" style={{ marginBottom: 0 }}>
+                <div className="sale-detail-title">
+                  <Truck size={18} /> Detalles de Entrega
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                  {sale.shipments.map((shipment) => (
+                    <div key={shipment.id} style={{ padding: '12px', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div style={{ fontWeight: 500 }}>Código de Entrega: {shipment.delivery_code || 'N/A'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '8px' }}>(Tracking: {shipment.tracking_code || 'N/A'})</span></div>
+                        <span className={`status-badge ${shipment.status === 'delivered' ? 'status-success' : 'status-warning'}`}>
+                          {shipment.status}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Notas */}
-          <div className="sale-detail-section" style={{ marginBottom: '20px' }}>
-            <div className="sale-detail-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><StickyNote size={18} style={{ flexShrink: 0 }} /> <span>Notas Internas de la Venta</span></div>
-              {!isEditingNotes && (
-                <CanAccess permission="edit_sale_notes">
-                  <button onClick={() => setIsEditingNotes(true)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                    Editar Notas
-                  </button>
-                </CanAccess>
-              )}
-            </div>
-            
-            {isEditingNotes ? (
-              <div style={{ marginTop: '10px' }}>
-                <textarea 
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Añade notas internas visibles solo para el personal..."
-                  style={{ width: '100%', padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', minHeight: '80px', color: 'var(--text-main)', resize: 'vertical', outline: 'none' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                  <button onClick={() => { setIsEditingNotes(false); setNotes(sale.notes || ""); }} disabled={actionLoading} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '6px', cursor: 'pointer' }}>
-                    Cancelar
-                  </button>
-                  <button onClick={handleSaveNotes} disabled={actionLoading} style={{ padding: '6px 12px', background: 'var(--color-primary)', border: 'none', color: 'var(--color-primary-text)', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}>
-                    {actionLoading ? 'Guardando...' : 'Guardar Notas'}
-                  </button>
+                      {shipment.address && (
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                          <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }}/>
+                          {shipment.address.street}, {shipment.address.city}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ) : (
-              sale.notes ? (
-                <div style={{ padding: '12px', background: 'var(--bg-input)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-main)', marginTop: '10px' }}>
-                  {sale.notes}
+            )}
+
+            {/* Notas */}
+            <div className="sale-detail-section" style={{ marginBottom: 0 }}>
+              <div className="sale-detail-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><StickyNote size={18} style={{ flexShrink: 0 }} /> <span>Notas Internas de la Venta</span></div>
+                {!isEditingNotes && (
+                  <CanAccess permission="edit_sale_notes">
+                    <button onClick={() => setIsEditingNotes(true)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '13px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      Editar Notas
+                    </button>
+                  </CanAccess>
+                )}
+              </div>
+              
+              {isEditingNotes ? (
+                <div style={{ marginTop: '10px' }}>
+                  <textarea 
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Añade notas internas visibles solo para el personal..."
+                    style={{ width: '100%', padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', minHeight: '80px', color: 'var(--text-main)', resize: 'vertical', outline: 'none' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                    <button onClick={() => { setIsEditingNotes(false); setNotes(sale.notes || ""); }} disabled={actionLoading} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '6px', cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                    <button onClick={handleSaveNotes} disabled={actionLoading} style={{ padding: '6px 12px', background: 'var(--color-primary)', border: 'none', color: 'var(--color-primary-text)', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}>
+                      {actionLoading ? 'Guardando...' : 'Guardar Notas'}
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div style={{ padding: '12px', background: 'var(--bg-main)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '10px', fontStyle: 'italic' }}>
-                  No hay notas para esta venta. Haz clic en "Editar Notas" para agregar una.
-                </div>
-              )
-            )}
+                sale.notes ? (
+                  <div style={{ padding: '12px', background: 'var(--bg-input)', borderRadius: '8px', fontSize: '14px', color: 'var(--text-main)', marginTop: '10px' }}>
+                    {sale.notes}
+                  </div>
+                ) : (
+                  <div style={{ padding: '12px', background: 'var(--bg-main)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '10px', fontStyle: 'italic' }}>
+                    No hay notas para esta venta. Haz clic en "Editar Notas" para agregar una.
+                  </div>
+                )
+              )}
+            </div>
           </div>
 
           {/* Totales */}
@@ -586,7 +588,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
             {/* Side-by-side actions */}
             <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
               <CanAccess permission="manage_sales">
-                {sale.status !== 'cancelled' && sale.status !== 'refunded' && (
+                {sale.status !== 'cancelled' && sale.status !== 'refunded' && sale.status !== 'paid' && sale.status !== 'completed' && (
                   <button 
                     style={{ background: 'transparent', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid var(--color-danger)', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, flex: 1, fontSize: '14px', boxSizing: 'border-box' }}
                     onClick={() => handleStatusChange('cancelled')}

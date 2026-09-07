@@ -362,11 +362,11 @@ export default function Sales() {
                   </td>
                   <td>
                     {sale.payments && sale.payments.length > 0 ? (
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        {sale.payments.map(p => (
-                          <span key={p.id} className="status-badge" style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '2px 6px', fontSize: '11px' }}>
-                            {p.payment_method?.name || 'Otro'}
-                          </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '12px' }}>
+                        {sale.payments.map((p, index) => (
+                          <div key={p.id || index} style={{ color: 'var(--text-main)' }}>
+                            • {p.payment_method?.name || 'Otro'}
+                          </div>
                         ))}
                       </div>
                     ) : (
