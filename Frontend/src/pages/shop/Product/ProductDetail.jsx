@@ -507,10 +507,9 @@ const ProductDetail = () => {
 
           {/* Add to Cart */}
           <button
-            className={`add-to-cart-btn ${addedAnimation ? 'bg-green-500 text-white border-green-500' : ''}`}
+            className={`add-to-cart-btn ${addedAnimation ? 'btn-added-animate text-white' : ''}`}
             onClick={handleAddToCart}
             disabled={isCartLoading || (availableSizes.length > 0 && !selectedSize) || addedAnimation}
-            style={addedAnimation ? { backgroundColor: '#10b981', color: '#fff', borderColor: '#10b981' } : {}}
           >
             {isCartLoading ? 'Añadiendo...' : addedAnimation ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>

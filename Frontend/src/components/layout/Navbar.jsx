@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import { useThemeStore } from "../../store/themeStore";
 import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
@@ -83,19 +83,19 @@ export default function Navbar({ logo: _propLogo }) {
         {/* MENU ÚNICO */}
         <nav className={`nav-menu ${menuOpen ? "active" : ""}`}>
 
-          <Link to="/" onClick={closeMenu}>Inicio</Link>
+          <NavLink to="/" end onClick={closeMenu}>Inicio</NavLink>
 
-          <Link to="/shop" onClick={closeMenu}>
+          <NavLink to="/shop" onClick={closeMenu}>
             Tienda
-          </Link>
+          </NavLink>
 
-          <Link to="/collections" onClick={closeMenu}>
+          <NavLink to="/collections" onClick={closeMenu}>
             Colecciones
-          </Link>
+          </NavLink>
 
-          <Link to="/nosotros" onClick={closeMenu}>
+          <NavLink to="/nosotros" onClick={closeMenu}>
             Nosotros
-          </Link>
+          </NavLink>
 
           {!user ? (
             <div className="nav-mobile-auth">

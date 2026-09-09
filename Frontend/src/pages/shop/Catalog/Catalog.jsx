@@ -6,13 +6,16 @@ import { getCategories } from '../../../api/shop/categories';
 import { API_BASE_URL } from '../../../config/api';
 import { X, ShoppingBag } from 'lucide-react';
 import CustomSelect from '../../../components/ui/CustomSelect';
-import ProductCardMenu from '../components/ProductCardMenu';
+
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
+import useShopCartStore from '../../../store/shop/useShopCartStore';
 import './Catalog.css';
 
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const addToCart = useShopCartStore(state => state.addItem);
+  const [addedAnimationItems, setAddedAnimationItems] = useState({});
   const initialCategory = searchParams.get('category');
 
   const [products, setProducts] = useState([]);
@@ -431,7 +434,6 @@ const Catalog = () => {
                     >
                       {/* BOTÓN WISHLIST */}
                       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                        <ProductCardMenu productId={item.id} />
                         {item.has_discount && (
                           <div style={{ backgroundColor: 'var(--text-main)', color: 'var(--bg-main, #fff)', fontSize: '14px', fontWeight: '600', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
                             {item.discount_label}
@@ -781,10 +783,6 @@ const Catalog = () => {
                   </div>
                   {/* BOTÓN WISHLIST */}
                   <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                    <ProductCardMenu 
-                      productId={item.product_id || item.id} 
-                      variantId={item.id.toString().startsWith('var-') ? item.id.replace('var-', '') : null} 
-                    />
                     {item.has_discount && (
                       <div style={{ backgroundColor: 'var(--text-main)', color: 'var(--bg-main, #fff)', fontSize: '14px', fontWeight: '600', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
                         {item.discount_label}

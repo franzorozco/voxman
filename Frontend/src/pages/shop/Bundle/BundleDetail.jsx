@@ -817,7 +817,7 @@ const BundleDetail = () => {
               return (
                 <>
                   <button 
-                    className={`add-to-cart-btn w-full ${addedBundle ? 'added' : ''}`}
+                    className={`add-to-cart-btn w-full ${addedBundle ? 'btn-added-animate text-white' : ''}`}
                     onClick={handleAddBundle}
                     disabled={addedBundle || !isBundleValid}
                     style={{ opacity: (!isBundleValid && !addedBundle) ? 0.5 : 1, cursor: (!isBundleValid && !addedBundle) ? 'not-allowed' : 'pointer', transition: 'opacity 0.2s' }}

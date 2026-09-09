@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../../../utils/imageUtils';
-import ProductCardMenu from './ProductCardMenu';
 import './NewArrivalsCarousel.css';
 
 const NewArrivalsCarousel = ({ products }) => {
@@ -20,9 +19,6 @@ const NewArrivalsCarousel = ({ products }) => {
         {products.map((item, index) => (
           <Link key={item.id || index} to={item.targetUrl} className="carousel-item">
             <div className="carousel-item-img-wrapper" style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 10 }}>
-                <ProductCardMenu productId={item.productId || item.id} />
-              </div>
               <img 
                 src={getImageUrl(item.url)} 
                 alt={item.productName} 

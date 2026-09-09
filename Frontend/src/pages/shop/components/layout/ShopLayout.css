@@ -68,11 +68,13 @@
   transition: 0.25s;
 }
 
-.shop-nav-menu a:hover::after {
+.shop-nav-menu a:hover::after,
+.shop-nav-menu a.active::after {
   width: 100%;
 }
 
-.shop-nav-menu a:hover {
+.shop-nav-menu a:hover,
+.shop-nav-menu a.active {
   color: var(--color-primary);
 }
 

@@ -60,7 +60,10 @@ Route::prefix('v1/shop')->group(function () {
         Route::post('/logout', [ShopAuthController::class, 'logout']);
         Route::get('/profile', [ShopAuthController::class, 'profile']);
         Route::post('/customer-profile', [ShopAuthController::class, 'updateCustomerProfile']);
+        Route::put('/profile/password', [ShopAuthController::class, 'changePassword']);
         Route::post('/delivery-options/add-address', [ShopAuthController::class, 'addShippingAddress']);
+        Route::put('/delivery-options/addresses/{id}', [ShopAuthController::class, 'updateAddress']);
+        Route::delete('/delivery-options/addresses/{id}', [ShopAuthController::class, 'deleteAddress']);
         Route::post('/checkout/auth-init', [ShopCheckoutController::class, 'initAuthCheckout']);
         
         // Wishlist

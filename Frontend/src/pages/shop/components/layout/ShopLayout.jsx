@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuthStore } from "../../../../store/authStore";
 import useShopCartStore from "../../../../store/shop/useShopCartStore";
 import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
@@ -75,9 +75,9 @@ const ShopNavbar = () => {
 
         {/* MENU ÚNICO */}
         <nav className={`shop-nav-menu ${menuOpen ? "active" : ""}`}>
-          <Link to="/shop" onClick={closeMenu}>Tienda</Link>
-          <Link to="/shop/catalog" onClick={closeMenu}>Catálogo</Link>
-          {/* <Link to="/shop/collections" onClick={closeMenu}>Colecciones</Link> */}
+          <NavLink to="/shop" end onClick={closeMenu}>Tienda</NavLink>
+          <NavLink to="/shop/catalog" onClick={closeMenu}>Catálogo</NavLink>
+          {/* <NavLink to="/shop/collections" onClick={closeMenu}>Colecciones</NavLink> */}
 
           {!user ? (
             <div className="shop-nav-mobile-auth">

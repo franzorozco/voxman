@@ -5,6 +5,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------
+   ANIMACIONES GLOBALES DEL CARRITO 
+   (Usadas en ProductDetail, BundleDetail, Catalog)
+   ------------------------------------- */
+
+.btn-added-animate {
+  animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+
+@keyframes successPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); background-color: #10b981; border-color: #10b981; }
+  100% { transform: scale(1); background-color: #10b981; border-color: #10b981; }
+}
+
+.btn-added-animate svg {
+  animation: popCheck 0.4s ease forwards;
+}
+
+@keyframes popCheck {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
 #root {
   width: 100%;
   min-height: 100vh;
