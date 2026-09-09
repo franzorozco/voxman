@@ -1,6 +1,4 @@
 import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import PageTransition from "../components/ui/PageTransition";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -95,11 +93,11 @@ const AnimatedRoutes = () => {
   const profileThemeClass = profileIsDark ? "profile-theme-dark" : "profile-theme";
 
   return (
-    <AnimatePresence mode="sync">
+    
       <Routes location={location} key={location.pathname}>
 
         {/* ================= PUBLIC & AUTH (HOME THEME) ================= */}
-        <Route element={<PageTransition><ThemeLayout theme="home-theme" /></PageTransition>}>
+        <Route element={<ThemeLayout theme="home-theme" />}>
           <Route path="/" element={<Home />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/login" element={<Login />} />
@@ -184,7 +182,7 @@ const AnimatedRoutes = () => {
         </Route>
 
         {/* ================= SHOP (ONLINE STORE) ================= */}
-        <Route element={<PageTransition><ThemeLayout theme={shopThemeClass} /></PageTransition>}>
+        <Route element={<ThemeLayout theme={shopThemeClass} />}>
           <Route path="/shop" element={<ShopLayout />}>
             <Route index element={<ShopHome />} />
             <Route path="catalog" element={<ShopCatalog />} />
@@ -195,15 +193,15 @@ const AnimatedRoutes = () => {
         </Route>
 
         {/* ================= PROFILE (PROFILE THEME) ================= */}
-        <Route element={<PageTransition><ThemeLayout theme={profileThemeClass} /></PageTransition>}>
+        <Route element={<ThemeLayout theme={profileThemeClass} />}>
           <Route path="/profile" element={<Profile />} />
         </Route>
 
         {/* ================= FALLBACK ================= */}
-        <Route path="*" element={<PageTransition><ThemeLayout theme="home-theme"><Home /></ThemeLayout></PageTransition>} />
+        <Route path="*" element={<ThemeLayout theme="home-theme"><Home /></ThemeLayout>} />
 
       </Routes>
-    </AnimatePresence>
+    
   );
 };
 
@@ -214,3 +212,5 @@ export default function AppRouter() {
     </BrowserRouter>
   );
 }
+
+
