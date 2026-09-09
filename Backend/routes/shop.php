@@ -62,6 +62,10 @@ Route::prefix('v1/shop')->group(function () {
         Route::post('/customer-profile', [ShopAuthController::class, 'updateCustomerProfile']);
         Route::post('/delivery-options/add-address', [ShopAuthController::class, 'addShippingAddress']);
         Route::post('/checkout/auth-init', [ShopCheckoutController::class, 'initAuthCheckout']);
-        // Historial de compras, wishlist, etc.
+        
+        // Wishlist
+        Route::get('/wishlist', [\App\Http\Controllers\Api\shop\ShopWishlistController::class, 'index']);
+        Route::post('/wishlist/toggle', [\App\Http\Controllers\Api\shop\ShopWishlistController::class, 'toggle']);
+        // Historial de compras, etc.
     });
 });

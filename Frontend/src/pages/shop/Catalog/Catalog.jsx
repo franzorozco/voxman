@@ -6,6 +6,8 @@ import { getCategories } from '../../../api/shop/categories';
 import { API_BASE_URL } from '../../../config/api';
 import { X, ShoppingBag } from 'lucide-react';
 import CustomSelect from '../../../components/ui/CustomSelect';
+import ProductCardMenu from '../components/ProductCardMenu';
+import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
 import './Catalog.css';
 
 const Catalog = () => {
@@ -45,7 +47,12 @@ const Catalog = () => {
   const [sortBy, setSortBy] = useState('recomendados');
   const [visibleCount, setVisibleCount] = useState(12);
 
+  const categoriesFetchedRef = useRef(false);
+
   useEffect(() => {
+    if (categoriesFetchedRef.current) return;
+    categoriesFetchedRef.current = true;
+    
     const fetchCategories = async () => {
       try {
         const response = await getCategories();
@@ -59,8 +66,15 @@ const Catalog = () => {
     fetchCategories();
   }, []);
 
+  // Removido fetchWishlist para no sobrecargar
+
+  const lastFetchedCategoryRef = useRef(undefined);
+
   useEffect(() => {
     if (!categoriesLoaded) return;
+    if (lastFetchedCategoryRef.current === selectedCategory) return; // Ya trajo estos datos recientemente
+
+    lastFetchedCategoryRef.current = selectedCategory;
 
     const fetchCatalogItems = async () => {
       setIsLoading(true);
@@ -415,6 +429,16 @@ const Catalog = () => {
                         position: 'relative'
                       }}
                     >
+                      {/* BOTÓN WISHLIST */}
+                      <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                        <ProductCardMenu productId={item.id} />
+                        {item.has_discount && (
+                          <div style={{ backgroundColor: 'var(--text-main)', color: 'var(--bg-main, #fff)', fontSize: '14px', fontWeight: '600', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
+                            {item.discount_label}
+                          </div>
+                        )}
+                      </div>
+
                       {/* ETIQUETAS IZQUIERDA */}
                       <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 2 }}>
                         {item.is_bundle && (
@@ -433,24 +457,6 @@ const Catalog = () => {
                           </div>
                         )}
                       </div>
-                      {item.has_discount && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          backgroundColor: 'var(--text-main)',
-                          color: 'var(--bg-main, #fff)',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          zIndex: 2,
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                          letterSpacing: '0.05em'
-                        }}>
-                          {item.discount_label}
-                        </div>
-                      )}
                       {imageUrl ? (
                         <img
                           src={getImageUrl(imageUrl)}
@@ -773,24 +779,18 @@ const Catalog = () => {
                       </div>
                     )}
                   </div>
-                  {item.has_discount && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      backgroundColor: 'var(--text-main)',
-                      color: 'var(--bg-main, #fff)',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      padding: '6px 12px',
-                      borderRadius: '4px',
-                      zIndex: 2,
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                      letterSpacing: '0.05em'
-                    }}>
-                      {item.discount_label}
-                    </div>
-                  )}
+                  {/* BOTÓN WISHLIST */}
+                  <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                    <ProductCardMenu 
+                      productId={item.product_id || item.id} 
+                      variantId={item.id.toString().startsWith('var-') ? item.id.replace('var-', '') : null} 
+                    />
+                    {item.has_discount && (
+                      <div style={{ backgroundColor: 'var(--text-main)', color: 'var(--bg-main, #fff)', fontSize: '14px', fontWeight: '600', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
+                        {item.discount_label}
+                      </div>
+                    )}
+                  </div>
                   {imageUrl ? (
                     <img
                       key={imageUrl}
