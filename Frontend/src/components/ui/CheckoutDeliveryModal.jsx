@@ -72,7 +72,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
   const inputBg = isDark ? "#1f2937" : "#f9fafb";
   const hoverBg = isDark ? "#1f2937" : "#f9fafb";
   const activeBg = isDark ? "rgba(201, 162, 39, 0.1)" : "rgba(201, 162, 39, 0.05)";
-  const activeBorder = "#C9A227"; 
+  const activeBorder = "#c9a227"; 
 
   const deliveryMethods = [
     { id: "pickup", title: "Recojo en sucursal", description: "Recoge tu pedido personalmente en nuestra tienda física.", icon: Store, settingKey: "delivery_pickup" },
@@ -250,7 +250,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
                     {z.latitude && z.longitude && (
                       <button 
                         onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/maps?q=${z.latitude},${z.longitude}`, '_blank'); }}
-                        style={{ background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '6px' }}
+                        style={{ background: 'transparent', border: 'none', color: '#c9a227', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '6px' }}
                       >
                         <MapIcon size={14} /> Ver mapa
                       </button>
@@ -339,7 +339,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '450px', overflowY: 'auto', paddingRight: '8px' }}>
           {addresses.length > 0 && (
-            <button onClick={() => setIsAddingAddress(false)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '13px', padding: 0 }}>
+            <button onClick={() => setIsAddingAddress(false)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: '#c9a227', cursor: 'pointer', fontSize: '13px', padding: 0 }}>
               <ArrowLeft size={14} /> Volver a mis direcciones
             </button>
           )}
@@ -495,3 +495,5 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
     </div>
   );
 }
+
+

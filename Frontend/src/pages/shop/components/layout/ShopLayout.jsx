@@ -61,7 +61,10 @@ const ShopNavbar = () => {
     prevCountRef.current = cartItemCount;
   }, [cartItemCount]);
 
-  const logoUrl = isDark ? (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : getImageUrl('/system/logos/logo_white_sinfondo.png')) : (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : getImageUrl('/system/logos/logo_black_sinfondo.png'));
+  // Como shopTheme es siempre claro, usamos el logo oscuro por defecto (para contraste en fondo blanco)
+  const logoUrl = settings.store_logo_light 
+    ? getImageUrl(settings.store_logo_light) 
+    : getImageUrl('/system/logos/logo_black_sinfondo.png');
 
   return (
     <header className="shop-nav-header">
@@ -86,7 +89,7 @@ const ShopNavbar = () => {
             </div>
           ) : (
             <div className="shop-nav-mobile-user">
-              <Link to="/shop/profile" onClick={closeMenu}>Ver perfil</Link>
+              <Link to="/profile" state={{ theme: 'light' }} onClick={closeMenu}>Ver perfil</Link>
               <Link to="/shop/orders" onClick={closeMenu}>Mis pedidos</Link>
               <button onClick={handleLogout}>Cerrar sesión</button>
             </div>
@@ -120,8 +123,7 @@ const ShopNavbar = () => {
 
               {open && (
                 <div className="shop-nav-dropdown">
-                  <Link to="/shop/profile">Ver perfil</Link>
-                  <Link to="/shop/orders">Mis pedidos</Link>
+                  <Link to="/profile" state={{ theme: 'light' }}>Ver perfil</Link>
                   <div className="shop-divider" />
                   <button onClick={handleLogout}>Cerrar sesión</button>
                 </div>
@@ -154,3 +156,4 @@ const ShopLayout = () => {
 };
 
 export default ShopLayout;
+

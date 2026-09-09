@@ -30,9 +30,14 @@ api.interceptors.request.use((config) => {
       config.headers['X-Cart-Token'] = shopCartToken;
     }
     
-    const shopAuthToken = localStorage.getItem('shop_auth_token');
-    if (shopAuthToken) {
-      config.headers.Authorization = `Bearer ${shopAuthToken}`;
+    let shopAuthToken = localStorage.getItem('shop_auth_token');
+    if (shopAuthToken === 'undefined' || shopAuthToken === 'null') {
+      shopAuthToken = null;
+    }
+    const finalToken = shopAuthToken || localStorage.getItem('token');
+    
+    if (finalToken && finalToken !== 'undefined' && finalToken !== 'null') {
+      config.headers.Authorization = `Bearer ${finalToken}`;
     }
   }
 

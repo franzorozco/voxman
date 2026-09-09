@@ -232,22 +232,24 @@
 .profile-theme-dark {
   --color-primary: #ffffff;       
   --color-primary-text: #000000;       
-  --color-primary-hover: #e5e7eb;
-  --color-secondary: #1f2937;     
+  --color-primary-hover: #cccccc;
+  --color-secondary: #1a1a1a;     
   --color-danger: #ef4444;        
   --color-danger-hover: #dc2626;
   --color-warning: #fbbf24;       
   --color-success: #34d399;       
   
-  --bg-main: #0f172a;             /* Fondo slate oscuro elegante */
-  --bg-card: #1e293b;             
-  --bg-input: #334155;            
+  --bg-main: #000000;             /* Fondo negro puro */
+  --bg-card: #0a0a0a;             /* Fondo tarjeta casi negro */
+  --bg-input: #111111;            /* Fondo input oscuro */
   
-  --text-main: #f8fafc;           
-  --text-muted: #94a3b8; 
+  --text-main: #ffffff;           
+  --text-muted: #a3a3a3; 
   
-  --border-color: #334155;        
+  --border-color: #262626;        
   --border-focus: #ffffff;
-  --bg-overlay: rgba(0, 0, 0, 0.4);
+  --bg-overlay: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
+
+

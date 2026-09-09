@@ -19,7 +19,7 @@ export default function Home() {
   return (
     <div className="home">
 
-      <Navbar logo={logo} />
+      <Navbar isDarkThemeOverride={true} />
 
       <Hero
         title="VØXman"

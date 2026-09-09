@@ -303,7 +303,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                 '--border-color': borderColor,
                 '--text-main': textColor,
                 '--bg-card': modalBg,
-                '--color-primary': '#C9A227',
+                '--color-primary': '#c9a227',
                 '--color-primary-alpha': 'rgba(201, 162, 39, 0.1)',
                 '--text-muted': mutedColor
               }}>
@@ -435,3 +435,5 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
     </div>
   );
 }
+
+

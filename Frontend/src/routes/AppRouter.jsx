@@ -8,6 +8,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import Home from "../pages/home/Home";
 import Nosotros from "../pages/nosotros/Nosotros";
 import Tracking from "../pages/public/Tracking/Tracking";
+import Profile from "../pages/profile/Profile";
 
 /* AUTH */
 import Login from "../pages/auth/Login";
@@ -79,18 +80,19 @@ import BundleDetail from "../pages/shop/Bundle/BundleDetail";
 
 import { useThemeStore } from "../store/themeStore";
 
-const ThemeLayout = ({ theme }) => (
+const ThemeLayout = ({ theme, children }) => (
   <div className={theme} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', width: '100%' }}>
-    <Outlet />
+    {children || <Outlet />}
   </div>
 );
 
 const AnimatedRoutes = () => {
   const location = useLocation();
-  const { isDark } = useThemeStore();
+  const { isDark, profileIsDark } = useThemeStore();
   const adminThemeClass = isDark ? "admin-theme-dark" : "admin-theme";
   const posThemeClass = isDark ? "pos-theme-dark" : "pos-theme";
-  const shopThemeClass = isDark ? "shop-theme-dark" : "shop-theme";
+  const shopThemeClass = "shop-theme"; // El shop es siempre claro (sin modo oscuro)
+  const profileThemeClass = profileIsDark ? "profile-theme-dark" : "profile-theme";
 
   return (
     <AnimatePresence mode="sync">
@@ -106,8 +108,6 @@ const AnimatedRoutes = () => {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/auth/callback" element={<OAuthCallback />} />
           <Route path="/tracking/:id" element={<Tracking />} />
-          {/* fallback opcional */}
-          <Route path="*" element={<Home />} />
         </Route>
 
         {/* ================= DASHBOARD (ADMIN THEME) ================= */}
@@ -193,6 +193,14 @@ const AnimatedRoutes = () => {
             <Route path="cart" element={<ShopCartView />} />
           </Route>
         </Route>
+
+        {/* ================= PROFILE (PROFILE THEME) ================= */}
+        <Route element={<PageTransition><ThemeLayout theme={profileThemeClass} /></PageTransition>}>
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+
+        {/* ================= FALLBACK ================= */}
+        <Route path="*" element={<PageTransition><ThemeLayout theme="home-theme"><Home /></ThemeLayout></PageTransition>} />
 
       </Routes>
     </AnimatePresence>

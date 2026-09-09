@@ -38,7 +38,7 @@ export default function Nosotros() {
 
   return (
     <div className="vox-nosotros-page">
-      <Navbar logo={navLogo} />
+      <Navbar isDarkThemeOverride={true} />
 
       {/* HERO SECTION */}
       <section className="vox-nosotros-hero">
@@ -190,3 +190,4 @@ export default function Nosotros() {
     </div>
   );
 }
+

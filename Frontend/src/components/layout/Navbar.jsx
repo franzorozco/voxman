@@ -6,12 +6,14 @@ import { useThemeStore } from "../../store/themeStore";
 import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import "./Navbar.css";
 
-export default function Navbar({ logo: _propLogo }) {
+export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const { isDark } = useThemeStore();
+  const { isDark: globalIsDark } = useThemeStore();
   const { settings, fetchSettings } = useShopSettingsStore();
+
+  const isDarkContext = isDarkThemeOverride !== undefined ? isDarkThemeOverride : globalIsDark;
 
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -63,10 +65,10 @@ export default function Navbar({ logo: _propLogo }) {
     setMenuOpen(false);
   };
 
-  // Invertimos la lógica para que muestre "el otro" logo en la página principal, según lo solicitado.
-  const logoUrl = isDark 
-    ? (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : getImageUrl('/system/logos/logo_black_sinfondo.png')) 
-    : (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : getImageUrl('/system/logos/logo_white_sinfondo.png'));
+  // Ajustamos la lógica para mostrar el logo que contraste correctamente con el fondo
+  const logoUrl = isDarkContext 
+    ? (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : getImageUrl('/system/logos/logo_white_sinfondo.png')) 
+    : (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : getImageUrl('/system/logos/logo_black_sinfondo.png'));
 
   return (
     <header className="nav-header">
@@ -120,20 +122,8 @@ export default function Navbar({ logo: _propLogo }) {
           ) : (
             <div className="nav-mobile-user">
 
-              <Link to="/profile" onClick={closeMenu}>
+              <Link to="/profile" state={{ theme: isDarkContext ? 'dark' : 'light' }} onClick={closeMenu}>
                 Ver perfil
-              </Link>
-
-              <Link to="/orders" onClick={closeMenu}>
-                Mis pedidos
-              </Link>
-
-              <Link to="/products" onClick={closeMenu}>
-                Mis productos
-              </Link>
-
-              <Link to="/favorites" onClick={closeMenu}>
-                Favoritos
               </Link>
 
               {hasDashboardAccess && (
@@ -194,20 +184,8 @@ export default function Navbar({ logo: _propLogo }) {
               {open && (
                 <div className="nav-dropdown">
 
-                  <Link to="/profile">
+                  <Link to="/profile" state={{ theme: isDarkContext ? 'dark' : 'light' }}>
                     Ver perfil
-                  </Link>
-
-                  <Link to="/orders">
-                    Mis pedidos
-                  </Link>
-
-                  <Link to="/products">
-                    Mis productos
-                  </Link>
-
-                  <Link to="/favorites">
-                    Favoritos
                   </Link>
 
                   {hasDashboardAccess && (

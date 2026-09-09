@@ -121,14 +121,14 @@
   );
 
   box-shadow:
-    0 4px 15px rgba(201,162,39,.35);
+    0 4px 15px rgba(201, 162, 39,.35);
 }
 
 .nav-btn-solid:hover {
   transform: translateY(-2px);
 
   box-shadow:
-    0 8px 25px rgba(201,162,39,.5);
+    0 8px 25px rgba(201, 162, 39,.5);
 }
 
 .nav-btn-solid:active,
@@ -310,3 +310,82 @@
   }
 
 }
+
+/* ========================================================
+   PROFILE CONTEXT (ADAPTABLE NAVBAR)
+   When Navbar is rendered inside .profile-theme / -dark
+======================================================== */
+
+.profile-theme .nav-header,
+.profile-theme-dark .nav-header {
+  background: var(--bg-main, #000);
+  border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+}
+
+.profile-theme .nav-menu a,
+.profile-theme-dark .nav-menu a {
+  color: var(--text-main, #fff);
+}
+
+.profile-theme .nav-menu a::after,
+.profile-theme-dark .nav-menu a::after {
+  background: var(--color-primary, #c9a227);
+}
+
+.profile-theme .nav-menu a:hover,
+.profile-theme .nav-menu a.active,
+.profile-theme-dark .nav-menu a:hover,
+.profile-theme-dark .nav-menu a.active {
+  color: var(--color-primary, #c9a227);
+}
+
+.profile-theme .hamburger span,
+.profile-theme-dark .hamburger span {
+  background: var(--text-main, #fff);
+}
+
+.profile-theme .nav-dropdown,
+.profile-theme-dark .nav-dropdown {
+  background: var(--bg-card, #111);
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  box-shadow: 0 10px 30px var(--bg-overlay, rgba(0,0,0,0.6));
+}
+
+.profile-theme .nav-dropdown a,
+.profile-theme .nav-dropdown button,
+.profile-theme-dark .nav-dropdown a,
+.profile-theme-dark .nav-dropdown button {
+  color: var(--text-main, #fff);
+}
+
+.profile-theme .nav-dropdown a:hover,
+.profile-theme .nav-dropdown button:hover,
+.profile-theme-dark .nav-dropdown a:hover,
+.profile-theme-dark .nav-dropdown button:hover {
+  background: var(--bg-input, rgba(255,255,255,0.05));
+  color: var(--color-primary, #c9a227);
+}
+
+.profile-theme .divider,
+.profile-theme-dark .divider {
+  background: var(--border-color, rgba(255,255,255,0.08));
+}
+
+@media (max-width: 1024px) {
+  .profile-theme .nav-menu,
+  .profile-theme-dark .nav-menu {
+    background: var(--bg-main, #000);
+    border-left: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  }
+  .profile-theme .nav-mobile-user button,
+  .profile-theme-dark .nav-mobile-user button {
+    color: var(--text-main, #fff);
+  }
+  .profile-theme .nav-mobile-auth,
+  .profile-theme .nav-mobile-user,
+  .profile-theme-dark .nav-mobile-auth,
+  .profile-theme-dark .nav-mobile-user {
+    border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  }
+}
+
