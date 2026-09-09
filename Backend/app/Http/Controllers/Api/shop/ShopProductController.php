@@ -21,7 +21,9 @@ class ShopProductController extends Controller
             'product_variants.size',
             'product_variants.fit',
             'brand',
-            'category'
+            'category',
+            'bundle_items.product',
+            'bundle_items.variant'
         ])->where('is_active', true);
 
         // Filtro por categora

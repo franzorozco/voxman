@@ -1,5 +1,5 @@
 import { getImageUrl } from '../../../utils/imageUtils';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../../../config/api';
 import { VideoPlayer } from '../../../components/ui/videoHelpers';
@@ -7,36 +7,23 @@ import '../Home/Home.css'; // Reusing the same CSS for the collage grid
 
 const ShopCollageGrid = ({ items }) => {
   const gridRef = useRef(null);
+  const [columns, setColumns] = useState(4);
 
-  // Scroll-reveal: observe items AFTER they render
+  // Track window size to determine grid columns
   useEffect(() => {
-    if (!items || items.length === 0) return;
+    const updateColumns = () => {
+      if (window.innerWidth <= 480) setColumns(1);
+      else if (window.innerWidth <= 768) setColumns(2);
+      else if (window.innerWidth <= 1024) setColumns(3);
+      else setColumns(4);
+    };
+    updateColumns();
+    window.addEventListener('resize', updateColumns);
+    return () => window.removeEventListener('resize', updateColumns);
+  }, []);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('shop-collage-visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.08, rootMargin: '0px 0px -20px 0px' }
-    );
+  // Pure CSS animation is now used instead of IntersectionObserver
 
-    const el = gridRef.current;
-    if (el) {
-      const domItems = el.querySelectorAll('.shop-collage-item');
-      domItems.forEach((item, i) => {
-        item.style.transitionDelay = `${(i % 8) * 0.08}s`;
-        observer.observe(item);
-      });
-    }
-
-    return () => observer.disconnect();
-  }, [items]);
-
-  
 
   if (!items || items.length === 0) {
     return (
@@ -46,17 +33,52 @@ const ShopCollageGrid = ({ items }) => {
     );
   }
 
+  // Generate layout items with specific classes based on index
+  const layoutItems = [];
+  let totalArea = 0;
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    let type = '';
+    let area = 1;
+
+    // We avoid placing large/tall items near the very end to guarantee clean packing
+    const isNearEnd = i >= items.length - 6;
+
+    if (columns > 1 && !isNearEnd) {
+      if (item.type === 'video') {
+        type = 'shop-collage-tall';
+        area = 2;
+      } else if (i % 7 === 0) {
+        type = 'shop-collage-large';
+        area = 4;
+      } else if (i % 5 === 0) {
+        type = 'shop-collage-tall';
+        area = 2;
+      }
+    }
+
+    layoutItems.push({ ...item, cssClass: type, area });
+    totalArea += area;
+  }
+
+  // Trim from the end so that the total area exactly fills the columns without leaving gaps
+  // AND limit the height to a maximum of 5 rows.
+  const MAX_ROWS = 5;
+  const maxArea = MAX_ROWS * columns;
+
+  while (layoutItems.length > 0 && (totalArea > maxArea || totalArea % columns !== 0)) {
+    const last = layoutItems.pop();
+    totalArea -= last.area;
+  }
+
   return (
     <div className="shop-collage-grid" ref={gridRef}>
-      {items.map((item, index) => (
+      {layoutItems.map((item, index) => (
         <Link 
           key={item.id || index} 
           to={item.targetUrl}
-          className={`shop-collage-item ${
-            item.type === 'video' ? 'shop-collage-tall' :
-            index % 7 === 0 ? 'shop-collage-large' :
-            index % 5 === 0 ? 'shop-collage-tall' : ''
-          }`}
+          className={`shop-collage-item ${item.cssClass}`}
         >
           {item.type === 'video' ? (
             <VideoPlayer
@@ -79,6 +101,7 @@ const ShopCollageGrid = ({ items }) => {
               {item.colorName && (
                 <span className="shop-collage-color">{item.colorName}</span>
               )}
+              <span className="shop-collage-action">Explorar</span>
             </div>
           </div>
         </Link>

@@ -29,12 +29,37 @@
   to { transform: rotate(360deg); }
 }
 
+/* ---- Hero Section ---- */
+.shop-home-hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+  background-color: var(--bg-main);
+}
+
+.shop-home-title {
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: 4px;
+  color: var(--text-main);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.shop-home-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
 /* ---- Collage Grid ---- */
 .shop-collage-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-auto-rows: 420px;
-  gap: 0;
+  grid-auto-flow: dense;
+  gap: 4px;
+  padding: 0 4px 4px 4px; /* Frame the grid */
 }
 
 /* Variaciones de tamaño para romper la monotonía */
@@ -51,32 +76,28 @@
   grid-column: span 2;
 }
 
-/* ---- Cada Item (scroll-reveal: empieza invisible) ---- */
 .shop-collage-item {
   position: relative;
   overflow: hidden;
   display: block;
   cursor: pointer;
-  background-color: var(--bg-input);
-  opacity: 0;
-  transform: translateY(40px) scale(0.97);
-  transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background-color: #f5f5f5;
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
-/* Estado visible (cuando entra en viewport) */
-.shop-collage-item.shop-collage-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+
+
 
 .shop-collage-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              filter 0.4s ease;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* ---- Overlay con info ---- */
@@ -85,56 +106,82 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    transparent 50%,
-    rgba(0, 0, 0, 0.55) 100%
+    transparent 60%,
+    rgba(0, 0, 0, 0.6) 100%
   );
   display: flex;
   align-items: flex-end;
-  padding: 24px;
-  opacity: 0;
-  transition: opacity 0.35s ease;
+  padding: 30px 24px;
+  opacity: 1; /* Always show the subtle gradient */
+  transition: background 0.4s ease;
 }
 
 .shop-collage-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  transform: translateY(12px);
-  transition: transform 0.35s ease;
+  gap: 6px;
+  width: 100%;
 }
 
 .shop-collage-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: #ffffff;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .shop-collage-color {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.8);
   text-transform: capitalize;
+  font-weight: 300;
+  letter-spacing: 0.5px;
 }
 
-.shop-collage-price {
-  font-size: 14px;
-  font-weight: 500;
+.shop-collage-action {
+  font-size: 11px;
+  font-weight: 600;
   color: #ffffff;
-  margin-top: 2px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 8px;
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.shop-collage-action::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 1px;
+  background: #ffffff;
+  transition: width 0.3s ease;
+  margin-top: 4px;
 }
 
 /* ---- Hover Effects ---- */
 .shop-collage-item:hover .shop-collage-img {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
 .shop-collage-item:hover .shop-collage-overlay {
-  opacity: 1;
+  background: linear-gradient(
+    180deg,
+    transparent 40%,
+    rgba(0, 0, 0, 0.75) 100%
+  );
 }
 
-.shop-collage-item:hover .shop-collage-info {
+.shop-collage-item:hover .shop-collage-action {
+  opacity: 1;
   transform: translateY(0);
+}
+
+.shop-collage-item:hover .shop-collage-action::after {
+  width: 100%;
 }
 
 /* ---- Responsive ---- */
@@ -154,15 +201,15 @@
 
   .shop-collage-large {
     grid-column: span 2;
-    grid-row: span 1;
+    grid-row: span 2;
   }
 
   .shop-collage-tall {
-    grid-row: span 1;
+    grid-row: span 2;
   }
 
   .shop-collage-wide {
-    grid-column: span 1;
+    grid-column: span 2;
   }
 
   .shop-collage-overlay {
