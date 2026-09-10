@@ -240,15 +240,15 @@ export default function Tracking() {
   const details = sale?.sale_details || [];
   
   
-    const computedShippingCost = shipment?.shipping_payment_type !== 'collect' ? Number(shipment?.shipping_cost || 0) : 0;
-    const computedAgencyCost = Number(shipment?.agency_dispatch_cost || 0);
-    const grandTotal = Number(sale?.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
+  const computedShippingCost = shipment?.shipping_payment_type !== 'collect' ? Number(shipment?.shipping_cost || 0) : 0;
+  const computedAgencyCost = Number(shipment?.agency_dispatch_cost || 0);
+  const grandTotal = Number(sale?.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
 
   const hasGlobalDiscount = (sale?.discount_id != null) || (sale?.sale_applied_discounts?.some(d => d.sale_detail_id == null));
   const hasGiftcard = sale?.giftcard_id != null;
   const hasDiscountOrGiftcard = hasGlobalDiscount || hasGiftcard;
 
-    const customer = sale?.customer;
+  const customer = sale?.customer;
   const guest = sale?.guest;
 
   let customerName = "Cliente";

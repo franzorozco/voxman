@@ -144,11 +144,7 @@ const AnimatedRoutes = () => {
             <Route path="purchases/receive/:id" element={<ProtectedRoute permissions={["receive_inventory"]}><ReceivePurchase /></ProtectedRoute>} />
             <Route path="purchases/accounts-payable" element={<ProtectedRoute permissions={["view_purchases"]}><AccountsPayableList /></ProtectedRoute>} />
             <Route path="inventory/quarantine" element={<ProtectedRoute permissions={["manage_inventory"]}><QuarantineList /></ProtectedRoute>} />
-            <Route path="shop-shorts" element={
-              <ProtectedRoute allowedPermissions={['view_promotions']}>
-                <ShopShorts />
-              </ProtectedRoute>
-            } />
+            <Route path="shop-shorts" element={<ProtectedRoute allowedPermissions={['view_promotions']}><ShopShorts /></ProtectedRoute>} />
             <Route path="clients" element={<ProtectedRoute permissions={["view_customers"]}><Customers /></ProtectedRoute>} />
             <Route path="clients/deleted" element={<ProtectedRoute permissions={["view_customers"]}><DeletedCustomers /></ProtectedRoute>} />
             <Route path="employees" element={<ProtectedRoute permissions={["manage_executives"]}><Employees /></ProtectedRoute>} />
