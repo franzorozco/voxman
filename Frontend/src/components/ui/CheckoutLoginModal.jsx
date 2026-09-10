@@ -322,6 +322,8 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
           onChange={handleChange}
           style={{
             flex: 1,
+            minWidth: 0,
+            width: '100%',
             background: 'transparent',
             border: 'none',
             padding: '12px',
@@ -517,8 +519,8 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
               <>
                 {renderInput("first_name", "Nombre(s)", "text", User)}
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <div style={{ flex: 1 }}>{renderInput("last_name_paternal", "Ap. Paterno", "text", User)}</div>
-                  <div style={{ flex: 1 }}>{renderInput("last_name_maternal", "Ap. Materno", "text", User)}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>{renderInput("last_name_paternal", "Ap. Paterno", "text", User)}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>{renderInput("last_name_maternal", "Ap. Materno", "text", User)}</div>
                 </div>
                 {renderInput("phone", "Teléfono", "text", User)}
               </>
