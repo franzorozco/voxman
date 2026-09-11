@@ -1,5 +1,16 @@
 /* Custom Bundle Gallery Styles - Editorial Dynamic Grid */
 
+/* Wishlist Heart Button */
+.product-wishlist-btn {
+  transition: transform 0.15s ease, background-color 0.2s ease !important;
+}
+.product-wishlist-btn:hover:not(:disabled) {
+  transform: scale(1.15) !important;
+}
+.product-wishlist-btn:active:not(:disabled) {
+  transform: scale(0.88) !important;
+}
+
 .product-gallery-container.editorial-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);

@@ -137,3 +137,7 @@ select option {
   .metric-label { grid-column: 2 !important; grid-row: 1 !important; margin-bottom: 0 !important; align-self: center !important; line-height: 1.2 !important; }
   .metric-value { grid-column: 1 / -1 !important; grid-row: 2 !important; font-size: 20px !important; }
 }
+
+/* Fix global horizontal scroll */
+html, body, #root { overflow-x: hidden; max-width: 100%; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }

@@ -69,6 +69,6 @@ Route::prefix('v1/shop')->group(function () {
         // Wishlist
         Route::get('/wishlist', [\App\Http\Controllers\Api\shop\ShopWishlistController::class, 'index']);
         Route::post('/wishlist/toggle', [\App\Http\Controllers\Api\shop\ShopWishlistController::class, 'toggle']);
-        // Historial de compras, etc.
+        Route::get('/my-orders', [ShopProfileController::class, 'myOrders']);
     });
 });

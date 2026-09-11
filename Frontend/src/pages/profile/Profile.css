@@ -3,6 +3,29 @@
    Utiliza variables definidas en theme.css (.profile-theme / .profile-theme-dark)
    ======================================================== */
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes profileSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* On small screens, hide the text label inside the geolocate button */
+@media (max-width: 480px) {
+  .map-geolocate-label { display: none; }
+}
+
+/* Ensure all elements within profile use border-box to prevent overflow */
+.profile-page-wrapper,
+.profile-page-wrapper *,
+.profile-page-wrapper *::before,
+.profile-page-wrapper *::after {
+  box-sizing: border-box;
+}
+
 .profile-page-wrapper {
   background-color: var(--bg-main);
   color: var(--text-main);
@@ -11,15 +34,21 @@
   flex-direction: column;
   font-family: "Poppins", "Inter", sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden; /* Fix horizontal shift */
+  width: 100%;
 }
 
 .profile-main-container {
   flex: 1;
   max-width: 1280px;
   width: 100%;
+  min-width: 0; /* Prevent flex blowout */
   margin: 0 auto;
   padding: 90px 24px 60px 24px;
+  box-sizing: border-box; /* Crucial for responsive padding */
+  overflow-x: hidden;
 }
+
 
 /* =========================================
    HERO / BANNER DE BIENVENIDA
@@ -545,6 +574,10 @@
 }
 
 .profile-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 48px 24px;
   color: var(--text-muted);
@@ -782,34 +815,69 @@
 }
 
 @media (max-width: 768px) {
+  .profile-main-container {
+    padding: 80px 16px 40px 16px;
+  }
+  
   .profile-hero-card {
-    padding: 20px;
+    padding: 24px 20px;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  
+  .profile-user-identity {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .profile-user-meta h1 {
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  .profile-badges-row {
+    justify-content: center;
   }
 
   .profile-stats-grid {
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 12px;
   }
 
   .profile-stat-box {
     flex: 1;
-    min-width: 80px;
-    padding: 10px;
+    min-width: 100px;
+    padding: 12px;
   }
 
   .profile-body-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    width: 100%;
+    max-width: 100vw;
   }
 
   .profile-sidebar {
     position: static;
     display: flex;
     overflow-x: auto;
-    padding: 10px;
+    padding: 4px;
     gap: 8px;
     border-radius: 12px;
+    margin-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .profile-sidebar::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
   }
 
   .profile-nav-group-title {
@@ -823,18 +891,220 @@
   .profile-nav-btn {
     white-space: nowrap;
     width: auto;
-    padding: 8px 14px;
-    border-radius: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
     margin-bottom: 0;
+    font-size: 13px;
   }
 
   .profile-form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    width: 100%;
   }
 
   .profile-content-card {
     padding: 20px;
+    border-radius: 16px;
+  }
+  
+  .profile-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .profile-card-header button {
+    width: 100%;
+    justify-content: center;
   }
 }
 
+@media (max-width: 480px) {
+  .profile-main-container {
+    padding: 70px 12px 30px 12px;
+  }
+  
+  .profile-hero-card {
+    padding: 20px 16px;
+  }
+  
+  .profile-content-card {
+    padding: 16px;
+  }
+  
+  .profile-form-actions {
+    flex-direction: column;
+  }
+  
+  .profile-btn-primary, .profile-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .profile-stat-value {
+    font-size: 18px;
+  }
+  
+  .profile-stat-label {
+    font-size: 10px;
+  }
+}
 
+/* =========================================
+   LISTA DE DESEOS — TARJETAS VISUALES
+   ========================================= */
+
+.profile-wishlist-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.profile-wishlist-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+/* Image wrapper */
+.profile-wishlist-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: var(--bg-input);
+  overflow: hidden;
+}
+.profile-wishlist-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+  display: block;
+}
+.profile-wishlist-card:hover .profile-wishlist-img {
+  transform: scale(1.04);
+}
+.profile-wishlist-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+/* Overlay badges */
+.profile-wishlist-discount-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--color-danger, #ef4444);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+.profile-wishlist-bundle-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Info section */
+.profile-wishlist-info {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.profile-wishlist-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.15s;
+}
+.profile-wishlist-name:hover {
+  color: var(--color-primary, #6366f1);
+}
+
+/* Variant tags (color + size) */
+.profile-wishlist-variant {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.profile-wishlist-tag {
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+/* Price row */
+.profile-wishlist-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.profile-wishlist-price-sale {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.profile-wishlist-price-original {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/* Footer: date + remove */
+.profile-wishlist-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+}
+.profile-wishlist-remove-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ef4444;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.profile-wishlist-remove-btn:hover {
+  background: rgba(239,68,68,0.08);
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { 
   User, 
@@ -23,11 +23,15 @@ import {
   Smartphone,
   Mail,
   Calendar,
-  X
+  X,
+  Loader2,
+  Truck,
+  Clock
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
 import { useThemeStore } from "../../store/themeStore";
+import useShopWishlistStore from "../../store/shop/useShopWishlistStore";
 import Navbar from "../home/components/Navbar";
 import Footer from "../../components/layout/Footer";
 import { 
@@ -36,8 +40,11 @@ import {
   changePassword, 
   addAddress, 
   updateAddress, 
-  deleteAddress 
+  deleteAddress,
+  getMyOrders 
 } from "../../api/profile/profileApi";
+import { getImageUrl } from "../../utils/imageUtils";
+import AddressMapPicker from "../../components/ui/AddressMapPicker";
 import "./Profile.css";
 
 export default function Profile() {
@@ -89,8 +96,18 @@ export default function Profile() {
     city: "La Paz",
     zone: "",
     street: "",
-    reference: ""
+    reference: "",
+    latitude: null,
+    longitude: null,
   });
+
+  // Orders State
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [orderFilter, setOrderFilter] = useState("all"); // all, pending, in_transit, completed
+
+  // Wishlist Store
+  const { items: wishlistItems, loading: wishlistLoading, fetchWishlist, toggleWishlist } = useShopWishlistStore();
 
   // Fetch Profile data on mount
   const loadProfile = async () => {
@@ -108,7 +125,7 @@ export default function Profile() {
           last_name_maternal: prof.last_name_maternal || "",
           phone: prof.phone || "",
           birthdate: prof.birthdate ? prof.birthdate.split("T")[0] : "",
-          gender: prof.gender || "Prefiero no decirlo"
+          gender: ["Masculino", "Femenino", "Prefiero no decirlo"].includes(prof.gender) ? prof.gender : "Prefiero no decirlo"
         });
 
         // Populate addresses from customers collection
@@ -132,7 +149,7 @@ export default function Profile() {
           last_name_maternal: prof.last_name_maternal || "",
           phone: prof.phone || "",
           birthdate: prof.birthdate ? prof.birthdate.split("T")[0] : "",
-          gender: prof.gender || "Prefiero no decirlo"
+          gender: ["Masculino", "Femenino", "Prefiero no decirlo"].includes(prof.gender) ? prof.gender : "Prefiero no decirlo"
         });
         const customer = authUser.customers?.[0];
         if (customer?.addresses) {
@@ -151,6 +168,14 @@ export default function Profile() {
     loadProfile();
   }, []);
 
+  // Frontend auth validation: redirect if logged out from elsewhere (e.g. Navbar)
+  useEffect(() => {
+    if (!loading && !authUser && !token) {
+      toast.error("Por favor inicia sesión para acceder a tu perfil.");
+      navigate("/login");
+    }
+  }, [authUser, token, loading, navigate]);
+
   // Handle Profile Update
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -161,7 +186,16 @@ export default function Profile() {
 
     try {
       setSavingProfile(true);
-      const res = await updateProfile(profileForm);
+      // Sanitize: send null instead of empty strings for optional fields
+      const payload = {
+        ...profileForm,
+        birthdate: profileForm.birthdate?.trim() || null,
+        phone: profileForm.phone?.trim() || null,
+        last_name_paternal: profileForm.last_name_paternal?.trim() || null,
+        last_name_maternal: profileForm.last_name_maternal?.trim() || null,
+        gender: profileForm.gender?.trim() || null,
+      };
+      const res = await updateProfile(payload);
       toast.success("Perfil actualizado con éxito.");
       if (res?.user) {
         setUserData(res.user);
@@ -169,7 +203,10 @@ export default function Profile() {
       }
     } catch (err) {
       console.error("Error updating profile:", err);
-      toast.error(err.response?.data?.message || "Error al actualizar perfil.");
+      const errMsg = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat().join(" ")
+        : err.response?.data?.message || "Error al actualizar perfil.";
+      toast.error(errMsg);
     } finally {
       setSavingProfile(false);
     }
@@ -239,7 +276,9 @@ export default function Profile() {
         city: "La Paz",
         zone: "",
         street: "",
-        reference: ""
+        reference: "",
+        latitude: null,
+        longitude: null,
       });
     } catch (err) {
       console.error("Error saving address:", err);
@@ -257,7 +296,9 @@ export default function Profile() {
       city: addr.city || "",
       zone: addr.zone || "",
       street: addr.street || "",
-      reference: addr.reference || ""
+      reference: addr.reference || "",
+      latitude: addr.latitude ? Number(addr.latitude) : null,
+      longitude: addr.longitude ? Number(addr.longitude) : null,
     });
     setShowAddressModal(true);
   };
@@ -278,6 +319,72 @@ export default function Profile() {
     logout();
     toast.success("Sesión cerrada.");
     navigate("/");
+  };
+
+  // Load orders when tab is activated or filter changes
+  const loadOrders = useCallback(async (filter) => {
+    try {
+      setOrdersLoading(true);
+      const params = {};
+      if (filter && filter !== "all") {
+        params.status = filter;
+      }
+      const data = await getMyOrders(params);
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error loading orders:", err);
+      toast.error("Error al cargar tus pedidos.");
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, []);
+
+  // Fetch data when switching tabs
+  useEffect(() => {
+    if (activeTab === "orders") {
+      loadOrders(orderFilter);
+    } else if (activeTab === "wishlist") {
+      fetchWishlist();
+    }
+  }, [activeTab]);
+
+  // Refetch orders when filter changes
+  useEffect(() => {
+    if (activeTab === "orders") {
+      loadOrders(orderFilter);
+    }
+  }, [orderFilter]);
+
+  // Helper: get delivery status label and color for profile cards
+  const getDeliveryStatusInfo = (schedule, shipment) => {
+    if (!schedule) {
+      // No delivery schedule, use shipment status
+      const s = shipment?.status || 'pending';
+      if (s === 'delivered') return { label: 'Entregado', color: '#10b981', cssClass: 'status-delivered' };
+      if (s === 'shipped') return { label: 'Enviado', color: '#3b82f6', cssClass: 'status-transit' };
+      return { label: 'Pendiente', color: '#64748b', cssClass: 'status-pending' };
+    }
+    const st = schedule.status;
+    switch (st) {
+      case 'completed': return { label: 'Entregado', color: '#10b981', cssClass: 'status-delivered' };
+      case 'on_the_way': return { label: 'En Camino', color: '#3b82f6', cssClass: 'status-transit' };
+      case 'at_the_meeting_point': return { label: 'En el Punto', color: '#8b5cf6', cssClass: 'status-transit' };
+      case 'ready_for_pickup': return { label: 'Listo para Recoger', color: '#8b5cf6', cssClass: 'status-transit' };
+      case 'assigned': return { label: 'Agendado', color: '#4f46e5', cssClass: 'status-pending' };
+      case 'preparing':
+      case 'prepared': return { label: 'Preparando', color: '#f97316', cssClass: 'status-pending' };
+      case 'packaged': return { label: 'Empaquetado', color: '#0ea5e9', cssClass: 'status-transit' };
+      case 'shipped': return { label: 'Remitido', color: '#3b82f6', cssClass: 'status-transit' };
+      case 'cancelled': return { label: 'Cancelado', color: '#ef4444', cssClass: 'status-cancelled' };
+      default: return { label: 'Pendiente', color: '#64748b', cssClass: 'status-pending' };
+    }
+  };
+
+  // Helper: get membership tier from points
+  const getMembershipTier = (points) => {
+    if (points >= 500) return { name: 'Gold', color: '#f59e0b' };
+    if (points >= 100) return { name: 'Silver', color: '#9ca3af' };
+    return { name: 'Bronze', color: '#cd7f32' };
   };
 
   // Helper values
@@ -363,8 +470,8 @@ export default function Profile() {
             </div>
 
             <div className="profile-stat-box">
-              <span className="profile-stat-value" style={{ color: "var(--color-success)" }}>
-                Activo
+              <span className="profile-stat-value" style={{ color: customerInfo?.is_active !== false ? "var(--color-success)" : "var(--text-muted)" }}>
+                {customerInfo?.is_active !== false ? "Activo" : "Inactivo"}
               </span>
               <span className="profile-stat-label">Estado</span>
             </div>
@@ -602,7 +709,9 @@ export default function Profile() {
                         city: "La Paz",
                         zone: "",
                         street: "",
-                        reference: ""
+                        reference: "",
+                        latitude: null,
+                        longitude: null,
                       });
                       setShowAddressModal(true);
                     }}
@@ -633,6 +742,32 @@ export default function Profile() {
                     </div>
 
                     <form onSubmit={handleAddressSubmit}>
+
+                      {/* MAP PICKER */}
+                      <div style={{ marginBottom: "20px" }}>
+                        <label className="profile-label" style={{ display: "block", marginBottom: "8px" }}>
+                          Ubicación en el mapa
+                        </label>
+                        <AddressMapPicker
+                          initialLat={addressForm.latitude}
+                          initialLng={addressForm.longitude}
+                          onAddressSelect={(fields) => {
+                            setAddressForm(prev => ({
+                              ...prev,
+                              latitude: fields.lat ?? prev.latitude,
+                              longitude: fields.lng ?? prev.longitude,
+                              // Only overwrite text fields if the geocoder returned non-empty values
+                              ...(fields.street ? { street: fields.street } : {}),
+                              ...(fields.zone ? { zone: fields.zone } : {}),
+                              ...(fields.city ? { city: fields.city } : {}),
+                              ...(fields.state ? { state: fields.state } : {}),
+                              ...(fields.country ? { country: fields.country } : {}),
+                            }));
+                          }}
+                        />
+                      </div>
+
+                      {/* MANUAL FIELDS (editable after map selection) */}
                       <div className="profile-form-grid">
                         <div className="profile-form-group">
                           <label className="profile-label">País</label>
@@ -914,7 +1049,7 @@ export default function Profile() {
               </div>
             )}
 
-            {/* 4. MIS PEDIDOS (PLACEHOLDER DE ALTA PRESENCIA) */}
+            {/* 4. MIS PEDIDOS */}
             {activeTab === "orders" && (
               <div className="profile-content-card">
                 <div className="profile-card-header">
@@ -928,35 +1063,83 @@ export default function Profile() {
                 </div>
 
                 <div className="profile-orders-tabs">
-                  <button className="profile-tab-pill active">Todos</button>
-                  <button className="profile-tab-pill">Pendientes</button>
-                  <button className="profile-tab-pill">En Camino</button>
-                  <button className="profile-tab-pill">Entregados</button>
+                  {[
+                    { key: "all", label: "Todos" },
+                    { key: "pending", label: "Pendientes" },
+                    { key: "in_transit", label: "En Camino" },
+                    { key: "completed", label: "Entregados" }
+                  ].map(f => (
+                    <button
+                      key={f.key}
+                      className={`profile-tab-pill ${orderFilter === f.key ? "active" : ""}`}
+                      onClick={() => setOrderFilter(f.key)}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Pedido de Demostración Estético */}
-                <div className="profile-order-card">
-                  <div className="order-meta-group">
-                    <h4>Pedido #VX-9821</h4>
-                    <p>Realizado el 08 de Septiembre, 2026 • 2 artículos</p>
+                {ordersLoading ? (
+                  <div className="profile-empty-state" style={{ padding: "40px 0" }}>
+                    <Loader2 size={32} style={{ animation: "profileSpin 0.8s linear infinite" }} />
+                    <p>Cargando pedidos...</p>
                   </div>
-                  <span className="order-status-badge status-delivered">Entregado</span>
-                  <div>
-                    <span style={{ fontWeight: 700, fontSize: "15px" }}>Bs. 349.00</span>
+                ) : orders.length === 0 ? (
+                  <div className="profile-empty-state" style={{ padding: "32px 0" }}>
+                    <Package size={48} />
+                    <h3>No tienes pedidos registrados</h3>
+                    <p>Cuando realices tu primera compra, aparecerá aquí.</p>
+                    <Link to="/shop/catalog" className="profile-btn-primary" style={{ display: "inline-flex", marginTop: "8px" }}>
+                      Explorar Catálogo
+                    </Link>
                   </div>
-                  <Link to="/tracking/VX-9821" className="profile-btn-outline" style={{ fontSize: "12px", padding: "6px 14px" }}>
-                    Ver Seguimiento
-                  </Link>
-                </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {orders.map((order) => {
+                      const mainShipment = order.shipments?.[0];
+                      const schedule = mainShipment?.delivery_schedule;
+                      const statusInfo = getDeliveryStatusInfo(schedule, mainShipment);
+                      const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric" }) : "";
+                      const trackingId = schedule?.id || mainShipment?.id;
 
-                <div className="profile-empty-state" style={{ padding: "32px 0" }}>
-                  <Package size={36} />
-                  <p>No tienes más pedidos registrados en este momento.</p>
-                </div>
+                      // Same calculation as /dashboard/sales
+                      const computedShippingCost = mainShipment?.shipping_payment_type !== 'collect' ? Number(mainShipment?.shipping_cost || 0) : 0;
+                      const computedAgencyCost = Number(mainShipment?.agency_dispatch_cost || 0);
+                      const grandTotal = Number(order.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
+                      const totalPaid = order.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+                      const displayTotal = order.status === 'paid' ? grandTotal : (grandTotal - totalPaid);
+
+                      return (
+                        <div key={order.id} className="profile-order-card">
+                          <div className="order-meta-group">
+                            <h4>Pedido {order.invoice_number ? `#${order.invoice_number}` : `#${order.id.slice(0, 8).toUpperCase()}`}</h4>
+                            <p>Realizado el {orderDate} • {order.items_count} artículo{order.items_count !== 1 ? "s" : ""}</p>
+                          </div>
+                          <span className={`order-status-badge ${statusInfo.cssClass}`} style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color, borderColor: statusInfo.color }}>
+                            {statusInfo.label}
+                          </span>
+                          <div>
+                            <span style={{ fontWeight: 700, fontSize: "15px" }}>Bs. {Number(displayTotal).toFixed(2)}</span>
+                            {Number(order.dynamic_global_discount || 0) > 0 && (
+                              <div style={{ fontSize: "11px", color: "var(--color-danger, #ef4444)" }}>
+                                Desc: -Bs. {Number(order.dynamic_global_discount).toFixed(2)}
+                              </div>
+                            )}
+                          </div>
+                          {trackingId && (
+                            <Link to={`/tracking/${trackingId}`} className="profile-btn-outline" style={{ fontSize: "12px", padding: "6px 14px" }}>
+                              Ver Seguimiento
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* 5. LISTA DE DESEOS (PLACEHOLDER CON UI) */}
+            {/* 5. LISTA DE DESEOS */}
             {activeTab === "wishlist" && (
               <div className="profile-content-card">
                 <div className="profile-card-header">
@@ -964,16 +1147,125 @@ export default function Profile() {
                     <h2><Heart size={22} /> Lista de Deseos</h2>
                     <p>Tus prendas favoritas guardadas para después.</p>
                   </div>
+                  {wishlistItems.length > 0 && (
+                    <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                      {wishlistItems.length} artículo{wishlistItems.length !== 1 ? "s" : ""}
+                    </span>
+                  )}
                 </div>
 
-                <div className="profile-empty-state">
-                  <Heart size={48} />
-                  <h3>Tu lista de deseos está vacía</h3>
-                  <p>Explora nuestro catálogo exclusivo y guarda los productos que más te gusten.</p>
-                  <Link to="/shop/catalog" className="profile-btn-primary" style={{ display: "inline-flex" }}>
-                    Explorar Catálogo
-                  </Link>
-                </div>
+                {wishlistLoading ? (
+                  <div className="profile-empty-state" style={{ padding: "40px 0" }}>
+                    <Loader2 size={32} style={{ animation: "profileSpin 0.8s linear infinite" }} />
+                    <p>Cargando lista de deseos...</p>
+                  </div>
+                ) : wishlistItems.length === 0 ? (
+                  <div className="profile-empty-state">
+                    <Heart size={48} />
+                    <h3>Tu lista de deseos está vacía</h3>
+                    <p>Explora nuestro catálogo exclusivo y guarda los productos que más te gusten.</p>
+                    <Link to="/shop/catalog" className="profile-btn-primary" style={{ display: "inline-flex" }}>
+                      Explorar Catálogo
+                    </Link>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
+                    {wishlistItems.map((item) => {
+                      // Build the product link with color/size query params
+                      const basePath = item.is_bundle
+                        ? `/shop/bundle/${item.product_id}`
+                        : `/shop/product/${item.product_id}`;
+                      const params = new URLSearchParams();
+                      if (item.variant?.color) params.set("color", item.variant.color);
+                      const productLink = params.toString() ? `${basePath}?${params}` : basePath;
+
+                      const imageUrl = item.cover_image ? getImageUrl(item.cover_image) : null;
+
+                      return (
+                        <div key={item.id} className="profile-wishlist-card">
+                          {/* Image */}
+                          <Link to={productLink} style={{ display: "block", textDecoration: "none" }}>
+                            <div className="profile-wishlist-img-wrap">
+                              {imageUrl ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={item.product_name}
+                                  className="profile-wishlist-img"
+                                />
+                              ) : (
+                                <div className="profile-wishlist-img-placeholder">
+                                  <Heart size={32} style={{ opacity: 0.25 }} />
+                                </div>
+                              )}
+                              {/* Discount badge */}
+                              {item.has_discount && item.discount_label && (
+                                <span className="profile-wishlist-discount-badge">
+                                  {item.discount_label}
+                                </span>
+                              )}
+                              {/* Bundle badge */}
+                              {item.is_bundle && (
+                                <span className="profile-wishlist-bundle-badge">Conjunto</span>
+                              )}
+                            </div>
+                          </Link>
+
+                          {/* Info */}
+                          <div className="profile-wishlist-info">
+                            <Link to={productLink} style={{ textDecoration: "none", color: "inherit" }}>
+                              <p className="profile-wishlist-name">{item.product_name}</p>
+                            </Link>
+
+                            {/* Color + Size */}
+                            {(item.variant?.color || item.variant?.size) && (
+                              <div className="profile-wishlist-variant">
+                                {item.variant.color && (
+                                  <span className="profile-wishlist-tag">{item.variant.color}</span>
+                                )}
+                                {item.variant.size && (
+                                  <span className="profile-wishlist-tag">Talla {item.variant.size}</span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Price */}
+                            <div className="profile-wishlist-price-row">
+                              {item.has_discount ? (
+                                <>
+                                  <span className="profile-wishlist-price-sale">
+                                    Bs {parseFloat(item.display_price || 0).toFixed(2)}
+                                  </span>
+                                  <span className="profile-wishlist-price-original">
+                                    Bs {parseFloat(item.original_price || 0).toFixed(2)}
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="profile-wishlist-price-sale">
+                                  Bs {parseFloat(item.display_price || item.original_price || 0).toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Date + Remove */}
+                            <div className="profile-wishlist-footer">
+                              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                                {item.created_at ? new Date(item.created_at).toLocaleDateString("es-BO", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                              </span>
+                              <button
+                                className="profile-wishlist-remove-btn"
+                                onClick={() => toggleWishlist(item.product_id, item.variant_id)}
+                                title="Quitar de favoritos"
+                              >
+                                <Heart size={13} fill="#ef4444" strokeWidth={0} />
+                                Quitar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -991,7 +1283,7 @@ export default function Profile() {
                 <div className="profile-membership-card">
                   <div className="membership-top-row">
                     <span className="membership-brand">VØXMAN</span>
-                    <span className="membership-tier-badge">Nivel Silver</span>
+                    <span className="membership-tier-badge" style={{ color: getMembershipTier(customerInfo?.points || 0).color }}>Nivel {getMembershipTier(customerInfo?.points || 0).name}</span>
                   </div>
 
                   <div className="membership-bottom-row">

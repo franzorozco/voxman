@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { getProduct, getProducts } from '../../../api/shop/products';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
+import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
 import { API_BASE_URL } from '../../../config/api';
-import { ChevronDown, ChevronUp, Share2, Copy, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Share2, Copy, Check, Heart } from 'lucide-react';
 import { VideoPlayer } from '../../../components/ui/videoHelpers';
 import './ProductDetail.css';
 
@@ -82,6 +83,16 @@ const ProductDetail = () => {
 
   const addToCart = useShopCartStore((state) => state.addToCart);
   const isCartLoading = useShopCartStore((state) => state.isLoading);
+
+  const toggleWishlist = useShopWishlistStore((state) => state.toggleWishlist);
+  const isInWishlist = useShopWishlistStore((state) => state.isInWishlist);
+  const fetchWishlist = useShopWishlistStore((state) => state.fetchWishlist);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  // Fetch wishlist once so heart state is correct
+  useEffect(() => {
+    fetchWishlist().catch(() => {});
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -421,8 +432,45 @@ const ProductDetail = () => {
         <div className="product-info-container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
             <h1 className="product-title" style={{ margin: 0, flex: 1 }}>{product.name}</h1>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button 
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Wishlist Heart Button */}
+              {(() => {
+                const variantId = selectedVariant?.id || null;
+                const inWishlist = isInWishlist(product.id, variantId);
+                return (
+                  <button
+                    onClick={async () => {
+                      if (wishlistLoading) return;
+                      setWishlistLoading(true);
+                      try {
+                        await toggleWishlist(product.id, variantId);
+                      } finally {
+                        setWishlistLoading(false);
+                      }
+                    }}
+                    disabled={wishlistLoading}
+                    title={inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    className="product-wishlist-btn"
+                    style={{
+                      width: '32px', height: '32px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: '50%', border: 'none', cursor: wishlistLoading ? 'not-allowed' : 'pointer',
+                      backgroundColor: inWishlist ? '#fff0f0' : '#f5f5f5',
+                      color: inWishlist ? '#ef4444' : '#666',
+                      transition: 'all 0.2s ease',
+                      transform: wishlistLoading ? 'scale(0.9)' : 'scale(1)',
+                    }}
+                  >
+                    <Heart
+                      size={15}
+                      fill={inWishlist ? '#ef4444' : 'none'}
+                      strokeWidth={inWishlist ? 0 : 1.8}
+                    />
+                  </button>
+                );
+              })()}
+
+              <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   alert("Enlace copiado al portapapeles");
@@ -432,7 +480,7 @@ const ProductDetail = () => {
               >
                 <Copy size={15} />
               </button>
-              <a 
+              <a
                 href={`https://wa.me/?text=Mira%20este%20producto:%20${encodeURIComponent(product.name)}%20${encodeURIComponent(window.location.href)}`}
                 target="_blank"
                 rel="noopener noreferrer"

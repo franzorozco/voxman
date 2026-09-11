@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProduct } from '../../../api/shop/products';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
+import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
 import { API_BASE_URL } from '../../../config/api';
-import { Check, Copy, Share2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Copy, Share2, ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import './BundleDetail.css';
 
 
@@ -528,6 +529,16 @@ const BundleDetail = () => {
   const addToCart = useShopCartStore((state) => state.addToCart);
   const addBundleToCart = useShopCartStore((state) => state.addBundleToCart);
 
+  const toggleWishlist = useShopWishlistStore((state) => state.toggleWishlist);
+  const isInWishlist = useShopWishlistStore((state) => state.isInWishlist);
+  const fetchWishlist = useShopWishlistStore((state) => state.fetchWishlist);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  // Fetch wishlist once so heart state is correct
+  useEffect(() => {
+    fetchWishlist().catch(() => {});
+  }, []);
+
   useEffect(() => {
     const fetchBundle = async () => {
       setIsLoading(true);
@@ -739,8 +750,44 @@ const BundleDetail = () => {
               </span>
               <h1 className="product-title" style={{ margin: 0 }}>{bundle.name}</h1>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button 
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* Wishlist Heart Button — bundles have no variant, so variant_id = null */}
+              {(() => {
+                const inWishlist = isInWishlist(bundle.id, null);
+                return (
+                  <button
+                    onClick={async () => {
+                      if (wishlistLoading) return;
+                      setWishlistLoading(true);
+                      try {
+                        await toggleWishlist(bundle.id, null);
+                      } finally {
+                        setWishlistLoading(false);
+                      }
+                    }}
+                    disabled={wishlistLoading}
+                    title={inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    className="product-wishlist-btn"
+                    style={{
+                      width: '32px', height: '32px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: '50%', border: 'none', cursor: wishlistLoading ? 'not-allowed' : 'pointer',
+                      backgroundColor: inWishlist ? '#fff0f0' : '#f5f5f5',
+                      color: inWishlist ? '#ef4444' : '#666',
+                      transition: 'all 0.2s ease',
+                      transform: wishlistLoading ? 'scale(0.9)' : 'scale(1)',
+                    }}
+                  >
+                    <Heart
+                      size={15}
+                      fill={inWishlist ? '#ef4444' : 'none'}
+                      strokeWidth={inWishlist ? 0 : 1.8}
+                    />
+                  </button>
+                );
+              })()}
+
+              <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   alert("Enlace copiado al portapapeles");
@@ -750,7 +797,7 @@ const BundleDetail = () => {
               >
                 <Copy size={15} />
               </button>
-              <a 
+              <a
                 href={`https://wa.me/?text=Mira%20este%20conjunto:%20${encodeURIComponent(bundle.name)}%20${encodeURIComponent(window.location.href)}`}
                 target="_blank"
                 rel="noopener noreferrer"

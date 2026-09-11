@@ -2,6 +2,27 @@
    SHOP PRODUCT DETAIL - PREMIUM DESIGN
 ============================================ */
 
+/* Wishlist Heart Button */
+.product-wishlist-btn {
+  transition: transform 0.15s ease, background-color 0.2s ease !important;
+}
+.product-wishlist-btn:hover:not(:disabled) {
+  transform: scale(1.15) !important;
+}
+.product-wishlist-btn:active:not(:disabled) {
+  transform: scale(0.88) !important;
+}
+@keyframes heartbeat {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.25); }
+  50%  { transform: scale(1); }
+  75%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.product-wishlist-btn.in-wishlist {
+  animation: heartbeat 0.35s ease;
+}
+
 .product-detail-page {
   background-color: #fff;
   min-height: 100vh;

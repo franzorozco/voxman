@@ -49,8 +49,8 @@ class ShopProfileController extends Controller
             'first_name' => 'required|string|max:100',
             'last_name_paternal' => 'nullable|string|max:100',
             'last_name_maternal' => 'nullable|string|max:100',
-            'birthdate' => 'nullable|date',
-            'gender' => 'nullable|string|in:Masculino,Femenino,Prefiero no decirlo',
+            'birthdate' => 'nullable|date_format:Y-m-d',
+            'gender' => 'nullable|string|max:50',
             'country' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'city' => 'nullable|string|max:100',
@@ -218,11 +218,13 @@ class ShopProfileController extends Controller
         $user = $request->user();
         $customerIds = $user->customers()->pluck('id')->toArray();
 
+        if (empty($customerIds)) {
+            return response()->json(['message' => 'No tienes un perfil de cliente.'], 403);
+        }
+
         $address = \App\Models\Core\Address::where('id', $id)
-            ->where(function($query) use ($user, $customerIds) {
-                $query->where('user_id', $user->id)
-                      ->orWhereIn('customer_id', $customerIds);
-            })->firstOrFail();
+            ->whereIn('customer_id', $customerIds)
+            ->firstOrFail();
 
         $request->validate([
             'country' => 'nullable|string|max:100',
@@ -253,11 +255,13 @@ class ShopProfileController extends Controller
         $user = $request->user();
         $customerIds = $user->customers()->pluck('id')->toArray();
 
+        if (empty($customerIds)) {
+            return response()->json(['message' => 'No tienes un perfil de cliente.'], 403);
+        }
+
         $address = \App\Models\Core\Address::where('id', $id)
-            ->where(function($query) use ($user, $customerIds) {
-                $query->where('user_id', $user->id)
-                      ->orWhereIn('customer_id', $customerIds);
-            })->firstOrFail();
+            ->whereIn('customer_id', $customerIds)
+            ->firstOrFail();
 
         $address->delete();
 
@@ -267,6 +271,96 @@ class ShopProfileController extends Controller
             'message' => 'Dirección eliminada exitosamente',
             'user' => $this->formatUser($user)
         ]);
+    }
+
+    public function myOrders(Request $request)
+    {
+        $customer = $request->user()->customer;
+
+        if (!$customer) {
+            return response()->json([]);
+        }
+
+        $query = \App\Models\Sales\Sale::with([
+            'sale_details.product_variant.product',
+            'sale_details.product_variant.size',
+            'sale_details.product_variant.fit',
+            'sale_details.sale_applied_discount',
+            'shipments.delivery_schedule',
+            'shipments.address',
+            'payments',
+            'sale_applied_discounts'
+        ])->where('customer_id', $customer->id)
+          ->orderBy('created_at', 'desc');
+
+        if ($request->has('status')) {
+            $status = $request->query('status');
+            $query->whereHas('shipments.delivery_schedule', function($q) use ($status) {
+                if ($status === 'pending') {
+                    $q->whereIn('status', ['pending', 'assigned', 'requested', 'reserved', 'preparing', 'prepared']);
+                } elseif ($status === 'in_transit') {
+                    $q->whereIn('status', ['on_the_way', 'at_the_meeting_point', 'ready_for_pickup', 'packaged', 'shipped']);
+                } elseif ($status === 'completed') {
+                    $q->where('status', 'completed');
+                } elseif ($status === 'cancelled') {
+                    $q->where('status', 'cancelled');
+                }
+            });
+        }
+
+        $sales = $query->get();
+
+        $formattedSales = $sales->map(function($sale) {
+            return [
+                'id' => $sale->id,
+                'invoice_number' => $sale->invoice_number,
+                'created_at' => $sale->created_at,
+                'status' => $sale->status,
+                'source' => $sale->source,
+                'dynamic_total' => $sale->dynamic_total,
+                'dynamic_subtotal' => $sale->dynamic_subtotal,
+                'dynamic_global_discount' => $sale->dynamic_global_discount,
+                'items_count' => $sale->sale_details->count(),
+                'items' => $sale->sale_details->map(function($detail) {
+                    return [
+                        'product_name' => optional(optional($detail->product_variant)->product)->name,
+                        'size' => optional(optional($detail->product_variant)->size)->name,
+                        'fit' => optional(optional($detail->product_variant)->fit)->name,
+                        'sku' => optional($detail->product_variant)->sku,
+                        'quantity' => $detail->quantity,
+                        'unit_price' => $detail->dynamic_unit_price,
+                        'final_price' => $detail->dynamic_subtotal,
+                    ];
+                }),
+                'shipments' => $sale->shipments->map(function($shipment) {
+                    return [
+                        'id' => $shipment->id,
+                        'status' => $shipment->status,
+                        'delivery_type' => $shipment->delivery_type,
+                        'tracking_code' => $shipment->tracking_code,
+                        'shipped_at' => $shipment->shipped_at,
+                        'delivered_at' => $shipment->delivered_at,
+                        'shipping_cost' => $shipment->shipping_cost,
+                        'shipping_payment_type' => $shipment->shipping_payment_type,
+                        'agency_dispatch_cost' => $shipment->agency_dispatch_cost,
+                        'delivery_schedule' => $shipment->delivery_schedule ? [
+                            'id' => $shipment->delivery_schedule->id,
+                            'status' => $shipment->delivery_schedule->status,
+                            'scheduled_date' => $shipment->delivery_schedule->scheduled_date,
+                        ] : null,
+                    ];
+                }),
+                'payments' => $sale->payments->map(function($payment) {
+                    return [
+                        'amount' => $payment->amount,
+                        'method' => $payment->method,
+                        'created_at' => $payment->created_at,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json($formattedSales);
     }
 
     public function logout(Request $request)

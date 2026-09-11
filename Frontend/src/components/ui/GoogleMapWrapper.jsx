@@ -2,6 +2,7 @@ import React from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyD2GCanK5Gxm26zDyPrKc7MNy7WhAJZK7M";
+const LIBRARIES = ['places'];
 
 export default function GoogleMapWrapper({
   mapContainerStyle = { width: '100%', height: '300px' },
@@ -15,6 +16,7 @@ export default function GoogleMapWrapper({
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: LIBRARIES,
   });
 
   if (!isLoaded) return loadingElement;
@@ -31,3 +33,5 @@ export default function GoogleMapWrapper({
     </GoogleMap>
   );
 }
+
+export { GOOGLE_MAPS_API_KEY, LIBRARIES };

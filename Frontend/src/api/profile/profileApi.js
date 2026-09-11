@@ -51,3 +51,11 @@ export const deleteAddress = async (id) => {
   const res = await api.delete(`/v1/shop/delivery-options/addresses/${id}`);
   return res.data;
 };
+
+/**
+ * Obtener historial de pedidos del cliente autenticado
+ */
+export const getMyOrders = async (params = {}) => {
+  const res = await api.get('/v1/shop/my-orders', { params });
+  return res.data;
+};
