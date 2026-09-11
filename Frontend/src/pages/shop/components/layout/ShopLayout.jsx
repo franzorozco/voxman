@@ -7,6 +7,7 @@ import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStor
 import { useThemeStore } from "../../../../store/themeStore";
 import { API_BASE_URL } from "../../../../config/api";
 import Footer from "../../../../components/layout/Footer";
+import CheckoutLoginModal from "../../../../components/ui/CheckoutLoginModal";
 import './ShopLayout.css';
 
 const ShopNavbar = () => {
@@ -19,6 +20,9 @@ const ShopNavbar = () => {
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [bounce, setBounce] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('login');
+  
   const menuRef = useRef();
   const prevCountRef = useRef(0);
 
@@ -84,8 +88,8 @@ const ShopNavbar = () => {
 
           {!user ? (
             <div className="shop-nav-mobile-auth">
-              <Link to="/shop/login" className="shop-nav-btn shop-nav-btn-outline" onClick={closeMenu}>Iniciar sesión</Link>
-              <Link to="/shop/register" className="shop-nav-btn shop-nav-btn-solid" onClick={closeMenu}>Registrarse</Link>
+              <button className="shop-nav-btn shop-nav-btn-outline" onClick={() => { closeMenu(); setModalMode('login'); setIsLoginModalOpen(true); }}>Iniciar sesión</button>
+              <button className="shop-nav-btn shop-nav-btn-solid" onClick={() => { closeMenu(); setModalMode('register'); setIsLoginModalOpen(true); }}>Registrarse</button>
             </div>
           ) : (
             <div className="shop-nav-mobile-user">
@@ -108,8 +112,8 @@ const ShopNavbar = () => {
 
           {!user ? (
             <div className="shop-nav-desktop-auth">
-              <Link to="/shop/login" className="shop-nav-btn shop-nav-btn-outline">Iniciar sesión</Link>
-              <Link to="/shop/register" className="shop-nav-btn shop-nav-btn-solid">Registrarse</Link>
+              <button className="shop-nav-btn shop-nav-btn-outline" onClick={() => { setModalMode('login'); setIsLoginModalOpen(true); }}>Iniciar sesión</button>
+              <button className="shop-nav-btn shop-nav-btn-solid" onClick={() => { setModalMode('register'); setIsLoginModalOpen(true); }}>Registrarse</button>
             </div>
           ) : (
             <div className="shop-nav-user" ref={menuRef}>
@@ -139,6 +143,13 @@ const ShopNavbar = () => {
           </div>
         </div>
       </div>
+
+      <CheckoutLoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        initialMode={modalMode}
+        theme="light" // El shop es siempre claro
+      />
     </header>
   );
 };

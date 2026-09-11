@@ -1,4 +1,4 @@
-import api from './client';
+import api from '../client';
 
 /**
  * Obtener perfil completo del usuario autenticado

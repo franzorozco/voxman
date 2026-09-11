@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MoreVertical, Heart } from 'lucide-react';
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
-import useShopAuthStore from '../../../store/shop/useShopAuthStore';
 import { useAuthStore } from '../../../store/authStore';
 
 const ProductCardMenu = ({ productId, variantId = null, className = '', style = {} }) => {
@@ -9,11 +8,10 @@ const ProductCardMenu = ({ productId, variantId = null, className = '', style = 
   const menuRef = useRef(null);
 
   const { toggleWishlist } = useShopWishlistStore();
-  const shopAuth = useShopAuthStore();
-  const adminAuth = useAuthStore();
+  const auth = useAuthStore();
 
-  const activeUser = shopAuth.user || adminAuth.user;
-  const isAuthenticated = shopAuth.isAuthenticated || !!adminAuth.token;
+  const activeUser = auth.user;
+  const isAuthenticated = !!auth.token;
 
   // Si no es un usuario autenticado con perfil, no renderizar o deshabilitar
   const isCustomer = isAuthenticated && activeUser?.customers && activeUser.customers.length > 0;

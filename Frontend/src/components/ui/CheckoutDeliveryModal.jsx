@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Store, MapPin, Truck, Home, ArrowLeft, MapIcon, Loader2, Navigation, Calendar, Plus } from "lucide-react";
-import { getDeliveryBranches, getDeliveryZones, addDeliveryAddress } from "../../api/shopAuth";
+import { getDeliveryBranches, getDeliveryZones, addDeliveryAddress } from "../../api/shop/auth";
 import { getImageUrl } from "../../utils/imageUtils";
 import GoogleMapWrapper from "./GoogleMapWrapper";
 import { Marker } from "@react-google-maps/api";

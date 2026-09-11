@@ -5,7 +5,7 @@ import { Minus, Plus, Trash2, Loader2 } from 'lucide-react';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
 import { useAuthStore } from '../../../store/authStore';
 import { useThemeStore } from '../../../store/themeStore';
-import { getShopProfile } from '../../../api/shopAuth';
+import { getShopProfile } from '../../../api/shop/auth';
 import CheckoutAuthModal from '../../../components/ui/CheckoutAuthModal';
 import CheckoutLoginModal from '../../../components/ui/CheckoutLoginModal';
 import CheckoutGuestModal from '../../../components/ui/CheckoutGuestModal';

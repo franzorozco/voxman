@@ -37,7 +37,7 @@ import {
   addAddress, 
   updateAddress, 
   deleteAddress 
-} from "../../api/profileApi";
+} from "../../api/profile/profileApi";
 import "./Profile.css";
 
 export default function Profile() {

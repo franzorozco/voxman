@@ -1,11 +1,11 @@
 import api from "../client";
 
-const BASE_URL = "/v1/shop";
+export const loginShopUser = (data) => api.post("/login", data);
+export const registerShopUser = (data) => api.post("/register", data);
+export const getShopProfile = () => api.get("/v1/shop/profile");
+export const updateCustomerProfile = (data) => api.post("/v1/shop/customer-profile", data);
+export const addDeliveryAddress = (data) => api.post("/v1/shop/delivery-options/add-address", data);
+export const initAuthCheckout = (data) => api.post("/v1/shop/checkout/auth-init", data);
 
-export const login = (data) => api.post(`${BASE_URL}/login`, data);
-
-export const register = (data) => api.post(`${BASE_URL}/register`, data);
-
-export const getProfile = () => api.get(`${BASE_URL}/profile`);
-
-export const logout = () => api.post(`${BASE_URL}/logout`);
+export const getDeliveryBranches = () => api.get("/v1/shop/delivery-options/branches");
+export const getDeliveryZones = () => api.get("/v1/shop/delivery-options/zones");

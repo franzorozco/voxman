@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ShoppingBag, MapPin, CheckCircle, Truck, Store, MapIcon, Home, User as UserIcon } from 'lucide-react';
-import { initAuthCheckout } from '../../api/shopAuth';
+import { initAuthCheckout, updateCustomerProfile } from '../../api/shop/auth';
 import useShopCartStore from '../../store/shop/useShopCartStore';
 import { getImageUrl } from '../../utils/imageUtils';
 import toast from 'react-hot-toast';

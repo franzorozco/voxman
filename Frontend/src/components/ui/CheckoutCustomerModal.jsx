@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { User, Phone, MapPin, Map, CheckCircle, X, Navigation, Crosshair, Map as MapIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import { updateCustomerProfile } from "../../api/shopAuth";
+import { updateCustomerProfile } from "../../api/shop/auth";
 import GoogleMapWrapper from "./GoogleMapWrapper";
 import CustomSelect from "./CustomSelect";
 import { Marker } from "@react-google-maps/api";
