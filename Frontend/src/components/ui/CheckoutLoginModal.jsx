@@ -6,17 +6,21 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
 import { Link } from "react-router-dom";
 
-export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect, theme = 'light', initialMode = 'login' }) {
-  const [mode, setMode] = useState(initialMode); // 'login' | 'register'
+export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect, theme = 'light', initialMode = 'login', initialData = null }) {
+  const [mode, setMode] = useState(initialMode); // 'login' | 'register' | 'google_register'
   
-  const [form, setForm] = useState({
-    email: "",
-    username: "",
-    password: "",
+  const [form, setForm] = useState({ 
+    username: "", 
+    email: "", 
+    password: "", 
     password_confirmation: "",
+    first_name: "",
+    last_name_paternal: "",
+    last_name_maternal: "",
+    phone: ""
   });
-
   const [errors, setErrors] = useState({});
+  const [googleRegToken, setGoogleRegToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -25,18 +29,57 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
   const [remember, setRemember] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-
   // Reset state when opening/closing or switching modes
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
-      setForm({ email: "", username: "", password: "", password_confirmation: "" });
       setErrors({});
+      setAcceptedTerms(false);
       setSuccess(false);
       setShowPassword(false);
       setPasswordStrength("");
+      
+      if (initialMode === 'google_register' && initialData) {
+        setGoogleRegToken(initialData.googleRegToken);
+        
+        let defaultUsername = "";
+        if (initialData.email) {
+          defaultUsername = initialData.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '');
+        }
+
+        let firstName = "";
+        let lastName = "";
+        if (initialData.name) {
+          const parts = initialData.name.split(' ');
+          firstName = parts[0] || "";
+          lastName = parts.slice(1).join(' ') || "";
+        }
+
+        setForm({
+          username: defaultUsername,
+          email: initialData.email || "",
+          password: "",
+          password_confirmation: "",
+          first_name: firstName,
+          last_name_paternal: lastName,
+          last_name_maternal: "",
+          phone: ""
+        });
+      } else {
+        setGoogleRegToken("");
+        setForm({
+          username: "",
+          email: "",
+          password: "",
+          password_confirmation: "",
+          first_name: "",
+          last_name_paternal: "",
+          last_name_maternal: "",
+          phone: ""
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialMode, initialData]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -116,7 +159,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      const res = await getGoogleAuthUrl();
+      const res = await getGoogleAuthUrl('shop');
       if (res.data?.url) {
         window.location.href = res.data.url;
       }
@@ -166,6 +209,41 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
     if (!acceptedTerms) {
       toast.error("Debes aceptar los términos y condiciones");
+      return;
+    }
+
+    if (mode === 'google_register') {
+      if (!form.username || !form.first_name) {
+        toast.error("El nombre de usuario y nombre son obligatorios");
+        return;
+      }
+      try {
+        setLoading(true);
+        const { completeGoogleRegistration } = await import("../../api/admin/auth");
+        const res = await completeGoogleRegistration({ ...form, google_reg_token: googleRegToken });
+        
+        const token = res.data?.token;
+        const user = res.data?.user;
+
+        if (!token) throw new Error("No llegó token del backend");
+
+        localStorage.setItem("token", token);
+        localStorage.setItem("shop_auth_token", token);
+        localStorage.setItem("shop_user", JSON.stringify(user));
+        
+        useAuthStore.getState().login({ user, token });
+
+        setSuccessMessage("¡Cuenta creada con éxito!");
+        setSuccess(true);
+        setTimeout(() => {
+          onClose();
+          if (onSuccessRedirect) onSuccessRedirect(user);
+        }, 1500);
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Error al completar registro");
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
@@ -396,10 +474,60 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         ) : (
           <form onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            {renderInput("email", "Correo electrónico", "email", Mail)}
-            {mode === 'register' && renderInput("username", "Nombre de usuario", "text", User)}
-            {renderInput("password", "Contraseña", showPassword ? "text" : "password", Lock)}
-            {mode === 'register' && renderInput("password_confirmation", "Confirmar contraseña", showPassword ? "text" : "password", Lock)}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: mode === 'google_register' && "email" === "email" ? (isDark ? "#374151" : "#e5e7eb") : inputBg,
+              border: `1px solid ${errors["email"] ? '#ef4444' : borderColor}`,
+              borderRadius: '8px',
+              padding: '0 12px',
+              transition: 'border-color 0.2s',
+              opacity: mode === 'google_register' && "email" === "email" ? 0.7 : 1
+            }}>
+              <Mail size={18} color={mutedColor} />
+              <input
+                name="email"
+                type="email"
+                placeholder="Correo electrónico"
+                value={form.email}
+                onChange={handleChange}
+                disabled={mode === 'google_register'}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '12px',
+                  color: textColor,
+                  fontSize: '15px',
+                  outline: 'none',
+                  cursor: mode === 'google_register' ? 'not-allowed' : 'text'
+                }}
+              />
+            </div>
+            {errors["email"] && mode !== 'google_register' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px', marginTop: '-10px' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                <span>{errors["email"]}</span>
+              </div>
+            )}
+
+            {(mode === 'register' || mode === 'google_register') && renderInput("username", "Nombre de usuario", "text", User)}
+            
+            {mode === 'google_register' ? (
+              <>
+                {renderInput("first_name", "Nombre(s)", "text", User)}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ flex: 1 }}>{renderInput("last_name_paternal", "Ap. Paterno", "text", User)}</div>
+                  <div style={{ flex: 1 }}>{renderInput("last_name_maternal", "Ap. Materno", "text", User)}</div>
+                </div>
+                {renderInput("phone", "Teléfono", "text", User)}
+              </>
+            ) : (
+              <>
+                {renderInput("password", "Contraseña", showPassword ? "text" : "password", Lock)}
+                {mode === 'register' && renderInput("password_confirmation", "Confirmar contraseña", showPassword ? "text" : "password", Lock)}
+              </>
+            )}
 
             {mode === 'login' && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 0' }}>
@@ -421,7 +549,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
               </div>
             )}
 
-            {mode === 'register' && (
+            {(mode === 'register' || mode === 'google_register') && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0' }}>
                 <input 
                   type="checkbox" 
@@ -438,9 +566,8 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
             <button 
               type="submit" 
-              disabled={loading}
+              disabled={loading || ((mode === 'register' || mode === 'google_register') && !acceptedTerms)}
               style={{
-                marginTop: '8px',
                 width: '100%',
                 background: textColor,
                 color: modalBg,
@@ -449,56 +576,54 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                 borderRadius: '8px',
                 fontSize: '15px',
                 fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
-                transition: 'transform 0.1s, opacity 0.2s'
+                cursor: (loading || ((mode === 'register' || mode === 'google_register') && !acceptedTerms)) ? 'not-allowed' : 'pointer',
+                opacity: (loading || ((mode === 'register' || mode === 'google_register') && !acceptedTerms)) ? 0.7 : 1,
+                marginTop: '8px'
               }}
-              onMouseDown={(e) => !loading && (e.currentTarget.style.transform = 'scale(0.98)')}
-              onMouseUp={(e) => !loading && (e.currentTarget.style.transform = 'scale(1)')}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
-              {loading ? (mode === 'login' ? "Ingresando..." : "Creando cuenta...") : (mode === 'login' ? "Ingresar y Continuar" : "Registrarse y Continuar")}
+              {loading ? (mode === 'google_register' ? 'Completando...' : (mode === 'login' ? 'Iniciando...' : 'Creando...')) : (mode === 'google_register' ? 'Completar Registro' : (mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'))}
             </button>
-            
-            <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
-              <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${borderColor}` }} />
-              <span style={{ padding: '0 10px', color: mutedColor, fontSize: '12px' }}>
-                {mode === 'login' ? "O INICIA CON" : "O REGÍSTRATE CON"}
-              </span>
-              <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${borderColor}` }} />
-            </div>
 
-            <button 
-              type="button" 
-              onClick={handleGoogleLogin} 
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '8px',
-                border: `1px solid ${borderColor}`,
-                background: 'transparent',
-                color: textColor,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '14px',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = isDark ? '#374151' : '#f3f4f6'}
-              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              Continuar con Google
-            </button>
+            {mode !== 'google_register' && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', margin: '16px 0' }}>
+                  <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${borderColor}` }} />
+                  <span style={{ padding: '0 10px', color: mutedColor, fontSize: '12px' }}>O {mode === 'login' ? 'INICIA SESIÓN' : 'REGÍSTRATE'} CON</span>
+                  <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${borderColor}` }} />
+                </div>
+
+                <button 
+                  type="button" 
+                  onClick={handleGoogleLogin} 
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: `1px solid ${borderColor}`,
+                    background: 'transparent',
+                    color: textColor,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  Continuar con Google
+                </button>
+              </>
+            )}
 
             <div style={{ textAlign: 'center', marginTop: '12px' }}>
               <span style={{ color: mutedColor, fontSize: '13px' }}>

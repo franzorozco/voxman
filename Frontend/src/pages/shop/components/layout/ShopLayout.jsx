@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../../../store/authStore";
 import useShopCartStore from "../../../../store/shop/useShopCartStore";
 import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
@@ -22,6 +22,24 @@ const ShopNavbar = () => {
   const [bounce, setBounce] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('login');
+  const [modalInitialData, setModalInitialData] = useState(null);
+  
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("google_reg_token");
+    const email = params.get("email");
+    const name = params.get("name") || "";
+
+    if (token) {
+      setModalMode('google_register');
+      setModalInitialData({ googleRegToken: token, email, name });
+      setIsLoginModalOpen(true);
+      // Clean url to avoid infinite loops?
+      // window.history.replaceState({}, document.title, location.pathname);
+    }
+  }, [location]);
   
   const menuRef = useRef();
   const prevCountRef = useRef(0);
@@ -148,6 +166,7 @@ const ShopNavbar = () => {
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
         initialMode={modalMode}
+        initialData={modalInitialData}
         theme="light" // El shop es siempre claro
       />
     </header>

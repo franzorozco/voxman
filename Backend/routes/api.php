@@ -44,6 +44,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 Route::get('/auth/google', [SocialAuthController::class, 'redirect']);
 Route::get('/auth/google/callback', [SocialAuthController::class, 'callback']);
+Route::post('/auth/google/complete-registration', [SocialAuthController::class, 'completeRegistration']);
 
 // Public Order Network routes (for customers to confirm delivery via link)
 Route::prefix('v1/delivery')->group(function () {
