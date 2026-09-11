@@ -3,9 +3,9 @@ import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-
 import ProtectedRoute from "./ProtectedRoute";
 
 /* PÁGINAS PÚBLICAS */
-import Home from "../pages/home/Home";
-import Nosotros from "../pages/nosotros/Nosotros";
-import Tracking from "../pages/public/Tracking/Tracking";
+import Home from "../pages/home/home/Home";
+import Nosotros from "../pages/home/nosotros/Nosotros";
+import Tracking from "../pages/shop/Tracking/Tracking";
 import Profile from "../pages/profile/Profile";
 
 /* AUTH */

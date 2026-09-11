@@ -28,7 +28,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
 import { useThemeStore } from "../../store/themeStore";
-import Navbar from "../../components/layout/Navbar";
+import Navbar from "../home/components/Navbar";
 import Footer from "../../components/layout/Footer";
 import { 
   getProfile, 

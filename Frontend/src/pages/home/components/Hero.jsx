@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./Hero.css";
 
-import modelo1 from "../../assets/global/modelo_1.png";
-import modelo2 from "../../assets/global/modelo_2.png";
-import modelo3 from "../../assets/global/modelo_3.png";
-import modelo4 from "../../assets/global/modelo_4.png";
+import modelo1 from "../../../assets/global/modelo_1.png";
+import modelo2 from "../../../assets/global/modelo_2.png";
+import modelo3 from "../../../assets/global/modelo_3.png";
+import modelo4 from "../../../assets/global/modelo_4.png";
 
 export default function Hero({ title, subtitle }) {
   const images = [modelo1, modelo2, modelo3, modelo4];

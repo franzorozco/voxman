@@ -1,9 +1,9 @@
-import { getImageUrl } from '../../utils/imageUtils';
+import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { useAuthStore } from "../../store/authStore";
-import { useThemeStore } from "../../store/themeStore";
-import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
+import { useAuthStore } from "../../../store/authStore";
+import { useThemeStore } from "../../../store/themeStore";
+import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
 import "./Navbar.css";
 
 export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
