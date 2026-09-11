@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\shop\ShopProductController;
 use App\Http\Controllers\Api\shop\ShopCategoryController;
 use App\Http\Controllers\Api\shop\ShopCartController;
 use App\Http\Controllers\Api\shop\ShopCheckoutController;
-use App\Http\Controllers\Api\shop\ShopAuthController;
+use App\Http\Controllers\Api\shop\ShopProfileController;
 use App\Http\Controllers\Api\shop\ShopShortController;
 use App\Http\Controllers\Api\shop\ShopSettingsController;
 
@@ -57,13 +57,13 @@ Route::prefix('v1/shop')->group(function () {
 
     // Rutas protegidas para clientes logueados
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::post('/logout', [ShopAuthController::class, 'logout']);
-        Route::get('/profile', [ShopAuthController::class, 'profile']);
-        Route::post('/customer-profile', [ShopAuthController::class, 'updateCustomerProfile']);
-        Route::put('/profile/password', [ShopAuthController::class, 'changePassword']);
-        Route::post('/delivery-options/add-address', [ShopAuthController::class, 'addShippingAddress']);
-        Route::put('/delivery-options/addresses/{id}', [ShopAuthController::class, 'updateAddress']);
-        Route::delete('/delivery-options/addresses/{id}', [ShopAuthController::class, 'deleteAddress']);
+        Route::post('/logout', [ShopProfileController::class, 'logout']);
+        Route::get('/profile', [ShopProfileController::class, 'profile']);
+        Route::post('/customer-profile', [ShopProfileController::class, 'updateCustomerProfile']);
+        Route::put('/profile/password', [ShopProfileController::class, 'changePassword']);
+        Route::post('/delivery-options/add-address', [ShopProfileController::class, 'addShippingAddress']);
+        Route::put('/delivery-options/addresses/{id}', [ShopProfileController::class, 'updateAddress']);
+        Route::delete('/delivery-options/addresses/{id}', [ShopProfileController::class, 'deleteAddress']);
         Route::post('/checkout/auth-init', [ShopCheckoutController::class, 'initAuthCheckout']);
         
         // Wishlist

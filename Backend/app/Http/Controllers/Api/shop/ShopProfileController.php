@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\shop;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class ShopAuthController extends Controller
+class ShopProfileController extends Controller
 {
     private function formatUser($user)
     {
