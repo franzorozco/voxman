@@ -10,9 +10,8 @@ use App\Models\ModelHasPermission;
 use App\Models\Role;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Spatie\Permission\Models\Permission as SpatiePermission;
 /**
  * Class Permission
  * 
@@ -28,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @package App\Models\Base
  */
-class Permission extends Model
+class Permission extends SpatiePermission 
 {
 	use SoftDeletes;
 	protected $table = 'permissions';
@@ -38,8 +37,4 @@ class Permission extends Model
 		return $this->hasMany(ModelHasPermission::class);
 	}
 
-	public function roles()
-	{
-		return $this->belongsToMany(Role::class, 'role_has_permissions');
-	}
 }

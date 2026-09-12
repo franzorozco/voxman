@@ -1,0 +1,117 @@
+/* Estilos específicos para la vista del Carrito de Compras */
+.cart-view-container {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+.cart-view-title {
+  color: var(--text-main);
+}
+
+.cart-view-empty {
+  color: var(--text-muted);
+}
+
+.cart-item-list {
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  /* Divide lines handled implicitly or manually */
+}
+
+.cart-item-container {
+  border-bottom: 1px solid var(--bg-overlay);
+}
+
+.cart-item-img-placeholder {
+  background-color: var(--bg-input);
+}
+
+.cart-item-title {
+  color: var(--text-main);
+}
+
+.cart-item-title:hover {
+  color: var(--color-primary-hover);
+}
+
+.cart-item-subtitle {
+  color: var(--text-muted);
+}
+
+.cart-item-price {
+  color: var(--text-main);
+}
+
+.cart-item-remove-btn {
+  color: var(--color-danger);
+  transition: color 0.2s;
+}
+
+.cart-item-remove-btn:hover {
+  color: var(--color-danger-hover);
+}
+
+.cart-summary-container {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.cart-summary-text {
+  color: var(--text-main);
+}
+
+.cart-summary-btn {
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
+  transition: all 0.2s ease-in-out;
+}
+
+.cart-summary-btn:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.cart-item-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cart-item-fade-out {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.qty-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.qty-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.qty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qty-display {
+  width: 32px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }

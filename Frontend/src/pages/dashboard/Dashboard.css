@@ -8,8 +8,8 @@ html, body {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: #0f0f0f;
-  color: white;
+  background: var(--bg-main);
+  color: var(--text-main);
 }
 
 /* ===== SIDEBAR ===== */
@@ -18,9 +18,8 @@ html, body {
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
-
-  background: #000;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-input);
+  border-right: 1px solid var(--border-color);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -54,8 +53,8 @@ html, body {
 }
 
 .section-title {
-  font-size: 10px;
-  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  color: var(--text-muted);
   margin: 10px 0 5px 10px;
   letter-spacing: 1px;
 }
@@ -65,27 +64,27 @@ html, body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.6);
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 14px;
   transition: 0.2s;
 }
 
-.sidebar-nav a img {
+.sidebar-nav a svg {
   width: 18px;
   height: 18px;
-  filter: invert(1);
   opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .sidebar-nav a:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: white;
+  background: var(--bg-overlay);
+  color: var(--text-main);
 }
 
-.sidebar-nav a:hover img {
+.sidebar-nav a:hover svg {
   opacity: 1;
 }
 
@@ -139,7 +138,7 @@ html, body {
 
 .sidebar::-webkit-scrollbar-thumb,
 .main::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-overlay);
   border-radius: 10px;
 }
 
@@ -164,7 +163,7 @@ html, body {
   font-size: 0;
 }
 
-.sidebar.collapsed .sidebar-nav a img {
+.sidebar.collapsed .sidebar-nav a svg {
   margin: 0;
 }
 
@@ -178,8 +177,10 @@ html, body {
 
 /* ===== TOGGLE BUTTON ===== */
 .toggle-btn {
+  background: transparent;
+  border: none;
   position: absolute;
-  top: 18px;
+  top: 19px;
   left: 18px;
 
   width: 32px;
@@ -193,19 +194,393 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
 
-  color: white;
+  color: var(--text-main);
   font-size: 18px;
   cursor: pointer;
   transition: 0.2s;
 }
 
 .toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-overlay);
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
+
+  .dashboard {
+    position: relative;
+  }
+
+  /* SIDEBAR MOBILE */
   .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 260px;
+    height: 100vh;
+
+    z-index: 999;
+
+    transition: transform 0.3s ease;
+
+    /* oculto por defecto */
+    transform: translateX(-100%);
+  }
+
+  /* cuando est abierto */
+  .sidebar:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  /* colapsado = oculto completo */
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 260px;
+    padding: 24px;
+    display: none !important; /* Force hide the entire sidebar so icons cannot show */
+  }
+
+  /* MAIN ocupa todo */
+  .main {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* BOTN HAMBURGUESA */
+  .toggle-btn {
+      background: transparent;
+      border: none;
+      position: fixed;
+    top: 9px;
+    left: 14px;
+    z-index: 1001;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 10px;
+
+    background: rgba(0,0,0,0.85);
+    border: 1px solid var(--border-color);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--text-main);
+    font-size: 20px;
+  }
+
+  .topbar {
+    padding-left: 65px;
+  }
+}
+
+
+.topbar {
+  height: 70px;
+  min-height: 70px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.topbar-left h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 12px;
+
+
+  border-radius: 12px;
+}
+
+.topbar-user svg {
+  color: var(--color-primary);
+}
+
+.topbar-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.user-email {
+  font-size: 11px;
+  color: var( --text-main) !important;
+}
+
+/* BUTTONS */
+.topbar-btn {
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 14px;
+
+  border-radius: 10px;
+
+  border: none;
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  transition: 0.2s ease;
+
+  text-decoration: none;
+}
+
+/* HOME */
+.home-btn {
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: var(--color-primary);
+}
+
+.home-btn:hover {
+  background: rgba(37, 99, 235, 0.25);
+  transform: translateY(-1px);
+}
+
+/* LOGOUT */
+.logout-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background: var(--bg-overlay);
+}
+
+.nav-link.active {
+  background: var(--bg-overlay);
+  color: var(--color-primary);
+  font-weight: 600;
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 8px 8px 0;
+}
+
+.nav-link.active svg {
+  stroke: var(--color-primary);
+}
+
+
+@media (max-width: 1024px) {
+
+  .topbar {
+    height: 60px;
+    min-height: 60px;
+    padding: 0 14px 0 60px;
+
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+  }
+
+  .topbar-left h3 {
+    font-size: 15px;
+  }
+
+  .topbar-right {
+    gap: 8px;
+  }
+
+  .topbar-user {
+    padding: 0;
+    gap: 6px;
+  }
+
+  .topbar-user svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .topbar-user-info {
+    display: flex;
+  }
+
+  .user-email {
     display: none;
   }
+
+  .user-name {
+    font-size: 12px;
+    max-width: 90px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-btn {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .topbar-btn span {
+    display: none;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+    .topbar-left h3 {
+    display: none;
+  }
+  
+  .topbar-user-info {
+    overflow: hidden;
+  }
+
+  .user-email {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+    .topbar-user {
+    background: rgba(255,255,255,0.04);
+    padding: 4px 8px;
+    border-radius: 10px;
+  }
+
+  .user-name {
+    max-width: 70px;
+    font-size: 11px;
+  }
+
+  
+
+}
+
+
+.logout-modal {
+  width: 90%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 30px 25px;
+  text-align: center;
+  color: var(--text-main);
+  animation: modalFade 0.2s ease;
+}
+
+.logout-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
+}
+
+.logout-modal h2 {
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.logout-modal p {
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.logout-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.logout-actions button {
+  flex: 1;
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+/* cancelar */
+.cancel-btn {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-main);
+}
+
+.cancel-btn:hover {
+  background: var(--bg-overlay);
+}
+
+/* confirmar */
+.confirm-btn {
+  background: var(--color-danger);
+  color: var(--text-main);
+}
+
+.confirm-btn:hover {
+  background: var(--color-danger-hover);
+  transform: translateY(-1px);
+}
+
+/* FORCE ALL MODAL OVERLAYS ABOVE MOBILE TOGGLE BTN */
+.modal-overlay,
+.branch-modal-overlay,
+.settings-modal-overlay,
+.selector-modal-overlay {
+  z-index: 10000 !important;
 }

@@ -1,0 +1,245 @@
+/* src/pages/dashboard/pages/inventory/Inventory.css */
+
+.inventory-container {
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  .inventory-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  
+  .inventory-actions {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .inventory-table {
+    width: 100%;
+    min-width: 900px; /* Increased to give plenty of room */
+    table-layout: auto !important; /* Ensure it's not fixed */
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px var(--shadow-color);
+  }
+  
+  .inventory-table th,
+  .inventory-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .inventory-table th {
+    background: var(--bg-header);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+  
+  .inventory-table tr:hover td {
+    background: var(--bg-hover);
+  }
+  
+  .product-img {
+    box-shadow: 0 2px 5px var(--shadow-color);
+  }
+  
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .status-badge.success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+  
+  .status-badge.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+  }
+  
+  .status-badge.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+  
+  .table-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .btn-edit {
+    background: var(--color-warning);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .btn-edit:hover {
+    filter: brightness(1.1);
+  }
+  
+  .btn-secondary {
+    background: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .btn-secondary:hover {
+    background: var(--bg-hover);
+  }
+  
+  .hide-on-mobile {
+    display: inline;
+  }
+  
+  @media (max-width: 600px) {
+    .inventory-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .audit-modal-footer {
+      flex-direction: column;
+      align-items: stretch !important;
+      gap: 15px;
+    }
+    .audit-modal-footer > div:last-child {
+      width: 100%;
+    }
+    .audit-modal-footer > div:last-child > button {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hide-on-mobile {
+      display: none !important;
+    }
+
+    .filters-container > div:first-child {
+      flex-wrap: wrap !important;
+    }
+    
+    .filters-container > div:first-child > div {
+      flex-basis: 100% !important;
+    }
+    
+    .filters-container > div:first-child > button {
+      flex: 1;
+      justify-content: center;
+    }
+
+    /* Make camera button strict size again */
+    .filters-container > div:first-child > button[title="Escanear con Cámara"] {
+      flex: 0 0 42px !important;
+      padding: 0 !important;
+    }
+
+    .filters-panel {
+      grid-template-columns: 1fr 1fr !important;
+    }
+
+    .inventory-actions {
+      flex-direction: row !important;
+      flex-wrap: wrap;
+    }
+    
+    .header-actions {
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    
+    /* Make the branch selector flex appropriately */
+    .header-actions > div:first-child {
+      flex-basis: 100%;
+    }
+    .header-actions > div:first-child > button {
+      width: 100%;
+      justify-content: space-between;
+    }
+    
+    /* Historial full width */
+    .header-actions > a {
+      justify-content: center;
+    }
+    
+    /* Auditar and Ingresar 50% each */
+    .header-actions > button {
+      flex: 1 1 calc(50% - 8px);
+      max-width: calc(50% - 7px);
+      justify-content: center;
+      padding: 10px !important;
+    }
+
+    .filters-header {
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    
+    .filters-header .search-bar {
+      max-width: 100% !important;
+    }
+    
+    .filters-header .filter-toggle-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .filters-panel {
+      grid-template-columns: 1fr !important;
+    }
+    .filters-panel > div {
+      grid-column: span 1 !important;
+    }
+
+    .inventory-table th,
+    .inventory-table td {
+      padding: 12px 8px;
+      font-size: 13px;
+    }
+  }
+
+/* Ocultar flechas del input number */
+.no-spinners::-webkit-inner-spin-button,
+.no-spinners::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinners {
+  -moz-appearance: textfield; /* Firefox */
+}

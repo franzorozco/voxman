@@ -8,7 +8,7 @@ class CashRegister extends BaseCashRegister
 {
 	protected $fillable = [
 		'branch_id',
-		'user_id',
+		'employee_id',
 		'opening_amount',
 		'closing_amount',
 		'opened_at',

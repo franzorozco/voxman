@@ -1,0 +1,142 @@
+.home {
+  background: #0d0d0d;
+  color: #fff;
+}
+
+/* REUTILIZABLE */
+.container {
+  max-width: 1200px;
+  margin: auto;
+}
+
+.section {
+  padding: 80px 60px;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  padding: 40px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+}
+
+.product {
+  background: #000;
+  padding: 20px;
+  border: 1px solid #333;
+}
+
+.destacados {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+}
+
+.destacados::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+}
+
+.destacados .container {
+  position: relative;
+  z-index: 2;
+}
+.card {
+  padding: 50px 30px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+}
+
+/* 🔥 HOVER */
+.card:hover {
+  border-color: #c9a227;
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.destacados {
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* overlay oscuro elegante */
+.destacados::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(0,0,0,0.7),
+    rgba(0,0,0,0.9)
+  );
+}
+
+/* contenido encima */
+.destacados .container {
+  position: relative;
+  z-index: 2;
+}
+
+.product {
+  background: #111;
+  padding: 20px;
+  border: 1px solid #333;
+  text-align: left;
+
+  transition: all 0.3s ease;
+}
+
+/* hover elegante */
+.product:hover {
+  border-color: #c9a227;
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+.product .img {
+  height: 220px;
+  background: #222;
+  margin-bottom: 15px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* efecto hover imagen */
+.product:hover .img {
+  transform: scale(1.05);
+  transition: 0.4s;
+}
+
+.product p {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.product span {
+  color: #c9a227;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.section h2 {
+  font-size: 34px;
+  margin-bottom: 50px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+

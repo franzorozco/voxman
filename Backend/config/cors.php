@@ -1,13 +1,26 @@
 <?php
+
 return [
 
-    'paths' => ['api/*'],
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie'
+    ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:5173'],
+    'allowed_origins' => explode(
+        ',',
+        env(
+            'CORS_ALLOWED_ORIGINS',
+            env('FRONTEND_URL', 'http://localhost:5173')
+        )
+    ),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '/https:\/\/.*\.ngrok-free\.app$/',
+        '/https:\/\/.*\.trycloudflare\.com$/'
+    ],
 
     'allowed_headers' => ['*'],
 

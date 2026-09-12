@@ -23,11 +23,11 @@ use Illuminate\Database\Eloquent\Model;
 class Fit extends Model
 {
 	protected $table = 'fits';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid'
 	];
 
 	public function variant_sizes()

@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\Branch;
-use App\Models\ProductVariant;
+use App\Models\Branch\Branch;
+use App\Models\Catalog\ProductVariant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -33,12 +33,12 @@ class Inventory extends Model
 {
 	use SoftDeletes;
 	protected $table = 'inventories';
+	protected $keyType = 'string';
 	public $incrementing = false;
+	
+
 
 	protected $casts = [
-		'id' => 'uuid',
-		'branch_id' => 'uuid',
-		'variant_id' => 'uuid',
 		'stock' => 'int',
 		'min_stock' => 'int'
 	];
@@ -48,7 +48,7 @@ class Inventory extends Model
 		return $this->belongsTo(Branch::class);
 	}
 
-	public function product_variant()
+	public function variant()
 	{
 		return $this->belongsTo(ProductVariant::class, 'variant_id');
 	}

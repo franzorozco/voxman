@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\Category;
-use App\Models\Discount;
+use App\Models\Catalog\Category;
+use App\Models\Discount\Discount;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -24,12 +24,11 @@ use Illuminate\Database\Eloquent\Model;
 class DiscountCategory extends Model
 {
 	protected $table = 'discount_categories';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'discount_id' => 'uuid',
-		'category_id' => 'uuid'
 	];
 
 	public function discount()

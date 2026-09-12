@@ -1,17 +1,19 @@
 <?php
-
+ 
 /**
  * Created by Reliese Model.
  */
 
 namespace App\Models\Base;
 
-use App\Models\Category;
-use App\Models\Discount;
-use App\Models\Owner;
-use App\Models\ProductImage;
-use App\Models\ProductType;
-use App\Models\ProductVariant;
+use App\Models\Catalog\Category;
+use App\Models\Discount\Discount;
+use App\Models\Actors\Owner;
+use App\Models\Catalog\ProductImage;
+use App\Models\Catalog\ProductType;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Catalog\BundleItem;
+ 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $slug
  * @property float $base_price
  * @property bool|null $is_active
+ * @property bool|null $is_bundle
  * @property int|null $views
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -40,6 +43,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Collection|ProductVariant[] $product_variants
  * @property Collection|ProductImage[] $product_images
  * @property Collection|Discount[] $discounts
+ * @property Collection|BundleItem[] $bundle_items
  *
  * @package App\Models\Base
  */
@@ -47,22 +51,23 @@ class Product extends Model
 {
 	use SoftDeletes;
 	protected $table = 'products';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'owner_id' => 'uuid',
-		'category_id' => 'uuid',
-		'product_type_id' => 'uuid',
+		
 		'base_price' => 'float',
 		'is_active' => 'bool',
-		'views' => 'int'
+		'is_bundle' => 'bool',
+		'views' => 'int',
+		'tags' => 'array'
 	];
-
+	
 	public function owner()
 	{
 		return $this->belongsTo(Owner::class);
 	}
+	
 
 	public function category()
 	{
@@ -73,7 +78,7 @@ class Product extends Model
 	{
 		return $this->belongsTo(ProductType::class);
 	}
-
+	
 	public function product_variants()
 	{
 		return $this->hasMany(ProductVariant::class);
@@ -87,5 +92,10 @@ class Product extends Model
 	public function discounts()
 	{
 		return $this->belongsToMany(Discount::class, 'discount_products');
+	}
+
+	public function bundle_items()
+	{
+		return $this->hasMany(BundleItem::class, 'bundle_id');
 	}
 }

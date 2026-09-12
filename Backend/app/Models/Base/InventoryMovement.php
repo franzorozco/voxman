@@ -6,9 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\Branch;
-use App\Models\ProductVariant;
-use App\Models\User;
+use App\Models\Branch\Branch;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Core\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,29 +33,26 @@ use Illuminate\Database\Eloquent\Model;
 class InventoryMovement extends Model
 {
 	protected $table = 'inventory_movements';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'variant_id' => 'uuid',
-		'branch_id' => 'uuid',
-		'user_id' => 'uuid',
 		'quantity' => 'int'
 	];
 
-	public function product_variant()
+	public function variant()
 	{
 		return $this->belongsTo(ProductVariant::class, 'variant_id');
+	}
+
+	public function employee()
+	{
+		return $this->belongsTo(Employee::class);
 	}
 
 	public function branch()
 	{
 		return $this->belongsTo(Branch::class);
-	}
-
-	public function user()
-	{
-		return $this->belongsTo(User::class);
 	}
 }

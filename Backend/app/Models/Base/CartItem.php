@@ -7,7 +7,7 @@
 namespace App\Models\Base;
 
 use App\Models\Cart;
-use App\Models\ProductVariant;
+use App\Models\Catalog\ProductVariant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,13 +28,11 @@ use Illuminate\Database\Eloquent\Model;
 class CartItem extends Model
 {
 	protected $table = 'cart_items';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'cart_id' => 'uuid',
-		'variant_id' => 'uuid',
 		'quantity' => 'int'
 	];
 

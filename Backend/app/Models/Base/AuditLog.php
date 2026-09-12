@@ -29,13 +29,11 @@ use Illuminate\Database\Eloquent\Model;
 class AuditLog extends Model
 {
 	protected $table = 'audit_logs';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'user_id' => 'uuid',
-		'record_id' => 'uuid',
 		'old_data' => 'binary',
 		'new_data' => 'binary'
 	];

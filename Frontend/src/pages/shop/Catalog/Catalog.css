@@ -1,0 +1,117 @@
+/* Estilos específicos para la página de Catálogo de la tienda */
+.catalog-container {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+.catalog-header-border {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.catalog-title {
+  color: var(--text-main);
+}
+
+.catalog-filter-list {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.catalog-filter-link {
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.catalog-filter-link:hover {
+  color: var(--color-primary);
+}
+
+.catalog-product-img-placeholder {
+  background-color: var(--bg-input);
+}
+
+.catalog-product-title {
+  color: var(--text-main);
+}
+
+.catalog-product-price {
+  color: var(--text-main);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 800px;
+  }
+}
+
+.catalog-variant-card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e5e5e5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.catalog-variant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.catalog-grid-animate {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom Scrollbar for the sticky sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted);
+}

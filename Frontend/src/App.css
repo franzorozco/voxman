@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;

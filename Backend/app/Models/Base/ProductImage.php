@@ -6,7 +6,7 @@
 
 namespace App\Models\Base;
 
-use App\Models\Product;
+use App\Models\Catalog\Product;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,12 +26,18 @@ use Illuminate\Database\Eloquent\Model;
 class ProductImage extends Model
 {
 	protected $table = 'product_images';
+	protected $keyType = 'string';
 	public $incrementing = false;
-	public $timestamps = false;
+	public $timestamps = true;
+	const UPDATED_AT = null;
 
+	protected $fillable = [
+		'id',
+		'product_id',
+		'url',
+		'is_main',
+	];
 	protected $casts = [
-		'id' => 'uuid',
-		'product_id' => 'uuid',
 		'is_main' => 'bool'
 	];
 

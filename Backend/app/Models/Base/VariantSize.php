@@ -6,9 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\Fit;
-use App\Models\ProductVariant;
-use App\Models\Size;
+use App\Models\Catalog\Fit;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Catalog\Size;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -27,13 +27,11 @@ use Illuminate\Database\Eloquent\Model;
 class VariantSize extends Model
 {
 	protected $table = 'variant_sizes';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'variant_id' => 'uuid',
-		'size_id' => 'uuid',
-		'fit_id' => 'uuid'
 	];
 
 	public function product_variant()

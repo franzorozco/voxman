@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Core\User;
 use App\Models\Core\UserProfile;
-use App\Models\Actors\Customer;
 
 class RegisterController extends Controller
 {
@@ -25,20 +24,30 @@ class RegisterController extends Controller
 
                 UserProfile::create([
                     'user_id' => $user->id,
-                    'first_name' => $request->first_name,
+                    'first_name' => $request->first_name ?? $request->username,
                     'last_name_paternal' => $request->last_name_paternal,
                     'phone' => $request->phone,
                 ]);
 
-                Customer::create([
-                    'user_id' => $user->id,
-                    'customer_code' => 'CUST-' . uniqid(),
-                ]);
+                $user->assignRole('Usuario');
+
+                $user->loadMissing('profile', 'customers.addresses', 'employee.branch');
 
                 $token = $user->createToken('auth_token')->plainTextToken;
 
                 return [
-                    'user' => $user,
+                    'user' => [
+                        'id' => $user->id,
+                        'email' => $user->email,
+                        'username' => $user->username,
+                        'full_name' => optional($user->profile)->first_name . ' ' . optional($user->profile)->last_name_paternal,
+                        'photo' => optional($user->profile)->photo ?? null,
+                        'employee' => null,
+                        'roles' => $user->getRoleNames(), 
+                        'permissions' => $user->getAllPermissions()->pluck('name'),
+                        'profile' => $user->profile,
+                        'customers' => $user->customers,
+                    ],
                     'token' => $token,
                 ];
             });

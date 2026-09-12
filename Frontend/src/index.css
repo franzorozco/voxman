@@ -1,58 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;800&display=swap');
+@import url('./theme.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------
+   ANIMACIONES GLOBALES DEL CARRITO 
+   (Usadas en ProductDetail, BundleDetail, Catalog)
+   ------------------------------------- */
 
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+.btn-added-animate {
+  animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+@keyframes successPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); background-color: #10b981; border-color: #10b981; }
+  100% { transform: scale(1); background-color: #10b981; border-color: #10b981; }
+}
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+.btn-added-animate svg {
+  animation: popCheck 0.4s ease forwards;
+}
+
+@keyframes popCheck {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
 #root {
@@ -64,17 +38,37 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Ocultar barra de desplazamiento para todo el sistema */
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+html, body {
+  -ms-overflow-style: none; /* IE y Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 body {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100vh;
+  /* These fallback to basic values if no theme wrapper is present */
+  background-color: var(--bg-main, #f9fafb);
+  color: var(--text-main, #111827);
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
 h1,
 h2 {
-  font-family: var(--heading);
   font-weight: 500;
-  color: var(--text-h);
+  color: var(--text-main);
 }
 
 h1 {
@@ -86,6 +80,7 @@ h1 {
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
@@ -95,21 +90,54 @@ h2 {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  /* NORMALIZAR TODOS LOS MODALES A 95% EN CELULARES */
+  .modal-content, 
+  [class*="modal-content"] {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* FIX: NORMALIZAR ALTURA DE LOS MODALES PARA EVITAR ESPACIOS EN BLANCO */
+.modal-content, .modal {
+  height: auto !important;
+  max-height: 90vh !important;
 }
+
+/* Fix global para dropdowns (options heredan el color del select para evitar bug en Chromium) */
+select option {
+  background-color: inherit;
+  color: inherit;
+}
+.pulse-anim { animation: pulseAnim 1.5s infinite; }
+@keyframes pulseAnim { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+
+.products-header-actions { display: flex; gap: 10px; align-items: center; } 
+ @media (max-width: 768px) { .products-header .products-header-actions { width: 100%; justify-content: center !important; align-self: center !important; } .products-header-actions > * { flex: none !important; width: max-content !important; } }
+
+@media (max-width: 768px) { .carts-header-actions { display: grid !important; grid-template-columns: 1fr 1fr; width: 100%; gap: 10px; } .carts-header-actions button { width: 100% !important; max-width: none !important; } }
+@media (max-width: 768px) {
+  .metric-card { display: grid !important; grid-template-columns: auto 1fr !important; gap: 8px 12px !important; padding: 12px !important; }
+  .metric-content { display: contents !important; }
+  .metric-icon-wrapper { grid-column: 1 !important; grid-row: 1 !important; width: 32px !important; height: 32px !important; }
+  .metric-icon-wrapper svg { width: 16px !important; height: 16px !important; }
+  .metric-label { grid-column: 2 !important; grid-row: 1 !important; margin-bottom: 0 !important; align-self: center !important; line-height: 1.2 !important; }
+  .metric-value { grid-column: 1 / -1 !important; grid-row: 2 !important; font-size: 20px !important; }
+}
+
+/* Fix global horizontal scroll */
+html, body, #root { overflow-x: hidden; max-width: 100%; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }

@@ -6,7 +6,7 @@
 
 namespace App\Models\Base;
 
-use App\Models\CashRegister;
+use App\Models\Finance\CashRegister;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -33,14 +33,12 @@ class CashMovement extends Model
 {
 	use SoftDeletes;
 	protected $table = 'cash_movements';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'cash_register_id' => 'uuid',
-		'movement_type' => 'USER-DEFINED',
+		'movement_type' => 'string',
 		'amount' => 'float',
-		'reference_id' => 'uuid'
 	];
 
 	public function cash_register()
