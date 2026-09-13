@@ -149,13 +149,6 @@ export default function Tracking() {
         });
       }
     });
-    privateChannel.listen('.delivery.discount.applied', () => {
-      fetchTracking();
-    });
-    privateChannel.listen('.delivery.discount.removed', () => {
-      fetchTracking();
-      setDiscountMessage(null);
-    });
     privateChannel.listen('.DeliveryNotesUpdated', (data) => {
       setNotes(data.notes || '');
       setSchedule(prev => {
@@ -180,8 +173,6 @@ export default function Tracking() {
       echo.leaveChannel(`deliveries.global`);
       privateChannel.stopListening('.delivery.status.updated');
       privateChannel.stopListening('.checkout.session.shared');
-      privateChannel.stopListening('.delivery.discount.applied');
-      privateChannel.stopListening('.delivery.discount.removed');
       privateChannel.stopListening('.DeliveryNotesUpdated');
       privateChannel.stopListening('.DeliveryUpdated');
       echo.leaveChannel(`deliveries.${id}`);

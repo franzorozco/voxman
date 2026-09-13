@@ -1495,7 +1495,7 @@ class OrderNetworkController extends Controller
     /**
      * Add an item to the delivery.
      */
-    public function addItem(Request $request, $id)
+    public function addItem(Request $request, $id, \App\Services\Finance\OrderPricingService $pricingService)
     {
         $request->validate([
             'variant_id' => 'required|uuid'
@@ -1506,93 +1506,19 @@ class OrderNetworkController extends Controller
             $schedule = DeliverySchedule::with('shipment.sale.sale_details')->findOrFail($id);
 
             if ($schedule->status !== 'at_the_meeting_point') {
-                return response()->json(['error' => 'Solo puedes agregar prendas cuando el pedido estÃƒÂ¡ en el punto de encuentro.'], 400);
+                return response()->json(['error' => 'Solo puedes agregar prendas cuando el pedido está en el punto de encuentro.'], 400);
             }
 
             $sale = $schedule->shipment->sale;
-            $variant = \App\Models\Catalog\ProductVariant::with('product')->findOrFail($request->variant_id);
 
-            // Determine branch_id: from request, from existing StockReservation, or default
             $branchId = $request->branch_id;
             if (!$branchId) {
                 $existingRes = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->first();
                 $branchId = $existingRes ? $existingRes->branch_id : env('MAIN_BRANCH_ID', 1);
             }
 
-            // Check inventory
-            $inv = \App\Models\Inventory\Inventory::where('branch_id', $branchId)
-                ->where('variant_id', $variant->id)
-                ->lockForUpdate()
-                ->first();
-
-            if (!$inv || $inv->stock < 1) {
-                return response()->json(['error' => 'No hay stock suficiente para agregar esta prenda.'], 400);
-            }
-
-            // Deduct stock
-            $stockBefore = $inv->stock;
-            $inv->stock -= 1;
-            $inv->save();
-
-            InventoryMovement::create([
-                'variant_id' => $variant->id,
-                'branch_id' => $branchId,
-                'movement_type' => 'sale',
-                'quantity' => 1,
-                'stock_before' => $stockBefore,
-                'stock_after' => $inv->stock,
-                'reference_type' => 'sale',
-                'reference_id' => $sale->id,
-                'created_by' => auth()->id() ?? null,
-            ]);
-
-            // Revival logic: check if there's an existing released reservation for this variant & branch
-            $res = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)
-                ->where('variant_id', $variant->id)
-                ->where('branch_id', $branchId)
-                ->first();
-
-            if ($res) {
-                if ($res->status === 'released') {
-                    $res->update(['status' => 'confirmed', 'quantity' => 1]);
-                } else {
-                    $res->increment('quantity');
-                }
-            } else {
-                \App\Models\Inventory\StockReservation::create([
-                    'sale_id' => $sale->id,
-                    'variant_id' => $variant->id,
-                    'branch_id' => $branchId,
-                    'quantity' => 1,
-                    'status' => 'confirmed'
-                ]);
-            }
-
-            $price = $variant->price ?? $variant->product->base_price ?? 0;
-
-            // Check if there is an existing SaleDetail for this variant
-            $detail = $sale->sale_details()->where('variant_id', $variant->id)->first();
-            if ($detail) {
-                $detail->quantity += 1;
-                $detail->subtotal += $price;
-                $detail->final_price += $price;
-                $detail->save();
-            } else {
-                $sale->sale_details()->create([
-                    'variant_id' => $variant->id,
-                    'quantity' => 1,
-                    'unit_price' => $price,
-                    'subtotal' => $price,
-                    'final_price' => $price,
-                    'discount_amount' => 0,
-                    'notes' => 'Agregado en el punto de entrega'
-                ]);
-            }
-
-            // Update Sale totals
-            $sale->subtotal += $price;
-            $sale->total += $price;
-            $sale->save();
+            // Delegar la adición y el recálculo al servicio centralizado
+            $sale = $pricingService->addProduct($sale, $request->variant_id, 1, $branchId, auth()->id() ?? null);
 
             if ($schedule->checkout_session) {
                 $session = $schedule->checkout_session;
@@ -1609,19 +1535,21 @@ class OrderNetworkController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Prenda agregada correctamente al pedido.'
+                'message' => 'Prenda agregada correctamente al pedido.',
+                'new_total' => $sale->total
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage()], 400);
         }
     }
 
     /**
+     /**
      * Remove an item from the delivery and restore stock.
      */
-    public function removeItem(Request $request, $id, $reservationId)
+    public function removeItem(Request $request, $id, $reservationId, \App\Services\Finance\OrderPricingService $pricingService)
     {
         try {
             DB::beginTransaction();
@@ -1632,115 +1560,14 @@ class OrderNetworkController extends Controller
             }
 
             $sale = $schedule->shipment->sale;
-            $res = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->find($reservationId);
             
-            // Fallback: If the frontend passed a SaleDetail ID because the StockReservation wasn't available in the UI state
-            if (!$res) {
-                $detailFallback = $sale->sale_details()->find($reservationId);
-                if ($detailFallback) {
-                    $res = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->where('variant_id', $detailFallback->variant_id)->first();
-                }
-            }
-
-            if (!$res) {
-                return response()->json(['error' => 'Reserva de stock no encontrada.'], 404);
-            }
-            
-            $detail = $sale->sale_details()->where('variant_id', $res->variant_id)->first();
-            if (!$detail) {
-                return response()->json(['error' => 'Detalle de venta no encontrado.'], 404);
-            }
-
-            // Check if it's the ONLY active item left
             $totalActiveQty = \App\Models\Inventory\StockReservation::where('sale_id', $sale->id)->whereIn('status', ['reserved', 'confirmed'])->sum('quantity');
             if ($totalActiveQty <= 1) {
-                return response()->json(['error' => 'No puedes quitar la ÃƒÂºnica prenda de la entrega. Si el cliente no desea nada, cancela la entrega completa.'], 400);
+                return response()->json(['error' => 'No puedes quitar la única prenda de la entrega. Si el cliente no desea nada, cancela la entrega completa.'], 400);
             }
 
-            $branchId = $res->branch_id;
-            if (!$branchId) {
-                $branchId = $schedule->shipment->origin_branch_id ?? $sale->branch_id;
-                if (!$branchId) {
-                    $branchId = \App\Models\Company\Branch::where('is_active', true)->first()->id ?? null;
-                }
-            }
-
-            // Restore stock (1 unit)
-            if ($res->status !== 'released') {
-                $inv = \App\Models\Inventory\Inventory::where('branch_id', $branchId)
-                    ->where('variant_id', $res->variant_id)
-                    ->lockForUpdate()
-                    ->first();
-                
-                if ($inv) {
-                    $stockBefore = $inv->stock;
-                    $inv->stock += 1; // Return 1 unit
-                    $inv->save();
-
-                    InventoryMovement::create([
-                        'variant_id' => $res->variant_id,
-                        'branch_id' => $res->branch_id,
-                        'movement_type' => 'return',
-                        'quantity' => 1, // 1 unit
-                        'stock_before' => $stockBefore,
-                        'stock_after' => $inv->stock,
-                        'reference_type' => 'sale',
-                        'reference_id' => $sale->id,
-                        'created_by' => auth()->id() ?? null,
-                    ]);
-                }
-                
-                if ($res->quantity > 1) {
-                    $res->quantity -= 1;
-                    $res->save();
-                } else {
-                    $res->update(['status' => 'released']);
-                }
-            }
-
-            // Decrement SaleDetail or Delete if it was the last unit
-            if ($detail->quantity > 1) {
-                $detail->quantity -= 1;
-                $detail->subtotal -= $detail->unit_price;
-                $detail->final_price -= $detail->unit_price;
-                $detail->save();
-            } else {
-                $detail->delete();
-            }
-
-            // Update Sale totals
-            $sale->subtotal -= $detail->unit_price;
-            $sale->total -= $detail->unit_price;
-            if ($sale->total < 0) $sale->total = 0;
-            if ($sale->subtotal < 0) $sale->subtotal = 0;
-            $sale->save();
-
-            // --- Bundle disintegration ---
-            // If the removed item belonged to a bundle, the remaining siblings
-            // must revert to their original_price (their bundle discount is gone).
-            if ($detail->bundle_group_id) {
-                $siblings = $sale->sale_details()
-                    ->whereNull('deleted_at')
-                    ->where('bundle_group_id', $detail->bundle_group_id)
-                    ->get();
-
-                foreach ($siblings as $sibling) {
-                    $restoredPrice = $sibling->original_price ?? $sibling->unit_price;
-                    $priceDiff = $restoredPrice - $sibling->unit_price;
-
-                    // Update price fields
-                    $sibling->unit_price  = $restoredPrice;
-                    $sibling->final_price = max(0, $restoredPrice - ($sibling->discount ?? 0));
-                    $sibling->subtotal    = $sibling->final_price * $sibling->quantity;
-                    $sibling->bundle_group_id = null; // No longer part of a bundle
-                    $sibling->save();
-
-                    // Adjust sale totals for the price difference
-                    $sale->subtotal += $priceDiff * $sibling->quantity;
-                    $sale->total    += $priceDiff * $sibling->quantity;
-                }
-                $sale->save();
-            }
+            // Delegar remoción y recálculo al servicio centralizado
+            $sale = $pricingService->removeProduct($sale, $reservationId, 1, auth()->id() ?? null);
 
             if ($schedule->checkout_session) {
                 $session = $schedule->checkout_session;
@@ -1757,16 +1584,18 @@ class OrderNetworkController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Prenda quitada y stock devuelto exitosamente.'
+                'message' => 'Prenda quitada y stock devuelto exitosamente.',
+                'new_total' => $sale->total
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage()], 400);
         }
     }
 
     /**
+     /**
      * Restore a previously removed item to the delivery.
      */
     public function restoreItem(Request $request, $id, $reservationId)
@@ -1947,158 +1776,71 @@ class OrderNetworkController extends Controller
         return response()->json(['message' => 'SesiÃƒÂ³n de cobro compartida exitosamente.']);
     }
 
-    public function applyDiscount(Request $request, $id, \App\Services\Finance\DiscountValidationService $discountService)
+    public function applyDiscount(Request $request, $id, \App\Services\Finance\OrderPricingService $pricingService)
     {
         $request->validate([
             'code' => 'required|string'
         ]);
 
-        $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);
-        $sale = $schedule->shipment->sale;
+        try {
+            $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);
+            $sale = $schedule->shipment->sale;
 
-        if (!$sale) {
-            return response()->json(['error' => 'No se encontró la venta asociada a esta entrega.'], 404);
-        }
-
-        // Rule: Solo uno (Only one discount/giftcard per sale)
-        $hasGlobalDiscount = $sale->sale_applied_discounts->whereNull('sale_detail_id')->isNotEmpty();
-        if ($hasGlobalDiscount || $sale->giftcard_id) {
-            return response()->json(['error' => 'Esta venta ya tiene un descuento o giftcard aplicado.'], 400);
-        }
-
-        $code = trim($request->code);
-
-        // Build items for validation service
-        $items = $sale->sale_details->map(function($detail) use ($sale) {
-            $hasNativeDiscount = $sale->sale_applied_discounts->where('sale_detail_id', $detail->id)->isNotEmpty();
-            return [
-                'variant_id' => $detail->variant_id,
-                'line_subtotal' => $detail->subtotal,
-                'bundle_group_id' => $detail->bundle_group_id,
-                'applied_discount_id' => $hasNativeDiscount ? 'has_native' : null
-            ];
-        })->toArray();
-
-        // Validate using the shared service
-        $result = $discountService->validateCode(
-            $code,
-            $sale->subtotal,
-            $items,
-            $sale->customer_id,
-            $sale->branch_id
-        );
-
-        if (!$result['valid']) {
-            return response()->json(['error' => $result['message']], 400);
-        }
-
-        $discountAmount = $result['discount_amount'];
-        $discountData = [
-            'type' => $result['type'],
-            'code' => $code,
-            'amount' => $discountAmount
-        ];
-
-        if ($result['type'] === 'giftcard') {
-            $sale->giftcard_id = $result['id'];
-        } else {
-            // Un solo registro de descuento global
-            \App\Models\Sales\SaleAppliedDiscount::create([
-                'sale_id' => $sale->id,
-                'sale_detail_id' => null,
-                'discount_id' => $result['id'],
-                'discount_amount' => $discountAmount
-            ]);
-        }
-
-        $sale->discount_total += $discountAmount;
-        $sale->total = max(0, $sale->total - $discountAmount);
-        $sale->save();
-
-        if ($schedule->checkout_session) {
-            $session = $schedule->checkout_session;
-            if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
-                $computedShippingCost = $schedule->shipment->shipping_payment_type !== 'collect' ? ($schedule->shipment->shipping_cost ?? 0) : 0;
-                $computedAgencyCost = $schedule->shipment->agency_dispatch_cost ?? 0;
-                $trueTotal = max(0, $sale->dynamic_total + $computedShippingCost + $computedAgencyCost);
-                $totalPaid = $sale->payments()->sum('amount');
-                $session['monto_real'] = max(0, $trueTotal - $totalPaid);
-                $schedule->checkout_session = $session;
-                $schedule->save();
+            if (in_array($schedule->status, ['completed', 'cancelled'])) {
+                return response()->json(['error' => 'No se puede aplicar descuentos en este estado.'], 400);
             }
+
+            $hasGlobalDiscount = $sale->sale_applied_discounts->whereNull('sale_detail_id')->isNotEmpty();
+            if ($hasGlobalDiscount || $sale->giftcard_id) {
+                return response()->json(['error' => 'Esta venta ya tiene un descuento o giftcard aplicado.'], 400);
+            }
+
+            $sale = $pricingService->applyDiscount($sale, $request->code);
+
+            event(new \App\Events\DeliveryDiscountApplied($id, $sale, ['code' => $request->code, 'amount' => $sale->discount_total]));
+
+            return response()->json([
+                'message' => 'Descuento aplicado correctamente',
+                'discount_amount' => $sale->discount_total,
+                'new_total' => $sale->total
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
         }
-
-        // Broadcast back to admin
-        event(new \App\Events\DeliveryDiscountApplied($id, $sale, $discountData));
-
-        return response()->json([
-            'message' => 'Descuento aplicado correctamente',
-            'discount_amount' => $discountAmount,
-            'new_total' => $sale->total
-        ]);
     }
 
-    public function removeDiscount($id)
+    public function removeDiscount($id, \App\Services\Finance\OrderPricingService $pricingService)
     {
-        $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);
-        $sale = $schedule->shipment->sale;
+        try {
+            $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);
+            $sale = $schedule->shipment->sale;
 
-        $globalDiscount = $sale ? $sale->sale_applied_discounts->whereNull('sale_detail_id')->first() : null;
+            $globalDiscount = $sale ? $sale->sale_applied_discounts->whereNull('sale_detail_id')->first() : null;
 
-        if (!$sale || (!$globalDiscount && !$sale->giftcard_id)) {
-            return response()->json(['error' => 'No hay descuento para quitar.'], 400);
-        }
-
-        $removedDiscountId = $globalDiscount ? $globalDiscount->discount_id : null;
-
-        // Remove from applied discounts
-        if ($globalDiscount) {
-            \App\Models\Sales\SaleAppliedDiscount::where('id', $globalDiscount->id)->delete();
-        }
-
-        // Revert total
-        $sale->total += $sale->discount_total;
-        $sale->discount_total = 0;
-        // $sale->discount_id = null; // No longer exists in sales table
-        $sale->giftcard_id = null;
-        $sale->save();
-
-        if ($removedDiscountId) {
-            $cartQuery = \App\Models\Sales\Cart::where('status', 'ordered')->where('discount_id', $removedDiscountId);
+            if (!$sale || (!$globalDiscount && !$sale->giftcard_id && $sale->discount_total <= 0)) {
+                return response()->json(['error' => 'No hay descuento para quitar.'], 400);
+            }
             
-            if ($sale->customer_id) {
-                $cartQuery->where('customer_id', $sale->customer_id);
-            } elseif ($sale->guest_id) {
-                $cartQuery->where('guest_id', $sale->guest_id);
+            $removedDiscountId = $globalDiscount ? $globalDiscount->discount_id : null;
+
+            $sale = $pricingService->removeDiscount($sale);
+            
+            if ($removedDiscountId) {
+                \App\Models\Sales\Cart::where('status', 'ordered')->where('discount_id', $removedDiscountId)
+                    ->update(['discount_id' => null, 'total_discount' => 0]);
             }
 
-            $cartQuery->update([
-                'discount_id' => null,
-                'total_discount' => 0
+            event(new \App\Events\DeliveryDiscountRemoved($id, $sale));
+
+            return response()->json([
+                'message' => 'Descuento quitado exitosamente.',
+                'new_total' => $sale->total
             ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
         }
-
-        if ($schedule->checkout_session) {
-            $session = $schedule->checkout_session;
-            if (!isset($session['is_advance_payment']) || !$session['is_advance_payment']) {
-                $computedShippingCost = $schedule->shipment->shipping_payment_type !== 'collect' ? ($schedule->shipment->shipping_cost ?? 0) : 0;
-                $computedAgencyCost = $schedule->shipment->agency_dispatch_cost ?? 0;
-                $trueTotal = max(0, $sale->dynamic_total + $computedShippingCost + $computedAgencyCost);
-                $totalPaid = $sale->payments()->sum('amount');
-                $session['monto_real'] = max(0, $trueTotal - $totalPaid);
-                $schedule->checkout_session = $session;
-                $schedule->save();
-            }
-        }
-
-        // Broadcast to clients
-        event(new \App\Events\DeliveryDiscountRemoved($id, $sale));
-
-        return response()->json([
-            'message' => 'Descuento eliminado correctamente',
-            'new_total' => $sale->total
-        ]);
     }
+
     public function toggleRecipientEdit(Request $request, $id)
     {
         $schedule = DeliverySchedule::with('shipment')->findOrFail($id);

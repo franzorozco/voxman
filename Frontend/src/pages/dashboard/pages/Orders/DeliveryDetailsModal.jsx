@@ -211,25 +211,13 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     if (!scheduleId) return;
 
     const channel = echo.channel(`deliveries.${scheduleId}`);
-    channel.listen('.delivery.discount.applied', (data) => {
-      toast.success(`Descuento aplicado: Bs. ${data.discountData?.amount || 0}`);
-      fetchDetails(); 
-    });
-    channel.listen('.delivery.discount.removed', () => {
-      toast.error(`Descuento removido`);
-      fetchDetails();
-    });
     channel.listen('.DeliveryNotesUpdated', (data) => {
       setNotes(data.notes || '');
-      // No need to fetch all details, just update notes in state to reflect what other clients are seeing.
       setDetails(prev => {
         if (!prev) return prev;
         return {
           ...prev,
-          shipment: {
-            ...prev.shipment,
-            notes: data.notes
-          }
+          notes: data.notes
         };
       });
     });
@@ -240,8 +228,6 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     });
 
     return () => {
-      channel.stopListening('.delivery.discount.applied');
-      channel.stopListening('.delivery.discount.removed');
       channel.stopListening('.DeliveryNotesUpdated');
       channel.stopListening('.DeliveryUpdated');
       echo.leaveChannel(`deliveries.${scheduleId}`);
@@ -383,7 +369,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     return colors[status] || "var(--text-muted)";
   };
 
-  if (loading || !details) {
+  if (!details && loading) {
     return (
       <div className="modal-overlay">
         <div className="modal-content" style={{ maxWidth: '600px', display: 'flex', justifyContent: 'center', padding: '40px' }}>
@@ -1665,14 +1651,18 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                         border: '1px dashed var(--color-primary)',
                         color: 'var(--color-primary)',
                         fontWeight: 600,
-                        cursor: 'pointer',
+                        cursor: (updating || paymentMethod === 'ambos') ? 'not-allowed' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px'
                       }}
                     >
-                      <Plus size={18} /> Agregar descuento
+                      {updating ? (
+                        <div className="animate-spin" style={{ width: '18px', height: '18px', border: '2px solid var(--color-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
+                      ) : (
+                        <><Plus size={18} /> Agregar descuento</>
+                      )}
                     </button>
                   </CanAccess>
                 ) : (
@@ -1695,13 +1685,12 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       onValidated={async (res) => {
                         if (res && res.valid) {
                           try {
+                            setShowDiscountInput(false);
                             setUpdating(true);
                             await api.post(`/v1/admin/order-network/${scheduleId}/apply-discount`, { code: res.code });
-                            toast.success("Descuento guardado y compartido");
                             fetchDetails();
-                            setShowDiscountInput(false);
                           } catch (err) {
-                            toast.error("Error al aplicar descuento");
+                            setShowDiscountInput(true);
                           } finally {
                             setUpdating(false);
                           }

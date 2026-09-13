@@ -210,19 +210,11 @@ class DiscountValidationService
                 continue; // Skip bundle items for global discounts
             }
 
-            // Exclude items that already have automatic individual discounts
-            $activeAutomaticDiscounts = collect();
-            if (method_exists($this, 'getActiveDiscountsForProduct')) {
-                $activeAutomaticDiscounts = $this->getActiveDiscountsForProduct($variant->product);
-            }
-            $hasIndividualDiscount = false;
-            foreach ($activeAutomaticDiscounts as $autoDiscount) {
-                $autoVars = $autoDiscount->variants()->pluck('product_variants.id')->toArray();
-                if (empty($autoVars) || in_array($variant->id, $autoVars)) {
-                    $hasIndividualDiscount = true;
-                    break;
-                }
-            }
+            // Exclude items that already have an explicit individual discount applied
+            $hasIndividualDiscount = is_array($item) 
+                ? (!empty($item['applied_discount_id']) || !empty($item['discount_label'])) 
+                : (!empty($item->applied_discount_id) || !empty($item->discount_label));
+                
             if ($hasIndividualDiscount) {
                 continue; // Skip this item for global discount
             }
@@ -336,7 +328,9 @@ class DiscountValidationService
             $isBundleItem = is_array($item) ? !empty($item['bundle_group_id']) : !empty($item->bundle_group_id);
             if ($isBundleItem) continue;
 
-            $hasNativeDiscount = is_array($item) ? !empty($item['applied_discount_id']) : !empty($item->applied_discount_id);
+            $hasNativeDiscount = is_array($item) 
+                ? (!empty($item['applied_discount_id']) || !empty($item['discount_label'])) 
+                : (!empty($item->applied_discount_id) || !empty($item->discount_label));
             if ($hasNativeDiscount) continue;
 
             $lineSubtotal = is_array($item) ? ($item['line_subtotal'] ?? 0) : ($item->line_subtotal ?? $item->subtotal ?? 0);
