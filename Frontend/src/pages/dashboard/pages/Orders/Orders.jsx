@@ -3,6 +3,7 @@ import { getCarts } from "../../../../api/admin/carts";
 import { getDeliverySchedules, getDeliveryDrivers } from "../../../../api/admin/orderNetwork";
 import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle, Store } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { FRONTEND_URL } from "../../../../config/api";
 
 
 import DeliveryDetailsModal from "./DeliveryDetailsModal";
@@ -220,7 +221,7 @@ export default function Orders() {
       productDetails = productStrings.join(", ");
     }
     
-    const trackingUrl = `${window.location.origin}/tracking/${schedule.id}`;
+    const trackingUrl = `${FRONTEND_URL}/tracking/${schedule.id}`;
     const deliveryType = schedule.shipment?.delivery_type || 'scheduled_point';
     const meetPoint = schedule.meeting_point || "la ubicación acordada";
     const time = schedule.time_window || "una hora a convenir";
@@ -688,7 +689,7 @@ export default function Orders() {
                             className="action-btn" 
                             style={{ padding: '8px', background: 'var(--bg-input)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
                             onClick={() => {
-                              const trackingUrl = `${window.location.origin}/tracking/${schedule.id}`;
+                              const trackingUrl = `${FRONTEND_URL}/tracking/${schedule.id}`;
                               navigator.clipboard.writeText(trackingUrl);
                               toast.success("Enlace copiado");
                             }}

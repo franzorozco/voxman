@@ -139,7 +139,15 @@ export default function Profile() {
       }
     } catch (err) {
       console.error("Error loading profile:", err);
-      // Fallback to local authUser if available
+      // If unauthorized (token expired/invalid), force logout and redirect
+      if (err.response && err.response.status === 401) {
+        toast.error("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+        logout();
+        navigate("/login");
+        return;
+      }
+      
+      // Fallback to local authUser if available for other errors (e.g. network error)
       if (authUser) {
         setUserData(authUser);
         const prof = authUser.profile || {};

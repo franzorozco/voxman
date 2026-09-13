@@ -710,15 +710,15 @@ const BundleDetail = () => {
   return (
     <div className="product-detail-page">
       {/* Breadcrumbs */}
-      <div className="text-[11px] text-gray-500 uppercase tracking-widest mb-6 px-4 md:px-0" style={{ maxWidth: '1200px', margin: '0 auto 24px auto' }}>
-        <Link to="/shop" className="hover:text-black transition-colors" style={{ textDecoration: 'none', color: 'inherit' }}>Inicio</Link>
-        <span className="mx-2">/</span>
-        <Link to={`/shop/catalog?category=${bundle.category?.id || ''}`} className="hover:text-black transition-colors" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <nav className="product-breadcrumb">
+        <Link to="/shop">Inicio</Link>
+        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
+        <Link to={`/shop/catalog?category=${bundle.category?.id || ''}`}>
           {bundle.category?.name || 'Catálogo'}
         </Link>
-        <span className="mx-2">/</span>
-        <span className="text-black font-medium">{bundle.name} (Conjunto)</span>
-      </div>
+        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
+        <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{bundle.name} (Conjunto)</span>
+      </nav>
 
       <div className="product-detail-grid">
         {/* Left Column: Gallery */}

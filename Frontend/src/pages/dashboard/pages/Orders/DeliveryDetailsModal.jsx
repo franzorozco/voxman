@@ -96,6 +96,8 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const computedShippingCost = details?.shipment?.shipping_payment_type !== 'collect' ? Number(details?.shipment?.shipping_cost || 0) : 0;
   const computedAgencyCost = Number(details?.shipment?.agency_dispatch_cost || 0);
   const grandTotal = Number(sale?.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
+  const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+  const remainingAmount = Number(grandTotal - totalPaid);
 
   const hasGlobalDiscount = (sale?.discount_id != null) || (sale?.sale_applied_discounts?.some(d => d.sale_detail_id == null));
   const hasGiftcard = sale?.giftcard_id != null;
@@ -114,13 +116,14 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const [savingNotes, setSavingNotes] = useState(false);
 
   useEffect(() => {
-    if (showPaymentModal && details) {
-      const sale = details.shipment?.sale;
-      const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      const remaining = Number(grandTotal - totalPaid).toFixed(2);
-      setMontoReal(remaining > 0 ? remaining : '');
+    if (showPaymentModal) {
+      if (isAdvancePayment) {
+        setMontoReal(0);
+      } else {
+        setMontoReal(remainingAmount > 0 ? remainingAmount.toFixed(2) : '');
+      }
     }
-  }, [showPaymentModal, details]);
+  }, [showPaymentModal, details, isAdvancePayment, remainingAmount]);
 
 
 
@@ -437,14 +440,38 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
 
   let hasValidStock = true;
   const activeItems = sale?.sale_details?.filter(item => !item.deleted_at) || [];
+
+  const currentStatus = details?.status;
+  let requiresReservation = false;
+  
+  const localReserveStates = ['assigned', 'on_the_way', 'at_the_meeting_point', 'completed'];
+  const externalReserveStates = ['prepared', 'packaged', 'shipped', 'completed'];
+  const pickupReserveStates = ['reserved', 'preparing', 'ready_for_pickup', 'completed'];
+  
+  if (isExternal && externalReserveStates.includes(currentStatus)) {
+      requiresReservation = true;
+  } else if (isPickup && pickupReserveStates.includes(currentStatus)) {
+      requiresReservation = true;
+  } else if (!isExternal && !isPickup && localReserveStates.includes(currentStatus)) {
+      requiresReservation = true;
+  } else if (['completed', 'shipped'].includes(currentStatus)) {
+      requiresReservation = true;
+  }
+
   for (const item of activeItems) {
       const variant = item.product_variant;
       const totalPhysicalStock = variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
-      if (totalPhysicalStock < item.quantity) {
+      
+      const allReservations = sale?.stock_reservations || sale?.stockReservations || [];
+      const variantReservations = allReservations.filter(res => res.variant_id === item.variant_id && 
+(res.status === 'reserved' || res.status === 'confirmed' || !res.status));
+      
+      const reservedForThisItem = variantReservations.reduce((sum, res) => sum + Number(res.quantity), 0);
+      const effectiveStock = totalPhysicalStock + reservedForThisItem;
+
+      if (effectiveStock < item.quantity) {
           hasValidStock = false;
-      } else {
-          const allReservations = sale?.stock_reservations || sale?.stockReservations || [];
-          const variantReservations = allReservations.filter(res => res.variant_id === item.variant_id && (res.status === 'reserved' || res.status === 'confirmed' || !res.status));
+      } else if (requiresReservation) {
           if (variantReservations.length === 0) {
               hasValidStock = false;
           } else {
@@ -487,7 +514,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const isCancelled = details.status === 'cancelled';
   const isCompleted = details.status === 'completed';
   const isFinal = isCancelled || isCompleted;
-  const canEdit = !isOnTheWay && !isFinal;
+  
+  let canEdit = !isFinal;
+  if (!isPickup && !isExternal && currentStepIndex >= getStepIndex('on_the_way', STEPS_LOCAL)) {
+    canEdit = false;
+  } else if (isExternal && currentStepIndex >= getStepIndex('prepared', STEPS_EXTERNAL)) {
+    canEdit = false;
+  } else if (isPickup && currentStepIndex >= getStepIndex('preparing', STEPS_PICKUP)) {
+    canEdit = false;
+  }
 
   const statusTheme = {
     // Pickup states
@@ -682,8 +717,6 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     }
   };
 
-  const totalPaid = sale?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-  
   // A sale is considered fully paid if its status is 'paid'.
   // External shipments might be paid at the 'prepared' stage, local at 'completed'.
   const isFullyPaid = sale?.status === 'paid';
@@ -886,7 +919,9 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       const subtotal = item.dynamic_subtotal || (unitPrice * qty);
 
                       const totalPhysicalStock = variant?.inventories?.reduce((sum, inv) => sum + Number(inv.stock), 0) || 0;
-                      const isOutOfStock = relevantReservations.length === 0;
+                      const reservedForThisItem = relevantReservations.reduce((sum, res) => sum + Number(res.quantity), 0);
+                      const effectiveStock = totalPhysicalStock + reservedForThisItem;
+                      const isOutOfStock = requiresReservation ? relevantReservations.length === 0 : effectiveStock < qty;
 
                       return (
                         <div key={`${item.id}-${index}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', paddingBottom: '12px', borderBottom: '1px dashed var(--border-color)', opacity: isCancelled || item.deleted_at ? 0.6 : 1, ...(isBundleItem ? { background: 'var(--bg-hover)', padding: '8px', borderRadius: '8px', borderLeft: '3px solid #f59e0b' } : {}) }}>
@@ -923,9 +958,14 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                                     <span> • Color/Fit: {variant.fit.name}</span>
                                   )}
                                 </div>
-                                {!isOutOfStock && !item.deleted_at && (
+                                {!isOutOfStock && !item.deleted_at && relevantReservations.length > 0 && (
                                   <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '4px' }}>
                                     Extraído de <b>{branchName}</b>
+                                  </div>
+                                )}
+                                {!isOutOfStock && !item.deleted_at && relevantReservations.length === 0 && (
+                                  <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '4px' }}>
+                                    <i>Pendiente de reserva</i>
                                   </div>
                                 )}
                                 {item.deleted_at && (
@@ -1537,14 +1577,28 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               {isAdvancePayment ? (isPickup && paymentNextStatus === 'reserved' ? 'Pago de la reserva' : 'Registrar Adelanto') : (paymentNextStatus === 'prepared' ? 'Cobrar y Preparar Pedido' : 'Completar Entrega')}
             </h3>
             
-            <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{isAdvancePayment ? 'Total de la Venta:' : 'Total Original:'}</span>
-                <strong style={{ color: 'var(--text-muted)', textDecoration: (!isAdvancePayment && Number(montoReal) < grandTotal) ? 'line-through' : 'none' }}>Bs. {grandTotal.toFixed(2)}</strong>
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: 600 }}>{isAdvancePayment ? 'Monto a Adelantar:' : 'Monto Real a Cobrar:'}</span>
+              <div style={{ background: 'var(--bg-input)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{isAdvancePayment ? 'Total de la Venta:' : 'Total Original:'}</span>
+                  <strong style={{ color: 'var(--text-muted)' }}>Bs. {grandTotal.toFixed(2)}</strong>
+                </div>
+                
+                {!isAdvancePayment && totalPaid > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '14px', color: 'var(--color-success)' }}>Adelanto Registrado:</span>
+                    <strong style={{ color: 'var(--color-success)' }}>- Bs. {totalPaid.toFixed(2)}</strong>
+                  </div>
+                )}
+                
+                {!isAdvancePayment && totalPaid > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Saldo Restante:</span>
+                    <strong style={{ color: 'var(--text-muted)', textDecoration: (Number(montoReal) < remainingAmount) ? 'line-through' : 'none' }}>Bs. {remainingAmount.toFixed(2)}</strong>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: 600 }}>{isAdvancePayment ? 'Monto a Adelantar:' : 'Monto Real a Cobrar:'}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Bs.</span>
                   <input 
@@ -1573,9 +1627,9 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 </div>
               </div>
               
-              {!isAdvancePayment && Number(montoReal) < grandTotal && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
+              {!isAdvancePayment && Number(montoReal) < remainingAmount && !details.shipment?.sale?.discount_id && !details.shipment?.sale?.giftcard_id && (
                 <div style={{ marginTop: '8px', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, textAlign: 'right' }}>
-                  Descuento manual aplicado: -Bs. {(grandTotal - Number(montoReal)).toFixed(2)}
+                  Descuento manual aplicado: -Bs. {(remainingAmount - Number(montoReal)).toFixed(2)}
                 </div>
               )}
             </div>

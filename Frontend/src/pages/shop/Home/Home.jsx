@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
 import { getActiveShorts } from '../../../api/shop/shorts';
 import { formatCollageItems } from '../utils/collageHelpers';
@@ -57,6 +58,10 @@ const Home = () => {
       <div className="shop-home-hero">
         <h1 className="shop-home-title">LO MÁS DESTACADO</h1>
         <p className="shop-home-subtitle">Descubre las tendencias en moda masculina</p>
+        <Link to="/shop/catalog" className="shop-home-catalog-btn">
+          Ver catálogo completo
+          <span className="shop-home-catalog-btn__arrow">→</span>
+        </Link>
       </div>
       
       <ShopCollageGrid items={images} />

@@ -389,15 +389,15 @@ const ProductDetail = () => {
   return (
     <div className="product-detail-page">
       {/* Breadcrumbs */}
-      <div className="text-[11px] text-gray-500 uppercase tracking-widest mb-6 px-4 md:px-0" style={{ maxWidth: '1200px', margin: '0 auto 24px auto' }}>
-        <Link to="/shop" className="hover:text-black transition-colors" style={{ textDecoration: 'none', color: 'inherit' }}>Inicio</Link>
-        <span className="mx-2">/</span>
-        <Link to={`/shop/catalog?category=${product.category?.id || ''}`} className="hover:text-black transition-colors" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <nav className="product-breadcrumb">
+        <Link to="/shop">Inicio</Link>
+        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
+        <Link to={`/shop/catalog?category=${product.category?.id || ''}`}>
           {product.category?.name || 'Catálogo'}
         </Link>
-        <span className="mx-2">/</span>
-        <span className="text-black font-medium">{product.name}</span>
-      </div>
+        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
+        <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{product.name}</span>
+      </nav>
 
       <div className="product-detail-grid">
         

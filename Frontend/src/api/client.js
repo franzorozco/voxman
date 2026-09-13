@@ -44,4 +44,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor global de respuestas para manejar errores 401
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // 1. Limpiar estado de autenticación (Zustand)
+      // Importamos dinámicamente para evitar ciclos o usamos el local storage directo
+      // Pero mejor cargar el store
+      import("../store/authStore").then((module) => {
+        const logout = module.useAuthStore.getState().logout;
+        if (logout) logout();
+        
+        // 2. Solo redirigir si no estamos ya en /login
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
+      });
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

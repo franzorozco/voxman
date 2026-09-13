@@ -410,7 +410,7 @@ const Catalog = () => {
             const expandedProduct = row.find(p => p.id === expandedProductId);
             return (
               <React.Fragment key={rowIdx}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: expandedProduct ? '0' : '40px' }}>
+                <div className="catalog-products-row" style={{ marginBottom: expandedProduct ? '0' : '24px' }}>
               {row.map((item) => {
                 const imageUrl = item.cover_image || (item.product_images?.length > 0 ? item.product_images[0].url : null);
                 const isExpanded = expandedProductId === item.id;
@@ -557,39 +557,40 @@ const Catalog = () => {
                     </div>
                     
                     {/* INFO Y PRECIO */}
-                    <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '12px' }}>
-                        <h3 
+                    <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0, flex: 1 }}>
+                        <h3
                           onClick={(e) => handleProductClick(e, item)}
-                          style={{ fontSize: '15px', fontWeight: 400, color: 'var(--text-main)', lineHeight: '1.4', margin: 0, cursor: 'pointer' }}
+                          style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-main)', lineHeight: '1.4', margin: 0, cursor: 'pointer' }}
                         >
                           {item.name}
                         </h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {/* PRECIOS — nowrap garantizado por clase CSS */}
+                        <div className="catalog-card-price-row">
                           {item.has_discount ? (
                             <>
-                              <span style={{ fontSize: '17px', fontWeight: 600, color: 'var(--text-main)' }}>
+                              <span className="catalog-card-price">
                                 Bs {parseFloat(item.discounted_price || 0).toFixed(2)}
                               </span>
-                              <span style={{ fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                              <span className="catalog-card-price-original">
                                 Bs {parseFloat(item.base_price || 0).toFixed(2)}
                               </span>
                             </>
                           ) : (
-                            <span style={{ fontSize: '17px', fontWeight: 600, color: 'var(--text-main)' }}>
+                            <span className="catalog-card-price">
                               Bs {parseFloat(item.base_price || 0).toFixed(2)}
                             </span>
                           )}
                         </div>
                         {/* COLOR SWATCHES */}
                         {!item.is_bundle && getAvailableColors(item).length > 0 && (
-                          <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
                             {getAvailableColors(item).slice(0, 5).map((c, idx) => (
-                              <div 
+                              <div
                                 key={idx}
                                 title={c.name}
                                 style={{
-                                  width: '14px', height: '14px', borderRadius: '50%',
+                                  width: '13px', height: '13px', borderRadius: '50%',
                                   border: '1px solid var(--border-color)',
                                   backgroundImage: `url(${getImageUrl(c.image)})`,
                                   backgroundSize: 'cover', backgroundPosition: 'center',
@@ -597,33 +598,27 @@ const Catalog = () => {
                               />
                             ))}
                             {getAvailableColors(item).length > 5 && (
-                              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - 5}</span>
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - 5}</span>
                             )}
                           </div>
                         )}
                       </div>
 
-                      {/* BOTON AÑADIR LATERAL */}
+                      {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
                       {!item.is_bundle && quickAddProductId !== item.id && (
                         <button
-                          onClick={(e) => handleQuickAddClick(e, item.id)}
-                          title="Añadir rápido"
-                          style={{
-                            background: 'var(--bg-input, #f3f4f6)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '50%',
-                            width: '36px', height: '36px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: 'pointer',
-                            color: 'var(--text-main)',
-                            flexShrink: 0,
-                            transition: 'all 0.2s ease',
-                            marginTop: '2px'
+                          className="catalog-card-add-btn"
+                          onClick={(e) => {
+                            const btn = e.currentTarget; // capturar ANTES de que React limpie currentTarget
+                            btn.classList.add('pop');
+                            setTimeout(() => {
+                              if (btn.isConnected) btn.classList.remove('pop'); // solo si sigue en el DOM
+                            }, 400);
+                            handleQuickAddClick(e, item.id);
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--text-main)'; e.currentTarget.style.color = 'white'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-input, #f3f4f6)'; e.currentTarget.style.color = 'var(--text-main)'; }}
+                          title="Añadir rápido"
                         >
-                          <ShoppingBag size={18} />
+                          <ShoppingBag size={17} />
                         </button>
                       )}
                     </div>
@@ -742,7 +737,7 @@ const Catalog = () => {
 
     // Modo Prendas
     return (
-      <div key={animationKey} className="catalog-grid-animate" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+      <div key={animationKey} className="catalog-grid-animate catalog-products-grid">
         {displayItems.length === 0 ? (
           <p style={{ color: 'var(--text-muted)' }}>No se encontraron elementos.</p>
         ) : (
@@ -889,39 +884,40 @@ const Catalog = () => {
                 </div>
 
                 {/* INFO Y PRECIO */}
-                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '12px' }}>
-                    <h3 
+                <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0, flex: 1 }}>
+                    <h3
                       onClick={() => navigate(linkUrl)}
-                      style={{ fontSize: '15px', fontWeight: 400, color: 'var(--text-main)', lineHeight: '1.4', margin: 0, cursor: 'pointer' }}
+                      style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-main)', lineHeight: '1.4', margin: 0, cursor: 'pointer' }}
                     >
                       {item.name}
                     </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {/* PRECIOS — nowrap por clase CSS */}
+                    <div className="catalog-card-price-row">
                       {item.has_discount ? (
                         <>
-                          <span style={{ fontSize: '17px', fontWeight: 600, color: 'var(--text-main)' }}>
+                          <span className="catalog-card-price">
                             Bs {parseFloat(item.discounted_price || 0).toFixed(2)}
                           </span>
-                          <span style={{ fontSize: '14px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                          <span className="catalog-card-price-original">
                             Bs {parseFloat(item.base_price || item.price || 0).toFixed(2)}
                           </span>
                         </>
                       ) : (
-                        <span style={{ fontSize: '17px', fontWeight: 600, color: 'var(--text-main)' }}>
+                        <span className="catalog-card-price">
                           Bs {parseFloat(item.base_price || item.price || 0).toFixed(2)}
                         </span>
                       )}
                     </div>
                     {/* COLOR SWATCHES */}
                     {!item.is_bundle && getAvailableColors(item).length > 0 && (
-                      <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {getAvailableColors(item).slice(0, 5).map((c, idx) => (
-                          <div 
+                          <div
                             key={idx}
                             title={c.name}
                             style={{
-                              width: '14px', height: '14px', borderRadius: '50%',
+                              width: '13px', height: '13px', borderRadius: '50%',
                               border: '1px solid var(--border-color)',
                               backgroundImage: `url(${getImageUrl(c.image)})`,
                               backgroundSize: 'cover', backgroundPosition: 'center',
@@ -929,33 +925,27 @@ const Catalog = () => {
                           />
                         ))}
                         {getAvailableColors(item).length > 5 && (
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - 5}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - 5}</span>
                         )}
                       </div>
                     )}
                   </div>
 
-                  {/* BOTON AÑADIR LATERAL */}
+                  {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
                   {!item.is_bundle && quickAddProductId !== item.id && (
                     <button
-                      onClick={(e) => handleQuickAddClick(e, item.id)}
-                      title="Añadir rápido"
-                      style={{
-                        background: 'var(--bg-input, #f3f4f6)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '50%',
-                        width: '36px', height: '36px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
-                        color: 'var(--text-main)',
-                        flexShrink: 0,
-                        transition: 'all 0.2s ease',
-                        marginTop: '2px'
+                      className="catalog-card-add-btn"
+                      onClick={(e) => {
+                        const btn = e.currentTarget; // capturar ANTES de que React limpie currentTarget
+                        btn.classList.add('pop');
+                        setTimeout(() => {
+                          if (btn.isConnected) btn.classList.remove('pop'); // solo si sigue en el DOM
+                        }, 400);
+                        handleQuickAddClick(e, item.id);
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--text-main)'; e.currentTarget.style.color = 'white'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-input, #f3f4f6)'; e.currentTarget.style.color = 'var(--text-main)'; }}
+                      title="Añadir rápido"
                     >
-                      <ShoppingBag size={18} />
+                      <ShoppingBag size={17} />
                     </button>
                   )}
                 </div>
@@ -970,115 +960,121 @@ const Catalog = () => {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   return (
-    <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8 catalog-container" style={{ animation: 'pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-      {/* Mobile Filter Overlay */}
+    <div className="catalog-container" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px 80px', animation: 'pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      {/* ── OVERLAY FILTROS MÓVIL ── */}
       {isMobileFiltersOpen && (
-        <div className="fixed inset-0 flex z-50 lg:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setIsMobileFiltersOpen(false)} aria-hidden="true" />
-          <div className="relative ml-auto flex h-full w-full max-w-xs flex-col overflow-y-auto bg-white py-4 pb-12 shadow-xl" style={{ animation: 'slideInRight 0.3s ease-out' }}>
-            <div className="flex items-center justify-between px-4">
-              <h2 className="text-lg font-medium text-gray-900">Filtros</h2>
-              <button
-                type="button"
-                className="-mr-2 flex h-10 w-10 items-center justify-center rounded-md bg-white p-2 text-gray-400"
-                onClick={() => setIsMobileFiltersOpen(false)}
-              >
-                <X size={24} />
+        <>
+          <div className="catalog-mobile-overlay-backdrop" onClick={() => setIsMobileFiltersOpen(false)} />
+          <div className="catalog-mobile-filter-panel">
+            <div className="catalog-mobile-filter-header">
+              <h2 className="catalog-mobile-filter-title">Filtros</h2>
+              <button className="catalog-mobile-filter-close" onClick={() => setIsMobileFiltersOpen(false)}>
+                <X size={22} />
               </button>
             </div>
-            {/* Opciones de móvil copiadas del sidebar */}
-            <div className="mt-4 border-t border-gray-200 px-4 py-6">
-              {/* Buscador móvil */}
-              <div style={{ marginBottom: '24px' }}>
-                <input 
-                  type="text" placeholder="Buscar..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <h3 className="font-medium text-gray-900 mb-4">Categorías</h3>
-              <ul className="space-y-4">
-                <li>
-                  <button onClick={() => { setSelectedCategory(null); setIsMobileFiltersOpen(false); }} className={selectedCategory === null ? 'font-bold' : ''}>Todas</button>
-                </li>
-                {categories.filter(c => !c.parent_id).map((parent) => {
-                  const children = categories.filter(c => c.parent_id === parent.id);
-                  return (
-                    <React.Fragment key={parent.id}>
-                      <li>
-                        <button onClick={() => { setSelectedCategory(parent.id); setIsMobileFiltersOpen(false); }} className={selectedCategory === parent.id ? 'font-bold' : ''}>{parent.name}</button>
-                      </li>
-                      {children.map(child => (
-                        <li key={child.id} className="ml-4 mt-2 text-sm text-gray-600">
-                          <button onClick={() => { setSelectedCategory(child.id); setIsMobileFiltersOpen(false); }} className={selectedCategory === child.id ? 'font-bold text-black' : ''}>{child.name}</button>
-                        </li>
-                      ))}
-                    </React.Fragment>
-                  );
-                })}
-              </ul>
-              <h3 className="font-medium text-gray-900 mt-8 mb-4">Precio (Bs)</h3>
-              <div className="flex gap-2">
-                <input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="Min" className="w-1/2 p-2 border rounded" />
-                <input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="Max" className="w-1/2 p-2 border rounded" />
-              </div>
-              <h3 className="font-medium text-gray-900 mt-8 mb-4">Ordenar</h3>
-              <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-full p-2 border rounded">
-                <option value="recomendados">Recomendados</option>
-                <option value="price_asc">Menor a Mayor</option>
-                <option value="price_desc">Mayor a Menor</option>
-              </select>
+
+            {/* Buscador */}
+            <div style={{ marginBottom: '20px' }}>
+              <input
+                type="text" placeholder="Buscar producto..." value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="catalog-filter-input"
+              />
             </div>
+
+            {/* Categorías */}
+            <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-main)', marginBottom: '12px' }}>Categorías</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <li>
+                <button className="catalog-filter-link" style={{ fontWeight: selectedCategory === null ? 700 : 400, color: selectedCategory === null ? 'var(--text-main)' : 'var(--text-muted)' }}
+                  onClick={() => { setSelectedCategory(null); setIsMobileFiltersOpen(false); }}>
+                  Todas
+                </button>
+              </li>
+              {categories.filter(c => !c.parent_id).map((parent) => {
+                const children = categories.filter(c => c.parent_id === parent.id);
+                return (
+                  <React.Fragment key={parent.id}>
+                    <li>
+                      <button className="catalog-filter-link" style={{ fontWeight: selectedCategory === parent.id ? 700 : 500, color: 'var(--text-main)' }}
+                        onClick={() => { setSelectedCategory(parent.id); setIsMobileFiltersOpen(false); }}>
+                        {parent.name}
+                      </button>
+                    </li>
+                    {children.map(child => (
+                      <li key={child.id} style={{ paddingLeft: '14px' }}>
+                        <button className="catalog-filter-link" style={{ fontWeight: selectedCategory === child.id ? 600 : 400, color: selectedCategory === child.id ? 'var(--text-main)' : 'var(--text-muted)' }}
+                          onClick={() => { setSelectedCategory(child.id); setIsMobileFiltersOpen(false); }}>
+                          {child.name}
+                        </button>
+                      </li>
+                    ))}
+                  </React.Fragment>
+                );
+              })}
+            </ul>
+
+            {/* Precio */}
+            <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-main)', marginBottom: '12px' }}>Precio (Bs)</h3>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+              <input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="Min" className="catalog-filter-input" style={{ flex: 1 }} />
+              <span style={{ color: 'var(--text-muted)', alignSelf: 'center' }}>—</span>
+              <input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="Max" className="catalog-filter-input" style={{ flex: 1 }} />
+            </div>
+
+            {/* Ordenar */}
+            <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-main)', marginBottom: '12px' }}>Ordenar</h3>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="catalog-filter-input">
+              <option value="recomendados">Recomendados</option>
+              <option value="price_asc">Menor a Mayor</option>
+              <option value="price_desc">Mayor a Menor</option>
+              <option value="name_asc">Nombre: A - Z</option>
+            </select>
           </div>
-        </div>
+        </>
       )}
 
-      <div className="flex items-center justify-between catalog-header-border pb-6 pt-24 flex-wrap gap-4">
-        <h1 className="text-4xl font-extrabold tracking-tight catalog-title">Catálogo</h1>
+      {/* ── HEADER: Título + Controles ── */}
+      <div className="catalog-header">
+        <h1 className="catalog-title" style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
+          Catálogo
+        </h1>
 
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          {/* Botón Filtros Móvil */}
+        {/* Breadcrumbs — solo visibles en móvil, bajo el título */}
+        <nav className="catalog-header-breadcrumb">
+          <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Inicio</Link>
+          <span className="catalog-breadcrumb-sep">›</span>
+          <span style={{ color: 'var(--text-main)' }}>Catálogo</span>
+          {selectedCategory && (
+            <>
+              <span className="catalog-breadcrumb-sep">›</span>
+              <span style={{ color: 'var(--text-muted)' }}>
+                {categories.find(c => c.id === selectedCategory)?.name || 'Categoría'}
+              </span>
+            </>
+          )}
+        </nav>
+
+        <div className="catalog-controls">
+          {/* Botón Filtros — orden 1 en móvil */}
           <button
             type="button"
-            className="lg:hidden"
+            className="catalog-btn-filters"
             onClick={() => setIsMobileFiltersOpen(true)}
-            style={{ padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '13px', fontWeight: 600 }}
           >
             Filtros
           </button>
-          {viewMode === 'prendas' && (
-            <div style={{ display: 'flex', gap: '16px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, color: 'var(--text-muted)' }}>
-              <button
-                onClick={() => setImageMode('presentacion')}
-                style={{
-                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                  color: imageMode === 'presentacion' ? 'var(--text-main)' : 'var(--text-muted)',
-                  transition: 'color 0.2s ease', outline: 'none'
-                }}
-              >
-                Presentación
-              </button>
-              <span>/</span>
-              <button
-                onClick={() => setImageMode('vivido')}
-                style={{
-                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                  color: imageMode === 'vivido' ? 'var(--text-main)' : 'var(--text-muted)',
-                  transition: 'color 0.2s ease', outline: 'none'
-                }}
-              >
-                Vívido
-              </button>
-            </div>
-          )}
 
-          <div style={{ display: 'flex', gap: '24px', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
+          {/* Vista: Por Prendas / Por Productos — orden 2 en móvil (sube al lado de Filtros) */}
+          <div className="catalog-view-controls">
             <button
               onClick={() => { setViewMode('prendas'); setExpandedProductId(null); }}
               style={{
-                background: 'none', border: 'none', padding: '0 0 4px 0', cursor: 'pointer',
+                background: 'none', border: 'none', padding: '0 0 3px 0', cursor: 'pointer',
                 color: viewMode === 'prendas' ? 'var(--text-main)' : 'var(--text-muted)',
                 borderBottom: viewMode === 'prendas' ? '1px solid var(--text-main)' : '1px solid transparent',
-                transition: 'all 0.2s ease', outline: 'none'
+                transition: 'all 0.2s ease', outline: 'none',
+                fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
               }}
             >
               Por Prendas
@@ -1086,48 +1082,75 @@ const Catalog = () => {
             <button
               onClick={() => setViewMode('producto')}
               style={{
-                background: 'none', border: 'none', padding: '0 0 4px 0', cursor: 'pointer',
+                background: 'none', border: 'none', padding: '0 0 3px 0', cursor: 'pointer',
                 color: viewMode === 'producto' ? 'var(--text-main)' : 'var(--text-muted)',
                 borderBottom: viewMode === 'producto' ? '1px solid var(--text-main)' : '1px solid transparent',
-                transition: 'all 0.2s ease', outline: 'none'
+                transition: 'all 0.2s ease', outline: 'none',
+                fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
               }}
             >
               Por Productos
             </button>
           </div>
+
+          {/* Modo imagen: Presentación / Vívido — orden 3 en móvil (baja a su propia fila) */}
+          {viewMode === 'prendas' && (
+            <div className="catalog-image-controls">
+              <button
+                onClick={() => setImageMode('presentacion')}
+                style={{
+                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                  color: imageMode === 'presentacion' ? 'var(--text-main)' : 'var(--text-muted)',
+                  transition: 'color 0.2s ease', outline: 'none', fontWeight: 'inherit',
+                  fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
+                }}
+              >
+                Presentación
+              </button>
+              <span style={{ color: 'var(--border-color)' }}>/</span>
+              <button
+                onClick={() => setImageMode('vivido')}
+                style={{
+                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                  color: imageMode === 'vivido' ? 'var(--text-main)' : 'var(--text-muted)',
+                  transition: 'color 0.2s ease', outline: 'none', fontWeight: 'inherit',
+                  fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
+                }}
+              >
+                Vívido
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      <section aria-labelledby="products-heading" className="pb-24 pt-6">
+      <section aria-labelledby="products-heading" style={{ paddingBottom: '60px', paddingTop: '24px' }}>
         <h2 id="products-heading" className="sr-only">Productos</h2>
-        <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-4 relative items-start">
-          <form className="hidden lg:block sticky top-28 self-start max-h-[calc(100vh-120px)] overflow-y-auto pr-4 custom-scrollbar">
+        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '40px', alignItems: 'start', position: 'relative' }}>
+
+          {/* ── SIDEBAR FILTROS (solo desktop) ── */}
+          <form style={{ display: 'block' }} className="catalog-sidebar">
             <h3 className="sr-only">Filtros</h3>
-            
-            {/* Buscador minimalista */}
+
+            {/* Buscador */}
             <div style={{ marginBottom: '24px' }}>
-              <input 
-                type="text" 
-                placeholder="Buscar producto..." 
+              <input
+                type="text"
+                placeholder="Buscar producto..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  padding: '8px 0', 
-                  border: 'none',
-                  borderBottom: '1px solid var(--border-color)', 
-                  backgroundColor: 'transparent', 
-                  color: 'var(--text-main)', 
-                  fontSize: '14px', 
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
+                style={{
+                  width: '100%', padding: '8px 0', border: 'none',
+                  borderBottom: '1px solid var(--border-color)',
+                  backgroundColor: 'transparent', color: 'var(--text-main)',
+                  fontSize: '14px', outline: 'none', transition: 'border-color 0.2s'
                 }}
                 onFocus={(e) => e.target.style.borderBottom = '1px solid var(--text-main)'}
                 onBlur={(e) => e.target.style.borderBottom = '1px solid var(--border-color)'}
               />
             </div>
 
-            {/* BREADCRUMBS */}
+            {/* Breadcrumbs */}
             <nav style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '32px' }}>
               <Link to="/" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Inicio</Link>
               <span style={{ margin: '0 8px' }}>&gt;</span>
@@ -1145,14 +1168,11 @@ const Catalog = () => {
             {/* Categorías */}
             <div style={{ marginBottom: '32px' }}>
               <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>Categorías</h4>
-              <ul role="list" className="space-y-3 catalog-filter-list pb-6 text-sm font-medium border-b border-gray-200">
+              <ul role="list" className="catalog-filter-list" style={{ listStyle: 'none', padding: 0, margin: 0, paddingBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <li>
-                  <button
-                    type="button"
+                  <button type="button" className="catalog-filter-link"
                     onClick={() => { setSelectedCategory(null); setExpandedProductId(null); }}
-                    className={`catalog-filter-link ${selectedCategory === null ? 'active' : ''}`}
-                    style={{ fontWeight: selectedCategory === null ? 700 : 400, color: selectedCategory === null ? 'var(--text-main)' : 'var(--text-muted)', fontSize: '13px' }}
-                  >
+                    style={{ fontWeight: selectedCategory === null ? 700 : 400, color: selectedCategory === null ? 'var(--text-main)' : 'var(--text-muted)' }}>
                     Todas las Categorías
                   </button>
                 </li>
@@ -1160,24 +1180,18 @@ const Catalog = () => {
                   const children = categories.filter(c => c.parent_id === parent.id);
                   return (
                     <React.Fragment key={parent.id}>
-                      <li style={{ marginTop: '12px' }}>
-                        <button
-                          type="button"
+                      <li>
+                        <button type="button" className="catalog-filter-link"
                           onClick={() => { setSelectedCategory(parent.id); setExpandedProductId(null); }}
-                          className={`catalog-filter-link ${selectedCategory === parent.id ? 'active' : ''}`}
-                          style={{ fontWeight: selectedCategory === parent.id ? 700 : 500, color: selectedCategory === parent.id ? 'var(--text-main)' : 'var(--text-main)', fontSize: '13px' }}
-                        >
+                          style={{ fontWeight: selectedCategory === parent.id ? 700 : 500, color: 'var(--text-main)' }}>
                           {parent.name}
                         </button>
                       </li>
                       {children.map(child => (
-                        <li key={child.id} style={{ paddingLeft: '12px', marginTop: '6px' }}>
-                          <button
-                            type="button"
+                        <li key={child.id} style={{ paddingLeft: '12px' }}>
+                          <button type="button" className="catalog-filter-link"
                             onClick={() => { setSelectedCategory(child.id); setExpandedProductId(null); }}
-                            className={`catalog-filter-link ${selectedCategory === child.id ? 'active' : ''}`}
-                            style={{ fontWeight: selectedCategory === child.id ? 600 : 400, color: selectedCategory === child.id ? 'var(--text-main)' : 'var(--text-muted)', fontSize: '13px' }}
-                          >
+                            style={{ fontWeight: selectedCategory === child.id ? 600 : 400, color: selectedCategory === child.id ? 'var(--text-main)' : 'var(--text-muted)' }}>
                             {child.name}
                           </button>
                         </li>
@@ -1188,29 +1202,29 @@ const Catalog = () => {
               </ul>
             </div>
 
-            {/* Filtro Precio minimalista */}
+            {/* Precio */}
             <div style={{ marginBottom: '32px' }}>
               <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>Precio (Bs)</h4>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="Min" 
-                  style={{ width: '45%', padding: '6px 0', border: 'none', borderBottom: '1px solid var(--border-color)', backgroundColor: 'transparent', fontSize: '13px', outline: 'none' }}
+                <input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="Min"
+                  style={{ width: '45%', padding: '6px 0', border: 'none', borderBottom: '1px solid var(--border-color)', backgroundColor: 'transparent', fontSize: '13px', outline: 'none', color: 'var(--text-main)' }}
                   onFocus={(e) => e.target.style.borderBottom = '1px solid var(--text-main)'}
                   onBlur={(e) => e.target.style.borderBottom = '1px solid var(--border-color)'}
                 />
-                <span style={{ color: 'var(--text-muted)' }}>-</span>
-                <input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="Max" 
-                  style={{ width: '45%', padding: '6px 0', border: 'none', borderBottom: '1px solid var(--border-color)', backgroundColor: 'transparent', fontSize: '13px', outline: 'none' }}
+                <span style={{ color: 'var(--text-muted)' }}>—</span>
+                <input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="Max"
+                  style={{ width: '45%', padding: '6px 0', border: 'none', borderBottom: '1px solid var(--border-color)', backgroundColor: 'transparent', fontSize: '13px', outline: 'none', color: 'var(--text-main)' }}
                   onFocus={(e) => e.target.style.borderBottom = '1px solid var(--text-main)'}
                   onBlur={(e) => e.target.style.borderBottom = '1px solid var(--border-color)'}
                 />
               </div>
             </div>
 
-            {/* Ordenar por (CustomSelect) */}
+            {/* Ordenar por */}
             <div style={{ marginBottom: '24px' }}>
               <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>Ordenar por</h4>
-              <CustomSelect 
-                value={sortBy} 
+              <CustomSelect
+                value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
                 style={{ backgroundColor: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', borderRadius: '0', padding: '0' }}
               >
@@ -1222,21 +1236,19 @@ const Catalog = () => {
             </div>
           </form>
 
-          <div className="lg:col-span-3">
+          {/* ── ÁREA DE PRODUCTOS ── */}
+          <div>
             {isLoading ? (
-              <p style={{ color: 'var(--text-muted)' }}>Cargando catálogo...</p>
+              <p style={{ color: 'var(--text-muted)', paddingTop: '40px' }}>Cargando catálogo...</p>
             ) : (
               <>
                 {renderProductGrid()}
                 {visibleCount < processedItems.length && (
-                  <div style={{ textAlign: 'center', marginTop: '40px' }}>
-                    <button 
-                      onClick={() => setVisibleCount(prev => prev + 12)}
-                      style={{ padding: '12px 32px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: 'var(--text-main)', transition: 'all 0.2s' }}
-                    >
+                  <div className="catalog-load-more-wrap">
+                    <button className="catalog-load-more-btn" onClick={() => setVisibleCount(prev => prev + 12)}>
                       Cargar Más
                     </button>
-                    <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                    <p className="catalog-load-more-count">
                       Mostrando {visibleCount} de {processedItems.length} productos
                     </p>
                   </div>

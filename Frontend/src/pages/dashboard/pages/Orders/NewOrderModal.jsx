@@ -140,11 +140,13 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       if (sale && sale.sale_details && cartItems.length === 0) {
         const activeDetails = sale.sale_details.filter(d => !d.deleted_at);
         const items = activeDetails.map(detail => {
-          const reservation = sale.stock_reservations?.find(res => res.variant_id === detail.variant_id && res.status !== 'released');
+          const allReservations = sale.stock_reservations || sale.stockReservations || [];
+          const variantReservations = allReservations.filter(res => res.variant_id === detail.variant_id && res.status !== 'released');
+          const reservation = variantReservations[0];
           
           let autoBranchId = "";
-          if (reservation) {
-            autoBranchId = reservation.branch_id;
+          if (reservation && (reservation.branch_id || reservation.branch?.id)) {
+            autoBranchId = reservation.branch_id || reservation.branch?.id;
           } else if (detail.product_variant?.inventories?.length > 0) {
             const sortedInvs = [...detail.product_variant.inventories].sort((a, b) => 
               parseInt(b.stock || b.quantity || 0, 10) - parseInt(a.stock || a.quantity || 0, 10)
@@ -152,13 +154,26 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
             autoBranchId = sortedInvs[0].branch_id || sortedInvs[0].branch?.id || "";
           }
 
+          // Deep clone the variant so we can inject reserved stock back into it
+          const variantClone = JSON.parse(JSON.stringify(detail.product_variant));
+          if (variantClone.inventories) {
+            for (const res of variantReservations) {
+              const resBranchId = res.branch_id || res.branch?.id;
+              const invIndex = variantClone.inventories.findIndex(i => (i.branch_id || i.branch?.id) === resBranchId);
+              if (invIndex !== -1) {
+                const currentStock = parseInt(variantClone.inventories[invIndex].stock || variantClone.inventories[invIndex].quantity || 0, 10);
+                variantClone.inventories[invIndex].stock = currentStock + Number(res.quantity);
+              }
+            }
+          }
+
           return {
             _id: Date.now().toString() + Math.random(),
-            variant: detail.product_variant,
-            product: detail.product_variant?.product,
-            price: Number(detail.unit_price) || detail.product_variant?.price || 0,
+            variant: variantClone,
+            product: variantClone?.product,
+            price: Number(detail.unit_price) || variantClone?.price || 0,
             quantity: detail.quantity,
-            maxStock: detail.product_variant?.inventories?.reduce((sum, inv) => sum + parseInt(inv.stock || inv.quantity || 0, 10), 0) || 0,
+            maxStock: variantClone?.inventories?.reduce((sum, inv) => sum + parseInt(inv.stock || inv.quantity || 0, 10), 0) || 0,
             branch_id: autoBranchId
           };
         });
@@ -1527,10 +1542,28 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <button 
-                      className="action-btn primary" 
-                      style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: !isValidToContinue ? 0.5 : 1, cursor: !isValidToContinue ? 'not-allowed' : 'pointer', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)' }}
+                      style={{ 
+                        boxSizing: 'border-box', 
+                        width: '100%', 
+                        padding: '14px', 
+                        borderRadius: '10px', 
+                        fontSize: '15px', 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        gap: '8px', 
+                        opacity: !isValidToContinue ? 0.5 : 1, 
+                        cursor: !isValidToContinue ? 'not-allowed' : 'pointer',
+                        background: 'var(--color-primary)',
+                        color: 'var(--color-primary-text)',
+                        border: '1px solid transparent',
+                        fontWeight: 600,
+                        transition: 'background 0.2s ease, opacity 0.2s ease'
+                      }}
                       onClick={handleNextStep}
                       disabled={!isValidToContinue}
+                      onMouseOver={(e) => { if (isValidToContinue) e.currentTarget.style.background = 'var(--color-primary-hover)'; }}
+                      onMouseOut={(e) => { if (isValidToContinue) e.currentTarget.style.background = 'var(--color-primary)'; }}
                     >
                       Continuar <ArrowRight size={18} />
                     </button>
@@ -1555,9 +1588,28 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                     <button 
                       type="submit"
                       form="delivery-form"
-                      className="action-btn success" 
-                      style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: 'none', background: 'var(--color-success)', color: 'white', cursor: 'pointer', opacity: loading ? 0.7 : 1, fontWeight: 600, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+                      style={{ 
+                        boxSizing: 'border-box', 
+                        width: '100%', 
+                        padding: '14px', 
+                        borderRadius: '10px', 
+                        fontSize: '15px', 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        gap: '8px', 
+                        cursor: loading ? 'not-allowed' : 'pointer', 
+                        opacity: loading ? 0.7 : 1, 
+                        fontWeight: 600, 
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+                        background: 'var(--color-success)',
+                        color: 'white',
+                        border: '1px solid transparent',
+                        transition: 'background 0.2s ease, opacity 0.2s ease'
+                      }}
                       disabled={loading}
+                      onMouseOver={(e) => { if (!loading) e.currentTarget.style.background = '#059669'; }}
+                      onMouseOut={(e) => { if (!loading) e.currentTarget.style.background = 'var(--color-success)'; }}
                     >
                       {loading ? "Procesando..." : (mode === 'complete' ? "Completar" : mode === 'edit' ? "Guardar Cambios" : "Crear Entrega")}
                     </button>

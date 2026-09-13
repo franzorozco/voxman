@@ -753,9 +753,9 @@ class OrderNetworkController extends Controller
         $externalReserveStates = ['prepared', 'packaged', 'shipped', 'completed'];
         $pickupReserveStates = ['reserved', 'preparing', 'ready_for_pickup', 'completed'];
 
-        if ($deliveryType === 'store_pickup' && in_array($status, $pickupReserveStates)) {
+        if (in_array($deliveryType, ['pickup', 'store_pickup']) && in_array($status, $pickupReserveStates)) {
             $shouldReserve = true;
-        } elseif ($deliveryType === 'agency_shipping' && in_array($status, $externalReserveStates)) {
+        } elseif (in_array($deliveryType, ['external', 'delivery_national', 'agency_shipping']) && in_array($status, $externalReserveStates)) {
             $shouldReserve = true;
         } elseif (in_array($deliveryType, ['home_delivery', 'scheduled_point']) && in_array($status, $localReserveStates)) {
             $shouldReserve = true;
@@ -1352,39 +1352,61 @@ class OrderNetworkController extends Controller
                 
                 $subtotal += $lineTotal;
 
-                // Deduct new stock for reservation
-                $inventory = \App\Models\Inventory\Inventory::where('branch_id', $item['branch_id'])
-                    ->where('variant_id', $item['variant_id'])
-                    ->lockForUpdate()
-                    ->first();
+                // Check if we should reserve stock based on delivery type and status
+                $deliveryType = $schedule->shipment->delivery_type ?? 'scheduled_point';
+                $shouldReserve = false;
+                
+                $localReserveStates = ['assigned', 'on_the_way', 'at_the_meeting_point', 'completed'];
+                $externalReserveStates = ['prepared', 'packaged', 'shipped', 'completed'];
+                $pickupReserveStates = ['reserved', 'preparing', 'ready_for_pickup', 'completed'];
 
-                if (!$inventory || $inventory->stock < $item['quantity']) {
-                    throw new \Exception("Stock insuficiente para el producto.");
+                if (in_array($deliveryType, ['pickup', 'store_pickup']) && in_array($schedule->status, $pickupReserveStates)) {
+                    $shouldReserve = true;
+                } elseif (in_array($deliveryType, ['external', 'delivery_national', 'agency_shipping']) && in_array($schedule->status, $externalReserveStates)) {
+                    $shouldReserve = true;
+                } elseif (in_array($deliveryType, ['home_delivery', 'scheduled_point']) && in_array($schedule->status, $localReserveStates)) {
+                    $shouldReserve = true;
+                }
+                
+                if (in_array($schedule->status, ['completed', 'shipped'])) {
+                    $shouldReserve = true;
                 }
 
-                $stockBefore = $inventory->stock;
-                $inventory->stock -= $item['quantity'];
-                $inventory->save();
+                if ($shouldReserve) {
+                    // Deduct new stock for reservation
+                    $inventory = \App\Models\Inventory\Inventory::where('branch_id', $item['branch_id'])
+                        ->where('variant_id', $item['variant_id'])
+                        ->lockForUpdate()
+                        ->first();
 
-                InventoryMovement::create([
-                    'variant_id' => $item['variant_id'],
-                    'branch_id' => $item['branch_id'],
-                    'movement_type' => 'sale',
-                    'quantity' => (int) $item['quantity'],
-                    'stock_before' => $stockBefore,
-                    'stock_after' => $inventory->stock,
-                    'reference_type' => 'delivery_schedule',
-                    'reference_id' => $schedule->id,
-                    'created_by' => auth()->id() ?? null,
-                ]);
+                    if (!$inventory || $inventory->stock < $item['quantity']) {
+                        throw new \Exception("Stock insuficiente para el producto.");
+                    }
 
-                \App\Models\Inventory\StockReservation::create([
-                    'variant_id' => $item['variant_id'],
-                    'branch_id' => $item['branch_id'],
-                    'sale_id' => $sale->id,
-                    'quantity' => $item['quantity'],
-                    'status' => 'reserved'
-                ]);
+                    $stockBefore = $inventory->stock;
+                    $inventory->stock -= $item['quantity'];
+                    $inventory->save();
+
+                    InventoryMovement::create([
+                        'variant_id' => $item['variant_id'],
+                        'branch_id' => $item['branch_id'],
+                        'movement_type' => 'sale',
+                        'quantity' => (int) $item['quantity'],
+                        'stock_before' => $stockBefore,
+                        'stock_after' => $inventory->stock,
+                        'reference_type' => 'delivery_schedule',
+                        'reference_id' => $schedule->id,
+                        'created_by' => auth()->id() ?? null,
+                    ]);
+
+                    \App\Models\Inventory\StockReservation::create([
+                        'variant_id' => $item['variant_id'],
+                        'branch_id' => $item['branch_id'],
+                        'sale_id' => $sale->id,
+                        'quantity' => $item['quantity'],
+                        'status' => 'reserved'
+                    ]);
+                }
             }
 
             $shippingCost = (float)$request->input('shipping_cost', 0);

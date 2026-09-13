@@ -82,9 +82,6 @@ class Sale extends BaseSale
 
 	public function getDynamicGlobalDiscountAttribute()
 	{
-		if ($this->relationLoaded('sale_applied_discounts')) {
-			return $this->sale_applied_discounts->whereNull('sale_detail_id')->sum('discount_amount');
-		}
 		return (float) $this->discount_total;
 	}
 
