@@ -10,7 +10,7 @@ use App\Models\Inventory\StockReservation;
 use Illuminate\Support\Facades\DB;
 use App\Services\Finance\DiscountValidationService;
 
-class OrderPricingService
+class SalePricingService
 {
     protected $discountService;
 

@@ -1495,7 +1495,7 @@ class OrderNetworkController extends Controller
     /**
      * Add an item to the delivery.
      */
-    public function addItem(Request $request, $id, \App\Services\Finance\OrderPricingService $pricingService)
+    public function addItem(Request $request, $id, \App\Services\Finance\SalePricingService $pricingService)
     {
         $request->validate([
             'variant_id' => 'required|uuid'
@@ -1549,7 +1549,7 @@ class OrderNetworkController extends Controller
      /**
      * Remove an item from the delivery and restore stock.
      */
-    public function removeItem(Request $request, $id, $reservationId, \App\Services\Finance\OrderPricingService $pricingService)
+    public function removeItem(Request $request, $id, $reservationId, \App\Services\Finance\SalePricingService $pricingService)
     {
         try {
             DB::beginTransaction();
@@ -1776,7 +1776,7 @@ class OrderNetworkController extends Controller
         return response()->json(['message' => 'SesiÃƒÂ³n de cobro compartida exitosamente.']);
     }
 
-    public function applyDiscount(Request $request, $id, \App\Services\Finance\OrderPricingService $pricingService)
+    public function applyDiscount(Request $request, $id, \App\Services\Finance\SalePricingService $pricingService)
     {
         $request->validate([
             'code' => 'required|string'
@@ -1809,7 +1809,7 @@ class OrderNetworkController extends Controller
         }
     }
 
-    public function removeDiscount($id, \App\Services\Finance\OrderPricingService $pricingService)
+    public function removeDiscount($id, \App\Services\Finance\SalePricingService $pricingService)
     {
         try {
             $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);

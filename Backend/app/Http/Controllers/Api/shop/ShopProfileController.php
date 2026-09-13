@@ -310,55 +310,7 @@ class ShopProfileController extends Controller
 
         $sales = $query->get();
 
-        $formattedSales = $sales->map(function($sale) {
-            return [
-                'id' => $sale->id,
-                'invoice_number' => $sale->invoice_number,
-                'created_at' => $sale->created_at,
-                'status' => $sale->status,
-                'source' => $sale->source,
-                'dynamic_total' => $sale->dynamic_total,
-                'dynamic_subtotal' => $sale->dynamic_subtotal,
-                'dynamic_global_discount' => $sale->dynamic_global_discount,
-                'items_count' => $sale->sale_details->count(),
-                'items' => $sale->sale_details->map(function($detail) {
-                    return [
-                        'product_name' => optional(optional($detail->product_variant)->product)->name,
-                        'size' => optional(optional($detail->product_variant)->size)->name,
-                        'fit' => optional(optional($detail->product_variant)->fit)->name,
-                        'sku' => optional($detail->product_variant)->sku,
-                        'quantity' => $detail->quantity,
-                        'unit_price' => $detail->dynamic_unit_price,
-                        'final_price' => $detail->dynamic_subtotal,
-                    ];
-                }),
-                'shipments' => $sale->shipments->map(function($shipment) {
-                    return [
-                        'id' => $shipment->id,
-                        'status' => $shipment->status,
-                        'delivery_type' => $shipment->delivery_type,
-                        'tracking_code' => $shipment->tracking_code,
-                        'shipped_at' => $shipment->shipped_at,
-                        'delivered_at' => $shipment->delivered_at,
-                        'shipping_cost' => $shipment->shipping_cost,
-                        'shipping_payment_type' => $shipment->shipping_payment_type,
-                        'agency_dispatch_cost' => $shipment->agency_dispatch_cost,
-                        'delivery_schedule' => $shipment->delivery_schedule ? [
-                            'id' => $shipment->delivery_schedule->id,
-                            'status' => $shipment->delivery_schedule->status,
-                            'scheduled_date' => $shipment->delivery_schedule->scheduled_date,
-                        ] : null,
-                    ];
-                }),
-                'payments' => $sale->payments->map(function($payment) {
-                    return [
-                        'amount' => $payment->amount,
-                        'method' => $payment->method,
-                        'created_at' => $payment->created_at,
-                    ];
-                }),
-            ];
-        });
+        $formattedSales = \App\Http\Resources\SaleResource::collection($sales);
 
         return response()->json($formattedSales);
     }

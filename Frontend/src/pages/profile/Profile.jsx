@@ -1110,27 +1110,24 @@ export default function Profile() {
                       const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric" }) : "";
                       const trackingId = schedule?.id || mainShipment?.id;
 
-                      // Same calculation as /dashboard/sales
-                      const computedShippingCost = mainShipment?.shipping_payment_type !== 'collect' ? Number(mainShipment?.shipping_cost || 0) : 0;
-                      const computedAgencyCost = Number(mainShipment?.agency_dispatch_cost || 0);
-                      const grandTotal = Number(order.dynamic_total || 0) + computedShippingCost + computedAgencyCost;
-                      const totalPaid = order.payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-                      const displayTotal = order.status === 'paid' ? grandTotal : (grandTotal - totalPaid);
+                      const grandTotal = order.financials?.grand_total || 0;
+                      const totalPaid = order.financials?.total_paid || 0;
+                      const displayTotal = order.status === 'paid' ? grandTotal : order.financials?.balance_due || 0;
 
                       return (
                         <div key={order.id} className="profile-order-card">
                           <div className="order-meta-group">
                             <h4>Pedido {order.invoice_number ? `#${order.invoice_number}` : `#${order.id.slice(0, 8).toUpperCase()}`}</h4>
-                            <p>Realizado el {orderDate} • {order.items_count} artículo{order.items_count !== 1 ? "s" : ""}</p>
+                            <p>Realizado el {orderDate} • {order.financials?.items_count || 0} artículo{order.financials?.items_count !== 1 ? "s" : ""}</p>
                           </div>
                           <span className={`order-status-badge ${statusInfo.cssClass}`} style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color, borderColor: statusInfo.color }}>
                             {statusInfo.label}
                           </span>
                           <div>
                             <span style={{ fontWeight: 700, fontSize: "15px" }}>Bs. {Number(displayTotal).toFixed(2)}</span>
-                            {Number(order.dynamic_global_discount || 0) > 0 && (
+                            {Number(order.financials?.global_discount || 0) > 0 && (
                               <div style={{ fontSize: "11px", color: "var(--color-danger, #ef4444)" }}>
-                                Desc: -Bs. {Number(order.dynamic_global_discount).toFixed(2)}
+                                Desc: -Bs. {Number(order.financials.global_discount).toFixed(2)}
                               </div>
                             )}
                           </div>
