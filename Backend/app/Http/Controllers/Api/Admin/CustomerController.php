@@ -101,16 +101,23 @@ class CustomerController extends Controller
             'posProfile',
             'addresses',
             'sales.sale_details.product_variant.product',
+            'sales.sale_details.product_variant.size',
+            'sales.sale_details.product_variant.fit',
             'sales.branch',
             'sales.user.profile',
             'sales.payments.payment_method',
+            'sales.shipments',
+            'sales.sale_applied_discounts',
             'wishlists',
             'discounts',
             'received_giftcards.transactions',
             'purchased_giftcards.transactions'
         ])->findOrFail($id);
 
-        return response()->json($customer);
+        $customerArray = $customer->toArray();
+        $customerArray['sales'] = \App\Http\Resources\SaleResource::collection($customer->sales);
+
+        return response()->json($customerArray);
     }
 
     public function store(Request $request)

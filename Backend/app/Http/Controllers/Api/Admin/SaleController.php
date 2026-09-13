@@ -90,7 +90,7 @@ class SaleController extends Controller
         $paginated = $query->paginate($perPage);
         
         return response()->json([
-            'data' => $paginated->items(),
+            'data' => \App\Http\Resources\SaleResource::collection($paginated->getCollection()),
             'meta' => [
                 'current_page' => $paginated->currentPage(),
                 'last_page' => $paginated->lastPage(),
@@ -139,7 +139,7 @@ class SaleController extends Controller
             }
         }
 
-        return response()->json($sale);
+        return response()->json(new \App\Http\Resources\SaleResource($sale));
     }
 
     public function update(Request $request, $id)
@@ -230,7 +230,7 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return response()->json($sale);
+            return response()->json(new \App\Http\Resources\SaleResource($sale));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);

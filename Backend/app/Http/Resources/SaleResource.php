@@ -37,6 +37,13 @@ class SaleResource extends JsonResource
             'customer_id' => $this->customer_id,
             'branch_id' => $this->branch_id,
             
+            // --- BACKWARD COMPATIBILITY KEYS (To prevent breaking old frontend components) ---
+            'dynamic_total' => $saleTotal,
+            'dynamic_subtotal' => (float) $this->dynamic_subtotal,
+            'dynamic_global_discount' => (float) $this->dynamic_global_discount,
+            'total' => $saleTotal,
+            'subtotal' => (float) $this->dynamic_subtotal,
+            
             // Financial calculations (Standardized for all modules)
             'financials' => [
                 'items_count' => $this->sale_details ? $this->sale_details->count() : 0,
@@ -50,8 +57,20 @@ class SaleResource extends JsonResource
                 'is_fully_paid' => $isFullyPaid,
             ],
             
-            // Relationships
+            // Relationships (New Standard)
             'items' => SaleDetailResource::collection($this->whenLoaded('sale_details')),
+            
+            // --- BACKWARD COMPATIBILITY RELATIONSHIPS ---
+            'sale_details' => $this->whenLoaded('sale_details'),
+            'customer' => $this->whenLoaded('customer'),
+            'user' => $this->whenLoaded('user'),
+            'branch' => $this->whenLoaded('branch'),
+            'giftcard_transactions' => $this->whenLoaded('giftcard_transactions'),
+            'guest' => $this->whenLoaded('guest'),
+            'stockReservations' => $this->whenLoaded('stockReservations'),
+            'sale_applied_discounts' => $this->whenLoaded('sale_applied_discounts'),
+            'discount' => $this->whenLoaded('discount'),
+            // ---------------------------------------------
             
             'shipments' => $this->whenLoaded('shipments', function () {
                 return $this->shipments->map(function($shipment) {
