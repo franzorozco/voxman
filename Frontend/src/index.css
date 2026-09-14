@@ -139,5 +139,5 @@ select option {
 }
 
 /* Fix global horizontal scroll */
-html, body, #root { overflow-x: hidden; max-width: 100%; box-sizing: border-box; }
+html, body, #root { overflow-x: clip; max-width: 100%; box-sizing: border-box; }
 *, *::before, *::after { box-sizing: inherit; }

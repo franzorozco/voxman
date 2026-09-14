@@ -5,6 +5,8 @@ import { getSystemSettings, updateSystemSetting } from "../../../../api/admin/sy
 import { getVariantImages, getCategories, uploadCategoryImage } from "../../../../api/admin/homeConfig";
 import { getImageUrl } from "../../../../utils/imageUtils";
 import { useThemeStore } from "../../../../store/themeStore";
+import IconPickerModal from "./IconPickerModal";
+import * as Icons from "lucide-react";
 
 const TABS = [
   { id: "hero",       label: "Hero",        icon: <Image size={15} /> },
@@ -52,6 +54,8 @@ export default function HomeConfig() {
   
   const [dragOverHeroIdx, setDragOverHeroIdx] = useState(null);
   const [dragOverCatIdx, setDragOverCatIdx] = useState(null);
+
+  const [editingIconIndex, setEditingIconIndex] = useState(null);
 
   /* heroImages = array parsed from JSON setting */
   const heroImages = (() => {
@@ -867,19 +871,41 @@ export default function HomeConfig() {
               </button>
             </div>
             
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Imagen de Fondo (Opcional)</span>
+              <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0 }}>URL de la imagen. Se mostrará con un degradado y efecto fijo (parallax).</p>
+              <input
+                type="text"
+                value={settings.home_value_props_bg || ""}
+                onChange={(e) => setSetting("home_value_props_bg", e.target.value)}
+                placeholder="https://ejemplo.com/imagen.jpg"
+                style={{ padding: "10px", borderRadius: 8, fontSize: 13, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)" }}
+              />
+            </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {valueProps.map((prop, idx) => (
                 <div key={idx} style={{ display: "flex", gap: 12, padding: 16, background: "var(--bg-overlay)", border: "1px solid var(--border-color)", borderRadius: 8, position: "relative" }}>
                   
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 140 }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Ícono (Lucide)</span>
-                    <input
-                      type="text"
-                      value={prop.icon || ""}
-                      onChange={(e) => updateValueProp(idx, 'icon', e.target.value)}
-                      placeholder="Ej: Truck"
-                      style={{ padding: "8px", borderRadius: 6, fontSize: 13, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)" }}
-                    />
+                    <button
+                      onClick={() => setEditingIconIndex(idx)}
+                      style={{ 
+                        display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", 
+                        borderRadius: 6, fontSize: 13, background: "var(--bg-input)", 
+                        border: "1px solid var(--border-color)", color: "var(--text-main)",
+                        cursor: "pointer", justifyContent: "flex-start"
+                      }}
+                    >
+                      {(() => {
+                        const IconCmp = Icons[prop.icon];
+                        return IconCmp ? <IconCmp size={16} /> : <Icons.HelpCircle size={16} />;
+                      })()}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {prop.icon || "Seleccionar..."}
+                      </span>
+                    </button>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
@@ -1004,6 +1030,12 @@ export default function HomeConfig() {
           </div>
         </div>
       )}
+      
+      <IconPickerModal
+        isOpen={editingIconIndex !== null}
+        onClose={() => setEditingIconIndex(null)}
+        onSelect={(icon) => updateValueProp(editingIconIndex, 'icon', icon)}
+      />
     </div>
   );
 }

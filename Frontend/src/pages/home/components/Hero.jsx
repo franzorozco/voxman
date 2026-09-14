@@ -135,7 +135,7 @@ export default function Hero({ title, subtitle }) {
         <p>{subtitle}</p>
 
         <div className="hero-buttons">
-          <Link to="/catalog" className="btn primary">
+          <Link to="/shop/catalog" className="btn primary">
             Explorar tienda
           </Link>
           <Link to="/register" className="btn secondary">
@@ -146,4 +146,4 @@ export default function Hero({ title, subtitle }) {
 
     </section>
   );
-}
+}
