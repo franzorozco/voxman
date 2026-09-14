@@ -43,6 +43,21 @@ class ShopProductController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
+        // Ordenamiento dinámico para carruseles o secciones
+        if ($request->has('list_type')) {
+            $type = $request->list_type;
+            if ($type === 'newest') {
+                $query->orderBy('created_at', 'desc');
+            } elseif ($type === 'trending') {
+                $query->orderBy('views', 'desc'); // assuming views represents popularity/best sellers
+            } elseif ($type === 'random') {
+                $query->inRandomOrder();
+            }
+        } else {
+            // Default sort if needed
+            $query->orderBy('created_at', 'desc');
+        }
+
         $paginator = $query->paginate($request->get('per_page', 24));
 
         // Get applicable discounts using DiscountValidationService

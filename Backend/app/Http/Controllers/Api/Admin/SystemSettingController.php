@@ -22,7 +22,7 @@ class SystemSettingController extends Controller
 
         if (!$setting) {
             $cat = str_starts_with($key, 'home_') ? 'home_config' : 'General';
-            $type = str_contains($key, 'images') || str_contains($key, 'categories') ? 'json' : 'string';
+            $type = str_contains($key, 'images') || str_contains($key, 'categories') || str_contains($key, 'props') ? 'json' : 'string';
             
             $setting = SystemSetting::create([
                 'key' => $key,

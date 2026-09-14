@@ -9,11 +9,15 @@ import { useThemeStore } from "../../../../store/themeStore";
 const TABS = [
   { id: "hero",       label: "Hero",        icon: <Image size={15} /> },
   { id: "categories", label: "Categorías",  icon: <Grid size={15} /> },
+  { id: "carousel",   label: "Carrusel",    icon: <LayoutDashboard size={15} /> },
+  { id: "value_props",label: "Beneficios",  icon: <LayoutDashboard size={15} /> },
   { id: "sections",   label: "Secciones",   icon: <LayoutDashboard size={15} /> },
 ];
 
 const SECTION_KEYS = [
   { key: "home_show_hero",       label: "Hero (banner principal)",     desc: "La seccion con las imagenes y el titulo de bienvenida." },
+  { key: "home_show_value_props",label: "Barra de Beneficios",        desc: "Muestra la barra con iconos informativos debajo del hero." },
+  { key: "home_show_carousel",   label: "Carrusel de Productos",        desc: "Carrusel de Novedades, Más Vendidos, etc." },
   { key: "home_show_featured",   label: "Productos Destacados",         desc: "Grilla de productos marcados como destacados." },
   { key: "home_show_categories", label: "Categorias",                   desc: "Grilla de categorias de productos." },
   { key: "home_show_newsletter", label: "Newsletter / Suscripcion",    desc: "Formulario para que los clientes se suscriban." },
@@ -57,6 +61,22 @@ export default function HomeConfig() {
   /* featuredCategories = array parsed from JSON setting */
   const featuredCategories = (() => {
     try { return JSON.parse(settings.home_featured_categories || "[]"); } catch { return []; }
+  })();
+
+  const DEFAULT_VALUE_PROPS = [
+    { icon: 'MessageCircle', title: 'Contacto Directo', desc: 'Coordina tu entrega de forma rápida sin registros obligatorios.' },
+    { icon: 'Truck', title: 'Envíos y Delivery', desc: 'Entregas en La Paz, El Alto, Zona Sur, y envíos seguros a nivel nacional.' },
+    { icon: 'PackageCheck', title: 'Reservas Flexibles', desc: 'Asegura tu pedido con un adelanto y coordina fecha, hora y lugar.' },
+    { icon: 'UserPlus', title: 'Ventajas Exclusivas', desc: 'Crea tu cuenta (opcional) para agilizar envíos y guardar direcciones.' }
+  ];
+
+  /* valueProps = array parsed from JSON setting */
+  const valueProps = (() => {
+    if (!settings.home_value_props) return DEFAULT_VALUE_PROPS;
+    try { 
+      const parsed = JSON.parse(settings.home_value_props);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_VALUE_PROPS;
+    } catch { return DEFAULT_VALUE_PROPS; }
   })();
 
   /* ── Fetch settings ── */
@@ -179,6 +199,26 @@ export default function HomeConfig() {
     setSelectingImageForCat(null);
     setModalTab("gallery");
     setPastedUrl("");
+  };
+
+  const updateValueProp = (index, field, value) => {
+    const next = [...valueProps];
+    next[index][field] = value;
+    setSetting("home_value_props", JSON.stringify(next));
+  };
+
+  const addValueProp = () => {
+    if (valueProps.length >= 4) {
+      toast.error("Máximo 4 beneficios.");
+      return;
+    }
+    const next = [...valueProps, { icon: 'Star', title: 'Nuevo Beneficio', desc: 'Descripción del beneficio' }];
+    setSetting("home_value_props", JSON.stringify(next));
+  };
+
+  const removeValueProp = (index) => {
+    const next = valueProps.filter((_, i) => i !== index);
+    setSetting("home_value_props", JSON.stringify(next));
   };
 
   const handleFileUpload = async (e) => {
@@ -769,6 +809,111 @@ export default function HomeConfig() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ══════════════════════════════
+             TAB: CARRUSEL
+        ══════════════════════════════ */}
+        {activeTab === "carousel" && (
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 20, marginBottom: 20 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: "var(--text-main)" }}>Configuración del Carrusel</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>Título del Carrusel</span>
+                <input
+                  type="text"
+                  value={settings.home_carousel_title || ""}
+                  placeholder="Ej: LO MÁS VENDIDO"
+                  onChange={(e) => setSetting("home_carousel_title", e.target.value)}
+                  style={{ padding: "8px 12px", borderRadius: 8, fontSize: 14, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)", outline: "none" }}
+                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--border-color)")}
+                />
+              </label>
+              
+              <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>Tipo de lista a mostrar</span>
+                <select
+                  value={settings.home_carousel_type || "newest"}
+                  onChange={(e) => setSetting("home_carousel_type", e.target.value)}
+                  style={{ padding: "8px 12px", borderRadius: 8, fontSize: 14, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)", outline: "none" }}
+                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--border-color)")}
+                >
+                  <option value="newest">Lo más nuevo (Lanzamientos)</option>
+                  <option value="trending">Lo más visto / destacado (Best Sellers)</option>
+                  <option value="random">Aleatorio</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        )}
+        {/* ══════════════════════════════
+             TAB: BENEFICIOS
+        ══════════════════════════════ */}
+        {activeTab === "value_props" && (
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 20, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-main)" }}>Barra de Beneficios</h3>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Máximo 4 iconos que se mostrarán bajo el hero principal.</p>
+              </div>
+              <button 
+                onClick={addValueProp}
+                style={{ padding: "6px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600, background: "var(--color-primary)", color: "var(--color-primary-text)", border: "none", cursor: "pointer" }}
+              >
+                + Añadir Beneficio
+              </button>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {valueProps.map((prop, idx) => (
+                <div key={idx} style={{ display: "flex", gap: 12, padding: 16, background: "var(--bg-overlay)", border: "1px solid var(--border-color)", borderRadius: 8, position: "relative" }}>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 140 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Ícono (Lucide)</span>
+                    <input
+                      type="text"
+                      value={prop.icon || ""}
+                      onChange={(e) => updateValueProp(idx, 'icon', e.target.value)}
+                      placeholder="Ej: Truck"
+                      style={{ padding: "8px", borderRadius: 6, fontSize: 13, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Título</span>
+                    <input
+                      type="text"
+                      value={prop.title || ""}
+                      onChange={(e) => updateValueProp(idx, 'title', e.target.value)}
+                      placeholder="Ej: Envíos Nacionales"
+                      style={{ padding: "8px", borderRadius: 6, fontSize: 13, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 2 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Descripción</span>
+                    <input
+                      type="text"
+                      value={prop.desc || ""}
+                      onChange={(e) => updateValueProp(idx, 'desc', e.target.value)}
+                      placeholder="Breve descripción del beneficio..."
+                      style={{ padding: "8px", borderRadius: 6, fontSize: 13, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)" }}
+                    />
+                  </div>
+
+                  <button 
+                    onClick={() => removeValueProp(idx)}
+                    title="Eliminar"
+                    style={{ position: "absolute", top: -8, right: -8, width: 24, height: 24, borderRadius: "50%", background: "var(--color-danger, #e53e3e)", color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

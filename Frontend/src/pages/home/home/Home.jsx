@@ -3,6 +3,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../../../components/layout/Footer";
 import Hero from "../components/Hero";
 import FeaturedCategories from "../components/FeaturedCategories";
+import DynamicProductCarousel from "../components/DynamicProductCarousel";
+import ValueProps from "../components/ValueProps";
 import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
 
 import "./Home.css";
@@ -15,6 +17,8 @@ export default function Home() {
   }, [fetchSettings]);
 
   const showHero       = settings.home_show_hero       !== "false";
+  const showCarousel   = settings.home_show_carousel   === "true";
+  const showValueProps = settings.home_show_value_props !== "false";
   const showCategories = settings.home_show_categories !== "false";
   const showNewsletter = settings.home_show_newsletter !== "false";
 
@@ -29,6 +33,10 @@ export default function Home() {
           subtitle={settings.home_hero_subtitle || "Estilo masculino moderno, minimalista y potente."}
         />
       )}
+
+      {showValueProps && <ValueProps />}
+
+      {showCarousel && <DynamicProductCarousel />}
 
       {showCategories && <FeaturedCategories />}
 
