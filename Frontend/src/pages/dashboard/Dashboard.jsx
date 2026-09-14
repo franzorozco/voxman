@@ -272,13 +272,16 @@ export default function DashboardLayout() {
             </CanAccess>
 
             {/* 7. MARKETING Y FIDELIZACIÓN */}
-            <CanAccess permission={['view_promotions', 'view_giftcards']}>
+            <CanAccess permission={['view_promotions', 'view_giftcards', 'manage_settings']}>
               <div className="nav-section">
                 <p className="section-title">
                   {!collapsed && "MARKETING"}
                 </p>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/shop-shorts" icon={Film} label="Shorts (Tienda)" />
+                </CanAccess>
+                <CanAccess permission="manage_settings">
+                  <NavItem to="/dashboard/home-config" icon={House} label="Inicio / Hero" />
                 </CanAccess>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />

@@ -1,23 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./Hero.css";
+import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
+import { getImageUrl } from "../../../utils/imageUtils";
 
-import modelo1 from "../../../assets/global/modelo_1.png";
-import modelo2 from "../../../assets/global/modelo_2.png";
-import modelo3 from "../../../assets/global/modelo_3.png";
-import modelo4 from "../../../assets/global/modelo_4.png";
+const FALLBACK_IMAGE = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_black.jfif";
 
 export default function Hero({ title, subtitle }) {
-  const images = [modelo1, modelo2, modelo3, modelo4];
+  const settings = useShopSettingsStore((s) => s.settings);
+
+  // Parse dynamic images from settings; fall back to local assets
+  const dynamicImages = (() => {
+    try {
+      const parsed = JSON.parse(settings.home_hero_images || "[]");
+      return parsed.length > 0 ? parsed.map(getImageUrl) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const images = dynamicImages || [FALLBACK_IMAGE, FALLBACK_IMAGE, FALLBACK_IMAGE, FALLBACK_IMAGE];
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
+    setCurrent(0); // reset when images change
+  }, [images.length]);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
     }, 4000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [images.length]);
 
   return (
     <section className="hero">
@@ -33,8 +48,13 @@ export default function Hero({ title, subtitle }) {
           <div
             key={i}
             className={`hero-col ${i === current ? "active" : ""}`}
-            style={{ backgroundImage: `url(${img})` }}
-          />
+          >
+            <img 
+              src={img} 
+              alt="Hero" 
+              onError={(e) => { e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_black.jfif"; }}
+            />
+          </div>
         ))}
       </div>
 
@@ -43,7 +63,7 @@ export default function Hero({ title, subtitle }) {
         <p>{subtitle}</p>
 
         <div className="hero-buttons">
-          <Link to="/shop" className="btn primary">
+          <Link to="/catalog" className="btn primary">
             Explorar tienda
           </Link>
           <Link to="/register" className="btn secondary">
@@ -54,4 +74,4 @@ export default function Hero({ title, subtitle }) {
 
     </section>
   );
-}
+}

@@ -471,7 +471,11 @@ Route::middleware([
     Route::put('/system-settings/{key}', [\App\Http\Controllers\Api\Admin\SystemSettingController::class, 'update'])->middleware('permission:manage_settings');
     Route::post('/system-settings/{key}', [\App\Http\Controllers\Api\Admin\SystemSettingController::class, 'update'])->middleware('permission:manage_settings');
 
+    // Home Config routes
+    Route::get('/home-config/variant-images', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'variantImages'])->middleware('permission:manage_settings');
+
 });
+
 
 /* =========================================================
    RUTAS DEL PUNTO DE VENTA (POS)

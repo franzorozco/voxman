@@ -12,14 +12,18 @@ class ShopSettingsController extends Controller
     {
         // Solo devolver configuraciones públicas para el frontend
         $keys = [
-            'store_logo', 'store_logo_dark', 'store_logo_light', 'payment_qr', 
+            'store_logo', 'store_logo_dark', 'store_logo_light', 'payment_qr',
             'store_name', 'store_phone', 'store_address', 'facebook_url', 'instagram_url',
-            'delivery_pickup', 'delivery_home', 'delivery_scheduled_point', 'delivery_national'
+            'tiktok_url', 'contact_email',
+            'delivery_pickup', 'delivery_home', 'delivery_scheduled_point', 'delivery_national',
+            // Home config
+            'home_show_hero', 'home_show_featured', 'home_show_categories', 'home_show_newsletter',
+            'home_hero_title', 'home_hero_subtitle', 'home_hero_images',
         ];
-        
+
         $settings = SystemSetting::whereIn('key', $keys)
             ->pluck('value', 'key');
-            
+
         return response()->json($settings);
     }
 }
