@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { LayoutDashboard, Image, EyeOff, Eye, Save, RefreshCw, Check, X } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { LayoutDashboard, Image, EyeOff, Eye, Save, RefreshCw, Check, X, Grid, Upload, Link as LinkIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { getSystemSettings, updateSystemSetting } from "../../../../api/admin/systemSettings";
-import { getVariantImages } from "../../../../api/admin/homeConfig";
+import { getVariantImages, getCategories, uploadCategoryImage } from "../../../../api/admin/homeConfig";
 import { getImageUrl } from "../../../../utils/imageUtils";
 import { useThemeStore } from "../../../../store/themeStore";
 
 const TABS = [
-  { id: "hero",     label: "Hero",      icon: <Image size={15} /> },
-  { id: "sections", label: "Secciones", icon: <LayoutDashboard size={15} /> },
+  { id: "hero",       label: "Hero",        icon: <Image size={15} /> },
+  { id: "categories", label: "Categorías",  icon: <Grid size={15} /> },
+  { id: "sections",   label: "Secciones",   icon: <LayoutDashboard size={15} /> },
 ];
 
 const SECTION_KEYS = [
@@ -35,9 +36,27 @@ export default function HomeConfig() {
   const [page,        setPage]        = useState(1);
   const [hasMore,     setHasMore]     = useState(true);
 
+  /* ── categories state ── */
+  const [allCategories, setAllCategories] = useState([]);
+  const [loadingCats,   setLoadingCats]   = useState(false);
+  
+  const [selectingImageForCat, setSelectingImageForCat] = useState(null); // id of category being edited
+  const [modalTab, setModalTab] = useState("gallery"); // gallery | upload | url
+  const [pastedUrl, setPastedUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+  
+  const [dragOverHeroIdx, setDragOverHeroIdx] = useState(null);
+  const [dragOverCatIdx, setDragOverCatIdx] = useState(null);
+
   /* heroImages = array parsed from JSON setting */
   const heroImages = (() => {
     try { return JSON.parse(settings.home_hero_images || "[]"); } catch { return []; }
+  })();
+
+  /* featuredCategories = array parsed from JSON setting */
+  const featuredCategories = (() => {
+    try { return JSON.parse(settings.home_featured_categories || "[]"); } catch { return []; }
   })();
 
   /* ── Fetch settings ── */
@@ -88,6 +107,26 @@ export default function HomeConfig() {
     if (activeTab === "hero" && allImages.length === 0) fetchVariantImages(1, false);
   }, [activeTab, fetchVariantImages, allImages.length]);
 
+  /* ── Fetch categories ── */
+  const fetchCategoriesList = useCallback(async () => {
+    try {
+      setLoadingCats(true);
+      const data = await getCategories();
+      setAllCategories(data);
+    } catch {
+      toast.error("Error al cargar categorías");
+    } finally {
+      setLoadingCats(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "categories" && allCategories.length === 0) {
+      fetchCategoriesList();
+      if (allImages.length === 0) fetchVariantImages(1, false); // También necesitamos imágenes para las categorías
+    }
+  }, [activeTab, fetchCategoriesList, fetchVariantImages, allCategories.length, allImages.length]);
+
   /* ── Helpers ── */
   const setSetting = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -112,6 +151,56 @@ export default function HomeConfig() {
   const removeHeroImage = (url) => {
     const next = heroImages.filter((u) => u !== url);
     setSetting("home_hero_images", JSON.stringify(next));
+  };
+
+  const toggleFeaturedCategory = (cat) => {
+    const current = [...featuredCategories];
+    const existingIdx = current.findIndex((c) => c.id === cat.id);
+    
+    if (existingIdx >= 0) {
+      current.splice(existingIdx, 1);
+    } else {
+      if (current.length >= 5) {
+        toast.error("Máximo 5 categorías destacadas permitidas.");
+        return;
+      }
+      current.push({ id: cat.id, name: cat.name, image: null, order: current.length + 1 });
+    }
+    setSetting("home_featured_categories", JSON.stringify(current));
+  };
+
+  const updateCategoryImage = (catId, imageUrl) => {
+    const current = [...featuredCategories];
+    const cat = current.find((c) => c.id === catId);
+    if (cat) {
+      cat.image = imageUrl;
+      setSetting("home_featured_categories", JSON.stringify(current));
+    }
+    setSelectingImageForCat(null);
+    setModalTab("gallery");
+    setPastedUrl("");
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const res = await uploadCategoryImage(file);
+      updateCategoryImage(selectingImageForCat, res.url);
+      toast.success("Imagen subida correctamente");
+    } catch {
+      toast.error("Error al subir imagen");
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleApplyPastedUrl = () => {
+    if (!pastedUrl) return;
+    updateCategoryImage(selectingImageForCat, pastedUrl);
   };
 
   /* ── Save ── */
@@ -159,7 +248,7 @@ export default function HomeConfig() {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-primary)", color: "var(--color-primary-text)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <LayoutDashboard size={18} />
             </div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-main)" }}>Configuracion de Inicio</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-main)", lineHeight: 1, paddingTop: 2 }}>Configuracion de Inicio</h1>
           </div>
           <p style={{ fontSize: 13, color: "var(--text-muted)", marginLeft: 48 }}>
             Personaliza el hero, las secciones y el contenido de tu pagina principal.
@@ -184,7 +273,7 @@ export default function HomeConfig() {
                 marginBottom: activeTab === t.id ? -1 : 0,
               }}
             >
-              {t.icon} {t.label}
+              {t.icon} <span style={{ lineHeight: 1, paddingTop: 2 }}>{t.label}</span>
             </button>
           ))}
         </div>
@@ -237,7 +326,7 @@ export default function HomeConfig() {
 
               {heroImages.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "32px 0", color: "var(--text-muted)", fontSize: 13, border: "2px dashed var(--border-color)", borderRadius: 10 }}>
-                  <Image size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                  <Image size={32} style={{ opacity: 0.3, margin: "0 auto 8px auto", display: "block" }} />
                   <p>Ninguna imagen seleccionada.</p>
                   <p style={{ fontSize: 12, marginTop: 4 }}>Selecciona imagenes desde el galeria de abajo.</p>
                 </div>
@@ -250,19 +339,23 @@ export default function HomeConfig() {
                       onDragStart={(e) => {
                         e.dataTransfer.effectAllowed = 'move';
                         e.target.style.opacity = '0.5';
-                        // save index being dragged in dataTransfer or a local state? 
-                        // HTML5 dnd is easier with dataTransfer:
                         e.dataTransfer.setData('text/plain', i.toString());
                       }}
                       onDragEnd={(e) => {
                         e.target.style.opacity = '1';
+                        setDragOverHeroIdx(null);
                       }}
-                      onDragOver={(e) => {
-                        e.preventDefault(); // necessary to allow dropping
-                        e.dataTransfer.dropEffect = 'move';
+                      onDragOver={(e) => { 
+                        e.preventDefault(); 
+                        e.dataTransfer.dropEffect = 'move'; 
+                        if (dragOverHeroIdx !== i) setDragOverHeroIdx(i);
+                      }}
+                      onDragLeave={() => {
+                        if (dragOverHeroIdx === i) setDragOverHeroIdx(null);
                       }}
                       onDrop={(e) => {
                         e.preventDefault();
+                        setDragOverHeroIdx(null);
                         const draggedIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
                         if (isNaN(draggedIdx) || draggedIdx === i) return;
 
@@ -272,7 +365,16 @@ export default function HomeConfig() {
                         
                         setSetting("home_hero_images", JSON.stringify(current));
                       }}
-                      style={{ position: "relative", borderRadius: 10, overflow: "hidden", aspectRatio: "3/4", border: "2px solid var(--color-primary)", cursor: 'grab' }}
+                      style={{ 
+                        position: "relative", 
+                        borderRadius: 10, 
+                        overflow: "hidden", 
+                        aspectRatio: "3/4", 
+                        cursor: 'grab',
+                        border: dragOverHeroIdx === i ? "4px dashed var(--color-primary)" : "2px solid var(--color-primary)",
+                        transform: dragOverHeroIdx === i ? "scale(1.05)" : "scale(1)",
+                        transition: "all 0.2s"
+                      }}
                     >
                       <img src={getImageUrl(url)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
                       <div style={{ position: "absolute", top: 0, left: 0, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: "0 0 8px 0" }}>
@@ -372,6 +474,301 @@ export default function HomeConfig() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════
+             TAB: CATEGORIAS
+        ══════════════════════════════ */}
+        {activeTab === "categories" && (
+          <div>
+            {/* Categorías seleccionadas (estilo tarjetas arrastrables) */}
+            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 20, marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-main)" }}>Categorías seleccionadas</h3>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Máximo 5 recomendadas. Haz click en la tarjeta para elegir miniatura, arrastra para reordenar.</p>
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: featuredCategories.length === 5 ? "var(--color-danger, #e53e3e)" : "var(--bg-overlay)", color: featuredCategories.length === 5 ? "#fff" : "var(--text-muted)" }}>
+                  {featuredCategories.length} seleccionadas
+                </span>
+              </div>
+
+              {featuredCategories.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "32px 0", color: "var(--text-muted)", fontSize: 13, border: "2px dashed var(--border-color)", borderRadius: 10 }}>
+                  <Grid size={32} style={{ opacity: 0.3, margin: "0 auto 8px auto", display: "block" }} />
+                  <p>Ninguna categoría seleccionada.</p>
+                  <p style={{ fontSize: 12, marginTop: 4 }}>Selecciona categorías desde la lista de abajo.</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 10 }}>
+                  {featuredCategories.map((cat, i) => (
+                    <div 
+                      key={cat.id} 
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.target.style.opacity = '0.5';
+                        e.dataTransfer.setData('text/plain', i.toString());
+                      }}
+                      onDragEnd={(e) => {
+                        e.target.style.opacity = '1';
+                        setDragOverCatIdx(null);
+                      }}
+                      onDragOver={(e) => { 
+                        e.preventDefault(); 
+                        e.dataTransfer.dropEffect = 'move'; 
+                        if (dragOverCatIdx !== i) setDragOverCatIdx(i);
+                      }}
+                      onDragLeave={() => {
+                        if (dragOverCatIdx === i) setDragOverCatIdx(null);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOverCatIdx(null);
+                        const draggedIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                        if (isNaN(draggedIdx) || draggedIdx === i) return;
+                        const current = [...featuredCategories];
+                        const [draggedItem] = current.splice(draggedIdx, 1);
+                        current.splice(i, 0, draggedItem);
+                        current.forEach((c, idx) => c.order = idx + 1);
+                        setSetting("home_featured_categories", JSON.stringify(current));
+                      }}
+                      onClick={() => setSelectingImageForCat(cat.id)}
+                      style={{ 
+                        position: "relative", 
+                        borderRadius: 10, 
+                        overflow: "hidden", 
+                        aspectRatio: "3/4", 
+                        cursor: 'grab',
+                        border: dragOverCatIdx === i ? "4px dashed var(--color-primary)" : "2px solid var(--color-primary)",
+                        transform: dragOverCatIdx === i ? "scale(1.05)" : "scale(1)",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      {cat.image ? (
+                        <img src={getImageUrl(cat.image)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none", filter: "brightness(0.7)" }} />
+                      ) : (
+                        <div style={{ width: "100%", height: "100%", background: "var(--bg-overlay)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
+                          <Image size={24} style={{ opacity: 0.5, marginBottom: 8 }} />
+                          <span style={{ fontSize: 11, textAlign: "center", padding: "0 10px" }}>Click para miniatura</span>
+                        </div>
+                      )}
+                      
+                      <div style={{ position: "absolute", top: 0, left: 0, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: "0 0 8px 0", pointerEvents: "none" }}>
+                        #{i + 1}
+                      </div>
+
+                      <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 12, fontWeight: 600, padding: "8px 4px", textAlign: "center", pointerEvents: "none" }}>
+                        {cat.name}
+                      </div>
+
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleFeaturedCategory(cat); }}
+                        title="Quitar"
+                        style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: "50%", background: "rgba(0,0,0,0.7)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: "none" }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Categorías Disponibles */}
+            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-main)" }}>Categorías Disponibles</h3>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Haz click en una categoría para agregarla o quitarla de las destacadas.</p>
+                </div>
+              </div>
+
+              {loadingCats ? (
+                <div style={{ padding: 20, textAlign: "center", color: "var(--text-muted)" }}>Cargando categorías...</div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 8, maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
+                  {allCategories.map(cat => {
+                    const isSelected = featuredCategories.some(c => c.id === cat.id);
+                    return (
+                      <div
+                        key={cat.id}
+                        onClick={() => toggleFeaturedCategory(cat)}
+                        style={{
+                          position: "relative", borderRadius: 8, overflow: "hidden", cursor: "pointer",
+                          background: "var(--bg-overlay)",
+                          border: isSelected ? "2.5px solid var(--color-primary)" : "2px solid var(--border-color)",
+                          transition: "border-color 0.15s, transform 0.1s",
+                          transform: isSelected ? "scale(1.02)" : "scale(1)",
+                          opacity: !isSelected && featuredCategories.length >= 5 ? 0.4 : 1,
+                          padding: "12px 10px", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", minHeight: 60
+                        }}
+                      >
+                        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-main)", zIndex: 2 }}>{cat.name}</span>
+                        {isSelected && (
+                          <div style={{ position: "absolute", top: 4, right: 4, width: 16, height: 16, borderRadius: "50%", background: "var(--color-primary)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
+                            <Check size={10} color="#fff" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* MODAL para seleccionar miniatura */}
+            {selectingImageForCat && (
+              <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+                <div style={{ background: "var(--bg-card)", borderRadius: 12, width: "100%", maxWidth: 800, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+                  
+                  {/* Modal Header */}
+                  <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-main)", margin: 0 }}>
+                      Miniatura para: <span style={{ color: "var(--color-primary)" }}>{featuredCategories.find(c => c.id === selectingImageForCat)?.name}</span>
+                    </h3>
+                    <button onClick={() => setSelectingImageForCat(null)} style={{ background: "var(--bg-overlay)", border: "none", color: "var(--text-main)", cursor: "pointer", width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Modal Tabs */}
+                  <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", background: "var(--bg-main)" }}>
+                    {[
+                      { id: "upload", label: "Subir desde PC", icon: <Upload size={14} /> },
+                      { id: "url", label: "Pegar URL", icon: <LinkIcon size={14} /> },
+                      { id: "gallery", label: "Galería de Variantes", icon: <Image size={14} /> }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setModalTab(tab.id)}
+                        style={{
+                          flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0",
+                          border: "none", borderBottom: modalTab === tab.id ? "2px solid var(--color-primary)" : "2px solid transparent",
+                          background: modalTab === tab.id ? "var(--bg-card)" : "transparent",
+                          color: modalTab === tab.id ? "var(--color-primary)" : "var(--text-muted)",
+                          fontWeight: 600, fontSize: 13, cursor: "pointer"
+                        }}
+                      >
+                        {tab.icon} <span style={{ lineHeight: 1, paddingTop: 2 }}>{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* Modal Body */}
+                  <div style={{ padding: 24, flex: 1, overflowY: "auto", minHeight: 400 }}>
+                    
+                    {/* TAB: UPLOAD */}
+                    {modalTab === "upload" && (
+                      <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ border: "2px dashed var(--border-color)", borderRadius: 12, padding: "40px 20px", width: "100%", maxWidth: 400, textAlign: "center" }}>
+                          <Upload size={40} style={{ color: "var(--text-muted)", margin: "0 auto 16px auto", display: "block" }} />
+                          <h4 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-main)", margin: "0 0 8px" }}>Sube una imagen desde tu equipo</h4>
+                          <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 24px" }}>Formato recomendado: Vertical (Aspect Ratio 3:4).</p>
+                          
+                          <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            style={{ display: "none" }}
+                            onChange={handleFileUpload}
+                          />
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingImage}
+                            style={{
+                              padding: "10px 24px", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: uploadingImage ? "not-allowed" : "pointer",
+                              background: "var(--color-primary)", color: "var(--color-primary-text)", border: "none"
+                            }}
+                          >
+                            {uploadingImage ? "Subiendo..." : "Seleccionar archivo"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB: URL */}
+                    {modalTab === "url" && (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+                        <div style={{ width: "100%", maxWidth: 500 }}>
+                          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-main)", marginBottom: 8 }}>URL de la Imagen</label>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <input
+                              type="text"
+                              placeholder="https://ejemplo.com/imagen.jpg"
+                              value={pastedUrl}
+                              onChange={(e) => setPastedUrl(e.target.value)}
+                              style={{ flex: 1, padding: "10px 14px", borderRadius: 8, fontSize: 14, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)", outline: "none" }}
+                            />
+                            <button
+                              onClick={handleApplyPastedUrl}
+                              disabled={!pastedUrl}
+                              style={{ padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, background: "var(--color-primary)", color: "var(--color-primary-text)", border: "none", cursor: pastedUrl ? "pointer" : "not-allowed", opacity: pastedUrl ? 1 : 0.5 }}
+                            >
+                              Aplicar
+                            </button>
+                          </div>
+                        </div>
+
+                        {pastedUrl && (
+                          <div style={{ marginTop: 20, textAlign: "center" }}>
+                            <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>Previsualización:</p>
+                            <div style={{ width: 200, aspectRatio: "3/4", borderRadius: 8, overflow: "hidden", border: "1px solid var(--border-color)", margin: "0 auto" }}>
+                              <img src={pastedUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_white.jfif"; }} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* TAB: GALLERY */}
+                    {modalTab === "gallery" && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Buscar imagen..."
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          style={{ width: "100%", padding: "10px 14px", borderRadius: 8, fontSize: 13, background: "var(--bg-input)", border: "1px solid var(--border-color)", outline: "none", marginBottom: 20, color: "var(--text-main)" }}
+                        />
+
+                        {loadingImgs && page === 1 ? (
+                          <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>Cargando imágenes...</div>
+                        ) : (
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 12 }}>
+                            {filtered.map(url => (
+                              <div
+                                key={url}
+                                onClick={() => updateCategoryImage(selectingImageForCat, url)}
+                                style={{ aspectRatio: "3/4", borderRadius: 8, overflow: "hidden", cursor: "pointer", border: "2px solid transparent", transition: "border-color 0.2s" }}
+                                onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--color-primary)"}
+                                onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}
+                              >
+                                <img src={getImageUrl(url)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {hasMore && !search && (
+                          <div style={{ textAlign: "center", marginTop: 24 }}>
+                            <button
+                              onClick={() => fetchVariantImages(page + 1, true)}
+                              disabled={loadingImgs}
+                              style={{ padding: "8px 24px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: "var(--bg-overlay)", border: "1px solid var(--border-color)", color: "var(--text-main)", cursor: loadingImgs ? "not-allowed" : "pointer" }}
+                            >
+                              {loadingImgs ? "Cargando..." : "Cargar más imágenes"}
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

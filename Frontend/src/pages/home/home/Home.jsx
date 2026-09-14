@@ -2,9 +2,9 @@ import React, { useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../../../components/layout/Footer";
 import Hero from "../components/Hero";
+import FeaturedCategories from "../components/FeaturedCategories";
 import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
 
-import fondoDestacados from "../../../assets/global/fondos/fondo_grafito.png";
 import "./Home.css";
 
 export default function Home() {
@@ -15,7 +15,6 @@ export default function Home() {
   }, [fetchSettings]);
 
   const showHero       = settings.home_show_hero       !== "false";
-  const showFeatured   = settings.home_show_featured   !== "false";
   const showCategories = settings.home_show_categories !== "false";
   const showNewsletter = settings.home_show_newsletter !== "false";
 
@@ -31,37 +30,9 @@ export default function Home() {
         />
       )}
 
-      {showCategories && (
-        <section className="section">
-          <div className="container">
-            <h2>Categorías</h2>
-            <div className="grid">
-              <div className="card">Camisetas</div>
-              <div className="card">Pantalones</div>
-              <div className="card">Chaquetas</div>
-              <div className="card">Accesorios</div>
-            </div>
-          </div>
-        </section>
-      )}
+      {showCategories && <FeaturedCategories />}
 
-      {showFeatured && (
-        <section
-          className="section destacados"
-          style={{ backgroundImage: `url(${fondoDestacados})` }}
-        >
-          <div className="container">
-            <h2>Destacados</h2>
-            <div className="grid">
-              <div className="product">
-                <div className="img"></div>
-                <p>Oversize Black Tee</p>
-                <span>$29.99</span>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+
 
       {showNewsletter && (
         <section className="section">

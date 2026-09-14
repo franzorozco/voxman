@@ -41,4 +41,34 @@ class HomeConfigController extends Controller
             'total' => $paginated->total(),
         ]);
     }
+
+    public function categories()
+    {
+        $categories = \App\Models\Catalog\Category::select('id', 'name')->orderBy('name')->get();
+        return response()->json($categories);
+    }
+
+    public function uploadCategoryImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:5120'
+        ]);
+
+        $file = $request->file('image');
+        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $fullPath = 'catalog/categories/' . $filename;
+
+        try {
+            $contents = file_get_contents($file->getRealPath());
+            $result = \Illuminate\Support\Facades\Storage::disk('s3')->put($fullPath, $contents);
+
+            if (!$result) {
+                return response()->json(['message' => 'Error al subir imagen'], 500);
+            }
+
+            return response()->json(['url' => $fullPath]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+        }
+    }
 }

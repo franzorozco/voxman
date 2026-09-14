@@ -27,6 +27,7 @@ Route::prefix('v1/shop')->group(function () {
     Route::get('/products/{slug}', [ShopProductController::class, 'show']);
     
     Route::get('/categories', [ShopCategoryController::class, 'index']);
+    Route::get('/categories/featured', [ShopCategoryController::class, 'featured']);
 
     Route::get('/shorts', [ShopShortController::class, 'index']);
     

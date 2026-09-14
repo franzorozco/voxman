@@ -473,6 +473,8 @@ Route::middleware([
 
     // Home Config routes
     Route::get('/home-config/variant-images', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'variantImages'])->middleware('permission:manage_settings');
+    Route::get('/home-config/categories', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'categories'])->middleware('permission:manage_settings');
+    Route::post('/home-config/upload-category-image', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'uploadCategoryImage'])->middleware('permission:manage_settings');
 
 });
 

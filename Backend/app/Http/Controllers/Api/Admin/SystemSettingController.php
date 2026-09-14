@@ -18,7 +18,21 @@ class SystemSettingController extends Controller
 
     public function update(Request $request, $key)
     {
-        $setting = SystemSetting::where('key', $key)->firstOrFail();
+        $setting = SystemSetting::where('key', $key)->first();
+
+        if (!$setting) {
+            $cat = str_starts_with($key, 'home_') ? 'home_config' : 'General';
+            $type = str_contains($key, 'images') || str_contains($key, 'categories') ? 'json' : 'string';
+            
+            $setting = SystemSetting::create([
+                'key' => $key,
+                'display_name' => ucwords(str_replace('_', ' ', $key)),
+                'value' => '',
+                'type' => $type,
+                'category' => $cat,
+                'description' => ''
+            ]);
+        }
 
         if ($request->hasFile('value_file')) {
             $file = $request->file('value_file');
