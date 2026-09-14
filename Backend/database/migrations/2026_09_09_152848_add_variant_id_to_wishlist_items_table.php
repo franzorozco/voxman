@@ -11,8 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasColumn('wishlist_items', 'variant_id')) {
+            Schema::table('wishlist_items', function (Blueprint $table) {
+                $table->uuid('variant_id')->nullable()->after('product_id');
+            });
+        }
+
         Schema::table('wishlist_items', function (Blueprint $table) {
-            $table->uuid('variant_id')->nullable()->after('product_id');
+            // Add foreign key separately in case the column already existed
             $table->foreign('variant_id')->references('id')->on('product_variants')->onDelete('cascade');
         });
     }

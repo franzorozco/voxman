@@ -112,6 +112,8 @@ export default function Hero({ title, subtitle }) {
             <img 
               src={img} 
               alt="Hero" 
+              fetchpriority={i === 0 ? "high" : "auto"}
+              loading={i === 0 ? "eager" : "lazy"}
               onError={(e) => { e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_black.jfif"; }}
             />
           </div>

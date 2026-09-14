@@ -26,8 +26,17 @@ export default function FeaturedCategories() {
     fetchCats();
   }, []);
 
-  if (loading) return null; // Or a minimalist skeleton loader
-  if (categories.length === 0) return null; // Don't show section if empty
+  if (loading) {
+    return (
+      <section className="fc-section">
+        <div className="fc-container" style={{ minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p style={{ color: '#666', letterSpacing: '2px' }}>CARGANDO CATEGORÍAS...</p>
+        </div>
+      </section>
+    );
+  }
+  
+  if (categories.length === 0) return null;
 
   return (
     <section className="fc-section">

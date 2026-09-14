@@ -22,7 +22,7 @@ const Home = () => {
   const fetchCollageItems = async () => {
     try {
       const [productsRes, shortsRes] = await Promise.all([
-        getProducts({ per_page: 50 }),
+        getProducts({ per_page: 24 }),
         getActiveShorts()
       ]);
       
@@ -45,14 +45,6 @@ const Home = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="shop-home-loading">
-        <div className="shop-home-loader" />
-      </div>
-    );
-  }
-
   return (
     <div className="shop-home">
       <div className="shop-home-hero">
@@ -64,9 +56,16 @@ const Home = () => {
         </Link>
       </div>
       
-      <ShopCollageGrid items={images} />
-
-      <NewArrivalsCarousel products={carouselProducts} />
+      {loading ? (
+        <div className="shop-home-loading">
+          <div className="shop-home-loader" />
+        </div>
+      ) : (
+        <>
+          <ShopCollageGrid items={images} />
+          <NewArrivalsCarousel products={carouselProducts} />
+        </>
+      )}
     </div>
   );
 };
