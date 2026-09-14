@@ -10,11 +10,7 @@
   overflow: hidden;
 }
 
-.hero-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-}
+
 
 .hero h1 {
   font-size: 64px;
@@ -71,6 +67,12 @@
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.hero.has-hover::after {
+  opacity: 0;
 }
 
 
@@ -203,33 +205,48 @@
   box-shadow: 0 12px 35px rgba(255,255,255,0.3);
 }
 
+.hero-col {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  opacity: 1;
+  transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 1s ease, transform 1.5s ease, filter 0.5s ease;
+  filter: brightness(1) grayscale(0%);
+}
+
 .hero-content {
   position: relative;
   z-index: 2;
   text-align: center;
   max-width: 700px;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease;
+  pointer-events: none;
 }
 
-
-
-
-.hero-col {
-  flex: 1;
-  background-size: cover;
-  background-position: center;
-
-  opacity: 1;
-  transition: opacity 1s ease, transform 1.5s ease, filter 0.5s ease;
-  filter: brightness(1) grayscale(0%);
+.hero-content > * {
+  pointer-events: auto;
 }
 
 @media (min-width: 1025px) {
-  /* Only apply hover effects on desktop where all columns show side-by-side */
-  .hero-split:hover .hero-col {
-    filter: brightness(0.6) grayscale(30%);
+  .hero-col img {
+    transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  .hero-split .hero-col:hover {
-    filter: brightness(1.1) grayscale(0%);
+
+  /* Efectos controlados por las clases del estado de React con timeout */
+  .hero.has-hover .hero-split .hero-col {
+    filter: brightness(0.4) grayscale(50%);
+  }
+  
+  .hero.has-hover .hero-split .hero-col.is-hovered {
+    filter: brightness(1.15) grayscale(0%);
+    flex: 2; /* Resalta haciéndose más ancha */
+    z-index: 1;
+  }
+
+  .hero.has-hover .hero-split .hero-col.is-hovered img {
+    transform: scale(1.08); /* Se muestra de cerca / zoom */
   }
 }
 
