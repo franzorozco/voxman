@@ -56,8 +56,9 @@ api.interceptors.response.use(
         const logout = module.useAuthStore.getState().logout;
         if (logout) logout();
         
-        // 2. Solo redirigir si no estamos ya en /login
-        if (window.location.pathname !== "/login") {
+        // 2. Solo redirigir si no estamos ya en /login y NO estamos en la tienda pública
+        const currentPath = window.location.pathname;
+        if (currentPath !== "/login" && !currentPath.startsWith("/shop")) {
           window.location.href = "/login";
         }
       });

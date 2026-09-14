@@ -47,6 +47,42 @@ import { getImageUrl } from "../../utils/imageUtils";
 import AddressMapPicker from "../../components/ui/AddressMapPicker";
 import "./Profile.css";
 
+const MissingDataPointer = ({ message }) => (
+  <div style={{
+    marginTop: '6px',
+    background: 'var(--color-warning, #f59e0b)',
+    color: '#fff',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '11px',
+    fontWeight: 'bold',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    position: 'relative',
+    animation: 'pulseArrow 2s infinite'
+  }}>
+    <div style={{
+      position: 'absolute',
+      top: '-3px',
+      left: '12px',
+      transform: 'rotate(45deg)',
+      width: '6px',
+      height: '6px',
+      background: 'var(--color-warning, #f59e0b)',
+    }} />
+    <AlertCircle size={12} />
+    {message}
+    <style>{`
+      @keyframes pulseArrow {
+        0% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+        50% { transform: translateY(2px); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0); }
+        100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+      }
+    `}</style>
+  </div>
+);
+
 export default function Profile() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,6 +100,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [showConfirmCodeModal, setShowConfirmCodeModal] = useState(false);
 
   // User Profile Data
   const [userData, setUserData] = useState(null);
@@ -71,7 +108,9 @@ export default function Profile() {
     first_name: "",
     last_name_paternal: "",
     last_name_maternal: "",
-    phone: "",
+    phone_prefix: "+591",
+    phone_number: "",
+    customer_code: "",
     birthdate: "",
     gender: "Prefiero no decirlo"
   });
@@ -119,17 +158,30 @@ export default function Profile() {
         
         // Populate profile form
         const prof = res.user.profile || {};
+        const customer = res.user.customers?.[0];
+        let pPrefix = "+591";
+        let pNum = "";
+        if (prof.phone) {
+            const parts = prof.phone.split(" ");
+            if (parts.length > 1) {
+                pPrefix = parts[0];
+                pNum = parts.slice(1).join(" ");
+            } else {
+                pNum = prof.phone;
+            }
+        }
         setProfileForm({
           first_name: prof.first_name || "",
           last_name_paternal: prof.last_name_paternal || "",
           last_name_maternal: prof.last_name_maternal || "",
-          phone: prof.phone || "",
+          phone_prefix: pPrefix,
+          phone_number: pNum,
+          customer_code: customer?.customer_code || "",
           birthdate: prof.birthdate ? prof.birthdate.split("T")[0] : "",
           gender: ["Masculino", "Femenino", "Prefiero no decirlo"].includes(prof.gender) ? prof.gender : "Prefiero no decirlo"
         });
 
         // Populate addresses from customers collection
-        const customer = res.user.customers?.[0];
         if (customer?.addresses) {
           setAddresses(customer.addresses);
         }
@@ -151,15 +203,28 @@ export default function Profile() {
       if (authUser) {
         setUserData(authUser);
         const prof = authUser.profile || {};
+        const customer = authUser.customers?.[0];
+        let pPrefix = "+591";
+        let pNum = "";
+        if (prof.phone) {
+            const parts = prof.phone.split(" ");
+            if (parts.length > 1) {
+                pPrefix = parts[0];
+                pNum = parts.slice(1).join(" ");
+            } else {
+                pNum = prof.phone;
+            }
+        }
         setProfileForm({
           first_name: prof.first_name || "",
           last_name_paternal: prof.last_name_paternal || "",
           last_name_maternal: prof.last_name_maternal || "",
-          phone: prof.phone || "",
+          phone_prefix: pPrefix,
+          phone_number: pNum,
+          customer_code: customer?.customer_code || "",
           birthdate: prof.birthdate ? prof.birthdate.split("T")[0] : "",
           gender: ["Masculino", "Femenino", "Prefiero no decirlo"].includes(prof.gender) ? prof.gender : "Prefiero no decirlo"
         });
-        const customer = authUser.customers?.[0];
         if (customer?.addresses) {
           setAddresses(customer.addresses);
         }
@@ -186,25 +251,38 @@ export default function Profile() {
 
   // Handle Profile Update
   const handleProfileSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!profileForm.first_name.trim()) {
       toast.error("El nombre es requerido.");
       return;
     }
 
+    // Check if customer code was modified
+    const originalCode = userData?.customers?.[0]?.customer_code || "";
+    if (profileForm.customer_code?.trim() !== originalCode && !showConfirmCodeModal) {
+      setShowConfirmCodeModal(true);
+      return;
+    }
+
+    executeProfileSubmit();
+  };
+
+  const executeProfileSubmit = async () => {
     try {
       setSavingProfile(true);
       // Sanitize: send null instead of empty strings for optional fields
       const payload = {
-        ...profileForm,
+        first_name: profileForm.first_name,
         birthdate: profileForm.birthdate?.trim() || null,
-        phone: profileForm.phone?.trim() || null,
+        phone: profileForm.phone_number ? `${profileForm.phone_prefix} ${profileForm.phone_number}`.trim() : null,
         last_name_paternal: profileForm.last_name_paternal?.trim() || null,
         last_name_maternal: profileForm.last_name_maternal?.trim() || null,
         gender: profileForm.gender?.trim() || null,
+        customer_code: profileForm.customer_code?.trim() || null,
       };
       const res = await updateProfile(payload);
       toast.success("Perfil actualizado con éxito.");
+      setShowConfirmCodeModal(false);
       if (res?.user) {
         setUserData(res.user);
         login({ user: res.user, token: token || localStorage.getItem("token") });
@@ -397,6 +475,19 @@ export default function Profile() {
 
   // Helper values
   const customerInfo = userData?.customers?.[0];
+  
+  // Check if customer_code can be updated (2 months rule)
+  let canChangeCustomerCode = true;
+  let nextAllowedChangeDate = null;
+  if (customerInfo?.customer_code_updated_at) {
+    const lastUpdateDate = new Date(customerInfo.customer_code_updated_at);
+    const twoMonthsLater = new Date(lastUpdateDate);
+    twoMonthsLater.setMonth(twoMonthsLater.getMonth() + 2);
+    if (new Date() < twoMonthsLater) {
+      canChangeCustomerCode = false;
+      nextAllowedChangeDate = twoMonthsLater.toLocaleDateString();
+    }
+  }
   const userInitials = (userData?.full_name?.trim())
     ? userData.full_name.trim().split(/\s+/).map(n => n[0]).filter(Boolean).join("").slice(0, 2).toUpperCase()
     : (userData?.username || userData?.email || "U").slice(0, 2).toUpperCase();
@@ -589,13 +680,15 @@ export default function Profile() {
               <div className="profile-content-card">
                 <div className="profile-card-header">
                   <div className="profile-card-title-group">
-                    <h2><User size={22} /> Datos Personales</h2>
+                    <h2><User size={22} /> Datos Personales y del Cliente</h2>
                     <p>Mantén tu información actualizada para tus envíos y facturación.</p>
                   </div>
                 </div>
 
                 <form onSubmit={handleProfileSubmit}>
-                  <div className="profile-form-grid">
+                  {/* SECCIÓN: DATOS PERSONALES */}
+                  <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>Datos Personales</h3>
+                  <div className="profile-form-grid" style={{ marginBottom: "24px" }}>
                     <div className="profile-form-group">
                       <label className="profile-label">Nombre(s) *</label>
                       <input
@@ -606,6 +699,7 @@ export default function Profile() {
                         onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })}
                         required
                       />
+                      {!profileForm.first_name && <MissingDataPointer message="Falta completar nombre" />}
                     </div>
 
                     <div className="profile-form-group">
@@ -617,6 +711,7 @@ export default function Profile() {
                         value={profileForm.last_name_paternal}
                         onChange={(e) => setProfileForm({ ...profileForm, last_name_paternal: e.target.value })}
                       />
+                      {!profileForm.last_name_paternal && <MissingDataPointer message="Falta completar apellido paterno" />}
                     </div>
 
                     <div className="profile-form-group">
@@ -631,38 +726,6 @@ export default function Profile() {
                     </div>
 
                     <div className="profile-form-group">
-                      <label className="profile-label">Teléfono / Celular</label>
-                      <input
-                        type="text"
-                        className="profile-input"
-                        placeholder="Ej. +591 70000000"
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="profile-form-group">
-                      <label className="profile-label">Correo Electrónico</label>
-                      <input
-                        type="email"
-                        className="profile-input"
-                        value={userData?.email || ""}
-                        disabled
-                      />
-                      <span className="profile-input-help">Para cambiar tu correo contacta con soporte.</span>
-                    </div>
-
-                    <div className="profile-form-group">
-                      <label className="profile-label">Nombre de Usuario</label>
-                      <input
-                        type="text"
-                        className="profile-input"
-                        value={userData?.username ? `@${userData.username}` : "No configurado"}
-                        disabled
-                      />
-                    </div>
-
-                    <div className="profile-form-group">
                       <label className="profile-label">Fecha de Nacimiento</label>
                       <input
                         type="date"
@@ -670,6 +733,7 @@ export default function Profile() {
                         value={profileForm.birthdate}
                         onChange={(e) => setProfileForm({ ...profileForm, birthdate: e.target.value })}
                       />
+                      {!profileForm.birthdate && <MissingDataPointer message="Falta completar fecha de nacimiento" />}
                     </div>
 
                     <div className="profile-form-group">
@@ -683,6 +747,65 @@ export default function Profile() {
                         <option value="Femenino">Femenino</option>
                         <option value="Prefiero no decirlo">Prefiero no decirlo</option>
                       </select>
+                    </div>
+                  </div>
+
+                  <hr style={{ border: "0", borderTop: "1px solid var(--border-color)", margin: "24px 0" }} />
+
+                  {/* SECCIÓN: DATOS DEL CLIENTE */}
+                  <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>Datos del Cliente</h3>
+                  <div className="profile-form-grid">
+                    <div className="profile-form-group">
+                      <label className="profile-label">Número de Carnet</label>
+                      <input
+                        type="text"
+                        pattern="[0-9]*"
+                        className="profile-input"
+                        placeholder="Ej. 1234567"
+                        value={profileForm.customer_code}
+                        disabled={!canChangeCustomerCode}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (/^\d*$/.test(val)) {
+                            setProfileForm({ ...profileForm, customer_code: val });
+                          }
+                        }}
+                      />
+                      {!canChangeCustomerCode ? (
+                        <span className="profile-input-help" style={{ color: "var(--color-warning, #f59e0b)", display: "flex", gap: "4px", alignItems: "center", marginTop: "4px" }}>
+                          <AlertCircle size={12} />
+                          Solo puedes cambiar este dato cada 2 meses. Próximo cambio disponible: {nextAllowedChangeDate}
+                        </span>
+                      ) : (
+                        <span className="profile-input-help" style={{ color: "var(--text-muted)", display: "flex", gap: "4px", alignItems: "center", marginTop: "4px", fontSize: "11px" }}>
+                          <AlertCircle size={12} />
+                          Nota: Si cambias o guardas tu carnet, no podrás volver a modificarlo durante 2 meses. Piensa bien tu decisión.
+                        </span>
+                      )}
+                      {canChangeCustomerCode && !profileForm.customer_code && <MissingDataPointer message="Falta completar número de carnet" />}
+                    </div>
+
+                    <div className="profile-form-group">
+                      <label className="profile-label">Teléfono / Celular</label>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <input
+                          type="text"
+                          className="profile-input"
+                          style={{ width: "80px" }}
+                          placeholder="+591"
+                          value={profileForm.phone_prefix}
+                          onChange={(e) => setProfileForm({ ...profileForm, phone_prefix: e.target.value })}
+                        />
+                        <input
+                          type="text"
+                          className="profile-input"
+                          style={{ flex: 1 }}
+                          placeholder="70000000"
+                          value={profileForm.phone_number}
+                          onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value })}
+                        />
+                      </div>
+                      {!profileForm.phone_number && <MissingDataPointer message="Falta completar teléfono" />}
                     </div>
                   </div>
 
@@ -923,6 +1046,32 @@ export default function Profile() {
                   </div>
                 </div>
 
+                <div className="profile-form-grid" style={{ marginBottom: "24px" }}>
+                  <div className="profile-form-group">
+                    <label className="profile-label">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      className="profile-input"
+                      value={userData?.email || ""}
+                      disabled
+                    />
+                    <span className="profile-input-help">Para cambiar tu correo contacta con soporte.</span>
+                  </div>
+
+                  <div className="profile-form-group">
+                    <label className="profile-label">Nombre de Usuario</label>
+                    <input
+                      type="text"
+                      className="profile-input"
+                      value={userData?.username ? `@${userData.username}` : "No configurado"}
+                      disabled
+                    />
+                  </div>
+                </div>
+
+                <hr style={{ border: "0", borderTop: "1px solid var(--border-color)", margin: "24px 0" }} />
+
+                <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>Cambiar Contraseña</h3>
                 <form onSubmit={handlePasswordSubmit}>
                   <div className="profile-form-grid">
                     <div className="profile-form-group full-width">
@@ -1416,6 +1565,39 @@ export default function Profile() {
           </section>
         </div>
       </main>
+
+      {/* MODAL DE CONFIRMACIÓN DE CARNET */}
+      {showConfirmCodeModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 10000 }}>
+          <div style={{ background: "var(--bg-card, #fff)", padding: "24px", borderRadius: "12px", maxWidth: "400px", width: "90%", border: "1px solid var(--border-color)" }}>
+            <h3 style={{ marginTop: 0, color: "var(--text-color, #000)" }}>Confirmar Cambio de Carnet</h3>
+            <p style={{ color: "var(--text-muted, #666)", fontSize: "14px", lineHeight: "1.5" }}>
+              Estás a punto de cambiar tu Número de Carnet a <strong>{profileForm.customer_code}</strong>.
+              <br /><br />
+              Atención: Si procedes, <strong>no podrás modificarlo de nuevo durante los próximos 2 meses</strong>. Piensa bien tu decisión, ¿estás seguro de que la información es correcta?
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+              <button 
+                className="profile-btn-outline" 
+                onClick={() => setShowConfirmCodeModal(false)}
+                disabled={savingProfile}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="profile-btn-primary" 
+                onClick={() => {
+                  // Bypass the check by passing true, or just call executeProfileSubmit directly
+                  executeProfileSubmit();
+                }} 
+                disabled={savingProfile}
+              >
+                {savingProfile ? "Guardando..." : "Sí, estoy seguro"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

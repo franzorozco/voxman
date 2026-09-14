@@ -7,6 +7,14 @@ const useShopWishlistStore = create((set, get) => ({
   loading: false,
 
   fetchWishlist: async () => {
+    // Si no hay token guardado, ni siquiera intentamos pedir la wishlist
+    // (así evitamos el error 401 rojo en la consola)
+    const token = localStorage.getItem('token') || localStorage.getItem('shop_auth_token');
+    if (!token || token === 'undefined' || token === 'null') {
+      set({ items: [], loading: false });
+      return;
+    }
+
     try {
       set({ loading: true });
       const response = await api.get('/v1/shop/wishlist');

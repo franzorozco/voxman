@@ -249,7 +249,7 @@ const CartView = () => {
 
   return (
     <div className="cart-page-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-extrabold tracking-tight mb-10 cart-title text-center">Cesta de Compra</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-widest mb-10 cart-title text-center">Cesta de Compra</h1>
 
       <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
         {/* CART ITEMS */}
@@ -297,19 +297,17 @@ const CartView = () => {
                             </div>
                             <div className="ml-4 text-right">
                               {item.discount_label ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                  <p style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.85rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', gap: '8px' }}>
+                                  <p style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.8rem' }}>
                                     Bs {parseFloat(item.original_price || item.price).toFixed(2)}
                                   </p>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ backgroundColor: 'var(--color-danger)', color: 'white', padding: '2px 4px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 }}>
-                                      {item.discount_label}
-                                    </span>
-                                    <p className="text-sm font-bold text-red-600">Bs {parseFloat(item.price).toFixed(2)}</p>
-                                  </div>
+                                  <p className="text-sm font-bold text-gray-900">Bs {parseFloat(item.price).toFixed(2)}</p>
+                                  <span style={{ border: '1px solid #111827', color: '#111827', padding: '1px 4px', fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                                    {item.discount_label}
+                                  </span>
                                 </div>
                               ) : (
-                                <p className="text-sm font-medium cart-item-price">Bs {parseFloat(item.price).toFixed(2)}</p>
+                                <p className="text-sm font-medium cart-item-price text-gray-900">Bs {parseFloat(item.price).toFixed(2)}</p>
                               )}
                             </div>
                           </div>
@@ -322,10 +320,10 @@ const CartView = () => {
                         </div>
 
                         <div className="mt-4 flex-1 flex items-end justify-between">
-                          <div className="flex items-center border rounded-md cart-quantity-container">
+                          <div className="flex items-center border border-gray-300 rounded-none cart-quantity-container">
                             <button
                               type="button"
-                              className="p-2 cart-quantity-btn"
+                              className="p-2 text-gray-500 hover:text-black transition-colors cart-quantity-btn"
                               onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity - 1, item.id)}
                               disabled={item.quantity <= 1 || isLoading}
                             >
@@ -334,7 +332,7 @@ const CartView = () => {
                             <span className="px-4 text-sm font-medium cart-quantity-text">{item.quantity}</span>
                             <button
                               type="button"
-                              className="p-2 cart-quantity-btn"
+                              className="p-2 text-gray-500 hover:text-black transition-colors cart-quantity-btn"
                               onClick={() => handleUpdateQuantity(item.product_id, item.variant_id, item.quantity + 1, item.id)}
                               disabled={isLoading}
                             >
@@ -344,7 +342,7 @@ const CartView = () => {
                           <div className="ml-4">
                             <button
                               type="button"
-                              className="text-sm font-medium cart-remove-btn"
+                              className="text-gray-400 hover:text-red-600 transition-colors p-2"
                               onClick={() => handleRemove(item.product_id, item.variant_id, uniqueId)}
                             >
                               <Trash2 className="h-5 w-5" />
@@ -361,12 +359,12 @@ const CartView = () => {
         </div>
 
         {/* ORDER SUMMARY */}
-        <div className="mt-16 bg-gray-50 rounded-lg px-4 py-6 sm:p-6 lg:p-8 lg:mt-0 lg:col-span-5 cart-summary-box">
-          <h2 className="text-lg font-medium cart-summary-title">Resumen de compra</h2>
+        <div className="mt-16 bg-transparent border border-gray-200 rounded-none px-4 py-6 sm:p-6 lg:p-8 lg:mt-0 lg:col-span-5 cart-summary-box">
+          <h2 className="text-lg font-bold uppercase tracking-widest cart-summary-title">Resumen de compra</h2>
 
           {/* Discount Input Area */}
           <div className="mt-6 border-t border-gray-200 pt-4">
-            <label htmlFor="discount-code" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="discount-code" className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">
               Código de descuento
             </label>
             <div className="flex gap-2">
@@ -376,14 +374,14 @@ const CartView = () => {
                 value={discountCode}
                 onChange={(e) => setDiscountCode(e.target.value)}
                 disabled={appliedDiscount !== null || discountLoading}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-gray-100 disabled:text-gray-500 uppercase"
+                className="flex-1 rounded-none border-b border-t-0 border-l-0 border-r-0 border-gray-300 px-0 py-2 text-sm bg-transparent focus:border-black focus:outline-none focus:ring-0 disabled:text-gray-400 uppercase"
                 placeholder="Ingresa tu cupón"
               />
               {appliedDiscount ? (
                 <button
                   type="button"
                   onClick={handleRemoveDiscount}
-                  className="rounded-md bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                  className="rounded-none border border-red-600 bg-transparent px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-600 hover:text-white transition-colors"
                 >
                   Quitar
                 </button>
@@ -392,14 +390,14 @@ const CartView = () => {
                   type="button"
                   onClick={handleApplyDiscount}
                   disabled={!discountCode.trim() || discountLoading}
-                  className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors disabled:cursor-not-allowed"
+                  className="rounded-none border border-black bg-transparent px-4 py-2 text-xs font-bold uppercase tracking-wider text-black hover:bg-black hover:text-white disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
                 >
                   {discountLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
                 </button>
               )}
             </div>
             {appliedDiscount && (
-              <p className="mt-2 text-sm text-green-600 font-medium flex items-center gap-1">
+              <p className="mt-2 text-xs text-green-600 font-bold uppercase tracking-wider flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 {appliedDiscount.message || "Descuento aplicado"}
               </p>
@@ -408,33 +406,33 @@ const CartView = () => {
 
           <dl className="mt-4 space-y-4 border-t border-gray-200 pt-4">
             <div className="flex items-center justify-between">
-              <dt className="text-sm cart-summary-label">Subtotal</dt>
+              <dt className="text-sm font-medium text-gray-500 cart-summary-label">Subtotal</dt>
               <dd className="text-sm font-medium cart-summary-value">Bs {total.toFixed(2)}</dd>
             </div>
             
             {appliedDiscount && (
-              <div className="flex items-center justify-between text-green-600">
+              <div className="flex items-center justify-between text-gray-900">
                 <dt className="text-sm font-medium">Descuento ({appliedDiscount.code})</dt>
-                <dd className="text-sm font-medium">-Bs {parseFloat(appliedDiscount.discount_amount).toFixed(2)}</dd>
+                <dd className="text-sm font-bold">-Bs {parseFloat(appliedDiscount.discount_amount).toFixed(2)}</dd>
               </div>
             )}
             
             <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-              <dt className="text-base font-medium cart-summary-total-label">Total estimado</dt>
+              <dt className="text-base font-bold uppercase tracking-wider cart-summary-total-label">Total estimado</dt>
               <dd className="text-base font-bold cart-summary-total-value">
                 Bs {appliedDiscount ? (total - parseFloat(appliedDiscount.discount_amount)).toFixed(2) : total.toFixed(2)}
               </dd>
             </div>
           </dl>
 
-          <div className="mt-6">
+          <div className="mt-8 mb-4">
             <button
               onClick={handleCheckoutClick}
               disabled={items.length === 0 || isCheckingOut}
-              className={`w-full py-4 px-6 rounded-md text-base font-bold uppercase tracking-[0.1em] transition-all duration-300 flex items-center justify-center gap-3 relative group overflow-hidden ${
+              className={`w-full py-4 px-6 rounded-none text-sm font-bold uppercase tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-3 relative group overflow-hidden ${
                 items.length === 0 || isCheckingOut
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                  : 'bg-black text-white hover:bg-gray-900 active:scale-[0.98] shadow-sm hover:shadow-md'
+                  ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed' 
+                  : 'bg-black text-white hover:bg-white hover:text-black border border-black active:scale-[0.98]'
               }`}
             >
               {isCheckingOut ? (

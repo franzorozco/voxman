@@ -29,6 +29,22 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showConfirmCodeModal, setShowConfirmCodeModal] = useState(false);
+  
+  // Calculate if customer code can be changed
+  const customerInfo = initialData?.customers?.[0] || initialData;
+  const lastCodeUpdate = customerInfo?.customer_code_updated_at;
+  let canChangeCustomerCode = true;
+  let nextAllowedChangeDate = null;
+  if (lastCodeUpdate) {
+    const lastUpdateDate = new Date(lastCodeUpdate);
+    const twoMonthsLater = new Date(lastUpdateDate);
+    twoMonthsLater.setMonth(twoMonthsLater.getMonth() + 2);
+    if (new Date() < twoMonthsLater) {
+      canChangeCustomerCode = false;
+      nextAllowedChangeDate = twoMonthsLater.toLocaleDateString();
+    }
+  }
   
   // Map configuration
   const defaultCenter = { lat: -16.4897, lng: -68.1193 }; // La Paz, Bolivia
@@ -40,7 +56,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
   useEffect(() => {
     if (isOpen) {
       let initialPhoneCode = "+591";
-      let initialPhoneNumber = initialData.phone || "";
+      let initialPhoneNumber = initialData.phone || initialData.profile?.phone || "";
       
       // Basic logic to split if the phone has a country code
       if (initialPhoneNumber.startsWith("+")) {
@@ -52,9 +68,6 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
       }
 
       let profileFirstName = initialData.first_name || initialData.profile?.first_name || "";
-      if (initialData.username && profileFirstName === initialData.username) {
-        profileFirstName = "";
-      }
 
       setForm({
         first_name: profileFirstName,
@@ -62,7 +75,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
         last_name_maternal: initialData.last_name_maternal || initialData.profile?.last_name_maternal || "",
         birthdate: initialData.birthdate || initialData.profile?.birthdate || "",
         gender: initialData.gender || initialData.profile?.gender || "",
-        customer_code: initialData.customer_code || "",
+        customer_code: customerInfo?.customer_code || "",
         phoneCode: initialPhoneCode,
         phoneNumber: initialPhoneNumber,
         country: "Bolivia",
@@ -79,6 +92,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
       setMarkerPos(null);
       setMapCenter(defaultCenter);
       setIsMapOpen(false);
+      setShowConfirmCodeModal(false);
     }
   }, [isOpen, initialData]);
 
@@ -91,20 +105,17 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
     
     if (name === "last_name_paternal" || name === "last_name_maternal") {
       const paternal = name === "last_name_paternal" ? value : currentForm.last_name_paternal;
-      const maternal = name === "last_name_maternal" ? value : currentForm.last_name_maternal;
       
-      if (!paternal.trim() && !maternal.trim()) {
+      if (!paternal.trim()) {
         setErrors((prev) => ({ 
           ...prev, 
-          last_name_paternal: "Se requiere al menos un apellido",
-          last_name_maternal: "Se requiere al menos un apellido"
+          last_name_paternal: "El apellido paterno es obligatorio",
         }));
         return;
       } else {
         setErrors((prev) => ({ 
           ...prev, 
           last_name_paternal: "",
-          last_name_maternal: ""
         }));
         return;
       }
@@ -195,25 +206,34 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.first_name || (!form.last_name_paternal && !form.last_name_maternal) || !form.customer_code || !form.phoneNumber) {
-      toast.error("Por favor completa los campos requeridos (mínimo un apellido)");
+    if (e) e.preventDefault();
+    if (!form.first_name || !form.last_name_paternal || !form.customer_code || !form.phoneNumber) {
+      toast.error("Por favor completa los campos requeridos");
       setErrors({
         first_name: !form.first_name ? "El nombre es requerido" : "",
-        last_name_paternal: (!form.last_name_paternal && !form.last_name_maternal) ? "Se requiere al menos un apellido" : "",
-        last_name_maternal: (!form.last_name_paternal && !form.last_name_maternal) ? "Se requiere al menos un apellido" : "",
+        last_name_paternal: !form.last_name_paternal ? "El apellido paterno es obligatorio" : "",
         customer_code: !form.customer_code ? "Cédula de identidad es requerida" : "",
         phoneNumber: !form.phoneNumber ? "Teléfono es requerido" : ""
       });
       return;
     }
 
-    const payload = {
-      ...form,
-      phone: `${form.phoneCode} ${form.phoneNumber}`,
-      latitude: isMapOpen ? form.latitude : null,
-      longitude: isMapOpen ? form.longitude : null
-    };
+    const originalCode = customerInfo?.customer_code || "";
+    if (canChangeCustomerCode && form.customer_code !== originalCode && !showConfirmCodeModal) {
+      setShowConfirmCodeModal(true);
+      return;
+    }
+
+    executeSubmit();
+  };
+
+  const executeSubmit = async () => {
+    const payload = { ...form };
+    delete payload.birthdate;
+    delete payload.gender;
+    payload.phone = `${form.phoneCode} ${form.phoneNumber}`;
+    payload.latitude = isMapOpen ? form.latitude : null;
+    payload.longitude = isMapOpen ? form.longitude : null;
 
     try {
       setLoading(true);
@@ -222,6 +242,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
       localStorage.setItem("shop_user", JSON.stringify(updatedUser));
       
       toast.success("Perfil actualizado");
+      setShowConfirmCodeModal(false);
       onSuccess(updatedUser);
     } catch (error) {
       toast.error(error.response?.data?.message || "Error al guardar el perfil");
@@ -251,7 +272,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
           placeholder={placeholder}
           value={form[name] || ''}
           onChange={handleChange}
-          style={{ flex: 1, background: 'transparent', border: 'none', padding: '12px', color: textColor, fontSize: '15px', outline: 'none' }}
+          style={{ flex: 1, width: '100%', minWidth: 0, background: 'transparent', border: 'none', padding: '12px', color: textColor, fontSize: '15px', outline: 'none' }}
         />
       </div>
       {errors[name] && <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '6px', display: 'block' }}>{errors[name]}</span>}
@@ -287,46 +308,50 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
             <div>
               <h3 style={{ fontSize: '15px', fontWeight: '600', color: textColor, marginBottom: '12px' }}>Datos Personales (Requerido)</h3>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                {renderInput("first_name", "Nombres", "text", User)}
-                {renderInput("last_name_paternal", "Apellido Paterno", "text", User)}
+              <div className="responsive-grid-2" style={{ gap: '16px', marginBottom: '16px' }}>
+                {renderInput("first_name", "Nombres *", "text", User)}
+                {renderInput("last_name_paternal", "Apellido Paterno *", "text", User)}
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 {renderInput("last_name_maternal", "Apellido Materno", "text", User)}
-                {renderInput("birthdate", "Fecha de nacimiento (Opcional)", "date", null)}
-              </div>
-              
-              <div style={{ 
-                marginBottom: '16px',
-                '--bg-input': inputBg,
-                '--border-color': borderColor,
-                '--text-main': textColor,
-                '--bg-card': modalBg,
-                '--color-primary': '#c9a227',
-                '--color-primary-alpha': 'rgba(201, 162, 39, 0.1)',
-                '--text-muted': mutedColor
-              }}>
-                <CustomSelect
-                  name="gender"
-                  value={form.gender || ""}
-                  onChange={handleChange}
-                  placeholder="Seleccionar género (Opcional)"
-                >
-                  <option value="Masculino">Masculino</option>
-                  <option value="Femenino">Femenino</option>
-                  <option value="Prefiero no decirlo">Prefiero no decirlo</option>
-                </CustomSelect>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {renderInput("customer_code", "Cédula de Identidad (CI)", "text", User)}
+              <div className="responsive-grid-2" style={{ gap: '16px' }}>
+                <div>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', backgroundColor: inputBg,
+                    border: `1px solid ${errors.customer_code ? '#ef4444' : borderColor}`, borderRadius: '8px', padding: '0 12px',
+                    opacity: canChangeCustomerCode ? 1 : 0.7
+                  }}>
+                    <User size={18} color={mutedColor} />
+                    <input
+                      name="customer_code"
+                      type="text"
+                      placeholder="Cédula de Identidad (CI) *"
+                      value={form.customer_code || ''}
+                      onChange={handleChange}
+                      disabled={!canChangeCustomerCode}
+                      style={{ flex: 1, width: '100%', minWidth: 0, background: 'transparent', border: 'none', padding: '12px', color: textColor, fontSize: '15px', outline: 'none' }}
+                    />
+                  </div>
+                  {errors.customer_code && <span style={{ color: '#ef4444', fontSize: '12px', marginTop: '6px', display: 'block' }}>{errors.customer_code}</span>}
+                  {!canChangeCustomerCode ? (
+                    <span style={{ color: '#f59e0b', fontSize: '11px', marginTop: '6px', display: 'block' }}>
+                      Solo puedes cambiar este dato cada 2 meses. Disponible: {nextAllowedChangeDate}
+                    </span>
+                  ) : (
+                    <span style={{ color: mutedColor, fontSize: '11px', marginTop: '6px', display: 'block' }}>
+                      Nota: Al guardar, no podrás modificar tu CI por 2 meses.
+                    </span>
+                  )}
+                </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <div style={{ width: '80px', flexShrink: 0 }}>
                     {renderInput("phoneCode", "Ej: +591", "text", null)}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    {renderInput("phoneNumber", "Celular / WhatsApp", "tel", Phone)}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {renderInput("phoneNumber", "Celular / WhatsApp *", "tel", Phone)}
                   </div>
                 </div>
               </div>
@@ -395,12 +420,12 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                 )}
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="responsive-grid-2" style={{ gap: '16px', marginBottom: '16px' }}>
                 {renderInput("state", "Departamento", "text", Map)}
                 {renderInput("city", "Ciudad", "text", MapPin)}
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="responsive-grid-2" style={{ gap: '16px', marginBottom: '16px' }}>
                 {renderInput("zone", "Zona / Barrio", "text", Navigation)}
                 {renderInput("street", "Calle o Avenida", "text")}
               </div>
@@ -426,10 +451,53 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
           </button>
         </div>
       </div>
+
+      {showConfirmCodeModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 99999 }}>
+          <div style={{ background: modalBg, padding: "24px", borderRadius: "12px", maxWidth: "400px", width: "90%", border: `1px solid ${borderColor}` }}>
+            <h3 style={{ marginTop: 0, color: textColor, fontSize: '18px' }}>Confirmar Cambio de Carnet</h3>
+            <p style={{ color: mutedColor, fontSize: "14px", lineHeight: "1.5" }}>
+              Estás a punto de cambiar tu Cédula de Identidad a <strong>{form.customer_code}</strong>.
+              <br /><br />
+              Atención: Si procedes, <strong>no podrás modificarlo de nuevo durante los próximos 2 meses</strong>. Piensa bien tu decisión, ¿estás seguro de que la información es correcta?
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+              <button 
+                type="button"
+                style={{ background: 'transparent', border: `1px solid ${borderColor}`, color: textColor, padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
+                onClick={() => setShowConfirmCodeModal(false)}
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button"
+                style={{ background: textColor, color: modalBg, border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
+                onClick={executeSubmit} 
+                disabled={loading}
+              >
+                {loading ? "Guardando..." : "Sí, estoy seguro"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <style>{`
         @keyframes modalSlideUp {
           from { opacity: 0; transform: translateY(20px) scale(0.95); }
           to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (min-width: 601px) {
+          .responsive-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        @media (max-width: 600px) {
+          .responsive-grid-2 {
+            display: flex;
+            flex-direction: column;
+          }
         }
       `}</style>
     </div>

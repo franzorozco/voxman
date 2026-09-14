@@ -8,6 +8,190 @@ import { API_BASE_URL } from '../../../config/api';
 import { Check, Copy, Share2, ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import './BundleDetail.css';
 
+const ZoomableImage = ({ src, alt, className, style, onClick, disableTouchZoom = false }) => {
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+  const clickStartTime = React.useRef(0);
+
+  const updatePosition = (clientX, clientY, currentTarget) => {
+    const rect = currentTarget.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+    setPosition({ x, y });
+  };
+
+  const handleMouseDown = (e) => {
+    clickStartTime.current = Date.now();
+    setIsZoomed(true);
+    updatePosition(e.clientX, e.clientY, e.currentTarget);
+  };
+
+  const handleMouseMove = (e) => {
+    if (isZoomed) {
+      updatePosition(e.clientX, e.clientY, e.currentTarget);
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    clickStartTime.current = Date.now();
+    if (disableTouchZoom) return;
+    setIsZoomed(true);
+    updatePosition(e.touches[0].clientX, e.touches[0].clientY, e.currentTarget);
+  };
+
+  const handleTouchMove = (e) => {
+    if (disableTouchZoom) return;
+    if (isZoomed) {
+      updatePosition(e.touches[0].clientX, e.touches[0].clientY, e.currentTarget);
+    }
+  };
+
+  const handleMouseUp = () => setIsZoomed(false);
+
+  const handleClick = (e) => {
+    const duration = Date.now() - clickStartTime.current;
+    if (duration > 200) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (onClick) onClick(e);
+  };
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      style={{
+        ...style,
+        transformOrigin: `${position.x}% ${position.y}%`,
+        transform: isZoomed ? 'scale(2.5)' : undefined,
+        cursor: isZoomed ? 'grabbing' : 'zoom-in',
+        transition: isZoomed ? 'none' : 'transform 0.4s ease-out',
+        touchAction: isZoomed ? 'none' : 'auto'
+      }}
+      draggable={false}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleMouseUp}
+      onTouchCancel={handleMouseUp}
+      onClick={handleClick}
+    />
+  );
+};
+
+const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
+  const scrollRef = React.useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  const handlePrev = () => {
+    if (scrollRef.current && currentIndex > 0) {
+      const newIndex = currentIndex - 1;
+      setCurrentIndex(newIndex);
+      scrollRef.current.scrollTo({ left: window.innerWidth * newIndex, behavior: 'smooth' });
+    }
+  };
+
+  const handleNext = () => {
+    if (scrollRef.current && currentIndex < images.length - 1) {
+      const newIndex = currentIndex + 1;
+      setCurrentIndex(newIndex);
+      scrollRef.current.scrollTo({ left: window.innerWidth * newIndex, behavior: 'smooth' });
+    }
+  };
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const index = Math.round(scrollRef.current.scrollLeft / window.innerWidth);
+    if (index !== currentIndex) {
+      setCurrentIndex(index);
+    }
+  };
+
+  return (
+    <div className="lightbox-overlay" style={{
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+      background: 'linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 100%)',
+      zIndex: 999999, display: 'flex', flexDirection: 'column'
+    }}>
+      <button onClick={onClose} style={{
+        position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)',
+        border: 'none', color: '#fff', fontSize: '24px', width: '40px', height: '40px',
+        borderRadius: '50%', zIndex: 1000000, display: 'flex', alignItems: 'center', 
+        justifyContent: 'center', cursor: 'pointer'
+      }}>✕</button>
+      
+      {/* Flecha Izquierda (solo PC) */}
+      {currentIndex > 0 && (
+        <button onClick={handlePrev} className="lightbox-nav-btn" style={{
+          position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)',
+          background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px',
+          width: '50px', height: '50px', borderRadius: '50%', zIndex: 1000000, cursor: 'pointer',
+          display: window.innerWidth > 768 ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center'
+        }}>
+          ‹
+        </button>
+      )}
+
+      {/* Flecha Derecha (solo PC) */}
+      {currentIndex < images.length - 1 && (
+        <button onClick={handleNext} className="lightbox-nav-btn" style={{
+          position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
+          background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px',
+          width: '50px', height: '50px', borderRadius: '50%', zIndex: 1000000, cursor: 'pointer',
+          display: window.innerWidth > 768 ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center'
+        }}>
+          ›
+        </button>
+      )}
+
+      <div className="lightbox-scroll-container" onScroll={handleScroll} style={{
+        display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', 
+        width: '100%', height: '100%', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none'
+      }}
+      ref={(el) => {
+        scrollRef.current = el;
+        if (el && initialIndex > 0 && !el.dataset.scrolled) {
+          el.scrollLeft = window.innerWidth * initialIndex;
+          el.dataset.scrolled = 'true';
+        }
+      }}>
+        {images.map((img, i) => (
+          <div key={i} style={{ 
+            minWidth: '100vw', height: '100%', display: 'flex', 
+            alignItems: 'center', justifyContent: 'center', scrollSnapAlign: 'start',
+            padding: '20px'
+          }}>
+            <ZoomableImage src={img} alt={`img-${i}`} style={{ 
+              maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', 
+              borderRadius: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' 
+            }} />
+          </div>
+        ))}
+      </div>
+      
+      <div style={{
+        position: 'absolute', bottom: '30px', left: 0, width: '100%',
+        display: 'flex', justifyContent: 'center', gap: '8px', zIndex: 1000000, pointerEvents: 'none'
+      }}>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>
+          {window.innerWidth > 768 ? 'Usa las flechas para navegar' : 'Desliza para ver más'} • Mantén para zoom
+        </p>
+      </div>
+    </div>
+  );
+};
+
 
 const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange, onSelectionChange }) => {
   const [selectedColor, setSelectedColor] = React.useState(null);
@@ -514,6 +698,9 @@ const BundleDetail = () => {
   // Tracks the selected variant/price for each configurable item
   const [selectionsMap, setSelectionsMap] = useState({});
 
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
   const handleItemValidation = React.useCallback((productId, isValid) => {
     setItemsValidState(prev => {
       if (prev[productId] === isValid) return prev;
@@ -709,6 +896,14 @@ const BundleDetail = () => {
 
   return (
     <div className="product-detail-page">
+      {lightboxOpen && (
+        <FullscreenLightbox 
+          images={galleryImages.map(img => getImageUrl(img))}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
+      
       {/* Breadcrumbs */}
       <nav className="product-breadcrumb">
         <Link to="/shop">Inicio</Link>
@@ -731,10 +926,15 @@ const BundleDetail = () => {
                 key={`gallery-${idx}`} 
                 className={`product-gallery-item editorial-item ${posClass}`}
               >
-                <img 
+                <ZoomableImage 
                   src={getImageUrl(img)} 
                   alt={`${bundle.name} - Imagen ${idx + 1}`} 
                   loading={idx === 0 ? "eager" : "lazy"}
+                  disableTouchZoom={true}
+                  onClick={() => {
+                    setLightboxIndex(idx);
+                    setLightboxOpen(true);
+                  }}
                 />
               </div>
             );

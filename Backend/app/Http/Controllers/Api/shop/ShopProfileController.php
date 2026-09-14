@@ -44,10 +44,10 @@ class ShopProfileController extends Controller
     public function updateCustomerProfile(Request $request)
     {
         $request->validate([
-            'customer_code' => 'nullable|string|max:50',
-            'phone' => 'nullable|string|max:50',
+            'customer_code' => 'required|string|max:50',
+            'phone' => 'required|string|max:50',
             'first_name' => 'required|string|max:100',
-            'last_name_paternal' => 'nullable|string|max:100',
+            'last_name_paternal' => 'required|string|max:100',
             'last_name_maternal' => 'nullable|string|max:100',
             'birthdate' => 'nullable|date_format:Y-m-d',
             'gender' => 'nullable|string|max:50',
@@ -71,9 +71,9 @@ class ShopProfileController extends Controller
                         'phone' => $request->phone ?? $user->profile->phone,
                         'first_name' => $request->first_name,
                         'last_name_paternal' => $request->last_name_paternal,
-                        'last_name_maternal' => $request->last_name_maternal,
-                        'birthdate' => $request->birthdate,
-                        'gender' => $request->gender
+                        'last_name_maternal' => $request->has('last_name_maternal') ? $request->last_name_maternal : $user->profile->last_name_maternal,
+                        'birthdate' => $request->has('birthdate') ? $request->birthdate : $user->profile->birthdate,
+                        'gender' => $request->has('gender') ? $request->gender : $user->profile->gender
                     ]);
                 } else {
                     \App\Models\Core\UserProfile::create([
@@ -89,6 +89,13 @@ class ShopProfileController extends Controller
 
                 // Create or Update Customer
                 $existingCustomer = $user->customers()->first();
+                
+                if ($existingCustomer && $request->filled('customer_code') && $existingCustomer->customer_code !== $request->customer_code) {
+                    if ($existingCustomer->customer_code_updated_at && \Carbon\Carbon::parse($existingCustomer->customer_code_updated_at)->addMonths(2)->isFuture()) {
+                        throw new \Exception('No puedes cambiar tu número de carnet todavía. Deben pasar 2 meses desde el último cambio.');
+                    }
+                }
+
                 $code = $request->customer_code 
                     ?: ($existingCustomer ? $existingCustomer->customer_code : 'CLI-' . strtoupper(substr(uniqid(), -6)));
 
@@ -104,6 +111,7 @@ class ShopProfileController extends Controller
                 if (!$customer->wasRecentlyCreated && $request->filled('customer_code') && $customer->customer_code !== $request->customer_code) {
                     $customer->update([
                         'customer_code' => $request->customer_code,
+                        'customer_code_updated_at' => now(),
                         'tags' => $request->tags ?? $customer->tags
                     ]);
                 }
@@ -111,7 +119,6 @@ class ShopProfileController extends Controller
                 // Create Address ONLY if street or zone is supplied
                 if ($request->filled('street') || $request->filled('zone')) {
                     \App\Models\Core\Address::create([
-                        'user_id' => $user->id,
                         'customer_id' => $customer->id,
                         'address_type' => 'shipping',
                         'country' => $request->country ?? 'Bolivia',
@@ -191,7 +198,6 @@ class ShopProfileController extends Controller
         }
 
         $address = \App\Models\Core\Address::create([
-            'user_id' => $user->id,
             'customer_id' => $customer->id,
             'address_type' => 'shipping',
             'country' => $request->country ?? 'Bolivia',

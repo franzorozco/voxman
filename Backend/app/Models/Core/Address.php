@@ -7,7 +7,6 @@ use App\Models\Base\Address as BaseAddress;
 class Address extends BaseAddress
 {
 	protected $fillable = [
-		'user_id',
 		'customer_id',
 		'branch_id',
 		'address_type',

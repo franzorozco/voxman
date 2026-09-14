@@ -263,6 +263,7 @@
     right: -100%;
 
     width: 75%;
+    max-width: 350px;
     height: calc(100vh - 70px);
 
     background: #000;

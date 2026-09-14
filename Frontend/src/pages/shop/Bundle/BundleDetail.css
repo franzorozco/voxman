@@ -18,14 +18,14 @@
   background-color: var(--bg-main, #fff);
   min-height: 100vh;
   color: var(--text-main, #111827);
-  padding-top: 70px; /* altura real del .nav-header */
+  padding-top: 0;
 }
 
 /* Breadcrumbs */
 .product-breadcrumb {
   max-width: 1200px;
-  margin: 0 auto 28px auto;
-  padding: 8px 16px 0;
+  margin: 0 auto 32px auto;
+  padding: 16px 16px 0;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -378,7 +378,7 @@
 
 /* ===== RESPONSIVE TABLET (769-1023px) ===== */
 @media (max-width: 1023px) and (min-width: 769px) {
-  .product-detail-page { padding-top: 56px; }
+  .product-detail-page { padding-top: 0; }
   .product-info-container { padding: 20px 24px 48px; }
   .bundle-title, .product-title { font-size: 22px; }
   .bundle-piece-card { grid-template-columns: 140px 1fr; gap: 20px; }
@@ -386,8 +386,8 @@
 
 /* ===== RESPONSIVE MOVIL (<=768px) ===== */
 @media (max-width: 768px) {
-  .product-detail-page { padding-top: 54px; }
-  .product-breadcrumb { padding: 6px 12px 0; font-size: 10px; margin-bottom: 20px; }
+  .product-detail-page { padding-top: 0; }
+  .product-breadcrumb { padding: 16px 12px 0; font-size: 10px; margin-bottom: 16px; }
 
   .product-info-container { padding: 16px 16px 48px; }
 
@@ -429,7 +429,7 @@
 
 /* ===== RESPONSIVE MOVIL PEQUENO (<=480px) ===== */
 @media (max-width: 480px) {
-  .product-detail-page { padding-top: 60px; }
+  .product-detail-page { padding-top: 0; }
   .bundle-title, .product-title { font-size: 17px; }
   .product-info-container { padding: 12px 12px 40px; }
 

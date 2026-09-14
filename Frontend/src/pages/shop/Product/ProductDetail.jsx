@@ -11,30 +11,55 @@ import './ProductDetail.css';
 
 
 
-const ZoomableImage = ({ src, alt, className }) => {
+const ZoomableImage = ({ src, alt, className, style, onClick, disableTouchZoom = false }) => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [position, setPosition] = useState({ x: 50, y: 50 });
+  const clickStartTime = React.useRef(0);
 
-  const updatePosition = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+  const updatePosition = (clientX, clientY, currentTarget) => {
+    const rect = currentTarget.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
     setPosition({ x, y });
   };
 
   const handleMouseDown = (e) => {
+    clickStartTime.current = Date.now();
     setIsZoomed(true);
-    updatePosition(e);
+    updatePosition(e.clientX, e.clientY, e.currentTarget);
   };
 
   const handleMouseMove = (e) => {
     if (isZoomed) {
-      updatePosition(e);
+      updatePosition(e.clientX, e.clientY, e.currentTarget);
     }
   };
 
-  const handleMouseUp = () => {
-    setIsZoomed(false);
+  const handleTouchStart = (e) => {
+    clickStartTime.current = Date.now();
+    if (disableTouchZoom) return;
+    setIsZoomed(true);
+    updatePosition(e.touches[0].clientX, e.touches[0].clientY, e.currentTarget);
+  };
+
+  const handleTouchMove = (e) => {
+    if (disableTouchZoom) return;
+    if (isZoomed) {
+      updatePosition(e.touches[0].clientX, e.touches[0].clientY, e.currentTarget);
+    }
+  };
+
+  const handleMouseUp = () => setIsZoomed(false);
+
+  const handleClick = (e) => {
+    const duration = Date.now() - clickStartTime.current;
+    // Si mantuvieron presionado por más de 200ms, fue un zoom, no abrimos el modal
+    if (duration > 200) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (onClick) onClick(e);
   };
 
   return (
@@ -43,17 +68,133 @@ const ZoomableImage = ({ src, alt, className }) => {
       alt={alt}
       className={className}
       style={{
+        ...style,
         transformOrigin: `${position.x}% ${position.y}%`,
         transform: isZoomed ? 'scale(2.5)' : undefined,
         cursor: isZoomed ? 'grabbing' : 'zoom-in',
-        transition: isZoomed ? 'none' : 'transform 0.5s ease',
+        transition: isZoomed ? 'none' : 'transform 0.4s ease-out',
+        touchAction: isZoomed ? 'none' : 'auto' // Permite scroll horizontal (swipe) y vertical
       }}
       draggable={false}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleMouseUp}
+      onTouchCancel={handleMouseUp}
+      onClick={handleClick}
     />
+  );
+};
+
+const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
+  const scrollRef = React.useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'; // Evita el scroll del fondo
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  const handlePrev = () => {
+    if (scrollRef.current && currentIndex > 0) {
+      const newIndex = currentIndex - 1;
+      setCurrentIndex(newIndex);
+      scrollRef.current.scrollTo({ left: window.innerWidth * newIndex, behavior: 'smooth' });
+    }
+  };
+
+  const handleNext = () => {
+    if (scrollRef.current && currentIndex < images.length - 1) {
+      const newIndex = currentIndex + 1;
+      setCurrentIndex(newIndex);
+      scrollRef.current.scrollTo({ left: window.innerWidth * newIndex, behavior: 'smooth' });
+    }
+  };
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const index = Math.round(scrollRef.current.scrollLeft / window.innerWidth);
+    if (index !== currentIndex) {
+      setCurrentIndex(index);
+    }
+  };
+
+  return (
+    <div className="lightbox-overlay" style={{
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+      background: 'linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 100%)',
+      zIndex: 999999, display: 'flex', flexDirection: 'column'
+    }}>
+      <button onClick={onClose} style={{
+        position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)',
+        border: 'none', color: '#fff', fontSize: '24px', width: '40px', height: '40px',
+        borderRadius: '50%', zIndex: 1000000, display: 'flex', alignItems: 'center', 
+        justifyContent: 'center', cursor: 'pointer'
+      }}>
+        ✕
+      </button>
+
+      {/* Flecha Izquierda (solo PC) */}
+      {currentIndex > 0 && (
+        <button onClick={handlePrev} className="lightbox-nav-btn" style={{
+          position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)',
+          background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px',
+          width: '50px', height: '50px', borderRadius: '50%', zIndex: 1000000, cursor: 'pointer',
+          display: window.innerWidth > 768 ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center'
+        }}>
+          ‹
+        </button>
+      )}
+
+      {/* Flecha Derecha (solo PC) */}
+      {currentIndex < images.length - 1 && (
+        <button onClick={handleNext} className="lightbox-nav-btn" style={{
+          position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
+          background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px',
+          width: '50px', height: '50px', borderRadius: '50%', zIndex: 1000000, cursor: 'pointer',
+          display: window.innerWidth > 768 ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center'
+        }}>
+          ›
+        </button>
+      )}
+      
+      <div className="lightbox-scroll-container" onScroll={handleScroll} style={{
+        display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', 
+        width: '100%', height: '100%', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none'
+      }}
+      ref={(el) => {
+        scrollRef.current = el;
+        if (el && initialIndex > 0 && !el.dataset.scrolled) {
+          el.scrollLeft = window.innerWidth * initialIndex;
+          el.dataset.scrolled = 'true';
+        }
+      }}>
+        {images.map((img, i) => (
+          <div key={i} style={{ 
+            minWidth: '100vw', height: '100%', display: 'flex', 
+            alignItems: 'center', justifyContent: 'center', scrollSnapAlign: 'start',
+            padding: '20px'
+          }}>
+            <ZoomableImage src={img} alt={`img-${i}`} style={{ 
+              maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', 
+              borderRadius: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' 
+            }} />
+          </div>
+        ))}
+      </div>
+      
+      <div style={{
+        position: 'absolute', bottom: '30px', left: 0, width: '100%',
+        display: 'flex', justifyContent: 'center', gap: '8px', zIndex: 1000000, pointerEvents: 'none'
+      }}>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>
+          {window.innerWidth > 768 ? 'Usa las flechas para navegar' : 'Desliza para ver más'} • Mantén para zoom
+        </p>
+      </div>
+    </div>
   );
 };
 
@@ -74,11 +215,13 @@ const ProductDetail = () => {
   
   // Images to display
   const [displayImages, setDisplayImages] = useState([]);
-  
-  // Accordions
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Accordion states
   const [openAccordion, setOpenAccordion] = useState('description');
-  
-  // Animation State
+
+  // Animation state para el botón "Añadir a la Cesta"
   const [addedAnimation, setAddedAnimation] = useState(false);
 
   const addToCart = useShopCartStore((state) => state.addToCart);
@@ -388,6 +531,14 @@ const ProductDetail = () => {
 
   return (
     <div className="product-detail-page">
+      {lightboxOpen && (
+        <FullscreenLightbox 
+          images={displayImages.map(img => getImageUrl(img))}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
+      
       {/* Breadcrumbs */}
       <nav className="product-breadcrumb">
         <Link to="/shop">Inicio</Link>
@@ -407,7 +558,16 @@ const ProductDetail = () => {
           {displayImages.length > 0 ? (
             displayImages.map((img, idx) => (
               <div key={`${img}-${idx}`} className="product-gallery-item">
-                <ZoomableImage src={getImageUrl(img)} alt={`${product.name} - Imagen ${idx + 1}`} className="product-gallery-img" />
+                <ZoomableImage 
+                  src={getImageUrl(img)} 
+                  alt={`${product.name} - Imagen ${idx + 1}`} 
+                  className="product-gallery-img"
+                  disableTouchZoom={true}
+                  onClick={() => {
+                    setLightboxIndex(idx);
+                    setLightboxOpen(true);
+                  }}
+                />
               </div>
             ))
           ) : (
@@ -492,12 +652,10 @@ const ProductDetail = () => {
             </div>
           </div>
           {hasDiscount ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <p className="product-price">Bs {parseFloat(displayPrice || 0).toFixed(2)}</p>
-              <p style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '1.25rem' }}>Bs {parseFloat(originalPrice || 0).toFixed(2)}</p>
-              <span style={{ backgroundColor: 'var(--color-danger)', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '0.875rem', fontWeight: 600 }}>
-                {discountLabel}
-              </span>
+            <div className="product-price-row">
+              <span className="product-price-current">Bs {parseFloat(displayPrice || 0).toFixed(2)}</span>
+              <span className="product-price-original">Bs {parseFloat(originalPrice || 0).toFixed(2)}</span>
+              <span className="product-discount-badge">{discountLabel}</span>
             </div>
           ) : (
             <p className="product-price">Bs {parseFloat(displayPrice || 0).toFixed(2)}</p>
@@ -661,15 +819,15 @@ const ProductDetail = () => {
                         <div className="related-product-no-image">Sin imagen</div>
                       )}
                       {rel.hasDiscount && (
-                        <div style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: 'var(--color-danger)', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
+                        <div style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: 'transparent', color: 'var(--text-main, #111827)', border: '1px solid var(--text-main, #111827)', padding: '2px 6px', fontSize: '10px', fontWeight: '500', letterSpacing: '0.05em' }}>
                           {rel.discountLabel}
                         </div>
                       )}
                     </div>
                     <h4 className="related-product-name">{rel.productName}</h4>
                     {rel.hasDiscount ? (
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
-                        <p className="related-product-price" style={{ color: 'var(--color-danger)', margin: 0 }}>Bs {parseFloat(rel.discountedPrice || 0).toFixed(2)}</p>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <p className="related-product-price" style={{ margin: 0, fontWeight: 600 }}>Bs {parseFloat(rel.discountedPrice || 0).toFixed(2)}</p>
                         <p style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '12px', margin: 0 }}>Bs {parseFloat(rel.price || 0).toFixed(2)}</p>
                       </div>
                     ) : (

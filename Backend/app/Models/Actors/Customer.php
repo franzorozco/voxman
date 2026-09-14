@@ -14,6 +14,7 @@ class Customer extends BaseCustomer
 		'user_id',
 		'is_active',
 		'customer_code',
+		'customer_code_updated_at',
 		'points',
 		'total_purchases',
 		'tags'
@@ -21,6 +22,7 @@ class Customer extends BaseCustomer
 
 	protected $casts = [
 		'tags' => 'array',
+		'customer_code_updated_at' => 'datetime',
 	];
 
 	public function posProfile()

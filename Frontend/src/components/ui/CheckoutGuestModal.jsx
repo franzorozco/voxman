@@ -295,9 +295,10 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
                   <div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <div style={{
-                        width: '100px',
+                        width: '75px',
+                        flexShrink: 0,
                         display: 'flex', alignItems: 'center', backgroundColor: inputBg,
-                        border: `1px solid ${errors.country_code ? '#ef4444' : borderColor}`, borderRadius: '8px', padding: '0 12px'
+                        border: `1px solid ${errors.country_code ? '#ef4444' : borderColor}`, borderRadius: '8px', padding: '0 4px'
                       }}>
                         <input
                           name="country_code"

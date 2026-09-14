@@ -278,6 +278,7 @@
     top: 70px;
     right: -100%;
     width: 75%;
+    max-width: 350px;
     height: calc(100vh - 70px);
     background: var(--bg-card);
     border-left: 1px solid var(--border-color);
