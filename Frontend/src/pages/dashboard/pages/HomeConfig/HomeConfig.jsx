@@ -20,7 +20,6 @@ const SECTION_KEYS = [
   { key: "home_show_hero",       label: "Hero (banner principal)",     desc: "La seccion con las imagenes y el titulo de bienvenida." },
   { key: "home_show_value_props",label: "Barra de Beneficios",        desc: "Muestra la barra con iconos informativos debajo del hero." },
   { key: "home_show_carousel",   label: "Carrusel de Productos",        desc: "Carrusel de Novedades, Más Vendidos, etc." },
-  { key: "home_show_featured",   label: "Productos Destacados",         desc: "Grilla de productos marcados como destacados." },
   { key: "home_show_categories", label: "Categorias",                   desc: "Grilla de categorias de productos." },
   { key: "home_show_newsletter", label: "Newsletter / Suscripcion",    desc: "Formulario para que los clientes se suscriban." },
 ];

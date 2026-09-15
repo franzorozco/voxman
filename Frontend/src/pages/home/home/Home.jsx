@@ -16,11 +16,13 @@ export default function Home() {
     fetchSettings();
   }, [fetchSettings]);
 
-  const showHero       = settings.home_show_hero       !== "false";
-  const showCarousel   = settings.home_show_carousel   === "true";
-  const showValueProps = settings.home_show_value_props !== "false";
-  const showCategories = settings.home_show_categories !== "false";
-  const showNewsletter = settings.home_show_newsletter !== "false";
+  const isEnabled = (val) => val !== "false" && val !== false && val !== "0" && val !== 0;
+
+  const showHero       = isEnabled(settings.home_show_hero);
+  const showCarousel   = isEnabled(settings.home_show_carousel);
+  const showValueProps = isEnabled(settings.home_show_value_props);
+  const showCategories = isEnabled(settings.home_show_categories);
+  const showNewsletter = isEnabled(settings.home_show_newsletter);
 
   return (
     <div className="home">
