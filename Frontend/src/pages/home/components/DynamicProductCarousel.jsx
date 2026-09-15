@@ -43,6 +43,88 @@ export default function DynamicProductCarousel() {
     if (el) el.scrollBy({ left: 300, behavior: 'smooth' });
   };
 
+  const carouselItems = React.useMemo(() => {
+    const prendas = [];
+    products.forEach((product) => {
+      const attrImages = product.attribute_value_images || [];
+      const mainColorImages = attrImages.filter(img => img.is_main);
+
+      if (mainColorImages.length > 0) {
+        mainColorImages.forEach(mainImg => {
+          let matchedVariant = null;
+          if (product.product_variants) {
+            const colorVariants = product.product_variants.filter(v => 
+              v.variant_attribute_values?.some(vav => vav.attribute_value_id === mainImg.attribute_value_id)
+            );
+            if (colorVariants.length > 0) {
+              matchedVariant = colorVariants.reduce((best, curr) => 
+                (curr.discounted_price < best.discounted_price) ? curr : best
+              , colorVariants[0]);
+            }
+          }
+          
+          prendas.push({
+            unique_id: `img-${mainImg.id}`,
+            product_id: product.id,
+            slug: product.slug || product.id,
+            name: `${product.name} - ${mainImg.attribute_value?.value || ''}`,
+            color: mainImg.attribute_value?.value || '',
+            base_price: matchedVariant ? matchedVariant.base_price : product.base_price,
+            discounted_price: matchedVariant ? matchedVariant.discounted_price : product.discounted_price,
+            has_discount: matchedVariant ? matchedVariant.has_discount : product.has_discount,
+            discount_label: matchedVariant ? matchedVariant.discount_label : product.discount_label,
+            image: mainImg.url
+          });
+        });
+      } else {
+        const seenAttrs = new Set();
+        let addedVariant = false;
+        (product.product_variants || []).forEach(variant => {
+          if (variant.variant_images && variant.variant_images.length > 0) {
+            const attrKey = (variant.variant_attribute_values || [])
+              .map(va => va.attribute_value?.value || '')
+              .sort().join(' ') || variant.id;
+            
+            if (!seenAttrs.has(attrKey)) {
+              seenAttrs.add(attrKey);
+              addedVariant = true;
+              prendas.push({
+                unique_id: `var-${variant.variant_images[0] ? variant.variant_images[0].id : variant.id}`,
+                product_id: product.id,
+                slug: product.slug || product.id,
+                name: `${product.name} ${attrKey ? '- ' + attrKey : ''}`,
+                color: attrKey,
+                base_price: variant.base_price || product.base_price,
+                discounted_price: variant.discounted_price || product.discounted_price,
+                has_discount: variant.has_discount || product.has_discount,
+                discount_label: variant.discount_label || product.discount_label,
+                image: variant.variant_images[0].url
+              });
+            }
+          }
+        });
+        
+        if (!addedVariant) {
+          const imageUrl = product.cover_image || (product.product_images?.length > 0 ? product.product_images[0].url : null);
+          if (imageUrl) {
+            prendas.push({
+              unique_id: `prod-${product.id}`,
+              product_id: product.id,
+              slug: product.slug || product.id,
+              name: product.name,
+              base_price: product.base_price,
+              discounted_price: product.discounted_price,
+              has_discount: product.has_discount,
+              discount_label: product.discount_label,
+              image: imageUrl
+            });
+          }
+        }
+      }
+    });
+    return prendas;
+  }, [products]);
+
   if (loading) {
     return (
       <section className="dyn-carousel-section">
@@ -53,7 +135,7 @@ export default function DynamicProductCarousel() {
     );
   }
 
-  if (products.length === 0) return null;
+  if (carouselItems.length === 0) return null;
 
   return (
     <section className="dyn-carousel-section">
@@ -73,31 +155,32 @@ export default function DynamicProductCarousel() {
         </div>
 
         <div className="dyn-carousel-scroll" id="dynamic-carousel-scroll">
-          {products.map(product => {
-            const mainImg = product.product_images?.find(i => i.is_main) || product.product_images?.[0];
-            const imgUrl = mainImg ? getImageUrl(mainImg.url) : FALLBACK_IMAGE;
-            const price = product.discounted_price || product.base_price;
+          {carouselItems.map(item => {
+            const imgUrl = item.image ? getImageUrl(item.image) : FALLBACK_IMAGE;
+            const price = item.discounted_price || item.base_price;
             
+            const linkUrl = `/shop/product/${item.slug || item.product_id}${item.color ? `?color=${encodeURIComponent(item.color)}` : ''}`;
+
             return (
-              <Link to={`/shop/catalog/${product.slug || product.id}`} key={product.id} className="dyn-product-card">
+              <Link to={linkUrl} key={item.unique_id} className="dyn-product-card">
                 <div className="dyn-product-image">
                   <img 
                     src={imgUrl} 
-                    alt={product.name} 
+                    alt={item.name} 
                     loading="lazy"
                     onError={(e) => { e.target.src = FALLBACK_IMAGE; e.target.onerror = null; }}
                   />
-                  {product.has_discount && (
+                  {item.has_discount && (
                     <div className="dyn-product-badge">
-                      {product.discount_label}
+                      {item.discount_label}
                     </div>
                   )}
                 </div>
                 <div className="dyn-product-info">
-                  <h3 className="dyn-product-name">{product.name}</h3>
+                  <h3 className="dyn-product-name">{item.name}</h3>
                   <div className="dyn-product-prices">
-                    {product.has_discount && (
-                      <span className="dyn-price-original">Bs {product.base_price}</span>
+                    {item.has_discount && (
+                      <span className="dyn-price-original">Bs {item.base_price}</span>
                     )}
                     <span className="dyn-price-current">Bs {price}</span>
                   </div>
