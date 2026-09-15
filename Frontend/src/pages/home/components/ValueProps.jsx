@@ -26,6 +26,8 @@ const DEFAULT_PROPS = [
   }
 ];
 
+import { getImageUrl } from '../../../utils/imageUtils';
+
 export default function ValueProps() {
   const { settings } = useShopSettingsStore();
   const rightRef = useRef(null);
@@ -74,7 +76,7 @@ export default function ValueProps() {
 
   const bgImage = settings.home_value_props_bg || null;
   const sectionStyle = bgImage ? {
-    backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65)), url(${bgImage})`,
+    backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65)), url(${getImageUrl(bgImage)})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed'

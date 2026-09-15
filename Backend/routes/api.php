@@ -475,6 +475,8 @@ Route::middleware([
     Route::get('/home-config/variant-images', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'variantImages'])->middleware('permission:manage_settings');
     Route::get('/home-config/categories', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'categories'])->middleware('permission:manage_settings');
     Route::post('/home-config/upload-category-image', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'uploadCategoryImage'])->middleware('permission:manage_settings');
+    Route::post('/home-config/upload-background-image', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'uploadBackgroundImage'])->middleware('permission:manage_settings');
+    Route::get('/home-config/background-images', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'backgroundImages'])->middleware('permission:manage_settings');
 
 });
 

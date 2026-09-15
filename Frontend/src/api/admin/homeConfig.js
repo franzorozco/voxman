@@ -22,6 +22,20 @@ export const uploadCategoryImage = async (file) => {
   });
   return response.data; // { url }
 };
+
+export const uploadBackgroundImage = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  const response = await api.post(`/v1/admin/home-config/upload-background-image`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data; // { url }
+};
+
+export const getBackgroundImages = async () => {
+  const response = await api.get(`/v1/admin/home-config/background-images`);
+  return response.data; // { data: string[] }
+};
 /**
  * Guarda el valor de una setting de home_config.
  * Reutiliza el endpoint generico de system-settings.

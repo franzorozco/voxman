@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { LayoutDashboard, Image, EyeOff, Eye, Save, RefreshCw, Check, X, Grid, Upload, Link as LinkIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { getSystemSettings, updateSystemSetting } from "../../../../api/admin/systemSettings";
-import { getVariantImages, getCategories, uploadCategoryImage, uploadBackgroundImage, getBackgroundImages } from "../../../../api/admin/homeConfig";
+import { getVariantImages, getCategories, uploadCategoryImage } from "../../../../api/admin/homeConfig";
 import { getImageUrl } from "../../../../utils/imageUtils";
 import { useThemeStore } from "../../../../store/themeStore";
 import IconPickerModal from "./IconPickerModal";
@@ -53,26 +53,6 @@ export default function HomeConfig() {
   
   const [dragOverHeroIdx, setDragOverHeroIdx] = useState(null);
   const [dragOverCatIdx, setDragOverCatIdx] = useState(null);
-
-  /* ── backgrounds state ── */
-  const [selectingBackground, setSelectingBackground] = useState(false);
-  const [bgModalTab, setBgModalTab] = useState("gallery"); // gallery | upload | url
-  const [allBackgrounds, setAllBackgrounds] = useState([]);
-  const [loadingBgs, setLoadingBgs] = useState(false);
-  const bgFileInputRef = useRef(null);
-  const [pastedBgUrl, setPastedBgUrl] = useState("");
-
-  const fetchBackgrounds = async () => {
-    setLoadingBgs(true);
-    try {
-      const res = await getBackgroundImages();
-      setAllBackgrounds(res.data || []);
-    } catch (e) {
-      toast.error("Error al cargar fondos");
-    } finally {
-      setLoadingBgs(false);
-    }
-  };
 
   const [editingIconIndex, setEditingIconIndex] = useState(null);
 
@@ -264,35 +244,6 @@ export default function HomeConfig() {
   const handleApplyPastedUrl = () => {
     if (!pastedUrl) return;
     updateCategoryImage(selectingImageForCat, pastedUrl);
-  };
-
-  const updateBackgroundImage = (url) => {
-    setSetting("home_value_props_bg", url);
-    setSelectingBackground(false);
-    setBgModalTab("gallery");
-    setPastedBgUrl("");
-  };
-
-  const handleBgFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setUploadingImage(true);
-      const res = await uploadBackgroundImage(file);
-      updateBackgroundImage(res.url);
-      toast.success("Fondo subido correctamente");
-    } catch {
-      toast.error("Error al subir fondo");
-    } finally {
-      setUploadingImage(false);
-      if (bgFileInputRef.current) bgFileInputRef.current.value = "";
-    }
-  };
-
-  const handleApplyPastedBgUrl = () => {
-    if (!pastedBgUrl) return;
-    updateBackgroundImage(pastedBgUrl);
   };
 
   /* ── Save ── */
@@ -921,40 +872,14 @@ export default function HomeConfig() {
             
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Imagen de Fondo (Opcional)</span>
-              <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0 }}>Se mostrará con un degradado y efecto fijo (parallax) detrás de los beneficios.</p>
-              
-              <div 
-                onClick={() => {
-                  setSelectingBackground(true);
-                  if (allBackgrounds.length === 0) fetchBackgrounds();
-                }}
-                style={{ 
-                  marginTop: 8, height: 120, width: "100%", borderRadius: 10, border: "2px dashed var(--border-color)", 
-                  background: settings.home_value_props_bg ? `url(${getImageUrl(settings.home_value_props_bg)}) center/cover` : "var(--bg-overlay)",
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden"
-                }}
-              >
-                {!settings.home_value_props_bg && (
-                  <>
-                    <Image size={24} style={{ opacity: 0.5, marginBottom: 8, color: "var(--text-muted)" }} />
-                    <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>Click para elegir fondo</span>
-                  </>
-                )}
-                {settings.home_value_props_bg && (
-                  <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0}>
-                    <span style={{ color: "#fff", fontSize: 13, fontWeight: 600, background: "rgba(0,0,0,0.7)", padding: "6px 12px", borderRadius: 20 }}>Cambiar fondo</span>
-                  </div>
-                )}
-              </div>
-              
-              {settings.home_value_props_bg && (
-                <button 
-                  onClick={() => updateBackgroundImage("")}
-                  style={{ alignSelf: "flex-start", marginTop: 4, background: "none", border: "none", color: "var(--color-danger, #e53e3e)", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0 }}
-                >
-                  Quitar fondo
-                </button>
-              )}
+              <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0 }}>URL de la imagen. Se mostrará con un degradado y efecto fijo (parallax).</p>
+              <input
+                type="text"
+                value={settings.home_value_props_bg || ""}
+                onChange={(e) => setSetting("home_value_props_bg", e.target.value)}
+                placeholder="https://ejemplo.com/imagen.jpg"
+                style={{ padding: "10px", borderRadius: 8, fontSize: 13, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)" }}
+              />
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -1100,140 +1025,6 @@ export default function HomeConfig() {
                 {saving ? <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--text-muted)", borderTopColor: "transparent" }} /> : <Save size={15} />}
                 {saving ? "Guardando..." : "Guardar Todo"}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* MODAL para seleccionar fondo de beneficios */}
-      {selectingBackground && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div style={{ background: "var(--bg-card)", borderRadius: 12, width: "100%", maxWidth: 800, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid var(--border-color)" }}>
-            
-            {/* Modal Header */}
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, color: "var(--text-main)", margin: 0 }}>
-                Fondo para: <span style={{ color: "var(--color-primary)" }}>Beneficios</span>
-              </h3>
-              <button onClick={() => setSelectingBackground(false)} style={{ background: "var(--bg-overlay)", border: "none", color: "var(--text-main)", cursor: "pointer", width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Modal Tabs */}
-            <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", background: "var(--bg-main)" }}>
-              {[
-                { id: "upload", label: "Subir desde PC", icon: <Upload size={14} /> },
-                { id: "url", label: "Pegar URL", icon: <LinkIcon size={14} /> },
-                { id: "gallery", label: "Galería de Fondos", icon: <Image size={14} /> }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setBgModalTab(tab.id)}
-                  style={{
-                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0",
-                    border: "none", borderBottom: bgModalTab === tab.id ? "2px solid var(--color-primary)" : "2px solid transparent",
-                    background: bgModalTab === tab.id ? "var(--bg-card)" : "transparent",
-                    color: bgModalTab === tab.id ? "var(--color-primary)" : "var(--text-muted)",
-                    fontWeight: 600, fontSize: 13, cursor: "pointer"
-                  }}
-                >
-                  {tab.icon} <span style={{ lineHeight: 1, paddingTop: 2 }}>{tab.label}</span>
-                </button>
-              ))}
-            </div>
-            
-            {/* Modal Body */}
-            <div style={{ padding: 24, flex: 1, overflowY: "auto", minHeight: 400 }}>
-              
-              {/* TAB: UPLOAD */}
-              {bgModalTab === "upload" && (
-                <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ border: "2px dashed var(--border-color)", borderRadius: 12, padding: "40px 20px", width: "100%", maxWidth: 400, textAlign: "center" }}>
-                    <Upload size={40} style={{ color: "var(--text-muted)", margin: "0 auto 16px auto", display: "block" }} />
-                    <h4 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-main)", margin: "0 0 8px" }}>Sube una imagen desde tu equipo</h4>
-                    <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 24px" }}>Se guardará en /system/funds/</p>
-                    
-                    <input
-                      type="file"
-                      accept="image/*"
-                      ref={bgFileInputRef}
-                      style={{ display: "none" }}
-                      onChange={handleBgFileUpload}
-                    />
-                    <button
-                      onClick={() => bgFileInputRef.current?.click()}
-                      disabled={uploadingImage}
-                      style={{
-                        padding: "10px 24px", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: uploadingImage ? "not-allowed" : "pointer",
-                        background: "var(--color-primary)", color: "var(--color-primary-text)", border: "none"
-                      }}
-                    >
-                      {uploadingImage ? "Subiendo..." : "Seleccionar archivo"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB: URL */}
-              {bgModalTab === "url" && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-                  <div style={{ width: "100%", maxWidth: 500 }}>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-main)", marginBottom: 8 }}>URL de la Imagen</label>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input
-                        type="text"
-                        placeholder="https://ejemplo.com/fondo.jpg"
-                        value={pastedBgUrl}
-                        onChange={(e) => setPastedBgUrl(e.target.value)}
-                        style={{ flex: 1, padding: "10px 14px", borderRadius: 8, fontSize: 14, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)", outline: "none" }}
-                      />
-                      <button
-                        onClick={handleApplyPastedBgUrl}
-                        disabled={!pastedBgUrl}
-                        style={{ padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, background: "var(--color-primary)", color: "var(--color-primary-text)", border: "none", cursor: pastedBgUrl ? "pointer" : "not-allowed", opacity: pastedBgUrl ? 1 : 0.5 }}
-                      >
-                        Aplicar
-                      </button>
-                    </div>
-                  </div>
-
-                  {pastedBgUrl && (
-                    <div style={{ marginTop: 20, textAlign: "center", width: "100%" }}>
-                      <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>Previsualización:</p>
-                      <div style={{ width: "100%", height: 200, borderRadius: 8, overflow: "hidden", border: "1px solid var(--border-color)", margin: "0 auto" }}>
-                        <img src={pastedBgUrl} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_white.jfif"; }} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* TAB: GALLERY */}
-              {bgModalTab === "gallery" && (
-                <>
-                  {loadingBgs ? (
-                    <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>Cargando fondos...</div>
-                  ) : allBackgrounds.length === 0 ? (
-                    <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>No hay fondos en la galería.</div>
-                  ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
-                      {allBackgrounds.map(url => (
-                        <div
-                          key={url}
-                          onClick={() => updateBackgroundImage(url)}
-                          style={{ height: 120, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: "2px solid transparent", transition: "border-color 0.2s" }}
-                          onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--color-primary)"}
-                          onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}
-                        >
-                          <img src={getImageUrl(url)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-
             </div>
           </div>
         </div>

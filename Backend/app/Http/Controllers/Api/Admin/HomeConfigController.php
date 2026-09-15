@@ -71,4 +71,43 @@ class HomeConfigController extends Controller
             return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
         }
     }
+
+    public function uploadBackgroundImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:10240'
+        ]);
+
+        $file = $request->file('image');
+        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $fullPath = 'system/funds/' . $filename;
+
+        try {
+            $contents = file_get_contents($file->getRealPath());
+            $result = \Illuminate\Support\Facades\Storage::disk('s3')->put($fullPath, $contents);
+
+            if (!$result) {
+                return response()->json(['message' => 'Error al subir fondo'], 500);
+            }
+
+            return response()->json(['url' => $fullPath]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function backgroundImages()
+    {
+        try {
+            $files = \Illuminate\Support\Facades\Storage::disk('s3')->files('system/funds');
+            // Filter to only image extensions
+            $images = array_values(array_filter($files, function($file) {
+                return preg_match('/\.(jpg|jpeg|png|webp|jfif|gif)$/i', $file);
+            }));
+            
+            return response()->json(['data' => $images]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+        }
+    }
 }
