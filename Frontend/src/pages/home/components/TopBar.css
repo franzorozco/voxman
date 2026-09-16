@@ -5,9 +5,16 @@
   padding: 10px 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center !important;
+  box-sizing: border-box;
   position: relative;
   z-index: 10;
+  overflow: hidden;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  margin-top: -1px;
+  margin-bottom: -1px;
   /* Subtle animation on mount */
   animation: topbarFadeIn 0.4s ease forwards;
 }
@@ -17,14 +24,87 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* EFFECTS */
+.topbar--effect-pulse {
+  animation: topbarPulse 2s infinite;
+}
+@keyframes topbarPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.topbar--effect-glow {
+  box-shadow: 0 0 15px currentColor;
+  animation: topbarGlow 2s infinite alternate;
+}
+@keyframes topbarGlow {
+  from { box-shadow: 0 0 5px currentColor; }
+  to { box-shadow: 0 0 20px currentColor; }
+}
+
+.topbar--effect-marquee .topbar__inner {
+  white-space: nowrap;
+  animation: topbarMarquee 15s linear infinite;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+@keyframes topbarMarquee {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
+}
+
+.topbar--effect-bounce {
+  animation: topbarBounce 2s infinite;
+}
+@keyframes topbarBounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+  60% { transform: translateY(-2px); }
+}
+
+.topbar--effect-neon {
+  text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 20px currentColor;
+  animation: topbarNeon 1.5s infinite alternate;
+}
+@keyframes topbarNeon {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.3); }
+}
+
+.topbar--effect-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.topbar--effect-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -150%; width: 50%; height: 100%;
+  background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  animation: topbarShimmer 3s infinite;
+  pointer-events: none;
+}
+@keyframes topbarShimmer {
+  0% { left: -150%; }
+  50% { left: 200%; }
+  100% { left: 200%; }
+}
+
+.topbar__icon {
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
 .topbar__inner {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center !important;
   gap: 14px;
   flex-wrap: wrap;
   max-width: 1200px;
   width: 100%;
+  margin: 0 auto;
 }
 
 .topbar__text {
@@ -50,6 +130,109 @@
 
 .topbar__link:hover {
   opacity: 1;
+}
+
+.topbar__close {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 20;
+}
+
+.topbar__close:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* ─── Nuevos Efectos Visuales ─── */
+
+.topbar--effect-border-glow {
+  animation: topbarBorderGlow 1.5s infinite alternate;
+}
+@keyframes topbarBorderGlow {
+  0% { box-shadow: inset 0 1px 3px -1px currentColor, inset 0 -1px 3px -1px currentColor; }
+  100% { box-shadow: inset 0 5px 12px -2px currentColor, inset 0 -5px 12px -2px currentColor; }
+}
+
+.topbar--effect-typewriter .topbar__text {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid currentColor;
+  animation: typing 3s steps(40, end) infinite alternate, blink-caret 0.75s step-end infinite;
+}
+@keyframes typing {
+  0%, 10% { max-width: 0; }
+  90%, 100% { max-width: 100%; }
+}
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: currentColor; }
+}
+
+.topbar--effect-glitch {
+  animation: topbarGlitch 3s infinite;
+}
+@keyframes topbarGlitch {
+  0%, 95%, 100% { transform: translate(0); }
+  96% { transform: translate(-2px, 1px); }
+  97% { transform: translate(2px, -1px); }
+  98% { transform: translate(-2px, -1px); }
+  99% { transform: translate(2px, 1px); }
+}
+
+.topbar--effect-color-cycle {
+  animation: topbarColorCycle 5s linear infinite;
+}
+@keyframes topbarColorCycle {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.topbar--effect-scanline::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 2px;
+  background: currentColor;
+  opacity: 0.6;
+  animation: topbarScanline 2.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes topbarScanline {
+  0% { top: -10%; opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { top: 110%; opacity: 0; }
+}
+
+.topbar--effect-shake {
+  animation: topbarShake 5s infinite;
+}
+@keyframes topbarShake {
+  0%, 90% { transform: translate3d(0, 0, 0); }
+  92% { transform: translate3d(-3px, 0, 0) rotate(-1deg); }
+  94% { transform: translate3d(3px, 0, 0) rotate(1deg); }
+  96% { transform: translate3d(-3px, 0, 0) rotate(-1deg); }
+  98% { transform: translate3d(3px, 0, 0) rotate(1deg); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+.topbar--effect-pulse-glow {
+  animation: topbarPulseGlow 2s infinite alternate;
+}
+@keyframes topbarPulseGlow {
+  0% { box-shadow: 0 0 5px currentColor; transform: scale(1); }
+  100% { box-shadow: 0 0 20px currentColor; transform: scale(1.02); }
 }
 
 /* ─── Responsive ─── */

@@ -2,12 +2,16 @@
 
 .hero {
   position: relative;
-  height: 100vh;
-  margin-top: 70px;
+  height: calc(100vh - 70px);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+
+.preview-mode .hero {
+  height: 450px !important;
+  min-height: 450px !important;
 }
 
 /* Blend the bottom of the hero with the next section */

@@ -41,24 +41,14 @@ export default function Home() {
   const renderTopBars = (position) =>
     topBars
       .filter((b) => b.position === position)
-      .map((b) => (
-        <TopBar
-          key={b.id}
-          text={b.text}
-          bgColor={b.bgColor}
-          textColor={b.textColor}
-          linkUrl={b.linkUrl}
-          linkText={b.linkText}
-        />
-      ));
+      .map((b) => <TopBar key={b.id} {...b} />);
 
   return (
-    <div className="home">
+    <div className="home" style={{ paddingTop: '70px', backgroundColor: '#000' }}>
+      <Navbar isDarkThemeOverride={true} />
 
       {/* above_hero — encima del hero (pegado debajo de la navbar) */}
       {renderTopBars("above_hero")}
-
-      <Navbar isDarkThemeOverride={true} />
 
       {showHero && (
         <Hero

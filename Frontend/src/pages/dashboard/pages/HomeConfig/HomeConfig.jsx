@@ -7,6 +7,8 @@ import { getImageUrl } from "../../../../utils/imageUtils";
 import { useThemeStore } from "../../../../store/themeStore";
 import IconPickerModal from "./IconPickerModal";
 import * as Icons from "lucide-react";
+import TopBar from "../../../home/components/TopBar";
+import CustomSelect from "../../../../components/ui/CustomSelect";
 
 const TABS = [
   { id: "hero",       label: "Hero",        icon: <Image size={15} /> },
@@ -46,6 +48,8 @@ export default function HomeConfig() {
   /* ── categories state ── */
   const [allCategories, setAllCategories] = useState([]);
   const [loadingCats,   setLoadingCats]   = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [editingTopBarIconId, setEditingTopBarIconId] = useState(null);
   
   const [selectingImageForCat, setSelectingImageForCat] = useState(null); // id of category being edited
   const [modalTab, setModalTab] = useState("gallery"); // gallery | upload | url
@@ -1117,150 +1121,92 @@ export default function HomeConfig() {
                     }}
                   >
                     {/* Preview strip */}
-                    <div
-                      style={{
-                        backgroundColor: bar.bgColor, color: bar.textColor,
-                        padding: "8px 16px", fontSize: 12, fontWeight: 500,
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        opacity: bar.isVisible ? 1 : 0.4,
-                      }}
-                    >
-                      <span style={{ flex: 1, textAlign: "center" }}>
-                        {bar.text || "— Vista previa —"}
-                        {bar.linkText && (
-                          <span style={{ marginLeft: 10, textDecoration: "underline", opacity: 0.8 }}>{bar.linkText}</span>
-                        )}
-                      </span>
+                    <div style={{ pointerEvents: "none", marginBottom: 0, opacity: bar.isVisible ? 1 : 0.4 }}>
+                       <TopBar {...bar} />
                     </div>
 
                     {/* Controls */}
-                    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ padding: "18px", display: "flex", flexDirection: "column", gap: 18 }}>
 
-                      {/* Row: visible toggle + position + delete */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                        {/* Toggle visible */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <button
-                            type="button"
-                            onClick={() => updateTopBar(bar.id, "isVisible", !bar.isVisible)}
-                            style={{
-                              position: "relative", width: 40, height: 22, borderRadius: 11,
-                              border: "none", cursor: "pointer", flexShrink: 0,
-                              background: bar.isVisible ? "var(--color-success, #48bb78)" : "var(--border-color)",
-                              transition: "background 0.2s",
-                            }}
-                          >
-                            <span style={{
-                              position: "absolute", top: 2, width: 18, height: 18, borderRadius: "50%",
-                              background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-                              transition: "left 0.2s", left: bar.isVisible ? 20 : 2,
-                            }} />
-                          </button>
-                          <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>
-                            {bar.isVisible ? "Visible" : "Oculta"}
-                          </span>
-                        </div>
+                      {/* Header Row: Visible, Position, Delete */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 16, flex: 1 }}>
+                          {/* Toggle visible */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <button
+                              type="button"
+                              onClick={() => updateTopBar(bar.id, "isVisible", !bar.isVisible)}
+                              style={{
+                                position: "relative", width: 44, height: 24, borderRadius: 12,
+                                border: "none", cursor: "pointer", flexShrink: 0,
+                                background: bar.isVisible ? "var(--color-success, #48bb78)" : "var(--border-color)",
+                                transition: "background 0.2s",
+                              }}
+                            >
+                              <span style={{
+                                position: "absolute", top: 2, width: 20, height: 20, borderRadius: "50%",
+                                background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                                transition: "left 0.2s", left: bar.isVisible ? 22 : 2,
+                              }} />
+                            </button>
+                            <span style={{ fontSize: 13, color: "var(--text-main)", fontWeight: 600 }}>
+                              {bar.isVisible ? "Activo" : "Oculto"}
+                            </span>
+                          </div>
 
-                        {/* Position select */}
-                        <div style={{ flex: 1, minWidth: 200 }}>
-                          <select
-                            value={bar.position}
-                            onChange={(e) => updateTopBar(bar.id, "position", e.target.value)}
-                            style={{
-                              width: "100%", padding: "7px 10px", borderRadius: 8, fontSize: 12,
-                              background: "var(--bg-input)", border: "1px solid var(--border-color)",
-                              color: "var(--text-main)", cursor: "pointer", outline: "none",
-                            }}
-                          >
-                            {POSITION_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </select>
+                          {/* Position select */}
+                          <div style={{ flex: 1, maxWidth: 300 }}>
+                            <CustomSelect
+                              value={bar.position}
+                              onChange={(e) => updateTopBar(bar.id, "position", e.target.value)}
+                              style={{ minHeight: "36px", padding: "7px 10px", fontSize: "13px", border: "1px solid var(--border-color)", background: "var(--bg-input)" }}
+                            >
+                              {POSITION_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </CustomSelect>
+                          </div>
                         </div>
 
                         {/* Delete */}
                         <button
                           onClick={() => removeTopBar(bar.id)}
+                          title="Eliminar cintillo"
                           style={{
-                            padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                            display: "flex", alignItems: "center", gap: 6,
+                            padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600,
                             background: "var(--color-danger-light, #fee2e2)", color: "var(--color-danger, #dc2626)",
                             border: "1px solid var(--color-danger-border, #fca5a5)", cursor: "pointer",
                           }}
                         >
-                          <X size={14} />
+                          <X size={15} /> <span>Eliminar</span>
                         </button>
                       </div>
 
-                      {/* Texto del anuncio */}
-                      <div>
-                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 5 }}>
-                          Texto del anuncio
-                        </label>
-                        <input
-                          type="text"
-                          value={bar.text}
-                          onChange={(e) => updateTopBar(bar.id, "text", e.target.value)}
-                          placeholder="Ej: Envío gratis en pedidos mayores a Bs 300"
-                          style={{
-                            width: "100%", padding: "8px 12px", borderRadius: 8, fontSize: 13,
-                            background: "var(--bg-input)", border: "1px solid var(--border-color)",
-                            color: "var(--text-main)", outline: "none", boxSizing: "border-box",
-                          }}
-                          onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                          onBlur={(e) => (e.target.style.borderColor = "var(--border-color)")}
-                        />
-                      </div>
+                      <div style={{ borderTop: "1px solid var(--border-color)" }}></div>
 
-                      {/* Colors row */}
-                      <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                        <label style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, minWidth: 140 }}>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Color de fondo</span>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <input
-                              type="color"
-                              value={bar.bgColor}
-                              onChange={(e) => updateTopBar(bar.id, "bgColor", e.target.value)}
-                              style={{ width: 36, height: 32, borderRadius: 6, border: "1px solid var(--border-color)", cursor: "pointer", padding: 2 }}
-                            />
-                            <input
-                              type="text"
-                              value={bar.bgColor}
-                              onChange={(e) => updateTopBar(bar.id, "bgColor", e.target.value)}
-                              style={{
-                                flex: 1, padding: "7px 10px", borderRadius: 8, fontSize: 12,
-                                background: "var(--bg-input)", border: "1px solid var(--border-color)",
-                                color: "var(--text-main)", outline: "none", fontFamily: "monospace",
-                              }}
-                            />
-                          </div>
-                        </label>
-                        <label style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, minWidth: 140 }}>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Color del texto</span>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <input
-                              type="color"
-                              value={bar.textColor}
-                              onChange={(e) => updateTopBar(bar.id, "textColor", e.target.value)}
-                              style={{ width: 36, height: 32, borderRadius: 6, border: "1px solid var(--border-color)", cursor: "pointer", padding: 2 }}
-                            />
-                            <input
-                              type="text"
-                              value={bar.textColor}
-                              onChange={(e) => updateTopBar(bar.id, "textColor", e.target.value)}
-                              style={{
-                                flex: 1, padding: "7px 10px", borderRadius: 8, fontSize: 12,
-                                background: "var(--bg-input)", border: "1px solid var(--border-color)",
-                                color: "var(--text-main)", outline: "none", fontFamily: "monospace",
-                              }}
-                            />
-                          </div>
-                        </label>
-                      </div>
-
-                      {/* Link (optional) */}
-                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                        <div style={{ flex: 1, minWidth: 180 }}>
-                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 5 }}>
+                      {/* Content Row: Text, Links */}
+                      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                        <div style={{ flex: 2, minWidth: 250 }}>
+                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>
+                            Texto del anuncio
+                          </label>
+                          <input
+                            type="text"
+                            value={bar.text}
+                            onChange={(e) => updateTopBar(bar.id, "text", e.target.value)}
+                            placeholder="Ej: Envío gratis en pedidos mayores a Bs 300"
+                            style={{
+                              width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 13,
+                              background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                              color: "var(--text-main)", outline: "none", boxSizing: "border-box",
+                            }}
+                            onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
+                            onBlur={(e) => (e.target.style.borderColor = "var(--border-color)")}
+                          />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 200 }}>
+                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>
                             URL del enlace (opcional)
                           </label>
                           <input
@@ -1269,14 +1215,16 @@ export default function HomeConfig() {
                             onChange={(e) => updateTopBar(bar.id, "linkUrl", e.target.value)}
                             placeholder="/shop/catalog o https://..."
                             style={{
-                              width: "100%", padding: "7px 10px", borderRadius: 8, fontSize: 12,
+                              width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 13,
                               background: "var(--bg-input)", border: "1px solid var(--border-color)",
                               color: "var(--text-main)", outline: "none", boxSizing: "border-box",
                             }}
+                            onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
+                            onBlur={(e) => (e.target.style.borderColor = "var(--border-color)")}
                           />
                         </div>
                         <div style={{ flex: 1, minWidth: 150 }}>
-                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 5 }}>
+                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>
                             Texto del enlace (opcional)
                           </label>
                           <input
@@ -1285,11 +1233,173 @@ export default function HomeConfig() {
                             onChange={(e) => updateTopBar(bar.id, "linkText", e.target.value)}
                             placeholder="Ver tienda →"
                             style={{
-                              width: "100%", padding: "7px 10px", borderRadius: 8, fontSize: 12,
+                              width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 13,
                               background: "var(--bg-input)", border: "1px solid var(--border-color)",
                               color: "var(--text-main)", outline: "none", boxSizing: "border-box",
                             }}
+                            onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
+                            onBlur={(e) => (e.target.style.borderColor = "var(--border-color)")}
                           />
+                        </div>
+                      </div>
+
+                      {/* Styling & Typography Row */}
+                      <div style={{ background: "var(--bg-main)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: 16 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-main)", display: "block" }}>Estilos y Apariencia</span>
+                        
+                        {/* Colors & Toggles */}
+                        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 140 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Color de fondo</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <label style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid var(--border-color)", background: bar.bgColor, flexShrink: 0, cursor: "pointer", display: "block" }}>
+                                <input
+                                  type="color"
+                                  value={bar.bgColor}
+                                  onChange={(e) => updateTopBar(bar.id, "bgColor", e.target.value)}
+                                  style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                                />
+                              </label>
+                              <input
+                                type="text"
+                                value={bar.bgColor}
+                                onChange={(e) => updateTopBar(bar.id, "bgColor", e.target.value)}
+                                style={{
+                                  flex: 1, padding: "9px 10px", borderRadius: 8, fontSize: 13,
+                                  background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                                  color: "var(--text-main)", outline: "none", fontFamily: "monospace",
+                                }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 140 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Color del texto</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <label style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid var(--border-color)", background: bar.textColor, flexShrink: 0, cursor: "pointer", display: "block" }}>
+                                <input
+                                  type="color"
+                                  value={bar.textColor}
+                                  onChange={(e) => updateTopBar(bar.id, "textColor", e.target.value)}
+                                  style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                                />
+                              </label>
+                              <input
+                                type="text"
+                                value={bar.textColor}
+                                onChange={(e) => updateTopBar(bar.id, "textColor", e.target.value)}
+                                style={{
+                                  flex: 1, padding: "9px 10px", borderRadius: 8, fontSize: 13,
+                                  background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                                  color: "var(--text-main)", outline: "none", fontFamily: "monospace",
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <label style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 140, paddingBottom: 8, cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={!!bar.useGradient}
+                              onChange={(e) => updateTopBar(bar.id, "useGradient", e.target.checked)}
+                              style={{ width: 18, height: 18, cursor: "pointer" }}
+                            />
+                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Fondo Degradado</span>
+                          </label>
+                          
+                          <label style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 100, paddingBottom: 8, cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={!!bar.isCloseable}
+                              onChange={(e) => updateTopBar(bar.id, "isCloseable", e.target.checked)}
+                              style={{ width: 18, height: 18, cursor: "pointer" }}
+                            />
+                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Botón (X)</span>
+                          </label>
+                        </div>
+                        
+                        {/* Layout & Typography */}
+                        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 4 }}>
+                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 110 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Tamaño Letra</span>
+                            <CustomSelect
+                              value={bar.textSize || "13px"}
+                              onChange={(e) => updateTopBar(bar.id, "textSize", e.target.value)}
+                              style={{ minHeight: "36px", padding: "7px 10px", fontSize: "13px", border: "1px solid var(--border-color)", background: "var(--bg-input)" }}
+                            >
+                              <option value="12px">Pequeña</option>
+                              <option value="13px">Normal</option>
+                              <option value="14px">Mediana</option>
+                              <option value="16px">Grande</option>
+                            </CustomSelect>
+                          </label>
+
+                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 110 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Grosor Letra</span>
+                            <CustomSelect
+                              value={bar.fontWeight || "500"}
+                              onChange={(e) => updateTopBar(bar.id, "fontWeight", e.target.value)}
+                              style={{ minHeight: "36px", padding: "7px 10px", fontSize: "13px", border: "1px solid var(--border-color)", background: "var(--bg-input)" }}
+                            >
+                              <option value="400">Normal</option>
+                              <option value="500">Media</option>
+                              <option value="600">Seminegrita</option>
+                              <option value="700">Negrita</option>
+                            </CustomSelect>
+                          </label>
+
+                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 110 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Tamaño Ícono</span>
+                            <CustomSelect
+                              value={bar.iconSize || 16}
+                              onChange={(e) => updateTopBar(bar.id, "iconSize", e.target.value)}
+                              style={{ minHeight: "36px", padding: "7px 10px", fontSize: "13px", border: "1px solid var(--border-color)", background: "var(--bg-input)" }}
+                            >
+                              <option value="14">Pequeño</option>
+                              <option value="16">Normal</option>
+                              <option value="18">Mediano</option>
+                              <option value="20">Grande</option>
+                              <option value="24">Extra</option>
+                            </CustomSelect>
+                          </label>
+
+                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 110 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Grosor Cintillo</span>
+                            <CustomSelect
+                              value={bar.padding || "10px 20px"}
+                              onChange={(e) => updateTopBar(bar.id, "padding", e.target.value)}
+                              style={{ minHeight: "36px", padding: "7px 10px", fontSize: "13px", border: "1px solid var(--border-color)", background: "var(--bg-input)" }}
+                            >
+                              <option value="6px 20px">Delgado</option>
+                              <option value="10px 20px">Normal</option>
+                              <option value="14px 20px">Grueso</option>
+                              <option value="20px 20px">Extra Grueso</option>
+                            </CustomSelect>
+                          </label>
+
+                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 120 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Efecto Visual</span>
+                            <CustomSelect
+                              value={bar.effect || "none"}
+                              onChange={(e) => updateTopBar(bar.id, "effect", e.target.value)}
+                              style={{ minHeight: "36px", padding: "7px 10px", fontSize: "13px", border: "1px solid var(--border-color)", background: "var(--bg-input)" }}
+                            >
+                              <option value="none">Ninguno</option>
+                              <option value="border-glow">Bordes Iluminados</option>
+                              <option value="pulse">Latido (Pulse)</option>
+                              <option value="pulse-glow">Latido Resplandeciente</option>
+                              <option value="glow">Resplandor (Glow)</option>
+                              <option value="marquee">Deslizante (Marquee)</option>
+                              <option value="shimmer">Brillo (Shimmer)</option>
+                              <option value="bounce">Rebote (Bounce)</option>
+                              <option value="neon">Neón (Neon)</option>
+                              <option value="typewriter">Máquina de escribir</option>
+                              <option value="glitch">Glitch / Error</option>
+                              <option value="color-cycle">Ciclo Arcoíris</option>
+                              <option value="scanline">Escáner Láser</option>
+                              <option value="shake">Vibración (Shake)</option>
+                            </CustomSelect>
+                          </label>
                         </div>
                       </div>
 
@@ -1528,6 +1638,13 @@ export default function HomeConfig() {
         onClose={() => setEditingIconIndex(null)}
         onSelect={(icon) => updateValueProp(editingIconIndex, 'icon', icon)}
       />
+
+      <IconPickerModal
+        isOpen={editingTopBarIconId !== null}
+        onClose={() => setEditingTopBarIconId(null)}
+        onSelect={(icon) => updateTopBar(editingTopBarIconId, 'icon', icon)}
+      />
     </div>
   );
 }
+

@@ -21,6 +21,7 @@ class ShopSettingsController extends Controller
             'home_hero_title', 'home_hero_subtitle', 'home_hero_images',
             'home_show_carousel', 'home_carousel_title', 'home_carousel_type',
             'home_show_value_props', 'home_value_props', 'home_value_props_bg',
+            'home_show_top_bars', 'home_top_bars',
         ];
 
         $settings = SystemSetting::whereIn('key', $keys)
