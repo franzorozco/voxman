@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../../../components/layout/Footer";
 import Hero from "../components/Hero";
 import FeaturedCategories from "../components/FeaturedCategories";
 import DynamicProductCarousel from "../components/DynamicProductCarousel";
 import ValueProps from "../components/ValueProps";
+import TopBar from "../components/TopBar";
 import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
 
 import "./Home.css";
@@ -23,9 +24,39 @@ export default function Home() {
   const showValueProps = isEnabled(settings.home_show_value_props);
   const showCategories = isEnabled(settings.home_show_categories);
   const showNewsletter = isEnabled(settings.home_show_newsletter);
+  const showTopBars    = isEnabled(settings.home_show_top_bars);
+
+  /* ── Parse top bars ── */
+  const topBars = useMemo(() => {
+    if (!showTopBars) return [];
+    try {
+      const parsed = JSON.parse(settings.home_top_bars || "[]");
+      return Array.isArray(parsed) ? parsed.filter((b) => b.isVisible) : [];
+    } catch {
+      return [];
+    }
+  }, [settings.home_top_bars, showTopBars]);
+
+  /** Returns TopBar components for a given position slot */
+  const renderTopBars = (position) =>
+    topBars
+      .filter((b) => b.position === position)
+      .map((b) => (
+        <TopBar
+          key={b.id}
+          text={b.text}
+          bgColor={b.bgColor}
+          textColor={b.textColor}
+          linkUrl={b.linkUrl}
+          linkText={b.linkText}
+        />
+      ));
 
   return (
     <div className="home">
+
+      {/* above_hero — encima del hero (pegado debajo de la navbar) */}
+      {renderTopBars("above_hero")}
 
       <Navbar isDarkThemeOverride={true} />
 
@@ -36,13 +67,23 @@ export default function Home() {
         />
       )}
 
+      {/* below_hero — justo debajo del hero */}
+      {renderTopBars("below_hero")}
+
       {showValueProps && <ValueProps />}
+
+      {/* below_value_props — debajo de beneficios */}
+      {renderTopBars("below_value_props")}
 
       {showCarousel && <DynamicProductCarousel />}
 
+      {/* below_carousel — debajo del carrusel */}
+      {renderTopBars("below_carousel")}
+
       {showCategories && <FeaturedCategories />}
 
-
+      {/* below_categories — debajo de categorías */}
+      {renderTopBars("below_categories")}
 
       {showNewsletter && (
         <section className="section">
@@ -52,6 +93,9 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* above_footer — justo antes del footer */}
+      {renderTopBars("above_footer")}
 
       <Footer />
 

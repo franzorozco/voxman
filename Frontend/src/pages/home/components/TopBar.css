@@ -1,0 +1,66 @@
+/* ─── TopBar / Cintillo de anuncios ─────────────────────────────── */
+
+.topbar {
+  width: 100%;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  /* Subtle animation on mount */
+  animation: topbarFadeIn 0.4s ease forwards;
+}
+
+@keyframes topbarFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.topbar__text {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.topbar__link {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.topbar__link:hover {
+  opacity: 1;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 8px 16px;
+  }
+  .topbar__text {
+    font-size: 11px;
+  }
+  .topbar__link {
+    font-size: 11px;
+  }
+}

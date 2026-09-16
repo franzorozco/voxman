@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { LayoutDashboard, Image, EyeOff, Eye, Save, RefreshCw, Check, X, Grid, Upload, Link as LinkIcon } from "lucide-react";
+import { LayoutDashboard, Image, EyeOff, Eye, Save, RefreshCw, Check, X, Grid, Upload, Link as LinkIcon, Megaphone } from "lucide-react";
 import toast from "react-hot-toast";
 import { getSystemSettings, updateSystemSetting } from "../../../../api/admin/systemSettings";
 import { getVariantImages, getCategories, uploadCategoryImage, uploadBackgroundImage, getBackgroundImages } from "../../../../api/admin/homeConfig";
@@ -13,6 +13,7 @@ const TABS = [
   { id: "categories", label: "Categorías",  icon: <Grid size={15} /> },
   { id: "carousel",   label: "Carrusel",    icon: <LayoutDashboard size={15} /> },
   { id: "value_props",label: "Beneficios",  icon: <LayoutDashboard size={15} /> },
+  { id: "topbars",    label: "Top Bars",    icon: <Megaphone size={15} /> },
   { id: "sections",   label: "Secciones",   icon: <LayoutDashboard size={15} /> },
 ];
 
@@ -21,6 +22,7 @@ const SECTION_KEYS = [
   { key: "home_show_value_props",label: "Barra de Beneficios",        desc: "Muestra la barra con iconos informativos debajo del hero." },
   { key: "home_show_carousel",   label: "Carrusel de Productos",        desc: "Carrusel de Novedades, Más Vendidos, etc." },
   { key: "home_show_categories", label: "Categorias",                   desc: "Grilla de categorias de productos." },
+  { key: "home_show_top_bars",   label: "Top Bars (Cintillos)",         desc: "Activa o desactiva todos los cintillos de anuncios del Home." },
   { key: "home_show_newsletter", label: "Newsletter / Suscripcion",    desc: "Formulario para que los clientes se suscriban." },
 ];
 
@@ -102,7 +104,25 @@ export default function HomeConfig() {
     } catch { return DEFAULT_VALUE_PROPS; }
   })();
 
-  /* ── Fetch settings ── */
+  /* topBars = array parsed from JSON setting */
+  const topBars = (() => {
+    try {
+      const parsed = JSON.parse(settings.home_top_bars || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  })();
+
+  /* ── Top Bars position options ── */
+  const POSITION_OPTIONS = [
+    { value: "above_hero",        label: "Encima del Hero (arriba de todo)" },
+    { value: "below_hero",        label: "Debajo del Hero" },
+    { value: "below_value_props", label: "Debajo de Beneficios" },
+    { value: "below_carousel",    label: "Debajo del Carrusel" },
+    { value: "below_categories",  label: "Debajo de Categorías" },
+    { value: "above_footer",      label: "Antes del Footer" },
+  ];
+
+
   const fetchSettings = useCallback(async () => {
     try {
       setLoadingSettings(true);
@@ -242,6 +262,38 @@ export default function HomeConfig() {
   const removeValueProp = (index) => {
     const next = valueProps.filter((_, i) => i !== index);
     setSetting("home_value_props", JSON.stringify(next));
+  };
+
+  /* ── TopBars CRUD ── */
+  const addTopBar = () => {
+    if (topBars.length >= 6) {
+      toast.error("Máximo 6 cintillos permitidos.");
+      return;
+    }
+    const next = [
+      ...topBars,
+      {
+        id: Date.now(),
+        text: "¡Nuevo anuncio! Escribe tu mensaje aquí.",
+        bgColor: "#000000",
+        textColor: "#ffffff",
+        linkUrl: "",
+        linkText: "",
+        position: "above_hero",
+        isVisible: true,
+      },
+    ];
+    setSetting("home_top_bars", JSON.stringify(next));
+  };
+
+  const updateTopBar = (id, field, value) => {
+    const next = topBars.map((b) => b.id === id ? { ...b, [field]: value } : b);
+    setSetting("home_top_bars", JSON.stringify(next));
+  };
+
+  const removeTopBar = (id) => {
+    const next = topBars.filter((b) => b.id !== id);
+    setSetting("home_top_bars", JSON.stringify(next));
   };
 
   const handleFileUpload = async (e) => {
@@ -1014,6 +1066,238 @@ export default function HomeConfig() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════
+             TAB: TOP BARS
+        ══════════════════════════════ */}
+        {activeTab === "topbars" && (
+          <div>
+            {/* Header + Add button */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-main)", margin: 0 }}>Cintillos de Anuncios</h3>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+                  Agrega hasta 6 barras. Cada una puede ir en una posición distinta dentro de la página Home.
+                </p>
+              </div>
+              <button
+                onClick={addTopBar}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "9px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  background: "var(--color-primary)", color: "var(--color-primary-text)",
+                  border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
+                }}
+              >
+                <Megaphone size={14} /> Agregar Barra
+              </button>
+            </div>
+
+            {topBars.length === 0 ? (
+              <div style={{
+                textAlign: "center", padding: "48px 24px",
+                border: "2px dashed var(--border-color)", borderRadius: 12,
+                color: "var(--text-muted)", fontSize: 13,
+              }}>
+                <Megaphone size={32} style={{ opacity: 0.25, display: "block", margin: "0 auto 12px" }} />
+                <p style={{ fontWeight: 600, marginBottom: 4 }}>Sin cintillos configurados.</p>
+                <p style={{ fontSize: 12 }}>Presiona "Agregar Barra" para crear tu primer anuncio.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {topBars.map((bar, idx) => (
+                  <div
+                    key={bar.id}
+                    style={{
+                      background: "var(--bg-card)", border: "1px solid var(--border-color)",
+                      borderRadius: 12, overflow: "hidden",
+                      borderLeft: bar.isVisible ? `4px solid ${bar.bgColor}` : "4px solid var(--border-color)",
+                    }}
+                  >
+                    {/* Preview strip */}
+                    <div
+                      style={{
+                        backgroundColor: bar.bgColor, color: bar.textColor,
+                        padding: "8px 16px", fontSize: 12, fontWeight: 500,
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        opacity: bar.isVisible ? 1 : 0.4,
+                      }}
+                    >
+                      <span style={{ flex: 1, textAlign: "center" }}>
+                        {bar.text || "— Vista previa —"}
+                        {bar.linkText && (
+                          <span style={{ marginLeft: 10, textDecoration: "underline", opacity: 0.8 }}>{bar.linkText}</span>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Controls */}
+                    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+
+                      {/* Row: visible toggle + position + delete */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                        {/* Toggle visible */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <button
+                            type="button"
+                            onClick={() => updateTopBar(bar.id, "isVisible", !bar.isVisible)}
+                            style={{
+                              position: "relative", width: 40, height: 22, borderRadius: 11,
+                              border: "none", cursor: "pointer", flexShrink: 0,
+                              background: bar.isVisible ? "var(--color-success, #48bb78)" : "var(--border-color)",
+                              transition: "background 0.2s",
+                            }}
+                          >
+                            <span style={{
+                              position: "absolute", top: 2, width: 18, height: 18, borderRadius: "50%",
+                              background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                              transition: "left 0.2s", left: bar.isVisible ? 20 : 2,
+                            }} />
+                          </button>
+                          <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>
+                            {bar.isVisible ? "Visible" : "Oculta"}
+                          </span>
+                        </div>
+
+                        {/* Position select */}
+                        <div style={{ flex: 1, minWidth: 200 }}>
+                          <select
+                            value={bar.position}
+                            onChange={(e) => updateTopBar(bar.id, "position", e.target.value)}
+                            style={{
+                              width: "100%", padding: "7px 10px", borderRadius: 8, fontSize: 12,
+                              background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                              color: "var(--text-main)", cursor: "pointer", outline: "none",
+                            }}
+                          >
+                            {POSITION_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => removeTopBar(bar.id)}
+                          style={{
+                            padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                            background: "var(--color-danger-light, #fee2e2)", color: "var(--color-danger, #dc2626)",
+                            border: "1px solid var(--color-danger-border, #fca5a5)", cursor: "pointer",
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+
+                      {/* Texto del anuncio */}
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 5 }}>
+                          Texto del anuncio
+                        </label>
+                        <input
+                          type="text"
+                          value={bar.text}
+                          onChange={(e) => updateTopBar(bar.id, "text", e.target.value)}
+                          placeholder="Ej: Envío gratis en pedidos mayores a Bs 300"
+                          style={{
+                            width: "100%", padding: "8px 12px", borderRadius: 8, fontSize: 13,
+                            background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                            color: "var(--text-main)", outline: "none", boxSizing: "border-box",
+                          }}
+                          onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
+                          onBlur={(e) => (e.target.style.borderColor = "var(--border-color)")}
+                        />
+                      </div>
+
+                      {/* Colors row */}
+                      <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                        <label style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, minWidth: 140 }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Color de fondo</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <input
+                              type="color"
+                              value={bar.bgColor}
+                              onChange={(e) => updateTopBar(bar.id, "bgColor", e.target.value)}
+                              style={{ width: 36, height: 32, borderRadius: 6, border: "1px solid var(--border-color)", cursor: "pointer", padding: 2 }}
+                            />
+                            <input
+                              type="text"
+                              value={bar.bgColor}
+                              onChange={(e) => updateTopBar(bar.id, "bgColor", e.target.value)}
+                              style={{
+                                flex: 1, padding: "7px 10px", borderRadius: 8, fontSize: 12,
+                                background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                                color: "var(--text-main)", outline: "none", fontFamily: "monospace",
+                              }}
+                            />
+                          </div>
+                        </label>
+                        <label style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, minWidth: 140 }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Color del texto</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <input
+                              type="color"
+                              value={bar.textColor}
+                              onChange={(e) => updateTopBar(bar.id, "textColor", e.target.value)}
+                              style={{ width: 36, height: 32, borderRadius: 6, border: "1px solid var(--border-color)", cursor: "pointer", padding: 2 }}
+                            />
+                            <input
+                              type="text"
+                              value={bar.textColor}
+                              onChange={(e) => updateTopBar(bar.id, "textColor", e.target.value)}
+                              style={{
+                                flex: 1, padding: "7px 10px", borderRadius: 8, fontSize: 12,
+                                background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                                color: "var(--text-main)", outline: "none", fontFamily: "monospace",
+                              }}
+                            />
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* Link (optional) */}
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        <div style={{ flex: 1, minWidth: 180 }}>
+                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 5 }}>
+                            URL del enlace (opcional)
+                          </label>
+                          <input
+                            type="text"
+                            value={bar.linkUrl}
+                            onChange={(e) => updateTopBar(bar.id, "linkUrl", e.target.value)}
+                            placeholder="/shop/catalog o https://..."
+                            style={{
+                              width: "100%", padding: "7px 10px", borderRadius: 8, fontSize: 12,
+                              background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                              color: "var(--text-main)", outline: "none", boxSizing: "border-box",
+                            }}
+                          />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 150 }}>
+                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 5 }}>
+                            Texto del enlace (opcional)
+                          </label>
+                          <input
+                            type="text"
+                            value={bar.linkText}
+                            onChange={(e) => updateTopBar(bar.id, "linkText", e.target.value)}
+                            placeholder="Ver tienda →"
+                            style={{
+                              width: "100%", padding: "7px 10px", borderRadius: 8, fontSize: 12,
+                              background: "var(--bg-input)", border: "1px solid var(--border-color)",
+                              color: "var(--text-main)", outline: "none", boxSizing: "border-box",
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
