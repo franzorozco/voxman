@@ -85,8 +85,16 @@ const ThemeLayout = ({ theme, children }) => (
   </div>
 );
 
+import { useEffect } from "react";
+
 const AnimatedRoutes = () => {
   const location = useLocation();
+
+  // Mover el scroll principal arriba en cada cambio de ruta (sin reiniciar los contenedores como el sidebar)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   const { isDark, profileIsDark } = useThemeStore();
   const adminThemeClass = isDark ? "admin-theme-dark" : "admin-theme";
   const posThemeClass = isDark ? "pos-theme-dark" : "pos-theme";
@@ -95,7 +103,7 @@ const AnimatedRoutes = () => {
 
   return (
     
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location}>
 
         {/* ================= PUBLIC & AUTH (HOME THEME) ================= */}
         <Route element={<ThemeLayout theme="home-theme" />}>
