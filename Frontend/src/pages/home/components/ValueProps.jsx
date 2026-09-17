@@ -75,11 +75,12 @@ export default function ValueProps() {
   const scrollHeight = `calc(300px + ${Math.max(0, propsData.length - 1) * 400}px)`;
 
   const bgImage = settings.home_value_props_bg || null;
+  const isMobileInitial = typeof window !== 'undefined' && window.innerWidth <= 800;
   const sectionStyle = bgImage ? {
     backgroundImage: `linear-gradient(to bottom right, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65)), url(${getImageUrl(bgImage)})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    backgroundAttachment: 'fixed'
+    backgroundAttachment: isMobileInitial ? 'scroll' : 'fixed'
   } : {};
 
   return (

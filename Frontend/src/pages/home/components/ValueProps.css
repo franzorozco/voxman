@@ -215,3 +215,5 @@
     font-size: 6rem;
   }
 }
+
+@media (max-width: 768px) { .vp-card { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); } }

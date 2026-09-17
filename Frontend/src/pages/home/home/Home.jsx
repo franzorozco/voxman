@@ -1,14 +1,16 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, lazy, Suspense } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../../../components/layout/Footer";
 import Hero from "../components/Hero";
-import FeaturedCategories from "../components/FeaturedCategories";
-import DynamicProductCarousel from "../components/DynamicProductCarousel";
-import ValueProps from "../components/ValueProps";
-import TopBar from "../components/TopBar";
 import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
 
 import "./Home.css";
+
+// Lazy load components below the fold for much better performance (especially on mobile)
+const FeaturedCategories = lazy(() => import("../components/FeaturedCategories"));
+const DynamicProductCarousel = lazy(() => import("../components/DynamicProductCarousel"));
+const ValueProps = lazy(() => import("../components/ValueProps"));
+const TopBar = lazy(() => import("../components/TopBar"));
 
 export default function Home() {
   const { settings, fetchSettings } = useShopSettingsStore();
@@ -48,7 +50,9 @@ export default function Home() {
       <Navbar isDarkThemeOverride={true} />
 
       {/* above_hero — encima del hero (pegado debajo de la navbar) */}
-      {renderTopBars("above_hero")}
+      <Suspense fallback={null}>
+        {renderTopBars("above_hero")}
+      </Suspense>
 
       {showHero && (
         <Hero
@@ -57,28 +61,28 @@ export default function Home() {
         />
       )}
 
-      {/* below_hero — justo debajo del hero */}
-      {renderTopBars("below_hero")}
+      <Suspense fallback={<div style={{height: "20vh"}}></div>}>
+        {/* below_hero — justo debajo del hero */}
+        {renderTopBars("below_hero")}
 
-      {showValueProps && <ValueProps />}
+        {showValueProps && <ValueProps />}
 
-      {/* below_value_props — debajo de beneficios */}
-      {renderTopBars("below_value_props")}
+        {/* below_value_props — debajo de beneficios */}
+        {renderTopBars("below_value_props")}
 
-      {showCarousel && <DynamicProductCarousel />}
+        {showCarousel && <DynamicProductCarousel />}
 
-      {/* below_carousel — debajo del carrusel */}
-      {renderTopBars("below_carousel")}
+        {/* below_carousel — debajo del carrusel */}
+        {renderTopBars("below_carousel")}
 
-      {showCategories && <FeaturedCategories />}
+        {showCategories && <FeaturedCategories />}
 
-      {/* below_categories — debajo de categorías */}
-      {renderTopBars("below_categories")}
+        {/* below_categories — debajo de categorías */}
+        {renderTopBars("below_categories")}
 
-
-
-      {/* above_footer — justo antes del footer */}
-      {renderTopBars("above_footer")}
+        {/* above_footer — justo antes del footer */}
+        {renderTopBars("above_footer")}
+      </Suspense>
 
       <Footer />
 

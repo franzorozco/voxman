@@ -2,7 +2,7 @@
 
 .hero {
   position: relative;
-  height: calc(100vh - 70px);
+  height: calc(100svh - 70px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -272,7 +272,7 @@
 
 @media (max-width: 1024px) and (min-width: 769px) {
   .hero {
-    height: calc(100dvh - 70px);
+    height: calc(100svh - 70px);
     display: flex;
     flex-direction: column;
     padding: 30px;
@@ -403,7 +403,7 @@
 
 @media (max-width: 768px) {
   .hero {
-    height: calc(100dvh - 70px);
+    height: calc(100svh - 70px);
     display: flex;
     flex-direction: column;
     padding: 20px;
