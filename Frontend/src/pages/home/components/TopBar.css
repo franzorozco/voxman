@@ -9,10 +9,8 @@
   box-sizing: border-box;
   position: relative;
   z-index: 10;
-  overflow: hidden;
   border: none !important;
   outline: none !important;
-  box-shadow: none !important;
   margin-top: -1px;
   margin-bottom: -1px;
   /* Subtle animation on mount */
@@ -157,11 +155,7 @@
 /* ─── Nuevos Efectos Visuales ─── */
 
 .topbar--effect-border-glow {
-  animation: topbarBorderGlow 1.5s infinite alternate;
-}
-@keyframes topbarBorderGlow {
-  0% { box-shadow: inset 0 1px 3px -1px currentColor, inset 0 -1px 3px -1px currentColor; }
-  100% { box-shadow: inset 0 5px 12px -2px currentColor, inset 0 -5px 12px -2px currentColor; }
+  box-shadow: inset 0 3px 8px -1px currentColor, inset 0 -3px 8px -1px currentColor;
 }
 
 .topbar--effect-typewriter .topbar__text {
@@ -233,6 +227,67 @@
 @keyframes topbarPulseGlow {
   0% { box-shadow: 0 0 5px currentColor; transform: scale(1); }
   100% { box-shadow: 0 0 20px currentColor; transform: scale(1.02); }
+}
+
+/* Nuevos Efectos Adicionales */
+.topbar--effect-gradient-flow {
+  background: linear-gradient(270deg, #ff007f, #7f00ff, #007fff, #00ff7f) !important;
+  background-size: 600% 600% !important;
+  animation: topbarGradientFlow 6s ease infinite;
+}
+@keyframes topbarGradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.topbar--effect-rainbow-text .topbar__text,
+.topbar--effect-rainbow-text .topbar__link,
+.topbar--effect-rainbow-text .topbar__icon {
+  background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  background-size: 200% auto;
+  color: transparent !important;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: topbarRainbowText 4s linear infinite;
+}
+@keyframes topbarRainbowText {
+  to { background-position: 200% center; }
+}
+
+.topbar--effect-cyberpunk {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  border-right: 5px solid #fce803 !important;
+  border-left: 5px solid #00f0ff !important;
+}
+
+.topbar--effect-text-breathe .topbar__text {
+  animation: topbarTextBreathe 3s ease-in-out infinite alternate;
+}
+@keyframes topbarTextBreathe {
+  from { letter-spacing: 0.5px; filter: drop-shadow(0 0 0 transparent); }
+  to { letter-spacing: 5px; filter: drop-shadow(0 0 8px currentColor); }
+}
+
+.topbar--effect-retro-wave .topbar__text {
+  text-shadow: 2px 2px 0px #e91e63, -2px -2px 0px #00bcd4;
+  font-style: italic;
+  font-weight: 800 !important;
+  letter-spacing: 2px;
+}
+
+.topbar--effect-spotlight::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle 250px at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: topbarSpotlight 5s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes topbarSpotlight {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 /* ─── Responsive ─── */

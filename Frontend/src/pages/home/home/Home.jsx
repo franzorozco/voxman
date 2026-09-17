@@ -23,7 +23,7 @@ export default function Home() {
   const showCarousel   = isEnabled(settings.home_show_carousel);
   const showValueProps = isEnabled(settings.home_show_value_props);
   const showCategories = isEnabled(settings.home_show_categories);
-  const showNewsletter = isEnabled(settings.home_show_newsletter);
+
   const showTopBars    = isEnabled(settings.home_show_top_bars);
 
   /* ── Parse top bars ── */
@@ -75,14 +75,7 @@ export default function Home() {
       {/* below_categories — debajo de categorías */}
       {renderTopBars("below_categories")}
 
-      {showNewsletter && (
-        <section className="section">
-          <div className="container" style={{ textAlign: "center" }}>
-            <h2>Suscríbete</h2>
-            <p>Recibe ofertas y novedades directo en tu correo.</p>
-          </div>
-        </section>
-      )}
+
 
       {/* above_footer — justo antes del footer */}
       {renderTopBars("above_footer")}

@@ -25,7 +25,7 @@ const SECTION_KEYS = [
   { key: "home_show_carousel",   label: "Carrusel de Productos",        desc: "Carrusel de Novedades, Más Vendidos, etc." },
   { key: "home_show_categories", label: "Categorias",                   desc: "Grilla de categorias de productos." },
   { key: "home_show_top_bars",   label: "Top Bars (Cintillos)",         desc: "Activa o desactiva todos los cintillos de anuncios del Home." },
-  { key: "home_show_newsletter", label: "Newsletter / Suscripcion",    desc: "Formulario para que los clientes se suscriban." },
+
 ];
 
 export default function HomeConfig() {
@@ -49,7 +49,6 @@ export default function HomeConfig() {
   const [allCategories, setAllCategories] = useState([]);
   const [loadingCats,   setLoadingCats]   = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [editingTopBarIconId, setEditingTopBarIconId] = useState(null);
   
   const [selectingImageForCat, setSelectingImageForCat] = useState(null); // id of category being edited
   const [modalTab, setModalTab] = useState("gallery"); // gallery | upload | url
@@ -81,6 +80,7 @@ export default function HomeConfig() {
   };
 
   const [editingIconIndex, setEditingIconIndex] = useState(null);
+  const [editingTopBarIcon, setEditingTopBarIcon] = useState(null); // { id: number, field: "icon" | "iconRight" }
 
   /* heroImages = array parsed from JSON setting */
   const heroImages = (() => {
@@ -942,17 +942,15 @@ export default function HomeConfig() {
               
               <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>Tipo de lista a mostrar</span>
-                <select
+                <CustomSelect
                   value={settings.home_carousel_type || "newest"}
                   onChange={(e) => setSetting("home_carousel_type", e.target.value)}
-                  style={{ padding: "8px 12px", borderRadius: 8, fontSize: 14, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)", outline: "none" }}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--border-color)")}
+                  style={{ minHeight: "36px", padding: "8px 12px", borderRadius: 8, fontSize: 14, background: "var(--bg-input)", border: "1px solid var(--border-color)", color: "var(--text-main)" }}
                 >
                   <option value="newest">Lo más nuevo (Lanzamientos)</option>
                   <option value="trending">Lo más visto / destacado (Best Sellers)</option>
                   <option value="random">Aleatorio</option>
-                </select>
+                </CustomSelect>
               </label>
             </div>
           </div>
@@ -1242,22 +1240,79 @@ export default function HomeConfig() {
                           />
                         </div>
                       </div>
+                      
+                      {/* Icons Row */}
+                      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                        <div style={{ flex: 1, minWidth: 180 }}>
+                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>
+                            Ícono Inicio (Izquierda)
+                          </label>
+                          <button
+                            onClick={() => setEditingTopBarIcon({ id: bar.id, field: "icon" })}
+                            style={{ 
+                              width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", 
+                              borderRadius: 8, fontSize: 13, background: "var(--bg-input)", 
+                              border: "1px solid var(--border-color)", color: "var(--text-main)",
+                              cursor: "pointer", justifyContent: "flex-start", height: 36
+                            }}
+                          >
+                            {(() => {
+                              const IconCmp = bar.icon && Icons[bar.icon];
+                              return IconCmp ? <IconCmp size={16} /> : <Icons.Plus size={16} />;
+                            })()}
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {bar.icon || "Agregar ícono..."}
+                            </span>
+                          </button>
+                          {bar.icon && (
+                            <button onClick={() => updateTopBar(bar.id, "icon", "")} style={{ fontSize: 11, color: "var(--color-danger, #e53e3e)", background: "none", border: "none", marginTop: 4, cursor: "pointer", padding: 0, fontWeight: 600 }}>Quitar ícono</button>
+                          )}
+                        </div>
+
+                        <div style={{ flex: 1, minWidth: 180 }}>
+                          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>
+                            Ícono Final (Derecha)
+                          </label>
+                          <button
+                            onClick={() => setEditingTopBarIcon({ id: bar.id, field: "iconRight" })}
+                            style={{ 
+                              width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", 
+                              borderRadius: 8, fontSize: 13, background: "var(--bg-input)", 
+                              border: "1px solid var(--border-color)", color: "var(--text-main)",
+                              cursor: "pointer", justifyContent: "flex-start", height: 36
+                            }}
+                          >
+                            {(() => {
+                              const IconRightCmp = bar.iconRight && Icons[bar.iconRight];
+                              return IconRightCmp ? <IconRightCmp size={16} /> : <Icons.Plus size={16} />;
+                            })()}
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {bar.iconRight || "Agregar ícono..."}
+                            </span>
+                          </button>
+                          {bar.iconRight && (
+                            <button onClick={() => updateTopBar(bar.id, "iconRight", "")} style={{ fontSize: 11, color: "var(--color-danger, #e53e3e)", background: "none", border: "none", marginTop: 4, cursor: "pointer", padding: 0, fontWeight: 600 }}>Quitar ícono</button>
+                          )}
+                        </div>
+                        
+                        <div style={{ flex: 2, minWidth: 200 }} />
+                      </div>
 
                       {/* Styling & Typography Row */}
                       <div style={{ background: "var(--bg-main)", borderRadius: 8, padding: 16, border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: 16 }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-main)", display: "block" }}>Estilos y Apariencia</span>
                         
-                        {/* Colors & Toggles */}
+                        {/* Row 1: Colors */}
                         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
                           <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 140 }}>
                             <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Color de fondo</span>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <label style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid var(--border-color)", background: bar.bgColor, flexShrink: 0, cursor: "pointer", display: "block" }}>
+                            <div style={{ display: "flex", alignItems: "center", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, padding: 4 }}>
+                              <label style={{ width: 28, height: 28, borderRadius: 6, background: bar.bgColor, flexShrink: 0, cursor: "pointer", display: "block", border: "1px solid rgba(0,0,0,0.1)", position: "relative", overflow: "hidden" }}>
                                 <input
                                   type="color"
                                   value={bar.bgColor}
                                   onChange={(e) => updateTopBar(bar.id, "bgColor", e.target.value)}
-                                  style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                                  style={{ opacity: 0, width: "100%", height: "100%", position: "absolute", cursor: "pointer" }}
                                 />
                               </label>
                               <input
@@ -1265,9 +1320,9 @@ export default function HomeConfig() {
                                 value={bar.bgColor}
                                 onChange={(e) => updateTopBar(bar.id, "bgColor", e.target.value)}
                                 style={{
-                                  flex: 1, padding: "9px 10px", borderRadius: 8, fontSize: 13,
-                                  background: "var(--bg-input)", border: "1px solid var(--border-color)",
-                                  color: "var(--text-main)", outline: "none", fontFamily: "monospace",
+                                  flex: 1, padding: "4px 8px", fontSize: 13,
+                                  background: "transparent", border: "none",
+                                  color: "var(--text-main)", outline: "none", fontFamily: "monospace", minWidth: 60
                                 }}
                               />
                             </div>
@@ -1275,13 +1330,13 @@ export default function HomeConfig() {
                           
                           <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 140 }}>
                             <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Color del texto</span>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <label style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid var(--border-color)", background: bar.textColor, flexShrink: 0, cursor: "pointer", display: "block" }}>
+                            <div style={{ display: "flex", alignItems: "center", background: "var(--bg-input)", border: "1px solid var(--border-color)", borderRadius: 8, padding: 4 }}>
+                              <label style={{ width: 28, height: 28, borderRadius: 6, background: bar.textColor, flexShrink: 0, cursor: "pointer", display: "block", border: "1px solid rgba(0,0,0,0.1)", position: "relative", overflow: "hidden" }}>
                                 <input
                                   type="color"
                                   value={bar.textColor}
                                   onChange={(e) => updateTopBar(bar.id, "textColor", e.target.value)}
-                                  style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                                  style={{ opacity: 0, width: "100%", height: "100%", position: "absolute", cursor: "pointer" }}
                                 />
                               </label>
                               <input
@@ -1289,37 +1344,17 @@ export default function HomeConfig() {
                                 value={bar.textColor}
                                 onChange={(e) => updateTopBar(bar.id, "textColor", e.target.value)}
                                 style={{
-                                  flex: 1, padding: "9px 10px", borderRadius: 8, fontSize: 13,
-                                  background: "var(--bg-input)", border: "1px solid var(--border-color)",
-                                  color: "var(--text-main)", outline: "none", fontFamily: "monospace",
+                                  flex: 1, padding: "4px 8px", fontSize: 13,
+                                  background: "transparent", border: "none",
+                                  color: "var(--text-main)", outline: "none", fontFamily: "monospace", minWidth: 60
                                 }}
                               />
                             </div>
                           </div>
-
-                          <label style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 140, paddingBottom: 8, cursor: "pointer" }}>
-                            <input
-                              type="checkbox"
-                              checked={!!bar.useGradient}
-                              onChange={(e) => updateTopBar(bar.id, "useGradient", e.target.checked)}
-                              style={{ width: 18, height: 18, cursor: "pointer" }}
-                            />
-                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Fondo Degradado</span>
-                          </label>
-                          
-                          <label style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 100, paddingBottom: 8, cursor: "pointer" }}>
-                            <input
-                              type="checkbox"
-                              checked={!!bar.isCloseable}
-                              onChange={(e) => updateTopBar(bar.id, "isCloseable", e.target.checked)}
-                              style={{ width: 18, height: 18, cursor: "pointer" }}
-                            />
-                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Botón (X)</span>
-                          </label>
                         </div>
                         
-                        {/* Layout & Typography */}
-                        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 4 }}>
+                        {/* Row 2: Typography */}
+                        <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
                           <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 110 }}>
                             <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Tamaño Letra</span>
                             <CustomSelect
@@ -1366,18 +1401,21 @@ export default function HomeConfig() {
                           <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 110 }}>
                             <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Grosor Cintillo</span>
                             <CustomSelect
-                              value={bar.padding || "10px 20px"}
+                              value={bar.padding || "12px 20px"}
                               onChange={(e) => updateTopBar(bar.id, "padding", e.target.value)}
                               style={{ minHeight: "36px", padding: "7px 10px", fontSize: "13px", border: "1px solid var(--border-color)", background: "var(--bg-input)" }}
                             >
                               <option value="6px 20px">Delgado</option>
-                              <option value="10px 20px">Normal</option>
-                              <option value="14px 20px">Grueso</option>
-                              <option value="20px 20px">Extra Grueso</option>
+                              <option value="12px 20px">Normal</option>
+                              <option value="24px 20px">Grueso</option>
+                              <option value="40px 20px">Extra Grueso</option>
                             </CustomSelect>
                           </label>
+                        </div>
 
-                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 120 }}>
+                        {/* Row 3: Effects & Toggles */}
+                        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 2, minWidth: 220 }}>
                             <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Efecto Visual</span>
                             <CustomSelect
                               value={bar.effect || "none"}
@@ -1385,7 +1423,13 @@ export default function HomeConfig() {
                               style={{ minHeight: "36px", padding: "7px 10px", fontSize: "13px", border: "1px solid var(--border-color)", background: "var(--bg-input)" }}
                             >
                               <option value="none">Ninguno</option>
-                              <option value="border-glow">Bordes Iluminados</option>
+                              <option value="border-glow">Bordes Iluminados (Fijo)</option>
+                              <option value="gradient-flow">Fondo Flotante (Gradiente)</option>
+                              <option value="rainbow-text">Texto Arcoíris (Fluido)</option>
+                              <option value="cyberpunk">Cyberpunk</option>
+                              <option value="text-breathe">Respiración de Texto</option>
+                              <option value="retro-wave">Onda Retro (Synthwave)</option>
+                              <option value="spotlight">Foco de Luz (Spotlight)</option>
                               <option value="pulse">Latido (Pulse)</option>
                               <option value="pulse-glow">Latido Resplandeciente</option>
                               <option value="glow">Resplandor (Glow)</option>
@@ -1400,6 +1444,28 @@ export default function HomeConfig() {
                               <option value="shake">Vibración (Shake)</option>
                             </CustomSelect>
                           </label>
+
+                          <div style={{ display: "flex", gap: 16, flex: 1, minWidth: 200, paddingBottom: 8 }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={!!bar.useGradient}
+                                onChange={(e) => updateTopBar(bar.id, "useGradient", e.target.checked)}
+                                style={{ width: 18, height: 18, cursor: "pointer" }}
+                              />
+                              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Fondo Degradado</span>
+                            </label>
+                            
+                            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={!!bar.isCloseable}
+                                onChange={(e) => updateTopBar(bar.id, "isCloseable", e.target.checked)}
+                                style={{ width: 18, height: 18, cursor: "pointer" }}
+                              />
+                              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-main)" }}>Botón (X)</span>
+                            </label>
+                          </div>
                         </div>
                       </div>
 
@@ -1640,9 +1706,14 @@ export default function HomeConfig() {
       />
 
       <IconPickerModal
-        isOpen={editingTopBarIconId !== null}
-        onClose={() => setEditingTopBarIconId(null)}
-        onSelect={(icon) => updateTopBar(editingTopBarIconId, 'icon', icon)}
+        isOpen={editingTopBarIcon !== null}
+        onClose={() => setEditingTopBarIcon(null)}
+        onSelect={(icon) => {
+          if (editingTopBarIcon) {
+            updateTopBar(editingTopBarIcon.id, editingTopBarIcon.field, icon);
+            setEditingTopBarIcon(null);
+          }
+        }}
       />
     </div>
   );

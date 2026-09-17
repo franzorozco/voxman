@@ -14,12 +14,13 @@ export default function TopBar({
   linkUrl = "", 
   linkText = "",
   icon = "",
+  iconRight = "",
   useGradient = false,
   effect = "none",
   textSize = "13px",
   iconSize = 16,
   fontWeight = "500",
-  padding = "10px 20px",
+  padding = "12px 20px",
   isCloseable = false
 }) {
   const [isClosed, setIsClosed] = useState(false);
@@ -41,6 +42,7 @@ export default function TopBar({
 
   const isExternal = linkUrl.startsWith("http");
   const IconCmp = icon && Icons[icon] ? Icons[icon] : null;
+  const IconRightCmp = iconRight && Icons[iconRight] ? Icons[iconRight] : null;
 
   let bgStyle = { backgroundColor: bgColor, color: textColor, padding: padding };
   if (useGradient) {
@@ -68,6 +70,8 @@ export default function TopBar({
             </Link>
           )
         )}
+        
+        {IconRightCmp && <IconRightCmp size={Number(iconSize) || 16} className="topbar__icon" style={{ marginLeft: 4, marginRight: 0 }} />}
       </div>
       
       {isCloseable && (

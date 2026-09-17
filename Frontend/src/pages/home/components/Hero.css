@@ -272,7 +272,6 @@
 
 @media (max-width: 1024px) and (min-width: 769px) {
   .hero {
-    margin-top: 70px;
     height: calc(100dvh - 70px);
     display: flex;
     flex-direction: column;
@@ -404,7 +403,6 @@
 
 @media (max-width: 768px) {
   .hero {
-    margin-top: 70px;
     height: calc(100dvh - 70px);
     display: flex;
     flex-direction: column;
