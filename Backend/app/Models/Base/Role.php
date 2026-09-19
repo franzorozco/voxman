@@ -32,6 +32,7 @@ class Role extends Model
 {
 	use SoftDeletes;
 	protected $table = 'roles';
+	protected $keyType = 'string';
 
 	public function model_has_roles()
 	{

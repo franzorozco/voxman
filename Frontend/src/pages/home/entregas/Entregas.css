@@ -1,0 +1,251 @@
+/* =========================================================
+   VOXMAN "ENTREGAS" PAGE - PREMIUM STYLING
+========================================================= */
+
+.vox-entregas-page {
+  background-color: #000000;
+  color: #ffffff;
+  font-family: "Inter", "Outfit", sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================================
+   HERO SECTION
+========================================================= */
+.vox-entregas-hero {
+  position: relative;
+  height: 100vh;
+  min-height: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+.vox-icon-container {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  color: #fff;
+  opacity: 0.9;
+}
+
+/* Reusing utility classes from Nosotros.css conceptually */
+.vox-hero-title {
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-family: 'Bodoni Moda', serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.vox-hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: #a0a0a0;
+  letter-spacing: 1px;
+  font-weight: 300;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Scroll Indicator */
+.vox-scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  opacity: 0.6;
+}
+.mouse {
+  width: 26px;
+  height: 42px;
+  border: 2px solid #fff;
+  border-radius: 20px;
+  position: relative;
+}
+.mouse::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 8px;
+  background: #fff;
+  border-radius: 4px;
+  animation: scrollMouse 2s infinite cubic-bezier(0.15, 0.41, 0.69, 0.94);
+}
+
+@keyframes scrollMouse {
+  0% { transform: translate(-50%, 0); opacity: 1; }
+  100% { transform: translate(-50%, 15px); opacity: 0; }
+}
+/* If necessary, we can duplicate the reveal animations here or ensure they are global, 
+   but since they are module specific, we define them here. */
+
+.vox-reveal, .vox-reveal-left, .vox-reveal-right {
+  opacity: 0;
+  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vox-reveal { transform: translateY(40px); }
+.vox-reveal-left { transform: translateX(-40px); }
+.vox-reveal-right { transform: translateX(40px); }
+
+.vox-reveal.active, .vox-reveal-left.active, .vox-reveal-right.active {
+  opacity: 1;
+  transform: translate(0);
+}
+
+.delay-1 { transition-delay: 0.15s; }
+
+/* =========================================================
+   DELIVERY METHODS
+========================================================= */
+.vox-delivery-methods {
+  padding: 120px 0;
+  background: #050505;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.vox-delivery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.vox-delivery-card {
+  background: linear-gradient(145deg, #111, #0a0a0a);
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 60px 50px;
+  border-radius: 4px;
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+
+.vox-delivery-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.vox-card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.vox-delivery-card h3 {
+  font-size: 1.8rem;
+  font-family: 'Bodoni Moda', serif;
+  margin-bottom: 20px;
+  font-weight: 400;
+}
+
+.vox-card-desc {
+  color: #999;
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 30px;
+}
+
+.vox-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vox-card-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #ccc;
+  font-size: 0.95rem;
+  font-weight: 300;
+}
+
+.vox-card-list li svg {
+  color: #888;
+}
+
+/* =========================================================
+   HOW IT WORKS
+========================================================= */
+.vox-how-it-works {
+  padding: 120px 0;
+  background: #000;
+}
+
+.vox-how-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.vox-steps {
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.vox-step {
+  display: flex;
+  gap: 30px;
+}
+
+.vox-step-number {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 2.5rem;
+  color: rgba(255,255,255,0.2);
+  line-height: 1;
+}
+
+.vox-step-info h4 {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.vox-step-info p {
+  color: #888;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 992px) {
+  .vox-delivery-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .vox-delivery-card {
+    padding: 40px 30px;
+  }
+  
+  .vox-step {
+    flex-direction: column;
+    gap: 15px;
+  }
+}

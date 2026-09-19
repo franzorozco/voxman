@@ -1,0 +1,63 @@
+/* AccountsPayable.css */
+.accounts-payable-container {
+  padding: 20px;
+}
+
+/* Inherits most styles from Purchases.css but can override specific things here */
+
+.accounts-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.account-stat-card {
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.account-filter-select {
+    width: 200px;
+}
+
+.account-refresh-btn {
+    padding: 10px;
+}
+
+.row-overdue {
+    background: rgba(239, 68, 68, 0.02) !important;
+}
+
+.account-action-btn {
+    padding: 6px 12px;
+}
+
+/* ==================================
+   MOBILE / RESPONSIVE (CARD VIEW)
+   ================================== */
+@media (max-width: 768px) {
+    .accounts-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .account-filter-select {
+        width: 100%;
+        flex: none;
+    }
+    
+    .account-refresh-btn {
+        width: 100%;
+        flex: none;
+    }
+
+
+}
+
+

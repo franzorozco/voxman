@@ -7,6 +7,11 @@ use App\Models\Base\Attribute as BaseAttribute;
 class Attribute extends BaseAttribute
 {
 	protected $fillable = [
-		'name'
+		'name',
+        'is_fixed'
 	];
+
+    protected $casts = [
+        'is_fixed' => 'boolean',
+    ];
 }

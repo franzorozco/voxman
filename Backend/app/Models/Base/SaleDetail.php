@@ -6,11 +6,10 @@
 
 namespace App\Models\Base;
 
-use App\Models\Owner;
-use App\Models\OwnerPaymentDetail;
-use App\Models\ProductVariant;
-use App\Models\Return;
-use App\Models\Sale;
+use App\Models\Actors\Owner;
+use App\Models\Finance\OwnerPaymentDetail;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Sales\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -44,13 +43,11 @@ class SaleDetail extends Model
 {
 	use SoftDeletes;
 	protected $table = 'sale_details';
+	protected $keyType = 'string';
 	public $incrementing = false;
+	
 
 	protected $casts = [
-		'id' => 'uuid',
-		'sale_id' => 'uuid',
-		'variant_id' => 'uuid',
-		'owner_id' => 'uuid',
 		'quantity' => 'int',
 		'unit_price' => 'float',
 		'discount' => 'float',
@@ -73,10 +70,12 @@ class SaleDetail extends Model
 		return $this->belongsTo(Owner::class);
 	}
 
+	/*
 	public function returns()
 	{
-		return $this->hasMany(Return::class);
+		return $this->hasMany(\App\Models\Returns\ReturnModel::class);
 	}
+	*/
 
 	public function owner_payment_details()
 	{

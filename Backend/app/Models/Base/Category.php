@@ -6,13 +6,14 @@
 
 namespace App\Models\Base;
 
-use App\Models\DiscountCategory;
-use App\Models\Product;
+use App\Models\Discount\DiscountCategory;
+use App\Models\Discount\Discount;
+use App\Models\Catalog\Product;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 /**
  * Class Category
  * 
@@ -34,21 +35,20 @@ class Category extends Model
 {
 	use SoftDeletes;
 	protected $table = 'categories';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'parent_id' => 'uuid'
 	];
-
+ 
 	public function category()
 	{
-		return $this->belongsTo(\App\Models\Category::class, 'parent_id');
+		return $this->belongsTo(\App\Models\Catalog\Category::class, 'parent_id');
 	}
 
 	public function categories()
 	{
-		return $this->hasMany(\App\Models\Category::class, 'parent_id');
+		return $this->hasMany(\App\Models\Catalog\Category::class, 'parent_id');
 	}
 
 	public function products()
@@ -60,4 +60,16 @@ class Category extends Model
 	{
 		return $this->hasMany(DiscountCategory::class);
 	}
+
+	public function discounts()
+	{
+		return $this->belongsToMany(
+			Discount::class,
+			'discount_categories',
+			'category_id',
+			'discount_id'
+		);
+	}
+
+
 }

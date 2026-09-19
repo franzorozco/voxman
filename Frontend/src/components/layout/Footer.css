@@ -1,8 +1,8 @@
 .footer {
-  background: #000;
-  color: #fff;
+  background: var(--bg-card, #000);
+  color: var(--text-main, #fff);
   padding: 60px 20px 20px;
-  border-top: 1px solid #222;
+  border-top: 1px solid var(--border-color, #222);
 }
 
 .footer-container {
@@ -17,24 +17,25 @@
   font-size: 28px;
   letter-spacing: 2px;
   margin-bottom: 10px;
+  color: var(--text-main, #fff);
 }
 
 .footer-column h3 {
   margin-bottom: 12px;
   font-size: 16px;
-  color: #aaa;
+  color: var(--text-muted, #aaa);
   text-transform: uppercase;
 }
 
 .footer-column p {
   font-size: 14px;
-  color: #ccc;
+  color: var(--text-muted, #ccc);
   line-height: 1.5;
 }
 
 .footer-column a {
   display: block;
-  color: #ccc;
+  color: var(--text-muted, #ccc);
   text-decoration: none;
   margin: 6px 0;
   font-size: 14px;
@@ -42,7 +43,7 @@
 }
 
 .footer-column a:hover {
-  color: #fff;
+  color: var(--color-primary, #fff);
   transform: translateX(4px);
 }
 
@@ -55,24 +56,24 @@
 .newsletter input {
   flex: 1;
   padding: 10px;
-  border: 1px solid #333;
-  background: #111;
-  color: #fff;
+  border: 1px solid var(--border-color, #333);
+  background: var(--bg-input, #111);
+  color: var(--text-main, #fff);
   outline: none;
 }
 
 .newsletter button {
   padding: 10px 14px;
   border: none;
-  background: #fff;
-  color: #000;
+  background: var(--color-primary, #fff);
+  color: var(--color-primary-text, #000);
   cursor: pointer;
   font-weight: bold;
   transition: 0.3s;
 }
 
 .newsletter button:hover {
-  background: #ccc;
+  background: var(--color-primary-hover, #ccc);
 }
 
 /* Social */
@@ -84,19 +85,19 @@
   display: inline-block;
   margin-right: 10px;
   font-size: 13px;
-  color: #aaa;
+  color: var(--text-muted, #aaa);
 }
 
 .socials a:hover {
-  color: #fff;
+  color: var(--color-primary, #fff);
 }
 
 /* Bottom */
 .footer-bottom {
-  border-top: 1px solid #222;
+  border-top: 1px solid var(--border-color, #222);
   margin-top: 40px;
   padding-top: 15px;
   text-align: center;
   font-size: 13px;
-  color: #777;
+  color: var(--text-muted, #777);
 }

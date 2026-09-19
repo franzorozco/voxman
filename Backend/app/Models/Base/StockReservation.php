@@ -6,9 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\Branch;
-use App\Models\ProductVariant;
-use App\Models\Sale;
+use App\Models\Branch\Branch;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Sales\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,14 +32,11 @@ use Illuminate\Database\Eloquent\Model;
 class StockReservation extends Model
 {
 	protected $table = 'stock_reservations';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'variant_id' => 'uuid',
-		'branch_id' => 'uuid',
-		'sale_id' => 'uuid',
 		'quantity' => 'int'
 	];
 

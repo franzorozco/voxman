@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\AttributeValue;
-use App\Models\ProductVariant;
+use App\Models\Catalog\AttributeValue;
+use App\Models\Catalog\ProductVariant;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -24,21 +24,24 @@ use Illuminate\Database\Eloquent\Model;
 class VariantAttributeValue extends Model
 {
 	protected $table = 'variant_attribute_values';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'variant_id' => 'uuid',
-		'attribute_value_id' => 'uuid'
 	];
 
 	public function product_variant()
 	{
 		return $this->belongsTo(ProductVariant::class, 'variant_id');
 	}
-
+	
 	public function attribute_value()
 	{
-		return $this->belongsTo(AttributeValue::class);
+		return $this->belongsTo(AttributeValue::class, 'attribute_value_id');
 	}
+
+ 
+
+
 }
