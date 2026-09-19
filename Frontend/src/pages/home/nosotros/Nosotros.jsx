@@ -1,32 +1,40 @@
-import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../../../components/layout/Footer";
 import { Heart, Target, Award, Shield, Compass, Star } from "lucide-react";
 
-import { API_BASE_URL } from "../../../config/api";
-const navLogo = getImageUrl('/system/logos/logo_black_sinfondo.png');
-const heroLogo = getImageUrl('/system/logos/logo_black_sinfondo.png');
+import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
+import { getImageUrl } from '../../../utils/imageUtils';
+
 import dueno1 from "../../../assets/global/Franz.jpg";
 import dueno2 from "../../../assets/global/Rous.jpg";
 
 import "./Nosotros.css";
  
 export default function Nosotros() {
+  const { settings } = useShopSettingsStore();
+  
+  // En la pagina de Nosotros usamos fondo oscuro (Navbar oscuro), 
+  // por lo que necesitamos el logo claro/blanco.
+  const heroLogo = settings.store_logo_dark 
+    ? getImageUrl(settings.store_logo_dark) 
+    : getImageUrl('/system/logos/logo_white_sinfondo.png');
   
   // Intersection Observer para las animaciones al hacer scroll
   useEffect(() => {
-    const elementos = document.querySelectorAll(".vox-reveal");
+    const elementos = document.querySelectorAll(".vox-reveal, .vox-reveal-left, .vox-reveal-right");
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("active");
+            // Unobserve to run only once
+            observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.2, rootMargin: "0px 0px -50px 0px" }
     );
 
     elementos.forEach((el) => observer.observe(el));
@@ -47,13 +55,13 @@ export default function Nosotros() {
           <div className="vox-hero-logo-container">
             <img src={heroLogo} alt="VOXman Logo" className="vox-hero-logo" />
           </div>
-          <h1 className="vox-hero-title">Más que ropa, una identidad.</h1>
+          <h1 className="vox-hero-title">MÁS QUE ROPA, UNA IDENTIDAD.</h1>
           <p className="vox-hero-subtitle">
             Forjados en la perseverancia. Construidos con pasión.
           </p>
-          <div className="vox-scroll-indicator">
-            <div className="mouse"></div>
-          </div>
+        </div>
+        <div className="vox-scroll-indicator">
+          <div className="mouse"></div>
         </div>
       </section>
 
@@ -61,26 +69,27 @@ export default function Nosotros() {
       <section className="vox-story-section">
         <div className="vox-container">
           <div className="vox-story-grid">
-            <div className="vox-story-text vox-reveal">
+            <div className="vox-story-text vox-reveal-left">
+              <span className="vox-overline">El Origen</span>
               <h2 className="vox-section-title">El Inicio de un Sueño</h2>
               <div className="vox-story-paragraphs">
                 <p>
-                  <strong>VOXman</strong> no nació en una sala de juntas, nació de conversaciones a altas horas de la noche, de caminatas después de entrenar, y del profundo deseo de dos jóvenes enamorados por construir algo propio.
+                  <strong>VOXman</strong> no nació en una sala de juntas. Nació de conversaciones a altas horas de la noche, de caminatas después de entrenar y del profundo deseo de dos mentes apasionadas por construir algo propio.
                 </p>
                 <p>
-                  Esta marca es el reflejo vivo de nuestra relación. Hemos atravesado tormentas y días soleados, tiempos donde todo parecía ir en contra y momentos donde el esfuerzo daba sus primeros frutos. Cada hilo, cada diseño y cada línea de código en este proyecto lleva impregnada nuestra historia de resiliencia.
+                  Esta marca es el reflejo vivo de nuestra historia. Hemos atravesado tormentas y días soleados, tiempos donde todo parecía ir en contra y momentos donde el esfuerzo daba sus primeros frutos. Cada hilo, cada diseño y cada línea de código en este proyecto lleva impregnada nuestra resiliencia.
                 </p>
                 <p>
-                  No importa cuántas veces la vida se ponga difícil, aprendimos que si luchamos juntos, no hay barrera que no podamos superar. Creamos VOXman para transmitir esa misma energía a quienes visten nuestras prendas: la confianza de que puedes enfrentar al mundo y ganar.
+                  No importa cuántas veces la vida se ponga difícil, aprendimos que luchando juntos no hay barrera insuperable. Creamos VOXman para transmitir esa energía: la confianza de que puedes enfrentar al mundo y ganar.
                 </p>
               </div>
             </div>
             
-            <div className="vox-story-image-wrapper vox-reveal">
+            <div className="vox-story-image-wrapper vox-reveal-right">
               <div className="vox-story-image-glass">
-                <Heart size={48} className="vox-heart-icon" />
+                <Heart strokeWidth={1} size={56} className="vox-heart-icon" />
                 <h3>Nuestra Promesa</h3>
-                <p>"Construir algo verdadero, algo que dure y que trascienda. Todo lo que hacemos, lo hacemos con el corazón."</p>
+                <p>"Construir algo verdadero, algo que dure y que trascienda. Todo lo que hacemos, lo hacemos con el corazón y una obsesión por la excelencia."</p>
               </div>
             </div>
           </div>
@@ -91,6 +100,7 @@ export default function Nosotros() {
       <section className="vox-founders-section">
         <div className="vox-container">
           <div className="vox-section-header vox-reveal">
+            <span className="vox-overline">Los Creadores</span>
             <h2 className="vox-section-title">Quienes Somos</h2>
             <p className="vox-section-subtitle">Dos mentes, un solo corazón detrás de la marca.</p>
           </div>
@@ -99,8 +109,7 @@ export default function Nosotros() {
             {/* FUNDADOR 1 */}
             <div className="vox-founder-card vox-reveal">
               <div className="vox-founder-image-box">
-                <img src={dueno1} alt="Franz Orozco" className="vox-founder-img" />
-                <div className="vox-founder-overlay"></div>
+                <img src={dueno1} alt="Franz Orozco" className="vox-founder-img" loading="lazy" />
               </div>
               <div className="vox-founder-info">
                 <h3>Franz Orozco</h3>
@@ -114,14 +123,13 @@ export default function Nosotros() {
             {/* FUNDADORA 2 */}
             <div className="vox-founder-card vox-reveal delay-1">
               <div className="vox-founder-image-box">
-                <img src={dueno2} alt="Rous Vidal" className="vox-founder-img" />
-                <div className="vox-founder-overlay"></div>
+                <img src={dueno2} alt="Rous Vidal" className="vox-founder-img" loading="lazy" />
               </div>
               <div className="vox-founder-info">
                 <h3>Rous Vidal</h3>
                 <span className="vox-founder-role">Estética, Arte y Dirección Visual</span>
                 <p>
-                  El alma creativa, el buen gusto y la pasión visual. Rous aporta la sensibilidad artística que hace que cada detalle de VOXman respire autenticidad y elegancia. Es el corazón estético que conecta nuestra ropa con las emociones de las personas.
+                  El alma creativa, el buen gusto y la pasión visual. Rous aporta la sensibilidad artística que hace que cada detalle de VOXman respire autenticidad y elegancia. Es el corazón estético que conecta nuestra ropa con las emociones.
                 </p>
               </div>
             </div>
@@ -133,19 +141,19 @@ export default function Nosotros() {
       <section className="vox-mv-section">
         <div className="vox-container">
           <div className="vox-mv-grid">
-            <div className="vox-mv-card vox-reveal">
+            <div className="vox-mv-card vox-reveal-left">
               <div className="vox-mv-icon-circle">
-                <Target size={32} />
+                <Target strokeWidth={1.5} size={36} />
               </div>
               <h3>Nuestra Misión</h3>
               <p>
-                Ofrecer más que prendas de vestir. Queremos entregar herramientas de confianza. Nuestra misión es confeccionar moda que haga sentir a cada persona segura de sí misma, respaldada por calidad inquebrantable y un diseño que hable por su carácter.
+                Ofrecer más que prendas de vestir. Entregamos herramientas de confianza. Nuestra misión es confeccionar moda que haga sentir a cada persona segura de sí misma, respaldada por una calidad inquebrantable y un diseño que hable por su carácter.
               </p>
             </div>
 
-            <div className="vox-mv-card vox-reveal delay-1">
+            <div className="vox-mv-card vox-reveal-right delay-1">
               <div className="vox-mv-icon-circle">
-                <Compass size={32} />
+                <Compass strokeWidth={1.5} size={36} />
               </div>
               <h3>Nuestra Visión</h3>
               <p>
@@ -160,25 +168,31 @@ export default function Nosotros() {
       <section className="vox-values-section">
         <div className="vox-container">
           <div className="vox-section-header vox-reveal">
-            <h2 className="vox-section-title">Nuestra Esencia</h2>
-            <p className="vox-section-subtitle">Los pilares sobre los que construimos nuestro día a día.</p>
+            <span className="vox-overline">La Esencia</span>
+            <h2 className="vox-section-title">Nuestros Pilares</h2>
           </div>
 
           <div className="vox-values-grid">
             <div className="vox-value-item vox-reveal">
-              <Award className="vox-val-icon" />
+              <div className="vox-val-icon-wrapper">
+                <Award strokeWidth={1.5} className="vox-val-icon" />
+              </div>
               <h4>Autenticidad</h4>
               <p>No seguimos moldes, creamos nuestra propia identidad con originalidad pura.</p>
             </div>
             
             <div className="vox-value-item vox-reveal delay-1">
-              <Star className="vox-val-icon" />
+              <div className="vox-val-icon-wrapper">
+                <Star strokeWidth={1.5} className="vox-val-icon" />
+              </div>
               <h4>Calidad</h4>
               <p>Atención obsesiva a los detalles para entregar un producto que perdure en el tiempo.</p>
             </div>
             
             <div className="vox-value-item vox-reveal delay-2">
-              <Shield className="vox-val-icon" />
+              <div className="vox-val-icon-wrapper">
+                <Shield strokeWidth={1.5} className="vox-val-icon" />
+              </div>
               <h4>Resiliencia</h4>
               <p>Crecemos ante la adversidad. Nunca nos rendimos, siempre encontramos un camino.</p>
             </div>
@@ -190,4 +204,3 @@ export default function Nosotros() {
     </div>
   );
 }
-

@@ -86,15 +86,12 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
         <nav className={`nav-menu ${menuOpen ? "active" : ""}`}>
 
           <NavLink to="/" end onClick={closeMenu}>Inicio</NavLink>
-
           <NavLink to="/shop" onClick={closeMenu}>
-            Tienda
+            {settings.store_name ? `Tienda ${settings.store_name}` : "Tienda"}
           </NavLink>
-
-          <NavLink to="/collections" onClick={closeMenu}>
-            Colecciones
+          <NavLink to="/entregas" onClick={closeMenu}>
+            Envíos y Entregas
           </NavLink>
-
           <NavLink to="/nosotros" onClick={closeMenu}>
             Nosotros
           </NavLink>

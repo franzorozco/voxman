@@ -21,7 +21,9 @@ class SystemSettingController extends Controller
         $setting = SystemSetting::where('key', $key)->first();
 
         if (!$setting) {
-            $cat = str_starts_with($key, 'home_') ? 'home_config' : 'General';
+            $cat = 'General';
+            if (str_starts_with($key, 'home_')) $cat = 'home_config';
+            if (str_starts_with($key, 'shipping_')) $cat = 'shipping_page_config';
             $type = str_contains($key, 'images') || str_contains($key, 'categories') || str_contains($key, 'props') ? 'json' : 'string';
             
             $setting = SystemSetting::create([

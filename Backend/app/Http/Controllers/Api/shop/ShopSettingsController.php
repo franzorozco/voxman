@@ -25,6 +25,7 @@ class ShopSettingsController extends Controller
         ];
 
         $settings = SystemSetting::whereIn('key', $keys)
+            ->orWhere('key', 'like', 'shipping_%')
             ->pluck('value', 'key');
 
         return response()->json($settings);

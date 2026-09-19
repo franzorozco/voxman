@@ -283,6 +283,9 @@ export default function DashboardLayout() {
                 <CanAccess permission="manage_settings">
                   <NavItem to="/dashboard/home-config" icon={House} label="Inicio / Hero" />
                 </CanAccess>
+                <CanAccess permission="manage_settings">
+                  <NavItem to="/dashboard/entregas-config" icon={Truck} label="Config. Entregas" />
+                </CanAccess>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />
                 </CanAccess>

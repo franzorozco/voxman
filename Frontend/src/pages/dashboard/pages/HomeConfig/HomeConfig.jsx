@@ -1,6 +1,6 @@
 import "./HomeConfig.css";
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { LayoutDashboard, Image, EyeOff, Eye, Save, RefreshCw, Check, X, Grid, Upload, Link as LinkIcon, Megaphone } from "lucide-react";
+import { LayoutDashboard, Image, EyeOff, Eye, Save, RefreshCw, Check, X, Grid, Upload, Link as LinkIcon, Megaphone, Truck } from "lucide-react";
 import toast from "react-hot-toast";
 import { getSystemSettings, updateSystemSetting } from "../../../../api/admin/systemSettings";
 import { getVariantImages, getCategories, uploadCategoryImage, uploadBackgroundImage, getBackgroundImages } from "../../../../api/admin/homeConfig";
@@ -1336,6 +1336,8 @@ export default function HomeConfig() {
                 </div>;
         })}
           </div>}
+
+
       </div>
 
       {/* ── Floating Save Bar ── */}

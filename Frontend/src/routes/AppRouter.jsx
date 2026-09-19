@@ -5,6 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 /* PÁGINAS PÚBLICAS */
 import Home from "../pages/home/home/Home";
 import Nosotros from "../pages/home/nosotros/Nosotros";
+import Entregas from "../pages/home/entregas/Entregas";
 import Tracking from "../pages/shop/Tracking/Tracking";
 import Profile from "../pages/profile/Profile";
 
@@ -61,7 +62,8 @@ import Payroll from "../pages/dashboard/pages/Payroll/Payroll.jsx";
 import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
 import Sales from "../pages/dashboard/pages/Sales/Sales.jsx";
 import SystemSettings from "../pages/dashboard/pages/SystemSettings/SystemSettings.jsx";
-import HomeConfig from "../pages/dashboard/pages/HomeConfig/HomeConfig.jsx";
+import HomeConfig from "../pages/dashboard/pages/HomeConfig/HomeConfig";
+import EntregasConfig from "../pages/dashboard/pages/EntregasConfig/EntregasConfig";
 import Finance from "../pages/dashboard/pages/Finance/Finance.jsx";
 import Carts from "../pages/dashboard/pages/Carts/Carts.jsx";
 import Orders from "../pages/dashboard/pages/Orders/Orders.jsx";
@@ -109,6 +111,7 @@ const AnimatedRoutes = () => {
         <Route element={<ThemeLayout theme="home-theme" />}>
           <Route path="/" element={<Home />} />
           <Route path="/nosotros" element={<Nosotros />} />
+          <Route path="/entregas" element={<Entregas />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -171,6 +174,7 @@ const AnimatedRoutes = () => {
             <Route path="returns" element={<ProtectedRoute permissions={["view_returns"]}><Returns /></ProtectedRoute>} />
             <Route path="system-settings" element={<ProtectedRoute permissions={["manage_settings"]}><SystemSettings /></ProtectedRoute>} />
             <Route path="home-config" element={<ProtectedRoute permissions={["manage_settings"]}><HomeConfig /></ProtectedRoute>} />
+            <Route path="entregas-config" element={<ProtectedRoute permissions={["manage_settings"]}><EntregasConfig /></ProtectedRoute>} />
 
           </Route>
         </Route>
