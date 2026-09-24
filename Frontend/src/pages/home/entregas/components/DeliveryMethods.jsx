@@ -33,24 +33,37 @@ export default function DeliveryMethods() {
     ];
   }
 
+  const sectionOverline = settings.shipping_methods_overline || "Nuestras Rutas";
+  const sectionTitle = settings.shipping_methods_title || "Opciones de Entrega";
+  const sectionSubtitle = settings.shipping_methods_subtitle || "Diseñadas para adaptarse a tu ritmo y a tu ubicación.";
+  const cardAnimation = settings.shipping_methods_animation || "fade-up";
+
   const renderIcon = (name, size) => {
     const IconCmp = Icons[name] || Icons.CheckCircle;
     return <IconCmp size={size} strokeWidth={1.5} />;
+  };
+
+  const getRevealClass = (index, animType) => {
+    if (animType === "fade-left") return "vox-reveal-left";
+    if (animType === "fade-right") return "vox-reveal-right";
+    if (animType === "fade-up") return "vox-reveal";
+    if (animType === "alternate") return index % 2 !== 0 ? "vox-reveal-right" : "vox-reveal-left";
+    return "vox-reveal";
   };
 
   return (
     <section className="vox-delivery-methods">
       <div className="vox-container">
         <div className="vox-section-header vox-reveal">
-          <span className="vox-overline">Nuestras Rutas</span>
-          <h2 className="vox-section-title">Opciones de Entrega</h2>
-          <p className="vox-section-subtitle">Diseñadas para adaptarse a tu ritmo y a tu ubicación.</p>
+          {sectionOverline && <span className="vox-overline">{sectionOverline}</span>}
+          {sectionTitle && <h2 className="vox-section-title">{sectionTitle}</h2>}
+          {sectionSubtitle && <p className="vox-section-subtitle">{sectionSubtitle}</p>}
         </div>
 
         <div className="vox-delivery-grid">
           {methods.map((method, i) => {
             const delayClass = i % 2 !== 0 ? "delay-1" : "";
-            const revealClass = i % 2 !== 0 ? "vox-reveal-right" : "vox-reveal-left";
+            const revealClass = getRevealClass(i, cardAnimation);
             const featureList = method.features ? method.features.split('\n').filter(f => f.trim() !== '') : [];
 
             return (

@@ -7,7 +7,7 @@ import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import "./Dashboard.css";
 import { API_BASE_URL } from "../../config/api";
 import CanAccess from "../../components/ui/CanAccess";
-import AttendanceWidget from "./components/AttendanceWidget/AttendanceWidget";
+
 import GlobalScannerModal from "../../components/ui/GlobalScannerModal";
 import ModalProtection from "./components/ModalProtection";
 import {
@@ -262,9 +262,7 @@ export default function DashboardLayout() {
                 <CanAccess permission="manage_executives">
                   <NavItem to="/dashboard/employees" icon={UserRoundSearch} label="Personal" />
                 </CanAccess>
-                <CanAccess permission="manage_executives">
-                  <NavItem to="/dashboard/attendances" icon={BarChart3} label="Asistencia" />
-                </CanAccess>
+
                 <CanAccess permission="manage_user_salaries">
                   <NavItem to="/dashboard/payroll" icon={FileText} label="Nómina y Pagos" />
                 </CanAccess>
@@ -285,6 +283,9 @@ export default function DashboardLayout() {
                 </CanAccess>
                 <CanAccess permission="manage_settings">
                   <NavItem to="/dashboard/entregas-config" icon={Truck} label="Config. Entregas" />
+                </CanAccess>
+                <CanAccess permission="manage_settings">
+                  <NavItem to="/dashboard/nosotros-config" icon={Users} label="Config. Nosotros" />
                 </CanAccess>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />
@@ -403,10 +404,7 @@ export default function DashboardLayout() {
                       minWidth: '220px',
                       zIndex: 999
                     }}>
-                      <div style={{ padding: '4px 0 12px 0', borderBottom: '1px solid var(--border-color)', marginBottom: '4px' }}>
-                        <AttendanceWidget />
-                      </div>
-                      
+
                       <Link
                         to="/"
                         style={{

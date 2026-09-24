@@ -308,7 +308,7 @@ Route::middleware([
         Route::post('/{id}/role', [EmployeeController::class, 'assignRole']);
     });
 
-    Route::prefix('attendances')->group(function () {
+    /*Route::prefix('attendances')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'index']);
         Route::post('/', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'store']);
         Route::put('/{id}', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'update']);
@@ -316,7 +316,7 @@ Route::middleware([
         Route::post('/check-in', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'checkIn']);
         Route::post('/check-out', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'checkOut']);
         Route::get('/status/{employeeId}', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'status']);
-    });
+    });*/
     Route::prefix('payroll')->group(function () {
         Route::get('/history', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'history']);
         Route::post('/calculate', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'calculate']);
@@ -477,6 +477,10 @@ Route::middleware([
     Route::post('/home-config/upload-category-image', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'uploadCategoryImage'])->middleware('permission:manage_settings');
     Route::post('/home-config/upload-background-image', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'uploadBackgroundImage'])->middleware('permission:manage_settings');
     Route::get('/home-config/background-images', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'backgroundImages'])->middleware('permission:manage_settings');
+    Route::post('/home-config/upload-video', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'uploadVideoPage'])->middleware('permission:manage_settings');
+    Route::get('/home-config/videos', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'videoPages'])->middleware('permission:manage_settings');
+    Route::post('/home-config/upload-actor-image', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'uploadActorImage'])->middleware('permission:manage_settings');
+    Route::get('/home-config/actor-images', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'actorImages'])->middleware('permission:manage_settings');
 
 });
 

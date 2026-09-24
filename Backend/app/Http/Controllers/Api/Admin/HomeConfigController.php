@@ -110,4 +110,85 @@ class HomeConfigController extends Controller
             return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
         }
     }
+
+    public function uploadVideoPage(Request $request)
+    {
+        $request->validate([
+            'video' => 'required|mimetypes:video/mp4,video/quicktime,video/webm|max:51200' // 50MB max
+        ]);
+
+        $file = $request->file('video');
+        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $fullPath = 'system/video_pages/' . $filename;
+
+        try {
+            $contents = file_get_contents($file->getRealPath());
+            $result = \Illuminate\Support\Facades\Storage::disk('s3')->put($fullPath, $contents);
+
+            if (!$result) {
+                return response()->json(['message' => 'Error al subir el video'], 500);
+            }
+
+            return response()->json(['url' => $fullPath]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function videoPages()
+    {
+        try {
+            $files = \Illuminate\Support\Facades\Storage::disk('s3')->files('system/video_pages');
+            if (!is_array($files)) {
+                $files = [];
+            }
+            
+            // Filter to only video extensions
+            $videos = array_values(array_filter($files, function($file) {
+                return preg_match('/\.(mp4|webm|mov|avi)$/i', $file);
+            }));
+            
+            return response()->json(['data' => $videos]);
+        } catch (\Exception $e) {
+            // Si la carpeta no existe o hay error de S3, devolvemos array vacío
+            return response()->json(['data' => []]);
+        }
+    }
+    public function uploadActorImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:10240'
+        ]);
+
+        $file = $request->file('image');
+        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $fullPath = 'system/actors/' . $filename;
+
+        try {
+            $contents = file_get_contents($file->getRealPath());
+            $result = \Illuminate\Support\Facades\Storage::disk('s3')->put($fullPath, $contents);
+
+            if (!$result) {
+                return response()->json(['message' => 'Error al subir imagen de actor'], 500);
+            }
+
+            return response()->json(['url' => $fullPath]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function actorImages()
+    {
+        try {
+            $files = \Illuminate\Support\Facades\Storage::disk('s3')->files('system/actors');
+            if (!is_array($files)) {
+                $files = [];
+            }
+            
+            return response()->json(['data' => $files]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+        }
+    }
 }

@@ -289,6 +289,12 @@ html, body {
   border-bottom: 1px solid var(--border-color);
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
 .topbar-left h3 {
   font-size: 18px;
   font-weight: 600;
@@ -299,6 +305,7 @@ html, body {
 .topbar-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 14px;
 }
 

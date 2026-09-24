@@ -59,11 +59,12 @@ import Owners from "../pages/dashboard/pages/Owners/Owners.jsx";
 import OwnerProfile from "../pages/dashboard/pages/Owners/OwnerProfile.jsx";
 import DeletedEmployees from "../pages/dashboard/pages/Employees/DeletedEmployees.jsx";
 import Payroll from "../pages/dashboard/pages/Payroll/Payroll.jsx";
-import Attendances from "../pages/dashboard/pages/Attendances/Attendances.jsx";
+
 import Sales from "../pages/dashboard/pages/Sales/Sales.jsx";
 import SystemSettings from "../pages/dashboard/pages/SystemSettings/SystemSettings.jsx";
 import HomeConfig from "../pages/dashboard/pages/HomeConfig/HomeConfig";
 import EntregasConfig from "../pages/dashboard/pages/EntregasConfig/EntregasConfig";
+import NosotrosConfig from "../pages/dashboard/pages/NosotrosConfig/NosotrosConfig";
 import Finance from "../pages/dashboard/pages/Finance/Finance.jsx";
 import Carts from "../pages/dashboard/pages/Carts/Carts.jsx";
 import Orders from "../pages/dashboard/pages/Orders/Orders.jsx";
@@ -164,7 +165,7 @@ const AnimatedRoutes = () => {
             <Route path="owners/:id" element={<ProtectedRoute permissions={["view_owners"]}><OwnerProfile /></ProtectedRoute>} />
             <Route path="employees/deleted" element={<ProtectedRoute permissions={["manage_executives"]}><DeletedEmployees /></ProtectedRoute>} />
             <Route path="payroll" element={<ProtectedRoute permissions={["manage_user_salaries"]}><Payroll /></ProtectedRoute>} />
-            <Route path="attendances" element={<ProtectedRoute permissions={["manage_executives"]}><Attendances /></ProtectedRoute>} />
+
             <Route path="sales" element={<ProtectedRoute permissions={["view_sales"]}><Sales /></ProtectedRoute>} />
             <Route path="orders" element={<ProtectedRoute permissions={["manage_sales"]}><Orders /></ProtectedRoute>} />
             <Route path="finance" element={<ProtectedRoute permissions={["view_finance"]}><Finance /></ProtectedRoute>} />
@@ -175,6 +176,7 @@ const AnimatedRoutes = () => {
             <Route path="system-settings" element={<ProtectedRoute permissions={["manage_settings"]}><SystemSettings /></ProtectedRoute>} />
             <Route path="home-config" element={<ProtectedRoute permissions={["manage_settings"]}><HomeConfig /></ProtectedRoute>} />
             <Route path="entregas-config" element={<ProtectedRoute permissions={["manage_settings"]}><EntregasConfig /></ProtectedRoute>} />
+            <Route path="nosotros-config" element={<ProtectedRoute permissions={["manage_settings"]}><NosotrosConfig /></ProtectedRoute>} />
 
           </Route>
         </Route>

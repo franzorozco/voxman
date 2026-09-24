@@ -39,9 +39,9 @@ export default function Entregas() {
     <div className="vox-entregas-page">
       <Navbar isDarkThemeOverride={true} />
       
-      <EntregasHero />
-      <DeliveryMethods />
-      <HowItWorks />
+      {String(settings.shipping_section_hero_show) !== "0" && <EntregasHero />}
+      {String(settings.shipping_section_methods_show) !== "0" && <DeliveryMethods />}
+      {String(settings.shipping_section_process_show) !== "0" && <HowItWorks />}
 
       <Footer />
     </div>

@@ -20,23 +20,49 @@ export default function HowItWorks() {
     ];
   }
 
+  const sectionOverline = settings.shipping_process_overline || "Paso a Paso";
+  const sectionTitle = settings.shipping_process_title || "¿Cómo es el proceso?";
+  const layout = settings.shipping_process_layout || "list";
+  const animation = settings.shipping_process_animation || "fade-left";
+
+  const getRevealClass = (index, animType) => {
+    if (animType === "fade-left") return "vox-reveal-left";
+    if (animType === "fade-right") return "vox-reveal-right";
+    if (animType === "fade-up") return "vox-reveal";
+    if (animType === "alternate") return index % 2 !== 0 ? "vox-reveal-right" : "vox-reveal-left";
+    return "vox-reveal-left";
+  };
+
+  const containerClass = layout === "cards" ? "vox-process-cards" : "vox-steps";
+
   return (
     <section className="vox-how-it-works">
       <div className="vox-container">
-        <div className="vox-how-grid">
-          <div className="vox-how-text vox-reveal-left">
-            <span className="vox-overline">Paso a Paso</span>
-            <h2 className="vox-section-title">¿Cómo es el proceso?</h2>
-            <div className="vox-steps">
-              {steps.map((step, i) => (
-                <div className="vox-step" key={i}>
-                  <div className="vox-step-number">{String(i + 1).padStart(2, '0')}</div>
-                  <div className="vox-step-info">
-                    <h4>{step.title}</h4>
-                    <p>{step.desc}</p>
+        <div className={`vox-how-grid ${layout === 'cards' ? 'layout-cards' : ''}`}>
+          <div className={`vox-how-text ${getRevealClass(0, animation)}`}>
+            {sectionOverline && <span className="vox-overline">{sectionOverline}</span>}
+            {sectionTitle && <h2 className="vox-section-title">{sectionTitle}</h2>}
+            
+            <div className={containerClass}>
+              {steps.map((step, i) => {
+                const delayClass = i % 2 !== 0 ? "delay-1" : "";
+                const stepReveal = getRevealClass(i + 1, animation);
+                
+                return (
+                  <div className={`vox-step ${stepReveal} ${delayClass}`} key={i}>
+                    <div className="vox-step-number">{String(i + 1).padStart(2, '0')}</div>
+                    <div className="vox-step-info">
+                      <h4>{step.title}</h4>
+                      <p>{step.desc}</p>
+                      {step.link_text && step.link_url && (
+                        <a href={step.link_url} target="_blank" rel="noopener noreferrer" className="vox-step-link">
+                          {step.link_text}
+                        </a>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

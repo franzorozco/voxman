@@ -16,14 +16,41 @@
 ========================================================= */
 .vox-entregas-hero {
   position: relative;
+  width: 100%;
   height: 100vh;
-  min-height: 700px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #000;
+  background-color: #050505; /* Fallback puro negro/oscuro */
   overflow: hidden;
+}
+
+.vox-hero-video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.vox-hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0.8) 100%);
+  z-index: 2;
+}
+
+.vox-hero-content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  color: #fff;
+  padding: 0 20px;
 }
 
 .vox-icon-container {
@@ -58,20 +85,21 @@
 /* Scroll Indicator */
 .vox-scroll-indicator {
   position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
   z-index: 10;
-  opacity: 0.6;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+  /* El color será inyectado por React via --scroll-color */
 }
-.mouse {
+
+/* 1. MOUSE */
+.vox-scroll-mouse {
   width: 26px;
   height: 42px;
-  border: 2px solid #fff;
+  border: 2px solid var(--scroll-color, #fff);
   border-radius: 20px;
   position: relative;
 }
-.mouse::before {
+.vox-scroll-mouse::before {
   content: '';
   position: absolute;
   top: 8px;
@@ -79,14 +107,42 @@
   transform: translateX(-50%);
   width: 4px;
   height: 8px;
-  background: #fff;
+  background: var(--scroll-color, #fff);
   border-radius: 4px;
   animation: scrollMouse 2s infinite cubic-bezier(0.15, 0.41, 0.69, 0.94);
 }
-
 @keyframes scrollMouse {
   0% { transform: translate(-50%, 0); opacity: 1; }
   100% { transform: translate(-50%, 15px); opacity: 0; }
+}
+
+/* 2. ARROW BOUNCE */
+.vox-scroll-arrow {
+  width: 24px;
+  height: 24px;
+  border-right: 3px solid var(--scroll-color, #fff);
+  border-bottom: 3px solid var(--scroll-color, #fff);
+  transform: rotate(45deg);
+  animation: scrollArrow 2s infinite ease-in-out;
+}
+@keyframes scrollArrow {
+  0%, 100% { transform: translateY(0) rotate(45deg); }
+  50% { transform: translateY(10px) rotate(45deg); }
+}
+
+/* 3. PULSE DOT */
+.vox-scroll-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--scroll-color, #fff);
+  animation: scrollDot 1.5s infinite ease-in-out;
+  box-shadow: 0 0 0 0 rgba(255,255,255,0.7);
+}
+@keyframes scrollDot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 var(--scroll-color, #fff); opacity: 0.7; }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255,255,255,0); opacity: 1; }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0); opacity: 0.7; }
 }
 /* If necessary, we can duplicate the reveal animations here or ensure they are global, 
    but since they are module specific, we define them here. */
@@ -117,14 +173,14 @@
 
 .vox-delivery-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
 }
 
 .vox-delivery-card {
   background: linear-gradient(145deg, #111, #0a0a0a);
   border: 1px solid rgba(255,255,255,0.05);
-  padding: 60px 50px;
+  padding: 30px 25px;
   border-radius: 4px;
   transition: transform 0.4s ease, border-color 0.4s ease;
 }
@@ -198,6 +254,10 @@
   margin: 0 auto;
 }
 
+.vox-how-grid.layout-cards {
+  max-width: 1200px;
+}
+
 .vox-steps {
   margin-top: 50px;
   display: flex;
@@ -205,9 +265,31 @@
   gap: 40px;
 }
 
+.vox-process-cards {
+  margin-top: 50px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
 .vox-step {
   display: flex;
   gap: 30px;
+}
+
+.vox-process-cards .vox-step {
+  flex-direction: column;
+  background: linear-gradient(145deg, #111, #0a0a0a);
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 40px 30px;
+  border-radius: 4px;
+  gap: 20px;
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+
+.vox-process-cards .vox-step:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255,255,255,0.15);
 }
 
 .vox-step-number {
@@ -217,35 +299,60 @@
   line-height: 1;
 }
 
+.vox-process-cards .vox-step-number {
+  font-size: 3.5rem;
+  color: rgba(255,255,255,0.1);
+}
+
 .vox-step-info h4 {
   font-size: 1.4rem;
-  margin-bottom: 12px;
-  font-weight: 500;
+  margin-bottom: 10px;
+  font-family: 'Bodoni Moda', serif;
 }
 
 .vox-step-info p {
-  color: #888;
+  color: #a0a0a0;
   line-height: 1.6;
-  font-weight: 300;
+}
+
+.vox-step-link {
+  display: inline-block;
+  margin-top: 15px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 2px;
+  transition: all 0.3s ease;
+}
+
+.vox-step-link:hover {
+  border-bottom-color: #fff;
+  color: #ccc;
 }
 
 /* =========================================================
    RESPONSIVE
 ========================================================= */
-@media (max-width: 992px) {
+@media (max-width: 768px) {
   .vox-delivery-grid {
     grid-template-columns: 1fr;
     gap: 40px;
   }
-}
 
-@media (max-width: 768px) {
   .vox-delivery-card {
-    padding: 40px 30px;
+    padding: 30px 20px;
   }
   
   .vox-step {
     flex-direction: column;
     gap: 15px;
+  }
+
+  .vox-process-cards {
+    grid-template-columns: 1fr;
   }
 }
