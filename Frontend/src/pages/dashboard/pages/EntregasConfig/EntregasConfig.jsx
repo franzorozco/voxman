@@ -1,6 +1,7 @@
 import "../HomeConfig/HomeConfig.css";
 import "./EntregasConfig.css";
 import React, { useState, useEffect } from "react";
+import CustomSelect from "../../../../components/ui/CustomSelect";
 import { Truck, MapPin, Save, Plus, Trash2, Edit2, ListOrdered, Image as ImageIcon, Layers, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { getSystemSettings, updateSystemSetting } from "../../../../api/admin/systemSettings";
@@ -423,58 +424,58 @@ export default function EntregasConfig() {
                 {/* Alineación Vertical */}
                 <label className="hc-style-17">
                   <span className="hc-style-18">Alineación Vertical</span>
-                  <select
+                  <CustomSelect
                     value={settings.shipping_hero_align_v || "center"}
                     onChange={e => setSetting("shipping_hero_align_v", e.target.value)}
-                    className="hc-style-19 ec-cursor-pointer"
+                    className="ec-cursor-pointer"
                   >
                     <option value="flex-start">Arriba</option>
                     <option value="center">Centro</option>
                     <option value="flex-end">Abajo</option>
-                  </select>
+                  </CustomSelect>
                 </label>
 
                 {/* Alineación Horizontal */}
                 <label className="hc-style-17">
                   <span className="hc-style-18">Alineación Horizontal</span>
-                  <select
+                  <CustomSelect
                     value={settings.shipping_hero_align_h || "center"}
                     onChange={e => setSetting("shipping_hero_align_h", e.target.value)}
-                    className="hc-style-19 ec-cursor-pointer"
+                    className="ec-cursor-pointer"
                   >
                     <option value="flex-start">Izquierda</option>
                     <option value="center">Centro</option>
                     <option value="flex-end">Derecha</option>
-                  </select>
+                  </CustomSelect>
                 </label>
 
                 {/* Tamaño Título */}
                 <label className="hc-style-17">
                   <span className="hc-style-18">Tamaño del Título</span>
-                  <select
+                  <CustomSelect
                     value={settings.shipping_hero_title_size || "md"}
                     onChange={e => setSetting("shipping_hero_title_size", e.target.value)}
-                    className="hc-style-19 ec-cursor-pointer"
+                    className="ec-cursor-pointer"
                   >
                     <option value="sm">Pequeño</option>
                     <option value="md">Normal</option>
                     <option value="lg">Grande</option>
                     <option value="xl">Extra Grande</option>
-                  </select>
+                  </CustomSelect>
                 </label>
 
                 {/* Tamaño Subtítulo */}
                 <label className="hc-style-17">
                   <span className="hc-style-18">Tamaño del Subtítulo</span>
-                  <select
+                  <CustomSelect
                     value={settings.shipping_hero_subtitle_size || "md"}
                     onChange={e => setSetting("shipping_hero_subtitle_size", e.target.value)}
-                    className="hc-style-19 ec-cursor-pointer"
+                    className="ec-cursor-pointer"
                   >
                     <option value="sm">Pequeño</option>
                     <option value="md">Normal</option>
                     <option value="lg">Grande</option>
-                  </select>
+                  </CustomSelect>
                 </label>
               </div>
             </div>
@@ -486,37 +487,37 @@ export default function EntregasConfig() {
                 {/* Mostrar Indicador */}
                 <label className="hc-style-17">
                   <span className="hc-style-18">Mostrar Indicador</span>
-                  <select
+                  <CustomSelect
                     value={settings.shipping_hero_scroll_show !== undefined ? settings.shipping_hero_scroll_show : "1"}
                     onChange={e => setSetting("shipping_hero_scroll_show", e.target.value)}
-                    className="hc-style-19 ec-cursor-pointer"
+                    className="ec-cursor-pointer"
                   >
                     <option value="1">Sí, Mostrar</option>
                     <option value="0">No, Ocultar</option>
-                  </select>
+                  </CustomSelect>
                 </label>
 
                 {/* Tipo de Animación */}
                 <label className="hc-style-17">
                   <span className="hc-style-18">Tipo de Animación</span>
-                  <select
+                  <CustomSelect
                     value={settings.shipping_hero_scroll_type || "mouse"}
                     onChange={e => setSetting("shipping_hero_scroll_type", e.target.value)}
-                    className="hc-style-19 ec-cursor-pointer"
+                    className="ec-cursor-pointer"
                   >
                     <option value="mouse">Ratón Scrolleando (Clásico)</option>
                     <option value="arrow">Flecha Rebotando</option>
                     <option value="dot">Punto Parpadeante</option>
-                  </select>
+                  </CustomSelect>
                 </label>
 
                 {/* Posición */}
                 <label className="hc-style-17">
                   <span className="hc-style-18">Posición en Pantalla</span>
-                  <select
+                  <CustomSelect
                     value={settings.shipping_hero_scroll_pos || "bottom_center"}
                     onChange={e => setSetting("shipping_hero_scroll_pos", e.target.value)}
-                    className="hc-style-19 ec-cursor-pointer"
+                    className="ec-cursor-pointer"
                   >
                     <option value="bottom_center">Abajo (Centro)</option>
                     <option value="bottom_left">Abajo (Izquierda)</option>
@@ -524,21 +525,21 @@ export default function EntregasConfig() {
                     <option value="center_left">Centro (Izquierda)</option>
                     <option value="center_right">Centro (Derecha)</option>
                     <option value="top_center">Arriba (Centro)</option>
-                  </select>
+                  </CustomSelect>
                 </label>
 
                 {/* Tamaño */}
                 <label className="hc-style-17">
                   <span className="hc-style-18">Tamaño</span>
-                  <select
+                  <CustomSelect
                     value={settings.shipping_hero_scroll_size || "md"}
                     onChange={e => setSetting("shipping_hero_scroll_size", e.target.value)}
-                    className="hc-style-19 ec-cursor-pointer"
+                    className="ec-cursor-pointer"
                   >
                     <option value="sm">Pequeño</option>
                     <option value="md">Normal</option>
                     <option value="lg">Grande</option>
-                  </select>
+                  </CustomSelect>
                 </label>
 
                 {/* Color */}
@@ -597,16 +598,16 @@ export default function EntregasConfig() {
                   </label>
                   <label className="hc-style-17">
                     <span className="hc-style-18">Estilo de Animación</span>
-                    <select
+                    <CustomSelect
                       value={settings.shipping_methods_animation || "fade-up"}
                       onChange={e => setSetting("shipping_methods_animation", e.target.value)}
-                      className="hc-style-19 ec-cursor-pointer"
+                      className="ec-cursor-pointer"
                     >
                       <option value="fade-up">Aparecer hacia arriba</option>
                       <option value="fade-left">Aparecer desde la derecha</option>
                       <option value="fade-right">Aparecer desde la izquierda</option>
                       <option value="alternate">Alternado (Der-Izq-Der)</option>
-                    </select>
+                    </CustomSelect>
                   </label>
                 </div>
                 <label className="hc-style-17">
@@ -733,27 +734,27 @@ export default function EntregasConfig() {
                   </label>
                   <label className="hc-style-17">
                     <span className="hc-style-18">Estilo de Animación</span>
-                    <select
+                    <CustomSelect
                       value={settings.shipping_process_animation || "fade-left"}
                       onChange={e => setSetting("shipping_process_animation", e.target.value)}
-                      className="hc-style-19 ec-cursor-pointer"
+                      className="ec-cursor-pointer"
                     >
                       <option value="fade-up">Aparecer hacia arriba</option>
                       <option value="fade-left">Aparecer desde la derecha</option>
                       <option value="fade-right">Aparecer desde la izquierda</option>
                       <option value="alternate">Alternado (Der-Izq-Der)</option>
-                    </select>
+                    </CustomSelect>
                   </label>
                   <label className="hc-style-17">
                     <span className="hc-style-18">Formato Visual (Layout)</span>
-                    <select
+                    <CustomSelect
                       value={settings.shipping_process_layout || "list"}
                       onChange={e => setSetting("shipping_process_layout", e.target.value)}
-                      className="hc-style-19 ec-cursor-pointer"
+                      className="ec-cursor-pointer"
                     >
                       <option value="list">Lista Vertical (Clásica)</option>
                       <option value="cards">Tarjetas en Grilla</option>
-                    </select>
+                    </CustomSelect>
                   </label>
                 </div>
               </div>
@@ -858,7 +859,19 @@ export default function EntregasConfig() {
               <button onClick={fetchSettings} className="hc-style-150">
                 Descartar
               </button>
-              <button onClick={handleSave} disabled={saving} className="ec-save-btn">
+              <button onClick={handleSave} disabled={saving} style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 20px",
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: saving ? "not-allowed" : "pointer",
+                background: saving ? "var(--border-color)" : "var(--color-primary)",
+                color: saving ? "var(--text-muted)" : "var(--color-primary-text)",
+                border: "none"
+              }}>
                 {saving ? <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin hc-style-151" /> : <Save size={15} />}
                 {saving ? "Guardando..." : "Guardar Todo"}
               </button>

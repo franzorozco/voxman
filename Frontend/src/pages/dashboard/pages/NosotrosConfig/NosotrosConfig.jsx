@@ -509,7 +509,7 @@ export default function NosotrosConfig() {
                             className="hc-style-44" 
                             style={{ filter: "brightness(0.8)" }}
                             onError={(e) => {
-                              e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_white.jfif";
+                              e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/Imagen_usuario_no_encontrado_white.jfif";
                             }}
                           />
                           <button 

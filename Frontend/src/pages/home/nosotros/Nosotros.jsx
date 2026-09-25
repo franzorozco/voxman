@@ -142,7 +142,13 @@ export default function Nosotros() {
               ])).map((f, i) => (
                 <div key={i} className={`vox-founder-card vox-reveal ${i % 2 !== 0 ? 'delay-1' : ''}`}>
                   <div className="vox-founder-image-box">
-                    <img src={f.image ? getImageUrl(f.image) : (i === 0 ? dueno1 : dueno2)} alt={f.name} className="vox-founder-img" loading="lazy" />
+                    <img 
+                      src={f.image ? getImageUrl(f.image) : (i === 0 ? dueno1 : dueno2)} 
+                      alt={f.name} 
+                      className="vox-founder-img" 
+                      loading="lazy" 
+                      onError={(e) => { e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/Imagen_usuario_no_encontrado_black.jfif"; }}
+                    />
                   </div>
                   <div className="vox-founder-info">
                     <h3>{f.name}</h3>
