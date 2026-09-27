@@ -38,6 +38,17 @@ class ShopProductController extends Controller
             }
         }
 
+        if ($request->has('exclude_category_id')) {
+            $excludeId = $request->exclude_category_id;
+            if (is_array($excludeId)) {
+                $query->whereNotIn('category_id', $excludeId);
+            } elseif (str_contains((string)$excludeId, ',')) {
+                $query->whereNotIn('category_id', explode(',', $excludeId));
+            } else {
+                $query->where('category_id', '!=', $excludeId);
+            }
+        }
+
         // BÃ‡Â§squeda por nombre
         if ($request->has('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -52,6 +63,10 @@ class ShopProductController extends Controller
                 $query->orderBy('views', 'desc'); // assuming views represents popularity/best sellers
             } elseif ($type === 'random') {
                 $query->inRandomOrder();
+            } elseif ($type === 'price_desc') {
+                $query->orderBy('base_price', 'desc');
+            } elseif ($type === 'price_asc') {
+                $query->orderBy('base_price', 'asc');
             }
         } else {
             // Default sort if needed

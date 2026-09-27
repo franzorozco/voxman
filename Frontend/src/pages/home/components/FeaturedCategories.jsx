@@ -15,7 +15,6 @@ export default function FeaturedCategories() {
     const fetchCats = async () => {
       try {
         const res = await getFeaturedCategories();
-        // res.data is assumed if using axios, but if api.get directly returns the data, we handle it:
         setCategories(res.data || res);
       } catch (error) {
         console.error('Error fetching featured categories', error);

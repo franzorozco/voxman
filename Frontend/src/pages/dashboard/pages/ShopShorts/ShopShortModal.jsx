@@ -1,8 +1,8 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
-import { X, Upload, Link as LinkIcon } from "lucide-react";
+import { X, Upload, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { createShopShort, updateShopShort } from "../../../../api/admin/shopShorts";
+import { createShopShort, updateShopShort, getShopShorts } from "../../../../api/admin/shopShorts";
 import { getProducts } from "../../../../api/admin/products";
 import { getCategories } from "../../../../api/admin/categories";
 import CustomSelect from "../../../../components/ui/CustomSelect";
@@ -24,6 +24,9 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
     short?.video_url && short.video_url.startsWith("http") ? short.video_url : ""
   );
 
+  const [videoTab, setVideoTab] = useState("upload"); // 'upload', 'url', 'gallery'
+  const [existingVideos, setExistingVideos] = useState([]);
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
@@ -35,15 +38,20 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
   const fetchData = async () => {
     try {
       setLoadingData(true);
-      const [prodRes, catRes] = await Promise.all([
+      const [prodRes, catRes, shortsRes] = await Promise.all([
         getProducts({ per_page: 100 }),
-        getCategories()
+        getCategories(),
+        getShopShorts()
       ]);
       const prodData = prodRes.data?.data || prodRes.data || [];
       setProducts(Array.isArray(prodData) ? prodData : []);
       
       const catData = catRes.data?.data || catRes.data || [];
       setCategories(Array.isArray(catData) ? catData : []);
+
+      const shortsData = shortsRes.data || [];
+      const uniqueVideos = Array.from(new Set(shortsData.map(s => s.video_url).filter(Boolean)));
+      setExistingVideos(uniqueVideos);
     } catch (error) {
       toast.error("Error al cargar datos");
     } finally {
@@ -152,17 +160,53 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
               <div>
-                <label style={labelStyle}>Opciones de Video *</label>
+                <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '20px' }}>
+                  {[{
+                    id: "upload",
+                    label: "Subir desde PC",
+                    icon: <Upload size={14} />
+                  }, {
+                    id: "url",
+                    label: "Pegar URL",
+                    icon: <LinkIcon size={14} />
+                  }, {
+                    id: "gallery",
+                    label: "Galería de Videos",
+                    icon: <ImageIcon size={14} />
+                  }].map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setVideoTab(tab.id)}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        padding: "14px 0",
+                        border: "none",
+                        background: "transparent",
+                        color: videoTab === tab.id ? "var(--color-primary)" : "var(--text-muted)",
+                        borderBottom: videoTab === tab.id ? "2px solid var(--color-primary)" : "2px solid transparent",
+                        cursor: "pointer",
+                        fontWeight: 500,
+                        fontSize: "13px",
+                        marginBottom: "-1px"
+                      }}
+                    >
+                      {tab.icon} {tab.label}
+                    </button>
+                  ))}
+                </div>
                 
-                <div style={{ display: 'flex', gap: '16px', flexDirection: 'column' }}>
-                  {/* File Upload Zone */}
+                {videoTab === "upload" && (
                   <div style={{ position: 'relative' }}>
                     <div className="shorts-upload-zone" style={{ opacity: videoLink ? 0.5 : 1 }}>
                       <input 
                         type="file" 
                         accept="video/mp4,video/quicktime,video/webm"
                         onChange={handleVideoChange}
-                        disabled={!!videoLink}
                       />
                       <Upload size={32} className="shorts-upload-icon" />
                       {videoFile ? (
@@ -176,12 +220,7 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
                     {(videoFile || (isEditing && short?.video_url && !short.video_url.startsWith('http'))) && !videoLink && (
                        <button
                          type="button"
-                         onClick={() => {
-                           setVideoFile(null);
-                           // Si estamos editando y hay un archivo antiguo, esto solo limpia el nuevo archivo subido
-                           // Para limpiar el viejo tendríamos que vaciar video_url, pero lo dejaremos así para no complicar el backend,
-                           // o podemos simplemente dejar que el usuario suba otro o ponga un link.
-                         }}
+                         onClick={() => setVideoFile(null)}
                          style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10 }}
                          title="Limpiar archivo"
                        >
@@ -189,10 +228,9 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
                        </button>
                     )}
                   </div>
+                )}
 
-                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', fontWeight: 'bold' }}>O</div>
-
-                  {/* URL Input */}
+                {videoTab === "url" && (
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
                       <LinkIcon size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -202,7 +240,6 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
                         value={videoLink}
                         onChange={handleLinkChange}
                         placeholder="Pegar enlace de video (Ej: https://.../video.mp4)"
-                        disabled={!!videoFile}
                       />
                       {videoLink && (
                         <button
@@ -216,9 +253,48 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
                       )}
                     </div>
                   </div>
-                </div>
+                )}
 
-                {previewUrl && (
+                {videoTab === "gallery" && (
+                  <div>
+                    {existingVideos.length === 0 ? (
+                      <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>No hay videos subidos previamente.</p>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '10px', maxHeight: '200px', overflowY: 'auto', paddingRight: '5px' }}>
+                        {existingVideos.map((url, i) => {
+                          const isSelected = videoLink === url;
+                          return (
+                            <div 
+                              key={i} 
+                              onClick={() => {
+                                setVideoLink(url);
+                                setVideoFile(null);
+                              }}
+                              style={{ 
+                                position: 'relative', 
+                                height: '160px', 
+                                borderRadius: '8px', 
+                                overflow: 'hidden', 
+                                border: isSelected ? '2px solid var(--color-primary)' : '2px solid transparent',
+                                cursor: 'pointer',
+                                background: '#000'
+                              }}
+                            >
+                              <VideoPlayer 
+                                url={url}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                autoPlay={false}
+                              />
+                              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: isSelected ? 'var(--color-primary)' : 'transparent', opacity: isSelected ? 0.3 : 0, zIndex: 10 }} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {previewUrl && (videoTab === 'upload' || videoTab === 'url') && (
                   <div className="shorts-video-preview-large" style={{ marginTop: '16px', position: 'relative' }}>
                     <VideoPlayer 
                       url={previewUrl} 

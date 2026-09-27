@@ -5,6 +5,8 @@ import { getActiveShorts } from '../../../api/shop/shorts';
 import { formatCollageItems } from '../utils/collageHelpers';
 import ShopCollageGrid from '../components/ShopCollageGrid';
 import NewArrivalsCarousel from '../components/NewArrivalsCarousel';
+import ShopFeaturedCategories from '../components/ShopFeaturedCategories';
+import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
 import './Home.css';
 
 const Home = () => {
@@ -12,58 +14,122 @@ const Home = () => {
   const [carouselProducts, setCarouselProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const hasFetched = React.useRef(false);
+  const { settings, fetched, fetchSettings } = useShopSettingsStore();
 
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-    fetchCollageItems();
-  }, []);
+    if (!fetched) {
+      fetchSettings();
+    } else if (!hasFetched.current) {
+      hasFetched.current = true;
+      fetchCollageItems();
+    }
+  }, [fetched, fetchSettings]);
 
   const fetchCollageItems = async () => {
     try {
-      const [productsRes, shortsRes] = await Promise.all([
-        getProducts({ per_page: 24 }),
-        getActiveShorts()
+      const sortMap = {
+        'newest': 'newest',
+        'price_asc': 'price_asc',
+        'price_desc': 'price_desc',
+        'best_sellers': 'trending',
+        'most_viewed': 'trending',
+        'random': 'random'
+      };
+
+      // --- 1. Fetch Collage Items ---
+      const collageSort = settings.shop_home_collage_sort || 'newest';
+      let collageParams = {
+        per_page: 24,
+        list_type: sortMap[collageSort] || 'newest'
+      };
+      
+      const collageFilterType = settings.shop_home_collage_category_filter || 'all';
+      if (collageFilterType !== 'all') {
+        let catIds = [];
+        try { catIds = JSON.parse(settings.shop_home_collage_categories || '[]'); } catch {}
+        if (catIds.length > 0) {
+          if (collageFilterType === 'include') collageParams.category_id = catIds.join(',');
+          else if (collageFilterType === 'exclude') collageParams.exclude_category_id = catIds.join(',');
+        }
+      }
+
+      // --- 2. Fetch New Arrivals ---
+      const naSort = settings.shop_home_new_arrivals_sort || 'newest';
+      let naParams = {
+        per_page: parseInt(settings.shop_home_new_arrivals_limit || 8, 10),
+        list_type: sortMap[naSort] || 'newest'
+      };
+      
+      const naFilterType = settings.shop_home_new_arrivals_category_filter || 'all';
+      if (naFilterType !== 'all') {
+        let catIds = [];
+        try { catIds = JSON.parse(settings.shop_home_new_arrivals_categories || '[]'); } catch {}
+        if (catIds.length > 0) {
+          if (naFilterType === 'include') naParams.category_id = catIds.join(',');
+          else if (naFilterType === 'exclude') naParams.exclude_category_id = catIds.join(',');
+        }
+      }
+
+      const [productsRes, shortsRes, naRes] = await Promise.all([
+        getProducts(collageParams),
+        getActiveShorts(),
+        getProducts(naParams)
       ]);
       
       const products = productsRes.data?.data || productsRes.data || [];
       const shorts = shortsRes.data || [];
       
       const allFormattedItems = formatCollageItems(products, shorts);
-      
-      // Carousel only gets images
-      const imageItems = allFormattedItems.filter(item => item.type === 'image');
-      setCarouselProducts(imageItems.slice(0, 8));
-
-      // Collage gets everything
       setImages(allFormattedItems);
 
+      const naProducts = naRes.data?.data || naRes.data || [];
+      const naFormattedItems = formatCollageItems(naProducts, []).filter(item => item.type === 'image');
+      setCarouselProducts(naFormattedItems);
+
     } catch (err) {
-      console.error('Error fetching collage items:', err);
+      console.error('Error fetching items:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  const showHero = settings.shop_home_show_hero === undefined || String(settings.shop_home_show_hero) !== "0";
+  const showCategories = settings.shop_home_show_categories === undefined || String(settings.shop_home_show_categories) !== "0";
+  const showCollage = settings.shop_home_show_collage === undefined || String(settings.shop_home_show_collage) !== "0";
+  const showNewArrivals = settings.shop_home_show_new_arrivals === undefined || String(settings.shop_home_show_new_arrivals) !== "0";
+
   return (
     <div className="shop-home">
-      <div className="shop-home-hero">
-        <h1 className="shop-home-title">LO MÁS DESTACADO</h1>
-        <p className="shop-home-subtitle">Descubre las tendencias en moda masculina</p>
-        <Link to="/shop/catalog" className="shop-home-catalog-btn">
-          Ver catálogo completo
-          <span className="shop-home-catalog-btn__arrow">→</span>
-        </Link>
-      </div>
-      
+      {showHero && (
+        <div className="shop-home-hero">
+          <h1 className="shop-home-title">{settings.shop_home_hero_title || "LO MÁS DESTACADO"}</h1>
+          <p className="shop-home-subtitle">{settings.shop_home_hero_subtitle || "Descubre las tendencias en moda masculina"}</p>
+          <Link to="/shop/catalog" className="shop-home-catalog-btn">
+            {settings.shop_home_hero_btn_text || "Ver catálogo completo"}
+            <span className="shop-home-catalog-btn__arrow">→</span>
+          </Link>
+        </div>
+      )}
+
       {loading ? (
         <div className="shop-home-loading">
           <div className="shop-home-loader" />
         </div>
       ) : (
         <>
-          <ShopCollageGrid items={images} />
-          <NewArrivalsCarousel products={carouselProducts} />
+          {showCollage && <ShopCollageGrid items={images} />}
+          {showCategories && <ShopFeaturedCategories categories={settings.shop_home_featured_categories} />}
+          {showNewArrivals && (
+            <NewArrivalsCarousel 
+              products={carouselProducts} 
+              title={settings.shop_home_new_arrivals_title}
+              subtitle={settings.shop_home_new_arrivals_subtitle}
+              cardBg={settings.shop_home_new_arrivals_card_bg}
+              textColor={settings.shop_home_new_arrivals_text_color}
+              cardRadius={settings.shop_home_new_arrivals_card_radius}
+              cardShadow={settings.shop_home_new_arrivals_card_shadow}
+            />
+          )}
         </>
       )}
     </div>
