@@ -47,6 +47,7 @@ class CustomResetPasswordNotification extends Notification
             : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/logos/526f4e85-7036-49c5-aa50-5756c8c0d43b.png';
 
         return (new MailMessage)
+            ->from('soporte@voxman.shop', 'Soporte VOXMAN')
             ->subject('Recuperación de contraseña — VOXMAN')
             ->view('emails.reset_password', [
                 'resetUrl'         => $resetUrl,
