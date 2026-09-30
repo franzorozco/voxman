@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload } from "lucide-react";
+import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload, RefreshCw, Users } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getCustomers, deleteCustomer, getCustomerKpis } from "../../../../api/admin/customers";
 import CustomerModal from "./CustomerModal";
@@ -85,19 +85,44 @@ export default function Customers() {
   return (
     <div className="products-container fade-in">
       <div className="products-header">
-        <h1 className="products-title">Clientes</h1>
-        <div className="products-header-actions">
-          <Link to="/dashboard/clients/deleted" className="btn-secondary">
+        <h1 className="products-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Users size={24} />
+          Clientes
+        </h1>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            className="action-btn" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', background: 'transparent', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => { setSelectedCustomer(null); setIsModalOpen(true); }}
+          >
+            <Plus size={18} />
+            <span className="hide-on-mobile">Nuevo Cliente</span>
+          </button>
+
+          <Link to="/dashboard/clients/deleted"
+            className="action-btn" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+          >
             <ArchiveRestore size={18} />
             <span className="hide-on-mobile">Papelera</span>
           </Link>
-          <button className="btn-secondary" onClick={() => setIsLinkModalOpen(true)}>
+
+          <button 
+            className="action-btn" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => setIsLinkModalOpen(true)}
+          >
             <Link2 size={18} />
             <span className="hide-on-mobile">Vincular</span>
           </button>
-          <button className="btn-primary" onClick={() => { setSelectedCustomer(null); setIsModalOpen(true); }}>
-            <Plus size={18} />
-            Nuevo Cliente
+          
+          <button 
+            className="action-btn primary" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', color: 'var(--color-primary-text)', background: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => fetchCustomers(filters)}
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            <span className="hide-on-mobile">Actualizar</span>
           </button>
         </div>
       </div>
@@ -128,7 +153,7 @@ export default function Customers() {
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              placeholder="Buscar por cÃ³digo, email, nombre o CI/DNI..." 
+              placeholder="Buscar por código, email, nombre o CI/DNI..." 
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             />
@@ -199,7 +224,7 @@ export default function Customers() {
                 value={filters.sortBy}
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
               >
-                <option value="created_at">MÃ¡s recientes</option>
+                <option value="created_at">Más recientes</option>
                 <option value="points">Puntos</option>
                 <option value="total_purchases">Total Comprado</option>
               </CustomSelect>
@@ -235,13 +260,13 @@ export default function Customers() {
           <table className="products-table">
             <thead>
               <tr>
-                <th>CÃ³digo</th>
+                <th>Código</th>
                 <th>Cliente</th>
                 <th>Contacto</th>
                 <th>Puntos</th>
                 <th>Total Compras</th>
                 <th>Estado</th>
-                <th style={{ textAlign: 'center' }}>Acciones</th>
+                <th className="actions-col" style={{ textAlign: 'center' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -253,10 +278,28 @@ export default function Customers() {
 
                 return (
                   <tr key={c.id}>
-                    <td data-label="Código">
-                      <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px' }}>
-                        {c.customer_code}
-                      </span>
+                    <td data-label="Código" className="first-col-mobile">
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div className="mobile-actions-dropdown hide-on-pc">
+                          <div className="dropdown-toggle" tabIndex="0">
+                            <MoreVertical size={18} />
+                          </div>
+                          <div className="dropdown-content">
+                            <button onClick={() => handleViewDetails(c)} className="dropdown-item">
+                              <Eye size={16} /> Ver Expediente
+                            </button>
+                            <button onClick={() => handleEdit(c)} className="dropdown-item">
+                              <Edit size={16} /> Editar
+                            </button>
+                            <button onClick={() => handleDelete(c.id)} className="dropdown-item" style={{ color: '#ef4444' }}>
+                              <Trash2 size={16} /> Eliminar
+                            </button>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px' }}>
+                          {c.customer_code}
+                        </span>
+                      </div>
                     </td>
                     <td data-label="Cliente">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -294,14 +337,22 @@ export default function Customers() {
                       <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>{c.points} pts</span>
                     </td>
                     <td data-label="Total Compras">
-                      <span style={{ fontWeight: 500 }}>${Number(c.total_purchases).toFixed(2)}</span>
+                      <span style={{ fontWeight: 500 }}>Bs. {
+                        (() => {
+                          if (c.sales && c.sales.length > 0) {
+                            const validSales = c.sales.filter(s => s.status !== 'cancelled' && s.status !== 'refunded');
+                            return validSales.reduce((acc, sale) => acc + Number(sale.total), 0).toFixed(2);
+                          }
+                          return Number(c.total_purchases || 0).toFixed(2);
+                        })()
+                      }</span>
                     </td>
                     <td data-label="Estado">
                       <span style={{ background: 'var(--bg-overlay)', color: c.is_active ? 'var(--color-success)' : 'var(--color-danger)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                         {c.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td data-label="Acciones">
+                    <td data-label="Acciones" className="actions-col">
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                         <button 
                           className="btn-secondary"

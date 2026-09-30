@@ -18,7 +18,7 @@ import { getFits } from "../../../../api/admin/fits";
 import "./Products.css";
 import "../css/stylesCruds.css";
 import { Link } from "react-router-dom";
-import { X, Trash2, Search, Filter, Camera, Package, Plus } from "lucide-react";
+import { X, Trash2, Search, Filter, Camera, Package, Plus, RefreshCw } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 
@@ -424,31 +424,42 @@ export default function Products() {
               <span className="hide-on-mobile">Crear Producto</span>
             </button>
           </CanAccess>
+          <button 
+            className="action-btn" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={loadProducts}
+            title="Actualizar"
+          >
+            <RefreshCw size={18} className={loadingProducts ? "animate-spin" : ""} />
+            <span className="hide-on-mobile">Actualizar</span>
+          </button>
         </div>
       </div>
       <div className="filters-container" style={{ marginBottom: '20px' }}>
         <div className="filters-container-inner" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              placeholder="Buscar producto por nombre o código..."
-              value={filters.search}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  search: e.target.value,
-                })
-              }
-            />
+          <div style={{ display: 'flex', gap: '8px', flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, position: 'relative', minWidth: 0 }}>
+              <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input
+                style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+                placeholder="Buscar producto..."
+                value={filters.search}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    search: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <button
+              onClick={() => openScanner(processScannedCode)}
+              style={{ width: '42px', height: '42px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s' }}
+              title="Escanear código de barras o QR"
+            >
+              <Camera size={18} />
+            </button>
           </div>
-          <button
-            onClick={() => openScanner(processScannedCode)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 16px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s' }}
-            title="Escanear código de barras o QR"
-          >
-            <Camera size={18} />
-          </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}

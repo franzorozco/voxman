@@ -33,7 +33,7 @@
   align-items: center;
   gap: 10px;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: none;
   border-radius: 8px;
   padding: 10px 16px;
   flex: 1;
@@ -55,7 +55,7 @@
   align-items: center;
   gap: 10px;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: none;
   border-radius: 8px;
   padding: 10px 16px;
 }
@@ -135,7 +135,7 @@
   background: var(--bg-main);
   padding: 16px;
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: none;
 }
 
 .sale-detail-title {
@@ -159,3 +159,97 @@
     margin-bottom: 30px;
   }
 }
+
+/* MOBILE KPI SETTINGS */
+@media (max-width: 768px) {
+  .sales-kpi-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .sales-kpi-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+    gap: 4px !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .sales-kpi-label {
+    font-size: 10px !important;
+    letter-spacing: 0 !important;
+    line-height: 1.2 !important;
+  }
+  .sales-kpi-value {
+    font-size: 20px !important;
+  }
+
+  /* HIDE ACTION COLUMNS ON MOBILE */
+  .actions-col {
+    display: none !important;
+  }
+
+  /* MOBILE TABLE ACTIONS DROPDOWN */
+  
+  .hide-on-pc {
+    display: block !important;
+  }
+}
+
+/* DESKTOP HIDE ACTIONS DROPDOWN */
+@media (min-width: 769px) {
+  .hide-on-pc {
+    display: none !important;
+  }
+}
+
+/* DROPDOWN STYLING */
+.mobile-actions-dropdown {
+  position: relative;
+}
+.dropdown-toggle {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 50;
+  min-width: 140px;
+  padding: 4px;
+}
+.mobile-actions-dropdown:focus-within .dropdown-content,
+.mobile-actions-dropdown:hover .dropdown-content {
+  display: block;
+}
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.dropdown-item:hover {
+  background: var(--bg-input);
+  color: var(--color-primary);
+}
+
+.sales-table:focus-within { overflow: visible !important; }
+

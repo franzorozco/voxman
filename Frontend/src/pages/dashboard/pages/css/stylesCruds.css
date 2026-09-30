@@ -55,3 +55,18 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+
+/* Fix Dropdown Clipping for all tables */
+.table-wrapper:focus-within {
+  overflow: visible !important;
+}
+.table-responsive:focus-within {
+  overflow: visible !important;
+}
+
+.bundles-table:focus-within {
+  overflow: visible !important;
+}
+table:focus-within {
+  overflow: visible !important;
+}

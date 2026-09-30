@@ -8,7 +8,7 @@ import "./Bundles.css";
 import "../css/stylesCruds.css";
 
 import { Link } from "react-router-dom";
-import { Plus, Search, Filter, Trash2, Package, DollarSign, Activity, Archive, TrendingUp } from "lucide-react";
+import { Plus, Search, Filter, Trash2, Package, DollarSign, Activity, Archive, TrendingUp, RefreshCw } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 
@@ -196,13 +196,22 @@ export default function Bundles() {
     <div className="bundles-container">
       <div className="bundles-header">
         <h1 className="bundles-title"><Package size={24} className="text-primary" /> Conjuntos</h1>
-        <div className="bundles-header-actions">
+        <div className="bundles-header-actions" style={{ display: 'flex', gap: '10px' }}>
           <CanAccess permission="create_products">
             <button className="btn-primary bundles-create-btn" onClick={handleCreate}>
-              <Package size={18} />
-              <span>Crear Conjunto</span>
+              <Plus size={18} />
+              <span className="hide-on-mobile">Crear Conjunto</span>
             </button>
           </CanAccess>
+          <button 
+            className="action-btn" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={loadBundles}
+            title="Actualizar"
+          >
+            <RefreshCw size={18} className={loadingBundles ? "animate-spin" : ""} />
+            <span className="hide-on-mobile">Actualizar</span>
+          </button>
         </div>
       </div>
 

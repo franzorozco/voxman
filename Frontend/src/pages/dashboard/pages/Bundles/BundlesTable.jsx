@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import React from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
+import { Edit2, Trash2, Eye, MoreVertical, CheckSquare } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
 import { API_BASE_URL } from "../../../../config/api";
 
@@ -38,7 +38,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
       <table className="bundles-table">
         <thead>
           <tr>
-            <th className="bt-col-check">
+            <th className="bt-col-check checkbox-col">
               <input type="checkbox" onChange={handleSelectAll} checked={bundles.length > 0 && selectedRows.length === bundles.length} className="custom-table-checkbox" />
             </th>
             <th className="bt-col-img">Img</th>
@@ -48,7 +48,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
             <th>Ítems</th>
             <th>Stock Virtual</th>
             <th>Estado</th>
-            <th>Acciones</th>
+            <th className="actions-col">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -60,8 +60,35 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
             
             return (
               <tr key={bundle.id} className={selectedRows.includes(bundle.id) ? "selected-row" : ""}>
-                <td>
-                  <input type="checkbox" checked={selectedRows.includes(bundle.id)} onChange={() => handleSelectRow(bundle.id)} className="custom-table-checkbox" />
+                <td className="checkbox-col" style={{ width: '40px' }}>
+                  <div className={selectedRows.includes(bundle.id) ? "" : "hide-on-mobile"}>
+                    <input type="checkbox" checked={selectedRows.includes(bundle.id)} onChange={() => handleSelectRow(bundle.id)} className="custom-table-checkbox" />
+                  </div>
+                  {!selectedRows.includes(bundle.id) && (
+                    <div className="mobile-actions-dropdown hide-on-pc">
+                      <div className="dropdown-toggle" tabIndex="0" style={{ padding: '0' }}>
+                        <MoreVertical size={18} />
+                      </div>
+                      <div className="dropdown-content">
+                        <button className="dropdown-item" onClick={() => handleSelectRow(bundle.id)}>
+                          <CheckSquare size={16} /> Seleccionar
+                        </button>
+                        <button className="dropdown-item" onClick={() => onView && onView(bundle)}>
+                          <Eye size={16} /> Ver
+                        </button>
+                        <CanAccess permission="edit_products">
+                          <button className="dropdown-item" onClick={() => onEdit(bundle)}>
+                            <Edit2 size={16} /> Editar
+                          </button>
+                        </CanAccess>
+                        <CanAccess permission="delete_products">
+                          <button className="dropdown-item" onClick={() => onDelete(bundle.id)} style={{ color: '#ef4444' }}>
+                            <Trash2 size={16} /> Eliminar
+                          </button>
+                        </CanAccess>
+                      </div>
+                    </div>
+                  )}
                 </td>
                 <td onClick={() => onView && onView(bundle)} className="bt-clickable-td">
                   <div className="product-thumb">
@@ -76,7 +103,10 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                   </div>
                 </td>
                 <td onClick={() => onView && onView(bundle)} className="bt-clickable-td">
-                  <div className="bt-cell-name">{bundle.name}</div>
+                  <div className="bt-cell-name">
+                    {bundle.name}
+                    {selectedRows.includes(bundle.id) && <span className="hide-on-pc" style={{ color: 'var(--color-primary)', marginLeft: '6px' }}>✓</span>}
+                  </div>
                   {bundle.slug && <div className="bt-cell-slug">{bundle.slug}</div>}
                 </td>
                 <td>
@@ -105,7 +135,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                     {bundle.is_active ? "Activo" : "Inactivo"}
                   </span>
                 </td>
-                <td>
+                <td className="actions-col">
                   <div className="table-actions">
                     <button className="btn-view" onClick={() => onView && onView(bundle)} title="Ver detalles">
                       <Eye size={16} />

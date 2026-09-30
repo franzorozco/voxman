@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   TrendingUp, ShoppingBag, Users, Package, AlertTriangle,
   RotateCcw, Truck, ShoppingCart, DollarSign, BarChart2,
   ArrowUpRight, ArrowDownRight, Clock, CheckCircle,
   ChevronRight, Warehouse, CreditCard, Tag, Gift,
-  FileText, Activity, RefreshCw
+  FileText, Activity, RefreshCw, Calendar
 } from "lucide-react";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+  BarChart, Bar, Legend
+} from "recharts";
 
 import { getSales } from "../../../../api/admin/sales";
 import { getInventoryStats } from "../../../../api/admin/inventory";
@@ -18,8 +22,31 @@ import { getReturns } from "../../../../api/admin/returns";
 
 import "./Home.css";
 
-const fmt = (n) =>
-  new Intl.NumberFormat("es-VE", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(n ?? 0);
+const getDateParams = (range) => {
+  const end = new Date();
+  let start = new Date();
+  if (range === 'today') {
+    start.setHours(0,0,0,0);
+  } else if (range === '7d') {
+    start.setDate(end.getDate() - 7);
+  } else if (range === '30d') {
+    start.setDate(end.getDate() - 30);
+  } else if (range === 'month') {
+    start.setDate(1);
+  } else if (range === 'year') {
+    start.setMonth(0, 1);
+  } else {
+    return { start_date: undefined, end_date: undefined, date_from: undefined, date_to: undefined };
+  }
+  const startStr = start.toISOString().split('T')[0];
+  const endStr = end.toISOString().split('T')[0];
+  return { start_date: startStr, end_date: endStr, date_from: startStr, date_to: endStr };
+};
+
+const fmt = (n) => {
+  const formatted = new Intl.NumberFormat("es-BO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n ?? 0);
+  return `Bs ${formatted}`;
+};
 
 const fmtNum = (n) =>
   new Intl.NumberFormat("es-VE").format(n ?? 0);
@@ -31,10 +58,8 @@ const today = () => {
 
 const KpiCard = ({ icon: Icon, label, value, sub, color, loading }) => (
   <div className={`hd-kpi-card ${color || ""}`}>
-    <div className="hd-kpi-header">
-      <div className="hd-kpi-icon-box">
-        <Icon size={20} />
-      </div>
+    <div className="hd-kpi-icon-box">
+      <Icon size={22} />
     </div>
     <div className="hd-kpi-body">
       {loading ? (
@@ -50,28 +75,39 @@ const KpiCard = ({ icon: Icon, label, value, sub, color, loading }) => (
 
 const StatusBadge = ({ status }) => {
   const map = {
+    // Sales
     paid: { label: "Pagado", cls: "badge-success" },
     pending: { label: "Pendiente", cls: "badge-warning" },
     cancelled: { label: "Cancelado", cls: "badge-danger" },
     partial: { label: "Parcial", cls: "badge-info" },
-    preparing: { label: "Preparando", cls: "badge-info" },
-    ready: { label: "Listo", cls: "badge-success" },
-    in_transit: { label: "En camino", cls: "badge-warning" },
-    delivered: { label: "Entregado", cls: "badge-success" },
     failed: { label: "Fallido", cls: "badge-danger" },
     approved: { label: "Aprobado", cls: "badge-success" },
     rejected: { label: "Rechazado", cls: "badge-danger" },
+    // Orders/Shipments
+    requested: { label: "Solicitado", cls: "badge-warning" },
+    reserved: { label: "Reservado", cls: "badge-info" },
+    preparing: { label: "Preparando", cls: "badge-info" },
+    ready_for_pickup: { label: "Para recoger", cls: "badge-success" },
+    assigned: { label: "Agendado", cls: "badge-info" },
+    on_the_way: { label: "En Camino", cls: "badge-info" },
+    at_the_meeting_point: { label: "En Punto", cls: "badge-warning" },
+    completed: { label: "Entregado", cls: "badge-success" },
+    prepared: { label: "Preparado", cls: "badge-info" },
+    packaged: { label: "Empaquetado", cls: "badge-info" },
+    shipped: { label: "Remitido", cls: "badge-success" }
   };
   const s = map[status] || { label: status, cls: "badge-default" };
   return <span className={`hd-badge ${s.cls}`}>{s.label}</span>;
 };
 
 export default function Home() {
+  const [dateRange, setDateRange] = useState("month");
   const [salesData, setSalesData] = useState(null);
   const [inventoryStats, setInventoryStats] = useState(null);
   const [customerKpis, setCustomerKpis] = useState(null);
   const [financeData, setFinanceData] = useState(null);
-  const [recentSales, setRecentSales] = useState([]);
+  const [recentSalesFull, setRecentSalesFull] = useState([]);
+  const [recentSalesTable, setRecentSalesTable] = useState([]);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [pendingReturns, setPendingReturns] = useState([]);
   const [loadingKpis, setLoadingKpis] = useState(true);
@@ -83,10 +119,11 @@ export default function Home() {
   const loadKpis = useCallback(async () => {
     setLoadingKpis(true);
     try {
+      const dates = getDateParams(dateRange);
       const [invRes, custRes, finRes] = await Promise.allSettled([
-        getInventoryStats(),
-        getCustomerKpis(),
-        getFinanceDashboard(),
+        getInventoryStats(dates),
+        getCustomerKpis(dates),
+        getFinanceDashboard(dates),
       ]);
       if (invRes.status === "fulfilled") setInventoryStats(invRes.value.data);
       if (custRes.status === "fulfilled") setCustomerKpis(custRes.value.data);
@@ -96,26 +133,37 @@ export default function Home() {
     } finally {
       setLoadingKpis(false);
     }
-  }, []);
+  }, [dateRange]);
 
   const loadTables = useCallback(async () => {
     setLoadingTables(true);
     try {
-      const [salesRes, ordersRes, returnsRes] = await Promise.allSettled([
-        getSales({ per_page: 8, sortBy: "created_at", sortDir: "desc" }),
-        getDeliverySchedules({ per_page: 6 }),
+      const dates = getDateParams(dateRange);
+      const [salesResChart, salesResTable, ordersRes, returnsRes] = await Promise.allSettled([
+        getSales({ per_page: 100, sortBy: "created_at", sortDir: "desc", ...dates }), // For chart
+        getSales({ per_page: 8, sortBy: "created_at", sortDir: "desc" }), // Always latest 8 for table
+        getDeliverySchedules({ per_page: 6 }), // Recent orders
         getReturns({ status: "pending", per_page: 5 }),
       ]);
-      if (salesRes.status === "fulfilled") {
-        const d = salesRes.value.data;
+      
+      if (salesResChart.status === "fulfilled") {
+        const d = salesResChart.value.data;
         const arr = Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
-        setRecentSales(arr);
+        setRecentSalesFull(arr);
         if (d?.summary) setSalesData(d.summary);
       }
+      
+      if (salesResTable.status === "fulfilled") {
+        const d = salesResTable.value.data;
+        const arr = Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
+        setRecentSalesTable(arr);
+      }
+      
       if (ordersRes.status === "fulfilled") {
         const d = ordersRes.value.data;
         setPendingOrders(Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []));
       }
+      
       if (returnsRes.status === "fulfilled") {
         const d = returnsRes.value.data;
         setPendingReturns(Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []));
@@ -125,7 +173,7 @@ export default function Home() {
     } finally {
       setLoadingTables(false);
     }
-  }, [todayStr]);
+  }, [dateRange, todayStr]);
 
   useEffect(() => {
     loadKpis();
@@ -138,12 +186,39 @@ export default function Home() {
     loadTables();
   };
 
+  const recentSales = recentSalesTable.slice(0, 8);
+
   const financeSummary = financeData?.summary || {};
   const netProfit = financeSummary.net_profit ?? 0;
   const totalRevenue = financeSummary.total_revenue ?? 0;
   const totalExpenses = financeSummary.total_expenses ?? 0;
   const cashBalance = financeSummary.treasury?.cash_balance ?? 0;
   const bankBalance = financeSummary.treasury?.bank_balance ?? 0;
+
+  // Chart 1: Tendencia de Ventas (AreaChart)
+  const chartDataSales = useMemo(() => {
+    if (!recentSalesFull || recentSalesFull.length === 0) return [];
+    const grouped = {};
+    recentSalesFull.forEach(s => {
+      const d = s.created_at.split("T")[0];
+      if (!grouped[d]) grouped[d] = 0;
+      grouped[d] += Number(s.subtotal || s.total || 0);
+    });
+    return Object.keys(grouped).sort().map(date => ({
+      date,
+      ventas: grouped[date]
+    }));
+  }, [recentSalesFull]);
+
+  // Chart 2: Origen de Fondos (BarChart)
+  const chartDataFunds = useMemo(() => {
+    const treasury = financeData?.summary?.treasury?.details || {};
+    return [
+      { name: "Banco", valor: treasury.bank?.sales || 0 },
+      { name: "Caja", valor: treasury.cash?.sales || 0 },
+      { name: "Giftcards", valor: treasury.giftcard?.sales || 0 },
+    ];
+  }, [financeData]);
 
   const userName = (() => {
     try {
@@ -157,6 +232,13 @@ export default function Home() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Buenos días" : hour < 18 ? "Buenas tardes" : "Buenas noches";
 
+  const getDeliveryTypeLabel = (type) => {
+    if (type === 'home_delivery') return { label: "A Domicilio", cls: "type-home" };
+    if (type === 'external') return { label: "Nacional", cls: "type-ext" };
+    if (type === 'pickup') return { label: "Recojo", cls: "type-pickup" };
+    return { label: "Punto Fijo", cls: "type-point" };
+  };
+
   return (
     <div className="hd-container">
 
@@ -167,10 +249,23 @@ export default function Home() {
             {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
         </div>
-        <button className="hd-refresh-btn" onClick={handleRefresh} title="Actualizar datos">
-          <RefreshCw size={16} />
-          <span>Actualizar</span>
-        </button>
+        <div className="hd-actions-group">
+          <div className="hd-date-filter">
+            <Calendar size={16} className="hd-filter-icon" />
+            <select value={dateRange} onChange={e => setDateRange(e.target.value)} className="hd-filter-select">
+              <option value="today">Hoy</option>
+              <option value="7d">Últimos 7 días</option>
+              <option value="30d">Últimos 30 días</option>
+              <option value="month">Este Mes</option>
+              <option value="year">Este Año</option>
+              <option value="all">Todo el Historial</option>
+            </select>
+          </div>
+          <button className="hd-refresh-btn" onClick={handleRefresh} title="Actualizar datos">
+            <RefreshCw size={16} />
+            <span>Actualizar</span>
+          </button>
+        </div>
       </div>
 
       <div className="hd-kpi-grid">
@@ -178,10 +273,65 @@ export default function Home() {
         <KpiCard icon={DollarSign} label="Ganancia neta" value={fmt(netProfit)} sub={`Gastos: ${fmt(totalExpenses)}`} color={netProfit >= 0 ? "kpi-blue" : "kpi-red"} loading={loadingKpis} />
         <KpiCard icon={Package} label="Unidades en stock" value={fmtNum(inventoryStats?.total_items)} sub={`Valor: ${fmt(inventoryStats?.total_retail_value)}`} color="kpi-purple" loading={loadingKpis} />
         <KpiCard icon={AlertTriangle} label="Alertas de stock" value={fmtNum(inventoryStats?.low_stock_alerts)} sub="Productos agotados o bajos" color={inventoryStats?.low_stock_alerts > 0 ? "kpi-orange" : "kpi-green"} loading={loadingKpis} />
-        <KpiCard icon={Users} label="Clientes totales" value={fmtNum(customerKpis?.total_customers)} sub={`${fmtNum(customerKpis?.new_this_month ?? 0)} nuevos este mes`} color="kpi-teal" loading={loadingKpis} />
+        <KpiCard icon={Users} label="Clientes totales" value={fmtNum(customerKpis?.total_customers)} sub={`${fmtNum(customerKpis?.new_this_month ?? 0)} nuevos`} color="kpi-teal" loading={loadingKpis} />
         <KpiCard icon={CreditCard} label="Caja disponible" value={fmt(cashBalance)} sub={`Banco: ${fmt(bankBalance)}`} color="kpi-indigo" loading={loadingKpis} />
-        <KpiCard icon={ShoppingBag} label="Ticket promedio" value={fmt(salesData?.average_ticket)} sub="Por transacción pagada" color="kpi-rose" loading={loadingKpis} />
+        <KpiCard icon={ShoppingBag} label="Ticket promedio" value={fmt(salesData?.average_ticket)} sub="Por transacción" color="kpi-rose" loading={loadingKpis} />
         <KpiCard icon={BarChart2} label="Descuentos dados" value={fmt(salesData?.total_discount)} sub="Total del período" color="kpi-amber" loading={loadingKpis} />
+      </div>
+
+      <div className="hd-charts-section">
+        <div className="hd-chart-card">
+          <h2 className="hd-chart-title">Tendencia de Ingresos</h2>
+          <div className="hd-chart-wrapper">
+            {loadingTables ? (
+              <div className="hd-skeleton hd-skeleton-row" style={{height: '100%'}} />
+            ) : chartDataSales.length === 0 ? (
+              <p className="hd-empty">No hay suficientes datos para el gráfico.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={chartDataSales} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                  <XAxis dataKey="date" tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} minTickGap={20} />
+                  <YAxis tickFormatter={(v) => `Bs ${v}`} tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} width={80} />
+                  <RechartsTooltip 
+                    formatter={(value) => [fmt(value), "Ventas"]} 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Area type="monotone" dataKey="ventas" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorVentas)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="hd-chart-card">
+          <h2 className="hd-chart-title">Origen de Ingresos</h2>
+          <div className="hd-chart-wrapper">
+            {loadingKpis ? (
+              <div className="hd-skeleton hd-skeleton-row" style={{height: '100%'}} />
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={chartDataFunds} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
+                  <XAxis dataKey="name" tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} />
+                  <YAxis tickFormatter={(v) => `Bs ${v}`} tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} width={80} />
+                  <RechartsTooltip 
+                    formatter={(value) => [fmt(value), "Monto"]} 
+                    cursor={{fill: 'var(--bg-overlay)'}}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Bar dataKey="valor" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="hd-section">
@@ -233,9 +383,15 @@ export default function Home() {
                     const clientName = s.customer?.user?.profile
                       ? `${s.customer.user.profile.first_name} ${s.customer.user.profile.last_name}`
                       : s.guest?.name || "Invitado";
+                      
+                    // FIX: If invoice_number is 'DLV-undefined' or null, just show the ID
+                    let dispInv = s.invoice_number;
+                    if (!dispInv || dispInv.includes('undefined')) dispInv = s.id?.slice(0, 8);
+                    else dispInv = dispInv.slice(0, 12);
+                      
                     return (
                       <tr key={s.id}>
-                        <td className="hd-mono">{s.invoice_number?.slice(0,12) || s.id?.slice(0,8)}</td>
+                        <td className="hd-mono">{dispInv}</td>
                         <td>{clientName}</td>
                         <td className="hd-bold">{fmt(s.total)}</td>
                         <td><StatusBadge status={s.status} /></td>
@@ -260,16 +416,25 @@ export default function Home() {
           ) : (
             <div className="hd-table-scroll">
               <table className="hd-table">
-                <thead><tr><th>ID</th><th>Destino</th><th>Estado</th><th>Fecha</th></tr></thead>
+                <thead><tr><th>ID</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead>
                 <tbody>
-                  {pendingOrders.map((o) => (
-                    <tr key={o.id}>
-                      <td className="hd-mono">{o.id?.slice(0,8)}</td>
-                      <td>{o.destination_address?.slice(0,24) || "—"}</td>
-                      <td><StatusBadge status={o.status} /></td>
-                      <td className="hd-muted">{o.scheduled_date || "—"}</td>
-                    </tr>
-                  ))}
+                  {pendingOrders.map((o) => {
+                    const deliveryType = o.shipment?.delivery_type || 'scheduled_point';
+                    const typeLabel = getDeliveryTypeLabel(deliveryType);
+                    const dispCode = o.shipment?.delivery_code || o.id?.slice(0,8);
+                    return (
+                      <tr key={o.id}>
+                        <td className="hd-mono">{dispCode}</td>
+                        <td>
+                          <span className={`hd-type-badge ${typeLabel.cls}`}>
+                            {typeLabel.label}
+                          </span>
+                        </td>
+                        <td><StatusBadge status={o.status} /></td>
+                        <td className="hd-muted">{o.scheduled_date || "—"}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

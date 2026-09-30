@@ -2,7 +2,7 @@ import { getImageUrl } from '../../../../utils/imageUtils';
 import {
   API_BASE_URL
 } from "../../../../config/api";
-import { ChevronUp, ChevronDown, Ruler } from "lucide-react";
+import { ChevronUp, ChevronDown, Ruler, MoreVertical, Eye, Edit, Trash2, CheckSquare } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
 import Spinner from "../../components/Spinner/Spinner";
 import { useAuthStore } from "../../../../store/authStore";
@@ -76,7 +76,7 @@ export default function ProductsTable({
 
         <thead>
           <tr>
-            <th style={{ width: '40px' }}>
+            <th className="checkbox-col" style={{ width: '40px' }}>
               <input 
                 type="checkbox" 
                 checked={products.length > 0 && selectedRows.length === products.length} 
@@ -104,7 +104,7 @@ export default function ProductsTable({
             <th>Estado</th>
             <th>Actualizado</th>
 
-            <th>Acciones</th>
+            <th className="actions-col">Acciones</th>
           </tr>
         </thead>
 
@@ -157,13 +157,42 @@ export default function ProductsTable({
 
               return (
                 <tr key={p.id}>
-                  <td>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedRows.includes(p.id)} 
-                      onChange={() => handleSelectRow(p.id)} 
-                      className="custom-table-checkbox"
-                    />
+                  <td className="checkbox-col" style={{ width: '40px' }}>
+                    <div className={selectedRows.includes(p.id) ? "" : "hide-on-mobile"}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedRows.includes(p.id)} 
+                        onChange={() => handleSelectRow(p.id)} 
+                        className="custom-table-checkbox"
+                      />
+                    </div>
+                    {!selectedRows.includes(p.id) && (
+                      <div className="mobile-actions-dropdown hide-on-pc">
+                        <div className="dropdown-toggle" tabIndex="0" style={{ padding: '0' }}>
+                          <MoreVertical size={18} />
+                        </div>
+                        <div className="dropdown-content">
+                          <button className="dropdown-item" onClick={() => handleSelectRow(p.id)}>
+                            <CheckSquare size={16} /> Seleccionar
+                          </button>
+                          <CanAccess permission="view_products">
+                            <button className="dropdown-item" onClick={() => onView(p)}>
+                              <Eye size={16} /> Ver
+                            </button>
+                          </CanAccess>
+                          <CanAccess permission="edit_products">
+                            <button className="dropdown-item" onClick={() => onEdit(p)}>
+                              <Edit size={16} /> Variables
+                            </button>
+                          </CanAccess>
+                          <CanAccess permission="delete_products">
+                            <button className="dropdown-item" onClick={() => onDelete(p.id)} style={{ color: '#ef4444' }}>
+                              <Trash2 size={16} /> Eliminar
+                            </button>
+                          </CanAccess>
+                        </div>
+                      </div>
+                    )}
                   </td>
                   {/* IMAGE */}
                   <td>
@@ -314,7 +343,7 @@ export default function ProductsTable({
                       : "N/A"}
                   </td>
 
-                  <td>
+                  <td className="actions-col">
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
                       <CanAccess permission="view_products">
                         <button className="btn-view" onClick={() => onView(p)}>

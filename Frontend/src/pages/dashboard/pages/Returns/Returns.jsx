@@ -1,6 +1,6 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
-import { Search, Filter, RefreshCw, Eye, Undo2, DollarSign, PackageOpen } from "lucide-react";
+import { Search, Filter, RefreshCw, Eye, Undo2, DollarSign, PackageOpen, MoreVertical } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getReturns } from "../../../../api/admin/returns";
 import { API_BASE_URL } from '../../../../config/api';
@@ -59,13 +59,20 @@ export default function Returns() {
   return (
     <div className="products-container fade-in">
       <div className="products-header">
-        <h1 className="products-title">
-          <Undo2 size={28} className="text-primary" />
+        <h1 className="products-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Undo2 size={24} className="text-primary" />
           Devoluciones
         </h1>
-        <button className="btn-secondary" onClick={() => fetchReturns(filters)} title="Actualizar">
-          <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            className="action-btn primary" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', color: 'var(--color-primary-text)', background: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => fetchReturns(filters)}
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            <span className="hide-on-mobile">Actualizar</span>
+          </button>
+        </div>
       </div>
 
       <div className="metrics-container">
@@ -172,7 +179,7 @@ export default function Returns() {
                 <th>Estado</th>
                 <th>Reembolso</th>
                 <th>Fecha</th>
-                <th style={{ textAlign: 'right' }}>Acción</th>
+                <th className="actions-col" style={{ textAlign: 'right' }}>Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -185,7 +192,21 @@ export default function Returns() {
               ) : (
                 returnsList.map(ret => (
                   <tr key={ret.id}>
-                    <td style={{ fontWeight: 600 }}>{ret.reference_number || "S/N"}</td>
+                    <td className="first-col-mobile">
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div className="mobile-actions-dropdown hide-on-pc">
+                          <div className="dropdown-toggle" tabIndex="0">
+                            <MoreVertical size={18} />
+                          </div>
+                          <div className="dropdown-content">
+                            <button onClick={() => handleViewDetails(ret)} className="dropdown-item">
+                              <Eye size={16} /> Ver / Gestionar
+                            </button>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 600 }}>{ret.reference_number || "S/N"}</span>
+                      </div>
+                    </td>
                     <td>
                       <div style={{ fontSize: '13px', fontWeight: 600 }}>{ret.sale_detail?.sale?.invoice_number || "Venta Original"}</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -241,7 +262,7 @@ export default function Returns() {
                       {ret.refund_amount ? `Bs. ${Number(ret.refund_amount).toFixed(2)}` : "-"}
                     </td>
                     <td>{new Date(ret.created_at).toLocaleDateString()}</td>
-                    <td style={{ textAlign: 'right' }}>
+                    <td className="actions-col" style={{ textAlign: 'right' }}>
                       <button className="btn-view" onClick={() => handleViewDetails(ret)} title="Ver / Gestionar">
                         <Eye size={18} />
                       </button>

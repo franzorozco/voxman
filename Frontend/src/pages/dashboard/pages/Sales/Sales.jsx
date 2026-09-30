@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Eye, Filter, CheckCircle, XCircle, ShoppingBag, Clock, RotateCcw } from "lucide-react";
+import { Search, Eye, Filter, CheckCircle, XCircle, ShoppingBag, Clock, RotateCcw, MoreVertical, RefreshCw } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSales } from "../../../../api/admin/sales";
 import { getBranches } from "../../../../api/admin/branches";
@@ -114,21 +114,31 @@ export default function Sales() {
           <ShoppingBag size={24} />
           Ventas
         </h1>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            className="action-btn primary" 
+            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', color: 'var(--color-primary-text)', background: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => fetchSales()}
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            <span className="hide-on-mobile">Actualizar</span>
+          </button>
+        </div>
       </div>
 
       <CanAccess permission="view_sale_profits">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.3s ease' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ingresos Totales</span>
-            <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>Bs. {parseFloat(summary.total_revenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        <div className="sales-kpi-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+          <div className="sales-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.3s ease' }}>
+            <span className="sales-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ingresos Totales</span>
+            <span className="sales-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>Bs. {parseFloat(summary.total_revenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
           </div>
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.4s ease' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ventas Realizadas</span>
-            <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>{summary.total_sales || 0}</span>
+          <div className="sales-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.4s ease' }}>
+            <span className="sales-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ventas Realizadas</span>
+            <span className="sales-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>{summary.total_sales || 0}</span>
           </div>
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.5s ease' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ticket Promedio</span>
-            <span style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>Bs. {parseFloat(summary.average_ticket || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+          <div className="sales-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.5s ease' }}>
+            <span className="sales-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ticket Promedio</span>
+            <span className="sales-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>Bs. {parseFloat(summary.average_ticket || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
           </div>
         </div>
       </CanAccess>
@@ -265,7 +275,7 @@ export default function Sales() {
               <th>Pagos</th>
               <th>Total</th>
               <th>Estado</th>
-              <th style={{ textAlign: 'right' }}>Acciones</th>
+              <th className="actions-col" style={{ textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -280,13 +290,27 @@ export default function Sales() {
             ) : (
               sales.map((sale) => (
                 <tr key={sale.id}>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{sale.invoice_number || 'S/N'}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {sale.source === 'store' ? <span style={{color: 'var(--color-warning)'}}>• Tienda Física</span> : 
-                       sale.source === 'web' ? <span style={{color: 'var(--color-primary)'}}>• Tienda Web</span> : 
-                       sale.source === 'order_network' ? <span style={{color: '#10b981'}}>• Entrega Agendada</span> :
-                       `• ${sale.source || 'Tienda'}`}
+                  <td className="first-col-mobile">
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <div className="mobile-actions-dropdown hide-on-pc">
+                        <div className="dropdown-toggle" tabIndex="0">
+                          <MoreVertical size={18} />
+                        </div>
+                        <div className="dropdown-content">
+                          <button onClick={() => openDetailsModal(sale.id)} className="dropdown-item">
+                            <Eye size={16} /> Ver Detalles
+                          </button>
+                        </div>
+                      </div>
+                      <div className="invoice-content">
+                        <div style={{ fontWeight: 600 }}>{sale.invoice_number || 'S/N'}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {sale.source === 'store' ? <span style={{color: 'var(--color-warning)'}}>• Tienda Física</span> : 
+                           sale.source === 'web' ? <span style={{color: 'var(--color-primary)'}}>• Tienda Web</span> : 
+                           sale.source === 'order_network' ? <span style={{color: '#10b981'}}>• Entrega Agendada</span> :
+                           `• ${sale.source || 'Tienda'}`}
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -399,7 +423,7 @@ export default function Sales() {
                       </div>
                     )}
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td className="actions-col" style={{ textAlign: 'right' }}>
                       <button
                         className="action-btn view-btn"
                         onClick={() => openDetailsModal(sale.id)}

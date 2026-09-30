@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit, Truck } from "lucide-react";
+import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit, Truck, MoreVertical } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getCarts, deleteCart, convertCartToSale, sendCartReminder, convertCartToOrder, restoreCart } from "../../../../api/admin/carts";
 import CartDetailsModal from "./CartDetailsModal";
@@ -393,7 +393,7 @@ export default function Carts() {
                 <th>Origen</th>
                 <th>Fecha Creado</th>
                 <th>Vencimiento</th>
-                <th style={{ textAlign: 'right' }}>Acciones</th>
+                <th className="actions-col" style={{ textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -406,7 +406,52 @@ export default function Carts() {
               ) : (
                 carts.map(cart => (
                   <tr key={cart.id}>
-                    <td style={{ fontWeight: 600 }}>{cart.reference_number || "Sin Ref."}</td>
+                    <td className="first-col-mobile">
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <div className="mobile-actions-dropdown hide-on-pc">
+                          <div className="dropdown-toggle" tabIndex="0">
+                            <MoreVertical size={18} />
+                          </div>
+                          <div className="dropdown-content">
+                            <button className="dropdown-item" onClick={() => handleViewDetails(cart)}>
+                              <Eye size={16} /> Ver Detalles
+                            </button>
+                            <CanAccess permission="edit_carts">
+                              {(cart.status !== 'converted' && cart.status !== 'ordered') && (
+                                <button className="dropdown-item" onClick={() => handleOpenForm(cart)} style={{ color: 'var(--color-warning)' }}>
+                                  <Edit size={16} /> Editar Proforma
+                                </button>
+                              )}
+                            </CanAccess>
+                            {(cart.status === 'proforma' || cart.status === 'active') && (
+                              <>
+                                <CanAccess permission="convert_carts">
+                                  <button className="dropdown-item" onClick={() => handleConvertClick(cart.id)} style={{ color: '#10b981' }}>
+                                    <CheckCircle size={16} /> Convertir a Venta
+                                  </button>
+                                </CanAccess>
+                                <CanAccess permission="create_orders">
+                                  <button className="dropdown-item" onClick={() => handleConvertToOrderClick(cart.id)} style={{ color: 'var(--color-primary)' }}>
+                                    <Truck size={16} /> Convertir a Entrega
+                                  </button>
+                                </CanAccess>
+                              </>
+                            )}
+                            {cart.status === 'ordered' && (
+                              <button className="dropdown-item" onClick={() => handleReopenSuccessModal(cart)}>
+                                <Eye size={16} /> Ver Conversión
+                              </button>
+                            )}
+                            <CanAccess permission="delete_carts">
+                              <button className="dropdown-item" onClick={() => handleDelete(cart.id)} style={{ color: '#ef4444' }}>
+                                <Trash2 size={16} /> Eliminar
+                              </button>
+                            </CanAccess>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 600 }}>{cart.reference_number || "Sin Ref."}</span>
+                      </div>
+                    </td>
                     <td>
                       {cart.customer 
                         ? (cart.customer.user 
@@ -435,7 +480,7 @@ export default function Carts() {
                         ? `${new Date(cart.expires_at).toLocaleDateString()} ${new Date(cart.expires_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` 
                         : '-'}
                     </td>
-                    <td style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <td className="actions-col" style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                       <button className="btn-view" onClick={() => handleViewDetails(cart)} title="Ver Detalles">
                         <Eye size={18} />
                       </button>

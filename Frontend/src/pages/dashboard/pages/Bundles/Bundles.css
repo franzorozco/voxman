@@ -1589,3 +1589,101 @@
   /* Fix cost box overflow */
   .bfm-item-cost { flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 12px; }
 }
+
+/* MOBILE TWO COLUMNS KPI */
+@media (max-width: 768px) {
+  .bundles-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* MOBILE TABLE ACTIONS DROPDOWN */
+@media (max-width: 768px) {
+  .actions-col {
+    display: none !important;
+  }
+  .hide-on-pc {
+    display: inline-block !important;
+  }
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+/* DESKTOP HIDE ACTIONS DROPDOWN */
+@media (min-width: 769px) {
+  .hide-on-pc {
+    display: none !important;
+  }
+}
+
+/* DROPDOWN STYLING */
+.mobile-actions-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropdown-toggle {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 50;
+  min-width: 160px;
+  padding: 4px;
+}
+.mobile-actions-dropdown:focus-within .dropdown-content,
+.mobile-actions-dropdown:hover .dropdown-content {
+  display: block;
+}
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.dropdown-item:hover {
+  background: var(--bg-input);
+  color: var(--color-primary);
+}
+
+
+
+/* Fix Dropdown Clipping */
+.table-wrapper:focus-within {
+  overflow: visible !important;
+}
+.bundles-table tr:nth-child(n+3):last-child .dropdown-content,
+.bundles-table tr:nth-child(n+3):nth-last-child(2) .dropdown-content,
+.bundles-table tr:nth-child(n+3):nth-last-child(3) .dropdown-content {
+  top: auto;
+  bottom: 100%;
+  margin-bottom: 4px;
+}
+
+
+.bundles-table:focus-within {
+  overflow: visible !important;
+}
