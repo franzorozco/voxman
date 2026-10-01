@@ -9,6 +9,7 @@ import CustomSelect from '../../../components/ui/CustomSelect';
 
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
+import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
 import './Catalog.css';
 
 const Catalog = () => {
@@ -17,6 +18,13 @@ const Catalog = () => {
   const addToCart = useShopCartStore(state => state.addItem);
   const [addedAnimationItems, setAddedAnimationItems] = useState({});
   const initialCategory = searchParams.get('category');
+
+  // ── Settings del Dashboard ──
+  const { settings: shopSettings, fetchSettings: fetchShopSettings } = useShopSettingsStore();
+  useEffect(() => { fetchShopSettings(); }, [fetchShopSettings]);
+
+  // Helper para leer un setting con fallback
+  const cfg = (key, fallback) => shopSettings?.[key] ?? fallback;
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -32,10 +40,20 @@ const Catalog = () => {
   }, [selectedCategory, setSearchParams]);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('prendas');
-  const [imageMode, setImageMode] = useState('presentacion');
+  const [viewMode, setViewMode] = useState(null);
+  const [imageMode, setImageMode] = useState(null);
   const [expandedProductId, setExpandedProductId] = useState(null);
   const expandRef = useRef(null);
+
+  // Aplicar defaults del dashboard cuando los settings carguen
+  useEffect(() => {
+    if (shopSettings && Object.keys(shopSettings).length > 0) {
+      setViewMode(prev => prev === null ? (shopSettings.catalog_default_view || 'prendas') : prev);
+      setImageMode(prev => prev === null ? (shopSettings.catalog_default_image_mode || 'presentacion') : prev);
+      setSortBy(prev => prev === null ? (shopSettings.catalog_default_sort || 'recomendados') : prev);
+      setVisibleCount(prev => prev === null ? parseInt(shopSettings.catalog_products_per_page || '12', 10) : prev);
+    }
+  }, [shopSettings]);
 
   // Quick Add / Quick View state
   const [quickAddProductId, setQuickAddProductId] = useState(null);
@@ -47,8 +65,9 @@ const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [sortBy, setSortBy] = useState('recomendados');
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [sortBy, setSortBy] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(null);
+
 
   const categoriesFetchedRef = useRef(false);
 
@@ -92,7 +111,7 @@ const Catalog = () => {
         }
         const response = await getProducts(params);
         setProducts(response.data?.data || response.data || []);
-        setVisibleCount(12); // Resetear paginación al cambiar de categoría
+        setVisibleCount(parseInt(cfg('catalog_products_per_page', '12'), 10)); // Resetear paginación al cambiar de categoría
       } catch (error) {
         console.error('Error loading catalog items', error);
       } finally {
@@ -287,7 +306,7 @@ const Catalog = () => {
   };
 
   const prendasItems = getPrendas();
-  let baseItems = viewMode === 'producto' ? products : prendasItems;
+  let baseItems = (viewMode || 'prendas') === 'producto' ? products : prendasItems;
 
   // 1. Filtrar por Búsqueda (Search)
   if (searchQuery) {
@@ -340,7 +359,7 @@ const Catalog = () => {
   });
 
   // 4. Paginación / Cargar Más
-  const displayItems = processedItems.slice(0, visibleCount);
+  const displayItems = processedItems.slice(0, visibleCount || parseInt(cfg('catalog_products_per_page', '12'), 10));
 
   const animationKey = `${viewMode}-${imageMode}-${selectedCategory}-${sortBy}-${searchQuery}`;
 
@@ -397,11 +416,12 @@ const Catalog = () => {
 
   // Renderizar grid
   const renderProductGrid = () => {
-    if (viewMode === 'producto') {
-      // Agrupar en filas de 3 para insertar panel expandible entre filas
+    if ((viewMode || 'prendas') === 'producto') {
+      // Agrupar en filas según columnas configuradas
+      const colCount = parseInt(cfg('catalog_grid_cols_desktop', '3'), 10);
       const rows = [];
-      for (let i = 0; i < displayItems.length; i += 3) {
-        rows.push(displayItems.slice(i, i + 3));
+      for (let i = 0; i < displayItems.length; i += colCount) {
+        rows.push(displayItems.slice(i, i + colCount));
       }
 
       return (
@@ -410,7 +430,7 @@ const Catalog = () => {
             const expandedProduct = row.find(p => p.id === expandedProductId);
             return (
               <React.Fragment key={rowIdx}>
-                <div className="catalog-products-row" style={{ marginBottom: expandedProduct ? '0' : '24px' }}>
+                <div className="catalog-products-row" style={{ marginBottom: expandedProduct ? '0' : `${cfg('catalog_grid_gap', '24')}px`, gridTemplateColumns: `repeat(${cfg('catalog_grid_cols_desktop', '3')}, 1fr)`, gap: `${cfg('catalog_grid_gap', '24')}px` }}>
               {row.map((item) => {
                 const imageUrl = item.cover_image || (item.product_images?.length > 0 ? item.product_images[0].url : null);
                 const isExpanded = expandedProductId === item.id;
@@ -423,9 +443,9 @@ const Catalog = () => {
                       onClick={(e) => handleProductClick(e, item)}
                       style={{
                         cursor: 'pointer',
-                        backgroundColor: '#f5f5f5',
-                        aspectRatio: '1 / 1',
-                        borderRadius: '8px',
+                        backgroundColor: cfg('catalog_card_bg', '#f5f5f5'),
+                        aspectRatio: cfg('catalog_card_aspect_ratio', '1 / 1'),
+                        borderRadius: `${cfg('catalog_card_border_radius', '8')}px`,
                         overflow: 'hidden',
                         outline: isExpanded ? '2px solid var(--text-main)' : 'none',
                         transition: 'outline 0.2s ease',
@@ -434,8 +454,8 @@ const Catalog = () => {
                     >
                       {/* BOTÓN WISHLIST */}
                       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                        {item.has_discount && (
-                          <div style={{ backgroundColor: 'var(--text-main)', color: 'var(--bg-main, #fff)', fontSize: '14px', fontWeight: '600', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
+                        {item.has_discount && cfg('catalog_badge_show_discount', '1') !== '0' && (
+                          <div style={{ backgroundColor: cfg('catalog_badge_discount_bg', 'var(--text-main)'), color: cfg('catalog_badge_discount_text', 'var(--bg-main, #fff)'), fontSize: `${cfg('catalog_badge_discount_size', '14')}px`, fontWeight: '600', padding: '6px 12px', borderRadius: `${cfg('catalog_badge_discount_radius', '4')}px`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
                             {item.discount_label}
                           </div>
                         )}
@@ -443,19 +463,19 @@ const Catalog = () => {
 
                       {/* ETIQUETAS IZQUIERDA */}
                       <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 2 }}>
-                        {item.is_bundle && (
-                          <div style={{ backgroundColor: '#111', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            Conjunto
+                        {item.is_bundle && cfg('catalog_badge_show_bundle', '1') !== '0' && (
+                          <div style={{ backgroundColor: cfg('catalog_badge_bundle_bg', '#111'), color: cfg('catalog_badge_bundle_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            {cfg('catalog_badge_bundle_text', 'Conjunto')}
                           </div>
                         )}
-                        {(item.is_new || (Math.random() < 0.15 && item.id % 2 === 0)) && (
-                          <div style={{ backgroundColor: '#eab308', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            Nuevo
+                        {(item.is_new || (Math.random() < 0.15 && item.id % 2 === 0)) && cfg('catalog_badge_show_new', '1') !== '0' && (
+                          <div style={{ backgroundColor: cfg('catalog_badge_new_bg', '#eab308'), color: cfg('catalog_badge_new_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            {cfg('catalog_badge_new_text', 'Nuevo')}
                           </div>
                         )}
-                        {(item.stock <= 0 || item.stock_quantity === 0 || item.in_stock === false) && (
-                          <div style={{ backgroundColor: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            Agotado
+                        {(item.stock <= 0 || item.stock_quantity === 0 || item.in_stock === false) && cfg('catalog_badge_show_soldout', '1') !== '0' && (
+                          <div style={{ backgroundColor: cfg('catalog_badge_soldout_bg', '#ef4444'), color: cfg('catalog_badge_soldout_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            {cfg('catalog_badge_soldout_text', 'Agotado')}
                           </div>
                         )}
                       </div>
@@ -463,7 +483,7 @@ const Catalog = () => {
                         <img
                           src={getImageUrl(imageUrl)}
                           alt={item.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center' }}
+                          style={{ width: '100%', height: '100%', objectFit: cfg('catalog_card_object_fit', 'contain'), objectPosition: 'center' }}
                           loading="lazy"
                         />
                       ) : (
@@ -561,7 +581,7 @@ const Catalog = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0, flex: 1 }}>
                         <h3
                           onClick={(e) => handleProductClick(e, item)}
-                          style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-main)', lineHeight: '1.4', margin: 0, cursor: 'pointer' }}
+                          style={{ fontSize: `${cfg('catalog_card_name_size', '13')}px`, fontWeight: parseInt(cfg('catalog_card_name_weight', '400')), color: cfg('catalog_card_name_color', 'var(--text-main)'), lineHeight: '1.4', margin: 0, cursor: 'pointer', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: cfg('catalog_card_name_lines', '2') === 'none' ? 'unset' : cfg('catalog_card_name_lines', '2'), WebkitBoxOrient: 'vertical' }}
                         >
                           {item.name}
                         </h3>
@@ -569,43 +589,43 @@ const Catalog = () => {
                         <div className="catalog-card-price-row">
                           {item.has_discount ? (
                             <>
-                              <span className="catalog-card-price">
+                              <span className="catalog-card-price" style={{ fontSize: `${cfg('catalog_card_price_size', '14')}px`, color: cfg('catalog_card_price_color', 'var(--text-main)') }}>
                                 Bs {parseFloat(item.discounted_price || 0).toFixed(2)}
                               </span>
-                              <span className="catalog-card-price-original">
+                              <span className="catalog-card-price-original" style={{ color: cfg('catalog_card_price_old_color', 'var(--text-muted)') }}>
                                 Bs {parseFloat(item.base_price || 0).toFixed(2)}
                               </span>
                             </>
                           ) : (
-                            <span className="catalog-card-price">
+                            <span className="catalog-card-price" style={{ fontSize: `${cfg('catalog_card_price_size', '14')}px`, color: cfg('catalog_card_price_color', 'var(--text-main)') }}>
                               Bs {parseFloat(item.base_price || 0).toFixed(2)}
                             </span>
                           )}
                         </div>
                         {/* COLOR SWATCHES */}
-                        {!item.is_bundle && getAvailableColors(item).length > 0 && (
+                        {cfg('catalog_show_swatches', '1') !== '0' && !item.is_bundle && getAvailableColors(item).length > 0 && (
                           <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            {getAvailableColors(item).slice(0, 5).map((c, idx) => (
+                            {getAvailableColors(item).slice(0, parseInt(cfg('catalog_max_swatches', '5'))).map((c, idx) => (
                               <div
                                 key={idx}
                                 title={c.name}
                                 style={{
-                                  width: '13px', height: '13px', borderRadius: '50%',
+                                  width: `${cfg('catalog_swatch_size', '13')}px`, height: `${cfg('catalog_swatch_size', '13')}px`, borderRadius: '50%',
                                   border: '1px solid var(--border-color)',
                                   backgroundImage: `url(${getImageUrl(c.image)})`,
                                   backgroundSize: 'cover', backgroundPosition: 'center',
                                 }}
                               />
                             ))}
-                            {getAvailableColors(item).length > 5 && (
-                              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - 5}</span>
+                            {getAvailableColors(item).length > parseInt(cfg('catalog_max_swatches', '5')) && (
+                              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - parseInt(cfg('catalog_max_swatches', '5'))}</span>
                             )}
                           </div>
                         )}
                       </div>
 
                       {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
-                      {!item.is_bundle && quickAddProductId !== item.id && (
+                      {cfg('catalog_show_quick_add', '1') !== '0' && !item.is_bundle && quickAddProductId !== item.id && (
                         <button
                           className="catalog-card-add-btn"
                           onClick={(e) => {
@@ -737,12 +757,12 @@ const Catalog = () => {
 
     // Modo Prendas
     return (
-      <div key={animationKey} className="catalog-grid-animate catalog-products-grid">
+      <div key={animationKey} className="catalog-grid-animate catalog-products-grid" style={{ gridTemplateColumns: `repeat(${cfg('catalog_grid_cols_desktop', '3')}, 1fr)`, gap: `${cfg('catalog_grid_gap', '24')}px` }}>
         {displayItems.length === 0 ? (
           <p style={{ color: 'var(--text-muted)' }}>No se encontraron elementos.</p>
         ) : (
           displayItems.map((item) => {
-            const isVividMode = imageMode === 'vivido';
+            const isVividMode = (imageMode || 'presentacion') === 'vivido';
             const imageUrl = isVividMode ? item.image2 : item.image;
             const linkUrl = item.is_bundle 
               ? `/shop/bundle/${item.slug}` 
@@ -756,30 +776,30 @@ const Catalog = () => {
                 <div
                   onClick={() => navigate(linkUrl)}
                   className="group-hover:opacity-90 transition-opacity"
-                  style={{ cursor: 'pointer', backgroundColor: '#f5f5f5', aspectRatio: '1 / 1', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}
+                  style={{ cursor: 'pointer', backgroundColor: cfg('catalog_card_bg', '#f5f5f5'), aspectRatio: cfg('catalog_card_aspect_ratio', '1 / 1'), borderRadius: `${cfg('catalog_card_border_radius', '8')}px`, overflow: 'hidden', position: 'relative' }}
                 >
                   {/* ETIQUETAS IZQUIERDA */}
                   <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 2 }}>
-                    {item.is_bundle && (
-                      <div style={{ backgroundColor: '#111', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        Conjunto
+                    {item.is_bundle && cfg('catalog_badge_show_bundle', '1') !== '0' && (
+                      <div style={{ backgroundColor: cfg('catalog_badge_bundle_bg', '#111'), color: cfg('catalog_badge_bundle_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        {cfg('catalog_badge_bundle_text', 'Conjunto')}
                       </div>
                     )}
-                    {(item.is_new || (Math.random() < 0.15 && item.id % 2 === 0)) && (
-                      <div style={{ backgroundColor: '#eab308', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        Nuevo
+                    {(item.is_new || (Math.random() < 0.15 && item.id % 2 === 0)) && cfg('catalog_badge_show_new', '1') !== '0' && (
+                      <div style={{ backgroundColor: cfg('catalog_badge_new_bg', '#eab308'), color: cfg('catalog_badge_new_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        {cfg('catalog_badge_new_text', 'Nuevo')}
                       </div>
                     )}
-                    {(item.stock <= 0 || item.stock_quantity === 0 || item.in_stock === false) && (
-                      <div style={{ backgroundColor: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        Agotado
+                    {(item.stock <= 0 || item.stock_quantity === 0 || item.in_stock === false) && cfg('catalog_badge_show_soldout', '1') !== '0' && (
+                      <div style={{ backgroundColor: cfg('catalog_badge_soldout_bg', '#ef4444'), color: cfg('catalog_badge_soldout_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        {cfg('catalog_badge_soldout_text', 'Agotado')}
                       </div>
                     )}
                   </div>
                   {/* BOTÓN WISHLIST */}
                   <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                    {item.has_discount && (
-                      <div style={{ backgroundColor: 'var(--text-main)', color: 'var(--bg-main, #fff)', fontSize: '14px', fontWeight: '600', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
+                    {item.has_discount && cfg('catalog_badge_show_discount', '1') !== '0' && (
+                      <div style={{ backgroundColor: cfg('catalog_badge_discount_bg', 'var(--text-main)'), color: cfg('catalog_badge_discount_text', 'var(--bg-main, #fff)'), fontSize: `${cfg('catalog_badge_discount_size', '14')}px`, fontWeight: '600', padding: '6px 12px', borderRadius: `${cfg('catalog_badge_discount_radius', '4')}px`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
                         {item.discount_label}
                       </div>
                     )}
@@ -789,7 +809,7 @@ const Catalog = () => {
                       key={imageUrl}
                       src={getImageUrl(imageUrl)}
                       alt={item.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', animation: 'fadeIn 0.4s ease-in-out' }}
+                      style={{ width: '100%', height: '100%', objectFit: cfg('catalog_card_object_fit', 'contain'), objectPosition: 'center', animation: 'fadeIn 0.4s ease-in-out' }}
                       loading="lazy"
                     />
                   ) : (
@@ -888,7 +908,7 @@ const Catalog = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0, flex: 1 }}>
                     <h3
                       onClick={() => navigate(linkUrl)}
-                      style={{ fontSize: '13px', fontWeight: 400, color: 'var(--text-main)', lineHeight: '1.4', margin: 0, cursor: 'pointer' }}
+                      style={{ fontSize: `${cfg('catalog_card_name_size', '13')}px`, fontWeight: parseInt(cfg('catalog_card_name_weight', '400')), color: cfg('catalog_card_name_color', 'var(--text-main)'), lineHeight: '1.4', margin: 0, cursor: 'pointer', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: cfg('catalog_card_name_lines', '2') === 'none' ? 'unset' : cfg('catalog_card_name_lines', '2'), WebkitBoxOrient: 'vertical' }}
                     >
                       {item.name}
                     </h3>
@@ -896,43 +916,43 @@ const Catalog = () => {
                     <div className="catalog-card-price-row">
                       {item.has_discount ? (
                         <>
-                          <span className="catalog-card-price">
+                          <span className="catalog-card-price" style={{ fontSize: `${cfg('catalog_card_price_size', '14')}px`, color: cfg('catalog_card_price_color', 'var(--text-main)') }}>
                             Bs {parseFloat(item.discounted_price || 0).toFixed(2)}
                           </span>
-                          <span className="catalog-card-price-original">
+                          <span className="catalog-card-price-original" style={{ color: cfg('catalog_card_price_old_color', 'var(--text-muted)') }}>
                             Bs {parseFloat(item.base_price || item.price || 0).toFixed(2)}
                           </span>
                         </>
                       ) : (
-                        <span className="catalog-card-price">
+                        <span className="catalog-card-price" style={{ fontSize: `${cfg('catalog_card_price_size', '14')}px`, color: cfg('catalog_card_price_color', 'var(--text-main)') }}>
                           Bs {parseFloat(item.base_price || item.price || 0).toFixed(2)}
                         </span>
                       )}
                     </div>
                     {/* COLOR SWATCHES */}
-                    {!item.is_bundle && getAvailableColors(item).length > 0 && (
+                    {cfg('catalog_show_swatches', '1') !== '0' && !item.is_bundle && getAvailableColors(item).length > 0 && (
                       <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        {getAvailableColors(item).slice(0, 5).map((c, idx) => (
+                        {getAvailableColors(item).slice(0, parseInt(cfg('catalog_max_swatches', '5'))).map((c, idx) => (
                           <div
                             key={idx}
                             title={c.name}
                             style={{
-                              width: '13px', height: '13px', borderRadius: '50%',
+                              width: `${cfg('catalog_swatch_size', '13')}px`, height: `${cfg('catalog_swatch_size', '13')}px`, borderRadius: '50%',
                               border: '1px solid var(--border-color)',
                               backgroundImage: `url(${getImageUrl(c.image)})`,
                               backgroundSize: 'cover', backgroundPosition: 'center',
                             }}
                           />
                         ))}
-                        {getAvailableColors(item).length > 5 && (
-                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - 5}</span>
+                        {getAvailableColors(item).length > parseInt(cfg('catalog_max_swatches', '5')) && (
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - parseInt(cfg('catalog_max_swatches', '5'))}</span>
                         )}
                       </div>
                     )}
                   </div>
 
                   {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
-                  {!item.is_bundle && quickAddProductId !== item.id && (
+                  {cfg('catalog_show_quick_add', '1') !== '0' && !item.is_bundle && quickAddProductId !== item.id && (
                     <button
                       className="catalog-card-add-btn"
                       onClick={(e) => {
@@ -960,7 +980,16 @@ const Catalog = () => {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   return (
-    <div className="catalog-container" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px 80px', animation: 'pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+    <div className="catalog-container" style={{
+      maxWidth: `${cfg('catalog_max_width', '1280')}px`,
+      margin: '0 auto',
+      padding: '0 16px 80px',
+      animation: 'pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+      '--catalog-cols-desktop': cfg('catalog_grid_cols_desktop', '3'),
+      '--catalog-cols-tablet': cfg('catalog_grid_cols_tablet', '2'),
+      '--catalog-cols-mobile': cfg('catalog_grid_cols_mobile', '2'),
+      '--catalog-grid-gap': `${cfg('catalog_grid_gap', '24')}px`,
+    }}>
       {/* ── OVERLAY FILTROS MÓVIL ── */}
       {isMobileFiltersOpen && (
         <>
@@ -1037,14 +1066,14 @@ const Catalog = () => {
       {/* ── HEADER: Título + Controles ── */}
       <div className="catalog-header">
         <h1 className="catalog-title" style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-          Catálogo
+          {cfg('catalog_title', 'Catálogo')}
         </h1>
 
         {/* Breadcrumbs — solo visibles en móvil, bajo el título */}
         <nav className="catalog-header-breadcrumb">
-          <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Inicio</Link>
+          <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>{cfg('catalog_breadcrumb_home', 'Inicio')}</Link>
           <span className="catalog-breadcrumb-sep">›</span>
-          <span style={{ color: 'var(--text-main)' }}>Catálogo</span>
+          <span style={{ color: 'var(--text-main)' }}>{cfg('catalog_title', 'Catálogo')}</span>
           {selectedCategory && (
             <>
               <span className="catalog-breadcrumb-sep">›</span>
@@ -1066,58 +1095,60 @@ const Catalog = () => {
           </button>
 
           {/* Vista: Por Prendas / Por Productos — orden 2 en móvil (sube al lado de Filtros) */}
-          <div className="catalog-view-controls">
-            <button
-              onClick={() => { setViewMode('prendas'); setExpandedProductId(null); }}
-              style={{
-                background: 'none', border: 'none', padding: '0 0 3px 0', cursor: 'pointer',
-                color: viewMode === 'prendas' ? 'var(--text-main)' : 'var(--text-muted)',
-                borderBottom: viewMode === 'prendas' ? '1px solid var(--text-main)' : '1px solid transparent',
-                transition: 'all 0.2s ease', outline: 'none',
-                fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
-              }}
-            >
-              Por Prendas
-            </button>
-            <button
-              onClick={() => setViewMode('producto')}
-              style={{
-                background: 'none', border: 'none', padding: '0 0 3px 0', cursor: 'pointer',
-                color: viewMode === 'producto' ? 'var(--text-main)' : 'var(--text-muted)',
-                borderBottom: viewMode === 'producto' ? '1px solid var(--text-main)' : '1px solid transparent',
-                transition: 'all 0.2s ease', outline: 'none',
-                fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
-              }}
-            >
-              Por Productos
-            </button>
-          </div>
+          {cfg('catalog_show_view_toggle', '1') !== '0' && (
+            <div className="catalog-view-controls">
+              <button
+                onClick={() => { setViewMode('prendas'); setExpandedProductId(null); }}
+                style={{
+                  background: 'none', border: 'none', padding: '0 0 3px 0', cursor: 'pointer',
+                  color: (viewMode || 'prendas') === 'prendas' ? 'var(--text-main)' : 'var(--text-muted)',
+                  borderBottom: (viewMode || 'prendas') === 'prendas' ? '1px solid var(--text-main)' : '1px solid transparent',
+                  transition: 'all 0.2s ease', outline: 'none',
+                  fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
+                }}
+              >
+                {cfg('catalog_label_prendas', 'Por Prendas')}
+              </button>
+              <button
+                onClick={() => setViewMode('producto')}
+                style={{
+                  background: 'none', border: 'none', padding: '0 0 3px 0', cursor: 'pointer',
+                  color: (viewMode || 'prendas') === 'producto' ? 'var(--text-main)' : 'var(--text-muted)',
+                  borderBottom: (viewMode || 'prendas') === 'producto' ? '1px solid var(--text-main)' : '1px solid transparent',
+                  transition: 'all 0.2s ease', outline: 'none',
+                  fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
+                }}
+              >
+                {cfg('catalog_label_productos', 'Por Productos')}
+              </button>
+            </div>
+          )}
 
           {/* Modo imagen: Presentación / Vívido — orden 3 en móvil (baja a su propia fila) */}
-          {viewMode === 'prendas' && (
+          {(viewMode || 'prendas') === 'prendas' && cfg('catalog_show_image_toggle', '1') !== '0' && (
             <div className="catalog-image-controls">
               <button
                 onClick={() => setImageMode('presentacion')}
                 style={{
                   background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                  color: imageMode === 'presentacion' ? 'var(--text-main)' : 'var(--text-muted)',
+                  color: (imageMode || 'presentacion') === 'presentacion' ? 'var(--text-main)' : 'var(--text-muted)',
                   transition: 'color 0.2s ease', outline: 'none', fontWeight: 'inherit',
                   fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
                 }}
               >
-                Presentación
+                {cfg('catalog_label_presentacion', 'Presentación')}
               </button>
               <span style={{ color: 'var(--border-color)' }}>/</span>
               <button
                 onClick={() => setImageMode('vivido')}
                 style={{
                   background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                  color: imageMode === 'vivido' ? 'var(--text-main)' : 'var(--text-muted)',
+                  color: (imageMode || 'presentacion') === 'vivido' ? 'var(--text-main)' : 'var(--text-muted)',
                   transition: 'color 0.2s ease', outline: 'none', fontWeight: 'inherit',
                   fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
                 }}
               >
-                Vívido
+                {cfg('catalog_label_vivido', 'Vívido')}
               </button>
             </div>
           )}
@@ -1126,17 +1157,18 @@ const Catalog = () => {
 
       <section aria-labelledby="products-heading" style={{ paddingBottom: '60px', paddingTop: '24px' }}>
         <h2 id="products-heading" className="sr-only">Productos</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '40px', alignItems: 'start', position: 'relative' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `${cfg('catalog_sidebar_width', '220')}px 1fr`, gap: `${cfg('catalog_sidebar_gap', '40')}px`, alignItems: 'start', position: 'relative' }}>
 
           {/* ── SIDEBAR FILTROS (solo desktop) ── */}
           <form style={{ display: 'block' }} className="catalog-sidebar">
             <h3 className="sr-only">Filtros</h3>
 
             {/* Buscador */}
+            {cfg('catalog_show_search', '1') !== '0' && (
             <div style={{ marginBottom: '24px' }}>
               <input
                 type="text"
-                placeholder="Buscar producto..."
+                placeholder={cfg('catalog_search_placeholder', 'Buscar producto...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -1149,12 +1181,14 @@ const Catalog = () => {
                 onBlur={(e) => e.target.style.borderBottom = '1px solid var(--border-color)'}
               />
             </div>
+            )}
 
             {/* Breadcrumbs */}
+            {cfg('catalog_show_breadcrumbs', '1') !== '0' && (
             <nav style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '32px' }}>
-              <Link to="/" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Inicio</Link>
+              <Link to="/" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>{cfg('catalog_breadcrumb_home', 'Inicio')}</Link>
               <span style={{ margin: '0 8px' }}>&gt;</span>
-              <Link to="/shop/catalog" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Catálogo</Link>
+              <Link to="/shop/catalog" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>{cfg('catalog_title', 'Catálogo')}</Link>
               {selectedCategory && (
                 <>
                   <span style={{ margin: '0 8px' }}>&gt;</span>
@@ -1164,16 +1198,18 @@ const Catalog = () => {
                 </>
               )}
             </nav>
+            )}
 
             {/* Categorías */}
+            {cfg('catalog_show_categories', '1') !== '0' && (
             <div style={{ marginBottom: '32px' }}>
-              <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>Categorías</h4>
+              <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>{cfg('catalog_sidebar_categories_title', 'Categorías')}</h4>
               <ul role="list" className="catalog-filter-list" style={{ listStyle: 'none', padding: 0, margin: 0, paddingBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <li>
                   <button type="button" className="catalog-filter-link"
                     onClick={() => { setSelectedCategory(null); setExpandedProductId(null); }}
                     style={{ fontWeight: selectedCategory === null ? 700 : 400, color: selectedCategory === null ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                    Todas las Categorías
+                    {cfg('catalog_sidebar_all_categories', 'Todas las Categorías')}
                   </button>
                 </li>
                 {categories.filter(c => !c.parent_id).map((parent) => {
@@ -1201,10 +1237,12 @@ const Catalog = () => {
                 })}
               </ul>
             </div>
+            )}
 
             {/* Precio */}
+            {cfg('catalog_show_price_filter', '1') !== '0' && (
             <div style={{ marginBottom: '32px' }}>
-              <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>Precio (Bs)</h4>
+              <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>{cfg('catalog_sidebar_price_title', 'Precio (Bs)')}</h4>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="Min"
                   style={{ width: '45%', padding: '6px 0', border: 'none', borderBottom: '1px solid var(--border-color)', backgroundColor: 'transparent', fontSize: '13px', outline: 'none', color: 'var(--text-main)' }}
@@ -1219,21 +1257,24 @@ const Catalog = () => {
                 />
               </div>
             </div>
+            )}
 
             {/* Ordenar por */}
+            {cfg('catalog_show_sort', '1') !== '0' && (
             <div style={{ marginBottom: '24px' }}>
-              <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>Ordenar por</h4>
+              <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>{cfg('catalog_sidebar_sort_title', 'Ordenar por')}</h4>
               <CustomSelect
-                value={sortBy}
+                value={sortBy || 'recomendados'}
                 onChange={e => setSortBy(e.target.value)}
                 style={{ backgroundColor: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', borderRadius: '0', padding: '0' }}
               >
-                <option value="recomendados">Recomendados</option>
-                <option value="price_asc">Precio: Menor a Mayor</option>
-                <option value="price_desc">Precio: Mayor a Menor</option>
-                <option value="name_asc">Nombre: A - Z</option>
+                {cfg('catalog_sort_show_recomendados', '1') !== '0' && <option value="recomendados">Recomendados</option>}
+                {cfg('catalog_sort_show_price_asc', '1') !== '0' && <option value="price_asc">Precio: Menor a Mayor</option>}
+                {cfg('catalog_sort_show_price_desc', '1') !== '0' && <option value="price_desc">Precio: Mayor a Menor</option>}
+                {cfg('catalog_sort_show_name_asc', '1') !== '0' && <option value="name_asc">Nombre: A - Z</option>}
               </CustomSelect>
             </div>
+            )}
           </form>
 
           {/* ── ÁREA DE PRODUCTOS ── */}
@@ -1243,13 +1284,13 @@ const Catalog = () => {
             ) : (
               <>
                 {renderProductGrid()}
-                {visibleCount < processedItems.length && (
+                {cfg('catalog_show_load_more', '1') !== '0' && (visibleCount || 12) < processedItems.length && (
                   <div className="catalog-load-more-wrap">
-                    <button className="catalog-load-more-btn" onClick={() => setVisibleCount(prev => prev + 12)}>
-                      Cargar Más
+                    <button className="catalog-load-more-btn" onClick={() => setVisibleCount(prev => (prev || 12) + parseInt(cfg('catalog_load_more_count', '12'), 10))}>
+                      {cfg('catalog_load_more_text', 'Cargar Más')}
                     </button>
                     <p className="catalog-load-more-count">
-                      Mostrando {visibleCount} de {processedItems.length} productos
+                      Mostrando {visibleCount || 12} de {processedItems.length} productos
                     </p>
                   </div>
                 )}

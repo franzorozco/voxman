@@ -196,8 +196,8 @@
 
 .catalog-products-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(var(--catalog-cols-desktop, 3), 1fr);
+  gap: var(--catalog-grid-gap, 24px);
 }
 
 /* Modo "Por Productos" (expand panel) */
@@ -207,9 +207,9 @@
 
 .catalog-products-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(var(--catalog-cols-desktop, 3), 1fr);
+  gap: var(--catalog-grid-gap, 24px);
+  margin-bottom: var(--catalog-grid-gap, 24px);
 }
 
 /* =============================================================
@@ -509,10 +509,10 @@
     grid-template-columns: 1fr !important;
   }
 
-  /* Grid de 2 columnas en tablet */
+  /* Grid de columnas en tablet */
   .catalog-products-grid,
   .catalog-products-row {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(var(--catalog-cols-tablet, 2), 1fr);
     gap: 16px;
   }
 
@@ -600,10 +600,10 @@
     margin-top: 4px;
   }
 
-  /* Grid 2 columnas en móvil, con gap más pequeño */
+  /* Grid columnas en móvil, con gap más pequeño */
   .catalog-products-grid,
   .catalog-products-row {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(var(--catalog-cols-mobile, 2), 1fr);
     gap: 10px;
   }
 
@@ -665,10 +665,10 @@
     font-size: 1.5rem !important;
   }
 
-  /* Grid 2 col compacto */
+  /* Grid col compacto */
   .catalog-products-grid,
   .catalog-products-row {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(var(--catalog-cols-mobile, 2), 1fr);
     gap: 8px;
   }
 

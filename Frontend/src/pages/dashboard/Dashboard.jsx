@@ -287,6 +287,9 @@ const DashboardLayout = () => {
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/shop-config" icon={Film} label="Config. Shop" />
                 </CanAccess>
+                <CanAccess permission="manage_settings">
+                  <NavItem to="/dashboard/ShopCatalog-config" icon={Store} label="Config. Catálogo" />
+                </CanAccess>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />
                 </CanAccess>
