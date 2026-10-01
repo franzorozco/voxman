@@ -44,7 +44,7 @@ import {
   Settings2
 } from "lucide-react";
 
-export default function DashboardLayout() {
+const DashboardLayout = () => {
 
   const location = useLocation();
 
@@ -275,17 +275,17 @@ export default function DashboardLayout() {
                 <p className="section-title">
                   {!collapsed && "MARKETING"}
                 </p>
-                <CanAccess permission="view_promotions">
-                  <NavItem to="/dashboard/shop-shorts" icon={Film} label="Shorts (Tienda)" />
-                </CanAccess>
                 <CanAccess permission="manage_settings">
-                  <NavItem to="/dashboard/home-config" icon={House} label="Inicio / Hero" />
+                  <NavItem to="/dashboard/home-config" icon={House} label="Config. Home" />
                 </CanAccess>
                 <CanAccess permission="manage_settings">
                   <NavItem to="/dashboard/entregas-config" icon={Truck} label="Config. Entregas" />
                 </CanAccess>
                 <CanAccess permission="manage_settings">
                   <NavItem to="/dashboard/nosotros-config" icon={Users} label="Config. Nosotros" />
+                </CanAccess>
+                <CanAccess permission="view_promotions">
+                  <NavItem to="/dashboard/shop-config" icon={Film} label="Config. Shop" />
                 </CanAccess>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />
@@ -449,5 +449,6 @@ export default function DashboardLayout() {
       </div>
     </>
   );
-}
-// force reload
+};
+
+export default DashboardLayout;

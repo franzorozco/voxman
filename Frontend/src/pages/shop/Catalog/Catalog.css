@@ -711,3 +711,31 @@
     gap: 10px;
   }
 }
+
+/* Sidebar Sticky Behavior for PC */
+@media (min-width: 1025px) {
+  .catalog-view-controls {
+    order: 2;
+  }
+  .catalog-image-controls {
+    order: 1;
+  }
+
+  .catalog-sidebar {
+    position: sticky;
+    top: 100px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-right: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .catalog-sidebar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .catalog-sidebar::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+  }
+}

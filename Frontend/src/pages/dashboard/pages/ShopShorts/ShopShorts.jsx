@@ -16,10 +16,10 @@ import { VideoPlayer } from "../../../../components/ui/videoHelpers";
 
 const TABS = [
   { id: "hero", label: "Hero (Inicio)", icon: <ImageIcon size={15} /> },
-  { id: "categories", label: "Categorías", icon: <Grid size={15} /> },
-  { id: "sections", label: "Secciones", icon: <Layers size={15} /> },
   { id: "collage", label: "Collage", icon: <Grid size={15} /> },
-  { id: "new_arrivals", label: "Novedades", icon: <Star size={15} /> }
+  { id: "categories", label: "Categorías", icon: <Grid size={15} /> },
+  { id: "new_arrivals", label: "Novedades", icon: <Star size={15} /> },
+  { id: "sections", label: "Secciones", icon: <Layers size={15} /> }
 ];
 
 export default function ShopShorts() {
