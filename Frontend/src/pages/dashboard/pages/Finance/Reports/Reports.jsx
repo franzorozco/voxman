@@ -20,6 +20,13 @@ export default function FinanceReports() {
   
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchBranches();
@@ -63,11 +70,11 @@ export default function FinanceReports() {
     if (active && payload && payload.length) {
       return (
         <div style={{ background: 'var(--bg-card)', padding: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-          <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: 'var(--text-main)' }}>{label}</p>
+          <p style={{ margin: "0 0 8px 0", fontWeight: "bold", color: "var(--text-main)" }}>{typeof label === "string" && label.includes("-") ? label.split("-").reverse().join("/") : label}</p>
           {payload.map((entry, index) => (
             <div key={index} style={{ color: entry.color, display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '4px' }}>
               <span>{entry.name}:</span>
-              <span style={{ fontWeight: 'bold' }}>Bs. {Number(entry.value).toFixed(2)}</span>
+              <span style={{ fontWeight: 'bold' }}>Bs. {Number(entry.value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
           ))}
         </div>
@@ -95,46 +102,43 @@ export default function FinanceReports() {
           <p>Métricas financieras, rentabilidad y análisis de flujo general.</p>
         </div>
         
-        <div className="reports-filters">
-          <div className="date-picker-wrapper">
-            <Building size={18} className="date-picker-icon" />
-            <CustomSelect
-              className="date-picker-input"
-              value={selectedBranch}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              style={{ width: '200px' }}
-            >
-              <option value="">Todas las Sucursales</option>
-              {branches.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </CustomSelect>
-          </div>
-          
-          <div className="date-picker-wrapper">
-            <CalendarIcon size={18} className="date-picker-icon" />
-            <DatePicker
-              selectsRange={true}
-              startDate={startDate}
-              endDate={endDate}
-              onChange={(update) => setDateRange(update)}
-              isClearable={true}
-              placeholderText="Filtrar por fecha..."
-              className="date-picker-input"
-              locale={es}
-              dateFormat="dd MMM yyyy"
-            />
-          </div>
-          <button 
-            className="btn-secondary" 
-            onClick={fetchReports}
-            disabled={loading}
-            style={{ padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            title="Actualizar datos"
-          >
-            <RefreshCw size={18} className={loading ? "spin" : ""} />
-          </button>
-        </div>
+        <div className="reports-filters" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', width: isMobile ? '100%' : 'auto' }}>
+  <div style={{ width: isMobile ? '100%' : '200px' }}>
+    <CustomSelect
+      value={selectedBranch}
+      onChange={(e) => setSelectedBranch(e.target.value)}
+      style={{ width: '100%' }}
+    >
+      <option value="">Todas las Sucursales</option>
+      {branches.map(b => (
+        <option key={b.id} value={b.id}>{b.name}</option>
+      ))}
+    </CustomSelect>
+  </div>
+  
+  <div style={{ display: 'flex', gap: '12px', width: isMobile ? '100%' : 'auto' }}>
+    <div className="date-picker-wrapper" style={{ flex: 1 }}>
+      <CalendarIcon size={18} className="date-picker-icon" />
+      <DatePicker
+        selectsRange={true}
+        startDate={startDate}
+        endDate={endDate}
+        onChange={(update) => setDateRange(update)}
+        isClearable={true}
+        placeholderText="Filtrar por fecha..."
+        className="date-picker-input"
+        locale={es}
+        dateFormat="dd/MM/yyyy" wrapperClassName="w-full"
+        style={{ width: '100%' }}
+      />
+    </div>
+    <button className="btn-secondary" onClick={fetchReports} disabled={loading} style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, width: "auto" }}
+      title="Actualizar datos"
+    >
+      <RefreshCw size={18} className={loading ? "spin" : ""} />
+    </button>
+  </div>
+</div>
       </div>
 
       {loading && !data ? (
@@ -143,50 +147,50 @@ export default function FinanceReports() {
         </div>
       ) : (
         <>
-          <div className="kpi-row">
-            <div className="kpi-card">
-              <div className="kpi-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
-                <TrendingUp size={24} />
-              </div>
-              <div className="kpi-info" style={{ flex: 1 }}>
-                <h3>Ventas Brutas Totales</h3>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', justifyContent: 'space-between' }}>
-                  <p>Bs. {data?.summary?.total_sales?.toFixed(2) || '0.00'}</p>
-                  {renderGrowth(data?.summary?.growth?.sales)}
-                </div>
-              </div>
-            </div>
-            
-            <div className="kpi-card">
-              <div className="kpi-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-                <TrendingDown size={24} />
-              </div>
-              <div className="kpi-info" style={{ flex: 1 }}>
-                <h3>Egresos y Gastos</h3>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', justifyContent: 'space-between' }}>
-                  <p>Bs. {data?.summary?.total_expenses?.toFixed(2) || '0.00'}</p>
-                  {renderGrowth(data?.summary?.growth?.expenses)}
-                </div>
-              </div>
-            </div>
+          <div className="kpi-row" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', marginBottom: '24px' }}>
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <TrendingUp size={16} color="var(--color-success)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ventas Brutas Totales</span>
+    </div>
+    <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(data?.summary?.total_sales || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+    {data?.summary?.growth?.sales !== undefined && data?.summary?.growth?.sales !== null && (
+      <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+        {renderGrowth(data.summary.growth.sales)}
+      </div>
+    )}
+  </div>
+  
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <TrendingDown size={16} color="var(--color-danger)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Egresos y Gastos</span>
+    </div>
+    <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(data?.summary?.total_expenses || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+    {data?.summary?.growth?.expenses !== undefined && data?.summary?.growth?.expenses !== null && (
+      <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+        {renderGrowth(data.summary.growth.expenses)}
+      </div>
+    )}
+  </div>
 
-            <div className="kpi-card">
-              <div className="kpi-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
-                <DollarSign size={24} />
-              </div>
-              <div className="kpi-info" style={{ flex: 1 }}>
-                <h3>Utilidad Neta (Ingresos - Gastos)</h3>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', justifyContent: 'space-between' }}>
-                  <p style={{ color: (data?.summary?.net_profit || 0) >= 0 ? '#22c55e' : '#ef4444' }}>
-                    Bs. {data?.summary?.net_profit?.toFixed(2) || '0.00'}
-                  </p>
-                  {renderGrowth(data?.summary?.growth?.profit)}
-                </div>
-              </div>
-            </div>
-          </div>
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <DollarSign size={16} color="var(--color-primary)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Utilidad Neta (Ingresos - Gastos)</span>
+    </div>
+    <div style={{ fontSize: '24px', fontWeight: 700, color: (data?.summary?.net_profit || 0) >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
+      Bs. {Number(data?.summary?.net_profit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+    </div>
+    {data?.summary?.growth?.profit !== undefined && data?.summary?.growth?.profit !== null && (
+      <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+        {renderGrowth(data.summary.growth.profit)}
+      </div>
+    )}
+  </div>
+</div>
 
-          <div className="charts-grid">
+<div className="charts-grid">
             <div className="chart-card" style={{ marginBottom: 0 }}>
               <h3>Flujo Histórico (Ventas vs Egresos)</h3>
               <div className="chart-scroll-container">
@@ -194,7 +198,7 @@ export default function FinanceReports() {
                   <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data?.timeline || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
-                    <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickMargin={10} />
+                    <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickMargin={10} tickFormatter={(val) => val.includes("-") ? val.split("-").reverse().join("/") : val} />
                     <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(val) => `Bs.${val}`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ paddingTop: '10px' }} />
@@ -257,11 +261,11 @@ export default function FinanceReports() {
                 <tbody>
                   {(data?.timeline || []).slice().reverse().map((day, idx) => (
                     <tr key={idx}>
-                      <td>{day.date}</td>
-                      <td style={{ color: '#22c55e', fontWeight: '500' }}>Bs. {day.sales.toFixed(2)}</td>
-                      <td style={{ color: '#ef4444', fontWeight: '500' }}>Bs. {day.expenses.toFixed(2)}</td>
+                      <td>{day.date.split("-").reverse().join("/")}</td>
+                      <td style={{ color: '#22c55e', fontWeight: '500' }}>Bs. {Number(day.sales).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                      <td style={{ color: '#ef4444', fontWeight: '500' }}>Bs. {Number(day.expenses).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       <td style={{ color: day.profit >= 0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>
-                        Bs. {day.profit.toFixed(2)}
+                        Bs. {Number(day.profit).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </td>
                     </tr>
                   ))}
@@ -281,3 +285,11 @@ export default function FinanceReports() {
     </div>
   );
 }
+
+
+
+
+
+
+
+

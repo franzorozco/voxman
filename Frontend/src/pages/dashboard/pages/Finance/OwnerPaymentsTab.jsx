@@ -11,6 +11,13 @@ import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function OwnerPaymentsTab() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -102,33 +109,33 @@ export default function OwnerPaymentsTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Summary Cards */}
-      <div className="dashboard-summary-cards">
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-success)' }}>
-            <ArrowDownCircle size={20} />
-            <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)' }}>Total Inyectado</h3>
-          </div>
-          <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: 'var(--text-main)' }}>Bs. {summary.totalDeposits.toFixed(2)}</p>
-        </div>
-        
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-warning)' }}>
-            <ArrowUpCircle size={20} />
-            <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)' }}>Total Retirado</h3>
-          </div>
-          <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: 'var(--text-main)' }}>Bs. {summary.totalWithdrawals.toFixed(2)}</p>
-        </div>
+      <div className="dashboard-summary-cards" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px' }}>
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <ArrowDownCircle size={16} color="var(--color-success)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Inyectado</span>
+    </div>
+    <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {summary.totalDeposits.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+  </div>
+  
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <ArrowUpCircle size={16} color="var(--color-warning)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Retirado</span>
+    </div>
+    <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {summary.totalWithdrawals.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+  </div>
 
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)' }}>
-            <List size={20} />
-            <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)' }}>Balance Neto</h3>
-          </div>
-          <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: summary.netBalance >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
-            {summary.netBalance >= 0 ? '+' : '-'} Bs. {Math.abs(summary.netBalance).toFixed(2)}
-          </p>
-        </div>
-      </div>
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <List size={16} color="var(--color-primary)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Balance Neto</span>
+    </div>
+    <div style={{ fontSize: '24px', fontWeight: 700, color: summary.netBalance >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
+      {summary.netBalance >= 0 ? '+' : '-'} Bs. {Math.abs(summary.netBalance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+    </div>
+  </div>
+</div>
            {/* Action Bar */}
       <div className="responsive-header" style={{ marginTop: '20px' }}>
         <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-overlay)', padding: '4px', borderRadius: '8px' }}>
@@ -322,3 +329,4 @@ export default function OwnerPaymentsTab() {
     </div>
   );
 }
+

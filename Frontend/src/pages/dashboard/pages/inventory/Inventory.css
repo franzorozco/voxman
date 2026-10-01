@@ -243,3 +243,127 @@
 .no-spinners {
   -moz-appearance: textfield; /* Firefox */
 }
+
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 0 !important;
+  }
+  .header-actions > div:first-child {
+    width: 100%;
+  }
+  .header-actions > div:first-child button {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .inventory-action-buttons {
+    width: 100%;
+  }
+  .inventory-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .audit-table-wrapper {
+    overflow-x: hidden !important;
+    border: none !important;
+  }
+  .audit-table {
+    min-width: 100% !important;
+    width: 100% !important;
+    display: block;
+  }
+  .audit-table thead {
+    display: none;
+  }
+  .audit-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .audit-table tr.audit-product-row {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .audit-table tr.audit-product-row td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border-color) !important;
+    padding: 12px 16px !important;
+  }
+  .audit-table tr.audit-variant-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: 
+      "name name name"
+      "sku sku sku"
+      "teo fis dif";
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    background: var(--bg-main) !important;
+  }
+  .audit-table tr.audit-variant-row:last-child {
+    border-radius: 0 0 8px 8px;
+  }
+  .audit-table tr.audit-variant-row.is-audited {
+    background: var(--bg-input) !important;
+  }
+  .audit-table tr.audit-variant-row td {
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .audit-table tr.audit-variant-row td:nth-child(1) { 
+    grid-area: name; 
+    align-items: flex-start;
+  }
+  .audit-table tr.audit-variant-row td:nth-child(2) { 
+    grid-area: sku; 
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .audit-table tr.audit-variant-row td:nth-child(3) { grid-area: teo; }
+  .audit-table tr.audit-variant-row td:nth-child(4) { grid-area: fis; }
+  .audit-table tr.audit-variant-row td:nth-child(5) { grid-area: dif; }
+  
+  .audit-table tr.audit-variant-row td:nth-child(3)::before,
+  .audit-table tr.audit-variant-row td:nth-child(4)::before,
+  .audit-table tr.audit-variant-row td:nth-child(5)::before {
+    content: attr(data-label);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+  .audit-table tr.audit-variant-row td:nth-child(3),
+  .audit-table tr.audit-variant-row td:nth-child(4),
+  .audit-table tr.audit-variant-row td:nth-child(5) {
+    background: var(--bg-card);
+    padding: 10px 4px !important;
+    border-radius: 8px;
+    border: 1px solid var(--border-color) !important;
+    justify-content: center;
+    align-items: center;
+  }
+  .audit-table tr.audit-variant-row input {
+    width: 100% !important;
+    max-width: 60px;
+    padding: 6px !important;
+  }
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Trash2, Edit, Truck, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { Eye } from "lucide-react";
+import { Eye, MoreVertical } from "lucide-react";
 import { getSuppliers, deleteSupplier, getSupplierStats } from "../../../../api/admin/suppliers";
 import SupplierModal from "./SupplierModal";
 import { Link, useNavigate } from "react-router-dom";
@@ -16,6 +16,14 @@ export default function Suppliers() {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const navigate = useNavigate();
 
   const fetchSuppliers = async () => {
@@ -70,46 +78,50 @@ export default function Suppliers() {
           Proveedores
         </h1>
 
-        <div className="header-actions" style={{ display: 'flex', gap: '10px' }}>
-          <Link to="/dashboard/suppliers/returns" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="suppliers-action-buttons" style={{ display: 'flex', flex: isMobile ? 1 : 'unset', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
+          <Link to="/dashboard/suppliers/returns" className="btn-secondary" style={{ display: 'flex', flex: isMobile ? 1 : 'unset', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
             <RotateCcw size={18} />
             <span className="hide-on-mobile">Devoluciones</span>
           </Link>
-          <Link to="/dashboard/suppliers/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link to="/dashboard/suppliers/deleted" className="btn-secondary" style={{ display: 'flex', flex: isMobile ? 1 : 'unset', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
             <Trash2 size={18} />
             <span className="hide-on-mobile">Papelera</span>
           </Link>
           <CanAccess permission="create_suppliers">
-            <button className="btn-primary" onClick={() => openModal()} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button className="btn-primary" onClick={() => openModal()} style={{ display: 'flex', flex: isMobile ? 1 : 'unset', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
               <Plus size={18} />
-              <span className="hide-on-mobile">Nuevo Proveedor</span>
+              <span className="hide-on-mobile">Agregar</span>
             </button>
           </CanAccess>
+          <button onClick={fetchSuppliers} className="btn-secondary" style={{ display: 'flex', flex: isMobile ? 1 : 'unset', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            <span className="hide-on-mobile">Actualizar</span>
+          </button>
         </div>
       </div>
 
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', marginBottom: '24px' }}>
           <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Building2 size={16} color="var(--color-primary)" />
               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Proveedores</span>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Building2 size={16} /></div>
             </div>
             <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.total_suppliers}</div>
           </div>
           
           <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Truck size={16} color="var(--color-success)" />
               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Proveedores Activos</span>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Truck size={16} /></div>
             </div>
             <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.active_suppliers}</div>
           </div>
 
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <DollarSign size={16} color="var(--color-warning)" />
               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Compras de este mes</span>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(245,158,11,0.1)', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DollarSign size={16} /></div>
             </div>
             <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.purchases_this_month).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
           </div>
@@ -127,13 +139,6 @@ export default function Suppliers() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button 
-            onClick={fetchSuppliers}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
-          >
-            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-            <span className="hide-on-mobile">Actualizar</span>
-          </button>
         </div>
       </div>
 
@@ -161,9 +166,88 @@ export default function Suppliers() {
             ) : (
               suppliers.map((supplier) => (
                 <tr key={supplier.id}>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{supplier.name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{supplier.company_name}</div>
+                  <td style={{ position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+                        <button 
+                          className="btn-icon" 
+                          style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdown(activeDropdown === supplier.id ? null : supplier.id);
+                          }}
+                        >
+                          <MoreVertical size={20} />
+                        </button>
+                        
+                        {activeDropdown === supplier.id && (
+                          <>
+                            <div 
+                              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDropdown(null);
+                              }}
+                            />
+                            <div 
+                              style={{
+                                position: 'absolute',
+                                left: '10px',
+                                top: '40px',
+                                background: 'var(--bg-card)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                zIndex: 99,
+                                minWidth: '150px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              <CanAccess permission="view_suppliers">
+                                <button
+                                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px' }}
+                                  onClick={() => {
+                                    navigate(`/dashboard/suppliers/${supplier.id}`);
+                                    setActiveDropdown(null);
+                                  }}
+                                >
+                                  <Eye size={16} /> Ver Perfil
+                                </button>
+                              </CanAccess>
+                              <CanAccess permission="edit_suppliers">
+                                <button
+                                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px' }}
+                                  onClick={() => {
+                                    openModal(supplier);
+                                    setActiveDropdown(null);
+                                  }}
+                                >
+                                  <Edit size={16} /> Editar
+                                </button>
+                              </CanAccess>
+                              <CanAccess permission="delete_suppliers">
+                                <button
+                                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--color-danger)', width: '100%', textAlign: 'left', fontSize: '14px' }}
+                                  onClick={() => {
+                                    handleDelete(supplier.id);
+                                    setActiveDropdown(null);
+                                  }}
+                                >
+                                  <Trash2 size={16} /> Eliminar
+                                </button>
+                              </CanAccess>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{supplier.name}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{supplier.company_name}</div>
+                      </div>
+                    </div>
                   </td>
                   <td>
                     <div>{supplier.contact_name || "-"}</div>
@@ -177,34 +261,35 @@ export default function Suppliers() {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <CanAccess permission="view_suppliers">
-                      <button
-                        className="btn-edit"
-                        style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', marginRight: '5px' }}
-                        onClick={() => navigate(`/dashboard/suppliers/${supplier.id}`)}
-                        title="Ver Perfil"
-                      >
-                        <Eye size={16} />
-                      </button>
-                    </CanAccess>
-                    <CanAccess permission="edit_suppliers">
-                      <button
-                        className="btn-edit"
-                        onClick={() => openModal(supplier)}
-                        title="Editar"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    </CanAccess>
-                    <CanAccess permission="delete_suppliers">
-                      <button
-                        className="btn-delete"
-                        onClick={() => handleDelete(supplier.id)}
-                        title="Eliminar"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </CanAccess>
+                    <div className="hide-on-mobile action-buttons">
+                      <CanAccess permission="view_suppliers">
+                        <button
+                          className="btn-icon btn-view"
+                          onClick={() => navigate(`/dashboard/suppliers/${supplier.id}`)}
+                          title="Ver Perfil"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </CanAccess>
+                      <CanAccess permission="edit_suppliers">
+                        <button
+                          className="btn-icon btn-edit"
+                          onClick={() => openModal(supplier)}
+                          title="Editar"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      </CanAccess>
+                      <CanAccess permission="delete_suppliers">
+                        <button
+                          className="btn-icon btn-delete"
+                          onClick={() => handleDelete(supplier.id)}
+                          title="Eliminar"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </CanAccess>
+                    </div>
                   </td>
                 </tr>
               ))

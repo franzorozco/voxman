@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Eye, MoreVertical } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getOwners, deleteOwner } from "../../../../api/admin/owners";
 import OwnerModal from "./OwnerModal";
@@ -13,6 +13,14 @@ export default function Owners() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchOwners = async () => {
     try {
@@ -106,7 +114,7 @@ export default function Owners() {
                 <th>Productos</th>
                 <th>Fecha Registro</th>
                 <th>Estado</th>
-                <th style={{ textAlign: "center" }}>Acciones</th>
+                <th style={{ textAlign: "center", display: isMobile ? "none" : "table-cell" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -121,12 +129,75 @@ export default function Owners() {
 
                   return (
                     <tr key={owner.id}>
-                      <td data-label="Socio">
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{fullName}</span>
-                          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{owner.user?.email || "Sin correo"}</span>
-                        </div>
-                      </td>
+                      <td data-label="Socio" style={{ position: 'relative' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+      <button 
+        className="btn-icon" 
+        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setActiveDropdown(activeDropdown === owner.id ? null : owner.id);
+        }}
+      >
+        <MoreVertical size={20} />
+      </button>
+      
+      {activeDropdown === owner.id && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveDropdown(null);
+            }}
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '40px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 99,
+              minWidth: '150px',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '4px'
+            }}
+          >
+            <button 
+              onClick={() => { window.location.href = "/dashboard/owners/" + owner.id; setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+            >
+              <Eye size={16} /> Ver Perfil
+            </button>
+            <CanAccess permission="manage_owners">
+              <button 
+                onClick={() => { handleEdit(owner); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+              >
+                <Edit size={16} /> Editar
+              </button>
+              <button 
+                onClick={() => { handleDelete(owner.id); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-danger)', width: '100%', fontSize: '14px' }}
+              >
+                <Trash2 size={16} /> Eliminar
+              </button>
+            </CanAccess>
+          </div>
+        </>
+      )}
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{fullName}</span>
+      <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{owner.user?.email || "Sin correo"}</span>
+    </div>
+  </div>
+</td>
                       <td data-label="Contacto">
                         <span style={{ fontSize: '14px', color: 'var(--text-main)' }}>
                           {profile.phone || "No especificado"}
@@ -157,7 +228,7 @@ export default function Owners() {
                           {owner.is_active ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      <td data-label="Acciones">
+                      <td data-label="Acciones" className={isMobile ? "hide-on-mobile" : ""} style={{ display: isMobile ? "none" : "table-cell" }}>
                         <div style={{ display: "flex", gap: "8px", justifyContent: "center", alignItems: 'center' }}>
                           <button 
                             className="btn-icon" 
@@ -207,3 +278,11 @@ export default function Owners() {
     </div>
   );
 }
+
+
+
+
+
+
+
+

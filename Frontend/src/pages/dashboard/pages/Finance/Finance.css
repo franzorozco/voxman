@@ -3923,12 +3923,9 @@ select option:focus {
   .finance-page {
     padding: 10px !important;
   }
-  .treasury-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .owners-grid.active {
-    grid-template-columns: 1fr !important;
-  }
+  .treasury-grid { grid-template-columns: 1fr 1fr !important; }
+  .treasury-grid > div:last-child { grid-column: 1 / -1; }
+  .owners-grid.active { grid-template-columns: 1fr !important; }
   .responsive-header, .tab-header-flex {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -3942,9 +3939,7 @@ select option:focus {
   .responsive-filters > div, .responsive-filters select, .responsive-filters button {
     width: 100% !important;
   }
-  .dashboard-summary-cards {
-    grid-template-columns: 1fr !important;
-  }
+  
 }
 
 
@@ -3969,12 +3964,8 @@ select option:focus {
   .owner-details-header {
     grid-template-columns: 1fr;
   }
-  .branches-grid {
-    grid-template-columns: 1fr;
-  }
-  .metrics-grid {
-    grid-template-columns: 1fr;
-  }
+  .branches-grid { grid-template-columns: 1fr 1fr; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
   .products-table {
     font-size: 12px;
   }
@@ -4040,11 +4031,7 @@ select option:focus {
 }
 
 /* Branch Breakdown Grid */
-.branch-breakdown-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
+.branch-breakdown-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; } @media (max-width: 768px) { .branch-breakdown-grid { grid-template-columns: 1fr 1fr; gap: 10px; } }
 
 /* Owner Tabs Container */
 .owner-tabs-container {
@@ -4155,3 +4142,10 @@ select option:focus {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+
+
+
+
+

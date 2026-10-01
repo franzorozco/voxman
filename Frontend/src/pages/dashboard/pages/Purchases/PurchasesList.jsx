@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, FileText, XCircle, RefreshCw, Eye, Package, Filter } from "lucide-react";
+import { Plus, Search, FileText, XCircle, RefreshCw, Eye, Package, Filter, MoreVertical } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getPurchases, cancelPurchase, getPurchaseStats } from "../../../../api/admin/purchases";
 import { Link } from "react-router-dom";
@@ -18,6 +18,14 @@ export default function PurchasesList() {
   const [statusFilter, setStatusFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchPurchases = async () => {
     try {
@@ -180,13 +188,93 @@ export default function PurchasesList() {
             ) : (
               purchases.map((purchase) => (
                 <tr key={purchase.id}>
-                  <td>{new Date(purchase.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{purchase.supplier?.name || "Desconocido"}</div>
-                  </td>
-                  <td>{purchase.branch?.name || "-"}</td>
-                  <td>{purchase.invoice_number || "-"}</td>
-                  <td style={{ fontWeight: 600 }}>${Number(purchase.total).toFixed(2)}</td>
+                  <td style={{ position: 'relative' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+      <button 
+        className="btn-icon" 
+        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setActiveDropdown(activeDropdown === purchase.id ? null : purchase.id);
+        }}
+      >
+        <MoreVertical size={20} />
+      </button>
+      
+      {activeDropdown === purchase.id && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveDropdown(null);
+            }}
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '40px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 99,
+              minWidth: '200px',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
+            <button
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px' }}
+              onClick={() => {
+                setSelectedPurchase(purchase);
+                setActiveDropdown(null);
+              }}
+            >
+              <Eye size={16} /> Ver Detalles
+            </button>
+
+            <CanAccess permission="receive_inventory">
+              {purchase.status === 'pending' && (
+                <Link
+                  to={`/dashboard/purchases/receive/${purchase.id}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px', textDecoration: 'none' }}
+                  onClick={() => setActiveDropdown(null)}
+                >
+                  <Package size={16} /> Recepcionar
+                </Link>
+              )}
+            </CanAccess>
+
+            <CanAccess permission="cancel_purchases">
+              {purchase.status === 'pending' && (
+                <button
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--color-danger)', width: '100%', textAlign: 'left', fontSize: '14px' }}
+                  onClick={() => {
+                    handleCancel(purchase.id);
+                    setActiveDropdown(null);
+                  }}
+                >
+                  <XCircle size={16} /> Anular Compra
+                </button>
+              )}
+            </CanAccess>
+          </div>
+        </>
+      )}
+    </div>
+    <div>{new Date(purchase.created_at).toLocaleDateString()}</div>
+  </div>
+</td>
+<td>
+  <div style={{ fontWeight: 600 }}>{purchase.supplier?.name || "Desconocido"}</div>
+</td>
+<td>{purchase.branch?.name || "-"}</td>
+<td>{purchase.invoice_number || "-"}</td>
+<td style={{ fontWeight: 600 }}>Bs. {Number(purchase.total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                       <span className={`status-badge status-${purchase.status}`}>
@@ -200,7 +288,7 @@ export default function PurchasesList() {
                     </div>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <div className="hide-on-mobile action-buttons" style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
                       <button
                         className="btn-view"
                         onClick={() => setSelectedPurchase(purchase)}
@@ -243,3 +331,5 @@ export default function PurchasesList() {
     </div>
   );
 }
+
+

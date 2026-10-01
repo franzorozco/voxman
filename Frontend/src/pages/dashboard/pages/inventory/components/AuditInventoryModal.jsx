@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Search, Save, AlertCircle, Package, Check, Camera } from "lucide-react";
+import { X, Search, Save, AlertCircle, Package, Check, Camera, ChevronDown, ChevronUp } from "lucide-react";
 import { getInventory, submitInventoryAudit } from "../../../../../api/admin/inventory";
 import { toast } from "react-hot-toast";
 import useScanner from "../../../../../hooks/useScanner";
@@ -11,6 +11,12 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [showWarning, setShowWarning] = useState(true);
+  const [expandedProducts, setExpandedProducts] = useState({});
+
+  const toggleProduct = (pId) => {
+    setExpandedProducts(prev => ({ ...prev, [pId]: !prev[pId] }));
+  };
 
   const openScanner = useScannerStore(state => state.openScanner);
 
@@ -187,6 +193,39 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
   const displayItems = isSearching ? searchResults : Object.values(auditedItems).map(a => a.item);
   const groupedDisplay = groupItems(displayItems);
 
+  const formatVariantAttributes = (variant) => {
+    if (!variant) return "Única";
+    
+    let parts = [];
+    if (variant.size?.name) {
+      parts.push(`Talla: ${variant.size.name}`);
+    }
+
+    const attrs = variant.variant_attribute_values || [];
+    const sortedAttrs = [...attrs].sort((a, b) => {
+      const nameA = (a.attribute_value?.attribute?.name || "").toLowerCase();
+      const nameB = (b.attribute_value?.attribute?.name || "").toLowerCase();
+      
+      const isColorA = nameA.includes("color");
+      const isColorB = nameB.includes("color");
+      
+      if (isColorA && !isColorB) return -1;
+      if (!isColorA && isColorB) return 1;
+      return 0;
+    });
+
+    sortedAttrs.forEach(attr => {
+      const name = attr.attribute_value?.attribute?.name || "Atributo";
+      const value = attr.attribute_value?.value;
+      if (value) {
+        if (name.toLowerCase() === 'talla' && variant.size?.name) return;
+        parts.push(`${name}: ${value}`);
+      }
+    });
+
+    return parts.length > 0 ? parts.join(" - ") : "Única";
+  };
+
   if (!branchId) {
     return (
       <div className="modal-overlay" style={{ zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
@@ -217,10 +256,15 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
 
         <div className="modal-body" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
           
-          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--color-secondary)', padding: '12px 16px', borderRadius: '8px', color: 'var(--color-warning)', gap: '10px', border: '1px solid var(--border-color)' }}>
-            <AlertCircle size={20} style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: '13px', color: 'var(--text-main)' }}><strong>Auditoría por Búsqueda:</strong> Busca los productos, ingresa su conteo real y se guardarán en tu lista de auditados. Al finalizar, presiona Guardar.</span>
-          </div>
+          {showWarning && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', background: 'var(--color-secondary)', padding: '12px 16px', borderRadius: '8px', color: 'var(--color-warning)', gap: '10px', border: '1px solid var(--border-color)', position: 'relative' }}>
+              <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <span style={{ fontSize: '13px', color: 'var(--text-main)', flex: 1, paddingRight: '20px' }}><strong>Auditoría por Búsqueda:</strong> Busca los productos, ingresa su conteo real y se guardarán en tu lista de auditados. Al finalizar, presiona Guardar.</span>
+              <button onClick={() => setShowWarning(false)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: 1 }}>
@@ -230,7 +274,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
                 placeholder="Busca un producto por nombre o SKU para auditarlo..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ width: '100%', padding: '14px 14px 14px 38px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', fontSize: '15px' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '14px 14px 14px 38px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', fontSize: '15px' }}
               />
             </div>
             <button
@@ -251,8 +295,8 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
               <p style={{ margin: '8px 0 0 0', fontSize: '13px', maxWidth: '300px' }}>Usa el buscador para añadir productos y ajustar su stock real.</p>
             </div>
           ) : (
-            <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', overflowX: 'auto', flex: 1, minHeight: 0, background: 'var(--bg-card)' }}>
-              <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'auto' }}>
+            <div className="audit-table-wrapper" style={{ border: '1px solid var(--border-color)', borderRadius: '12px', overflowX: 'auto', flex: 1, minHeight: 0, background: 'var(--bg-card)' }}>
+              <table className="audit-table" style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', tableLayout: 'auto' }}>
                 <thead style={{ background: 'var(--bg-card)', position: 'sticky', top: 0, zIndex: 1 }}>
                   <tr>
                     <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>Producto / Variante</th>
@@ -268,16 +312,23 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
                   ) : Object.keys(groupedDisplay).length === 0 ? (
                     <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>No se encontraron productos.</td></tr>
                   ) : (
-                    Object.values(groupedDisplay).map(group => (
-                      <React.Fragment key={group.product?.id || Math.random()}>
+                    Object.values(groupedDisplay).map(group => {
+                      const pId = group.product?.id || Math.random();
+                      const isExpanded = expandedProducts[pId] !== undefined ? expandedProducts[pId] : !isSearching;
+                      
+                      return (
+                      <React.Fragment key={pId}>
                         {/* Fila de Agrupación del Producto */}
-                        <tr style={{ background: 'var(--color-secondary)' }}>
+                        <tr className="audit-product-row" onClick={() => toggleProduct(pId)} style={{ background: 'var(--color-secondary)', cursor: 'pointer', transition: 'background 0.2s' }}>
                           <td colSpan="5" style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)' }}>
-                            {group.product?.name || "Producto Desconocido"}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span>{group.product?.name || "Producto Desconocido"}</span>
+                              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </div>
                           </td>
                         </tr>
                         {/* Filas de las Variantes */}
-                        {group.items.map(item => {
+                        {isExpanded && group.items.map(item => {
                           const variantId = item.variant_id;
                           const theoryStock = item.stock;
                           
@@ -289,20 +340,18 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
                           const isAudited = audited !== undefined;
                           
                           return (
-                            <tr key={item.id} style={{ background: isAudited ? 'var(--bg-input)' : 'var(--bg-main)', borderBottom: '1px solid var(--border-color)' }}>
-                              <td style={{ padding: '12px 16px', paddingLeft: '32px', fontSize: '13px', fontWeight: 500, color: 'var(--text-main)' }}>
+                            <tr className={`audit-variant-row ${isAudited ? 'is-audited' : ''}`} key={item.id} style={{ background: isAudited ? 'var(--bg-input)' : 'var(--bg-main)', borderBottom: '1px solid var(--border-color)' }}>
+                              <td data-label="Variante" style={{ padding: '12px 16px', paddingLeft: '32px', fontSize: '13px', fontWeight: 500, color: 'var(--text-main)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   {isAudited && <Check size={14} color="var(--color-success)" />}
                                   <span>
-                                    {item.variant?.size?.name && `${item.variant.size.name}`}
-                                    {item.variant?.variant_attribute_values?.[0]?.attribute_value?.value && ` - ${item.variant.variant_attribute_values[0].attribute_value.value}`}
-                                    {(!item.variant?.size?.name && !item.variant?.variant_attribute_values?.length) && "Única"}
+                                    {formatVariantAttributes(item.variant)}
                                   </span>
                                 </div>
                               </td>
-                              <td style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{item.variant?.sku}</td>
-                              <td style={{ padding: '12px 16px', fontSize: '14px', textAlign: 'center', color: 'var(--text-main)' }}>{theoryStock}</td>
-                              <td style={{ padding: '8px 16px', textAlign: 'center' }}>
+                              <td data-label="SKU" style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{item.variant?.sku}</td>
+                              <td data-label="Teórico" style={{ padding: '12px 16px', fontSize: '14px', textAlign: 'center', color: 'var(--text-main)' }}>{theoryStock}</td>
+                              <td data-label="Físico" style={{ padding: '8px 16px', textAlign: 'center' }}>
                                 <input
                                   type="number"
                                   min="0"
@@ -312,14 +361,15 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
                                   style={{ width: '80px', padding: '8px', textAlign: 'center', borderRadius: '6px', border: '1px solid var(--border-color)', background: isAudited ? 'var(--bg-card)' : 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', fontWeight: 600 }}
                                 />
                               </td>
-                              <td style={{ padding: '12px 16px', fontSize: '14px', textAlign: 'center', fontWeight: 'bold', color: diff > 0 ? 'var(--color-success)' : diff < 0 ? 'var(--color-danger)' : 'var(--text-muted)' }}>
+                              <td data-label="Diferencia" style={{ padding: '12px 16px', fontSize: '14px', textAlign: 'center', fontWeight: 'bold', color: diff > 0 ? 'var(--color-success)' : diff < 0 ? 'var(--color-danger)' : 'var(--text-muted)' }}>
                                 {physicalStock === "" ? "-" : diff > 0 ? `+${diff}` : diff}
                               </td>
                             </tr>
                           );
                         })}
                       </React.Fragment>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -327,16 +377,16 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
           )}
         </div>
 
-        <div className="modal-footer audit-modal-footer" style={{ padding: '20px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', borderRadius: '0 0 16px 16px', gap: '15px' }}>
+        <div className="modal-footer audit-modal-footer" style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', borderRadius: '0 0 16px 16px', gap: '12px' }}>
           <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>
-            {Object.keys(auditedItems).length} productos auditados en esta sesión
+            {Object.keys(auditedItems).length} productos auditados
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={onClose} disabled={saving} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={onClose} disabled={saving} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}>
               Cancelar
             </button>
-            <button onClick={handleSubmit} disabled={saving || loading || Object.keys(auditedItems).length === 0} style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 500, opacity: Object.keys(auditedItems).length === 0 ? 0.5 : 1 }}>
-              <Save size={18} /> {saving ? "Guardando..." : "Guardar Auditoría"}
+            <button onClick={handleSubmit} disabled={saving || loading || Object.keys(auditedItems).length === 0} style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 500, opacity: Object.keys(auditedItems).length === 0 ? 0.5 : 1 }}>
+              <Save size={18} /> {saving ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </div>

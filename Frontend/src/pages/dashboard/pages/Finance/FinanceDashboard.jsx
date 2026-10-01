@@ -16,6 +16,13 @@ import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function FinanceDashboard() {
   const [data, setDashboardData] = useState({ owners: [], summary: {} });
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [selectedOwnerId, setSelectedOwnerId] = useState(null);
   const [ledgerData, setLedgerData] = useState([]);
   const [loadingLedger, setLoadingLedger] = useState(false);
@@ -141,37 +148,31 @@ export default function FinanceDashboard() {
       </div>
 
       {/* SUMMARY CARDS */}
-      <div className="dashboard-summary-cards">
-        <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.2)', color: 'var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.2)' }}>
-            <TrendingUp size={28} />
-          </div>
-          <div>
-            <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ingresos Brutos</p>
-            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', color: 'var(--text-main)', fontWeight: 800 }}>Bs. {Number(summary.total_revenue || 0).toFixed(2)}</h3>
-          </div>
-        </div>
+      <div className="dashboard-summary-cards" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px' }}>
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <TrendingUp size={16} color="var(--color-success)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ingresos Brutos</span>
+    </div>
+    <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(summary.total_revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+  </div>
 
-        <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(239, 68, 68, 0.2)', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)' }}>
-            <TrendingDown size={28} />
-          </div>
-          <div>
-            <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gastos Totales</p>
-            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', color: 'var(--text-main)', fontWeight: 800 }}>Bs. {Number(summary.total_expenses || 0).toFixed(2)}</h3>
-          </div>
-        </div>
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <TrendingDown size={16} color="var(--color-danger)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Gastos Totales</span>
+    </div>
+    <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(summary.total_expenses || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+  </div>
 
-        <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '20px', border: '1px solid var(--bg-overlay)', display: 'flex', alignItems: 'center', gap: '20px', backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--bg-overlay)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px var(--bg-overlay)' }}>
-            <DollarSign size={28} />
-          </div>
-          <div>
-            <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ganancia Neta Global</p>
-            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', color: 'var(--text-main)', fontWeight: 800 }}>Bs. {Number(summary.net_profit || 0).toFixed(2)}</h3>
-          </div>
-        </div>
-      </div>
+  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <DollarSign size={16} color="var(--color-primary)" />
+      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ganancia Neta Global</span>
+    </div>
+    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(summary.net_profit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+  </div>
+</div>
 
       {/* TREASURY PANEL */}
       {summary.treasury && (
@@ -185,61 +186,67 @@ export default function FinanceDashboard() {
             </h2>
             <p style={{ margin: '5px 0 0 46px', fontSize: '14px', color: 'var(--text-muted)' }}>Balance real de los fondos físicos y digitales de la tienda.</p>
           </div>
-          <div className="treasury-grid">
-            
-            {/* CASH BALANCE */}
-            <div style={{ padding: '30px 40px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-              <div style={{ padding: '16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '50%', color: 'var(--color-success)', marginBottom: '20px', boxShadow: '0 0 20px rgba(16, 185, 129, 0.2)' }}>
-                <Wallet size={36} />
-              </div>
-              <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Efectivo en Caja</h4>
-              <h2 style={{ margin: '0 0 25px 0', fontSize: '38px', color: 'var(--text-main)', fontWeight: 800 }}>Bs. {Number(summary.treasury.cash_balance).toFixed(2)}</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', width: '100%', fontSize: '13px' }}>
-                <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Entradas</span>
-                  <div style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: '15px' }}>+{(Number(summary.treasury.details.cash.sales) + Number(summary.treasury.details.cash.deposits)).toFixed(2)}</div>
-                </div>
-                <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Salidas</span>
-                  <div style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: '15px' }}>-{(Number(summary.treasury.details.cash.expenses) + Number(summary.treasury.details.cash.withdrawals)).toFixed(2)}</div>
-                </div>
-              </div>
-            </div>
+          <div className="treasury-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', padding: '20px', background: 'transparent' }}>
+  
+  {/* CASH BALANCE */}
+  <div style={{ background: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <Wallet size={16} color="var(--color-success)" />
+      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Efectivo en Caja</span>
+    </div>
+    <div style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: 'var(--text-main)' }}>
+      Bs. {Number(summary.treasury.cash_balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', marginTop: '4px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{color: 'var(--text-muted)'}}>Entradas:</span> 
+        <span style={{color: 'var(--color-success)', fontWeight: 600}}>+{(Number(summary.treasury.details.cash.sales) + Number(summary.treasury.details.cash.deposits)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{color: 'var(--text-muted)'}}>Salidas:</span> 
+        <span style={{color: 'var(--color-danger)', fontWeight: 600}}>-{(Number(summary.treasury.details.cash.expenses) + Number(summary.treasury.details.cash.withdrawals)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+      </div>
+    </div>
+  </div>
 
-            {/* BANK BALANCE */}
-            <div style={{ padding: '30px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>
-              <div style={{ padding: '16px', background: 'var(--bg-overlay)', borderRadius: '50%', color: 'var(--color-primary)', marginBottom: '20px', boxShadow: '0 0 20px var(--bg-overlay)' }}>
-                <CreditCard size={36} />
-              </div>
-              <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cuenta Bancaria</h4>
-              <h2 style={{ margin: '0 0 25px 0', fontSize: '38px', color: 'var(--text-main)', fontWeight: 800 }}>Bs. {Number(summary.treasury.bank_balance).toFixed(2)}</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', width: '100%', fontSize: '13px' }}>
-                <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Entradas</span>
-                  <div style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: '15px' }}>+{(Number(summary.treasury.details.bank.sales) + Number(summary.treasury.details.bank.deposits)).toFixed(2)}</div>
-                </div>
-                <div style={{ background: 'var(--bg-main)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '5px' }}>Salidas</span>
-                  <div style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: '15px' }}>-{(Number(summary.treasury.details.bank.expenses) + Number(summary.treasury.details.bank.withdrawals)).toFixed(2)}</div>
-                </div>
-              </div>
-            </div>
+  {/* BANK BALANCE */}
+  <div style={{ background: 'var(--bg-main)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <CreditCard size={16} color="var(--color-primary)" />
+      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cuenta Bancaria</span>
+    </div>
+    <div style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: 'var(--text-main)' }}>
+      Bs. {Number(summary.treasury.bank_balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', marginTop: '4px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{color: 'var(--text-muted)'}}>Entradas:</span> 
+        <span style={{color: 'var(--color-success)', fontWeight: 600}}>+{(Number(summary.treasury.details.bank.sales) + Number(summary.treasury.details.bank.deposits)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{color: 'var(--text-muted)'}}>Salidas:</span> 
+        <span style={{color: 'var(--color-danger)', fontWeight: 600}}>-{(Number(summary.treasury.details.bank.expenses) + Number(summary.treasury.details.bank.withdrawals)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+      </div>
+    </div>
+  </div>
 
-            {/* GIFTCARD "BALANCE" */}
-            <div style={{ padding: '30px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', background: 'rgba(168, 85, 247, 0.02)' }}>
-              <div style={{ padding: '16px', background: 'var(--bg-overlay)', borderRadius: '50%', color: 'var(--color-primary)', marginBottom: '20px', boxShadow: '0 0 20px var(--bg-overlay)' }}>
-                <Gift size={36} />
-              </div>
-              <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontWeight: 600, fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ventas con Giftcard</h4>
-              <h2 style={{ margin: '0 0 25px 0', fontSize: '38px', color: 'var(--text-main)', fontWeight: 800 }}>Bs. {Number(summary.treasury.details.giftcard?.sales || 0).toFixed(2)}</h2>
-              <div style={{ width: '100%', fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.6', background: 'var(--bg-main)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                Pagos recibidos mediante saldo de Giftcards. Suma a los <strong>Ingresos Brutos</strong>, pero no inyecta dinero físico nuevo a las cajas.
-              </div>
-            </div>
+  {/* GIFTCARD BALANCE */}
+  <div style={{ background: 'rgba(168, 85, 247, 0.05)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(168, 85, 247, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <Gift size={16} color="#a855f7" />
+      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ventas con Giftcard</span>
+    </div>
+    <div style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: 'var(--text-main)' }}>
+      Bs. {Number(summary.treasury.details.giftcard?.sales || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+    </div>
+    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', borderTop: '1px solid rgba(168, 85, 247, 0.2)', paddingTop: '10px', lineHeight: '1.4' }}>
+      Suma a Ingresos Brutos, pero no inyecta dinero f�sico nuevo a las cajas.
+    </div>
+  </div>
 
-          </div>
-        </div>
-      )}
+</div>
+</div>
+)}
 
       {/* OWNERS BREAKDOWN */}
       <div style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
@@ -305,7 +312,7 @@ export default function FinanceDashboard() {
                             <Wallet size={16} /> Saldo Disponible Total
                           </p>
                           <h2 style={{ margin: 0, fontSize: '36px', color: activeOwnerData.current_balance >= 0 ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: 700 }}>
-                            Bs. {Number(activeOwnerData.current_balance).toFixed(2)}
+                            Bs. {Number(activeOwnerData.current_balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                           </h2>
                         </div>
                       </div>
@@ -351,17 +358,17 @@ export default function FinanceDashboard() {
                     <div style={{ padding: '20px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Ganancia Neta (Actual):</span>
-                        <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Bs. {Number(activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed).toFixed(2)}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Bs. {Number(activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Deudas Pendientes:</span>
-                        <span style={{ fontWeight: 600, color: 'var(--color-danger)' }}>Bs. {Number(activeOwnerData.pending_debts).toFixed(2)}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--color-danger)' }}>Bs. {Number(activeOwnerData.pending_debts).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                       </div>
                       <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px' }}>
                         <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>Proyección (Restando Deudas):</span>
                         <span style={{ fontWeight: 700, color: (activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed - activeOwnerData.pending_debts) >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                          Bs. {Number(activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed - activeOwnerData.pending_debts).toFixed(2)}
+                          Bs. {Number(activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed - activeOwnerData.pending_debts).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </span>
                       </div>
                     </div>
@@ -378,23 +385,23 @@ export default function FinanceDashboard() {
                               <Building size={14} style={{ color: 'var(--color-primary)' }} />
                               {b.branch_name}
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", gap: "8px", flexWrap: "wrap" }}>
                               <span style={{ color: 'var(--text-muted)' }}>Caja Física:</span>
-                              <div className="metric-value" style={{ color: 'var(--color-primary)' }}>
-                                Bs. {Number(b.cash_balance || 0).toFixed(2)}
+                              <div style={{ color: "var(--color-primary)", fontWeight: 600 }}>
+                                Bs. {Number(b.cash_balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                               </div>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", gap: "8px", flexWrap: "wrap" }}>
                               <span style={{ color: 'var(--text-muted)' }}>Cta. Bancaria:</span>
-                              <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Bs. {Number(b.bank_balance).toFixed(2)}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Bs. {Number(b.bank_balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px dashed var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', gap: '8px', flexWrap: 'wrap', borderTop: '1px dashed var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
                               <span style={{ color: 'var(--text-muted)' }}>Deuda Pendiente:</span>
-                              <span style={{ fontWeight: 600, color: 'var(--color-danger)' }}>Bs. {Number(b.pending_debts).toFixed(2)}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--color-danger)' }}>Bs. {Number(b.pending_debts).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", gap: "8px", flexWrap: "wrap" }}>
                               <span style={{ color: 'var(--text-muted)' }}>Ganancia Sucursal:</span>
-                              <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>Bs. {Number(b.sales_revenue - b.expenses_assumed).toFixed(2)}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>Bs. {Number(b.sales_revenue - b.expenses_assumed).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                             </div>
                           </div>
                         ))}
@@ -412,7 +419,7 @@ export default function FinanceDashboard() {
                         </div>
                         <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>Ingresos por Ventas</h4>
                       </div>
-                      <span style={{ color: 'var(--text-main)', fontWeight: 700, fontSize: '24px' }}>Bs. {Number(activeOwnerData.sales_revenue).toFixed(2)}</span>
+                      <span style={{ color: 'var(--text-main)', fontWeight: 700, fontSize: '24px' }}>Bs. {Number(activeOwnerData.sales_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
 
                     <div style={{ padding: '20px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', display: 'flex', flexDirection: 'column' }}>
@@ -422,7 +429,7 @@ export default function FinanceDashboard() {
                         </div>
                         <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>Gastos Asumidos</h4>
                       </div>
-                      <span style={{ color: 'var(--text-main)', fontWeight: 700, fontSize: '24px' }}>Bs. {Number(activeOwnerData.expenses_assumed).toFixed(2)}</span>
+                      <span style={{ color: 'var(--text-main)', fontWeight: 700, fontSize: '24px' }}>Bs. {Number(activeOwnerData.expenses_assumed).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
 
                     <div style={{ padding: '20px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', display: 'flex', flexDirection: 'column' }}>
@@ -432,8 +439,8 @@ export default function FinanceDashboard() {
                         </div>
                         <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>Inyecciones</h4>
                       </div>
-                      <div className="metric-value" style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: '24px' }}>
-                        Bs. {Number(activeOwnerData?.total_contributions || 0).toFixed(2)}
+                      <div style={{ color: "var(--color-success)", fontWeight: 700, fontSize: "24px" }}>
+                        Bs. {Number(activeOwnerData?.total_contributions || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </div>
                     </div>
 
@@ -444,8 +451,8 @@ export default function FinanceDashboard() {
                         </div>
                         <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', fontWeight: 600 }}>Retiros</h4>
                       </div>
-                      <div className="metric-value" style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: '24px' }}>
-                        Bs. {Number(activeOwnerData?.total_withdrawals || 0).toFixed(2)}
+                      <div style={{ color: "var(--color-danger)", fontWeight: 700, fontSize: "24px" }}>
+                        Bs. {Number(activeOwnerData?.total_withdrawals || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </div>
                     </div>
                   </div>
@@ -541,10 +548,10 @@ export default function FinanceDashboard() {
                 {owners && owners.length > 0 ? owners.map(o => (
                   <tr key={o.owner_id} onClick={() => setSelectedOwnerId(o.owner_id)} style={{ cursor: 'pointer' }}>
                     <td data-label="Socio" style={{ fontWeight: 600 }}>{o.name}</td>
-                    <td data-label="Ingresos por Ventas" style={{ color: 'var(--color-success)', fontWeight: 500 }}>+ Bs. {Number(o.sales_revenue).toFixed(2)}</td>
-                    <td data-label="Gastos Asumidos" style={{ color: 'var(--color-danger)', fontWeight: 500 }}>- Bs. {Number(o.expenses_assumed).toFixed(2)}</td>
-                    <td data-label="Inyecciones" style={{ color: 'var(--color-primary)', fontWeight: 500 }}>+ Bs. {Number(o.deposits).toFixed(2)}</td>
-                    <td data-label="Retiros" style={{ color: 'var(--color-warning)', fontWeight: 500 }}>- Bs. {Number(o.withdrawals).toFixed(2)}</td>
+                    <td data-label="Ingresos por Ventas" style={{ color: 'var(--color-success)', fontWeight: 500 }}>+ Bs. {Number(o.sales_revenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td data-label="Gastos Asumidos" style={{ color: 'var(--color-danger)', fontWeight: 500 }}>- Bs. {Number(o.expenses_assumed).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td data-label="Inyecciones" style={{ color: 'var(--color-primary)', fontWeight: 500 }}>+ Bs. {Number(o.deposits).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td data-label="Retiros" style={{ color: 'var(--color-warning)', fontWeight: 500 }}>- Bs. {Number(o.withdrawals).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     <td data-label="Saldo Disponible">
                       <span style={{ 
                         background: o.current_balance >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
@@ -554,7 +561,7 @@ export default function FinanceDashboard() {
                         fontWeight: 'bold',
                         fontSize: '14px'
                       }}>
-                        Bs. {Number(o.current_balance).toFixed(2)}
+                        Bs. {Number(o.current_balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </span>
                     </td>
                   </tr>
@@ -597,3 +604,10 @@ export default function FinanceDashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+

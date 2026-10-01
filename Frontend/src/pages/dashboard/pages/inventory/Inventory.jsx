@@ -249,12 +249,12 @@ export default function Inventory() {
           </div>
 
           {filters.branch_id && (
-            <>
+            <div className="inventory-action-buttons" style={{ display: 'flex', gap: '10px' }}>
               <CanAccess permission="view_inventory_history">
                 <Link 
                   to={`/dashboard/inventory/movements${filters.branch_id ? `?branch_id=${filters.branch_id}` : ''}`}
                   className="btn-secondary" 
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', padding: '12px 16px', borderRadius: '10px' }}
+                  style={{ display: 'flex', flex: 1, justifyContent: 'center', alignItems: 'center', gap: '8px', textDecoration: 'none', padding: '12px 16px', borderRadius: '10px' }}
                 >
                   <History size={18} /> <span className="hide-on-mobile">Historial</span>
                 </Link>
@@ -263,25 +263,25 @@ export default function Inventory() {
               <CanAccess permission="adjust_inventory">
                 <button
                   onClick={() => setAuditModalOpen(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'var(--color-warning)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 500, boxShadow: '0 4px 10px var(--bg-overlay)', transition: 'transform 0.2s' }}
+                  style={{ display: 'flex', flex: 1, justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'var(--color-warning)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 500, boxShadow: '0 4px 10px var(--bg-overlay)', transition: 'transform 0.2s' }}
                   onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                 >
-                  <ClipboardCheck size={18} strokeWidth={2.5} /> <span className="hide-on-mobile">Auditar Inventario</span>
+                  <ClipboardCheck size={18} strokeWidth={2.5} /> <span className="hide-on-mobile">Auditar</span>
                 </button>
               </CanAccess>
 
               <CanAccess permission="receive_inventory">
                 <button
                   onClick={() => setReceiveModalOpen(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', fontWeight: 500, boxShadow: '0 4px 10px var(--bg-overlay)', transition: 'transform 0.2s' }}
+                  style={{ display: 'flex', flex: 1, justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '10px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', fontWeight: 500, boxShadow: '0 4px 10px var(--bg-overlay)', transition: 'transform 0.2s' }}
                   onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                 >
-                  <Plus size={18} strokeWidth={2.5} /> <span className="hide-on-mobile">Ingresar Stock</span>
+                  <Plus size={18} strokeWidth={2.5} /> <span className="hide-on-mobile">Ingresar</span>
                 </button>
               </CanAccess>
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -346,35 +346,35 @@ export default function Inventory() {
         <>
           {/* KPI Dashboard */}
           {stats && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px', animation: 'fadeIn 0.4s ease' }}>
+            <div className="inventory-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px', animation: 'fadeIn 0.4s ease' }}>
               <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Box size={18} color="var(--color-primary)" />
                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ítems en Stock</span>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--color-secondary)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Box size={16} /></div>
                 </div>
                 <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.total_items.toLocaleString()}</div>
               </div>
               
               <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <TrendingUp size={18} color="var(--color-danger)" />
                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Capital Invertido</span>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--color-secondary)', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><TrendingUp size={16} /></div>
                 </div>
                 <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {stats.total_cost_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
               </div>
 
               <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <DollarSign size={18} color="var(--color-success)" />
                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Valor Potencial</span>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--color-secondary)', color: 'var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DollarSign size={16} /></div>
                 </div>
                 <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {stats.total_retail_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
               </div>
 
               <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertTriangle size={18} color="var(--color-warning)" />
                   <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bajo Stock / Agotados</span>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--color-secondary)', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><AlertTriangle size={16} /></div>
                 </div>
                 <div style={{ fontSize: '28px', fontWeight: 700, color: stats.low_stock_alerts > 0 ? 'var(--color-warning)' : 'var(--text-main)' }}>{stats.low_stock_alerts.toLocaleString()}</div>
               </div>
@@ -382,28 +382,29 @@ export default function Inventory() {
           )}
 
           <div className="filters-container" style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
-              <div style={{ flex: 1, position: 'relative' }}>
-                <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-                  placeholder="Buscar producto o SKU..."
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-                />
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0', flexWrap: 'wrap' }}>
+              <div className="search-and-camera" style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+                    placeholder="Buscar producto o SKU..."
+                    value={filters.search}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+                  />
+                </div>
+                <button
+                  onClick={() => openScanner(processScannedCode)}
+                  title="Escanear con Cámara"
+                  style={{ width: '42px', height: '42px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s' }}
+                >
+                  <Camera size={20} />
+                </button>
               </div>
               <button
-                onClick={() => openScanner(processScannedCode)}
-                title="Escanear con Cámara"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--color-primary)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(99,102,241,0.05)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-card)' }}
-              >
-                <Camera size={20} />
-              </button>
-              <button
                 onClick={() => setShowFilters(!showFilters)}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--primary-color)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+                className="filter-toggle-btn"
+                style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--primary-color)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
               >
                 <Filter size={18} />
                 <span className="hide-on-mobile">Filtros</span>

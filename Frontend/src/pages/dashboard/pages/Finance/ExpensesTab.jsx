@@ -21,6 +21,13 @@ export default function ExpensesTab() {
   const [isQuickPayModalOpen, setIsQuickPayModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [viewMode, setViewMode] = useState('general'); // 'general' | 'kardex'
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState('all');
@@ -179,15 +186,18 @@ export default function ExpensesTab() {
           Resumen de Deudas Pendientes (Por Socio)
         </h3>
         {Object.keys(debtSummary).length > 0 ? (
-          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-            {Object.entries(debtSummary).map(([name, total]) => (
-              <div key={name} style={{ background: 'var(--bg-overlay)', padding: '15px', borderRadius: '10px', minWidth: '200px', flex: 1, border: '1px solid var(--border-color)' }}>
-                <p style={{ margin: '0 0 5px 0', fontSize: '13px', color: 'var(--text-muted)' }}>{name}</p>
-                <p style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ef4444' }}>Bs. {total.toFixed(2)}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+  {Object.entries(debtSummary).map(([name, total]) => (
+    <div key={name} style={{ background: 'var(--bg-overlay)', padding: '15px', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <AlertCircle size={14} color="var(--color-danger)" />
+        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{name}</span>
+      </div>
+      <p style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: 'var(--color-danger)' }}>Bs. {total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+    </div>
+  ))}
+</div>
+) : (
           <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '14px' }}>No hay deudas pendientes registradas.</p>
         )}
       </div>
@@ -539,3 +549,4 @@ export default function ExpensesTab() {
     </div>
   );
 }
+
