@@ -194,6 +194,20 @@
    Desktop: 3 col  |  Tablet: 2 col  |  Móvil: 2 col pequeño
 ============================================================= */
 
+.catalog-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width, 220px) 1fr;
+  gap: var(--sidebar-gap, 40px);
+  align-items: start;
+  position: relative;
+}
+
+@media (max-width: 1024px) {
+  .catalog-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .catalog-products-grid {
   display: grid;
   grid-template-columns: repeat(var(--catalog-cols-desktop, 3), 1fr);
@@ -505,9 +519,7 @@
   }
 
   /* El layout vuelve a 1 columna */
-  section > div[style*="220px"] {
-    grid-template-columns: 1fr !important;
-  }
+  
 
   /* Grid de columnas en tablet */
   .catalog-products-grid,
@@ -739,3 +751,4 @@
     border-radius: 4px;
   }
 }
+

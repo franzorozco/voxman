@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, Edit, Ticket, RefreshCw, Eye, EyeOff, Smartphone } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Ticket, RefreshCw, Eye, EyeOff, Smartphone, MoreVertical, Filter } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getGiftcards, deleteGiftcard } from "../../../../api/admin/giftcards";
 import GiftcardModal from "./GiftcardModal";
@@ -24,6 +24,15 @@ export default function Giftcards() {
   const [selectedGiftcard, setSelectedGiftcard] = useState(null);
   const [modalMode, setModalMode] = useState("create");
   const [visibleCodes, setVisibleCodes] = useState({});
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchGiftcards();
@@ -90,7 +99,7 @@ export default function Giftcards() {
   });
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount);
+    return 'Bs. ' + Number(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   };
 
   return (
@@ -106,51 +115,71 @@ export default function Giftcards() {
           </div>
         </div>
 
-        <div className="gift-header-actions-row">
-          <div className="gift-header-action-col">
-            <Link to="/dashboard/giftcards/deleted" className="btn-secondary gift-header-action-btn">
-              <Trash2 size={18} style={{ flexShrink: 0 }} />
-              <span className="hide-on-mobile">Papelera</span>
-            </Link>
-          </div>
-          <div className="gift-header-action-col">
-            <button className="btn-primary gift-header-action-btn" onClick={() => handleOpenModal("create")}>
-              <Plus size={18} style={{ flexShrink: 0 }} />
-              <span className="hide-on-mobile">Emitir Giftcard</span>
-            </button>
-          </div>
-        </div>
-      </div>
+        <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
+  <Link to="/dashboard/giftcards/deleted" className="btn-secondary" style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', padding: '10px' }} title="Papelera">
+    <Trash2 size={18} />
+    {!isMobile && "Papelera"}
+  </Link>
+  <button 
+    className="btn-primary" 
+    onClick={() => handleOpenModal("create")}
+    style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+    title="Emitir Giftcard"
+  >
+    <Plus size={18} />
+    {!isMobile && "Emitir Giftcard"}
+  </button>
+  <button 
+    className="btn-secondary" 
+    onClick={fetchGiftcards}
+    style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+    title="Actualizar"
+  >
+    <RefreshCw size={18} className={loading ? "spin" : ""} />
+    {!isMobile && "Actualizar"}
+  </button>
+</div>
+</div>
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner gift-filters-row">
-          <div style={{ flex: 2 }} className="gift-search-wrapper">
-            <Search size={18} className="gift-search-icon" />
-            <input 
-              type="text" 
-              placeholder="Buscar por código..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="gift-search-input"
-            />
-          </div>
-          
-          <div style={{ flex: 1 }}>
-            <CustomSelect 
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="gift-status-select"
-              style={{ height: '42px' }}
-            >
-              <option value="all">Todos los Estados</option>
-              <option value="active">Solo Activas</option>
-              <option value="exhausted">Agotadas (Saldo 0)</option>
-              <option value="expired">Expiradas</option>
-              <option value="inactive">Inactivas</option>
-            </CustomSelect>
-          </div>
-        </div>
+  <div className="filters-container-inner" style={{ marginBottom: showFilters ? '15px' : '0' }}>
+    <div style={{ flex: 1, position: 'relative' }}>
+      <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <input 
+        style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+        placeholder="Buscar por c�digo..." 
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+    </div>
+    <button 
+      onClick={() => setShowFilters(!showFilters)}
+      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+    >
+      <Filter size={18} />
+      <span className="hide-on-mobile">Filtros</span>
+    </button>
+  </div>
+
+  {showFilters && (
+    <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+        <CustomSelect 
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+        >
+          <option value="all">Todos los Estados</option>
+          <option value="active">Solo Activas</option>
+          <option value="exhausted">Agotadas (Saldo 0)</option>
+          <option value="expired">Expiradas</option>
+          <option value="inactive">Inactivas</option>
+        </CustomSelect>
       </div>
+    </div>
+  )}
+</div>
 
       <div className="table-wrapper">
         {loading ? (
@@ -167,7 +196,7 @@ export default function Giftcards() {
                 <th>Saldo Actual</th>
                 <th>Vencimiento</th>
                 <th>Estado</th>
-                <th width="180">Acciones</th>
+                <th width="180" style={{ display: isMobile ? "none" : "table-cell" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -191,9 +220,87 @@ export default function Giftcards() {
 
                   return (
                   <tr key={g.id}>
-                    <td data-label="Código">
-                      <div className="gift-code-wrapper">
-                        <span className="gift-code-text">
+                    <td data-label="C�digo" style={{ position: 'relative' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+      <button 
+        className="btn-icon" 
+        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+        onClick={(event) => {
+          event.stopPropagation();
+          setActiveDropdown(activeDropdown === g.id ? null : g.id);
+        }}
+      >
+        <MoreVertical size={20} />
+      </button>
+      
+      {activeDropdown === g.id && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setActiveDropdown(null);
+            }}
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '40px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 99,
+              minWidth: '150px',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '4px'
+            }}
+          >
+            <button 
+              onClick={() => { handleOpenCoupon(g); setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+            >
+              <Ticket size={16} /> Imprimir Cup�n
+            </button>
+            {!g.is_digitalized && g.is_active && (
+              <button 
+                onClick={() => { handleOpenDigitalize(g); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+              >
+                <Smartphone size={16} /> Digitalizar
+              </button>
+            )}
+            <button 
+              onClick={() => { handleOpenHistory(g); setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+            >
+              <Eye size={16} /> Ver Historial
+            </button>
+            {g.is_active && (
+              <button 
+                onClick={() => { handleOpenModal("reload", g); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+              >
+                <RefreshCw size={16} /> Recargar Saldo
+              </button>
+            )}
+            {g.is_active && (
+              <button 
+                onClick={() => { handleDelete(g.id); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-danger)', width: '100%', fontSize: '14px' }}
+              >
+                <Trash2 size={16} /> Eliminar
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+    <div className="gift-code-wrapper">
+      <span className="gift-code-text">
                           {visibleCodes[g.id] ? g.code : "••••••••"}
                         </span>
                         <button 
@@ -204,6 +311,7 @@ export default function Giftcards() {
                           {visibleCodes[g.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
+    </div>
                     </td>
                     <td data-label="Propietario / Comprador">
                       {g.customer ? (
@@ -238,7 +346,7 @@ export default function Giftcards() {
                         {statusText}
                       </span>
                     </td>
-                    <td data-label="Acciones" className="gift-actions-cell">
+                    <td data-label="Acciones" className="gift-actions-cell" style={{ display: isMobile ? "none" : "table-cell" }}>
                       <div className="gift-actions-wrapper">
                         <button 
                           className="btn-secondary gift-ticket-btn"
@@ -328,3 +436,13 @@ export default function Giftcards() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+

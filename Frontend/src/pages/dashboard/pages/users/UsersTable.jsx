@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Filter, Search } from "lucide-react";
+import { Filter, Search, MoreVertical, Eye, Edit, FileText, Trash2 } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import UserViewModal from "./UserViewModal";
 import CanAccess from "../../../../components/ui/CanAccess";
@@ -23,6 +23,14 @@ export default function UsersTable({
   const [confirmId, setConfirmId] = useState(null);
   const [viewUser, setViewUser] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   // =========================
   // ⏳ LOADING CONTROL
   // =========================
@@ -291,14 +299,95 @@ export default function UsersTable({
                   <th>Cliente</th>
                   <th>Empleado</th>
                   <th>Creado</th>
-                  <th>Acciones</th>
+                  <th style={{ display: isMobile ? "none" : "table-cell" }}>Acciones</th>
                 </tr>
               </thead>
 
               <tbody>
                 {items.map((u) => (
                   <tr key={u.id}>
-                    <td>{u.email}</td>
+<td style={{ position: 'relative' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+      <button 
+        className="btn-icon" 
+        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+        onClick={(event) => {
+          event.stopPropagation();
+          setActiveDropdown(activeDropdown === u.id ? null : u.id);
+        }}
+      >
+        <MoreVertical size={20} />
+      </button>
+      
+      {activeDropdown === u.id && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setActiveDropdown(null);
+            }}
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '40px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 99,
+              minWidth: '150px',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '4px'
+            }}
+          >
+            <CanAccess permission="view_users">
+              <button 
+                onClick={() => { setViewUser(u); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+              >
+                <Eye size={16} /> Ver
+              </button>
+            </CanAccess>
+            <CanAccess permission="edit_users">
+              <button 
+                onClick={() => { if (!canModify(u)) return; onEdit(u); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: canModify(u) ? 'pointer' : 'not-allowed', color: canModify(u) ? 'var(--color-primary)' : 'var(--text-muted)', width: '100%', fontSize: '14px' }}
+                disabled={!canModify(u)}
+                title={!canModify(u) ? getModifyReason(u) : "Editar"}
+              >
+                <Edit size={16} /> Editar
+              </button>
+            </CanAccess>
+            <CanAccess permission="view_users">
+              <button 
+                onClick={() => { generateUserPdf(u.id); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+              >
+                <FileText size={16} /> PDF
+              </button>
+            </CanAccess>
+            <CanAccess permission="delete_users">
+              <button 
+                onClick={() => { if (!canModify(u)) return; setConfirmId(u.id); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: canModify(u) ? 'pointer' : 'not-allowed', color: canModify(u) ? 'var(--color-danger)' : 'var(--text-muted)', width: '100%', fontSize: '14px' }}
+                disabled={!canModify(u)}
+                title={!canModify(u) ? getModifyReason(u) : "Eliminar"}
+              >
+                <Trash2 size={16} /> Eliminar
+              </button>
+            </CanAccess>
+          </div>
+        </>
+      )}
+    </div>
+    <span>{u.email}</span>
+  </div>
+</td>
                     <td>{u.username}</td>
 
                     <td>
@@ -332,53 +421,32 @@ export default function UsersTable({
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
 
-                    <td>
-                      <CanAccess permission="view_users">
-                        <button
-                          className="btn-view"
-                          onClick={() => setViewUser(u)}
-                        >
-                          Ver
-                        </button>
-                      </CanAccess>
-
-                      <CanAccess permission="edit_users">
-                        <button 
-                          className={`btn-edit ${!canModify(u) ? "disabled" : ""}`} 
-                          disabled={!canModify(u)}
-                          title={!canModify(u) ? getModifyReason(u) : "Editar usuario"}
-                          onClick={() => {
-                            if (!canModify(u)) return;
-                            onEdit(u);
-                          }}
-                        >
-                          Editar
-                        </button>
-                      </CanAccess>
-
-                      <CanAccess permission="view_users">
-                        <button
-                          className="btn-report"
-                          onClick={() => generateUserPdf(u.id)}
-                        >
-                          PDF
-                        </button>
-                      </CanAccess>
-
-                      <CanAccess permission="delete_users">
-                        <button
-                            className={`btn-delete ${(!canModify(u) || authUser?.id === u.id) ? "disabled" : ""}`}
-                            disabled={!canModify(u) || authUser?.id === u.id}
-                            title={authUser?.id === u.id ? "No puedes eliminar tu propia cuenta" : (!canModify(u) ? getModifyReason(u) : "Eliminar usuario")}
-                          onClick={() => {
-                            if (!canModify(u)) return; // 🔒 doble protección
-                            setConfirmId(u.id);
-                          }}
-                        >
-                          {canModify(u) ? "Eliminar" : "No permitido"}
-                        </button>
-                      </CanAccess>
-                    </td>
+                    <td style={{ display: isMobile ? "none" : "table-cell" }}>
+  <div style={{ display: 'flex', gap: '4px' }}>
+    <CanAccess permission="view_users">
+      <button className="btn-view" onClick={() => setViewUser(u)} title="Ver"><Eye size={16}/></button>
+    </CanAccess>
+    <CanAccess permission="edit_users">
+      <button 
+          className={`btn-edit ${!canModify(u) ? "disabled" : ""}`}
+        disabled={!canModify(u)}
+        title={!canModify(u) ? getModifyReason(u) : "Editar usuario"}
+        onClick={() => { if (!canModify(u)) return; onEdit(u); }}
+        ><Edit size={16}/></button>
+    </CanAccess>
+    <CanAccess permission="view_users">
+      <button className="btn-report" onClick={() => generateUserPdf(u.id)} title="PDF"><FileText size={16}/></button>
+    </CanAccess>
+    <CanAccess permission="delete_users">
+      <button 
+          className={`btn-delete ${!canModify(u) ? "disabled" : ""}`}
+        disabled={!canModify(u)}
+        title={!canModify(u) ? getModifyReason(u) : "Eliminar usuario"}
+        onClick={() => { if (!canModify(u)) return; setConfirmId(u.id); }}
+        ><Trash2 size={16}/></button>
+    </CanAccess>
+  </div>
+</td>
                   </tr>
                 ))}
               </tbody>
@@ -417,3 +485,12 @@ export default function UsersTable({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+

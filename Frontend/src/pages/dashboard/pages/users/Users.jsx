@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import {
   getUsers,
   createUser,
@@ -22,6 +22,13 @@ export default function Users() {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({
     status: "all",      
@@ -210,32 +217,53 @@ const handleOverwrite = async (data) => {
     <div className="users-container">
 
         <div className="users-header">
-          <h1 className="users-title">Usuarios</h1>
-
-          <div className="users-actions">
-            <CanAccess permission="create_users">
-              <button className="btn-primary" onClick={handleCreate}>
-                + Crear usuario
-              </button>
-            </CanAccess>
-
-            <CanAccess permission="view_users">
-              <button className="btn-secondary" onClick={generatePdf}>
-                Exportar PDF
-              </button>
-            </CanAccess>
-
-            <CanAccess permission="view_users">
-              <Link 
-                to="/dashboard/users/deleted"
-                className="btn-secondary" 
-                style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
-              >
-                <Trash2 size={16} /> Papelera
-              </Link>
-            </CanAccess>
-          </div>
-        </div>
+  <h1 className="users-title">?? Usuarios</h1>
+  
+  <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
+    <CanAccess permission="view_users">
+      <Link 
+        to="/dashboard/users/deleted"
+        className="btn-secondary" 
+        style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', padding: '10px' }}
+        title="Papelera"
+      >
+        <Trash2 size={18} />
+        {!isMobile && "Papelera"}
+      </Link>
+    </CanAccess>
+    <CanAccess permission="view_users">
+      <button 
+        className="btn-secondary" 
+        onClick={generatePdf}
+        style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+        title="Exportar PDF"
+      >
+        <Download size={18} />
+        {!isMobile && "Exportar PDF"}
+      </button>
+    </CanAccess>
+    <CanAccess permission="create_users">
+      <button 
+        className="btn-primary" 
+        onClick={handleCreate}
+        style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+        title="Crear usuario"
+      >
+        <Plus size={18} />
+        {!isMobile && "Crear usuario"}
+      </button>
+    </CanAccess>
+    <button 
+      className="btn-secondary" 
+      onClick={loadUsers}
+      style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+      title="Actualizar"
+    >
+      <RefreshCw size={18} />
+      {!isMobile && "Actualizar"}
+    </button>
+  </div>
+</div>
 
       <UsersTable
         users={users}
@@ -274,3 +302,4 @@ const handleOverwrite = async (data) => {
     </div>
   );
 }
+

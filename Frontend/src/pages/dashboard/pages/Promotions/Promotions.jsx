@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, MoreVertical, Edit, Trash2, Ticket, Eye, EyeOff, RotateCcw } from "lucide-react";
+import { Plus, Search, MoreVertical, Edit, Trash2, Ticket, Eye, EyeOff, RotateCcw, RefreshCw, Filter } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getPromotions, deletePromotion } from "../../../../api/admin/discounts";
 import PromotionModal from "./PromotionModal";
@@ -24,6 +24,15 @@ export default function Promotions() {
 
   // Menú de acciones (Dropdown)
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchPromotions();
@@ -96,52 +105,72 @@ export default function Promotions() {
           </div>
         </div>
 
-        <div className="promo-header-actions-row">
-          <div className="promo-header-action-col">
-            <Link to="/dashboard/promotions/deleted" className="btn-secondary promo-header-action-btn">
-              <Trash2 size={18} style={{ flexShrink: 0 }} />
-              <span className="hide-on-mobile">Papelera</span>
-            </Link>
-          </div>
-          <div className="promo-header-action-col">
-            <button className="btn-primary promo-header-action-btn" onClick={() => handleOpenModal()}>
-              <Plus size={18} style={{ flexShrink: 0 }} />
-              <span className="hide-on-mobile">Nueva Promoción</span>
-            </button>
-          </div>
-        </div>
-      </div>
+        <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
+  <Link to="/dashboard/promotions/deleted" className="btn-secondary" style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', padding: '10px' }} title="Papelera">
+    <Trash2 size={18} />
+    {!isMobile && "Papelera"}
+  </Link>
+  <button 
+    className="btn-primary" 
+    onClick={() => handleOpenModal()}
+    style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+    title="Nueva Promoci�n"
+  >
+    <Plus size={18} />
+    {!isMobile && "Nueva Promoci�n"}
+  </button>
+  <button 
+    className="btn-secondary" 
+    onClick={fetchPromotions}
+    style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+    title="Actualizar"
+  >
+    <RefreshCw size={18} className={loading ? "spin" : ""} />
+    {!isMobile && "Actualizar"}
+  </button>
+</div>
+</div>
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner promo-filters-row">
-          <div style={{ flex: 2 }} className="promo-search-wrapper">
-            <Search size={18} className="promo-search-icon" />
-            <input 
-              type="text" 
-              placeholder="Buscar por nombre o código..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="promo-search-input"
-            />
-          </div>
+  <div className="filters-container-inner" style={{ marginBottom: showFilters ? '15px' : '0' }}>
+    <div style={{ flex: 1, position: 'relative' }}>
+      <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <input 
+        style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+        placeholder="Buscar por nombre o c�digo..." 
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+    </div>
+    <button 
+      onClick={() => setShowFilters(!showFilters)}
+      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+    >
+      <Filter size={18} />
+      <span className="hide-on-mobile">Filtros</span>
+    </button>
+  </div>
 
-          <div style={{ flex: 1 }}>
-            <CustomSelect 
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="promo-status-select"
-              style={{ height: '42px' }}
-            >
-              <option value="all">Todos los Estados</option>
-              <option value="active">Activas</option>
-              <option value="scheduled">Programadas (Futuras)</option>
-              <option value="expired">Expiradas</option>
-              <option value="exhausted">Agotadas (Límite de usos)</option>
-              <option value="inactive">Inactivas</option>
-            </CustomSelect>
-          </div>
-        </div>
+  {showFilters && (
+    <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+        <CustomSelect 
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+        >
+          <option value="all">Todos los Estados</option>
+          <option value="active">Activas</option>
+          <option value="scheduled">Programadas (Futuras)</option>
+          <option value="expired">Expiradas</option>
+          <option value="exhausted">Agotadas (L�mite de usos)</option>
+          <option value="inactive">Inactivas</option>
+        </CustomSelect>
       </div>
+    </div>
+  )}
+</div>
 
       <div className="table-wrapper">
         {loading ? (
@@ -160,7 +189,7 @@ export default function Promotions() {
                 <th>Límites</th>
                 <th>Vigencia</th>
                 <th>Estado</th>
-                <th width="80">Acciones</th>
+                <th width="80" style={{ display: isMobile ? "none" : "table-cell" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -194,9 +223,70 @@ export default function Promotions() {
 
                   return (
                   <tr key={promo.id}>
-                    <td data-label="Nombre">
-                      <span className="promo-name">{promo.name}</span>
-                    </td>
+                    <td data-label="Nombre" style={{ position: 'relative' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+      <button 
+        className="btn-icon" 
+        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+        onClick={(event) => {
+          event.stopPropagation();
+          setActiveDropdown(activeDropdown === promo.id ? null : promo.id);
+        }}
+      >
+        <MoreVertical size={20} />
+      </button>
+      
+      {activeDropdown === promo.id && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setActiveDropdown(null);
+            }}
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '40px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 99,
+              minWidth: '150px',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '4px'
+            }}
+          >
+            <button 
+              onClick={() => { handleOpenCoupon(promo); setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+            >
+              <Ticket size={16} /> Imprimir Ticket
+            </button>
+            <button 
+              onClick={() => { handleOpenModal(promo); setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+            >
+              <Edit size={16} /> Editar
+            </button>
+            <button 
+              onClick={() => { handleDelete(promo.id); setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-danger)', width: '100%', fontSize: '14px' }}
+            >
+              <Trash2 size={16} /> Eliminar
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+    <span className="promo-name">{promo.name}</span>
+  </div>
+</td>
                     <td data-label="Código">
                       {promo.is_automatic ? (
                         <span className="promo-automatic-label">Automático</span>
@@ -219,10 +309,10 @@ export default function Promotions() {
                     <td data-label="Tipo">{promo.type === 'percentage' ? 'Porcentaje' : 'Monto Fijo'}</td>
                     <td data-label="Valor" className="promo-value-cell">
                       <div className="promo-value-wrapper">
-                        <span>{promo.type === 'percentage' ? `${promo.value}%` : `Bs. ${promo.value}`}</span>
+                        <span>{promo.type === 'percentage' ? `${promo.value}%` : `Bs. ${Number(promo.value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}</span>
                         {promo.type === 'percentage' && promo.max_discount_amount && (
                           <span className="promo-max-discount">
-                            Max: Bs. {promo.max_discount_amount}
+                            Max: Bs. {Number(promo.max_discount_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                           </span>
                         )}
                       </div>
@@ -271,7 +361,7 @@ export default function Promotions() {
                         {statusText}
                       </span>
                     </td>
-                    <td className="promo-actions-cell">
+                    <td className="promo-actions-cell" style={{ display: isMobile ? "none" : "table-cell" }}>
                       <span className="promo-actions-wrapper">
                         <button 
                           className="btn-secondary promo-ticket-btn"
@@ -329,3 +419,10 @@ export default function Promotions() {
     </div>
   );
 }
+
+
+
+
+
+
+

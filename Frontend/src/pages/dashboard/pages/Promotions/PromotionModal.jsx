@@ -56,6 +56,13 @@ const customStyles = {
 
 export default function PromotionModal({ promotion, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [dataLoading, setDataLoading] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -277,8 +284,8 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: '1000px', width: '95%' }}>
-        <h2 className="promo-modal-header" style={{ padding: '20px 30px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="modal" style={{ maxWidth: "1000px", width: "95%", height: isMobile ? "90vh" : "auto", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+        <h2 className="promo-modal-header" style={{ padding: isMobile ? "16px" : "20px 30px", borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Tag className="text-primary" size={24} />
           {promotion ? "Editar Promoción" : "Nueva Promoción"}
           <button type="button" className="promo-modal-close-btn" style={{ marginLeft: 'auto' }} onClick={onClose}>
@@ -293,25 +300,21 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
             </div>
           ) : (
             <>
-              <div className="promo-modal-body" style={{ 
-                padding: '30px', 
-                background: 'var(--bg-main)', 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+              <div className="promo-modal-body" style={{ padding: isMobile ? "16px" : "30px", background: "var(--bg-main)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(400px, 1fr))", 
                 gap: '24px',
-                overflowY: 'auto'
+                overflowY: 'auto', flex: 1
               }}>
                 
                 {/* Left Column: Basic Info & Limits */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   
                   {/* Card 1: Configuración Básica */}
-                  <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                  <div style={{ background: "var(--bg-card)", padding: isMobile ? "16px" : "24px", borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                       <Settings2 size={20} className="text-primary" /> Configuración Principal
                     </div>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                         <label>Nombre de la Promoción *</label>
                         <input 
@@ -410,12 +413,12 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   </div>
 
                   {/* Card 2: Condiciones y Límites */}
-                  <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                  <div style={{ background: "var(--bg-card)", padding: isMobile ? "16px" : "24px", borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                       <CalendarClock size={20} className="text-primary" /> Condiciones y Límites
                     </div>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
                       <div className="form-group">
                         <label>Compra Mínima (Bs)</label>
                         <input type="number" step="0.01" name="min_purchase_amount" value={formData.min_purchase_amount} onChange={handleChange} placeholder="Sin mínimo" style={{ width: '100%', boxSizing: 'border-box' }} />
@@ -452,7 +455,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                 {/* Right Column: Targets */}
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {/* Card 3: Filtros */}
-                  <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', height: '100%' }}>
+                  <div style={{ background: "var(--bg-card)", padding: isMobile ? "16px" : "24px", borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', height: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px' }}>
                       <Target size={20} className="text-primary" /> Objetivos Específicos (Filtros)
                     </div>
@@ -503,11 +506,11 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
 
               </div>
               
-              <div className="promo-modal-footer" style={{ padding: '20px 30px', background: 'var(--bg-card)' }}>
-                <button type="button" className="promo-btn-cancel" onClick={onClose} disabled={loading} style={{ fontSize: '14px', height: '42px' }}>
+              <div className="promo-modal-footer" style={{ padding: isMobile ? "16px" : "20px 30px", display: "flex", flexDirection: isMobile ? "column" : "row", gap: "12px", background: 'var(--bg-card)' }}>
+                <button type="button" className="promo-btn-cancel" style={{ flex: 1, width: "100%", fontSize: "14px", height: "42px" }} onClick={onClose} disabled={loading} >
                   Cancelar
                 </button>
-                <button type="submit" className="btn-primary promo-btn-submit" disabled={loading} style={{ fontSize: '14px', height: '42px', fontWeight: 600 }}>
+                <button type="submit" className="btn-primary promo-btn-submit" disabled={loading} style={{ flex: 1, width: "100%", fontSize: "14px", height: "42px", fontWeight: 600 }}>
                   {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Guardar Promoción"}
                 </button>
               </div>
@@ -518,3 +521,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
     </div>
   );
 }
+
+
+
+

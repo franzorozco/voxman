@@ -296,23 +296,9 @@ const DashboardLayout = () => {
                 <CanAccess permission="view_giftcards">
                   <NavItem to="/dashboard/giftcards" icon={Ticket} label="Giftcards" />
                 </CanAccess>
-                <CanAccess permission="view_promotions">
-                  <NavItem to="/dashboard/marketing/campaigns" icon={Layers3} label="Campañas (Próximamente)" />
-                </CanAccess>
               </div>
             </CanAccess>
 
-            {/* 8. LOGÍSTICA */}
-            <CanAccess permission="transfer_inventory">
-              <div className="nav-section">
-                <p className="section-title">
-                  {!collapsed && "LOGÍSTICA"}
-                </p>
-                <CanAccess permission="transfer_inventory">
-                  <NavItem to="/dashboard/shipping" icon={Truck} label="Rutas de Envío" />
-                </CanAccess>
-              </div>
-            </CanAccess>
 
             {/* 9. SISTEMA Y CONFIGURACIÓN */}
             <CanAccess permission={['view_branches', 'view_users', 'manage_roles', 'manage_settings', 'view_audit_logs']}>

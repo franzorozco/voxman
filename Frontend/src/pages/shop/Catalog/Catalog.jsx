@@ -430,7 +430,7 @@ const Catalog = () => {
             const expandedProduct = row.find(p => p.id === expandedProductId);
             return (
               <React.Fragment key={rowIdx}>
-                <div className="catalog-products-row" style={{ marginBottom: expandedProduct ? '0' : `${cfg('catalog_grid_gap', '24')}px`, gridTemplateColumns: `repeat(${cfg('catalog_grid_cols_desktop', '3')}, 1fr)`, gap: `${cfg('catalog_grid_gap', '24')}px` }}>
+                <div className="catalog-products-row" style={{ marginBottom: expandedProduct ? '0' : `${cfg('catalog_grid_gap', '24')}px`,  }}>
               {row.map((item) => {
                 const imageUrl = item.cover_image || (item.product_images?.length > 0 ? item.product_images[0].url : null);
                 const isExpanded = expandedProductId === item.id;
@@ -757,7 +757,7 @@ const Catalog = () => {
 
     // Modo Prendas
     return (
-      <div key={animationKey} className="catalog-grid-animate catalog-products-grid" style={{ gridTemplateColumns: `repeat(${cfg('catalog_grid_cols_desktop', '3')}, 1fr)`, gap: `${cfg('catalog_grid_gap', '24')}px` }}>
+      <div key={animationKey} className="catalog-grid-animate catalog-products-grid" style={{  }}>
         {displayItems.length === 0 ? (
           <p style={{ color: 'var(--text-muted)' }}>No se encontraron elementos.</p>
         ) : (
@@ -1157,7 +1157,7 @@ const Catalog = () => {
 
       <section aria-labelledby="products-heading" style={{ paddingBottom: '60px', paddingTop: '24px' }}>
         <h2 id="products-heading" className="sr-only">Productos</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: `${cfg('catalog_sidebar_width', '220')}px 1fr`, gap: `${cfg('catalog_sidebar_gap', '40')}px`, alignItems: 'start', position: 'relative' }}>
+        <div className="catalog-layout" style={{ "--sidebar-width": `${cfg("catalog_sidebar_width", "220")}px`, "--sidebar-gap": `${cfg("catalog_sidebar_gap", "40")}px` }}>
 
           {/* ── SIDEBAR FILTROS (solo desktop) ── */}
           <form style={{ display: 'block' }} className="catalog-sidebar">
@@ -1304,3 +1304,5 @@ const Catalog = () => {
 };
 
 export default Catalog;
+
+

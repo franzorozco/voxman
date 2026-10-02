@@ -2,7 +2,7 @@ import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { getBranches, deleteBranch } from "../../../../api/admin/branches";
-import { LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2, Search, Filter } from "lucide-react";
+import { Plus, LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2, Search, Filter, RefreshCw, MoreVertical } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import BranchFormModal from "./BranchFormModal";
 import CanAccess from "../../../../components/ui/CanAccess";
@@ -23,6 +23,14 @@ export default function Branches() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadBranches = async () => {
     try {
@@ -79,26 +87,42 @@ export default function Branches() {
       <div className="branches-header">
         <h1 className="branches-title">Sucursales</h1>
 
-        <div className="branches-actions">
-          <CanAccess permission="create_branches">
-            <button className="btn-primary" onClick={handleCreate}>
-              + Nueva Sucursal
-            </button>
-          </CanAccess>
+        <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
+  <CanAccess permission="view_branches">
+    <Link 
+      to="/dashboard/branches/deleted"
+      className="btn-secondary" 
+      style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', padding: '10px' }}
+      title="Papelera"
+    >
+      <Trash2 size={18} /> 
+      {!isMobile && "Papelera"}
+    </Link>
+  </CanAccess>
+  <CanAccess permission="create_branches">
+    <button 
+      className="btn-primary" 
+      onClick={handleCreate}
+      style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+      title="Nueva Sucursal"
+    >
+      <Plus size={18} />
+      {!isMobile && "Nueva Sucursal"}
+    </button>
+  </CanAccess>
+  <button 
+    className="btn-secondary" 
+    onClick={loadBranches}
+    style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+    title="Actualizar"
+  >
+    <RefreshCw size={18} className={loading ? "spin" : ""} />
+    {!isMobile && "Actualizar"}
+  </button>
+</div>
+</div>
 
-          <CanAccess permission="view_branches">
-            <Link 
-              to="/dashboard/branches/deleted"
-              className="btn-secondary" 
-              style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
-            >
-              <Trash2 size={16} /> Papelera
-            </Link>
-          </CanAccess>
-        </div>
-      </div>
-
-      <div className="filters-container" style={{ marginBottom: '20px' }}>
+<div className="filters-container" style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -174,7 +198,7 @@ export default function Branches() {
       ) : filteredBranches.length === 0 ? (
         <div className="empty-state">No se encontraron sucursales.</div>
       ) : viewMode === "grid" ? (
-        <div className="branches-grid">
+        <div className="branches-grid" style={{ gridTemplateColumns: isMobile ? "1fr" : undefined }}>
           {filteredBranches.map((branch) => {
             const primaryImage = branch.images?.find(img => img.is_primary)?.image_url 
               || branch.images?.[0]?.image_url 
@@ -242,7 +266,7 @@ export default function Branches() {
               <th>Teléfono</th>
               <th>Gerente</th>
               <th>Estado</th>
-              <th>Acciones</th>
+              <th style={{ display: isMobile ? "none" : "table-cell" }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -261,7 +285,68 @@ export default function Branches() {
             ) : (
               filteredBranches.map((branch) => (
                 <tr key={branch.id}>
-                  <td style={{ fontWeight: 500 }}>{branch.name}</td>
+<td style={{ fontWeight: 500, position: 'relative' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+      <button 
+        className="btn-icon" 
+        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+        onClick={(event) => {
+          event.stopPropagation();
+          setActiveDropdown(activeDropdown === branch.id ? null : branch.id);
+        }}
+      >
+        <MoreVertical size={20} />
+      </button>
+      
+      {activeDropdown === branch.id && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setActiveDropdown(null);
+            }}
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '40px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 99,
+              minWidth: '150px',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '4px'
+            }}
+          >
+            <CanAccess permission="edit_branches">
+              <button 
+                onClick={() => { handleEdit(branch); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+              >
+                <Edit2 size={16} /> Editar
+              </button>
+            </CanAccess>
+            <CanAccess permission="delete_branches">
+              <button 
+                onClick={() => { setConfirmModal({ isOpen: true, id: branch.id }); setActiveDropdown(null); }}
+                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-danger)', width: '100%', fontSize: '14px' }}
+              >
+                <Trash2 size={16} /> Eliminar
+              </button>
+            </CanAccess>
+          </div>
+        </>
+      )}
+    </div>
+    {branch.name}
+  </div>
+</td>
                   <td>
                     {branch.address 
                       ? `${branch.address.street || ''} ${branch.address.city ? ', ' + branch.address.city : ''}` 
@@ -279,20 +364,20 @@ export default function Branches() {
                       {branch.is_active ? 'Activa' : 'Inactiva'}
                     </span>
                   </td>
-                  <td>
-                    <div className="table-actions">
-                      <CanAccess permission="edit_branches">
-                        <button className="btn-edit" onClick={() => handleEdit(branch)}>
-                          Editar
-                        </button>
-                      </CanAccess>
-                      <CanAccess permission="delete_branches">
-                        <button className="btn-delete" onClick={() => setConfirmModal({ isOpen: true, id: branch.id })}>
-                          Eliminar
-                        </button>
-                      </CanAccess>
-                    </div>
-                  </td>
+                  <td style={{ display: isMobile ? "none" : "table-cell" }}>
+  <div className="table-actions">
+    <CanAccess permission="edit_branches">
+      <button className="btn-edit" onClick={() => handleEdit(branch)}>
+        Editar
+      </button>
+    </CanAccess>
+    <CanAccess permission="delete_branches">
+      <button className="btn-delete" onClick={() => setConfirmModal({ isOpen: true, id: branch.id })}>
+        Eliminar
+      </button>
+    </CanAccess>
+  </div>
+</td>
                 </tr>
               ))
             )}
@@ -321,3 +406,11 @@ export default function Branches() {
     </div>
   );
 }
+
+
+
+
+
+
+
+

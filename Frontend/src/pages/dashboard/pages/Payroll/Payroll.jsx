@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, DollarSign, RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2, Printer } from "lucide-react";
+import { Search, DollarSign, RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2, Printer, MoreVertical, Eye } from "lucide-react";
 import { getEmployees } from "../../../../api/admin/employees";
 import { calculatePayroll, payPayroll, getPayrollHistory, deletePayroll } from "../../../../api/admin/payroll";
 import Spinner from "../../components/Spinner/Spinner";
@@ -30,6 +30,14 @@ export default function Payroll() {
   const [autoDeduct, setAutoDeduct] = useState(false);
   
   const [selectedPayslip, setSelectedPayslip] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -154,7 +162,7 @@ export default function Payroll() {
       <div className="products-header">
         <h1 className="products-title">Nómina y Pagos</h1>
         
-        <div className="products-header-actions">
+        <div style={{ display: "flex", gap: "12px", width: isMobile ? "100%" : "auto" }}>
           <CustomSelect 
             value={month} 
             onChange={(e) => setMonth(e.target.value)}
@@ -218,7 +226,7 @@ export default function Payroll() {
                   <th>EMPLEADO</th>
                   <th>DÍA DE PAGO</th>
                   <th>SUELDO BASE</th>
-                  <th className="text-right">ACCIÓN</th>
+                  <th className="text-right" style={{ display: isMobile ? "none" : "table-cell" }}>ACCIÓN</th>
                 </tr>
               </thead>
               <tbody>
@@ -243,7 +251,67 @@ export default function Payroll() {
                     
                     return (
                       <tr key={emp.id} className="fade-in">
-                        <td data-label="CÓDIGO"><span className="customer-code">{emp.employee_code}</span></td>
+                          <td data-label="C�DIGO" style={{ position: 'relative' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+                                {!isPaid && (
+                                  <button 
+                                    className="btn-icon" 
+                                    style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      setActiveDropdown(activeDropdown === emp.id ? null : emp.id);
+                                    }}
+                                  >
+                                    <MoreVertical size={20} />
+                                  </button>
+                                )}
+                                
+                                {activeDropdown === emp.id && !isPaid && (
+                                  <>
+                                    <div 
+                                      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setActiveDropdown(null);
+                                      }}
+                                    />
+                                    <div 
+                                      style={{
+                                        position: 'absolute',
+                                        left: '10px',
+                                        top: '40px',
+                                        background: 'var(--bg-card)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                        zIndex: 99,
+                                        minWidth: '150px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        padding: '4px'
+                                      }}
+                                    >
+                                      <button 
+                                        onClick={() => { handleCalculate(emp); setActiveDropdown(null); }}
+                                        style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+                                      >
+                                        <DollarSign size={16} /> Procesar
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span className="customer-code">{emp.employee_code}</span>
+                                {isPaid && isMobile && (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#10b981', fontWeight: 600, fontSize: '12px' }}>
+                                      <CheckCircle size={14} /> Pagado
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
                         <td data-label="EMPLEADO">
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontWeight: 600 }}>{fullName}</span>
@@ -256,8 +324,8 @@ export default function Payroll() {
                                 Día {hireDay} de cada mes
                             </span>
                         </td>
-                        <td data-label="SUELDO BASE">Bs. {Number(emp.base_salary).toFixed(2)}</td>
-                        <td className="text-right" data-label="ACCIÓN">
+                        <td data-label="SUELDO BASE">Bs. {Number(emp.base_salary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="text-right" style={{ display: isMobile ? "none" : "table-cell" }} data-label="ACCIÓN">
                           {isPaid ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: 600, padding: '8px 16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>
                                 <CheckCircle size={16} /> Pagado
@@ -290,7 +358,7 @@ export default function Payroll() {
                   <th>COMISIONES</th>
                   <th>DESCUENTOS</th>
                   <th>TOTAL PAGADO</th>
-                  <th className="text-right">ACCIONES</th>
+                  <th className="text-right" style={{ display: isMobile ? "none" : "table-cell" }}>ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
@@ -313,18 +381,75 @@ export default function Payroll() {
                     
                     return (
                       <tr key={pay.id} className="fade-in">
-                        <td data-label="FECHA DE PAGO">{new Date(pay.payment_date).toLocaleDateString()}</td>
+                          <td data-label="FECHA DE PAGO" style={{ position: 'relative' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+                                <button 
+                                  className="btn-icon" 
+                                  style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setActiveDropdown(activeDropdown === 'hist-' + pay.id ? null : 'hist-' + pay.id);
+                                  }}
+                                >
+                                  <MoreVertical size={20} />
+                                </button>
+                                
+                                {activeDropdown === 'hist-' + pay.id && (
+                                  <>
+                                    <div 
+                                      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setActiveDropdown(null);
+                                      }}
+                                    />
+                                    <div 
+                                      style={{
+                                        position: 'absolute',
+                                        left: '10px',
+                                        top: '40px',
+                                        background: 'var(--bg-card)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                        zIndex: 99,
+                                        minWidth: '150px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        padding: '4px'
+                                      }}
+                                    >
+                                      <button 
+                                        onClick={() => { setSelectedPayslip(pay); setActiveDropdown(null); }}
+                                        style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+                                      >
+                                        <FileText size={16} /> Ver Recibo
+                                      </button>
+                                      <button 
+                                        onClick={() => { handleDeletePayment(pay.id); setActiveDropdown(null); }}
+                                        style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-danger)', width: '100%', fontSize: '14px' }}
+                                      >
+                                        <Trash2 size={16} /> Anular Pago
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                              <span>{new Date(pay.payment_date).toLocaleDateString()}</span>
+                            </div>
+                          </td>
                         <td data-label="EMPLEADO">
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontWeight: 600 }}>{fullName}</span>
                             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{pay.employee?.employee_code}</span>
                           </div>
                         </td>
-                        <td data-label="SUELDO BASE">Bs. {Number(pay.base_salary).toFixed(2)}</td>
-                        <td data-label="COMISIONES">Bs. {Number(pay.commissions).toFixed(2)}</td>
-                        <td data-label="DESCUENTOS" style={{ color: '#ef4444' }}>Bs. {Number(pay.deductions).toFixed(2)}</td>
-                        <td data-label="TOTAL PAGADO"><strong style={{ color: '#10b981' }}>Bs. {Number(pay.total_paid).toFixed(2)}</strong></td>
-                        <td className="text-right" data-label="ACCIONES">
+                        <td data-label="SUELDO BASE">Bs. {Number(pay.base_salary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td data-label="COMISIONES">Bs. {Number(pay.commissions).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td data-label="DESCUENTOS" style={{ color: '#ef4444' }}>Bs. {Number(pay.deductions).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td data-label="TOTAL PAGADO"><strong style={{ color: '#10b981' }}>Bs. {Number(pay.total_paid).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
+                        <td className="text-right" style={{ display: isMobile ? "none" : "table-cell" }} data-label="ACCIONES">
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                               <button className="icon-btn" onClick={() => setSelectedPayslip(pay)} title="Ver Recibo">
                                 <FileText size={18} color="var(--color-primary)" />
@@ -390,11 +515,11 @@ export default function Payroll() {
                   <div style={{ background: 'var(--bg-input)', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-main)', fontSize: '14px' }}>
                       <span>Sueldo Base ({payrollData.employee.contract_type || 'Mes'})</span>
-                      <span style={{ fontWeight: 600 }}>Bs. {Number(payrollData.base_salary).toFixed(2)}</span>
+                      <span style={{ fontWeight: 600 }}>Bs. {Number(payrollData.base_salary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-main)', fontSize: '14px' }}>
                       <span>Comisiones ({payrollData.sales_count} ventas en el ciclo)</span>
-                      <span style={{ fontWeight: 600, color: '#10b981' }}>+ Bs. {Number(payrollData.commissions).toFixed(2)}</span>
+                      <span style={{ fontWeight: 600, color: '#10b981' }}>+ Bs. {Number(payrollData.commissions).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </div>
                     
                     <hr style={{ borderColor: 'var(--border-color)', margin: '4px 0' }} />
@@ -456,3 +581,9 @@ export default function Payroll() {
     </div>
   );
 }
+
+
+
+
+
+

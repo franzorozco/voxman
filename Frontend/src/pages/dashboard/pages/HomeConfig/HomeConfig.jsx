@@ -1070,6 +1070,47 @@ export default function HomeConfig() {
                               {POSITION_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                             </CustomSelect>
                           </div>
+                          {/* Row 3: Effects & Toggles */}
+                        <div className="hc-style-130">
+                          <label className="hc-style-137">
+                            <span className="hc-style-95">Efecto Visual</span>
+                            <CustomSelect value={bar.effect || "none"} onChange={e => updateTopBar(bar.id, "effect", e.target.value)} className="hc-style-115">
+                              <option value="none">Ninguno</option>
+                              <option value="border-glow">Bordes Iluminados (Fijo)</option>
+                              <option value="gradient-flow">Fondo Flotante (Gradiente)</option>
+                              <option value="rainbow-text">Texto Arcoíris (Fluido)</option>
+                              <option value="cyberpunk">Cyberpunk</option>
+                              <option value="text-breathe">Respiración de Texto</option>
+                              <option value="retro-wave">Onda Retro (Synthwave)</option>
+                              <option value="spotlight">Foco de Luz (Spotlight)</option>
+                              <option value="pulse">Latido (Pulse)</option>
+                              <option value="pulse-glow">Latido Resplandeciente</option>
+                              <option value="glow">Resplandor (Glow)</option>
+                              <option value="marquee">Deslizante (Marquee)</option>
+                              <option value="shimmer">Brillo (Shimmer)</option>
+                              <option value="bounce">Rebote (Bounce)</option>
+                              <option value="neon">Neón (Neon)</option>
+                              <option value="typewriter">Máquina de escribir</option>
+                              <option value="glitch">Glitch / Error</option>
+                              <option value="color-cycle">Ciclo Arcoíris</option>
+                              <option value="scanline">Escáner Láser</option>
+                              <option value="shake">Vibración (Shake)</option>
+                            </CustomSelect>
+                          </label>
+
+                          <div className="hc-style-138">
+                            <label className="hc-style-139">
+                              <input type="checkbox" checked={!!bar.useGradient} onChange={e => updateTopBar(bar.id, "useGradient", e.target.checked)} className="hc-style-140" />
+                              <span className="hc-style-85">Fondo Degradado</span>
+                            </label>
+                            
+                            <label className="hc-style-139">
+                              <input type="checkbox" checked={!!bar.isCloseable} onChange={e => updateTopBar(bar.id, "isCloseable", e.target.checked)} className="hc-style-140" />
+                              <span className="hc-style-85">Botón (X)</span>
+                            </label>
+                          </div>
+                        </div>
+                        
                         </div>
 
                         {/* Delete */}
@@ -1236,47 +1277,6 @@ export default function HomeConfig() {
                               <option value="40px 20px">Extra Grueso</option>
                             </CustomSelect>
                           </label>
-                        </div>
-
-                        {/* Row 3: Effects & Toggles */}
-                        <div className="hc-style-130">
-                          <label className="hc-style-137">
-                            <span className="hc-style-95">Efecto Visual</span>
-                            <CustomSelect value={bar.effect || "none"} onChange={e => updateTopBar(bar.id, "effect", e.target.value)} className="hc-style-115">
-                              <option value="none">Ninguno</option>
-                              <option value="border-glow">Bordes Iluminados (Fijo)</option>
-                              <option value="gradient-flow">Fondo Flotante (Gradiente)</option>
-                              <option value="rainbow-text">Texto Arcoíris (Fluido)</option>
-                              <option value="cyberpunk">Cyberpunk</option>
-                              <option value="text-breathe">Respiración de Texto</option>
-                              <option value="retro-wave">Onda Retro (Synthwave)</option>
-                              <option value="spotlight">Foco de Luz (Spotlight)</option>
-                              <option value="pulse">Latido (Pulse)</option>
-                              <option value="pulse-glow">Latido Resplandeciente</option>
-                              <option value="glow">Resplandor (Glow)</option>
-                              <option value="marquee">Deslizante (Marquee)</option>
-                              <option value="shimmer">Brillo (Shimmer)</option>
-                              <option value="bounce">Rebote (Bounce)</option>
-                              <option value="neon">Neón (Neon)</option>
-                              <option value="typewriter">Máquina de escribir</option>
-                              <option value="glitch">Glitch / Error</option>
-                              <option value="color-cycle">Ciclo Arcoíris</option>
-                              <option value="scanline">Escáner Láser</option>
-                              <option value="shake">Vibración (Shake)</option>
-                            </CustomSelect>
-                          </label>
-
-                          <div className="hc-style-138">
-                            <label className="hc-style-139">
-                              <input type="checkbox" checked={!!bar.useGradient} onChange={e => updateTopBar(bar.id, "useGradient", e.target.checked)} className="hc-style-140" />
-                              <span className="hc-style-85">Fondo Degradado</span>
-                            </label>
-                            
-                            <label className="hc-style-139">
-                              <input type="checkbox" checked={!!bar.isCloseable} onChange={e => updateTopBar(bar.id, "isCloseable", e.target.checked)} className="hc-style-140" />
-                              <span className="hc-style-85">Botón (X)</span>
-                            </label>
-                          </div>
                         </div>
                       </div>
 

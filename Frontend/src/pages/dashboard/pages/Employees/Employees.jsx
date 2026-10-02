@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Edit, Trash2, Eye, ArchiveRestore, Filter } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Eye, ArchiveRestore, Filter, MoreVertical, RefreshCw } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getEmployees, deleteEmployee } from "../../../../api/admin/employees";
 import EmployeeModal from "./EmployeeModal";
@@ -20,6 +20,14 @@ export default function Employees() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [detailsEmployee, setDetailsEmployee] = useState(null);
@@ -65,20 +73,30 @@ export default function Employees() {
     <div className="products-container fade-in">
       <div className="products-header">
         <h1 className="products-title">Empleados</h1>
-        <div className="products-header-actions">
-          <Link to="/dashboard/employees/deleted" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none' }}>
-            <ArchiveRestore size={18} />
-            Papelera
-          </Link>
-          <button 
-            className="btn-primary" 
-            onClick={() => { setSelectedEmployee(null); setIsModalOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-          >
-            <Plus size={18} />
-            Nuevo Empleado
-          </button>
-        </div>
+        <div style={{ display: "flex", gap: "8px", width: isMobile ? "100%" : "auto" }}>
+  <Link to="/dashboard/employees/deleted" className="btn-secondary" style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', padding: '10px' }} title="Papelera">
+    <ArchiveRestore size={18} />
+    {!isMobile && "Papelera"}
+  </Link>
+  <button 
+    className="btn-primary" 
+    onClick={() => { setSelectedEmployee(null); setIsModalOpen(true); }}
+    style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+    title="Nuevo Empleado"
+  >
+    <Plus size={18} />
+    {!isMobile && "Nuevo"}
+  </button>
+  <button 
+    className="btn-secondary" 
+    onClick={() => fetchEmployees(filters)}
+    style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
+    title="Actualizar"
+  >
+    <RefreshCw size={18} className={loading ? "spin" : ""} />
+    {!isMobile && "Actualizar"}
+  </button>
+</div>
       </div>
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
@@ -145,7 +163,7 @@ export default function Employees() {
                 <th>Contacto</th>
                 <th>Sueldo Base</th>
                 <th>Estado</th>
-                <th style={{ textAlign: 'center' }}>Acciones</th>
+                <th style={{ textAlign: 'center', display: isMobile ? "none" : "table-cell" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -155,11 +173,72 @@ export default function Employees() {
                 
                 return (
                   <tr key={e.id}>
-                    <td data-label="CÃ³digo">
-                      <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px' }}>
-                        {e.employee_code}
-                      </span>
-                    </td>
+                    <td data-label="Código" style={{ position: 'relative' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
+      <button 
+        className="btn-icon" 
+        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
+        onClick={(event) => {
+          event.stopPropagation();
+          setActiveDropdown(activeDropdown === e.id ? null : e.id);
+        }}
+      >
+        <MoreVertical size={20} />
+      </button>
+      
+      {activeDropdown === e.id && (
+        <>
+          <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setActiveDropdown(null);
+            }}
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '40px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 99,
+              minWidth: '150px',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '4px'
+            }}
+          >
+            <button 
+              onClick={() => { handleViewDetails(e); setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+            >
+              <Eye size={16} /> Ver Perfil
+            </button>
+            <button 
+              onClick={() => { handleEdit(e); setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+            >
+              <Edit size={16} /> Editar
+            </button>
+            <button 
+              onClick={() => { handleDelete(e.id); setActiveDropdown(null); }}
+              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-danger)', width: '100%', fontSize: '14px' }}
+            >
+              <Trash2 size={16} /> Eliminar
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+    <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px' }}>
+      {e.employee_code}
+    </span>
+  </div>
+</td>
                     <td data-label="Empleado">
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{fullName}</span>
@@ -175,14 +254,14 @@ export default function Employees() {
                       </div>
                     </td>
                     <td data-label="Sueldo Base">
-                      <span style={{ fontWeight: 500 }}>Bs. {Number(e.base_salary).toFixed(2)}</span>
+                      <span style={{ fontWeight: 500 }}>Bs. {Number(e.base_salary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                     </td>
                     <td data-label="Estado">
                       <span style={{ background: 'var(--bg-overlay)', color: e.is_active ? 'var(--color-success)' : 'var(--color-danger)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                         {e.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td data-label="Acciones">
+                    <td data-label="Acciones" className={isMobile ? "hide-on-mobile" : ""} style={{ display: isMobile ? "none" : "table-cell" }}>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                         <button 
                           className="btn-secondary"
@@ -245,3 +324,10 @@ export default function Employees() {
     </div>
   );
 }
+
+
+
+
+
+
+
