@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Trash2, Edit, Truck, RefreshCw, RotateCcw } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { Eye, MoreVertical } from "lucide-react";
 import { getSuppliers, deleteSupplier, getSupplierStats } from "../../../../api/admin/suppliers";
@@ -168,45 +169,8 @@ export default function Suppliers() {
                 <tr key={supplier.id}>
                   <td style={{ position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
-                        <button 
-                          className="btn-icon" 
-                          style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveDropdown(activeDropdown === supplier.id ? null : supplier.id);
-                          }}
-                        >
-                          <MoreVertical size={20} />
-                        </button>
-                        
-                        {activeDropdown === supplier.id && (
-                          <>
-                            <div 
-                              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveDropdown(null);
-                              }}
-                            />
-                            <div 
-                              style={{
-                                position: 'absolute',
-                                left: '10px',
-                                top: '40px',
-                                background: 'var(--bg-card)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                zIndex: 99,
-                                minWidth: '150px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                overflow: 'hidden'
-                              }}
-                            >
-                              <CanAccess permission="view_suppliers">
-                                <button
+                      <RowDropdown rowId={supplier.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+      <button
                                   style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px' }}
                                   onClick={() => {
                                     navigate(`/dashboard/suppliers/${supplier.id}`);
@@ -215,33 +179,7 @@ export default function Suppliers() {
                                 >
                                   <Eye size={16} /> Ver Perfil
                                 </button>
-                              </CanAccess>
-                              <CanAccess permission="edit_suppliers">
-                                <button
-                                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px' }}
-                                  onClick={() => {
-                                    openModal(supplier);
-                                    setActiveDropdown(null);
-                                  }}
-                                >
-                                  <Edit size={16} /> Editar
-                                </button>
-                              </CanAccess>
-                              <CanAccess permission="delete_suppliers">
-                                <button
-                                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--color-danger)', width: '100%', textAlign: 'left', fontSize: '14px' }}
-                                  onClick={() => {
-                                    handleDelete(supplier.id);
-                                    setActiveDropdown(null);
-                                  }}
-                                >
-                                  <Trash2 size={16} /> Eliminar
-                                </button>
-                              </CanAccess>
-                            </div>
-                          </>
-                        )}
-                      </div>
+    </RowDropdown>
 
                       <div>
                         <div style={{ fontWeight: 600 }}>{supplier.name}</div>
@@ -307,3 +245,4 @@ export default function Suppliers() {
     </div>
   );
 }
+

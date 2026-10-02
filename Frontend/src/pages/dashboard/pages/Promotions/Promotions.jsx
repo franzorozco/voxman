@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, Ticket, Eye, EyeOff, RotateCcw, RefreshCw, Filter } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getPromotions, deletePromotion } from "../../../../api/admin/discounts";
 import PromotionModal from "./PromotionModal";
@@ -225,43 +226,8 @@ export default function Promotions() {
                   <tr key={promo.id}>
                     <td data-label="Nombre" style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
-      <button 
-        className="btn-icon" 
-        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
-        onClick={(event) => {
-          event.stopPropagation();
-          setActiveDropdown(activeDropdown === promo.id ? null : promo.id);
-        }}
-      >
-        <MoreVertical size={20} />
-      </button>
-      
-      {activeDropdown === promo.id && (
-        <>
-          <div 
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-            onClick={(event) => {
-              event.stopPropagation();
-              setActiveDropdown(null);
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '40px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              zIndex: 99,
-              minWidth: '150px',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '4px'
-            }}
-          >
+    <RowDropdown rowId={promo.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+          
             <button 
               onClick={() => { handleOpenCoupon(promo); setActiveDropdown(null); }}
               style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
@@ -280,10 +246,7 @@ export default function Promotions() {
             >
               <Trash2 size={16} /> Eliminar
             </button>
-          </div>
-        </>
-      )}
-    </div>
+</RowDropdown>
     <span className="promo-name">{promo.name}</span>
   </div>
 </td>
@@ -419,6 +382,9 @@ export default function Promotions() {
     </div>
   );
 }
+
+
+
 
 
 

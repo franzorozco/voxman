@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { getBranches, deleteBranch } from "../../../../api/admin/branches";
 import { Plus, LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2, Search, Filter, RefreshCw, MoreVertical } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import BranchFormModal from "./BranchFormModal";
 import CanAccess from "../../../../components/ui/CanAccess";
@@ -287,43 +288,8 @@ export default function Branches() {
                 <tr key={branch.id}>
 <td style={{ fontWeight: 500, position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
-      <button 
-        className="btn-icon" 
-        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
-        onClick={(event) => {
-          event.stopPropagation();
-          setActiveDropdown(activeDropdown === branch.id ? null : branch.id);
-        }}
-      >
-        <MoreVertical size={20} />
-      </button>
-      
-      {activeDropdown === branch.id && (
-        <>
-          <div 
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-            onClick={(event) => {
-              event.stopPropagation();
-              setActiveDropdown(null);
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '40px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              zIndex: 99,
-              minWidth: '150px',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '4px'
-            }}
-          >
+    <RowDropdown rowId={branch.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+          
             <CanAccess permission="edit_branches">
               <button 
                 onClick={() => { handleEdit(branch); setActiveDropdown(null); }}
@@ -340,10 +306,7 @@ export default function Branches() {
                 <Trash2 size={16} /> Eliminar
               </button>
             </CanAccess>
-          </div>
-        </>
-      )}
-    </div>
+</RowDropdown>
     {branch.name}
   </div>
 </td>
@@ -406,6 +369,9 @@ export default function Branches() {
     </div>
   );
 }
+
+
+
 
 
 

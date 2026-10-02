@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, FileText, XCircle, RefreshCw, Eye, Package, Filter, MoreVertical } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getPurchases, cancelPurchase, getPurchaseStats } from "../../../../api/admin/purchases";
 import { Link } from "react-router-dom";
@@ -190,44 +191,8 @@ export default function PurchasesList() {
                 <tr key={purchase.id}>
                   <td style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
-      <button 
-        className="btn-icon" 
-        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setActiveDropdown(activeDropdown === purchase.id ? null : purchase.id);
-        }}
-      >
-        <MoreVertical size={20} />
-      </button>
-      
-      {activeDropdown === purchase.id && (
-        <>
-          <div 
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveDropdown(null);
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '40px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              zIndex: 99,
-              minWidth: '200px',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
-          >
-            <button
+    <RowDropdown rowId={purchase.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+      <button
               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px' }}
               onClick={() => {
                 setSelectedPurchase(purchase);
@@ -236,36 +201,7 @@ export default function PurchasesList() {
             >
               <Eye size={16} /> Ver Detalles
             </button>
-
-            <CanAccess permission="receive_inventory">
-              {purchase.status === 'pending' && (
-                <Link
-                  to={`/dashboard/purchases/receive/${purchase.id}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px', textDecoration: 'none' }}
-                  onClick={() => setActiveDropdown(null)}
-                >
-                  <Package size={16} /> Recepcionar
-                </Link>
-              )}
-            </CanAccess>
-
-            <CanAccess permission="cancel_purchases">
-              {purchase.status === 'pending' && (
-                <button
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--color-danger)', width: '100%', textAlign: 'left', fontSize: '14px' }}
-                  onClick={() => {
-                    handleCancel(purchase.id);
-                    setActiveDropdown(null);
-                  }}
-                >
-                  <XCircle size={16} /> Anular Compra
-                </button>
-              )}
-            </CanAccess>
-          </div>
-        </>
-      )}
-    </div>
+    </RowDropdown>
     <div>{new Date(purchase.created_at).toLocaleDateString()}</div>
   </div>
 </td>
@@ -331,5 +267,6 @@ export default function PurchasesList() {
     </div>
   );
 }
+
 
 

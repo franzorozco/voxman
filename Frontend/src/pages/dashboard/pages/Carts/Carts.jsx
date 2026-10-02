@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit, Truck, MoreVertical } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getCarts, deleteCart, convertCartToSale, sendCartReminder, convertCartToOrder, restoreCart } from "../../../../api/admin/carts";
 import CartDetailsModal from "./CartDetailsModal";
@@ -12,6 +13,7 @@ import CustomSelect from '../../../../components/ui/CustomSelect';
 import { useNavigate } from 'react-router-dom';
 
 export default function Carts() {
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const navigate = useNavigate();
   const [carts, setCarts] = useState([]);
   const [successModalData, setSuccessModalData] = useState({ isOpen: false, scheduleId: null, details: null, mappedType: null });
@@ -408,17 +410,14 @@ export default function Carts() {
                   <tr key={cart.id}>
                     <td className="first-col-mobile">
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <div className="mobile-actions-dropdown hide-on-pc">
-                          <div className="dropdown-toggle" tabIndex="0">
-                            <MoreVertical size={18} />
-                          </div>
-                          <div className="dropdown-content">
-                            <button className="dropdown-item" onClick={() => handleViewDetails(cart)}>
+                        <div className="hide-on-pc">
+                            <RowDropdown rowId={cart.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+                              <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => handleViewDetails(cart)}>
                               <Eye size={16} /> Ver Detalles
                             </button>
                             <CanAccess permission="edit_carts">
                               {(cart.status !== 'converted' && cart.status !== 'ordered') && (
-                                <button className="dropdown-item" onClick={() => handleOpenForm(cart)} style={{ color: 'var(--color-warning)' }}>
+                                <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--color-warning)", width: "100%", fontSize: "14px" }} onClick={() => handleOpenForm(cart)}>
                                   <Edit size={16} /> Editar Proforma
                                 </button>
                               )}
@@ -426,29 +425,29 @@ export default function Carts() {
                             {(cart.status === 'proforma' || cart.status === 'active') && (
                               <>
                                 <CanAccess permission="convert_carts">
-                                  <button className="dropdown-item" onClick={() => handleConvertClick(cart.id)} style={{ color: '#10b981' }}>
+                                  <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "#10b981", width: "100%", fontSize: "14px" }} onClick={() => handleConvertClick(cart.id)}>
                                     <CheckCircle size={16} /> Convertir a Venta
                                   </button>
                                 </CanAccess>
                                 <CanAccess permission="create_orders">
-                                  <button className="dropdown-item" onClick={() => handleConvertToOrderClick(cart.id)} style={{ color: 'var(--color-primary)' }}>
+                                  <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--color-primary)", width: "100%", fontSize: "14px" }} onClick={() => handleConvertToOrderClick(cart.id)}>
                                     <Truck size={16} /> Convertir a Entrega
                                   </button>
                                 </CanAccess>
                               </>
                             )}
                             {cart.status === 'ordered' && (
-                              <button className="dropdown-item" onClick={() => handleReopenSuccessModal(cart)}>
+                              <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => handleReopenSuccessModal(cart)}>
                                 <Eye size={16} /> Ver Conversión
                               </button>
                             )}
                             <CanAccess permission="delete_carts">
-                              <button className="dropdown-item" onClick={() => handleDelete(cart.id)} style={{ color: '#ef4444' }}>
+                              <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "#ef4444", width: "100%", fontSize: "14px" }} onClick={() => handleDelete(cart.id)}>
                                 <Trash2 size={16} /> Eliminar
                               </button>
                             </CanAccess>
+                            </RowDropdown>
                           </div>
-                        </div>
                         <span style={{ fontWeight: 600 }}>{cart.reference_number || "Sin Ref."}</span>
                       </div>
                     </td>
@@ -612,3 +611,7 @@ export default function Carts() {
     </div>
   );
 }
+
+
+
+

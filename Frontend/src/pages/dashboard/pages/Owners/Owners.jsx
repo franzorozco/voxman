@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, Eye, MoreVertical } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getOwners, deleteOwner } from "../../../../api/admin/owners";
 import OwnerModal from "./OwnerModal";
@@ -131,43 +132,10 @@ export default function Owners() {
                     <tr key={owner.id}>
                       <td data-label="Socio" style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
-      <button 
-        className="btn-icon" 
-        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setActiveDropdown(activeDropdown === owner.id ? null : owner.id);
-        }}
-      >
-        <MoreVertical size={20} />
-      </button>
+    <RowDropdown rowId={owner.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
       
-      {activeDropdown === owner.id && (
-        <>
-          <div 
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveDropdown(null);
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '40px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              zIndex: 99,
-              minWidth: '150px',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '4px'
-            }}
-          >
+      
+      
             <button 
               onClick={() => { window.location.href = "/dashboard/owners/" + owner.id; setActiveDropdown(null); }}
               style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
@@ -188,10 +156,7 @@ export default function Owners() {
                 <Trash2 size={16} /> Eliminar
               </button>
             </CanAccess>
-          </div>
-        </>
-      )}
-    </div>
+</RowDropdown>
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{fullName}</span>
       <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{owner.user?.email || "Sin correo"}</span>
@@ -278,6 +243,10 @@ export default function Owners() {
     </div>
   );
 }
+
+
+
+
 
 
 

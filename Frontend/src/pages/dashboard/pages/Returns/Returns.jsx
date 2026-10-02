@@ -1,6 +1,7 @@
-锘縤mport { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { Search, Filter, RefreshCw, Eye, Undo2, DollarSign, PackageOpen, MoreVertical } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getReturns } from "../../../../api/admin/returns";
 import { API_BASE_URL } from '../../../../config/api';
@@ -16,6 +17,7 @@ export default function Returns() {
     return_rate: 0
   });
   const [loading, setLoading] = useState(true);
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
@@ -99,7 +101,7 @@ export default function Returns() {
             <Filter size={24} />
           </div>
           <div className="metric-content">
-            <div className="metric-label">Tasa de Devoluci贸n</div>
+            <div className="metric-label">Tasa de Devoluci髇</div>
             <div className="metric-value">{summary.return_rate}%</div>
           </div>
         </div>
@@ -136,7 +138,7 @@ export default function Returns() {
               >
                 <option value="">Todos los Estados</option>
                 <option value="pending">Pendiente</option>
-                <option value="inspection">En Inspecci贸n</option>
+                <option value="inspection">En Inspecci髇</option>
                 <option value="approved">Aprobado / Reembolsado</option>
                 <option value="rejected">Rechazado</option>
               </CustomSelect>
@@ -179,7 +181,7 @@ export default function Returns() {
                 <th>Estado</th>
                 <th>Reembolso</th>
                 <th>Fecha</th>
-                <th className="actions-col" style={{ textAlign: 'right' }}>Acci贸n</th>
+                <th className="actions-col" style={{ textAlign: 'right' }}>Acci髇</th>
               </tr>
             </thead>
             <tbody>
@@ -194,16 +196,13 @@ export default function Returns() {
                   <tr key={ret.id}>
                     <td className="first-col-mobile">
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <div className="mobile-actions-dropdown hide-on-pc">
-                          <div className="dropdown-toggle" tabIndex="0">
-                            <MoreVertical size={18} />
-                          </div>
-                          <div className="dropdown-content">
-                            <button onClick={() => handleViewDetails(ret)} className="dropdown-item">
+                        <div className="hide-on-pc">
+                            <RowDropdown rowId={ret.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+                              <button onClick={() => handleViewDetails(ret)} style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }}>
                               <Eye size={16} /> Ver / Gestionar
                             </button>
+                            </RowDropdown>
                           </div>
-                        </div>
                         <span style={{ fontWeight: 600 }}>{ret.reference_number || "S/N"}</span>
                       </div>
                     </td>
@@ -253,7 +252,7 @@ export default function Returns() {
                     <td>
                       <span className={`status-badge status-${ret.status}`}>
                         {ret.status === 'pending' && 'Pendiente'}
-                        {ret.status === 'inspection' && 'Inspecci贸n'}
+                        {ret.status === 'inspection' && 'Inspecci髇'}
                         {ret.status === 'approved' && 'Aprobado'}
                         {ret.status === 'rejected' && 'Rechazado'}
                       </span>
@@ -284,3 +283,5 @@ export default function Returns() {
     </div>
   );
 }
+
+

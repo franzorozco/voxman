@@ -1,10 +1,12 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import React from "react";
 import { Edit2, Trash2, Eye, MoreVertical, CheckSquare } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import CanAccess from "../../../../components/ui/CanAccess";
 import { API_BASE_URL } from "../../../../config/api";
 
 export default function BundlesTable({ bundles, loading, selectedRows, setSelectedRows, onEdit, onDelete, onView }) {
+  const [activeDropdown, setActiveDropdown] = useState(null);
   if (loading) {
     return <div className="loading-state">Cargando conjuntos...</div>;
   }
@@ -65,29 +67,26 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                     <input type="checkbox" checked={selectedRows.includes(bundle.id)} onChange={() => handleSelectRow(bundle.id)} className="custom-table-checkbox" />
                   </div>
                   {!selectedRows.includes(bundle.id) && (
-                    <div className="mobile-actions-dropdown hide-on-pc">
-                      <div className="dropdown-toggle" tabIndex="0" style={{ padding: '0' }}>
-                        <MoreVertical size={18} />
-                      </div>
-                      <div className="dropdown-content">
-                        <button className="dropdown-item" onClick={() => handleSelectRow(bundle.id)}>
+                    <div className="hide-on-pc">
+                            <RowDropdown rowId={bundle.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+                              <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => handleSelectRow(bundle.id)}>
                           <CheckSquare size={16} /> Seleccionar
                         </button>
-                        <button className="dropdown-item" onClick={() => onView && onView(bundle)}>
+                        <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => onView && onView(bundle)}>
                           <Eye size={16} /> Ver
                         </button>
                         <CanAccess permission="edit_products">
-                          <button className="dropdown-item" onClick={() => onEdit(bundle)}>
+                          <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => onEdit(bundle)}>
                             <Edit2 size={16} /> Editar
                           </button>
                         </CanAccess>
                         <CanAccess permission="delete_products">
-                          <button className="dropdown-item" onClick={() => onDelete(bundle.id)} style={{ color: '#ef4444' }}>
+                          <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "#ef4444", width: "100%", fontSize: "14px" }} onClick={() => onDelete(bundle.id)}>
                             <Trash2 size={16} /> Eliminar
                           </button>
                         </CanAccess>
-                      </div>
-                    </div>
+                            </RowDropdown>
+                          </div>
                   )}
                 </td>
                 <td onClick={() => onView && onView(bundle)} className="bt-clickable-td">
@@ -160,3 +159,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
     </div>
   );
 }
+
+
+
+

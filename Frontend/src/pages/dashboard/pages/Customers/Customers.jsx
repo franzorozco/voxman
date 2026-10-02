@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload, RefreshCw, Users } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getCustomers, deleteCustomer, getCustomerKpis } from "../../../../api/admin/customers";
 import CustomerModal from "./CustomerModal";
@@ -10,6 +11,7 @@ import { Link } from "react-router-dom";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Customers() {
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState({ totalCustomers: 0, activeCustomers: 0, newThisMonth: 0, totalPoints: 0 });
@@ -280,22 +282,19 @@ export default function Customers() {
                   <tr key={c.id}>
                     <td data-label="Código" className="first-col-mobile">
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <div className="mobile-actions-dropdown hide-on-pc">
-                          <div className="dropdown-toggle" tabIndex="0">
-                            <MoreVertical size={18} />
-                          </div>
-                          <div className="dropdown-content">
-                            <button onClick={() => handleViewDetails(c)} className="dropdown-item">
+                        <div className="hide-on-pc">
+                            <RowDropdown rowId={c.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+                              <button onClick={() => handleViewDetails(c)} style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }}>
                               <Eye size={16} /> Ver Expediente
                             </button>
-                            <button onClick={() => handleEdit(c)} className="dropdown-item">
+                            <button onClick={() => handleEdit(c)} style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }}>
                               <Edit size={16} /> Editar
                             </button>
-                            <button onClick={() => handleDelete(c.id)} className="dropdown-item" style={{ color: '#ef4444' }}>
+                            <button onClick={() => handleDelete(c.id)} style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "#ef4444", width: "100%", fontSize: "14px" }}>
                               <Trash2 size={16} /> Eliminar
                             </button>
+                            </RowDropdown>
                           </div>
-                        </div>
                         <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px' }}>
                           {c.customer_code}
                         </span>
@@ -425,3 +424,6 @@ export default function Customers() {
     </div>
   );
 }
+
+
+

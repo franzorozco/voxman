@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, Eye, ArchiveRestore, Filter, MoreVertical, RefreshCw } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getEmployees, deleteEmployee } from "../../../../api/admin/employees";
 import EmployeeModal from "./EmployeeModal";
@@ -175,43 +176,8 @@ export default function Employees() {
                   <tr key={e.id}>
                     <td data-label="Código" style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
-      <button 
-        className="btn-icon" 
-        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
-        onClick={(event) => {
-          event.stopPropagation();
-          setActiveDropdown(activeDropdown === e.id ? null : e.id);
-        }}
-      >
-        <MoreVertical size={20} />
-      </button>
-      
-      {activeDropdown === e.id && (
-        <>
-          <div 
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-            onClick={(event) => {
-              event.stopPropagation();
-              setActiveDropdown(null);
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '40px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              zIndex: 99,
-              minWidth: '150px',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '4px'
-            }}
-          >
+    <RowDropdown rowId={e.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+          
             <button 
               onClick={() => { handleViewDetails(e); setActiveDropdown(null); }}
               style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
@@ -230,10 +196,7 @@ export default function Employees() {
             >
               <Trash2 size={16} /> Eliminar
             </button>
-          </div>
-        </>
-      )}
-    </div>
+</RowDropdown>
     <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px' }}>
       {e.employee_code}
     </span>
@@ -324,6 +287,9 @@ export default function Employees() {
     </div>
   );
 }
+
+
+
 
 
 

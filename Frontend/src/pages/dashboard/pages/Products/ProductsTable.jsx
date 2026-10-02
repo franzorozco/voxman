@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { getImageUrl } from '../../../../utils/imageUtils';
 import {
   API_BASE_URL
 } from "../../../../config/api";
 import { ChevronUp, ChevronDown, Ruler, MoreVertical, Eye, Edit, Trash2, CheckSquare } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import CanAccess from "../../../../components/ui/CanAccess";
 import Spinner from "../../components/Spinner/Spinner";
 import { useAuthStore } from "../../../../store/authStore";
@@ -18,6 +20,7 @@ export default function ProductsTable({
   setSelectedRows = () => {}
 }) {
 
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const user = useAuthStore((state) => state.user);
   const canViewCosts = user?.permissions?.includes("view_product_costs") || user?.roles?.includes("Owner");
 
@@ -167,31 +170,28 @@ export default function ProductsTable({
                       />
                     </div>
                     {!selectedRows.includes(p.id) && (
-                      <div className="mobile-actions-dropdown hide-on-pc">
-                        <div className="dropdown-toggle" tabIndex="0" style={{ padding: '0' }}>
-                          <MoreVertical size={18} />
-                        </div>
-                        <div className="dropdown-content">
-                          <button className="dropdown-item" onClick={() => handleSelectRow(p.id)}>
+                      <div className="hide-on-pc">
+                            <RowDropdown rowId={p.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+                              <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => handleSelectRow(p.id)}>
                             <CheckSquare size={16} /> Seleccionar
                           </button>
                           <CanAccess permission="view_products">
-                            <button className="dropdown-item" onClick={() => onView(p)}>
+                            <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => onView(p)}>
                               <Eye size={16} /> Ver
                             </button>
                           </CanAccess>
                           <CanAccess permission="edit_products">
-                            <button className="dropdown-item" onClick={() => onEdit(p)}>
+                            <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => onEdit(p)}>
                               <Edit size={16} /> Variables
                             </button>
                           </CanAccess>
                           <CanAccess permission="delete_products">
-                            <button className="dropdown-item" onClick={() => onDelete(p.id)} style={{ color: '#ef4444' }}>
+                            <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "#ef4444", width: "100%", fontSize: "14px" }} onClick={() => onDelete(p.id)}>
                               <Trash2 size={16} /> Eliminar
                             </button>
                           </CanAccess>
-                        </div>
-                      </div>
+                            </RowDropdown>
+                          </div>
                     )}
                   </td>
                   {/* IMAGE */}
@@ -377,3 +377,9 @@ export default function ProductsTable({
     </div>
   );
 }
+
+
+
+
+
+

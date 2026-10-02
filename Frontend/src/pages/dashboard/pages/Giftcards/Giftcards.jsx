@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Trash2, Edit, Ticket, RefreshCw, Eye, EyeOff, Smartphone, MoreVertical, Filter } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getGiftcards, deleteGiftcard } from "../../../../api/admin/giftcards";
 import GiftcardModal from "./GiftcardModal";
@@ -222,43 +223,8 @@ export default function Giftcards() {
                   <tr key={g.id}>
                     <td data-label="C�digo" style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
-      <button 
-        className="btn-icon" 
-        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
-        onClick={(event) => {
-          event.stopPropagation();
-          setActiveDropdown(activeDropdown === g.id ? null : g.id);
-        }}
-      >
-        <MoreVertical size={20} />
-      </button>
-      
-      {activeDropdown === g.id && (
-        <>
-          <div 
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-            onClick={(event) => {
-              event.stopPropagation();
-              setActiveDropdown(null);
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '40px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              zIndex: 99,
-              minWidth: '150px',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '4px'
-            }}
-          >
+    <RowDropdown rowId={g.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+          
             <button 
               onClick={() => { handleOpenCoupon(g); setActiveDropdown(null); }}
               style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
@@ -295,10 +261,7 @@ export default function Giftcards() {
                 <Trash2 size={16} /> Eliminar
               </button>
             )}
-          </div>
-        </>
-      )}
-    </div>
+</RowDropdown>
     <div className="gift-code-wrapper">
       <span className="gift-code-text">
                           {visibleCodes[g.id] ? g.code : "••••••••"}
@@ -436,6 +399,9 @@ export default function Giftcards() {
     </div>
   );
 }
+
+
+
 
 
 

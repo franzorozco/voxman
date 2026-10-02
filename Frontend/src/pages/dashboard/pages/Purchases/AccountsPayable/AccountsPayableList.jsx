@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, DollarSign, Clock, CheckCircle, RefreshCw, Eye, FileText, AlertTriangle, Filter, MoreVertical } from "lucide-react";
+import RowDropdown from "../../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getAccountsPayable, getAccountsPayableStats } from "../../../../../api/admin/accountsPayable";
 import { getPurchase } from "../../../../../api/admin/purchases";
@@ -175,44 +176,8 @@ export default function AccountsPayableList() {
                   <tr key={acc.id} className={isOverdue ? "row-overdue" : ""}>
                     <td style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <div className="show-on-mobile" style={{ display: isMobile ? 'block' : 'none' }}>
-      <button 
-        className="btn-icon" 
-        style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', padding: 0, margin: 0, width: 'auto', height: 'auto' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setActiveDropdown(activeDropdown === acc.id ? null : acc.id);
-        }}
-      >
-        <MoreVertical size={20} />
-      </button>
-      
-      {activeDropdown === acc.id && (
-        <>
-          <div 
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 98 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveDropdown(null);
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '40px',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              zIndex: 99,
-              minWidth: '200px',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
-          >
-            <button
+    <RowDropdown rowId={acc.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+      <button
               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px' }}
               onClick={async () => {
                 setActiveDropdown(null);
@@ -232,10 +197,7 @@ export default function AccountsPayableList() {
               {acc.status === 'paid' ? <Eye size={16} /> : <DollarSign size={16} />}
               {acc.status === 'paid' ? ' Ver' : ' Pagar'}
             </button>
-          </div>
-        </>
-      )}
-    </div>
+    </RowDropdown>
     <div>
       <div style={{ fontWeight: 600 }}>{acc.supplier?.name || "Desconocido"}</div>
       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{acc.supplier?.contact_name}</div>
@@ -295,6 +257,7 @@ export default function AccountsPayableList() {
     </div>
   );
 }
+
 
 
 

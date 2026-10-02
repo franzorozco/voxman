@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Eye, Filter, CheckCircle, XCircle, ShoppingBag, Clock, RotateCcw, MoreVertical, RefreshCw } from "lucide-react";
+import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getSales } from "../../../../api/admin/sales";
 import { getBranches } from "../../../../api/admin/branches";
@@ -12,6 +13,7 @@ import "./Sales.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Sales() {
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [sales, setSales] = useState([]);
   const [summary, setSummary] = useState({
     total_revenue: 0,
@@ -292,16 +294,13 @@ export default function Sales() {
                 <tr key={sale.id}>
                   <td className="first-col-mobile">
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                      <div className="mobile-actions-dropdown hide-on-pc">
-                        <div className="dropdown-toggle" tabIndex="0">
-                          <MoreVertical size={18} />
-                        </div>
-                        <div className="dropdown-content">
-                          <button onClick={() => openDetailsModal(sale.id)} className="dropdown-item">
+                      <div className="hide-on-pc">
+                            <RowDropdown rowId={sale.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+                              <button onClick={() => openDetailsModal(sale.id)} style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }}>
                             <Eye size={16} /> Ver Detalles
                           </button>
-                        </div>
-                      </div>
+                            </RowDropdown>
+                          </div>
                       <div className="invoice-content">
                         <div style={{ fontWeight: 600 }}>{sale.invoice_number || 'S/N'}</div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -448,3 +447,6 @@ export default function Sales() {
     </div>
   );
 }
+
+
+
