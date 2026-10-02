@@ -309,45 +309,44 @@ export default function UsersTable({
                   <tr key={u.id}>
 <td style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <RowDropdown rowId={u.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
-          
-            <CanAccess permission="view_users">
-              <button 
-                onClick={() => { setViewUser(u); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
-              >
-                <Eye size={16} /> Ver
-              </button>
-            </CanAccess>
-            <CanAccess permission="edit_users">
-              <button 
-                onClick={() => { if (!canModify(u)) return; onEdit(u); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: canModify(u) ? 'pointer' : 'not-allowed', color: canModify(u) ? 'var(--color-primary)' : 'var(--text-muted)', width: '100%', fontSize: '14px' }}
-                disabled={!canModify(u)}
-                title={!canModify(u) ? getModifyReason(u) : "Editar"}
-              >
-                <Edit size={16} /> Editar
-              </button>
-            </CanAccess>
-            <CanAccess permission="view_users">
-              <button 
-                onClick={() => { generateUserPdf(u.id); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
-              >
-                <FileText size={16} /> PDF
-              </button>
-            </CanAccess>
-            <CanAccess permission="delete_users">
-              <button 
-                onClick={() => { if (!canModify(u)) return; setConfirmId(u.id); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: canModify(u) ? 'pointer' : 'not-allowed', color: canModify(u) ? 'var(--color-danger)' : 'var(--text-muted)', width: '100%', fontSize: '14px' }}
-                disabled={!canModify(u)}
-                title={!canModify(u) ? getModifyReason(u) : "Eliminar"}
-              >
-                <Trash2 size={16} /> Eliminar
-              </button>
-            </CanAccess>
-</RowDropdown>
+          <RowDropdown rowId={u.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+        <CanAccess permission="view_users">
+          <button 
+            onClick={() => { setViewUser(u); setActiveDropdown(null); }}
+            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+          >
+            <Eye size={16} /> Ver
+          </button>
+        </CanAccess>
+        <CanAccess permission="edit_users">
+          <button 
+            onClick={() => { if (!canModify(u)) return; onEdit(u); setActiveDropdown(null); }}
+            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: canModify(u) ? 'pointer' : 'not-allowed', color: canModify(u) ? 'var(--color-primary)' : 'var(--text-muted)', width: '100%', fontSize: '14px' }}
+            disabled={!canModify(u)}
+            title={!canModify(u) ? getModifyReason(u) : "Editar"}
+          >
+            <Edit size={16} /> Editar
+          </button>
+        </CanAccess>
+        <CanAccess permission="view_users">
+          <button 
+            onClick={() => { generateUserPdf(u.id); setActiveDropdown(null); }}
+            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+          >
+            <FileText size={16} /> PDF
+          </button>
+        </CanAccess>
+        <CanAccess permission="delete_users">
+          <button 
+            onClick={() => { if (!canModify(u)) return; setConfirmId(u.id); setActiveDropdown(null); }}
+            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: canModify(u) ? 'pointer' : 'not-allowed', color: canModify(u) ? '#ef4444' : 'var(--text-muted)', width: '100%', fontSize: '14px' }}
+            disabled={!canModify(u)}
+            title={!canModify(u) ? getModifyReason(u) : "Eliminar"}
+          >
+            <Trash2 size={16} /> Eliminar
+          </button>
+        </CanAccess>
+      </RowDropdown>
     <span>{u.email}</span>
   </div>
 </td>
@@ -448,6 +447,7 @@ export default function UsersTable({
     </div>
   );
 }
+
 
 
 

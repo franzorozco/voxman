@@ -7,6 +7,9 @@ import { API_BASE_URL } from '../../../config/api';
 import { X, ShoppingBag } from 'lucide-react';
 import CustomSelect from '../../../components/ui/CustomSelect';
 
+import { useDebounce } from 'use-debounce';
+import { Virtuoso, VirtuosoGrid } from 'react-virtuoso';
+
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
 import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
@@ -51,7 +54,6 @@ const Catalog = () => {
       setViewMode(prev => prev === null ? (shopSettings.catalog_default_view || 'prendas') : prev);
       setImageMode(prev => prev === null ? (shopSettings.catalog_default_image_mode || 'presentacion') : prev);
       setSortBy(prev => prev === null ? (shopSettings.catalog_default_sort || 'recomendados') : prev);
-      setVisibleCount(prev => prev === null ? parseInt(shopSettings.catalog_products_per_page || '12', 10) : prev);
     }
   }, [shopSettings]);
 
@@ -63,10 +65,14 @@ const Catalog = () => {
 
   // Nuevos estados para filtros y paginación
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300); // 300ms debounce
   const [minPrice, setMinPrice] = useState('');
+  const [debouncedMinPrice] = useDebounce(minPrice, 300);
   const [maxPrice, setMaxPrice] = useState('');
+  const [debouncedMaxPrice] = useDebounce(maxPrice, 300);
   const [sortBy, setSortBy] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
 
   const categoriesFetchedRef = useRef(false);
@@ -90,36 +96,57 @@ const Catalog = () => {
 
   // Removido fetchWishlist para no sobrecargar
 
-  const lastFetchedCategoryRef = useRef(undefined);
+  // Reiniciar la página y limpiar productos cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+    setProducts([]);
+    setHasMore(true);
+  }, [selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy]);
 
+  // Obtener productos desde el backend (paginación server-side)
   useEffect(() => {
     if (!categoriesLoaded) return;
-    if (lastFetchedCategoryRef.current === selectedCategory) return; // Ya trajo estos datos recientemente
-
-    lastFetchedCategoryRef.current = selectedCategory;
+    if (!hasMore && currentPage > 1) return;
 
     const fetchCatalogItems = async () => {
-      setIsLoading(true);
+      if (currentPage === 1) setIsLoading(true);
+      
       try {
-        // Obtenemos un límite alto (ej. 200) para poder hacer filtros, sort y búsqueda cliente-side
-        // ya que el backend no soporta todo esto nativamente aún.
-        const params = { per_page: 200 };
+        const perPage = parseInt(cfg('catalog_products_per_page', '12'), 10);
+        const params = { page: currentPage, per_page: perPage };
+
         if (selectedCategory) {
           const children = categories.filter(c => c.parent_id === selectedCategory);
           const ids = [selectedCategory, ...children.map(c => c.id)];
           params.category_id = ids.join(',');
         }
+        if (debouncedSearchQuery) params.search = debouncedSearchQuery;
+        if (debouncedMinPrice) params.min_price = debouncedMinPrice;
+        if (debouncedMaxPrice) params.max_price = debouncedMaxPrice;
+        if (sortBy) params.list_type = sortBy;
+
         const response = await getProducts(params);
-        setProducts(response.data?.data || response.data || []);
-        setVisibleCount(parseInt(cfg('catalog_products_per_page', '12'), 10)); // Resetear paginación al cambiar de categoría
+        const fetchedProducts = response.data?.data || response.data || [];
+
+        setProducts(prev => {
+          if (currentPage === 1) return fetchedProducts;
+          // Evitar duplicados
+          const newProducts = fetchedProducts.filter(fp => !prev.some(p => p.id === fp.id));
+          return [...prev, ...newProducts];
+        });
+
+        if (fetchedProducts.length < perPage) {
+          setHasMore(false);
+        }
       } catch (error) {
         console.error('Error loading catalog items', error);
       } finally {
-        setIsLoading(false);
+        if (currentPage === 1) setIsLoading(false);
       }
     };
+
     fetchCatalogItems();
-  }, [selectedCategory, categoriesLoaded, categories]);
+  }, [categoriesLoaded, currentPage, selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, categories]);
 
   useEffect(() => {
     if (expandedProductId && expandRef.current) {
@@ -206,8 +233,10 @@ const Catalog = () => {
     }
     return variants;
   };
-  // Extraer prendas (colores/variantes) con segunda imagen
-  const getPrendas = () => {
+  // Extraer prendas (colores/variantes) con segunda imagen solo si estamos en modo prendas
+  const prendasItems = React.useMemo(() => {
+    if ((viewMode || 'prendas') === 'producto') return [];
+    
     const prendas = [];
     products.forEach((product) => {
       const attrImages = product.attribute_value_images || [];
@@ -244,7 +273,7 @@ const Catalog = () => {
             has_discount: product.has_discount,
             discount_label: product.discount_label,
             image: mainImg.url,
-            image2: secondImg.url,
+            image2: secondImg?.url || mainImg.url,
             active_discounts: product.active_discounts,
             is_bundle: product.is_bundle
           });
@@ -273,7 +302,7 @@ const Catalog = () => {
                 has_discount: product.has_discount,
                 discount_label: product.discount_label,
                 image: variant.variant_images[0].url,
-                image2: secondImg.url,
+                image2: secondImg?.url || variant.variant_images[0].url,
                 active_discounts: product.active_discounts,
                 is_bundle: product.is_bundle
               });
@@ -303,63 +332,33 @@ const Catalog = () => {
       }
     });
     return prendas;
-  };
+  }, [products, viewMode]);
 
-  const prendasItems = getPrendas();
-  let baseItems = (viewMode || 'prendas') === 'producto' ? products : prendasItems;
+  const baseItems = (viewMode || 'prendas') === 'producto' ? products : prendasItems;
 
-  // 1. Filtrar por Búsqueda (Search)
-  if (searchQuery) {
-    const lowerQuery = searchQuery.toLowerCase();
-    baseItems = baseItems.filter(item => 
-      item.name.toLowerCase().includes(lowerQuery) || 
-      (item.color && item.color.toLowerCase().includes(lowerQuery))
-    );
-  }
-
-  // 2. Filtrar por Precio
-  if (minPrice !== '') {
-    baseItems = baseItems.filter(item => {
-      const p = parseFloat(item.discounted_price || item.price || item.base_price || 0);
-      return p >= parseFloat(minPrice);
-    });
-  }
-  if (maxPrice !== '') {
-    baseItems = baseItems.filter(item => {
-      const p = parseFloat(item.discounted_price || item.price || item.base_price || 0);
-      return p <= parseFloat(maxPrice);
-    });
-  }
-
-  // 3. Procesar Conjuntos y Ordenar (Sort By)
-  const processedItems = [...baseItems].map(item => {
-    const originalProduct = products.find(p => p.id === (item.product_id || item.id));
-    if (item.is_bundle && originalProduct?.bundle_items?.length > 0) {
-      const sumBase = originalProduct.bundle_items.reduce((acc, bi) => acc + parseFloat(bi.product?.base_price || 0), 0);
-      const bundlePrice = parseFloat(item.discounted_price || item.base_price || item.price || 0);
-      if (sumBase > bundlePrice && bundlePrice > 0) {
-        return {
-          ...item,
-          has_discount: true,
-          base_price: sumBase,
-          discounted_price: bundlePrice,
-          discount_label: `- Bs ${(sumBase - bundlePrice).toFixed(2)}`
-        };
+  // 1. Procesar Bundle Pricing (Filtros ya aplicados por el backend)
+  const processedItems = React.useMemo(() => {
+    return [...baseItems].map(item => {
+      const originalProduct = products.find(p => p.id === (item.product_id || item.id));
+      if (item.is_bundle && originalProduct?.bundle_items?.length > 0) {
+        const sumBase = originalProduct.bundle_items.reduce((acc, bi) => acc + parseFloat(bi.product?.base_price || 0), 0);
+        const bundlePrice = parseFloat(item.discounted_price || item.base_price || item.price || 0);
+        if (sumBase > bundlePrice && bundlePrice > 0) {
+          return {
+            ...item,
+            has_discount: true,
+            base_price: sumBase,
+            discounted_price: bundlePrice,
+            discount_label: `- Bs ${(sumBase - bundlePrice).toFixed(2)}`
+          };
+        }
       }
-    }
-    return item;
-  }).sort((a, b) => {
-    const priceA = parseFloat(a.discounted_price || a.price || a.base_price || 0);
-    const priceB = parseFloat(b.discounted_price || b.price || b.base_price || 0);
-    
-    if (sortBy === 'price_asc') return priceA - priceB;
-    if (sortBy === 'price_desc') return priceB - priceA;
-    if (sortBy === 'name_asc') return a.name.localeCompare(b.name);
-    return 0; // recomendados (default order from backend)
-  });
+      return item;
+    });
+  }, [baseItems, products]);
 
-  // 4. Paginación / Cargar Más
-  const displayItems = processedItems.slice(0, visibleCount || parseInt(cfg('catalog_products_per_page', '12'), 10));
+  // 4. Paginación / Cargar Más: Eliminamos el slice() ya que la paginación es por servidor
+  const displayItems = processedItems;
 
   const animationKey = `${viewMode}-${imageMode}-${selectedCategory}-${sortBy}-${searchQuery}`;
 
@@ -425,11 +424,16 @@ const Catalog = () => {
       }
 
       return (
-        <div key={animationKey} className="catalog-grid-animate">
-          {rows.map((row, rowIdx) => {
+        <Virtuoso
+          useWindowScroll
+          data={rows}
+          endReached={() => {
+            if (hasMore && !isLoading) setCurrentPage(p => p + 1);
+          }}
+          itemContent={(rowIdx, row) => {
             const expandedProduct = row.find(p => p.id === expandedProductId);
             return (
-              <React.Fragment key={rowIdx}>
+              <div key={rowIdx}>
                 <div className="catalog-products-row" style={{ marginBottom: expandedProduct ? '0' : `${cfg('catalog_grid_gap', '24')}px`,  }}>
               {row.map((item) => {
                 const imageUrl = item.cover_image || (item.product_images?.length > 0 ? item.product_images[0].url : null);
@@ -748,36 +752,54 @@ const Catalog = () => {
                 </div>
               </div>
             )}
-          </React.Fragment>
-        );
-      })}
-        </div>
+              </div>
+            );
+          }}
+        />
       );
     }
 
     // Modo Prendas
     return (
-      <div key={animationKey} className="catalog-grid-animate catalog-products-grid" style={{  }}>
-        {displayItems.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)' }}>No se encontraron elementos.</p>
-        ) : (
-          displayItems.map((item) => {
-            const isVividMode = (imageMode || 'presentacion') === 'vivido';
-            const imageUrl = isVividMode ? item.image2 : item.image;
-            const linkUrl = item.is_bundle 
-              ? `/shop/bundle/${item.slug}` 
-              : `/shop/product/${item.slug}${item.color ? `?color=${encodeURIComponent(item.color)}` : ''}`;
-            return (
-              <div 
-                key={item.id} 
-                className="group relative block"
-                style={{ position: 'relative' }}
+      <VirtuosoGrid
+        useWindowScroll
+        data={displayItems}
+        endReached={() => {
+          if (hasMore && !isLoading) setCurrentPage(p => p + 1);
+        }}
+        components={{
+          List: React.forwardRef(({ style, children, ...props }, ref) => (
+            <div
+              ref={ref}
+              {...props}
+              style={style}
+              className="catalog-grid-animate catalog-products-grid"
+            >
+              {children}
+            </div>
+          )),
+          Item: ({ children, ...props }) => (
+            <div {...props}>
+              {children}
+            </div>
+          )
+        }}
+        itemContent={(index, item) => {
+          const isVividMode = (imageMode || 'presentacion') === 'vivido';
+          const imageUrl = isVividMode ? item.image2 : item.image;
+          const linkUrl = item.is_bundle 
+            ? `/shop/bundle/${item.slug}` 
+            : `/shop/product/${item.slug}${item.color ? `?color=${encodeURIComponent(item.color)}` : ''}`;
+          return (
+            <div 
+              className="group relative block"
+              style={{ position: 'relative' }}
+            >
+              <div
+                onClick={() => navigate(linkUrl)}
+                className="group-hover:opacity-90 transition-opacity"
+                style={{ cursor: 'pointer', backgroundColor: cfg('catalog_card_bg', '#f5f5f5'), aspectRatio: cfg('catalog_card_aspect_ratio', '1 / 1'), borderRadius: `${cfg('catalog_card_border_radius', '8')}px`, overflow: 'hidden', position: 'relative' }}
               >
-                <div
-                  onClick={() => navigate(linkUrl)}
-                  className="group-hover:opacity-90 transition-opacity"
-                  style={{ cursor: 'pointer', backgroundColor: cfg('catalog_card_bg', '#f5f5f5'), aspectRatio: cfg('catalog_card_aspect_ratio', '1 / 1'), borderRadius: `${cfg('catalog_card_border_radius', '8')}px`, overflow: 'hidden', position: 'relative' }}
-                >
                   {/* ETIQUETAS IZQUIERDA */}
                   <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 2 }}>
                     {item.is_bundle && cfg('catalog_badge_show_bundle', '1') !== '0' && (
@@ -970,10 +992,9 @@ const Catalog = () => {
                   )}
                 </div>
               </div>
-            );
-          })
-        )}
-      </div>
+          );
+        }}
+      />
     );
   };
 
@@ -1284,14 +1305,9 @@ const Catalog = () => {
             ) : (
               <>
                 {renderProductGrid()}
-                {cfg('catalog_show_load_more', '1') !== '0' && (visibleCount || 12) < processedItems.length && (
-                  <div className="catalog-load-more-wrap">
-                    <button className="catalog-load-more-btn" onClick={() => setVisibleCount(prev => (prev || 12) + parseInt(cfg('catalog_load_more_count', '12'), 10))}>
-                      {cfg('catalog_load_more_text', 'Cargar Más')}
-                    </button>
-                    <p className="catalog-load-more-count">
-                      Mostrando {visibleCount || 12} de {processedItems.length} productos
-                    </p>
+                {isLoading && (
+                  <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    Cargando más productos...
                   </div>
                 )}
               </>

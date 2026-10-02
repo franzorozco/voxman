@@ -132,31 +132,28 @@ export default function Owners() {
                     <tr key={owner.id}>
                       <td data-label="Socio" style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <RowDropdown rowId={owner.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
-      
-      
-      
-            <button 
-              onClick={() => { window.location.href = "/dashboard/owners/" + owner.id; setActiveDropdown(null); }}
-              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
-            >
-              <Eye size={16} /> Ver Perfil
-            </button>
-            <CanAccess permission="manage_owners">
-              <button 
-                onClick={() => { handleEdit(owner); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
-              >
-                <Edit size={16} /> Editar
-              </button>
-              <button 
-                onClick={() => { handleDelete(owner.id); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-danger)', width: '100%', fontSize: '14px' }}
-              >
-                <Trash2 size={16} /> Eliminar
-              </button>
-            </CanAccess>
-</RowDropdown>
+          <RowDropdown rowId={owner.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+        <button 
+          onClick={() => { window.location.href = "/dashboard/owners/" + owner.id; setActiveDropdown(null); }}
+          style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+        >
+          <Eye size={16} /> Ver Perfil
+        </button>
+        <CanAccess permission="manage_owners">
+          <button 
+            onClick={() => { handleEdit(owner); setActiveDropdown(null); }}
+            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+          >
+            <Edit size={16} /> Editar
+          </button>
+          <button 
+            onClick={() => { handleDelete(owner.id); setActiveDropdown(null); }}
+            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#ef4444', width: '100%', fontSize: '14px' }}
+          >
+            <Trash2 size={16} /> Eliminar
+          </button>
+        </CanAccess>
+      </RowDropdown>
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{fullName}</span>
       <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{owner.user?.email || "Sin correo"}</span>
@@ -243,6 +240,7 @@ export default function Owners() {
     </div>
   );
 }
+
 
 
 

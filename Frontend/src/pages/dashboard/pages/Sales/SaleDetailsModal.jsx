@@ -83,32 +83,32 @@ export default function SaleDetailsModal({ saleId, onClose }) {
     <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999 }}>
       <div className="modal-content fade-in" style={{ background: 'var(--bg-card)', borderRadius: '12px', overflow: 'hidden', width: '95%', maxWidth: '1000px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
         
-        {/* Header */}
-        <div className="modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', paddingRight: '50px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-            <FileText size={24} className="text-primary" style={{ flexShrink: 0, marginTop: '2px' }}/>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: 0, lineHeight: 1.2 }}>
-              Detalle de Venta
-              <div style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginTop: '4px', wordBreak: 'break-all', fontWeight: 500 }}>
+                        {/* Header */}
+        <div className="modal-header" style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <FileText size={20} className="text-primary" style={{ flexShrink: 0 }}/>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
+                Detalle de Venta
+              </h2>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500, background: 'var(--bg-main)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
                 {sale.invoice_number || sale.id.split('-')[0]}
-              </div>
-            </h2>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-            {sale.shipments?.[0]?.delivery_code && (
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Entrega: {sale.shipments[0].delivery_code}</span>
-            )}
-            <span className={`status-badge ${sale.status === 'completed' ? 'status-success' : sale.status === 'cancelled' ? 'status-danger' : 'status-warning'}`}>
-              {sale.status}
-            </span>
-            {sale.shipments?.[0]?.delivery_schedule && (
-              <span className={`status-badge ${sale.shipments[0].delivery_schedule.status === 'completed' ? 'status-success' : 'status-warning'}`} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}>
-                Entrega: {sale.shipments[0].delivery_schedule.status === 'at_the_meeting_point' ? 'En el punto' : sale.shipments[0].delivery_schedule.status === 'on_the_way' ? 'En camino' : sale.shipments[0].delivery_schedule.status === 'completed' ? 'Completado' : sale.shipments[0].delivery_schedule.status === 'cancelled' ? 'Cancelado' : sale.shipments[0].delivery_schedule.status === 'pending' ? 'Pendiente' : sale.shipments[0].delivery_schedule.status === 'assigned' ? 'Asignado' : sale.shipments[0].delivery_schedule.status}
               </span>
+              <span className={`status-badge ${sale.status === 'completed' ? 'status-success' : sale.status === 'cancelled' ? 'status-danger' : 'status-warning'}`} style={{ padding: '4px 8px' }}>
+                {sale.status}
+              </span>
+              {sale.shipments?.[0]?.delivery_schedule && (
+                <span className={`status-badge ${sale.shipments[0].delivery_schedule.status === 'completed' ? 'status-success' : 'status-warning'}`} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 8px' }}>
+                  Entrega: {sale.shipments[0].delivery_schedule.status === 'at_the_meeting_point' ? 'En el punto' : sale.shipments[0].delivery_schedule.status === 'on_the_way' ? 'En camino' : sale.shipments[0].delivery_schedule.status === 'completed' ? 'Completado' : sale.shipments[0].delivery_schedule.status === 'cancelled' ? 'Cancelado' : sale.shipments[0].delivery_schedule.status === 'pending' ? 'Pendiente' : sale.shipments[0].delivery_schedule.status === 'assigned' ? 'Asignado' : sale.shipments[0].delivery_schedule.status}
+                </span>
+              )}
+            </div>
+            {sale.shipments?.[0]?.delivery_code && (
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Entrega: {sale.shipments[0].delivery_code}</span>
             )}
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', position: 'absolute', top: '20px', right: '20px' }}>
-            <X size={24} />
+          <button onClick={onClose} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px', flexShrink: 0 }}>
+            <X size={18} />
           </button>
         </div>
 
@@ -563,49 +563,43 @@ export default function SaleDetailsModal({ saleId, onClose }) {
         </div>
 
         {/* Footer actions */}
-        <div className="modal-footer" style={{ padding: '20px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--bg-main)' }}>
-          
-            {/* Primary Action */}
+                        <div className="modal-footer" style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--bg-main)' }}>
+          <CanAccess permission="manage_sales">
+            {sale.status === 'pending' && (
+              <button 
+                style={{ backgroundColor: 'var(--color-success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, width: '100%', fontSize: '14px', boxSizing: 'border-box' }}
+                onClick={() => handleStatusChange('completed')}
+                disabled={actionLoading}
+              >
+                <CheckCircle size={18} /> Marcar Completada
+              </button>
+            )}
+          </CanAccess>
+
+          <div style={{ display: 'flex', gap: '12px', width: '100%', flexWrap: 'wrap' }}>
             <CanAccess permission="manage_sales">
-              {sale.status === 'pending' && (
+              {sale.status !== 'cancelled' && sale.status !== 'refunded' && sale.status !== 'paid' && sale.status !== 'completed' && (
                 <button 
-                  style={{ backgroundColor: 'var(--color-success)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, width: '100%', fontSize: '14px', boxSizing: 'border-box' }}
-                  onClick={() => handleStatusChange('completed')}
+                  style={{ background: 'transparent', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid var(--color-danger)', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, flex: 1, minWidth: '120px', fontSize: '14px', boxSizing: 'border-box' }}
+                  onClick={() => handleStatusChange('cancelled')}
                   disabled={actionLoading}
                 >
-                  <CheckCircle size={18} /> Marcar Completada
+                  <X size={16} /> Cancelar
                 </button>
               )}
             </CanAccess>
 
-            {/* Secondary Action */}
             <CanAccess permission="print_sale_receipt">
-              <button style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', height: '44px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px', boxSizing: 'border-box' }} onClick={() => setShowReceipt(true)}>
+              <button style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: 1, minWidth: '160px', height: '44px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px', boxSizing: 'border-box' }} onClick={() => setShowReceipt(true)}>
                 <Printer size={18} /> Imprimir Ticket
               </button>
             </CanAccess>
-
-            {/* Side-by-side actions */}
-            <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
-              <CanAccess permission="manage_sales">
-                {sale.status !== 'cancelled' && sale.status !== 'refunded' && sale.status !== 'paid' && sale.status !== 'completed' && (
-                  <button 
-                    style={{ background: 'transparent', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid var(--color-danger)', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, flex: 1, fontSize: '14px', boxSizing: 'border-box' }}
-                    onClick={() => handleStatusChange('cancelled')}
-                    disabled={actionLoading}
-                  >
-                    <X size={16} /> Cancelar
-                  </button>
-                )}
-              </CanAccess>
-              
-              <button onClick={onClose} disabled={actionLoading} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontWeight: 600, cursor: 'pointer', height: '44px', borderRadius: '8px', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', boxSizing: 'border-box' }}>
-                Cerrar
-              </button>
-            </div>
-          
+            
+            <button onClick={onClose} disabled={actionLoading} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontWeight: 600, cursor: 'pointer', height: '44px', borderRadius: '8px', flex: 1, minWidth: '120px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', boxSizing: 'border-box' }}>
+              Cerrar
+            </button>
+          </div>
         </div>
-
       </div>
 
         {showReceipt && (
@@ -624,3 +618,5 @@ export default function SaleDetailsModal({ saleId, onClose }) {
     </div>
   );
 }
+
+

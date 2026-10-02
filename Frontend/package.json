@@ -33,8 +33,10 @@
     "react-icons": "^5.6.0",
     "react-router-dom": "^7.14.1",
     "react-select": "^5.10.2",
+    "react-virtuoso": "^4.18.16",
     "recharts": "^3.9.1",
     "translate": "^3.0.1",
+    "use-debounce": "^10.1.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

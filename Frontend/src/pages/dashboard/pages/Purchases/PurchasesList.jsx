@@ -191,16 +191,42 @@ export default function PurchasesList() {
                 <tr key={purchase.id}>
                   <td style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <RowDropdown rowId={purchase.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+        <RowDropdown rowId={purchase.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
       <button
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px' }}
-              onClick={() => {
-                setSelectedPurchase(purchase);
-                setActiveDropdown(null);
-              }}
-            >
-              <Eye size={16} /> Ver Detalles
-            </button>
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px', cursor: 'pointer' }}
+        onClick={() => {
+          setSelectedPurchase(purchase);
+          setActiveDropdown(null);
+        }}
+      >
+        <Eye size={16} /> Ver Detalles
+      </button>
+
+      <CanAccess permission="receive_inventory">
+        {purchase.status === 'pending' && (
+          <Link
+            to={`/dashboard/purchases/receive/${purchase.id}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', width: '100%', textAlign: 'left', fontSize: '14px', cursor: 'pointer', textDecoration: 'none' }}
+            onClick={() => setActiveDropdown(null)}
+          >
+            <Package size={16} /> Recepcionar
+          </Link>
+        )}
+      </CanAccess>
+
+      <CanAccess permission="cancel_purchases">
+        {purchase.status === 'pending' && (
+          <button
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', color: '#ef4444', width: '100%', textAlign: 'left', fontSize: '14px', cursor: 'pointer' }}
+            onClick={() => {
+              handleCancel(purchase.id);
+              setActiveDropdown(null);
+            }}
+          >
+            <XCircle size={16} /> Anular Compra
+          </button>
+        )}
+      </CanAccess>
     </RowDropdown>
     <div>{new Date(purchase.created_at).toLocaleDateString()}</div>
   </div>
@@ -267,6 +293,9 @@ export default function PurchasesList() {
     </div>
   );
 }
+
+
+
 
 
 

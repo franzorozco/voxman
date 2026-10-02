@@ -4,8 +4,8 @@ import { MoreVertical } from "lucide-react";
 
 /**
  * RowDropdown – menú de 3 puntitos con posicionamiento dinámico real.
- * Usa createPortal inyectándolo en el nodo que contiene el tema (.admin-theme)
- * para no perder las variables CSS (--bg-card) pero escapar del overflow.
+ * Usa createPortal inyectándolo en el nodo que contiene el tema (.admin-theme).
+ * SE OCULTA AUTOMÁTICAMENTE EN ESCRITORIO (> 768px).
  */
 export default function RowDropdown({ rowId, activeId, setActiveId, children }) {
   const btnRef = useRef(null);
@@ -14,7 +14,6 @@ export default function RowDropdown({ rowId, activeId, setActiveId, children }) 
   const [portalNode, setPortalNode] = useState(null);
 
   useEffect(() => {
-    // Al igual que CustomSelect, inyectamos en el nodo del tema para heredar colores
     if (typeof document !== "undefined") {
       const node = document.querySelector('.admin-theme') 
                 || document.querySelector('.admin-theme-dark') 
@@ -93,57 +92,73 @@ export default function RowDropdown({ rowId, activeId, setActiveId, children }) 
   }, [isOpen]);
 
   return (
-    <div style={{ display: "inline-block", position: "relative" }}>
-      <button
-        ref={btnRef}
-        onClick={toggle}
-        style={{
-          background: "transparent",
-          border: "none",
-          color: "var(--text-main)",
-          padding: "4px",
-          margin: 0,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "6px",
-        }}
-        title="Acciones"
-      >
-        <MoreVertical size={20} />
-      </button>
+    <>
+      <style>
+        {`
+          @media (min-width: 769px) {
+            .row-dropdown-wrapper {
+              display: none !important;
+            }
+          }
+          @media (max-width: 768px) {
+            .row-dropdown-wrapper {
+              display: inline-block !important;
+            }
+          }
+        `}
+      </style>
+      <div className="row-dropdown-wrapper" style={{ position: "relative" }}>
+        <button
+          ref={btnRef}
+          onClick={toggle}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "var(--text-main)",
+            padding: "4px",
+            margin: 0,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "6px",
+          }}
+          title="Acciones"
+        >
+          <MoreVertical size={20} />
+        </button>
 
-      {isOpen && portalNode && createPortal(
-        <>
-          <div
-            style={{ position: "fixed", inset: 0, zIndex: 99998 }}
-            onClick={(e) => { e.stopPropagation(); setActiveId(null); }}
-          />
-          <div
-            ref={menuRef}
-            style={{
-              position: "fixed",
-              top: "-9999px",
-              left: "-9999px",
-              opacity: 0,
-              pointerEvents: "none",
-              background: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
-              zIndex: 99999,
-              minWidth: "160px",
-              display: "flex",
-              flexDirection: "column",
-              padding: "4px",
-            }}
-          >
-            {children}
-          </div>
-        </>,
-        portalNode
-      )}
-    </div>
+        {isOpen && portalNode && createPortal(
+          <>
+            <div
+              style={{ position: "fixed", inset: 0, zIndex: 99998 }}
+              onClick={(e) => { e.stopPropagation(); setActiveId(null); }}
+            />
+            <div
+              ref={menuRef}
+              style={{
+                position: "fixed",
+                top: "-9999px",
+                left: "-9999px",
+                opacity: 0,
+                pointerEvents: "none",
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "8px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
+                zIndex: 99999,
+                minWidth: "160px",
+                display: "flex",
+                flexDirection: "column",
+                padding: "4px",
+              }}
+            >
+              {children}
+            </div>
+          </>,
+          portalNode
+        )}
+      </div>
+    </>
   );
 }

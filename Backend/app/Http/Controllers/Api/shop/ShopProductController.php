@@ -54,6 +54,14 @@ class ShopProductController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
+        // Filtro por precio
+        if ($request->has('min_price')) {
+            $query->where('base_price', '>=', $request->min_price);
+        }
+        if ($request->has('max_price')) {
+            $query->where('base_price', '<=', $request->max_price);
+        }
+
         // Ordenamiento dinámico para carruseles o secciones
         if ($request->has('list_type')) {
             $type = $request->list_type;
@@ -77,18 +85,20 @@ class ShopProductController extends Controller
 
         // Get applicable discounts using DiscountValidationService
         // Optimize: collect products and evaluate discounts in memory to avoid N+1
-        $automaticDiscounts = \App\Models\Discount\Discount::with(['categories', 'brands', 'products', 'variants', 'customers'])
-            ->where('is_automatic', true)
-            ->where('active', true)
-            ->where(function($q) {
-                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-            })
-            ->where(function($q) {
-                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-            })
-            ->get();
+        $automaticDiscounts = \Illuminate\Support\Facades\Cache::remember('active_automatic_discounts', 300, function() {
+            return \App\Models\Discount\Discount::with(['categories', 'brands', 'products', 'variants', 'customers'])
+                ->where('is_automatic', true)
+                ->where('active', true)
+                ->where(function($q) {
+                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+                })
+                ->where(function($q) {
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                })
+                ->get();
+        });
 
-                        $paginator->getCollection()->transform(function ($product) use ($automaticDiscounts) {
+        $paginator->getCollection()->transform(function ($product) use ($automaticDiscounts) {
             return $this->applyDiscountsToProduct($product, $automaticDiscounts);
         });
 
@@ -128,16 +138,18 @@ class ShopProductController extends Controller
           ->orWhere('id', $slug)
           ->firstOrFail();
 
-        $automaticDiscounts = \App\Models\Discount\Discount::with(['categories', 'brands', 'products', 'variants', 'customers'])
-            ->where('is_automatic', true)
-            ->where('active', true)
-            ->where(function($q) {
-                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-            })
-            ->where(function($q) {
-                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-            })
-            ->get();
+        $automaticDiscounts = \Illuminate\Support\Facades\Cache::remember('active_automatic_discounts', 300, function() {
+            return \App\Models\Discount\Discount::with(['categories', 'brands', 'products', 'variants', 'customers'])
+                ->where('is_automatic', true)
+                ->where('active', true)
+                ->where(function($q) {
+                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+                })
+                ->where(function($q) {
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                })
+                ->get();
+        });
 
         $product = $this->applyDiscountsToProduct($product, $automaticDiscounts);
 

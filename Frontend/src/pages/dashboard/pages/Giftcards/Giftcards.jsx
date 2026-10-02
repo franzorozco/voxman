@@ -223,45 +223,42 @@ export default function Giftcards() {
                   <tr key={g.id}>
                     <td data-label="C�digo" style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <RowDropdown rowId={g.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
-          
-            <button 
-              onClick={() => { handleOpenCoupon(g); setActiveDropdown(null); }}
-              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
-            >
-              <Ticket size={16} /> Imprimir Cup�n
-            </button>
-            {!g.is_digitalized && g.is_active && (
-              <button 
-                onClick={() => { handleOpenDigitalize(g); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
-              >
-                <Smartphone size={16} /> Digitalizar
-              </button>
-            )}
-            <button 
-              onClick={() => { handleOpenHistory(g); setActiveDropdown(null); }}
-              style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
-            >
-              <Eye size={16} /> Ver Historial
-            </button>
-            {g.is_active && (
-              <button 
-                onClick={() => { handleOpenModal("reload", g); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
-              >
-                <RefreshCw size={16} /> Recargar Saldo
-              </button>
-            )}
-            {g.is_active && (
-              <button 
-                onClick={() => { handleDelete(g.id); setActiveDropdown(null); }}
-                style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-danger)', width: '100%', fontSize: '14px' }}
-              >
-                <Trash2 size={16} /> Eliminar
-              </button>
-            )}
-</RowDropdown>
+          <RowDropdown rowId={g.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
+        <button 
+          onClick={() => { handleOpenCoupon(g); setActiveDropdown(null); }}
+          style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+        >
+          <Ticket size={16} /> Imprimir Cup�n
+        </button>
+        {!g.is_digitalized && g.is_active && (
+          <button 
+            onClick={() => { handleOpenDigitalize(g); setActiveDropdown(null); }}
+            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+          >
+            <Smartphone size={16} /> Digitalizar
+          </button>
+        )}
+        <button 
+          onClick={() => { handleOpenHistory(g); setActiveDropdown(null); }}
+          style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
+        >
+          <Eye size={16} /> Ver Historial
+        </button>
+        {g.is_active && (
+          <button 
+            onClick={() => { handleOpenModal("reload", g); setActiveDropdown(null); }}
+            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
+          >
+            <RefreshCw size={16} /> Recargar Saldo
+          </button>
+        )}
+        <button 
+          onClick={() => { handleDelete(g.id); setActiveDropdown(null); }}
+          style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#ef4444', width: '100%', fontSize: '14px' }}
+        >
+          <Trash2 size={16} /> Eliminar
+        </button>
+      </RowDropdown>
     <div className="gift-code-wrapper">
       <span className="gift-code-text">
                           {visibleCodes[g.id] ? g.code : "••••••••"}
@@ -399,6 +396,7 @@ export default function Giftcards() {
     </div>
   );
 }
+
 
 
 

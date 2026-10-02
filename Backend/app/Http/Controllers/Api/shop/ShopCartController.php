@@ -609,8 +609,6 @@ public function syncCartPrices(&$cartData)
     {
         $request->validate([
             'discount_code' => 'required|string',
-            'discount_id' => 'required|uuid',
-            'discount_amount' => 'required|numeric|min:0'
         ]);
 
         $cartToken = $request->header('X-Cart-Token');
@@ -623,15 +621,84 @@ public function syncCartPrices(&$cartData)
             return response()->json(['error' => 'Cart not found'], 404);
         }
 
+        // Calculate subtotal strictly from server cache
+        $serverSubtotal = 0;
+        $serverItems = [];
+        foreach ($cartData['items'] as $item) {
+            $lineSubtotal = $item['price'] * $item['quantity'];
+            $serverSubtotal += $lineSubtotal;
+            $serverItems[] = [
+                'variant_id' => $item['variant_id'],
+                'quantity' => $item['quantity'],
+                'line_subtotal' => $lineSubtotal,
+                'bundle_group_id' => $item['bundle_group_id'] ?? null
+            ];
+        }
+
+        // Security check for customer_id
+        $customerId = $request->customer_id;
+        if ($customerId) {
+            $user = auth('sanctum')->user();
+            if (!$user) {
+                $customerId = null;
+            } else {
+                $validCustomer = \App\Models\Actors\Customer::where('id', $customerId)
+                                    ->where('user_id', $user->id)
+                                    ->exists();
+                if (!$validCustomer && $user->id !== $customerId) {
+                    $customerId = null;
+                }
+            }
+        }
+
+        $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+        $result = $discountService->validateCode(
+            $request->discount_code,
+            $serverSubtotal,
+            $serverItems,
+            $customerId,
+            null
+        );
+
+        if (!$result['valid']) {
+            return response()->json(['message' => $result['message']], 422);
+        }
+
         $cartData['applied_global_discount'] = [
-            'code' => $request->discount_code,
-            'id' => $request->discount_id,
-            'amount' => $request->discount_amount
+            'code' => $result['code'],
+            'id' => $result['id'],
+            'amount' => $result['discount_amount']
         ];
         
-                $this->syncCartPrices($cartData);
-        $this->recalculateTotal($cartData);
         $this->syncCartPrices($cartData);
+        $this->recalculateTotal($cartData);
+        $this->syncCartPrices($cartData); // Note: Calling it twice seems redundant, but preserving existing flow.
+        
+        // Re-validate global discount if prices changed after sync
+        $newServerSubtotal = $cartData['total'];
+        $newServerItems = [];
+        foreach ($cartData['items'] as $item) {
+            $newServerItems[] = [
+                'variant_id' => $item['variant_id'],
+                'quantity' => $item['quantity'],
+                'line_subtotal' => $item['price'] * $item['quantity'],
+                'bundle_group_id' => $item['bundle_group_id'] ?? null
+            ];
+        }
+        $newResult = $discountService->validateCode(
+            $request->discount_code,
+            $newServerSubtotal,
+            $newServerItems,
+            $customerId,
+            null
+        );
+
+        if ($newResult['valid']) {
+            $cartData['applied_global_discount']['amount'] = $newResult['discount_amount'];
+        } else {
+            unset($cartData['applied_global_discount']);
+        }
+
         $this->saveCartData($cartToken, $cartData);
 
         return response()->json($cartData);

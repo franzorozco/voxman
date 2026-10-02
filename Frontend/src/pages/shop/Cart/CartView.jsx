@@ -73,14 +73,6 @@ const CartView = () => {
     setDiscountLoading(true);
     try {
       const { default: api } = await import('../../../api/client');
-      // Prepare items as {variant_id, quantity, line_subtotal, bundle_group_id}
-      const mappedItems = items.map(item => ({
-        variant_id: item.variant_id,
-        quantity: item.quantity,
-        line_subtotal: parseFloat(item.price) * item.quantity,
-        bundle_group_id: item.bundle_group_id || null
-      }));
-      
       // Extract actual Customer ID
       let actualCustomerId = null;
       const userSource = currentUser || globalUser;
@@ -94,8 +86,6 @@ const CartView = () => {
       
       const payload = {
         code: discountCode,
-        subtotal: total,
-        items: mappedItems,
         customer_id: actualCustomerId
       };
       
@@ -104,8 +94,7 @@ const CartView = () => {
         // Save the discount in the backend cart session
         await api.post('/v1/shop/cart/apply-discount', {
           discount_code: res.data.code,
-          discount_id: res.data.id,
-          discount_amount: res.data.discount_amount
+          customer_id: actualCustomerId
         });
         
         const appliedData = {
@@ -389,7 +378,7 @@ const CartView = () => {
                 <button
                   type="button"
                   onClick={handleApplyDiscount}
-                  disabled={!discountCode.trim() || discountLoading}
+                  disabled={!discountCode.trim() || discountLoading || items.length === 0}
                   className="rounded-none border border-black bg-transparent px-4 py-2 text-xs font-bold uppercase tracking-wider text-black hover:bg-black hover:text-white disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
                 >
                   {discountLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
