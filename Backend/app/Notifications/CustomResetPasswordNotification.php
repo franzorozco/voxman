@@ -27,10 +27,10 @@ class CustomResetPasswordNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        $frontendUrl = rtrim(config('app.frontend_url'), '/');
         $resetUrl    = $frontendUrl . '/reset-password/' . $this->token . '?email=' . urlencode($this->email);
-        $appUrl      = env('APP_URL', 'http://localhost:8000');
-        $storageBase = rtrim(env('AWS_URL', ''), '/');
+        $appUrl      = config('app.url');
+        $storageBase = rtrim((string) config('filesystems.disks.s3.url', ''), '/');
 
         // Logos desde system_settings (con fallback a las URLs fijas)
         $logos = SystemSetting::whereIn('key', ['store_logo_dark', 'store_logo_light'])

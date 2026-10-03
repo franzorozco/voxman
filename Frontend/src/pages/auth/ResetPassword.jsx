@@ -27,8 +27,10 @@ export default function ResetPassword() {
 
   const validate = (name, value) => {
     let error = "";
-    if (name === "password" && value.length < 6) {
-      error = "Mínimo 6 caracteres";
+    if (name === "password") {
+      if (value.length < 8) error = "Mínimo 8 caracteres";
+      else if (value.length > 72) error = "Máximo 72 caracteres";
+      else if (!/[a-zA-Z]/.test(value) || !/\d/.test(value)) error = "Debe incluir letras y números";
     }
     if (name === "password_confirmation" && value !== form.password) {
       error = "Las contraseñas no coinciden";
@@ -47,6 +49,10 @@ export default function ResetPassword() {
 
     if (!form.password || form.password !== form.password_confirmation) {
       toast.error("Revisa las contraseñas");
+      return;
+    }
+    if (errors.password) {
+      toast.error(errors.password);
       return;
     }
 

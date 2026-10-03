@@ -26,11 +26,7 @@ class ShopDiscountController extends Controller
             return response()->json(['valid' => false, 'message' => 'No cart token provided'], 400);
         }
 
-        \Illuminate\Support\Facades\Log::info("validateCode - Token received: " . $cartToken);
-        
         $cartData = \Illuminate\Support\Facades\Cache::get("cart:{$cartToken}");
-        \Illuminate\Support\Facades\Log::info("validateCode - Raw Cache Data: " . ($cartData ?: 'null'));
-        
         $cartData = $cartData ? json_decode($cartData, true) : null;
 
         if (!$cartData || empty($cartData['items'])) {

@@ -89,20 +89,22 @@ export default function Register() {
     }
 
     if (name === "password") {
-      if (value.length < 6) {
-        error = "Mínimo 6 caracteres";
-      } else {
-        const hasNumbers = /\d/.test(value);
-        const hasLetters = /[a-zA-Z]/.test(value);
-        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+      const hasNumbers = /\d/.test(value);
+      const hasLetters = /[a-zA-Z]/.test(value);
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
-        if (hasLetters && hasNumbers && hasSpecial && value.length >= 8) {
-          setPasswordStrength("Fuerte");
-        } else if ((hasLetters && hasNumbers) || (hasLetters && hasSpecial)) {
-          setPasswordStrength("Media");
-        } else {
-          setPasswordStrength("Débil");
-        }
+      if (value.length < 8) {
+        error = "Mínimo 8 caracteres";
+        setPasswordStrength("");
+      } else if (value.length > 72) {
+        error = "Máximo 72 caracteres";
+      } else if (!hasLetters || !hasNumbers) {
+        error = "Debe incluir letras y números";
+        setPasswordStrength("Débil");
+      } else if (hasSpecial) {
+        setPasswordStrength("Fuerte");
+      } else {
+        setPasswordStrength("Media");
       }
     }
 
@@ -229,6 +231,9 @@ export default function Register() {
               <Mail size={18} className="input-icon" />
               <input
                 name="email"
+                type="email"
+                autoComplete="email"
+                maxLength={150}
                 placeholder="Correo electrónico"
                 value={form.email}
                 onChange={handleChange}
@@ -247,6 +252,8 @@ export default function Register() {
               <User size={18} className="input-icon" />
               <input
                 name="username"
+                autoComplete="username"
+                maxLength={50}
                 placeholder="Nombre de la cuenta"
                 value={form.username}
                 onChange={handleChange}
@@ -263,19 +270,19 @@ export default function Register() {
               <>
                 <div className="input-group">
                   <UserCheck size={18} className="input-icon" />
-                  <input name="first_name" placeholder="Nombre(s)" value={form.first_name} onChange={handleChange} required />
+                  <input name="first_name" maxLength={100} placeholder="Nombre(s)" value={form.first_name} onChange={handleChange} required />
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <div className="input-group" style={{ flex: 1 }}>
-                    <input name="last_name_paternal" placeholder="Apellido Paterno" value={form.last_name_paternal} onChange={handleChange} />
+                    <input name="last_name_paternal" maxLength={100} placeholder="Apellido Paterno" value={form.last_name_paternal} onChange={handleChange} />
                   </div>
                   <div className="input-group" style={{ flex: 1 }}>
-                    <input name="last_name_maternal" placeholder="Apellido Materno" value={form.last_name_maternal} onChange={handleChange} />
+                    <input name="last_name_maternal" maxLength={100} placeholder="Apellido Materno" value={form.last_name_maternal} onChange={handleChange} />
                   </div>
                 </div>
                 <div className="input-group">
                   <Phone size={18} className="input-icon" style={{ padding: 0 }} />
-                  <input name="phone" placeholder="Teléfono" value={form.phone} onChange={handleChange} />
+                  <input name="phone" type="tel" inputMode="tel" maxLength={30} placeholder="Teléfono" value={form.phone} onChange={handleChange} />
                 </div>
               </>
             ) : (
@@ -287,6 +294,8 @@ export default function Register() {
                     <input
                       name="password"
                       type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      maxLength={72}
                       placeholder="Contraseña"
                       onChange={handleChange}
                     />

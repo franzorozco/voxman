@@ -11,7 +11,7 @@ return [
 
     'guard' => ['web'],
 
-    'expiration' => null,
+    'expiration' => 60 * 24 * 30, // 30 días: respaldo global; los tokens sin expiración propia nunca caducaban
 
     'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
 

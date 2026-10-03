@@ -14,15 +14,18 @@ return Application::configure(basePath: dirname(__DIR__))
 
     ->withMiddleware(function (Middleware $middleware): void {
 
+        // 🔒 Security headers on every API response
         $middleware->api(prepend: [
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
-        // 🔥 SPATIE MIDDLEWARES
+        // 🔥 SPATIE MIDDLEWARES + Security aliases
         $middleware->alias([
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'pos.access' => \App\Http\Middleware\PosAccessMiddleware::class,
+            'role'              => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'        => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission'=> \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'pos.access'        => \App\Http\Middleware\PosAccessMiddleware::class,
+            'cart.token'        => \App\Http\Middleware\CheckCartToken::class,
         ]);
     })
 

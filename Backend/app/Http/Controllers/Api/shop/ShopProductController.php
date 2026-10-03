@@ -26,62 +26,66 @@ class ShopProductController extends Controller
             'bundle_items.variant'
         ])->where('is_active', true);
 
-        // Filtro por categora
+        // Filtro por categoría — solo UUIDs válidos (la columna es uuid en PostgreSQL;
+        // un valor inválido provocaba un error 500 con la página de debug completa)
         if ($request->has('category_id')) {
-            $categoryId = $request->category_id;
-            if (is_array($categoryId)) {
-                $query->whereIn('category_id', $categoryId);
-            } elseif (str_contains((string)$categoryId, ',')) {
-                $query->whereIn('category_id', explode(',', $categoryId));
+            $ids = $this->parseUuidList($request->input('category_id'));
+            if (empty($ids)) {
+                // Filtro inválido → no devolver nada en lugar de ignorar el filtro
+                $query->whereRaw('1 = 0');
             } else {
-                $query->where('category_id', $categoryId);
+                $query->whereIn('category_id', $ids);
             }
         }
 
         if ($request->has('exclude_category_id')) {
-            $excludeId = $request->exclude_category_id;
-            if (is_array($excludeId)) {
-                $query->whereNotIn('category_id', $excludeId);
-            } elseif (str_contains((string)$excludeId, ',')) {
-                $query->whereNotIn('category_id', explode(',', $excludeId));
-            } else {
-                $query->where('category_id', '!=', $excludeId);
+            $ids = $this->parseUuidList($request->input('exclude_category_id'));
+            if (!empty($ids)) {
+                $query->whereNotIn('category_id', $ids);
             }
         }
 
-        // BÃ‡Â§squeda por nombre
-        if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
-
-        // Filtro por precio
-        if ($request->has('min_price')) {
-            $query->where('base_price', '>=', $request->min_price);
-        }
-        if ($request->has('max_price')) {
-            $query->where('base_price', '<=', $request->max_price);
-        }
-
-        // Ordenamiento dinámico para carruseles o secciones
-        if ($request->has('list_type')) {
-            $type = $request->list_type;
-            if ($type === 'newest') {
-                $query->orderBy('created_at', 'desc');
-            } elseif ($type === 'trending') {
-                $query->orderBy('views', 'desc'); // assuming views represents popularity/best sellers
-            } elseif ($type === 'random') {
-                $query->inRandomOrder();
-            } elseif ($type === 'price_desc') {
-                $query->orderBy('base_price', 'desc');
-            } elseif ($type === 'price_asc') {
-                $query->orderBy('base_price', 'asc');
+        // Búsqueda por nombre — solo strings, máx 100 chars, comodines escapados
+        $rawSearch = $request->input('search');
+        if (is_string($rawSearch)) {
+            $search = mb_substr(trim(strip_tags($rawSearch)), 0, 100);
+            if ($search !== '') {
+                // addcslashes escapa '%' y '_' para que no sean wildcards del usuario
+                $query->where('name', 'ilike', '%' . addcslashes($search, '%_\\') . '%');
             }
+        }
+
+        // Filtro por precio — solo valores numéricos (ignora arrays / texto)
+        $minPrice = $request->input('min_price');
+        if (is_numeric($minPrice)) {
+            $query->where('base_price', '>=', (float) $minPrice);
+        }
+        $maxPrice = $request->input('max_price');
+        if (is_numeric($maxPrice)) {
+            $query->where('base_price', '<=', (float) $maxPrice);
+        }
+
+        // Ordenamiento — whitelist estricta. Cualquier valor no reconocido (incl. 'recomendados')
+        // cae al orden por defecto: sin ORDER BY la paginación de PostgreSQL no es determinista.
+        $type = is_string($request->input('list_type')) ? $request->input('list_type') : '';
+        if ($type === 'trending') {
+            $query->orderBy('views', 'desc');
+        } elseif ($type === 'random') {
+            $query->inRandomOrder();
+        } elseif ($type === 'price_desc') {
+            $query->orderBy('base_price', 'desc');
+        } elseif ($type === 'price_asc') {
+            $query->orderBy('base_price', 'asc');
+        } elseif ($type === 'name_asc') {
+            $query->orderBy('name', 'asc');
         } else {
-            // Default sort if needed
-            $query->orderBy('created_at', 'desc');
+            $query->orderBy('created_at', 'desc'); // 'newest', 'recomendados' y valores inválidos
         }
+        $query->orderBy('id'); // desempate estable para la paginación
 
-        $paginator = $query->paginate($request->get('per_page', 24));
+        // per_page limitado a máximo 100 para prevenir dumps masivos de la DB
+        $perPage = min(max(1, (int) $request->get('per_page', 24)), 100);
+        $paginator = $query->paginate($perPage);
 
         // Get applicable discounts using DiscountValidationService
         // Optimize: collect products and evaluate discounts in memory to avoid N+1
@@ -99,7 +103,8 @@ class ShopProductController extends Controller
         });
 
         $paginator->getCollection()->transform(function ($product) use ($automaticDiscounts) {
-            return $this->applyDiscountsToProduct($product, $automaticDiscounts);
+            $product = $this->applyDiscountsToProduct($product, $automaticDiscounts);
+            return $this->toPublic($product); // 🔒 ocultar costo y campos internos
         });
 
         return response()->json($paginator);
@@ -110,6 +115,11 @@ class ShopProductController extends Controller
      */
     public function show($slug)
     {
+        $slug = (string) $slug;
+        if ($slug === '' || mb_strlen($slug) > 255) {
+            abort(404);
+        }
+
         $product = Product::with([
             'product_images',
             'attribute_value_images.attributeValue.attribute',
@@ -134,8 +144,14 @@ class ShopProductController extends Controller
             'bundle_items.variant.size',
             'bundle_items.variant.fit',
             'bundle_items.variant.variant_measurements.measurement_type',
-        ])->where('slug', $slug)
-          ->orWhere('id', $slug)
+        ])->where('is_active', true) // 🔒 productos inactivos no son públicos
+          ->where(function ($q) use ($slug) {
+              $q->where('slug', $slug);
+              // Solo comparar con `id` si es UUID válido (columna uuid en PostgreSQL)
+              if (\Illuminate\Support\Str::isUuid($slug)) {
+                  $q->orWhere('id', $slug);
+              }
+          })
           ->firstOrFail();
 
         $automaticDiscounts = \Illuminate\Support\Facades\Cache::remember('active_automatic_discounts', 300, function() {
@@ -153,7 +169,92 @@ class ShopProductController extends Controller
 
         $product = $this->applyDiscountsToProduct($product, $automaticDiscounts);
 
-        return response()->json($product);
+        return response()->json($this->toPublic($product)); // 🔒 ocultar costo y campos internos
+    }
+
+    /**
+     * Convierte un valor (string "a,b,c" o array) en una lista de UUIDs válidos (máx 50).
+     */
+    private function parseUuidList($value): array
+    {
+        if (is_string($value)) {
+            $value = explode(',', $value);
+        }
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return collect($value)
+            ->filter(fn ($v) => is_string($v) && \Illuminate\Support\Str::isUuid(trim($v)))
+            ->map(fn ($v) => trim($v))
+            ->unique()
+            ->take(50)
+            ->values()
+            ->all();
+    }
+
+    /** Campos internos que nunca deben salir en la API pública de la tienda. */
+    private const HIDDEN_PRODUCT   = ['owner_id', 'deleted_at'];
+    private const HIDDEN_VARIANT   = ['cost', 'barcode', 'weight', 'deleted_at'];
+    private const HIDDEN_INVENTORY = ['min_stock', 'deleted_at', 'created_at', 'updated_at'];
+    private const HIDDEN_BRANCH    = ['deleted_at', 'created_at', 'updated_at'];
+
+    /**
+     * Minimiza los datos expuestos: oculta costo, códigos internos y contadores de descuentos.
+     * Se aplica solo en la tienda — el admin sigue viendo todos los campos.
+     */
+    private function toPublic($product)
+    {
+        $product->makeHidden(self::HIDDEN_PRODUCT);
+
+        if ($product->relationLoaded('product_variants')) {
+            $this->hideVariants($product->product_variants);
+        }
+
+        if ($product->relationLoaded('bundle_items')) {
+            foreach ($product->bundle_items as $bundleItem) {
+                $bundleItem->makeHidden(['deleted_at']);
+
+                if ($bundleItem->relationLoaded('product') && $bundleItem->product) {
+                    $bundleItem->product->makeHidden(self::HIDDEN_PRODUCT);
+                    if ($bundleItem->product->relationLoaded('product_variants')) {
+                        $this->hideVariants($bundleItem->product->product_variants);
+                    }
+                }
+                if ($bundleItem->relationLoaded('variant') && $bundleItem->variant) {
+                    $this->hideVariants([$bundleItem->variant]);
+                }
+            }
+        }
+
+        return $product;
+    }
+
+    private function hideVariants($variants): void
+    {
+        foreach ($variants as $variant) {
+            $variant->makeHidden(self::HIDDEN_VARIANT);
+
+            // Descuentos: solo lo necesario para mostrar (sin used_count, usage_limit, relaciones, etc.)
+            $discounts = $variant->getAttribute('active_discounts');
+            if ($discounts instanceof \Illuminate\Support\Collection) {
+                $variant->setAttribute('active_discounts', $discounts->map(fn ($d) => [
+                    'id'    => $d->id,
+                    'name'  => $d->name,
+                    'type'  => $d->type,
+                    'value' => (float) $d->value,
+                ])->values());
+            }
+
+            if ($variant->relationLoaded('inventories')) {
+                foreach ($variant->inventories as $inventory) {
+                    $inventory->makeHidden(self::HIDDEN_INVENTORY);
+                    if ($inventory->relationLoaded('branch') && $inventory->branch) {
+                        $inventory->branch->makeHidden(self::HIDDEN_BRANCH);
+                    }
+                }
+            }
+        }
     }
 
     private function applyDiscountsToProduct($product, $automaticDiscounts)

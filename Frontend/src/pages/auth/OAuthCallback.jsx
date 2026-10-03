@@ -1,81 +1,94 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import toast from "react-hot-toast";
 import api from "../../api/client";
+import { exchangeGoogleCode } from "../../api/admin/auth";
+
+// Mensajes para los errores que devuelve el backend en /login?error=...
+const ERROR_MESSAGES = {
+  email_not_verified: "Tu correo de Google no está verificado.",
+  account_disabled: "Tu cuenta está desactivada. Contacta a soporte.",
+  invalid_state: "La sesión de Google expiró. Inténtalo de nuevo.",
+};
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuthStore();
+  // React StrictMode ejecuta los efectos 2 veces; el código es de un solo uso, así que solo se canjea una vez
+  const handled = useRef(false);
 
   useEffect(() => {
+    if (handled.current) return;
+    handled.current = true;
+
     const handleCallback = async () => {
-      // Leer el token de la URL: /auth/callback?token=...
+      // 🔒 La URL ya no trae el token de sesión, solo un código de un solo uso (60 s).
+      // Se borra de la barra de direcciones/historial de inmediato.
       const params = new URLSearchParams(location.search);
-      const token = params.get("token");
-      const googleRegToken = params.get("google_reg_token");
-      const origin = params.get("origin");
-      const email = params.get("email") || "";
-      const name = params.get("name") || "";
+      const code = params.get("code");
       const error = params.get("error");
+      window.history.replaceState({}, "", "/auth/callback");
 
       if (error) {
-        toast.error("Error al iniciar sesión con Google");
+        toast.error(ERROR_MESSAGES[error] || "Error al iniciar sesión con Google");
         navigate("/login", { replace: true });
         return;
       }
 
-      if (googleRegToken) {
-        // Redirigir según el origen
-        if (origin === 'shop') {
-          navigate(`/shop?google_reg_token=${googleRegToken}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`, { replace: true });
-        } else {
-          navigate(`/register?google_reg_token=${googleRegToken}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`, { replace: true });
-        }
+      if (!code) {
+        navigate("/login", { replace: true });
         return;
       }
 
-      if (token) {
+      let data;
+      try {
+        const res = await exchangeGoogleCode(code);
+        data = res.data;
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Error al iniciar sesión con Google");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const origin = data.origin === "shop" ? "shop" : "login";
+
+      // Usuario nuevo: completar registro
+      if (data.type === "register" && data.google_reg_token) {
+        const qs = `google_reg_token=${encodeURIComponent(data.google_reg_token)}&email=${encodeURIComponent(data.email || "")}&name=${encodeURIComponent(data.name || "")}`;
+        navigate(origin === "shop" ? `/shop?${qs}` : `/register?${qs}`, { replace: true });
+        return;
+      }
+
+      // Usuario existente: iniciar sesión
+      if (data.type === "login" && data.token) {
+        const token = data.token;
         try {
-          // Guardar el token localmente para el interceptor
           localStorage.setItem("token", token);
-          if (origin === 'shop') {
+          if (origin === "shop") {
             localStorage.setItem("shop_auth_token", token);
           }
-          
-          // Establecer el header para axios y pedir los datos del usuario
+
           api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          
           const res = await api.get("/v1/admin/me");
-          
-          if (origin === 'shop') {
+
+          if (origin === "shop") {
             localStorage.setItem("shop_user", JSON.stringify(res.data.user));
           }
 
           login({ user: res.data.user, token });
-          
+
           toast.success("¡Bienvenido!");
-          if (origin === 'shop') {
-            navigate("/shop", { replace: true });
-          } else {
-            navigate("/dashboard/home", { replace: true });
-          }
+          navigate(origin === "shop" ? "/shop" : "/dashboard/home", { replace: true });
         } catch (err) {
           toast.error("Error al obtener la información del usuario");
-          if (origin === 'shop') {
-            navigate("/shop", { replace: true });
-          } else {
-            navigate("/login", { replace: true });
-          }
+          navigate(origin === "shop" ? "/shop" : "/login", { replace: true });
         }
-      } else {
-        if (origin === 'shop') {
-          navigate("/shop", { replace: true });
-        } else {
-          navigate("/login", { replace: true });
-        }
+        return;
       }
+
+      navigate(origin === "shop" ? "/shop" : "/login", { replace: true });
     };
 
     handleCallback();

@@ -37,14 +37,18 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialAuthController;
 
-Route::post('/register', RegisterController::class);
-Route::post('/login', LoginController::class);
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
-Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+// 🔒 Límites por IP en todos los endpoints de autenticación (anti fuerza bruta / spam / abuso de correo).
+// El 3er parámetro (prefijo) es obligatorio: sin él Laravel comparte UN solo contador por IP entre
+// todas las rutas con `throttle:N,M`, y el límite de una ruta se consume con las peticiones de otra.
+Route::post('/register', RegisterController::class)->middleware('throttle:10,60,auth_register_');
+Route::post('/login', LoginController::class)->middleware('throttle:20,1,auth_login_');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,15,auth_forgot_');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:10,15,auth_reset_');
 
-Route::get('/auth/google', [SocialAuthController::class, 'redirect']);
-Route::get('/auth/google/callback', [SocialAuthController::class, 'callback']);
-Route::post('/auth/google/complete-registration', [SocialAuthController::class, 'completeRegistration']);
+Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->middleware('throttle:30,1,auth_google_start_');
+Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->middleware('throttle:30,1,auth_google_cb_');
+Route::post('/auth/google/exchange', [SocialAuthController::class, 'exchange'])->middleware('throttle:30,1,auth_google_ex_');
+Route::post('/auth/google/complete-registration', [SocialAuthController::class, 'completeRegistration'])->middleware('throttle:10,15,auth_google_reg_');
 
 // Public Order Network routes (for customers to confirm delivery via link)
 Route::prefix('v1/delivery')->group(function () {

@@ -9,3 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('carts:cleanup-expired')->everyMinute();
+
+// Limpia tokens de sesión caducados (cada login crea un token)
+Schedule::command('sanctum:prune-expired --hours=24')->daily();

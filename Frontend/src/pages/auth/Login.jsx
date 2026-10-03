@@ -33,9 +33,7 @@ export default function Login() {
     }
 
     if (name === "password") {
-      if (value.length < 6) {
-        error = "Mínimo 6 caracteres";
-      }
+      if (!value) error = "Ingresa tu contraseña";
     }
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
@@ -62,6 +60,12 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!form.email || !form.password) {
+      toast.error("Ingresa tu correo y contraseña");
+      return;
+    }
+    if (loading) return;
+
     try {
       setLoading(true);
 
@@ -82,8 +86,11 @@ export default function Login() {
       setTimeout(() => navigate("/"), 1200);
 
     } catch (error) {
-      console.log(error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Error al iniciar sesión");
+      if (error.response?.status === 429) {
+        toast.error(error.response?.data?.message || "Demasiados intentos. Espera unos minutos.");
+      } else {
+        toast.error(error.response?.data?.message || "Error al iniciar sesión");
+      }
     } finally {
       setLoading(false);
     }
@@ -110,6 +117,9 @@ export default function Login() {
               <Mail size={18} className="input-icon" />
               <input
                 name="email"
+                type="email"
+                autoComplete="username"
+                maxLength={150}
                 placeholder="Correo electrónico"
                 onChange={handleChange}
               />
@@ -127,6 +137,8 @@ export default function Login() {
               <input
                 name="password"
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                maxLength={255}
                 placeholder="Contraseña"
                 onChange={handleChange}
               />

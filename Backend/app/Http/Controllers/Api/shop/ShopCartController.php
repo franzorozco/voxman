@@ -160,11 +160,11 @@ public function syncCartPrices(&$cartData)
         $request->validate([
             'product_id'      => 'required|string|exists:products,id',
             'variant_id'      => 'nullable|string|exists:product_variants,id',
-            'quantity'        => 'required|integer|min:1',
-            'color'           => 'nullable|string',
-            'bundle_group_id' => 'nullable|string',
-            'original_price'  => 'nullable|numeric|min:0',
-            'override_price'  => 'nullable|numeric|min:0',
+            'quantity'        => 'required|integer|min:1|max:100',  // max 100 para prevenir abuso
+            'color'           => 'nullable|string|max:100',
+            'bundle_group_id' => 'nullable|string|max:50',
+            // ⚠️ override_price y original_price ya NO se aceptan del cliente.
+            // El servidor siempre calcula el precio real desde la DB.
         ]);
 
         $cartToken = $request->header('X-Cart-Token');
@@ -181,8 +181,8 @@ public function syncCartPrices(&$cartData)
         $quantity      = $request->quantity;
         $color         = $request->color;
         $bundleGroupId = $request->bundle_group_id;
-        $originalPrice = $request->original_price;   // original price before bundle discount
-        $overridePrice = $request->override_price;   // proportional bundle price to use instead
+        // ⚠️ override_price y original_price del cliente son IGNORADOS.
+        // El precio siempre se calcula desde la DB en el servidor.
 
         // Load Product and Variant
         $product = Product::with(['product_images', 'attribute_value_images.attributeValue'])->find($productId);
@@ -195,7 +195,7 @@ public function syncCartPrices(&$cartData)
             return response()->json(['error' => 'Product not found'], 404);
         }
 
-        // Determine Name, Price, Size, Color
+        // Determine Name, Price, Size, Color — siempre desde la DB
         $name = $product->name;
         $price = $product->base_price;
         $sizeName = null;
@@ -254,50 +254,44 @@ public function syncCartPrices(&$cartData)
         $discountLabel = null;
         $appliedDiscountId = null;
 
-        // Apply automatic discount if not a bundle
-        if ($overridePrice === null) {
-            $discountService = app(DiscountValidationService::class);
-            $activeDiscounts = $discountService->getActiveDiscountsForProduct($product);
-            foreach ($activeDiscounts as $discount) {
-                $appliesToVariant = true;
-                $discountVariants = $discount->variants()->pluck('product_variants.id')->toArray();
-                if (!empty($discountVariants) && $variant) {
-                    $appliesToVariant = in_array($variant->id, $discountVariants);
+        // Aplicar descuento automático (precio siempre calculado en servidor)
+        $discountService = app(DiscountValidationService::class);
+        $activeDiscounts = $discountService->getActiveDiscountsForProduct($product);
+        foreach ($activeDiscounts as $discount) {
+            $appliesToVariant = true;
+            $discountVariants = $discount->variants()->pluck('product_variants.id')->toArray();
+            if (!empty($discountVariants) && $variant) {
+                $appliesToVariant = in_array($variant->id, $discountVariants);
+            }
+
+            if ($appliesToVariant) {
+                $amount = 0;
+                if ($discount->type === 'percentage') {
+                    $amount = $price * ($discount->value / 100);
+                    $label = "-".floatval($discount->value)."%";
+                } else {
+                    $amount = $discount->value;
+                    $label = "-Bs ".floatval($discount->value);
                 }
 
-                if ($appliesToVariant) {
-                    $amount = 0;
-                    if ($discount->type === 'percentage') {
-                        $amount = $price * ($discount->value / 100);
-                        $label = "-".floatval($discount->value)."%";
-                    } else {
-                        $amount = $discount->value;
-                        $label = "-Bs ".floatval($discount->value);
-                    }
+                if ($discount->max_discount_amount) {
+                    $amount = min($amount, $discount->max_discount_amount);
+                }
+                $amount = min($amount, $price);
 
-                    if ($discount->max_discount_amount) {
-                        $amount = min($amount, $discount->max_discount_amount);
-                    }
-                    $amount = min($amount, $price);
-
-                    if ($amount > $discountAmount) {
-                        $discountAmount = $amount;
-                        $discountLabel = $label;
-                        $appliedDiscountId = $discount->id;
-                    }
+                if ($amount > $discountAmount) {
+                    $discountAmount = $amount;
+                    $discountLabel = $label;
+                    $appliedDiscountId = $discount->id;
                 }
             }
         }
 
-        // Apply bundle override price if provided
-        if ($overridePrice !== null) {
-            $price = $overridePrice;
-        } else if ($discountAmount > 0) {
+        // Precio final siempre calculado en servidor
+        $originalPrice = (float) $price;
+        if ($discountAmount > 0) {
             $price = max(0, $price - $discountAmount);
         }
-
-        // The stored original_price: if explicitly provided use it, else the natural price
-        $storedOriginalPrice = ($originalPrice !== null) ? (float)$originalPrice : (float)($price + $discountAmount);
 
         // Check if item already exists
         $foundIndex = -1;
@@ -318,8 +312,8 @@ public function syncCartPrices(&$cartData)
                 'variant_id'      => $variantId,
                 'name'            => $name,
                 'price'           => (float)$price,
-                'original_price'  => $storedOriginalPrice,
-                'override_price'  => ($price != $storedOriginalPrice) ? (float)$price : null,
+                'original_price'  => $originalPrice,
+                'override_price'  => ($price != $originalPrice) ? (float)$price : null,
                 'bundle_group_id' => $bundleGroupId,
                 'quantity'        => $quantity,
                 'size'            => $sizeName,
@@ -330,8 +324,6 @@ public function syncCartPrices(&$cartData)
             ];
         }
 
-        $this->recalculateTotal($cartData);
-                $this->syncCartPrices($cartData);
         $this->recalculateTotal($cartData);
         $this->syncCartPrices($cartData);
         $this->saveCartData($cartToken, $cartData);
@@ -365,7 +357,7 @@ public function syncCartPrices(&$cartData)
         $bundlePrice = $bundle->base_price;
         $bundleGroupId = Str::uuid()->toString();
 
-        $cartToken = $request->header('X-Cart-Token') ?: Str::uuid()->toString();
+        $cartToken = $request->header('X-Cart-Token') ?: 'cart_' . Str::uuid()->toString();
         $cartData = $this->getCartData($cartToken) ?: ['total' => 0, 'items' => []];
 
         // For proportional pricing (optional)
@@ -467,8 +459,6 @@ public function syncCartPrices(&$cartData)
         }
 
         $this->recalculateTotal($cartData);
-                $this->syncCartPrices($cartData);
-        $this->recalculateTotal($cartData);
         $this->syncCartPrices($cartData);
         $this->saveCartData($cartToken, $cartData);
 
@@ -525,10 +515,8 @@ public function syncCartPrices(&$cartData)
         if ($updated) {
             $cartData['items'] = array_values($cartData['items']); // Re-index array
             $this->recalculateTotal($cartData);
-                    $this->syncCartPrices($cartData);
-        $this->recalculateTotal($cartData);
-        $this->syncCartPrices($cartData);
-        $this->saveCartData($cartToken, $cartData);
+            $this->syncCartPrices($cartData);
+            $this->saveCartData($cartToken, $cartData);
         }
 
         return response()->json($cartData);
@@ -596,10 +584,8 @@ public function syncCartPrices(&$cartData)
             }
 
             $this->recalculateTotal($cartData);
-                    $this->syncCartPrices($cartData);
-        $this->recalculateTotal($cartData);
-        $this->syncCartPrices($cartData);
-        $this->saveCartData($cartToken, $cartData);
+            $this->syncCartPrices($cartData);
+            $this->saveCartData($cartToken, $cartData);
         }
 
         return response()->json($cartData);
@@ -718,10 +704,9 @@ public function syncCartPrices(&$cartData)
 
         if (isset($cartData['applied_global_discount'])) {
             unset($cartData['applied_global_discount']);
-                    $this->syncCartPrices($cartData);
-        $this->recalculateTotal($cartData);
-        $this->syncCartPrices($cartData);
-        $this->saveCartData($cartToken, $cartData);
+            $this->recalculateTotal($cartData);
+            $this->syncCartPrices($cartData);
+            $this->saveCartData($cartToken, $cartData);
         }
 
         return response()->json($cartData);

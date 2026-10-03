@@ -1,4 +1,5 @@
 import { getImageUrl } from '../../../utils/imageUtils';
+import { sanitizeHtml } from '../../../utils/sanitizeHtml';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProduct } from '../../../api/shop/products';
@@ -485,7 +486,7 @@ const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange, onSele
             {isDetailsOpen && (
               <div style={{ paddingBottom: '12px', fontSize: '13px' }}>
                 {prod.description && (
-                  <div style={{ marginBottom: '16px' }} dangerouslySetInnerHTML={{ __html: prod.description }} />
+                  <div style={{ marginBottom: '16px' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(prod.description) }} />
                 )}
                 
                 {selectedVariant && selectedVariant.variant_attribute_values?.length > 0 && (
@@ -633,7 +634,7 @@ const FixedBundleItem = ({ prod, variant, added, onAdd }) => {
           <div style={{ padding: '0 12px 14px', fontSize: '13px' }}>
             {prod.description && (
               <div style={{ marginBottom: '14px', color: '#555', lineHeight: '1.6' }}
-                dangerouslySetInnerHTML={{ __html: prod.description }} />
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(prod.description) }} />
             )}
 
             {variant?.variant_attribute_values?.length > 0 && (

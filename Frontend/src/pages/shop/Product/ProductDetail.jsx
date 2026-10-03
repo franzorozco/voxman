@@ -1,4 +1,5 @@
 import { getImageUrl } from '../../../utils/imageUtils';
+import { sanitizeHtml } from '../../../utils/sanitizeHtml';
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { getProduct, getProducts } from '../../../api/shop/products';
@@ -736,7 +737,7 @@ const ProductDetail = () => {
               </button>
               <div className={`accordion-content ${openAccordion === 'description' ? 'open' : ''}`}>
                 <div className="accordion-body">
-                  <div dangerouslySetInnerHTML={{ __html: product.description || 'Sin descripción detallada.' }} />
+                  <div dangerouslySetInnerHTML={{ __html: product.description ? sanitizeHtml(product.description) : 'Sin descripción detallada.' }} />
                   
                   {selectedVariant && selectedVariant.variant_attribute_values?.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-gray-200">

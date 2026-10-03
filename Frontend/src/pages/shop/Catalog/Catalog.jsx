@@ -20,7 +20,10 @@ const Catalog = () => {
   const navigate = useNavigate();
   const addToCart = useShopCartStore(state => state.addItem);
   const [addedAnimationItems, setAddedAnimationItems] = useState({});
-  const initialCategory = searchParams.get('category');
+  // 🔒 Solo aceptar UUIDs válidos desde la URL (evita enviar basura al backend)
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const rawCategory = searchParams.get('category');
+  const initialCategory = rawCategory && UUID_RE.test(rawCategory) ? rawCategory : null;
 
   // ── Settings del Dashboard ──
   const { settings: shopSettings, fetchSettings: fetchShopSettings } = useShopSettingsStore();
@@ -472,7 +475,7 @@ const Catalog = () => {
                             {cfg('catalog_badge_bundle_text', 'Conjunto')}
                           </div>
                         )}
-                        {(item.is_new || (Math.random() < 0.15 && item.id % 2 === 0)) && cfg('catalog_badge_show_new', '1') !== '0' && (
+                        {item.is_new && cfg('catalog_badge_show_new', '1') !== '0' && (
                           <div style={{ backgroundColor: cfg('catalog_badge_new_bg', '#eab308'), color: cfg('catalog_badge_new_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                             {cfg('catalog_badge_new_text', 'Nuevo')}
                           </div>
@@ -807,7 +810,7 @@ const Catalog = () => {
                         {cfg('catalog_badge_bundle_text', 'Conjunto')}
                       </div>
                     )}
-                    {(item.is_new || (Math.random() < 0.15 && item.id % 2 === 0)) && cfg('catalog_badge_show_new', '1') !== '0' && (
+                    {item.is_new && cfg('catalog_badge_show_new', '1') !== '0' && (
                       <div style={{ backgroundColor: cfg('catalog_badge_new_bg', '#eab308'), color: cfg('catalog_badge_new_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         {cfg('catalog_badge_new_text', 'Nuevo')}
                       </div>
@@ -1028,6 +1031,7 @@ const Catalog = () => {
               <input
                 type="text" placeholder="Buscar producto..." value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                maxLength={100}
                 className="catalog-filter-input"
               />
             </div>
@@ -1192,6 +1196,7 @@ const Catalog = () => {
                 placeholder={cfg('catalog_search_placeholder', 'Buscar producto...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                maxLength={100}
                 style={{
                   width: '100%', padding: '8px 0', border: 'none',
                   borderBottom: '1px solid var(--border-color)',

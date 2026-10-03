@@ -13,12 +13,15 @@ class LoginController extends Controller
 {
     public function __invoke(Request $request)
     {
+        // 🔒 Límites de tamaño: evitan payloads gigantes (el hash solo usa los primeros 72 bytes)
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
+            'email' => 'required|string|email|max:150',
+            'password' => 'required|string|max:255',
+            'remember' => 'sometimes|boolean',
         ]);
 
-        $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
+        $email = Str::lower(trim($request->input('email')));
+        $throttleKey = Str::transliterate($email.'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
             $seconds = RateLimiter::availableIn($throttleKey);
@@ -28,20 +31,32 @@ class LoginController extends Controller
             ], 429);
         }
 
-        $user = User::where('email', $request->email)->first();
+        // Búsqueda sin distinguir mayúsculas (evita cuentas duplicadas "A@x.com" / "a@x.com")
+        $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
 
-        if (!$user) {
-            RateLimiter::hit($throttleKey, 1800);
-            return response()->json([
-                'message' => 'Usuario no encontrado'
-            ], 404);
+        // 🔒 Tiempo constante: si el usuario no existe igual se calcula un hash, así no se puede
+        // adivinar qué correos están registrados midiendo cuánto tarda la respuesta.
+        if ($user) {
+            $passwordOk = Hash::check($request->password, $user->password);
+        } else {
+            Hash::make(Str::random(16));
+            $passwordOk = false;
         }
 
-        if (!Hash::check($request->password, $user->password)) {
+        if (!$passwordOk) {
             RateLimiter::hit($throttleKey, 1800);
+            // 🔒 Mensaje único: antes devolvía "Usuario no encontrado" (404) vs "Contraseña incorrecta" (401),
+            // lo que permitía descubrir qué correos tienen cuenta.
             return response()->json([
-                'message' => 'Contraseña incorrecta'
+                'message' => 'Correo o contraseña incorrectos'
             ], 401);
+        }
+
+        // 🔒 Cuentas desactivadas no pueden iniciar sesión (is_active nunca se verificaba)
+        if ($user->is_active === false) {
+            return response()->json([
+                'message' => 'Tu cuenta está desactivada. Contacta a soporte.'
+            ], 403);
         }
 
         RateLimiter::clear($throttleKey);

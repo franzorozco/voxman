@@ -176,7 +176,7 @@ export default function NosotrosConfig() {
     setSaving(true);
     try {
       for (const key of Array.from(dirty)) {
-        await updateSystemSetting(key, { value: settings[key], category: 'About_Us_page_config' });
+        await updateSystemSetting(key, { value: settings[key], category: 'About_us_page_config' });
       }
       toast.success(`Configuraciones guardadas`);
       setDirty(new Set());

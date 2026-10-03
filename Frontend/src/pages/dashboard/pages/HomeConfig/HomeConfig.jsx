@@ -405,7 +405,8 @@ export default function HomeConfig() {
     try {
       setSaving(true);
       await Promise.all(Array.from(dirty).map(key => updateSystemSetting(key, {
-        value: settings[key]
+        value: settings[key],
+        category: 'home_page_config'
       })));
       toast.success("Configuracion guardada correctamente");
       fetchSettings();

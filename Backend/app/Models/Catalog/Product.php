@@ -9,9 +9,9 @@ class Product extends BaseProduct
     use \App\Traits\Auditable;
     
 	protected $fillable = [
-
+        // 'id' es necesario: el admin crea productos con 'id' => Str::uuid() (el modelo no usa HasUuids).
+        // Seguro mientras ningún controlador haga create($request->all()) — verificado.
         'id',
-
 		'owner_id',
 		'category_id',
 		'product_type_id',

@@ -151,12 +151,22 @@ class ShopProfileController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
+            // Mínimo 8 chars, al menos 1 mayúscula, 1 minúscula, 1 número, 1 símbolo
+            'new_password'     => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
         ], [
             'current_password.required' => 'La contraseña actual es requerida.',
-            'new_password.required' => 'La nueva contraseña es requerida.',
-            'new_password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
-            'new_password.confirmed' => 'La confirmación de la nueva contraseña no coincide.',
+            'new_password.required'     => 'La nueva contraseña es requerida.',
+            'new_password.min'          => 'La nueva contraseña debe tener al menos 8 caracteres.',
+            'new_password.confirmed'    => 'La confirmación de la nueva contraseña no coincide.',
         ]);
 
         $user = $request->user();
@@ -167,7 +177,11 @@ class ShopProfileController extends Controller
 
         $user->update(['password' => \Illuminate\Support\Facades\Hash::make($request->new_password)]);
 
-        return response()->json(['message' => 'Contraseña actualizada correctamente.']);
+        // 🔒 Revocar TODOS los tokens activos al cambiar contraseña
+        // Esto fuerza logout de todas las sesiones abiertas por seguridad
+        $user->tokens()->delete();
+
+        return response()->json(['message' => 'Contraseña actualizada correctamente. Por favor inicia sesión de nuevo.']);
     }
 
     public function addShippingAddress(Request $request)
@@ -287,6 +301,7 @@ class ShopProfileController extends Controller
             return response()->json([]);
         }
 
+        // 🔒 El customer_id siempre viene del usuario autenticado — nunca del request
         $query = \App\Models\Sales\Sale::with([
             'sale_details.product_variant.product',
             'sale_details.product_variant.size',
@@ -296,12 +311,14 @@ class ShopProfileController extends Controller
             'shipments.address',
             'payments',
             'sale_applied_discounts'
-        ])->where('customer_id', $customer->id)
+        ])->where('customer_id', $customer->id) // 🔒 IDOR: solo pedidos propios
           ->orderBy('created_at', 'desc');
 
-        if ($request->has('status')) {
+        // 🔒 Whitelist de valores permitidos para el filtro de status
+        $allowedStatuses = ['pending', 'in_transit', 'completed', 'cancelled'];
+        if ($request->has('status') && in_array($request->query('status'), $allowedStatuses, true)) {
             $status = $request->query('status');
-            $query->whereHas('shipments.delivery_schedule', function($q) use ($status) {
+            $query->whereHas('shipments.delivery_schedule', function ($q) use ($status) {
                 if ($status === 'pending') {
                     $q->whereIn('status', ['pending', 'assigned', 'requested', 'reserved', 'preparing', 'prepared']);
                 } elseif ($status === 'in_transit') {
@@ -315,7 +332,6 @@ class ShopProfileController extends Controller
         }
 
         $sales = $query->get();
-
         $formattedSales = \App\Http\Resources\SaleResource::collection($sales);
 
         return response()->json($formattedSales);

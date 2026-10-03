@@ -92,7 +92,7 @@ export default function ShopCatalogConfig() {
     setSaving(true);
     try {
       for (const key of Array.from(dirty)) {
-        await updateSystemSetting(key, { value: settings[key], category: 'Shop_Catalog_Config' });
+        await updateSystemSetting(key, { value: settings[key], category: 'Catalog_page_config' });
       }
       toast.success(`Configuraciones guardadas`);
       setDirty(new Set());

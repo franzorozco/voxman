@@ -33,7 +33,7 @@ class RegisterController extends Controller
 
                 $user->loadMissing('profile', 'customers.addresses', 'employee.branch');
 
-                $token = $user->createToken('auth_token')->plainTextToken;
+                $token = $user->createToken('auth_token', ['*'], now()->addHours(24))->plainTextToken;
 
                 return [
                     'user' => [
@@ -55,9 +55,10 @@ class RegisterController extends Controller
             return response()->json($data, 201);
 
         } catch (\Throwable $e) {
+            // 🔒 Nunca devolver $e->getMessage(): expone SQL, nombres de tablas y datos
+            \Illuminate\Support\Facades\Log::error('Error en registro: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Error en registro',
-                'error' => $e->getMessage()
+                'message' => 'No se pudo completar el registro. Inténtalo de nuevo.'
             ], 500);
         }
     }

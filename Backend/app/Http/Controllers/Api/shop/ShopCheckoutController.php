@@ -178,16 +178,17 @@ class ShopCheckoutController extends Controller
                 'whatsapp_number' => $waNumber
             ]);
 
-        } catch (\Exception $e) { \Log::error("Checkout Error: " . $e->getMessage()); \Log::error($e->getTraceAsString());
+        } catch (\Exception $e) {
+            \Log::error("Guest Checkout Error: " . $e->getMessage());
             DB::rollBack();
+            // ⚠️ No exponer el mensaje de excepción interno al cliente
             return response()->json([
-                'message' => 'Error al procesar el checkout',
-                'error' => $e->getMessage()
+                'message' => 'Error al procesar el checkout. Por favor intenta de nuevo.'
             ], 500);
         }
     }
 
-        public function initAuthCheckout(Request $request)
+    public function initAuthCheckout(Request $request)
     {
         $user = $request->user();
         
@@ -360,11 +361,12 @@ class ShopCheckoutController extends Controller
                 'whatsapp_number' => $waNumber
             ]);
 
-        } catch (\Exception $e) { \Log::error("Checkout Error: " . $e->getMessage()); \Log::error($e->getTraceAsString());
+        } catch (\Exception $e) {
+            \Log::error("Auth Checkout Error: " . $e->getMessage());
             DB::rollBack();
+            // ⚠️ No exponer el mensaje de excepción interno al cliente
             return response()->json([
-                'message' => 'Error al procesar el checkout',
-                'error' => $e->getMessage()
+                'message' => 'Error al procesar el checkout. Por favor intenta de nuevo.'
             ], 500);
         }
     }

@@ -21,29 +21,32 @@ use App\Http\Controllers\Api\shop\ShopSettingsController;
 */
 
 Route::prefix('v1/shop')->group(function () {
-    // Rutas públicas
-    Route::get('/settings', [ShopSettingsController::class, 'index']);
-    Route::get('/products', [ShopProductController::class, 'index']);
-    Route::get('/products/{slug}', [ShopProductController::class, 'show']);
-    
-    Route::get('/categories', [ShopCategoryController::class, 'index']);
-    Route::get('/categories/featured', [ShopCategoryController::class, 'featured']);
+    // ── Rutas públicas de lectura con rate limiting (240 req/min por IP) ───
+    // 240 y no 60: operadores móviles usan CGNAT (muchos clientes comparten IP) y
+    // una sola visita al catálogo (settings + categorías + scroll infinito) hace ~10-20 requests.
+    // El 3er parámetro de throttle (prefijo) separa los contadores: sin él todas las rutas
+    // `throttle:N,M` comparten UN solo contador por IP.
+    Route::middleware(['throttle:240,1,shop_read_'])->group(function () {
+        Route::get('/settings', [ShopSettingsController::class, 'index']);
+        Route::get('/products', [ShopProductController::class, 'index']);
+        Route::get('/products/{slug}', [ShopProductController::class, 'show']);
+        Route::get('/categories', [ShopCategoryController::class, 'index']);
+        Route::get('/categories/featured', [ShopCategoryController::class, 'featured']);
+        Route::get('/shorts', [ShopShortController::class, 'index']);
+    });
 
-    Route::get('/shorts', [ShopShortController::class, 'index']);
-    
     // Autenticación de clientes
     // Login y Register ahora usan las rutas globales /api/login y /api/register
 
-    // Rutas del checkout (Guest & User)
-    Route::post('/checkout/guest-init', [ShopCheckoutController::class, 'initGuestCheckout']);
-
     // Opciones de entrega
-    Route::get('/delivery-options/branches', [ShopCheckoutController::class, 'getAvailableBranches']);
-    Route::get('/delivery-options/zones', [ShopCheckoutController::class, 'getDeliveryZones']);
+    Route::middleware(['throttle:30,1,shop_checkout_'])->group(function () {
+        Route::post('/checkout/guest-init', [ShopCheckoutController::class, 'initGuestCheckout']);
+        Route::get('/delivery-options/branches', [ShopCheckoutController::class, 'getAvailableBranches']);
+        Route::get('/delivery-options/zones', [ShopCheckoutController::class, 'getDeliveryZones']);
+    });
 
-    // Rutas del carrito (Protegidas por Cart Token manual vía Interceptor)
-    Route::prefix('cart')->group(function () {
-        // En un caso real, un middleware específico podría verificar el X-Cart-Token
+    // ── Rutas del carrito — con validación de token y rate limiting ─────────
+    Route::prefix('cart')->middleware(['cart.token', 'throttle:120,1,shop_cart_'])->group(function () {
         Route::get('/', [ShopCartController::class, 'show']);
         Route::post('/add', [ShopCartController::class, 'add']);
         Route::post('/add-bundle', [ShopCartController::class, 'addBundle']);
@@ -56,8 +59,8 @@ Route::prefix('v1/shop')->group(function () {
         Route::post('/checkout', [ShopCheckoutController::class, 'process']);
     });
 
-    // Rutas protegidas para clientes logueados
-    Route::middleware(['auth:sanctum'])->group(function () {
+    // ── Rutas protegidas para clientes logueados ────────────────────────────
+    Route::middleware(['auth:sanctum', 'throttle:60,1,shop_auth_'])->group(function () {
         Route::post('/logout', [ShopProfileController::class, 'logout']);
         Route::get('/profile', [ShopProfileController::class, 'profile']);
         Route::post('/customer-profile', [ShopProfileController::class, 'updateCustomerProfile']);
@@ -66,10 +69,11 @@ Route::prefix('v1/shop')->group(function () {
         Route::put('/delivery-options/addresses/{id}', [ShopProfileController::class, 'updateAddress']);
         Route::delete('/delivery-options/addresses/{id}', [ShopProfileController::class, 'deleteAddress']);
         Route::post('/checkout/auth-init', [ShopCheckoutController::class, 'initAuthCheckout']);
-        
+
         // Wishlist
         Route::get('/wishlist', [\App\Http\Controllers\Api\shop\ShopWishlistController::class, 'index']);
         Route::post('/wishlist/toggle', [\App\Http\Controllers\Api\shop\ShopWishlistController::class, 'toggle']);
         Route::get('/my-orders', [ShopProfileController::class, 'myOrders']);
     });
 });
+

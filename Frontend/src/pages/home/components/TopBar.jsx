@@ -3,6 +3,51 @@ import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import "./TopBar.css";
 
+// ─── Security helpers ────────────────────────────────────────────────────────
+
+/**
+ * Permite solo URLs absolutas (http/https) o rutas relativas internas (/ruta).
+ * Bloquea: javascript:, data:, vbscript:, //evil.com (protocol-relative).
+ */
+const SAFE_URL_RE = /^(https?:\/\/|\/(?!\/))/i;
+const sanitizeUrl = (url) => {
+  if (!url || typeof url !== "string") return "";
+  const trimmed = url.trim();
+  return SAFE_URL_RE.test(trimmed) ? trimmed : "";
+};
+
+/** Acepta solo hex, rgb(), rgba(), hsl(), hsla(). Rechaza cualquier otra cosa. */
+const CSS_COLOR_RE =
+  /^(#[0-9a-fA-F]{3,8}|rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)|rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(0|1|0?\.\d+)\s*\)|hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)|hsla\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*,\s*(0|1|0?\.\d+)\s*\))$/i;
+const sanitizeCssColor = (val, fallback) =>
+  typeof val === "string" && CSS_COLOR_RE.test(val.trim()) ? val.trim() : fallback;
+
+/** Acepta valores de tamaño: número + unidad válida. */
+const CSS_SIZE_RE = /^\d+(\.\d+)?(px|em|rem|%|vh|vw)$/i;
+const sanitizeCssSize = (val, fallback) =>
+  typeof val === "string" && CSS_SIZE_RE.test(val.trim()) ? val.trim() : fallback;
+
+/** Acepta font-weight numérico (100–900) o palabras clave CSS. */
+const CSS_FONT_WEIGHT_RE = /^(normal|bold|lighter|bolder|[1-9]00)$/i;
+const sanitizeFontWeight = (val, fallback) =>
+  typeof val === "string" && CSS_FONT_WEIGHT_RE.test(val.trim()) ? val.trim() : fallback;
+
+/**
+ * Acepta padding de 1 a 4 valores numéricos con unidad.
+ * Ej: "12px 20px", "8px", "4px 8px 4px 8px".
+ */
+const CSS_PADDING_RE = /^(\d+(\.\d+)?(px|em|rem|%) ?)( ?\d+(\.\d+)?(px|em|rem|%) ?){0,3}$/i;
+const sanitizePadding = (val, fallback) =>
+  typeof val === "string" && CSS_PADDING_RE.test(val.trim()) ? val.trim() : fallback;
+
+/** Clampea iconSize a un rango razonable [8, 64]. */
+const sanitizeIconSize = (val) => {
+  const n = Number(val);
+  return Number.isFinite(n) ? Math.min(64, Math.max(8, n)) : 16;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * TopBar — Cintillo de anuncio reutilizable.
  */
@@ -40,42 +85,50 @@ export default function TopBar({
     }
   };
 
-  const isExternal = linkUrl.startsWith("http");
-  const IconCmp = icon && Icons[icon] ? Icons[icon] : null;
+  // ── Sanitize all props that come from the backend ──
+  const safeUrl        = sanitizeUrl(linkUrl);
+  const safeBgColor    = sanitizeCssColor(bgColor, "#000000");
+  const safeTextColor  = sanitizeCssColor(textColor, "#ffffff");
+  const safeTextSize   = sanitizeCssSize(textSize, "13px");
+  const safeFontWeight = sanitizeFontWeight(fontWeight, "500");
+  const safePadding    = sanitizePadding(padding, "12px 20px");
+  const safeIconSize   = sanitizeIconSize(iconSize);
+
+  const isExternal = safeUrl.startsWith("http");
+  const IconCmp      = icon      && Icons[icon]      ? Icons[icon]      : null;
   const IconRightCmp = iconRight && Icons[iconRight] ? Icons[iconRight] : null;
 
-  let bgStyle = { backgroundColor: bgColor, color: textColor, padding: padding };
+  let bgStyle = { backgroundColor: safeBgColor, color: safeTextColor, padding: safePadding };
   if (useGradient) {
-    // Un degradado que usa el color de fondo como base
     bgStyle = {
       ...bgStyle,
-      background: `linear-gradient(90deg, ${bgColor} 0%, rgba(255,255,255,0.15) 50%, ${bgColor} 100%)`,
+      background: `linear-gradient(90deg, ${safeBgColor} 0%, rgba(255,255,255,0.15) 50%, ${safeBgColor} 100%)`,
     };
   }
 
   return (
     <div className={`topbar topbar--effect-${effect}`} style={bgStyle}>
       <div className="topbar__inner">
-        {IconCmp && <IconCmp size={Number(iconSize) || 16} className="topbar__icon" />}
-        <span className="topbar__text" style={{ fontSize: textSize, fontWeight: fontWeight }}>{text}</span>
+        {IconCmp && <IconCmp size={safeIconSize} className="topbar__icon" />}
+        <span className="topbar__text" style={{ fontSize: safeTextSize, fontWeight: safeFontWeight }}>{text}</span>
 
-        {linkUrl && linkText && (
+        {safeUrl && linkText && (
           isExternal ? (
-            <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="topbar__link" style={{ color: textColor }}>
+            <a href={safeUrl} target="_blank" rel="noopener noreferrer" className="topbar__link" style={{ color: safeTextColor }}>
               {linkText}
             </a>
           ) : (
-            <Link to={linkUrl} className="topbar__link" style={{ color: textColor }}>
+            <Link to={safeUrl} className="topbar__link" style={{ color: safeTextColor }}>
               {linkText}
             </Link>
           )
         )}
-        
-        {IconRightCmp && <IconRightCmp size={Number(iconSize) || 16} className="topbar__icon" style={{ marginLeft: 4, marginRight: 0 }} />}
+
+        {IconRightCmp && <IconRightCmp size={safeIconSize} className="topbar__icon" style={{ marginLeft: 4, marginRight: 0 }} />}
       </div>
-      
+
       {isCloseable && (
-        <button onClick={handleClose} className="topbar__close" style={{ color: textColor }} title="Cerrar anuncio">
+        <button onClick={handleClose} className="topbar__close" style={{ color: safeTextColor }} title="Cerrar anuncio">
           <Icons.X size={16} />
         </button>
       )}

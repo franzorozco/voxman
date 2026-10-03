@@ -45,9 +45,9 @@ export default function ForgotPassword() {
         {success ? (
           <div className="success-message" style={{ textAlign: 'center' }}>
             <CheckCircle size={48} color="#33d9b2" style={{ margin: '0 auto 16px' }} />
-            <span style={{ display: 'block', marginBottom: '8px' }}>¡Enlace enviado!</span>
+            <span style={{ display: 'block', marginBottom: '8px' }}>¡Solicitud recibida!</span>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.5' }}>
-              Hemos enviado un enlace a <strong>{email}</strong>. Revisa tu bandeja de entrada o carpeta de spam.
+              Si <strong>{email}</strong> está registrado, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada o carpeta de spam.
             </p>
             <button 
               className="auth-btn-primary" 
