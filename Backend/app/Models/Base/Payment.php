@@ -6,9 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\CashRegister;
-use App\Models\PaymentMethod;
-use App\Models\Sale;
+use App\Models\Finance\CashRegister;
+use App\Models\Finance\PaymentMethod;
+use App\Models\Sales\Sale;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -38,15 +38,12 @@ class Payment extends Model
 {
 	use SoftDeletes;
 	protected $table = 'payments';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'sale_id' => 'uuid',
-		'cash_register_id' => 'uuid',
-		'payment_method_id' => 'uuid',
 		'amount' => 'float',
-		'status' => 'USER-DEFINED'
+		'status' => 'string'
 	];
 
 	public function sale()

@@ -23,12 +23,12 @@ use Illuminate\Database\Eloquent\Model;
 class ModelHasPermission extends Model
 {
 	protected $table = 'model_has_permissions';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
 		'permission_id' => 'int',
-		'model_id' => 'uuid'
 	];
 
 	public function permission()

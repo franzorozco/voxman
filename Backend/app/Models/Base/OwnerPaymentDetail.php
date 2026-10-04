@@ -6,8 +6,9 @@
 
 namespace App\Models\Base;
 
-use App\Models\OwnerPayment;
-use App\Models\SaleDetail;
+use App\Models\Actors\Owner;
+use App\Models\Finance\OwnerPayment;
+use App\Models\Sales\SaleDetail;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,13 +29,11 @@ use Illuminate\Database\Eloquent\Model;
 class OwnerPaymentDetail extends Model
 {
 	protected $table = 'owner_payment_details';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'owner_payment_id' => 'uuid',
-		'sale_detail_id' => 'uuid',
 		'amount' => 'float'
 	];
 

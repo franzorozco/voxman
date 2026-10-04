@@ -1,0 +1,92 @@
+.new-arrivals-section {
+  padding: 40px 20px;
+  background-color: var(--bg-main);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.new-arrivals-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.new-arrivals-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--text-main);
+}
+
+.new-arrivals-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: color 0.3s ease;
+}
+
+.new-arrivals-link:hover {
+  color: var(--text-main);
+}
+
+.new-arrivals-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Firefox */
+  padding-bottom: 16px; /* Space for scrollbar if any */
+}
+
+.new-arrivals-carousel::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.carousel-item {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.carousel-item-img-wrapper {
+  width: 100%;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  background-color: var(--bg-input);
+  margin-bottom: 12px;
+}
+
+.carousel-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.carousel-item:hover .carousel-item-img {
+  transform: scale(1.05);
+}
+
+.carousel-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.carousel-item-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-main);
+  text-transform: uppercase;
+}
+
+.carousel-item-price {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

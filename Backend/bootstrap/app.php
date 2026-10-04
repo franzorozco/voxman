@@ -9,10 +9,38 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
     )
+
     ->withMiddleware(function (Middleware $middleware): void {
+
+        // 🔒 Security headers on every API response
+        $middleware->api(prepend: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
+        // 🔥 SPATIE MIDDLEWARES + Security aliases
+        $middleware->alias([
+            'role'              => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'        => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission'=> \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'pos.access'        => \App\Http\Middleware\PosAccessMiddleware::class,
+            'cart.token'        => \App\Http\Middleware\CheckCartToken::class,
+        ]);
     })
+
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+
+        $exceptions->render(function (
+            \Illuminate\Auth\AuthenticationException $e,
+            $request
+        ) {
+
+            return response()->json([
+                'message' => 'No autenticado'
+            ], 401);
+        });
+
     })
+
     ->create();

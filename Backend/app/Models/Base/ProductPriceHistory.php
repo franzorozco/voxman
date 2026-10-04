@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\ProductVariant;
-use App\Models\User;
+use App\Models\Catalog\ProductVariant;
+use App\Models\Core\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -29,15 +29,13 @@ use Illuminate\Database\Eloquent\Model;
 class ProductPriceHistory extends Model
 {
 	protected $table = 'product_price_history';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'variant_id' => 'uuid',
 		'old_price' => 'float',
 		'new_price' => 'float',
-		'changed_by' => 'uuid'
 	];
 
 	public function product_variant()

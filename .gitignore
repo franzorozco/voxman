@@ -13,3 +13,5 @@ frontend/build
 
 # OS
 .DS_Store
+
+ngrok.exe

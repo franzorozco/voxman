@@ -6,8 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\Product;
-use App\Models\ProductTypeMeasurement;
+use App\Models\Catalog\Product;
+use App\Models\Catalog\ProductTypeMeasurement;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -31,10 +31,10 @@ class ProductType extends Model
 {
 	use SoftDeletes;
 	protected $table = 'product_types';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [
-		'id' => 'uuid'
 	];
 
 	public function products()

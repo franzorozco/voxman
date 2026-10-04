@@ -6,7 +6,8 @@
 
 namespace App\Models\Base;
 
-use App\Models\CartItem;
+use App\Models\Sales\CartItem;
+use App\Models\Actors\Customer;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -27,20 +28,19 @@ use Illuminate\Database\Eloquent\Model;
 class Cart extends Model
 {
 	protected $table = 'carts';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'user_id' => 'uuid'
 	];
 
-	public function user()
+	public function customer()
 	{
-		return $this->belongsTo(User::class);
+		return $this->belongsTo(Customer::class);
 	}
 
-	public function cart_items()
+	public function items()
 	{
 		return $this->hasMany(CartItem::class);
 	}

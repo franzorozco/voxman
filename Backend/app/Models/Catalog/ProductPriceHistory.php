@@ -12,4 +12,9 @@ class ProductPriceHistory extends BaseProductPriceHistory
 		'new_price',
 		'changed_by'
 	];
+
+	public function variant()
+	{
+		return $this->belongsTo(\App\Models\Catalog\ProductVariant::class, 'variant_id')->withTrashed();
+	}
 }

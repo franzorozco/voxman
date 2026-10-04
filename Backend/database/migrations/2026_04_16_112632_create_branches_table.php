@@ -15,6 +15,7 @@ return new class extends Migration
             $table->uuid('id')->default('uuid_generate_v4()')->primary();
             $table->string('name', 150);
             $table->string('phone', 20)->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamp('created_at')->nullable()->useCurrent();
             $table->timestamp('updated_at')->nullable();
             $table->softDeletes();

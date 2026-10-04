@@ -14,7 +14,6 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -53,6 +52,10 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+
+    // URL pública del frontend (enlaces de reset de contraseña, redirects de Google).
+    // Usar config('app.frontend_url') en lugar de env() para que funcione con config:cache.
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
 
     /*
     |--------------------------------------------------------------------------
