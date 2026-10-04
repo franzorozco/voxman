@@ -56,7 +56,6 @@ Route::prefix('v1/shop')->group(function () {
         Route::post('/validate-code', [\App\Http\Controllers\Api\shop\ShopDiscountController::class, 'validateCode']);
         Route::post('/apply-discount', [ShopCartController::class, 'applyDiscount']);
         Route::post('/remove-discount', [ShopCartController::class, 'removeDiscount']);
-        Route::post('/checkout', [ShopCheckoutController::class, 'process']);
     });
 
     // ── Rutas protegidas para clientes logueados ────────────────────────────

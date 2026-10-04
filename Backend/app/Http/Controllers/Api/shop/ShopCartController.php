@@ -61,12 +61,16 @@ public function syncCartPrices(&$cartData)
             }
 
             $product = \App\Models\Catalog\Product::find($item['product_id']);
+            if (!$product) continue;
+
             $variant = null;
             if (!empty($item['variant_id'])) {
                 $variant = \App\Models\Catalog\ProductVariant::find($item['variant_id']);
+                // Security: ensure the variant actually belongs to the product
+                if ($variant && $variant->product_id !== $product->id) {
+                    $variant = null; // Ignore invalid variant to prevent price manipulation
+                }
             }
-
-            if (!$product) continue;
 
             $basePrice = $product->base_price;
             if ($variant && $variant->price !== null) {
@@ -186,13 +190,17 @@ public function syncCartPrices(&$cartData)
 
         // Load Product and Variant
         $product = Product::with(['product_images', 'attribute_value_images.attributeValue'])->find($productId);
+        
+        if (!$product) {
+            return response()->json(['error' => 'Product not found'], 404);
+        }
+
         $variant = null;
         if ($variantId) {
             $variant = ProductVariant::with(['size', 'variant_images', 'variant_attribute_values.attribute_value.attribute'])->find($variantId);
-        }
-
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
+            if (!$variant || $variant->product_id !== $product->id) {
+                return response()->json(['error' => 'Variant mismatch or not found'], 400);
+            }
         }
 
         // Determine Name, Price, Size, Color — siempre desde la DB
@@ -367,12 +375,15 @@ public function syncCartPrices(&$cartData)
 
         foreach ($items as $itemReq) {
             $product = Product::with(['product_images', 'attribute_value_images.attributeValue'])->find($itemReq['product_id']);
+            if (!$product) continue;
+
             $variant = null;
             if (!empty($itemReq['variant_id'])) {
                 $variant = ProductVariant::with(['size', 'variant_images', 'variant_attribute_values.attribute_value.attribute'])->find($itemReq['variant_id']);
+                if (!$variant || $variant->product_id !== $product->id) {
+                    return response()->json(['error' => 'Variant mismatch or not found for product ' . $product->name], 400);
+                }
             }
-
-            if (!$product) continue;
 
             $price = $product->base_price;
             $sizeName = null;
@@ -474,7 +485,7 @@ public function syncCartPrices(&$cartData)
             'cart_item_id' => 'nullable|string',
             'product_id' => 'required_without:cart_item_id|string',
             'variant_id' => 'nullable|string',
-            'quantity' => 'required|integer|min:0',
+            'quantity' => 'required|integer|min:0|max:100', // max 100 para prevenir abuso
         ]);
 
         $cartToken = $request->header('X-Cart-Token');

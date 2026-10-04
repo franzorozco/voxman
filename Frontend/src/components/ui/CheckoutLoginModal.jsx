@@ -96,44 +96,60 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
   // VALIDACIÓN
   const validate = (name, value) => {
     let error = "";
+
     if (name === "email") {
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!regex.test(value)) error = "Correo inválido";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) error = "Correo inválido";
     }
+
+    if (name === "username") {
+      if (value.length < 3) error = "Mínimo 3 caracteres";
+      else if (/\s/.test(value)) error = "Sin espacios";
+      else {
+        const userRegex = /^[a-zA-Z0-9_]+$/;
+        if (!userRegex.test(value)) error = "Solo letras, números y guiones bajos";
+      }
+    }
+
     if (name === "password") {
       if (mode === 'register') {
-        let strength = "Débil";
-        const hasUpper = /[A-Z]/.test(value);
-        const hasNumber = /[0-9]/.test(value);
-        const hasSymbol = /[^A-Za-z0-9]/.test(value);
+        const hasNumbers = /\d/.test(value);
+        const hasLetters = /[a-zA-Z]/.test(value);
+        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
-        if (value.length >= 6) strength = "Media";
-        if (value.length >= 8 && hasUpper && hasNumber && hasSymbol) {
-          strength = "Fuerte";
+        if (value.length < 8) {
+          error = "Mínimo 8 caracteres";
+          setPasswordStrength("");
+        } else if (value.length > 72) {
+          error = "Máximo 72 caracteres";
+        } else if (!hasLetters || !hasNumbers) {
+          error = "Debe incluir letras y números";
+          setPasswordStrength("Débil");
+        } else if (hasSpecial) {
+          setPasswordStrength("Fuerte");
+        } else {
+          setPasswordStrength("Media");
         }
-        setPasswordStrength(strength);
+      } else {
+        // En login solo validamos longitud mínima por seguridad básica
+        if (value.length < 8) {
+          error = "Mínimo 8 caracteres";
+        }
       }
 
-      if (value.length < 6) {
-        error = "Mínimo 6 caracteres";
-      }
       if (mode === 'register' && form.password_confirmation && value !== form.password_confirmation) {
         setErrors((prev) => ({ ...prev, password_confirmation: "Las contraseñas no coinciden" }));
       } else if (mode === 'register' && form.password_confirmation && value === form.password_confirmation) {
         setErrors((prev) => ({ ...prev, password_confirmation: "" }));
       }
     }
+
     if (name === "password_confirmation") {
       if (value !== form.password) {
         error = "Las contraseñas no coinciden";
       }
     }
-    if (name === "username") {
-      const userRegex = /^[a-zA-Z0-9_]+$/;
-      if (!userRegex.test(value)) {
-        error = "Solo letras, números y _";
-      }
-    }
+
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
@@ -213,6 +229,10 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     }
 
     if (mode === 'google_register') {
+      if (Object.values(errors).some((err) => err)) {
+        toast.error("Corrige los errores antes de continuar");
+        return;
+      }
       if (!form.username || !form.first_name) {
         toast.error("El nombre de usuario y nombre son obligatorios");
         return;
@@ -302,7 +322,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
   const borderColor = isDark ? "#374151" : "#e5e7eb";
   const inputBg = isDark ? "#1f2937" : "#f9fafb";
 
-  const renderInput = (name, placeholder, type = "text", Icon) => (
+  const renderInput = (name, placeholder, type = "text", Icon, maxLength = undefined) => (
     <div>
       <div style={{
         display: 'flex',
@@ -318,6 +338,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
           name={name}
           type={type}
           placeholder={placeholder}
+          maxLength={maxLength}
           value={form[name]}
           onChange={handleChange}
           style={{
@@ -490,6 +511,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
               <input
                 name="email"
                 type="email"
+                maxLength={150}
                 placeholder="Correo electrónico"
                 value={form.email}
                 onChange={handleChange}
@@ -513,21 +535,21 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
               </div>
             )}
 
-            {(mode === 'register' || mode === 'google_register') && renderInput("username", "Nombre de usuario", "text", User)}
+            {(mode === 'register' || mode === 'google_register') && renderInput("username", "Nombre de usuario", "text", User, 50)}
             
             {mode === 'google_register' ? (
               <>
-                {renderInput("first_name", "Nombre(s)", "text", User)}
+                {renderInput("first_name", "Nombre(s)", "text", User, 100)}
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>{renderInput("last_name_paternal", "Ap. Paterno", "text", User)}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>{renderInput("last_name_maternal", "Ap. Materno", "text", User)}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>{renderInput("last_name_paternal", "Ap. Paterno", "text", User, 100)}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>{renderInput("last_name_maternal", "Ap. Materno", "text", User, 100)}</div>
                 </div>
-                {renderInput("phone", "Teléfono", "text", User)}
+                {renderInput("phone", "Teléfono", "text", User, 30)}
               </>
             ) : (
               <>
-                {renderInput("password", "Contraseña", showPassword ? "text" : "password", Lock)}
-                {mode === 'register' && renderInput("password_confirmation", "Confirmar contraseña", showPassword ? "text" : "password", Lock)}
+                {renderInput("password", "Contraseña", showPassword ? "text" : "password", Lock, 72)}
+                {mode === 'register' && renderInput("password_confirmation", "Confirmar contraseña", showPassword ? "text" : "password", Lock, 72)}
               </>
             )}
 
