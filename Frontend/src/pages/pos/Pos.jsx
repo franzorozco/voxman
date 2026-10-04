@@ -26,7 +26,7 @@ const Pos = () => {
         
         // Guardia de seguridad
         if (!hasSellAll && !hasSellOwn) {
-            navigate('/dashboard');
+            navigate('/');
             return;
         }
 

@@ -3,9 +3,13 @@ import { ArrowLeft, Search, RotateCcw, Trash2, Eye, EyeOff } from "lucide-react"
 import { toast } from "react-hot-toast";
 import { getDeletedGiftcards, restoreGiftcard, forceDeleteGiftcard } from "../../../../api/admin/giftcards";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../../../../store/authStore";
 import "./Giftcards.css";
 
 export default function DeletedGiftcards() {
+  const authUser = useAuthStore((s) => s.user);
+  // Mismo criterio que CanAccess: Owner o permiso explicito. El backend vuelve a validar en cada accion.
+  const can = (perm) => !!authUser && (authUser.roles?.includes('Owner') || authUser.permissions?.includes(perm));
   const [giftcards, setGiftcards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -139,21 +143,21 @@ export default function DeletedGiftcards() {
                     </td>
                     <td data-label="Acciones" className="gift-actions-cell">
                       <div className="gift-actions-wrapper">
-                        <button 
+                        {can('restore_giftcards') && (<button 
                           className="btn-secondary gift-ticket-btn"
                           title="Restaurar"
                           onClick={() => handleRestore(g.id)}
                           style={{ color: '#10b981' }}
                         >
                           <RotateCcw size={18} />
-                        </button>
-                        <button 
+                        </button> )}
+                        {can('delete_giftcards') && (<button 
                           className="btn-delete gift-delete-btn"
                           title="Eliminar permanentemente"
                           onClick={() => handleForceDelete(g.id)}
                         >
                           <Trash2 size={18} />
-                        </button>
+                        </button> )}
                       </div>
                     </td>
                   </tr>

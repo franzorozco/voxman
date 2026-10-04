@@ -168,7 +168,7 @@ export default function Register() {
           setSuccess(true);
           useAuthStore.getState().login({ user: res.data.user, token: res.data.token });
           setTimeout(() => {
-            navigate("/dashboard/home");
+            navigate("/");
           }, 1200);
         }
       } catch (error) {

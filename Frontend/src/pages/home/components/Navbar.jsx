@@ -18,11 +18,15 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const isAdmin = user?.roles?.includes("Administrador");
+  const isOwner = user?.roles?.includes("Owner");
   
-  // Verificamos si tiene cualquier permiso administrativo o el rol Administrador para entrar al Dashboard
-  const hasDashboardAccess = isAdmin || user?.permissions?.some(p => 
-    p.startsWith('view_') || p.startsWith('manage_') || p.startsWith('create_') || p.startsWith('edit_')
+  // El botón "Administración" solo aparece si el usuario puede entrar al panel (access_dashboard)
+  // Y tiene al menos un permiso de alguna vista del dashboard (view_* o manage_*).
+  // Tener solo el rol "Administrador" ya no basta: lo que cuenta son los permisos asignados.
+  const perms = user?.permissions ?? [];
+  const hasDashboardAccess = isOwner || (
+    perms.includes('access_dashboard') &&
+    perms.some(p => p.startsWith('view_') || p.startsWith('manage_'))
   );
 
   // Verificamos si tiene alguno de los permisos de ventas para entrar al Punto de Venta

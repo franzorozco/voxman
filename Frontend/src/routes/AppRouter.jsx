@@ -125,7 +125,7 @@ const AnimatedRoutes = () => {
         {/* ================= DASHBOARD (ADMIN THEME) ================= */}
         <Route element={<ThemeLayout theme={adminThemeClass} />}>
           <Route path="/dashboard" element={
-              <ProtectedRoute>
+              <ProtectedRoute permissions={["access_dashboard"]}>
                 <DashboardLayout />
               </ProtectedRoute>
             }

@@ -29,9 +29,10 @@ class ShopShortController extends Controller
      */
     public function store(Request $request)
     {
+        \App\Support\SecureUpload::validateAll($request, 'video');
         $validator = Validator::make($request->all(), [
             'video' => 'nullable|file|mimes:mp4,mov,ogg,qt|max:50000', // max 50MB
-            'video_link' => 'nullable|url',
+            'video_link' => 'nullable|url:http,https|max:2048',
             'title' => 'nullable|string|max:255',
             'product_id' => 'nullable|uuid|exists:products,id',
             'category_id' => 'nullable|uuid|exists:categories,id',
@@ -46,8 +47,7 @@ class ShopShortController extends Controller
         $videoUrl = null;
         if ($request->hasFile('video')) {
             $file = $request->file('video');
-            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $videoPath = $file->storeAs('system/shorts', $filename, 's3');
+            $videoPath = \App\Support\SecureUpload::store($file, 'system/shorts', 'video');
             $videoUrl = '/storage/' . $videoPath;
         } elseif ($request->video_link) {
             $videoUrl = $request->video_link;
@@ -85,11 +85,12 @@ class ShopShortController extends Controller
      */
     public function update(Request $request, $id)
     {
+        \App\Support\SecureUpload::validateAll($request, 'video');
         $short = ShopShort::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'video' => 'nullable|file|mimes:mp4,mov,ogg,qt|max:50000',
-            'video_link' => 'nullable|url',
+            'video_link' => 'nullable|url:http,https|max:2048',
             'title' => 'nullable|string|max:255',
             'product_id' => 'nullable|uuid|exists:products,id',
             'category_id' => 'nullable|uuid|exists:categories,id',
@@ -105,22 +106,17 @@ class ShopShortController extends Controller
             // Delete old video if it's a local file
             if (str_starts_with($short->video_url, '/storage/')) {
                 $oldPath = str_replace('/storage/', '', $short->video_url);
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
-                }
+                $this->deleteStoredVideo($oldPath);
             }
 
             $file = $request->file('video');
-            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $videoPath = $file->storeAs('system/shorts', $filename, 's3');
+            $videoPath = \App\Support\SecureUpload::store($file, 'system/shorts', 'video');
             $short->video_url = '/storage/' . $videoPath;
         } elseif ($request->video_link) {
              // Delete old video if it's a local file and we are replacing it with a link
              if (str_starts_with($short->video_url, '/storage/')) {
                  $oldPath = str_replace('/storage/', '', $short->video_url);
-                 if (Storage::disk('public')->exists($oldPath)) {
-                     Storage::disk('public')->delete($oldPath);
-                 }
+                 $this->deleteStoredVideo($oldPath);
              }
              $short->video_url = $request->video_link;
         }
@@ -155,12 +151,32 @@ class ShopShortController extends Controller
         $short = ShopShort::findOrFail($id);
         
         $oldPath = str_replace('/storage/', '', $short->video_url);
-        if (Storage::disk('public')->exists($oldPath)) {
-            Storage::disk('public')->delete($oldPath);
-        }
+        $this->deleteStoredVideo($oldPath);
 
         $short->delete();
 
         return response()->json(['message' => 'Short deleted successfully']);
+    }
+
+    /**
+     * Borra un video del R2 (disco s3). Solo permite rutas dentro de system/shorts/
+     * para que una URL manipulada no pueda borrar otros archivos del bucket.
+     */
+    private function deleteStoredVideo(?string $path): void
+    {
+        if (!$path) return;
+        $path = ltrim(str_replace('/storage/', '', $path), '/');
+
+        if (!str_starts_with($path, 'system/shorts/') || str_contains($path, '..')) {
+            return; // enlace externo o ruta no permitida
+        }
+
+        try {
+            if (Storage::disk('s3')->exists($path)) {
+                Storage::disk('s3')->delete($path);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('[ShopShort] No se pudo borrar el video de R2: ' . $e->getMessage());
+        }
     }
 }

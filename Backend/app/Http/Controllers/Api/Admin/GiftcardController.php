@@ -14,17 +14,24 @@ class GiftcardController extends Controller
     // List all giftcards (with search)
     public function index(Request $request)
     {
+        $request->validate([
+            'search'      => 'nullable|string|max:50',
+            'customer_id' => 'nullable|uuid',
+        ]);
+
         $query = Giftcard::with(['customer.user.profile', 'purchaser.user.profile', 'transactions.sale']);
         
         if ($request->filled('search')) {
-            $query->where('code', 'LIKE', "%{$request->search}%");
+            // Se escapan % y _ para que el usuario no pueda forzar búsquedas comodín masivas
+            $term = addcslashes($request->search, '%_\\');
+            $query->where('code', 'LIKE', "%{$term}%");
         }
 
         if ($request->filled('customer_id')) {
             $query->where('customer_id', $request->customer_id);
         }
 
-        return response()->json($query->paginate(15));
+        return response()->json($query->orderByDesc('created_at')->paginate(15));
     }
 
     // Sell/Issue a new giftcard
@@ -32,9 +39,9 @@ class GiftcardController extends Controller
     {
         $request->validate([
             'code' => ['required', 'regex:/^VOX-\d{6}$/', 'unique:giftcards,code'],
-            'amount' => 'required|numeric|min:50',
+            'amount' => 'required|numeric|min:50|max:100000',
             'purchaser_id' => 'nullable|uuid|exists:customers,id',
-            'expires_at' => 'nullable|date',
+            'expires_at' => 'nullable|date|after:now',
         ]);
 
         DB::beginTransaction();
@@ -66,7 +73,7 @@ class GiftcardController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error al generar Giftcard', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al generar Giftcard', 'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')], 500);
         }
     }
 
@@ -74,12 +81,17 @@ class GiftcardController extends Controller
     public function reload(Request $request, $id)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:1|max:100000',
         ]);
 
         DB::beginTransaction();
         try {
-            $giftcard = Giftcard::findOrFail($id);
+            // lockForUpdate evita que dos recargas simultáneas se pisen el saldo
+            $giftcard = Giftcard::lockForUpdate()->findOrFail($id);
+            if (!$giftcard->is_active) {
+                DB::rollBack();
+                return response()->json(['message' => 'La Giftcard está inactiva'], 400);
+            }
             $giftcard->current_balance += $request->amount;
             $giftcard->save();
 
@@ -99,14 +111,14 @@ class GiftcardController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error al recargar Giftcard', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al recargar Giftcard', 'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')], 500);
         }
     }
 
     // Check balance / Validate
     public function checkBalance(Request $request)
     {
-        $request->validate(['code' => 'required|string']);
+        $request->validate(['code' => ['required', 'string', 'max:20', 'regex:/^VOX-\d{6}$/']]);
 
         $giftcard = Giftcard::where('code', $request->code)->first();
 
@@ -132,13 +144,13 @@ class GiftcardController extends Controller
     public function digitalize(Request $request)
     {
         $request->validate([
-            'code' => 'required|string',
+            'code' => ['required', 'string', 'max:20', 'regex:/^VOX-\d{6}$/'],
             'customer_id' => 'required|uuid|exists:customers,id'
         ]);
 
         DB::beginTransaction();
         try {
-            $giftcard = Giftcard::where('code', $request->code)->first();
+            $giftcard = Giftcard::where('code', $request->code)->lockForUpdate()->first();
 
             if (!$giftcard) {
                 return response()->json(['message' => 'Código de Giftcard inválido'], 404);
@@ -162,7 +174,7 @@ class GiftcardController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error al digitalizar Giftcard', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al digitalizar Giftcard', 'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')], 500);
         }
     }
 

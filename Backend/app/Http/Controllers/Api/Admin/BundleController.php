@@ -54,6 +54,8 @@ class BundleController extends Controller
 
     public function store(Request $request)
     {
+        // Validar TODOS los archivos subidos (tipo real, tamaño) antes de tocar la BD
+        \App\Support\SecureUpload::validateAll($request);
         DB::beginTransaction();
         try {
             $bundle = Product::create([
@@ -73,8 +75,7 @@ class BundleController extends Controller
 
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $file) {
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('catalog/bundles', $filename, 's3');
+                    $filePath = \App\Support\SecureUpload::store($file, 'catalog/bundles', 'image');
 
                     $image = new \App\Models\Catalog\ProductImage([
                         'product_id' => $bundle->id,
@@ -119,13 +120,15 @@ class BundleController extends Controller
             \Log::error("Bundle Store Error: " . $e->getMessage());
             return response()->json([
                 'message' => 'Error al crear conjunto', 
-                'error' => $e->getMessage()
+                'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }
 
     public function update(Request $request, $id)
     {
+        // Validar TODOS los archivos subidos (tipo real, tamaño) antes de tocar la BD
+        \App\Support\SecureUpload::validateAll($request);
         DB::beginTransaction();
         try {
             $bundle = Product::where('is_bundle', true)->findOrFail($id);
@@ -149,8 +152,7 @@ class BundleController extends Controller
                 // We'll replace all if new ones are uploaded like in ProductController
                 \App\Models\Catalog\ProductImage::where('product_id', $bundle->id)->delete();
                 foreach ($request->file('product_images') as $file) {
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('catalog/bundles', $filename, 's3');
+                    $filePath = \App\Support\SecureUpload::store($file, 'catalog/bundles', 'image');
 
                     $image = new \App\Models\Catalog\ProductImage([
                         'product_id' => $bundle->id,
@@ -198,7 +200,7 @@ class BundleController extends Controller
             \Log::error("Bundle Update Error: " . $e->getMessage());
             return response()->json([
                 'message' => 'Error al actualizar conjunto', 
-                'error' => $e->getMessage()
+                'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }

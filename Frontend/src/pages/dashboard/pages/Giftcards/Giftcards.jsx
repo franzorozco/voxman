@@ -8,11 +8,15 @@ import GiftcardHistoryModal from "./GiftcardHistoryModal";
 import GiftcardCoupon from "./GiftcardCoupon";
 import GiftcardDigitalizeModal from "./GiftcardDigitalizeModal";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../../../../store/authStore";
 
 import "./Giftcards.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 export default function Giftcards() {
+  const authUser = useAuthStore((s) => s.user);
+  // Mismo criterio que CanAccess: Owner o permiso explicito. El backend vuelve a validar en cada accion.
+  const can = (perm) => !!authUser && (authUser.roles?.includes('Owner') || authUser.permissions?.includes(perm));
   const [giftcards, setGiftcards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,11 +121,11 @@ export default function Giftcards() {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
-  <Link to="/dashboard/giftcards/deleted" className="btn-secondary" style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', padding: '10px' }} title="Papelera">
+  {(can('restore_giftcards') || can('delete_giftcards')) && (<Link to="/dashboard/giftcards/deleted" className="btn-secondary" style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', padding: '10px' }} title="Papelera">
     <Trash2 size={18} />
     {!isMobile && "Papelera"}
-  </Link>
-  <button 
+  </Link> )}
+  {can('create_giftcards') && (<button 
     className="btn-primary" 
     onClick={() => handleOpenModal("create")}
     style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
@@ -129,7 +133,7 @@ export default function Giftcards() {
   >
     <Plus size={18} />
     {!isMobile && "Emitir Giftcard"}
-  </button>
+  </button> )}
   <button 
     className="btn-secondary" 
     onClick={fetchGiftcards}
@@ -230,7 +234,7 @@ export default function Giftcards() {
         >
           <Ticket size={16} /> Imprimir Cupón
         </button>
-        {!g.is_digitalized && g.is_active && (
+        {can('edit_giftcards') && !g.is_digitalized && g.is_active && (
           <button 
             onClick={() => { handleOpenDigitalize(g); setActiveDropdown(null); }}
             style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
@@ -244,7 +248,7 @@ export default function Giftcards() {
         >
           <Eye size={16} /> Ver Historial
         </button>
-        {g.is_active && (
+        {can('edit_giftcards') && g.is_active && (
           <button 
             onClick={() => { handleOpenModal("reload", g); setActiveDropdown(null); }}
             style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--color-primary)', width: '100%', fontSize: '14px' }}
@@ -252,12 +256,12 @@ export default function Giftcards() {
             <RefreshCw size={16} /> Recargar Saldo
           </button>
         )}
-        <button 
+        {can('delete_giftcards') && (<button 
           onClick={() => { handleDelete(g.id); setActiveDropdown(null); }}
           style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#ef4444', width: '100%', fontSize: '14px' }}
         >
           <Trash2 size={16} /> Eliminar
-        </button>
+        </button> )}
       </RowDropdown>
     <div className="gift-code-wrapper">
       <span className="gift-code-text">
@@ -316,7 +320,7 @@ export default function Giftcards() {
                           <Ticket size={18} />
                         </button>
                         
-                        {!g.is_digitalized && (
+                        {can('edit_giftcards') && !g.is_digitalized && (
                           <button 
                             className="btn-secondary gift-digitalize-btn"
                             title="Digitalizar (Asignar DueÃ±o)"
@@ -334,22 +338,22 @@ export default function Giftcards() {
                         >
                           <Eye size={18} />
                         </button>
-                        <button 
+                        {can('edit_giftcards') && (<button 
                           className="btn-secondary gift-reload-btn"
                           title="Recargar saldo"
                           onClick={() => handleOpenModal("reload", g)}
                           disabled={!g.is_active}
                         >
                           <RefreshCw size={18} />
-                        </button>
-                        <button 
+                        </button> )}
+                        {can('delete_giftcards') && (<button 
                           className="btn-delete gift-delete-btn"
                           title="Eliminar"
                           onClick={() => handleDelete(g.id)}
                           disabled={!g.is_active}
                         >
                           <Trash2 size={18} />
-                        </button>
+                        </button> )}
                       </div>
                     </td>
                   </tr>

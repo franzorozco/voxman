@@ -30,6 +30,8 @@ class BranchController extends Controller
 
     public function store(Request $request)
     {
+        // Validar TODOS los archivos subidos (tipo real, tamaño) antes de tocar la BD
+        \App\Support\SecureUpload::validateAll($request);
         DB::beginTransaction();
 
         try {
@@ -80,8 +82,7 @@ class BranchController extends Controller
             // 4. Upload Images
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $file) {
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('branches', $filename, 's3');
+                    $filePath = \App\Support\SecureUpload::store($file, 'branches', 'image');
 
                     $isPrimary = false;
                     if ($request->has('primary_image_index') && $request->primary_image_index == $index) {
@@ -112,7 +113,7 @@ class BranchController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Error al crear la sucursal',
-                'error' => $e->getMessage()
+                'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }
@@ -125,6 +126,8 @@ class BranchController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Validar TODOS los archivos subidos (tipo real, tamaño) antes de tocar la BD
+        \App\Support\SecureUpload::validateAll($request);
         DB::beginTransaction();
 
         try {
@@ -201,8 +204,7 @@ class BranchController extends Controller
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $file) {
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('branches', $filename, 's3');
+                    $filePath = \App\Support\SecureUpload::store($file, 'branches', 'image');
 
                     $image = new BranchImage([
                         'branch_id' => $branch->id,
@@ -233,7 +235,7 @@ class BranchController extends Controller
             \Illuminate\Support\Facades\Log::error($e);
             return response()->json([
                 'message' => 'Error al actualizar la sucursal',
-                'error' => $e->getMessage()
+                'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }
@@ -249,7 +251,7 @@ class BranchController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al eliminar la sucursal',
-                'error' => $e->getMessage()
+                'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }
@@ -272,7 +274,7 @@ class BranchController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al restaurar la sucursal',
-                'error' => $e->getMessage()
+                'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }
@@ -291,7 +293,7 @@ class BranchController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al eliminar permanentemente la sucursal',
-                'error' => $e->getMessage()
+                'error' => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }

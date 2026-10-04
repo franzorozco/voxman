@@ -19,6 +19,7 @@ import { getFinanceDashboard } from "../../../../api/admin/finance";
 import { getPurchaseStats } from "../../../../api/admin/purchases";
 import { getDeliverySchedules } from "../../../../api/admin/orderNetwork";
 import { getReturns } from "../../../../api/admin/returns";
+import { useAuthStore } from "../../../../store/authStore";
 
 import "./Home.css";
 
@@ -100,7 +101,36 @@ const StatusBadge = ({ status }) => {
   return <span className={`hd-badge ${s.cls}`}>{s.label}</span>;
 };
 
+const P = {
+  finance:   ['view_finance'],
+  sales:     ['view_sales', 'view_sales_own_branch', 'view_sales_all_branches'],
+  inventory: ['view_inventory_own_branch', 'view_inventory_all_branches'],
+  customers: ['view_customers'],
+  orders:    ['view_orders', 'view_orders_own_branch', 'view_orders_all_branches'],
+  returns:   ['view_returns', 'view_returns_own_branch', 'view_returns_all_branches'],
+};
+
+// Permiso necesario para ver cada acceso rapido del dashboard
+const LINK_PERMS = {
+  '/dashboard/sales': P.sales,
+  '/dashboard/inventory': P.inventory,
+  '/dashboard/products': ['view_products'],
+  '/dashboard/customers': P.customers,
+  '/dashboard/orders': P.orders,
+  '/dashboard/carts': ['view_carts', 'view_carts_own_branch', 'view_carts_all_branches'],
+  '/dashboard/returns': P.returns,
+  '/dashboard/promotions': ['view_promotions'],
+  '/dashboard/giftcards': ['view_giftcards'],
+  '/dashboard/finance': P.finance,
+  '/dashboard/purchases': ['view_purchases'],
+  '/dashboard/logs': ['view_audit_logs'],
+};
+
 export default function Home() {
+  const authUser = useAuthStore((s) => s.user);
+  // Mismo criterio que CanAccess: Owner o permiso explicito. El backend vuelve a validar cada endpoint.
+  const canAny = (perms = []) => !!authUser && (authUser.roles?.includes('Owner') || perms.some((p) => authUser.permissions?.includes(p)));
+  const gate = (perms, fn) => (canAny(perms) ? fn() : Promise.reject(new Error('sin permiso')));
   const [dateRange, setDateRange] = useState("month");
   const [salesData, setSalesData] = useState(null);
   const [inventoryStats, setInventoryStats] = useState(null);
@@ -121,9 +151,9 @@ export default function Home() {
     try {
       const dates = getDateParams(dateRange);
       const [invRes, custRes, finRes] = await Promise.allSettled([
-        getInventoryStats(dates),
-        getCustomerKpis(dates),
-        getFinanceDashboard(dates),
+        gate(P.inventory, () => getInventoryStats(dates)),
+        gate(P.customers, () => getCustomerKpis(dates)),
+        gate(P.finance, () => getFinanceDashboard(dates)),
       ]);
       if (invRes.status === "fulfilled") setInventoryStats(invRes.value.data);
       if (custRes.status === "fulfilled") setCustomerKpis(custRes.value.data);
@@ -140,10 +170,10 @@ export default function Home() {
     try {
       const dates = getDateParams(dateRange);
       const [salesResChart, salesResTable, ordersRes, returnsRes] = await Promise.allSettled([
-        getSales({ per_page: 100, sortBy: "created_at", sortDir: "desc", ...dates }), // For chart
-        getSales({ per_page: 8, sortBy: "created_at", sortDir: "desc" }), // Always latest 8 for table
-        getDeliverySchedules({ per_page: 6 }), // Recent orders
-        getReturns({ status: "pending", per_page: 5 }),
+        gate(P.sales, () => getSales({ per_page: 100, sortBy: "created_at", sortDir: "desc", ...dates })), // For chart
+        gate(P.sales, () => getSales({ per_page: 8, sortBy: "created_at", sortDir: "desc" })), // Always latest 8 for table
+        gate(P.orders, () => getDeliverySchedules({ per_page: 6 })), // Recent orders
+        gate(P.returns, () => getReturns({ status: "pending", per_page: 5 })),
       ]);
       
       if (salesResChart.status === "fulfilled") {
@@ -269,18 +299,18 @@ export default function Home() {
       </div>
 
       <div className="hd-kpi-grid">
-        <KpiCard icon={TrendingUp} label="Ingresos totales" value={fmt(totalRevenue)} sub={`${fmtNum(salesData?.total_sales ?? 0)} transacciones`} color="kpi-green" loading={loadingKpis} />
-        <KpiCard icon={DollarSign} label="Ganancia neta" value={fmt(netProfit)} sub={`Gastos: ${fmt(totalExpenses)}`} color={netProfit >= 0 ? "kpi-blue" : "kpi-red"} loading={loadingKpis} />
-        <KpiCard icon={Package} label="Unidades en stock" value={fmtNum(inventoryStats?.total_items)} sub={`Valor: ${fmt(inventoryStats?.total_retail_value)}`} color="kpi-purple" loading={loadingKpis} />
-        <KpiCard icon={AlertTriangle} label="Alertas de stock" value={fmtNum(inventoryStats?.low_stock_alerts)} sub="Productos agotados o bajos" color={inventoryStats?.low_stock_alerts > 0 ? "kpi-orange" : "kpi-green"} loading={loadingKpis} />
-        <KpiCard icon={Users} label="Clientes totales" value={fmtNum(customerKpis?.total_customers)} sub={`${fmtNum(customerKpis?.new_this_month ?? 0)} nuevos`} color="kpi-teal" loading={loadingKpis} />
-        <KpiCard icon={CreditCard} label="Caja disponible" value={fmt(cashBalance)} sub={`Banco: ${fmt(bankBalance)}`} color="kpi-indigo" loading={loadingKpis} />
-        <KpiCard icon={ShoppingBag} label="Ticket promedio" value={fmt(salesData?.average_ticket)} sub="Por transacción" color="kpi-rose" loading={loadingKpis} />
-        <KpiCard icon={BarChart2} label="Descuentos dados" value={fmt(salesData?.total_discount)} sub="Total del período" color="kpi-amber" loading={loadingKpis} />
+        {canAny(P.finance) && <KpiCard icon={TrendingUp} label="Ingresos totales" value={fmt(totalRevenue)} sub={`${fmtNum(salesData?.total_sales ?? 0)} transacciones`} color="kpi-green" loading={loadingKpis} /> }
+        {canAny(P.finance) && <KpiCard icon={DollarSign} label="Ganancia neta" value={fmt(netProfit)} sub={`Gastos: ${fmt(totalExpenses)}`} color={netProfit >= 0 ? "kpi-blue" : "kpi-red"} loading={loadingKpis} /> }
+        {canAny(P.inventory) && <KpiCard icon={Package} label="Unidades en stock" value={fmtNum(inventoryStats?.total_items)} sub={`Valor: ${fmt(inventoryStats?.total_retail_value)}`} color="kpi-purple" loading={loadingKpis} /> }
+        {canAny(P.inventory) && <KpiCard icon={AlertTriangle} label="Alertas de stock" value={fmtNum(inventoryStats?.low_stock_alerts)} sub="Productos agotados o bajos" color={inventoryStats?.low_stock_alerts > 0 ? "kpi-orange" : "kpi-green"} loading={loadingKpis} /> }
+        {canAny(P.customers) && <KpiCard icon={Users} label="Clientes totales" value={fmtNum(customerKpis?.total_customers)} sub={`${fmtNum(customerKpis?.new_this_month ?? 0)} nuevos`} color="kpi-teal" loading={loadingKpis} /> }
+        {canAny(P.finance) && <KpiCard icon={CreditCard} label="Caja disponible" value={fmt(cashBalance)} sub={`Banco: ${fmt(bankBalance)}`} color="kpi-indigo" loading={loadingKpis} /> }
+        {canAny(P.sales) && <KpiCard icon={ShoppingBag} label="Ticket promedio" value={fmt(salesData?.average_ticket)} sub="Por transacción" color="kpi-rose" loading={loadingKpis} /> }
+        {canAny(P.sales) && <KpiCard icon={BarChart2} label="Descuentos dados" value={fmt(salesData?.total_discount)} sub="Total del período" color="kpi-amber" loading={loadingKpis} /> }
       </div>
 
       <div className="hd-charts-section">
-        <div className="hd-chart-card">
+        {canAny(P.sales) && (<div className="hd-chart-card">
           <h2 className="hd-chart-title">Tendencia de Ingresos</h2>
           <div className="hd-chart-wrapper">
             {loadingTables ? (
@@ -308,9 +338,9 @@ export default function Home() {
               </ResponsiveContainer>
             )}
           </div>
-        </div>
+        </div> )}
 
-        <div className="hd-chart-card">
+        {canAny(P.finance) && (<div className="hd-chart-card">
           <h2 className="hd-chart-title">Origen de Ingresos</h2>
           <div className="hd-chart-wrapper">
             {loadingKpis ? (
@@ -331,7 +361,7 @@ export default function Home() {
               </ResponsiveContainer>
             )}
           </div>
-        </div>
+        </div> )}
       </div>
 
       <div className="hd-section">
@@ -350,7 +380,7 @@ export default function Home() {
             { to: "/dashboard/finance",     icon: DollarSign,    label: "Finanzas",      sub: "Dashboard financiero",     color: "ql-emerald" },
             { to: "/dashboard/purchases",   icon: FileText,      label: "Compras",       sub: "Abastecimiento",           color: "ql-sky"     },
             { to: "/dashboard/logs",        icon: Activity,      label: "Auditoría",     sub: "Registro de sistema",      color: "ql-slate"   },
-          ].map(({ to, icon: Icon, label, sub, color }) => (
+          ].filter((m) => canAny(LINK_PERMS[m.to])).map(({ to, icon: Icon, label, sub, color }) => (
             <Link key={to} to={to} className={`hd-ql-card ${color}`}>
               <div className="hd-ql-icon"><Icon size={22} /></div>
               <div className="hd-ql-info">
@@ -365,7 +395,7 @@ export default function Home() {
 
       <div className="hd-tables-grid">
 
-        <div className="hd-table-card">
+        {canAny(P.sales) && (<div className="hd-table-card">
           <div className="hd-table-header">
             <h2 className="hd-table-title"><CheckCircle size={18} />Ventas Recientes</h2>
             <Link to="/dashboard/sales" className="hd-table-link">Ver todas <ChevronRight size={14} /></Link>
@@ -402,9 +432,9 @@ export default function Home() {
               </table>
             </div>
           )}
-        </div>
+        </div> )}
 
-        <div className="hd-table-card">
+        {canAny(P.orders) && (<div className="hd-table-card">
           <div className="hd-table-header">
             <h2 className="hd-table-title"><Truck size={18} />Pedidos Activos</h2>
             <Link to="/dashboard/orders" className="hd-table-link">Ver todos <ChevronRight size={14} /></Link>
@@ -439,9 +469,9 @@ export default function Home() {
               </table>
             </div>
           )}
-        </div>
+        </div> )}
 
-        <div className="hd-table-card">
+        {canAny(P.returns) && (<div className="hd-table-card">
           <div className="hd-table-header">
             <h2 className="hd-table-title"><RotateCcw size={18} />Devoluciones Pendientes</h2>
             <Link to="/dashboard/returns" className="hd-table-link">Ver todas <ChevronRight size={14} /></Link>
@@ -467,7 +497,7 @@ export default function Home() {
               </table>
             </div>
           )}
-        </div>
+        </div> )}
 
       </div>
 

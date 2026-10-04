@@ -70,6 +70,14 @@ Route::middleware([
         return response()->json(['user' => $user]);
     });
 
+    // =========================================================
+    // COMPUERTA DE STAFF: todo lo que sigue exige acceso al panel.
+    // Los clientes/usuarios públicos (rol Usuario/Cliente) NO tienen
+    // 'access_dashboard', así que reciben 403 en cualquiera de estas rutas.
+    // /me queda fuera porque lo usa también la tienda.
+    // =========================================================
+    Route::middleware('permission:access_dashboard')->group(function () {
+
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->middleware('permission:view_users');
         Route::get('/report/pdf', [UserController::class, 'reportPdf'])->middleware('permission:view_users');
@@ -148,14 +156,14 @@ Route::middleware([
     });
 
     Route::prefix('discounts')->group(function () {
-        Route::get('/', [DiscountController::class, 'index']);
-        Route::get('/deleted', [DiscountController::class, 'deleted']);
-        Route::get('/{id}', [DiscountController::class, 'show']);
-        Route::post('/', [DiscountController::class, 'store']);
-        Route::put('/{id}', [DiscountController::class, 'update']);
-        Route::delete('/{id}', [DiscountController::class, 'destroy']);
-        Route::post('/{id}/restore', [DiscountController::class, 'restore']);
-        Route::delete('/{id}/force', [DiscountController::class, 'forceDestroy']);
+        Route::get('/', [DiscountController::class, 'index'])->middleware('permission:view_promotions|manage_discounts|apply_cart_discounts|manage_order_discounts');
+        Route::get('/deleted', [DiscountController::class, 'deleted'])->middleware('permission:manage_discounts');
+        Route::get('/{id}', [DiscountController::class, 'show'])->middleware('permission:view_promotions|manage_discounts|apply_cart_discounts|manage_order_discounts');
+        Route::post('/', [DiscountController::class, 'store'])->middleware('permission:manage_discounts');
+        Route::put('/{id}', [DiscountController::class, 'update'])->middleware('permission:manage_discounts');
+        Route::delete('/{id}', [DiscountController::class, 'destroy'])->middleware('permission:manage_discounts');
+        Route::post('/{id}/restore', [DiscountController::class, 'restore'])->middleware('permission:manage_discounts');
+        Route::delete('/{id}/force', [DiscountController::class, 'forceDestroy'])->middleware('permission:manage_discounts');
     });
 
     Route::prefix('shop-shorts')->group(function () {
@@ -276,40 +284,40 @@ Route::middleware([
     });
 
     Route::prefix('customers')->group(function () {
-        Route::get('/', [CustomerController::class, 'index']);
-        Route::get('/kpis', [CustomerController::class, 'kpis']);
-        Route::get('/deleted', [CustomerController::class, 'getDeleted']);
-        Route::post('/{id}/restore', [CustomerController::class, 'restore']);
-        Route::get('/search-unlinked-users', [CustomerController::class, 'searchUnlinkedUsers']);
-        Route::get('/search-pos-customers', [CustomerController::class, 'searchPosCustomers']);
-        Route::post('/link-user', [CustomerController::class, 'linkUser']);
-        Route::get('/{id}', [CustomerController::class, 'show']);
-        Route::get('/{id}/timeline', [CustomerController::class, 'getTimeline']);
-        Route::put('/{id}/tags', [CustomerController::class, 'updateTags']);
-        Route::post('/{id}/points', [CustomerController::class, 'adjustPoints']);
-        Route::post('/', [CustomerController::class, 'store']);
-        Route::put('/{id}', [CustomerController::class, 'update']);
-        Route::delete('/{id}', [CustomerController::class, 'destroy']);
+        Route::get('/', [CustomerController::class, 'index'])->middleware('permission:view_customers');
+        Route::get('/kpis', [CustomerController::class, 'kpis'])->middleware('permission:view_customers');
+        Route::get('/deleted', [CustomerController::class, 'getDeleted'])->middleware('permission:view_customers');
+        Route::post('/{id}/restore', [CustomerController::class, 'restore'])->middleware('permission:restore_customers');
+        Route::get('/search-unlinked-users', [CustomerController::class, 'searchUnlinkedUsers'])->middleware('permission:view_customers');
+        Route::get('/search-pos-customers', [CustomerController::class, 'searchPosCustomers'])->middleware('permission:view_customers');
+        Route::post('/link-user', [CustomerController::class, 'linkUser'])->middleware('permission:edit_customers');
+        Route::get('/{id}', [CustomerController::class, 'show'])->middleware('permission:view_customers');
+        Route::get('/{id}/timeline', [CustomerController::class, 'getTimeline'])->middleware('permission:view_customers');
+        Route::put('/{id}/tags', [CustomerController::class, 'updateTags'])->middleware('permission:edit_customers');
+        Route::post('/{id}/points', [CustomerController::class, 'adjustPoints'])->middleware('permission:adjust_loyalty_points');
+        Route::post('/', [CustomerController::class, 'store'])->middleware('permission:create_customers');
+        Route::put('/{id}', [CustomerController::class, 'update'])->middleware('permission:edit_customers');
+        Route::delete('/{id}', [CustomerController::class, 'destroy'])->middleware('permission:delete_customers');
     });
 
     Route::prefix('guests')->group(function () {
-        Route::get('/search', [GuestController::class, 'search']);
-        Route::get('/{id}/history', [GuestController::class, 'history']);
+        Route::get('/search', [GuestController::class, 'search'])->middleware('permission:view_customers|view_sales|view_orders|create_orders');
+        Route::get('/{id}/history', [GuestController::class, 'history'])->middleware('permission:view_customers|view_sales|view_orders|create_orders');
     });
 
     Route::prefix('employees')->group(function () {
-        Route::get('/', [EmployeeController::class, 'index']);
-        Route::get('/deleted', [EmployeeController::class, 'getDeleted']);
-        Route::post('/{id}/restore', [EmployeeController::class, 'restore']);
-        Route::get('/{id}/stats', [EmployeeController::class, 'stats']);
-        Route::get('/{id}', [EmployeeController::class, 'show']);
-        Route::post('/', [EmployeeController::class, 'store']);
-        Route::put('/{id}', [EmployeeController::class, 'update']);
-        Route::delete('/{id}', [EmployeeController::class, 'destroy']);
-        Route::delete('/{id}/force', [EmployeeController::class, 'forceDestroy']);
-        Route::post('/{id}/permissions', [EmployeeController::class, 'assignPermission']);
-        Route::delete('/{id}/permissions', [EmployeeController::class, 'revokePermission']);
-        Route::post('/{id}/role', [EmployeeController::class, 'assignRole']);
+        Route::get('/', [EmployeeController::class, 'index'])->middleware('permission:manage_executives');
+        Route::get('/deleted', [EmployeeController::class, 'getDeleted'])->middleware('permission:manage_executives');
+        Route::post('/{id}/restore', [EmployeeController::class, 'restore'])->middleware('permission:manage_executives');
+        Route::get('/{id}/stats', [EmployeeController::class, 'stats'])->middleware('permission:manage_executives');
+        Route::get('/{id}', [EmployeeController::class, 'show'])->middleware('permission:manage_executives');
+        Route::post('/', [EmployeeController::class, 'store'])->middleware('permission:manage_executives');
+        Route::put('/{id}', [EmployeeController::class, 'update'])->middleware('permission:manage_executives');
+        Route::delete('/{id}', [EmployeeController::class, 'destroy'])->middleware('permission:manage_executives');
+        Route::delete('/{id}/force', [EmployeeController::class, 'forceDestroy'])->middleware('permission:manage_executives');
+        Route::post('/{id}/permissions', [EmployeeController::class, 'assignPermission'])->middleware('permission:manage_user_roles');
+        Route::delete('/{id}/permissions', [EmployeeController::class, 'revokePermission'])->middleware('permission:manage_user_roles');
+        Route::post('/{id}/role', [EmployeeController::class, 'assignRole'])->middleware('permission:manage_user_roles');
     });
 
     /*Route::prefix('attendances')->group(function () {
@@ -322,10 +330,10 @@ Route::middleware([
         Route::get('/status/{employeeId}', [\App\Http\Controllers\Api\Admin\EmployeeAttendanceController::class, 'status']);
     });*/
     Route::prefix('payroll')->group(function () {
-        Route::get('/history', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'history']);
-        Route::post('/calculate', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'calculate']);
-        Route::post('/pay', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'store']);
-        Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'destroy']);
+        Route::get('/history', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'history'])->middleware('permission:manage_user_salaries');
+        Route::post('/calculate', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'calculate'])->middleware('permission:manage_user_salaries');
+        Route::post('/pay', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'store'])->middleware('permission:manage_user_salaries');
+        Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\EmployeePaymentController::class, 'destroy'])->middleware('permission:manage_user_salaries');
     });
 
     Route::prefix('giftcards')->group(function () {
@@ -371,8 +379,8 @@ Route::middleware([
     });
 
     Route::prefix('quarantine')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Api\Admin\QuarantineController::class, 'index']); // Sin permiso por ahora
-        Route::post('/{id}/resolve', [\App\Http\Controllers\Api\Admin\QuarantineController::class, 'resolve']); // Sin permiso por ahora
+        Route::get('/', [\App\Http\Controllers\Api\Admin\QuarantineController::class, 'index'])->middleware('permission:view_inventory_own_branch|view_inventory_all_branches');
+        Route::post('/{id}/resolve', [\App\Http\Controllers\Api\Admin\QuarantineController::class, 'resolve'])->middleware('permission:adjust_inventory|receive_inventory');
     });
     
     Route::prefix('sales')->group(function () {
@@ -410,7 +418,7 @@ Route::middleware([
         Route::post('/adjustment', [\App\Http\Controllers\Api\Admin\CashFlowController::class, 'addAdjustment'])->middleware('permission:manage_cashflow');
     });
     
-    Route::get('supplier-returns', [\App\Http\Controllers\Api\Admin\SupplierReturnController::class, 'index']);
+    Route::get('supplier-returns', [\App\Http\Controllers\Api\Admin\SupplierReturnController::class, 'index'])->middleware('permission:view_suppliers');
 
     Route::prefix('finance')->group(function () {
         Route::get('dashboard', [\App\Http\Controllers\Api\Admin\FinanceDashboardController::class, 'index'])->middleware('permission:view_finance');
@@ -485,6 +493,8 @@ Route::middleware([
     Route::get('/home-config/videos', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'videoPages'])->middleware('permission:manage_settings');
     Route::post('/home-config/upload-actor-image', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'uploadActorImage'])->middleware('permission:manage_settings');
     Route::get('/home-config/actor-images', [\App\Http\Controllers\Api\Admin\HomeConfigController::class, 'actorImages'])->middleware('permission:manage_settings');
+
+    }); // fin compuerta access_dashboard
 
 });
 

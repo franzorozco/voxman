@@ -200,6 +200,8 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        // Validar TODOS los archivos subidos (tipo real, tamaño) antes de tocar la BD
+        \App\Support\SecureUpload::validateAll($request);
         DB::beginTransaction();
 
         try {
@@ -225,8 +227,7 @@ class ProductController extends Controller
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $file) {
 
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('catalog/products', $filename, 's3');
+                    $filePath = \App\Support\SecureUpload::store($file, 'catalog/products', 'image');
 
                     $image = new ProductImage([
                         'product_id' => $product->id,
@@ -245,8 +246,7 @@ class ProductController extends Controller
                 foreach ($request->file('color_images') as $colorId => $files) {
                     if (is_array($files)) {
                         foreach ($files as $idx => $file) {
-                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('catalog/attributes', $filename, 's3');
+                            $filePath = \App\Support\SecureUpload::store($file, 'catalog/attributes', 'image');
 
                             $image = new AttributeValueImage([
                                 'attribute_value_id' => $colorId,
@@ -293,8 +293,7 @@ class ProductController extends Controller
                     // =========================
                     if ($request->hasFile("variant_images.{$index}")) {
                         foreach ($request->file("variant_images.{$index}") as $file) {
-                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('catalog/variants', $filename, 's3');
+                            $filePath = \App\Support\SecureUpload::store($file, 'catalog/variants', 'image');
 
                             $image = new VariantImage([
                                 'variant_id' => $variant->id,
@@ -347,13 +346,15 @@ class ProductController extends Controller
 
             return response()->json([
                 'message' => 'Error al crear producto',
-                'error'   => $e->getMessage(),
+                'error'   => (config('app.debug') ? $e->getMessage() : 'Error interno'),
             ], 500);
         }
     }
 
     public function update(Request $request, $id)
     {
+        // Validar TODOS los archivos subidos (tipo real, tamaño) antes de tocar la BD
+        \App\Support\SecureUpload::validateAll($request);
         DB::beginTransaction();
 
         try {
@@ -383,8 +384,7 @@ class ProductController extends Controller
                 ProductImage::where('product_id', $product->id)->delete();
                 foreach ($request->file('product_images') as $file) {
 
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('catalog/products', $filename, 's3');
+                    $filePath = \App\Support\SecureUpload::store($file, 'catalog/products', 'image');
 
                     $image = new ProductImage([
                         'product_id' => $product->id,
@@ -422,8 +422,7 @@ class ProductController extends Controller
                 foreach ($request->file('color_images') as $colorId => $files) {
                     if (is_array($files)) {
                         foreach ($files as $idx => $file) {
-                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('catalog/attributes', $filename, 's3');
+                            $filePath = \App\Support\SecureUpload::store($file, 'catalog/attributes', 'image');
 
                             $image = new AttributeValueImage([
                                 'attribute_value_id' => $colorId,
@@ -547,8 +546,7 @@ class ProductController extends Controller
 
                     if ($request->hasFile("variant_images.{$index}")) {
                         foreach ($request->file("variant_images.{$index}") as $file) {
-                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('catalog/variants', $filename, 's3');
+                            $filePath = \App\Support\SecureUpload::store($file, 'catalog/variants', 'image');
 
                             $image = new VariantImage([
                                 'variant_id' => $variant->id,
@@ -586,13 +584,15 @@ class ProductController extends Controller
 
             return response()->json([
                 'message' => 'Error al actualizar producto',
-                'error'   => $e->getMessage(),
+                'error'   => (config('app.debug') ? $e->getMessage() : 'Error interno'),
             ], 500);
         }
     }
 
     public function updateImages(Request $request, $id)
     {
+        // Validar TODOS los archivos subidos (tipo real, tamaño) antes de tocar la BD
+        \App\Support\SecureUpload::validateAll($request);
         DB::beginTransaction();
 
         try {
@@ -604,8 +604,7 @@ class ProductController extends Controller
             if ($request->hasFile('product_images')) {
                 ProductImage::where('product_id', $product->id)->delete();
                 foreach ($request->file('product_images') as $file) {
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $filePath = $file->storeAs('catalog/products', $filename, 's3');
+                    $filePath = \App\Support\SecureUpload::store($file, 'catalog/products', 'image');
 
                     $image = new ProductImage([
                         'product_id' => $product->id,
@@ -644,8 +643,7 @@ class ProductController extends Controller
                 foreach ($request->file('color_images') as $colorId => $files) {
                     if (is_array($files)) {
                         foreach ($files as $idx => $file) {
-                            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                            $filePath = $file->storeAs('catalog/attributes', $filename, 's3');
+                            $filePath = \App\Support\SecureUpload::store($file, 'catalog/attributes', 'image');
 
                             $image = new AttributeValueImage([
                                 'attribute_value_id' => $colorId,
@@ -697,8 +695,7 @@ class ProductController extends Controller
                         $variant = $allVariants[$variantIndex];
                         if (is_array($files)) {
                             foreach ($files as $idx => $file) {
-                                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                                $filePath = $file->storeAs('catalog/variants', $filename, 's3');
+                                $filePath = \App\Support\SecureUpload::store($file, 'catalog/variants', 'image');
 
                                 $image = new VariantImage([
                                     'variant_id' => $variant->id,
@@ -737,7 +734,7 @@ class ProductController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Error al actualizar imágenes',
-                'error'   => $e->getMessage(),
+                'error'   => (config('app.debug') ? $e->getMessage() : 'Error interno'),
             ], 500);
         }
     }
@@ -777,7 +774,7 @@ class ProductController extends Controller
             \Illuminate\Support\Facades\Log::error('Error in updateMeasurements: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
             return response()->json([
                 'message' => 'Error al actualizar medidas',
-                'error'   => $e->getMessage(),
+                'error'   => (config('app.debug') ? $e->getMessage() : 'Error interno'),
             ], 500);
         }
     }
@@ -819,7 +816,7 @@ class ProductController extends Controller
 
             return response()->json([
                 'message' => 'Error al actualizar producto',
-                'error'   => $e->getMessage(),
+                'error'   => (config('app.debug') ? $e->getMessage() : 'Error interno'),
             ], 500);
         }
     }
@@ -844,7 +841,7 @@ class ProductController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Error al eliminar producto',
-                'error'   => $e->getMessage()
+                'error'   => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }
@@ -869,7 +866,7 @@ class ProductController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Error al restaurar producto',
-                'error'   => $e->getMessage()
+                'error'   => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }
@@ -903,7 +900,7 @@ class ProductController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Error al eliminar producto permanentemente',
-                'error'   => $e->getMessage()
+                'error'   => (config('app.debug') ? $e->getMessage() : 'Error interno')
             ], 500);
         }
     }

@@ -50,7 +50,8 @@ class SystemSettingController extends Controller
                 $folder = 'system/payments';
             }
 
-            $ext      = $file->getClientOriginalExtension();
+            // Extensión determinada por el contenido real (lista blanca de imágenes), no por el cliente
+            $ext      = \App\Support\SecureUpload::validate($file, 'image', 'value_file');
             $filename = Str::uuid() . '.' . $ext;
 
             try {
@@ -69,7 +70,7 @@ class SystemSettingController extends Controller
 
             } catch (\Exception $e) {
                 Log::error('[SystemSetting] S3 upload exception: ' . $e->getMessage());
-                return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+                return response()->json(['message' => 'Error al subir el archivo'], 500);
             }
 
         } else {

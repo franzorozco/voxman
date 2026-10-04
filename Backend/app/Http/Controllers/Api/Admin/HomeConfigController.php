@@ -55,8 +55,7 @@ class HomeConfigController extends Controller
         ]);
 
         $file = $request->file('image');
-        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $fullPath = 'catalog/categories/' . $filename;
+        $fullPath = 'catalog/categories/' . \Illuminate\Support\Str::uuid() . '.' . \App\Support\SecureUpload::validate($file, 'image', 'image');
 
         try {
             $contents = file_get_contents($file->getRealPath());
@@ -68,7 +67,7 @@ class HomeConfigController extends Controller
 
             return response()->json(['url' => $fullPath]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al acceder al almacenamiento'], 500);
         }
     }
 
@@ -79,8 +78,7 @@ class HomeConfigController extends Controller
         ]);
 
         $file = $request->file('image');
-        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $fullPath = 'system/funds/' . $filename;
+        $fullPath = 'system/funds/' . \Illuminate\Support\Str::uuid() . '.' . \App\Support\SecureUpload::validate($file, 'image', 'image');
 
         try {
             $contents = file_get_contents($file->getRealPath());
@@ -92,7 +90,7 @@ class HomeConfigController extends Controller
 
             return response()->json(['url' => $fullPath]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al acceder al almacenamiento'], 500);
         }
     }
 
@@ -107,7 +105,7 @@ class HomeConfigController extends Controller
             
             return response()->json(['data' => $images]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al acceder al almacenamiento'], 500);
         }
     }
 
@@ -118,8 +116,7 @@ class HomeConfigController extends Controller
         ]);
 
         $file = $request->file('video');
-        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $fullPath = 'system/video_pages/' . $filename;
+        $fullPath = 'system/video_pages/' . \Illuminate\Support\Str::uuid() . '.' . \App\Support\SecureUpload::validate($file, 'video', 'video');
 
         try {
             $contents = file_get_contents($file->getRealPath());
@@ -131,7 +128,7 @@ class HomeConfigController extends Controller
 
             return response()->json(['url' => $fullPath]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al acceder al almacenamiento'], 500);
         }
     }
 
@@ -161,8 +158,7 @@ class HomeConfigController extends Controller
         ]);
 
         $file = $request->file('image');
-        $filename = \Illuminate\Support\Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $fullPath = 'system/actors/' . $filename;
+        $fullPath = 'system/actors/' . \Illuminate\Support\Str::uuid() . '.' . \App\Support\SecureUpload::validate($file, 'image', 'image');
 
         try {
             $contents = file_get_contents($file->getRealPath());
@@ -174,7 +170,7 @@ class HomeConfigController extends Controller
 
             return response()->json(['url' => $fullPath]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al acceder al almacenamiento'], 500);
         }
     }
 
@@ -188,7 +184,7 @@ class HomeConfigController extends Controller
             
             return response()->json(['data' => $files]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error S3: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al acceder al almacenamiento'], 500);
         }
     }
 }

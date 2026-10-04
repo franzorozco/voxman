@@ -175,7 +175,7 @@ const DashboardLayout = () => {
                 <CanAccess permission="view_sales">
                   <NavItem to="/dashboard/sales" icon={BarChart3} label="Historial de Ventas" />
                 </CanAccess>
-                <CanAccess permission="view_users">
+                <CanAccess permission="view_customers">
                   <NavItem to="/dashboard/clients" icon={Users} label="Clientes" />
                 </CanAccess>
                 <CanAccess permission="view_returns">
