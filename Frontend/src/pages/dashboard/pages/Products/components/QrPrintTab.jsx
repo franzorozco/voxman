@@ -1,18 +1,18 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+﻿import React, { useState, useRef, useEffect, useMemo } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Printer, RefreshCw } from "lucide-react";
 
 import CustomSelect from '../../../../../components/ui/CustomSelect';
 const LABEL_SIZES = {
-  small:  { name: "Pequeño",  qr: 50,  width: 120, fontSize: { title: 8, attr: 7, price: 9, sku: 7 }, pad: 6 },
+  small:  { name: "PequeÃ±o",  qr: 50,  width: 120, fontSize: { title: 8, attr: 7, price: 9, sku: 7 }, pad: 6 },
   medium: { name: "Mediano",  qr: 80,  width: 170, fontSize: { title: 10, attr: 9, price: 12, sku: 8 }, pad: 10 },
   large:  { name: "Grande",   qr: 110, width: 220, fontSize: { title: 12, attr: 10, price: 14, sku: 9 }, pad: 14 },
 };
 
 const PAPER_FORMATS = {
-  a4:       { name: "Hoja A4 (210 × 297 mm)", width: "210mm", height: "297mm" },
-  carta:    { name: "Carta (216 × 279 mm)",    width: "216mm", height: "279mm" },
-  thermal:  { name: "Rollo Térmico (80mm)",     width: "80mm",  height: "auto" },
+  a4:       { name: "Hoja A4 (210 Ã— 297 mm)", width: "210mm", height: "297mm" },
+  carta:    { name: "Carta (216 Ã— 279 mm)",    width: "216mm", height: "279mm" },
+  thermal:  { name: "Rollo TÃ©rmico (80mm)",     width: "80mm",  height: "auto" },
   custom:   { name: "Personalizada (ajustar en impresora)", width: "100%", height: "auto" },
 };
 
@@ -78,7 +78,7 @@ export default function QrPrintTab({ product }) {
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=${sz.qr}x${sz.qr}&data=${encodeURIComponent(lbl.url)}" 
                width="${sz.qr}" height="${sz.qr}" style="margin:4px 0;" />
           <div class="lbl-price">Bs. ${Number(lbl.price).toFixed(2)}</div>
-          <div class="lbl-code">Cód: ${lbl.sku}</div>
+          <div class="lbl-code">CÃ³d: ${lbl.sku}</div>
         </div>`;
     }).join('\n');
 
@@ -160,7 +160,7 @@ export default function QrPrintTab({ product }) {
           list.push({
             variantId: variant.id,
             name: product.name,
-            attributes: attrText.join(' · '),
+            attributes: attrText.join(' Â· '),
             sku: skuStr,
             url: urlStr,
             price: price
@@ -180,7 +180,7 @@ export default function QrPrintTab({ product }) {
       <div className="qr-print-config">
 
         <div className="form-group">
-          <label>Sucursal / Almacén</label>
+          <label>Sucursal / AlmacÃ©n</label>
           <CustomSelect  value={selectedWarehouseId} onChange={(e) => setSelectedWarehouseId(e.target.value)}>
             <option value="">Seleccionar Sucursal...</option>
             {branches.map(br => (
@@ -199,7 +199,7 @@ export default function QrPrintTab({ product }) {
         </div>
 
         <div className="form-group">
-          <label>Tamaño de Etiqueta</label>
+          <label>TamaÃ±o de Etiqueta</label>
           <div style={{ display: "flex", gap: "8px" }}>
             {Object.entries(LABEL_SIZES).map(([k, v]) => (
               <button
@@ -271,7 +271,7 @@ export default function QrPrintTab({ product }) {
               })}
             </div>
           ) : (
-            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Selecciona una sucursal para cargar el stock de cada variante automáticamente.</p>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Selecciona una sucursal para cargar el stock de cada variante automÃ¡ticamente.</p>
           )}
         </div>
 
@@ -326,7 +326,7 @@ export default function QrPrintTab({ product }) {
                 {lbl.attributes && <div className="lbl-attr" style={{ fontSize: `${sz.fontSize.attr}px`, color: "#444", lineHeight: "1.3", marginBottom: "4px" }}>{lbl.attributes}</div>}
                 <QRCodeSVG value={lbl.url} size={sz.qr} level="M" />
                 <div className="lbl-price" style={{ fontSize: `${sz.fontSize.price}px`, fontWeight: "bold", marginTop: "4px" }}>Bs. {Number(lbl.price).toFixed(2)}</div>
-                <div className="lbl-code" style={{ fontSize: `${sz.fontSize.sku}px`, color: "#666", marginTop: "2px" }}>Cód: {lbl.sku}</div>
+                <div className="lbl-code" style={{ fontSize: `${sz.fontSize.sku}px`, color: "#666", marginTop: "2px" }}>CÃ³d: {lbl.sku}</div>
               </div>
             ))}
           </div>

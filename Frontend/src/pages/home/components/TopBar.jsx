@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import "./TopBar.css";
 
-// ─── Security helpers ────────────────────────────────────────────────────────
+// â”€â”€â”€ Security helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Permite solo URLs absolutas (http/https) o rutas relativas internas (/ruta).
@@ -22,18 +22,18 @@ const CSS_COLOR_RE =
 const sanitizeCssColor = (val, fallback) =>
   typeof val === "string" && CSS_COLOR_RE.test(val.trim()) ? val.trim() : fallback;
 
-/** Acepta valores de tamaño: número + unidad válida. */
+/** Acepta valores de tamaÃ±o: nÃºmero + unidad vÃ¡lida. */
 const CSS_SIZE_RE = /^\d+(\.\d+)?(px|em|rem|%|vh|vw)$/i;
 const sanitizeCssSize = (val, fallback) =>
   typeof val === "string" && CSS_SIZE_RE.test(val.trim()) ? val.trim() : fallback;
 
-/** Acepta font-weight numérico (100–900) o palabras clave CSS. */
+/** Acepta font-weight numÃ©rico (100â€“900) o palabras clave CSS. */
 const CSS_FONT_WEIGHT_RE = /^(normal|bold|lighter|bolder|[1-9]00)$/i;
 const sanitizeFontWeight = (val, fallback) =>
   typeof val === "string" && CSS_FONT_WEIGHT_RE.test(val.trim()) ? val.trim() : fallback;
 
 /**
- * Acepta padding de 1 a 4 valores numéricos con unidad.
+ * Acepta padding de 1 a 4 valores numÃ©ricos con unidad.
  * Ej: "12px 20px", "8px", "4px 8px 4px 8px".
  */
 const CSS_PADDING_RE = /^(\d+(\.\d+)?(px|em|rem|%) ?)( ?\d+(\.\d+)?(px|em|rem|%) ?){0,3}$/i;
@@ -46,10 +46,10 @@ const sanitizeIconSize = (val) => {
   return Number.isFinite(n) ? Math.min(64, Math.max(8, n)) : 16;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
- * TopBar — Cintillo de anuncio reutilizable.
+ * TopBar â€” Cintillo de anuncio reutilizable.
  */
 export default function TopBar({ 
   id,
@@ -85,7 +85,7 @@ export default function TopBar({
     }
   };
 
-  // ── Sanitize all props that come from the backend ──
+  // â”€â”€ Sanitize all props that come from the backend â”€â”€
   const safeUrl        = sanitizeUrl(linkUrl);
   const safeBgColor    = sanitizeCssColor(bgColor, "#000000");
   const safeTextColor  = sanitizeCssColor(textColor, "#ffffff");

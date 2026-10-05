@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { X, Search } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createAttendance, updateAttendance } from "../../../../api/admin/attendances";
@@ -153,10 +153,10 @@ export default function AttendanceModal({ attendance, onClose, onSuccess, initia
             </div>
 
             <div style={{ marginTop: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Notas o Justificación</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Notas o JustificaciÃ³n</label>
               <textarea 
                 rows="3"
-                placeholder="Ej. Llegó tarde por tráfico, Falta por enfermedad..."
+                placeholder="Ej. LlegÃ³ tarde por trÃ¡fico, Falta por enfermedad..."
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', resize: 'vertical' }}
                 value={formData.notes}
                 onChange={(e) => setFormData({...formData, notes: e.target.value})}

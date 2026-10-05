@@ -1,4 +1,4 @@
-/* 🔥 modal */
+﻿/* ðŸ”¥ modal */
 .modal-confirm {
   background: var(--bg-card);
   padding: 20px;
@@ -19,7 +19,7 @@
   margin-bottom: 15px;
 }
 
-/* 🔥 botones */
+/* ðŸ”¥ botones */
 .modal-actions {
   display: flex;
   justify-content: space-between;
@@ -44,7 +44,7 @@
   cursor: pointer;
 }
 
-/* 🔥 animaciones */
+/* ðŸ”¥ animaciones */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

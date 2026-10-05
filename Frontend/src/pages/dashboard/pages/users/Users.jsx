@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import {
@@ -82,18 +82,18 @@ const loadUsers = async () => {
       await deleteUser(id);
       await loadUsers();
     } catch (error) {
-      throw error; // 🔥 CLAVE: dejar que UserForm lo reciba
+      throw error; // ðŸ”¥ CLAVE: dejar que UserForm lo reciba
     }
   };
 
 const handleSubmit = async (data) => {
   try {
     if (selectedUser) {
-      // 🔵 UPDATE NORMAL
+      // ðŸ”µ UPDATE NORMAL
       await updateUser(selectedUser.id, data);
 
     } else {
-      // 🟢 CREATE CON CONTROL DE SOFT DELETE
+      // ðŸŸ¢ CREATE CON CONTROL DE SOFT DELETE
       try {
         await createUser(data);
 
@@ -103,11 +103,11 @@ const handleSubmit = async (data) => {
 
           setSoftDeleteModal({
             open: true,
-            data: err.response.data.user, // 👈 backend debe enviar usuario
-            formData: data, // 👈 lo que intentabas guardar
+            data: err.response.data.user, // ðŸ‘ˆ backend debe enviar usuario
+            formData: data, // ðŸ‘ˆ lo que intentabas guardar
           });
 
-          return; // 🚨 IMPORTANTE (detiene flujo)
+          return; // ðŸš¨ IMPORTANTE (detiene flujo)
         }
 
         throw err;
@@ -124,7 +124,7 @@ const handleSubmit = async (data) => {
 
 const handleRestore = async (data) => {
   try {
-    await restoreUser(softDeleteModal.data.id); // 👈 SOLO RESTORE REAL
+    await restoreUser(softDeleteModal.data.id); // ðŸ‘ˆ SOLO RESTORE REAL
 
     setSoftDeleteModal({ open: false, data: null, formData: null });
     setOpen(false);
@@ -185,7 +185,7 @@ const handleOverwrite = async (data) => {
     } catch (error) {
       console.error("ERROR PDF:", error.response?.data || error.message);
 
-      // 🔥 DEBUG REAL
+      // ðŸ”¥ DEBUG REAL
       console.log("TOKEN:", localStorage.getItem("token"));
     }
   };

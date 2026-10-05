@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createOwner, updateOwner } from "../../../../api/admin/owners";
@@ -53,7 +53,7 @@ export default function OwnerModal({ owner, onClose, onSuccess }) {
       return;
     }
     if (!isEditing && !formData.password) {
-      toast.error("La contraseña es obligatoria para un nuevo socio");
+      toast.error("La contraseÃ±a es obligatoria para un nuevo socio");
       return;
     }
 
@@ -114,7 +114,7 @@ export default function OwnerModal({ owner, onClose, onSuccess }) {
                     style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                     value={formData.last_name_paternal}
                     onChange={handleChange}
-                    placeholder="Ej. Pérez"
+                    placeholder="Ej. PÃ©rez"
                   />
                 </div>
               </div>
@@ -128,11 +128,11 @@ export default function OwnerModal({ owner, onClose, onSuccess }) {
                     style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                     value={formData.last_name_maternal}
                     onChange={handleChange}
-                    placeholder="Ej. López"
+                    placeholder="Ej. LÃ³pez"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>TelÃ©fono</label>
                   <input 
                     type="text" 
                     name="phone"
@@ -146,7 +146,7 @@ export default function OwnerModal({ owner, onClose, onSuccess }) {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  Correo Electrónico * {!canManageCredentials && '(Solo lectura)'}
+                  Correo ElectrÃ³nico * {!canManageCredentials && '(Solo lectura)'}
                 </label>
                 <input 
                   type="email" 
@@ -171,7 +171,7 @@ export default function OwnerModal({ owner, onClose, onSuccess }) {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  Contraseña {isEditing ? '(Dejar en blanco para no cambiar)' : '*'} {!canManageCredentials && '(Solo lectura)'}
+                  ContraseÃ±a {isEditing ? '(Dejar en blanco para no cambiar)' : '*'} {!canManageCredentials && '(Solo lectura)'}
                 </label>
                 <input 
                   type="password" 
@@ -188,7 +188,7 @@ export default function OwnerModal({ owner, onClose, onSuccess }) {
                   }}
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder={isEditing ? "Nueva contraseña..." : "Contraseña secreta"}
+                  placeholder={isEditing ? "Nueva contraseÃ±a..." : "ContraseÃ±a secreta"}
                   required={!isEditing}
                   disabled={!canManageCredentials}
                 />

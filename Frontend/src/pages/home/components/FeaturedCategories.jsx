@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getFeaturedCategories } from '../../../api/shop/categories';
@@ -29,7 +29,7 @@ export default function FeaturedCategories() {
     return (
       <section className="fc-section">
         <div className="fc-container" style={{ minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: '#666', letterSpacing: '2px' }}>CARGANDO CATEGORÍAS...</p>
+          <p style={{ color: '#666', letterSpacing: '2px' }}>CARGANDO CATEGORÃAS...</p>
         </div>
       </section>
     );
@@ -42,9 +42,9 @@ export default function FeaturedCategories() {
       <div className="fc-container">
         
         <div className="fc-header">
-          <h2 className="fc-title">C A T E G O R Í A S</h2>
+          <h2 className="fc-title">C A T E G O R Ã A S</h2>
           <Link to="/catalog" className="fc-link-all">
-            VER CATÁLOGO COMPLETO <ArrowRight size={16} />
+            VER CATÃLOGO COMPLETO <ArrowRight size={16} />
           </Link>
         </div>
 

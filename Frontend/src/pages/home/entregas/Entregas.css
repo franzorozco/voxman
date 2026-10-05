@@ -1,4 +1,4 @@
-/* =========================================================
+﻿/* =========================================================
    VOXMAN "ENTREGAS" PAGE - PREMIUM STYLING
 ========================================================= */
 
@@ -88,7 +88,7 @@
   z-index: 10;
   opacity: 0.8;
   transition: all 0.3s ease;
-  /* El color será inyectado por React via --scroll-color */
+  /* El color serÃ¡ inyectado por React via --scroll-color */
 }
 
 /* 1. MOUSE */

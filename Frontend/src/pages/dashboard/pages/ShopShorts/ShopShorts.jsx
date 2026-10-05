@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Search, Edit, Trash2, Layers, Image as ImageIcon, Film, Save, Eye, EyeOff, Grid, Star, Check, X, Upload, Link as LinkIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getShopShorts, deleteShopShort } from "../../../../api/admin/shopShorts";
@@ -17,7 +17,7 @@ import { VideoPlayer } from "../../../../components/ui/videoHelpers";
 const TABS = [
   { id: "hero", label: "Hero (Inicio)", icon: <ImageIcon size={15} /> },
   { id: "collage", label: "Collage", icon: <Grid size={15} /> },
-  { id: "categories", label: "Categorías", icon: <Grid size={15} /> },
+  { id: "categories", label: "CategorÃ­as", icon: <Grid size={15} /> },
   { id: "new_arrivals", label: "Novedades", icon: <Star size={15} /> },
   { id: "sections", label: "Secciones", icon: <Layers size={15} /> }
 ];
@@ -100,7 +100,7 @@ export default function ShopShorts() {
       current.splice(existingIdx, 1);
     } else {
       if (current.length >= 5) {
-        toast.error("Máximo 5 categorías destacadas permitidas.");
+        toast.error("MÃ¡ximo 5 categorÃ­as destacadas permitidas.");
         return;
       }
       current.push({ id: cat.id, name: cat.name, image: null, order: current.length + 1 });
@@ -127,7 +127,7 @@ export default function ShopShorts() {
       setUploadingImage(true);
       const res = await uploadCategoryImage(file);
       updateCategoryImage(selectingImageForCat, res.url);
-      toast.success("Imagen subida y asignada con éxito");
+      toast.success("Imagen subida y asignada con Ã©xito");
     } catch (err) {
       toast.error("Error al subir la imagen");
     } finally {
@@ -139,7 +139,7 @@ export default function ShopShorts() {
   const handlePastedUrl = () => {
     if (!pastedUrl) return;
     updateCategoryImage(selectingImageForCat, pastedUrl);
-    toast.success("Imagen enlazada con éxito");
+    toast.success("Imagen enlazada con Ã©xito");
   };
 
   useEffect(() => {
@@ -154,7 +154,7 @@ export default function ShopShorts() {
       const data = await getCategories();
       setCategories(data);
     } catch (err) {
-      toast.error("Error al cargar categorías");
+      toast.error("Error al cargar categorÃ­as");
     } finally {
       setLoadingCats(false);
     }
@@ -217,7 +217,7 @@ export default function ShopShorts() {
   };
 
   const handleDeleteShort = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este video?")) return;
+    if (!window.confirm("Â¿Seguro que deseas eliminar este video?")) return;
     try {
       await deleteShopShort(id);
       toast.success("Video eliminado");
@@ -236,8 +236,8 @@ export default function ShopShorts() {
 
   const SECTION_KEYS = [
     { key: "shop_home_show_hero", label: "Hero (Inicio)", desc: "El banner principal de la tienda." },
-    { key: "shop_home_show_categories", label: "Categorías Destacadas", desc: "La cuadrícula de categorías con miniaturas personalizadas." },
-    { key: "shop_home_show_collage", label: "Collage de Shorts/Productos", desc: "La cuadrícula mixta de videos y productos." },
+    { key: "shop_home_show_categories", label: "CategorÃ­as Destacadas", desc: "La cuadrÃ­cula de categorÃ­as con miniaturas personalizadas." },
+    { key: "shop_home_show_collage", label: "Collage de Shorts/Productos", desc: "La cuadrÃ­cula mixta de videos y productos." },
     { key: "shop_home_show_new_arrivals", label: "Carrusel de Novedades", desc: "El carrusel inferior de nuevos productos." }
   ];
 
@@ -249,7 +249,7 @@ export default function ShopShorts() {
             <div className="hc-style-9">
               <Film size={18} />
             </div>
-            <h1 className="hc-style-10">Configuración Tienda (Shop)</h1>
+            <h1 className="hc-style-10">ConfiguraciÃ³n Tienda (Shop)</h1>
           </div>
           <p className="hc-style-11">
             Personaliza el Hero, secciones de la tienda y administra los videos cortos (Shorts).
@@ -307,16 +307,16 @@ export default function ShopShorts() {
               <h3 className="hc-style-15">Textos del Hero (Inicio Tienda)</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Título Principal</span>
-                  <input type="text" value={settings.shop_home_hero_title ?? "LO MÁS DESTACADO"} onChange={e => setSetting("shop_home_hero_title", e.target.value)} className="hc-style-19" />
+                  <span className="hc-style-18">TÃ­tulo Principal</span>
+                  <input type="text" value={settings.shop_home_hero_title ?? "LO MÃS DESTACADO"} onChange={e => setSetting("shop_home_hero_title", e.target.value)} className="hc-style-19" />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Subtítulo</span>
+                  <span className="hc-style-18">SubtÃ­tulo</span>
                   <input type="text" value={settings.shop_home_hero_subtitle ?? "Descubre las tendencias en moda masculina"} onChange={e => setSetting("shop_home_hero_subtitle", e.target.value)} className="hc-style-19" />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Texto del Botón</span>
-                  <input type="text" value={settings.shop_home_hero_btn_text ?? "Ver catálogo completo"} onChange={e => setSetting("shop_home_hero_btn_text", e.target.value)} className="hc-style-19" />
+                  <span className="hc-style-18">Texto del BotÃ³n</span>
+                  <input type="text" value={settings.shop_home_hero_btn_text ?? "Ver catÃ¡logo completo"} onChange={e => setSetting("shop_home_hero_btn_text", e.target.value)} className="hc-style-19" />
                 </label>
               </div>
             </div>
@@ -328,8 +328,8 @@ export default function ShopShorts() {
             <div className="hc-style-14">
               <div className="hc-style-20">
                 <div>
-                  <h3 className="hc-style-21">Categorías seleccionadas</h3>
-                  <p className="hc-style-22">Máximo 5 recomendadas. Haz click en la tarjeta para elegir miniatura, arrastra para reordenar.</p>
+                  <h3 className="hc-style-21">CategorÃ­as seleccionadas</h3>
+                  <p className="hc-style-22">MÃ¡ximo 5 recomendadas. Haz click en la tarjeta para elegir miniatura, arrastra para reordenar.</p>
                 </div>
                 <span style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: featuredCategories.length === 5 ? "var(--color-danger, #e53e3e)" : "var(--bg-overlay)", color: featuredCategories.length === 5 ? "#fff" : "var(--text-muted)" }}>
                   {featuredCategories.length} seleccionadas
@@ -339,8 +339,8 @@ export default function ShopShorts() {
               {featuredCategories.length === 0 ? (
                 <div className="hc-style-23">
                   <Grid size={32} className="hc-style-24" />
-                  <p>Ninguna categoría seleccionada.</p>
-                  <p className="hc-style-25">Selecciona categorías desde la lista de abajo.</p>
+                  <p>Ninguna categorÃ­a seleccionada.</p>
+                  <p className="hc-style-25">Selecciona categorÃ­as desde la lista de abajo.</p>
                 </div>
               ) : (
                 <div className="hc-style-26">
@@ -359,13 +359,13 @@ export default function ShopShorts() {
             <div className="hc-style-30">
               <div className="hc-style-20">
                 <div>
-                  <h3 className="hc-style-21">Categorías Disponibles</h3>
-                  <p className="hc-style-22">Haz click en una categoría para agregarla o quitarla de las destacadas.</p>
+                  <h3 className="hc-style-21">CategorÃ­as Disponibles</h3>
+                  <p className="hc-style-22">Haz click en una categorÃ­a para agregarla o quitarla de las destacadas.</p>
                 </div>
               </div>
 
               {loadingCats ? (
-                <div className="hc-style-50">Cargando categorías...</div>
+                <div className="hc-style-50">Cargando categorÃ­as...</div>
               ) : (
                 <div className="hc-style-51">
                   {categories.map(cat => {
@@ -390,7 +390,7 @@ export default function ShopShorts() {
                   </div>
 
                   <div className="hc-style-60">
-                    {[{ id: "upload", label: "Subir desde PC", icon: <Upload size={14} /> }, { id: "url", label: "Pegar URL", icon: <LinkIcon size={14} /> }, { id: "gallery", label: "Galería de Variantes", icon: <ImageIcon size={14} /> }].map(tab => (
+                    {[{ id: "upload", label: "Subir desde PC", icon: <Upload size={14} /> }, { id: "url", label: "Pegar URL", icon: <LinkIcon size={14} /> }, { id: "gallery", label: "GalerÃ­a de Variantes", icon: <ImageIcon size={14} /> }].map(tab => (
                       <button key={tab.id} onClick={() => setModalTab(tab.id)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0", border: "none", borderBottom: modalTab === tab.id ? "2px solid var(--color-primary)" : "2px solid transparent", background: modalTab === tab.id ? "var(--bg-card)" : "transparent", color: modalTab === tab.id ? "var(--color-primary)" : "var(--text-muted)", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
                         {tab.icon} <span className="hc-style-13">{tab.label}</span>
                       </button>
@@ -423,7 +423,7 @@ export default function ShopShorts() {
                         </div>
                         {pastedUrl && (
                           <div className="hc-style-73">
-                            <p className="hc-style-74">Previsualización:</p>
+                            <p className="hc-style-74">PrevisualizaciÃ³n:</p>
                             <div className="hc-style-75">
                               <img src={pastedUrl} alt="Preview" onError={e => { e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_white.jfif"; }} className="hc-style-40" />
                             </div>
@@ -435,7 +435,7 @@ export default function ShopShorts() {
                     {modalTab === "gallery" && (
                       <>
                         {loadingImgs && page === 1 ? (
-                          <div className="hc-style-77">Cargando imágenes...</div>
+                          <div className="hc-style-77">Cargando imÃ¡genes...</div>
                         ) : (
                           <div className="hc-style-78">
                             {allImages.map(url => (
@@ -448,7 +448,7 @@ export default function ShopShorts() {
                         {hasMore && (
                           <div className="hc-style-80">
                             <button onClick={() => fetchVariantImages(page + 1, true)} disabled={loadingImgs} style={{ padding: "8px 24px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: "var(--bg-overlay)", border: "1px solid var(--border-color)", color: "var(--text-main)", cursor: loadingImgs ? "not-allowed" : "pointer" }}>
-                              {loadingImgs ? "Cargando..." : "Cargar más imágenes"}
+                              {loadingImgs ? "Cargando..." : "Cargar mÃ¡s imÃ¡genes"}
                             </button>
                           </div>
                         )}
@@ -465,36 +465,36 @@ export default function ShopShorts() {
           <div className="hc-style-141">
             <div className="hc-style-14" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '20px', marginBottom: '20px' }}>
               <h3 className="hc-style-15">Criterio de Ordenamiento (Productos)</h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>¿Qué productos se deben destacar primero en el collage?</p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>Â¿QuÃ© productos se deben destacar primero en el collage?</p>
               <CustomSelect 
                 value={settings.shop_home_collage_sort || "newest"} 
                 onChange={(e) => setSetting("shop_home_collage_sort", e.target.value)}
               >
-                <option value="newest">Novedades (Más recientes)</option>
-                <option value="best_sellers">Más vendidos</option>
-                <option value="most_viewed">Más vistos / Populares</option>
+                <option value="newest">Novedades (MÃ¡s recientes)</option>
+                <option value="best_sellers">MÃ¡s vendidos</option>
+                <option value="most_viewed">MÃ¡s vistos / Populares</option>
                 <option value="price_desc">Mayor precio primero</option>
                 <option value="price_asc">Menor precio primero</option>
               </CustomSelect>
             </div>
 
             <div className="hc-style-14">
-              <h3 className="hc-style-15">Filtro de Categorías</h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>¿Qué tipo de prendas deseas incluir en el collage?</p>
+              <h3 className="hc-style-15">Filtro de CategorÃ­as</h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>Â¿QuÃ© tipo de prendas deseas incluir en el collage?</p>
               
               <CustomSelect 
                 value={settings.shop_home_collage_category_filter || "all"} 
                 onChange={(e) => setSetting("shop_home_collage_category_filter", e.target.value)}
                 style={{ marginBottom: '15px' }}
               >
-                <option value="all">Mostrar TODAS las categorías</option>
-                <option value="include">SOLO mostrar ciertas categorías</option>
-                <option value="exclude">OCULTAR ciertas categorías</option>
+                <option value="all">Mostrar TODAS las categorÃ­as</option>
+                <option value="include">SOLO mostrar ciertas categorÃ­as</option>
+                <option value="exclude">OCULTAR ciertas categorÃ­as</option>
               </CustomSelect>
 
               {(settings.shop_home_collage_category_filter === 'include' || settings.shop_home_collage_category_filter === 'exclude') && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
-                  {loadingCats ? <span style={{ fontSize: '12px' }}>Cargando categorías...</span> : categories.map(cat => {
+                  {loadingCats ? <span style={{ fontSize: '12px' }}>Cargando categorÃ­as...</span> : categories.map(cat => {
                     let selectedCats = [];
                     try {
                       selectedCats = JSON.parse(settings.shop_home_collage_categories || "[]");
@@ -534,7 +534,7 @@ export default function ShopShorts() {
 
             <div className="hc-style-14" style={{ marginTop: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 className="hc-style-15" style={{ margin: 0 }}>Gestión de Videos (Shorts)</h3>
+                <h3 className="hc-style-15" style={{ margin: 0 }}>GestiÃ³n de Videos (Shorts)</h3>
                 <button className="btn-primary" onClick={() => handleOpenModal()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px 16px', fontSize: '13px', borderRadius: '8px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                   <Plus size={16} /> Nuevo Video
                 </button>
@@ -544,7 +544,7 @@ export default function ShopShorts() {
                 <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input 
                   style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', fontSize: '13px' }}
-                  placeholder="Buscar por título o producto..." 
+                  placeholder="Buscar por tÃ­tulo o producto..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -574,7 +574,7 @@ export default function ShopShorts() {
                         </div>
                       </div>
                       <div style={{ padding: '12px' }}>
-                        <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{short.title || 'Sin título'}</h4>
+                        <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{short.title || 'Sin tÃ­tulo'}</h4>
                         <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>{short.product ? short.product.name : 'Sin producto'}</p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
                           <span style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', color: short.is_active ? 'var(--color-success)' : 'var(--color-danger)' }}>
@@ -603,12 +603,12 @@ export default function ShopShorts() {
               <h3 className="hc-style-15">Textos del Carrusel</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Título</span>
-                  <input type="text" value={settings.shop_home_new_arrivals_title ?? "LO ÚLTIMO"} onChange={e => setSetting("shop_home_new_arrivals_title", e.target.value)} className="hc-style-19" />
+                  <span className="hc-style-18">TÃ­tulo</span>
+                  <input type="text" value={settings.shop_home_new_arrivals_title ?? "LO ÃšLTIMO"} onChange={e => setSetting("shop_home_new_arrivals_title", e.target.value)} className="hc-style-19" />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Subtítulo</span>
-                  <input type="text" value={settings.shop_home_new_arrivals_subtitle ?? "Piezas recién llegadas a la tienda"} onChange={e => setSetting("shop_home_new_arrivals_subtitle", e.target.value)} className="hc-style-19" />
+                  <span className="hc-style-18">SubtÃ­tulo</span>
+                  <input type="text" value={settings.shop_home_new_arrivals_subtitle ?? "Piezas reciÃ©n llegadas a la tienda"} onChange={e => setSetting("shop_home_new_arrivals_subtitle", e.target.value)} className="hc-style-19" />
                 </label>
               </div>
             </div>
@@ -620,9 +620,9 @@ export default function ShopShorts() {
                 onChange={(e) => setSetting("shop_home_new_arrivals_sort", e.target.value)}
                 style={{ marginBottom: '15px' }}
               >
-                <option value="newest">Novedades (Más recientes)</option>
-                <option value="best_sellers">Más vendidos</option>
-                <option value="most_viewed">Más vistos / Populares</option>
+                <option value="newest">Novedades (MÃ¡s recientes)</option>
+                <option value="best_sellers">MÃ¡s vendidos</option>
+                <option value="most_viewed">MÃ¡s vistos / Populares</option>
                 <option value="price_desc">Mayor precio primero</option>
                 <option value="price_asc">Menor precio primero</option>
                 <option value="random">Aleatorio</option>
@@ -635,22 +635,22 @@ export default function ShopShorts() {
             </div>
 
             <div className="hc-style-14" style={{ marginBottom: '20px' }}>
-              <h3 className="hc-style-15">Filtro de Categorías</h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>Selecciona qué productos participan en el carrusel.</p>
+              <h3 className="hc-style-15">Filtro de CategorÃ­as</h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>Selecciona quÃ© productos participan en el carrusel.</p>
               
               <CustomSelect 
                 value={settings.shop_home_new_arrivals_category_filter || "all"} 
                 onChange={(e) => setSetting("shop_home_new_arrivals_category_filter", e.target.value)}
                 style={{ marginBottom: '15px' }}
               >
-                <option value="all">Mostrar TODAS las categorías</option>
-                <option value="include">SOLO mostrar ciertas categorías</option>
-                <option value="exclude">OCULTAR ciertas categorías</option>
+                <option value="all">Mostrar TODAS las categorÃ­as</option>
+                <option value="include">SOLO mostrar ciertas categorÃ­as</option>
+                <option value="exclude">OCULTAR ciertas categorÃ­as</option>
               </CustomSelect>
 
               {(settings.shop_home_new_arrivals_category_filter === 'include' || settings.shop_home_new_arrivals_category_filter === 'exclude') && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
-                  {loadingCats ? <span style={{ fontSize: '12px' }}>Cargando categorías...</span> : categories.map(cat => {
+                  {loadingCats ? <span style={{ fontSize: '12px' }}>Cargando categorÃ­as...</span> : categories.map(cat => {
                     let selectedCats = [];
                     try { selectedCats = JSON.parse(settings.shop_home_new_arrivals_categories || "[]"); } catch {}
                     const isSelected = selectedCats.includes(cat.id);
@@ -702,7 +702,7 @@ export default function ShopShorts() {
                 </label>
                 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-                  <span className="hc-style-18">¿Sombreado en tarjetas?</span>
+                  <span className="hc-style-18">Â¿Sombreado en tarjetas?</span>
                   <button type="button" onClick={() => setSetting("shop_home_new_arrivals_card_shadow", settings.shop_home_new_arrivals_card_shadow === "1" ? "0" : "1")} 
                     style={{ position: 'relative', width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: settings.shop_home_new_arrivals_card_shadow === "1" ? 'var(--color-success, #48bb78)' : 'var(--border-color)', transition: 'background 0.2s', flexShrink: 0 }}>
                     <span style={{ position: 'absolute', top: '3px', width: '18px', height: '18px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.2s', left: settings.shop_home_new_arrivals_card_shadow === "1" ? '23px' : '3px' }} />

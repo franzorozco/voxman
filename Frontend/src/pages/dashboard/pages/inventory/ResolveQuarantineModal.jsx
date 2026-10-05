@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { resolveQuarantineItem } from "../../../../api/admin/quarantine";
 import { getProducts } from "../../../../api/admin/products";
@@ -44,8 +44,8 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!action) return toast.error("Selecciona una acción");
-    if (quantity < 1 || quantity > pendingCount) return toast.error("Cantidad inválida");
+    if (!action) return toast.error("Selecciona una acciÃ³n");
+    if (quantity < 1 || quantity > pendingCount) return toast.error("Cantidad invÃ¡lida");
 
     const payload = {
       action,
@@ -90,7 +90,7 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
           <div className="summary-box" style={{ background: 'var(--bg-overlay)', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
             <h4 style={{ margin: '0 0 5px 0' }}>{item.variant?.product?.name}</h4>
             <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-              Motivo: <strong>{item.reason === 'damaged' ? 'Dañado' : item.reason === 'wrong' ? 'Equivocado' : item.reason}</strong> | 
+              Motivo: <strong>{item.reason === 'damaged' ? 'DaÃ±ado' : item.reason === 'wrong' ? 'Equivocado' : item.reason}</strong> | 
               Pendientes: <strong>{pendingCount}</strong>
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
             </div>
 
             <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 500 }}>¿Qué deseas hacer con estos {quantity} ítems?</label>
+              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 500 }}>Â¿QuÃ© deseas hacer con estos {quantity} Ã­tems?</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                 
                 <label className={`action-card ${action === 'return' ? 'active' : ''}`} style={actionCardStyle(action === 'return')}>
@@ -123,7 +123,7 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
                 <label className={`action-card ${action === 'discard' ? 'active' : ''}`} style={actionCardStyle(action === 'discard')}>
                   <input type="radio" name="action" value="discard" checked={action === 'discard'} onChange={() => setAction('discard')} style={{ display: 'none' }} />
                   <Trash2 size={20} />
-                  <span>Dar de Baja (Pérdida)</span>
+                  <span>Dar de Baja (PÃ©rdida)</span>
                 </label>
 
                 <label className={`action-card ${action === 'convert' ? 'active' : ''}`} style={actionCardStyle(action === 'convert')}>
@@ -136,7 +136,7 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
 
             {action === 'convert' && (
               <div style={{ background: 'var(--bg-overlay)', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
-                <h4 style={{ marginTop: 0, marginBottom: '15px', fontSize: '15px' }}>Opciones de Conversión</h4>
+                <h4 style={{ marginTop: 0, marginBottom: '15px', fontSize: '15px' }}>Opciones de ConversiÃ³n</h4>
                 
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
@@ -148,10 +148,10 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
                         setSelectedVariantId("");
                       }} 
                     />
-                    <span>Crear una Variante Rápida (Refurbished/Merma)</span>
+                    <span>Crear una Variante RÃ¡pida (Refurbished/Merma)</span>
                   </label>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '5px 0 0 24px' }}>
-                    Si se marca, el sistema creará automáticamente una nueva variante para el producto seleccionado con un SKU distintivo.
+                    Si se marca, el sistema crearÃ¡ automÃ¡ticamente una nueva variante para el producto seleccionado con un SKU distintivo.
                   </p>
                 </div>
 
@@ -184,7 +184,7 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
                       required
                       style={{ width: '100%' }}
                     >
-                      <option value="">Seleccione a qué variante inyectar el stock</option>
+                      <option value="">Seleccione a quÃ© variante inyectar el stock</option>
                       {selectedProductObj.product_variants?.map(v => (
                         <option key={v.id} value={v.id}>{v.sku} - ${v.price}</option>
                       ))}
@@ -195,13 +195,13 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
             )}
 
             <div className="form-group" style={{ marginBottom: '25px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500 }}>Notas de Resolución (Obligatorio para devoluciones)</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500 }}>Notas de ResoluciÃ³n (Obligatorio para devoluciones)</label>
               <textarea 
                 className="purchase-form-input"
                 style={{ minHeight: '80px', resize: 'vertical', width: '100%' }}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Explique el motivo o detalle de esta acción..."
+                placeholder="Explique el motivo o detalle de esta acciÃ³n..."
                 required={action === 'return'}
               />
             </div>
@@ -209,7 +209,7 @@ export default function ResolveQuarantineModal({ isOpen, onClose, item, onSucces
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '15px', borderTop: '1px solid var(--border-color)' }}>
               <button type="button" className="btn-secondary" onClick={onClose} disabled={isSubmitting}>Cancelar</button>
               <button type="submit" className="btn-primary" disabled={isSubmitting || !action}>
-                {isSubmitting ? "Procesando..." : "Confirmar Acción"}
+                {isSubmitting ? "Procesando..." : "Confirmar AcciÃ³n"}
               </button>
             </div>
           </form>

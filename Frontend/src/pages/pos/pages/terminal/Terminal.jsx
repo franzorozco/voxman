@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     MonitorSmartphone, 
@@ -19,12 +19,12 @@ const PosHome = () => {
             path: "/pos/terminal"
         },
         {
-            title: "Gestión de Caja",
+            title: "GestiÃ³n de Caja",
             icon: WalletCards,
             path: "/pos/caja"
         },
         {
-            title: "Catálogo / Inventario",
+            title: "CatÃ¡logo / Inventario",
             icon: Boxes,
             path: "/pos/inventario"
         },

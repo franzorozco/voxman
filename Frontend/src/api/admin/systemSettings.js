@@ -1,4 +1,4 @@
-import api from "../client";
+﻿import api from "../client";
 
 export const getSystemSettings = async () => {
   const response = await api.get("/v1/admin/system-settings");

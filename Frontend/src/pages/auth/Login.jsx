@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginUser, getGoogleAuthUrl } from "../../api/admin/auth";
 import { useAuthStore } from "../../store/authStore";
@@ -23,17 +23,17 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
 
-  // VALIDACIÓN
+  // VALIDACIÃ“N
   const validate = (name, value) => {
     let error = "";
 
     if (name === "email") {
       const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!regex.test(value)) error = "Correo inválido";
+      if (!regex.test(value)) error = "Correo invÃ¡lido";
     }
 
     if (name === "password") {
-      if (!value) error = "Ingresa tu contraseña";
+      if (!value) error = "Ingresa tu contraseÃ±a";
     }
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
@@ -61,7 +61,7 @@ export default function Login() {
     e.preventDefault();
 
     if (!form.email || !form.password) {
-      toast.error("Ingresa tu correo y contraseña");
+      toast.error("Ingresa tu correo y contraseÃ±a");
       return;
     }
     if (loading) return;
@@ -73,7 +73,7 @@ export default function Login() {
       const token = res.data?.token;
       const user = res.data?.user;
 
-      if (!token) throw new Error("No llegó token del backend");
+      if (!token) throw new Error("No llegÃ³ token del backend");
 
       // GUARDAR EN LOCALSTORAGE
       localStorage.setItem("token", token);
@@ -89,7 +89,7 @@ export default function Login() {
       if (error.response?.status === 429) {
         toast.error(error.response?.data?.message || "Demasiados intentos. Espera unos minutos.");
       } else {
-        toast.error(error.response?.data?.message || "Error al iniciar sesión");
+        toast.error(error.response?.data?.message || "Error al iniciar sesiÃ³n");
       }
     } finally {
       setLoading(false);
@@ -120,7 +120,7 @@ export default function Login() {
                 type="email"
                 autoComplete="username"
                 maxLength={150}
-                placeholder="Correo electrónico"
+                placeholder="Correo electrÃ³nico"
                 onChange={handleChange}
               />
             </div>
@@ -139,7 +139,7 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 maxLength={255}
-                placeholder="Contraseña"
+                placeholder="ContraseÃ±a"
                 onChange={handleChange}
               />
               <button
@@ -172,7 +172,7 @@ export default function Login() {
                 </label>
               </div>
               <Link to="/forgot-password" style={{ color: 'var(--color-primary)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>
-                ¿Olvidaste tu contraseña?
+                Â¿Olvidaste tu contraseÃ±a?
               </Link>
             </div>
 
@@ -219,8 +219,8 @@ export default function Login() {
             </button>
 
             <div className="auth-footer">
-              ¿No tienes una cuenta?
-              <Link to="/register" className="auth-link">Únete al estilo</Link>
+              Â¿No tienes una cuenta?
+              <Link to="/register" className="auth-link">Ãšnete al estilo</Link>
             </div>
           </form>
         )}

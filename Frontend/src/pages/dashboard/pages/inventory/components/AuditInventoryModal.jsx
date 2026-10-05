@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { X, Search, Save, AlertCircle, Package, Check, Camera, ChevronDown, ChevronUp } from "lucide-react";
 import { getInventory, submitInventoryAudit } from "../../../../../api/admin/inventory";
 import { toast } from "react-hot-toast";
@@ -49,7 +49,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
            };
            return updated;
         });
-        toast.success(`+1 añadido: ${exactMatch.variant?.sku}`, { icon: '📦' });
+        toast.success(`+1 aÃ±adido: ${exactMatch.variant?.sku}`, { icon: 'ðŸ“¦' });
       } else {
         toast.error(`SKU ${code} no encontrado en esta sucursal`);
       }
@@ -124,7 +124,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
       }));
 
     if (itemsToSubmit.length === 0) {
-      toast.error("No has auditado ningún producto todavía.");
+      toast.error("No has auditado ningÃºn producto todavÃ­a.");
       return;
     }
 
@@ -135,10 +135,10 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
         items: itemsToSubmit
       });
 
-      toast.success("Auditoría guardada exitosamente");
+      toast.success("AuditorÃ­a guardada exitosamente");
       onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.error || error.response?.data?.message || "Error al guardar auditoría");
+      toast.error(error.response?.data?.error || error.response?.data?.message || "Error al guardar auditorÃ­a");
     } finally {
       setSaving(false);
     }
@@ -194,7 +194,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
   const groupedDisplay = groupItems(displayItems);
 
   const formatVariantAttributes = (variant) => {
-    if (!variant) return "Única";
+    if (!variant) return "Ãšnica";
     
     let parts = [];
     if (variant.size?.name) {
@@ -223,7 +223,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
       }
     });
 
-    return parts.length > 0 ? parts.join(" - ") : "Única";
+    return parts.length > 0 ? parts.join(" - ") : "Ãšnica";
   };
 
   if (!branchId) {
@@ -231,11 +231,11 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
       <div className="modal-overlay" style={{ zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
         <div className="modal-content" style={{ background: 'var(--bg-card)', width: '100%', maxWidth: '500px', borderRadius: '16px', display: 'flex', flexDirection: 'column' }}>
           <div className="modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ margin: 0, fontSize: '18px' }}>Error de Auditoría</h2>
+            <h2 style={{ margin: 0, fontSize: '18px' }}>Error de AuditorÃ­a</h2>
             <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="var(--text-muted)" /></button>
           </div>
           <div className="modal-body" style={{ padding: '24px' }}>
-            <p style={{ margin: 0 }}>Debe seleccionar una sucursal específica para realizar una auditoría.</p>
+            <p style={{ margin: 0 }}>Debe seleccionar una sucursal especÃ­fica para realizar una auditorÃ­a.</p>
           </div>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
         
         <div className="modal-header" style={{ position: 'relative', padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ paddingRight: '40px' }}>
-            <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}><Package /> Auditoría de Inventario</h2>
+            <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}><Package /> AuditorÃ­a de Inventario</h2>
             <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>Sucursal: {selectedBranch?.name}</p>
           </div>
           <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={24} /></button>
@@ -259,7 +259,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
           {showWarning && (
             <div style={{ display: 'flex', alignItems: 'flex-start', background: 'var(--color-secondary)', padding: '12px 16px', borderRadius: '8px', color: 'var(--color-warning)', gap: '10px', border: '1px solid var(--border-color)', position: 'relative' }}>
               <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
-              <span style={{ fontSize: '13px', color: 'var(--text-main)', flex: 1, paddingRight: '20px' }}><strong>Auditoría por Búsqueda:</strong> Busca los productos, ingresa su conteo real y se guardarán en tu lista de auditados. Al finalizar, presiona Guardar.</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-main)', flex: 1, paddingRight: '20px' }}><strong>AuditorÃ­a por BÃºsqueda:</strong> Busca los productos, ingresa su conteo real y se guardarÃ¡n en tu lista de auditados. Al finalizar, presiona Guardar.</span>
               <button onClick={() => setShowWarning(false)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 <X size={16} />
               </button>
@@ -279,7 +279,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
             </div>
             <button
               onClick={handleScanClick}
-              title="Escanear con Cámara"
+              title="Escanear con CÃ¡mara"
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '50px', height: '50px', borderRadius: '10px', background: 'var(--bg-input)', color: 'var(--color-primary)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500, flexShrink: 0 }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(99,102,241,0.05)' }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-input)' }}
@@ -291,8 +291,8 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
           {!isSearching && Object.keys(auditedItems).length === 0 ? (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border-color)', borderRadius: '12px', background: 'var(--bg-card)', padding: '40px 20px', textAlign: 'center' }}>
               <Package size={48} style={{ opacity: 0.5, marginBottom: '12px' }} />
-              <p style={{ margin: 0, fontSize: '15px', fontWeight: 500 }}>Tu lista de auditoría está vacía</p>
-              <p style={{ margin: '8px 0 0 0', fontSize: '13px', maxWidth: '300px' }}>Usa el buscador para añadir productos y ajustar su stock real.</p>
+              <p style={{ margin: 0, fontSize: '15px', fontWeight: 500 }}>Tu lista de auditorÃ­a estÃ¡ vacÃ­a</p>
+              <p style={{ margin: '8px 0 0 0', fontSize: '13px', maxWidth: '300px' }}>Usa el buscador para aÃ±adir productos y ajustar su stock real.</p>
             </div>
           ) : (
             <div className="audit-table-wrapper" style={{ border: '1px solid var(--border-color)', borderRadius: '12px', overflowX: 'auto', flex: 1, minHeight: 0, background: 'var(--bg-card)' }}>
@@ -301,8 +301,8 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
                   <tr>
                     <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>Producto / Variante</th>
                     <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>SKU</th>
-                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap' }}>Teórico</th>
-                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap' }}>Físico</th>
+                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap' }}>TeÃ³rico</th>
+                    <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap' }}>FÃ­sico</th>
                     <th style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', textAlign: 'center', whiteSpace: 'nowrap' }}>Diferencia</th>
                   </tr>
                 </thead>
@@ -318,7 +318,7 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
                       
                       return (
                       <React.Fragment key={pId}>
-                        {/* Fila de Agrupación del Producto */}
+                        {/* Fila de AgrupaciÃ³n del Producto */}
                         <tr className="audit-product-row" onClick={() => toggleProduct(pId)} style={{ background: 'var(--color-secondary)', cursor: 'pointer', transition: 'background 0.2s' }}>
                           <td colSpan="5" style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -350,8 +350,8 @@ export default function AuditInventoryModal({ branchId, branches, onClose, onSuc
                                 </div>
                               </td>
                               <td data-label="SKU" style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{item.variant?.sku}</td>
-                              <td data-label="Teórico" style={{ padding: '12px 16px', fontSize: '14px', textAlign: 'center', color: 'var(--text-main)' }}>{theoryStock}</td>
-                              <td data-label="Físico" style={{ padding: '8px 16px', textAlign: 'center' }}>
+                              <td data-label="TeÃ³rico" style={{ padding: '12px 16px', fontSize: '14px', textAlign: 'center', color: 'var(--text-main)' }}>{theoryStock}</td>
+                              <td data-label="FÃ­sico" style={{ padding: '8px 16px', textAlign: 'center' }}>
                                 <input
                                   type="number"
                                   min="0"

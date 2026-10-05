@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { X, Package, Tag, DollarSign, Activity, Link as LinkIcon, Info, Users, ArrowUpRight, BarChart3, Image as ImageIcon, Ruler, Save, Edit2, Copy, Check, PenTool, ExternalLink, Box, CheckCircle, AlertCircle, ShoppingBag } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
@@ -117,7 +117,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
 
   const handleSimpleValueChange = (groupId, measurementId, value) => {
     const matchingVariants = product.product_variants.filter(v => {
-      const gId = `${v.size?.name || 'Estándar'}-${v.fit?.name || 'Estándar'}`;
+      const gId = `${v.size?.name || 'EstÃ¡ndar'}-${v.fit?.name || 'EstÃ¡ndar'}`;
       return gId === groupId;
     });
     
@@ -245,12 +245,12 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
   if (measMode === 'simple' && product.product_variants) {
     const map = new Map();
     product.product_variants.forEach(v => {
-      const gId = `${v.size?.name || 'Estándar'}-${v.fit?.name || 'Estándar'}`;
+      const gId = `${v.size?.name || 'EstÃ¡ndar'}-${v.fit?.name || 'EstÃ¡ndar'}`;
       if (!map.has(gId)) {
         map.set(gId, {
            id: gId,
-           sizeName: v.size?.name || 'Estándar',
-           fitName: v.fit?.name || 'Estándar',
+           sizeName: v.size?.name || 'EstÃ¡ndar',
+           fitName: v.fit?.name || 'EstÃ¡ndar',
            variantIds: [v.id]
         });
       } else {
@@ -307,7 +307,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
               transition: '0.2s'
             }}
           >
-            Información General
+            InformaciÃ³n General
           </button>
           <button 
             onClick={() => setActiveTab('variants')}
@@ -329,7 +329,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
               transition: '0.2s'
             }}
           >
-            Galería y Colores
+            GalerÃ­a y Colores
           </button>
           <button 
             onClick={() => setActiveTab('measurements')}
@@ -340,7 +340,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
               transition: '0.2s'
             }}
           >
-            Medidas Físicas
+            Medidas FÃ­sicas
           </button>
           <button 
             onClick={() => setActiveTab('qr_print')}
@@ -370,12 +370,12 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                   </h3>
                   <div className="pvm-details-grid">
                     <div>
-                      <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Categoría</p>
-                      <p style={{ margin: 0, fontWeight: '500', color: 'var(--text-main)' }}>{product.category?.name || 'Sin categoría'}</p>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>CategorÃ­a</p>
+                      <p style={{ margin: 0, fontWeight: '500', color: 'var(--text-main)' }}>{product.category?.name || 'Sin categorÃ­a'}</p>
                     </div>
                     <div>
                       <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Tipo de Producto</p>
-                      <p style={{ margin: 0, fontWeight: '500', color: 'var(--text-main)' }}>{product.product_type?.name || 'Estándar'}</p>
+                      <p style={{ margin: 0, fontWeight: '500', color: 'var(--text-main)' }}>{product.product_type?.name || 'EstÃ¡ndar'}</p>
                     </div>
                     <div>
                       <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Marca</p>
@@ -387,16 +387,16 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                       </div>
                     </div>
                     <div>
-                      <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Propietario / Dueño</p>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Propietario / DueÃ±o</p>
                       <p style={{ margin: 0, fontWeight: '500', color: 'var(--text-main)' }}>{ownerName}</p>
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Descripción Corta</p>
-                      <p style={{ margin: 0, color: 'var(--text-main)', lineHeight: '1.5' }}>{product.short_description || 'Sin descripción'}</p>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>DescripciÃ³n Corta</p>
+                      <p style={{ margin: 0, color: 'var(--text-main)', lineHeight: '1.5' }}>{product.short_description || 'Sin descripciÃ³n'}</p>
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>Descripción Larga</p>
-                      <p style={{ margin: 0, color: 'var(--text-main)', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{product.long_description || 'Sin descripción'}</p>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '13px', color: 'var(--text-muted)' }}>DescripciÃ³n Larga</p>
+                      <p style={{ margin: 0, color: 'var(--text-main)', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{product.long_description || 'Sin descripciÃ³n'}</p>
                     </div>
                     <div style={{ gridColumn: '1 / -1', marginTop: '16px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '13px', color: 'var(--text-muted)' }}>
@@ -408,7 +408,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
 
                       {/* Quick add suggestions */}
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-                        {['Nuevo', 'Oferta', 'Best Seller', 'Liquidación', 'Exclusivo', 'Ed. Limitada', 'Temporada'].map(suggestion => (
+                        {['Nuevo', 'Oferta', 'Best Seller', 'LiquidaciÃ³n', 'Exclusivo', 'Ed. Limitada', 'Temporada'].map(suggestion => (
                           <button
                             key={suggestion}
                             type="button"
@@ -438,7 +438,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                           {product.tags.map((tag, idx) => (
                             <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '20px', background: 'var(--color-primary-alpha, rgba(99,102,241,0.15))', color: 'var(--color-primary)', fontSize: '12px', fontWeight: '600' }}>
                               {tag}
-                              <button type="button" onClick={() => handleTagUpdate(product.tags.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: '16px', padding: 0, lineHeight: 1, fontWeight: 'bold' }}>×</button>
+                              <button type="button" onClick={() => handleTagUpdate(product.tags.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: '16px', padding: 0, lineHeight: 1, fontWeight: 'bold' }}>Ã—</button>
                             </span>
                           ))}
                         </div>
@@ -514,7 +514,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
 
                 <div className="pvm-card">
                   <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)' }}>
-                    <BarChart3 size={18} color="var(--color-primary)" /> Métricas
+                    <BarChart3 size={18} color="var(--color-primary)" /> MÃ©tricas
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -549,21 +549,21 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                 return (
                   <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                     <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>📦</div>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>ðŸ“¦</div>
                       <div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Stock Total</div>
                         <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>{totalStock}</div>
                       </div>
                     </div>
                     <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>⚠️</div>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>âš ï¸</div>
                       <div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Stock Bajo</div>
                         <div style={{ fontSize: '18px', fontWeight: '700', color: lowStockCount > 0 ? 'var(--color-warning, #f59e0b)' : 'var(--text-main)' }}>{lowStockCount}</div>
                       </div>
                     </div>
                     <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🔴</div>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>ðŸ”´</div>
                       <div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sin Stock</div>
                         <div style={{ fontSize: '18px', fontWeight: '700', color: noStockCount > 0 ? 'var(--color-danger)' : 'var(--text-main)' }}>{noStockCount}</div>
@@ -617,7 +617,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                                 <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.sku}</div>
                                 <CopyButton text={variant.sku} />
                               </div>
-                                {variant.barcode && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Cód: {variant.barcode}</div>}
+                                {variant.barcode && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>CÃ³d: {variant.barcode}</div>}
                               </div>
                             </div>
                           </td>
@@ -635,7 +635,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                               {/* Display Fit if exists */}
                               {variant.fit && (
                                 <React.Fragment>
-                                  <span style={{ color: 'var(--border-color)' }}>•</span>
+                                  <span style={{ color: 'var(--border-color)' }}>â€¢</span>
                                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                     <span style={{ color: 'var(--text-muted)' }}>Fit:</span>
                                     <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.fit.name}</span>
@@ -649,7 +649,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                                 const attrValue = vav.attribute_value?.value || '';
                                 return (
                                   <React.Fragment key={vav.id || aIndex}>
-                                    {(variant.size || variant.fit || aIndex > 0) && <span style={{ color: 'var(--border-color)' }}>•</span>}
+                                    {(variant.size || variant.fit || aIndex > 0) && <span style={{ color: 'var(--border-color)' }}>â€¢</span>}
                                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                       <span style={{ color: 'var(--text-muted)', textTransform: 'capitalize' }}>
                                         {attrName}:
@@ -754,7 +754,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "16px" }}>
                   <h3 style={{ margin: "0", fontSize: "18px", color: "var(--text-main)" }}>
-                    {isEditingImages ? "Editando Imágenes" : "Galería y Colores"}
+                    {isEditingImages ? "Editando ImÃ¡genes" : "GalerÃ­a y Colores"}
                   </h3>
                   {!isEditingImages && (
                     <CanAccess permission="edit_products">
@@ -763,7 +763,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                         onClick={() => setIsEditingImages(true)}
                         style={{ display: "flex", alignItems: "center", gap: "8px" }}
                       >
-                        <PenTool size={16} /> Editar Imágenes
+                        <PenTool size={16} /> Editar ImÃ¡genes
                       </button>
                     </CanAccess>
                   )}
@@ -783,15 +783,15 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                     {!hasGlobalImages && !hasColorImages && !hasVariantImages && (
                       <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                         <ImageIcon size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-                        <p style={{ margin: 0, fontSize: '15px' }}>Este producto no tiene imágenes en su galería.</p>
+                        <p style={{ margin: 0, fontSize: '15px' }}>Este producto no tiene imÃ¡genes en su galerÃ­a.</p>
                       </div>
                     )}
                     
-                    {/* 1. Portada y Galería Principal */}
+                    {/* 1. Portada y GalerÃ­a Principal */}
                     {hasGlobalImages && (
                   <div>
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                      Portada y Galería Principal
+                      Portada y GalerÃ­a Principal
                     </h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 140px), 1fr))', gap: '20px' }}>
                       {product.product_images.map((img, iIndex) => (
@@ -803,7 +803,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                           />
                           {img.is_main && (
                             <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'var(--color-primary)', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                              ★ PORTADA
+                              â˜… PORTADA
                             </div>
                           )}
                         </div>
@@ -812,11 +812,11 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                   </div>
                 )}
 
-                {/* 2. Imágenes Agrupadas por Color */}
+                {/* 2. ImÃ¡genes Agrupadas por Color */}
                 {hasColorImages && (
                   <div>
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                      Imágenes por Color (Compartidas)
+                      ImÃ¡genes por Color (Compartidas)
                     </h3>
                     <div className="pvm-stack">
                       {/* Agrupar attribute_value_images por attribute_value_id */}
@@ -863,11 +863,11 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                   </div>
                 )}
 
-                {/* 3. Imágenes Específicas por Variante */}
+                {/* 3. ImÃ¡genes EspecÃ­ficas por Variante */}
                 {hasVariantImages && (
                   <div>
                     <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                      Imágenes Específicas por Variante
+                      ImÃ¡genes EspecÃ­ficas por Variante
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       {variantsWithImages.map((variant, vIdx) => (
@@ -878,10 +878,10 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                             <CopyButton text={variant.sku} />
                           </div>
                             <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-                              {variant.variant_attribute_values?.map(vav => vav.attribute_value?.value).join(' • ')}
+                              {variant.variant_attribute_values?.map(vav => vav.attribute_value?.value).join(' â€¢ ')}
                             </span>
                             <span style={{ fontSize: '12px', color: 'var(--color-warning)', background: 'rgba(234, 179, 8, 0.1)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
-                              Únicas de esta variante
+                              Ãšnicas de esta variante
                             </span>
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 90px), 1fr))', gap: '16px' }}>
@@ -908,12 +908,12 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "16px", flexWrap: "wrap", gap: "16px" }}>
                 <div>
                   <h3 style={{ margin: "0 0 8px 0", display: "flex", alignItems: "center", gap: "8px", fontSize: "18px", color: "var(--text-main)" }}>
-                    <Ruler size={18} color="var(--color-primary)" /> {isEditingMeas ? "Editando Medidas" : "Catálogo de Medidas Físicas"}
+                    <Ruler size={18} color="var(--color-primary)" /> {isEditingMeas ? "Editando Medidas" : "CatÃ¡logo de Medidas FÃ­sicas"}
                   </h3>
                   <p style={{ margin: "0", fontSize: "13px", color: "var(--text-muted)" }}>
                     {isEditingMeas 
-                      ? "Ingresa los centímetros exactos de las prendas para el almacén y control de tallas."
-                      : "Consulta las medidas físicas actuales para todas las variantes."}
+                      ? "Ingresa los centÃ­metros exactos de las prendas para el almacÃ©n y control de tallas."
+                      : "Consulta las medidas fÃ­sicas actuales para todas las variantes."}
                   </p>
                 </div>
                 
@@ -981,15 +981,15 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                   <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>Cargando esquema de medidas...</div>
                 ) : requiredMeasurements.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "40px" }}>
-                    <div style={{ fontSize: "3rem", marginBottom: "15px" }}>🤷‍♂️</div>
+                    <div style={{ fontSize: "3rem", marginBottom: "15px" }}>ðŸ¤·â€â™‚ï¸</div>
                     <h3 style={{ margin: 0, fontWeight: 500, color: "var(--text-main)" }}>Sin Medidas Requeridas</h3>
                     <p style={{ color: "var(--text-muted)", marginTop: "10px" }}>
-                      El Tipo de Producto ("{product.product_type?.name}") no tiene medidas asociadas. Ve a Configuración de Catálogo para agregarle medidas si es necesario.
+                      El Tipo de Producto ("{product.product_type?.name}") no tiene medidas asociadas. Ve a ConfiguraciÃ³n de CatÃ¡logo para agregarle medidas si es necesario.
                     </p>
                   </div>
                 ) : product.product_variants?.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "40px", color: "var(--color-danger)" }}>
-                    Este producto aún no tiene variantes generadas.
+                    Este producto aÃºn no tiene variantes generadas.
                   </div>
                 ) : (
                   <div className="table-responsive">
@@ -1010,7 +1010,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                           <tr style={{ background: "var(--bg-hover, rgba(0,0,0,0.02))", borderBottom: "2px solid var(--border-color)" }}>
                             <td colSpan={2} style={{ padding: "15px 12px", fontSize: "0.9rem", color: "var(--text-main)" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <span style={{ fontWeight: "600", color: "var(--color-primary)" }}>Rellenado Rápido</span>
+                                <span style={{ fontWeight: "600", color: "var(--color-primary)" }}>Rellenado RÃ¡pido</span>
                                 <button 
                                   className="btn-secondary" 
                                   style={{ padding: "4px 8px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "5px" }}
@@ -1052,7 +1052,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                               <tr key={group.id}>
                                 <td colSpan={2} style={{ padding: "10px", fontWeight: "500", color: "var(--text-main)" }}>
                                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                    <span>Talla {group.sizeName} • {group.fitName}</span>
+                                    <span>Talla {group.sizeName} â€¢ {group.fitName}</span>
                                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Aplica a {group.variantIds.length} variantes con esta misma talla y fit.</span>
                                   </div>
                                 </td>
@@ -1103,7 +1103,7 @@ export default function ProductViewModal({ product: initialProduct, initialVaria
                                 <td style={{ fontFamily: "monospace", color: "var(--text-main)" }}>{variant.sku}</td>
                                 <td>
                                   <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4", display: "block" }}>
-                                    {detailParts.join(" • ") || "Estándar"}
+                                    {detailParts.join(" â€¢ ") || "EstÃ¡ndar"}
                                   </span>
                                 </td>
                                 

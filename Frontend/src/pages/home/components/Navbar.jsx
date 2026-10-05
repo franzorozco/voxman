@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuthStore } from "../../../store/authStore";
@@ -20,7 +20,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
   const isOwner = user?.roles?.includes("Owner");
   
-  // El botón "Administración" solo aparece si el usuario puede entrar al panel (access_dashboard)
+  // El botÃ³n "AdministraciÃ³n" solo aparece si el usuario puede entrar al panel (access_dashboard)
   // Y tiene al menos un permiso de alguna vista del dashboard (view_* o manage_*).
   // Tener solo el rol "Administrador" ya no basta: lo que cuenta son los permisos asignados.
   const perms = user?.permissions ?? [];
@@ -69,7 +69,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
     setMenuOpen(false);
   };
 
-  // Ajustamos la lógica para mostrar el logo que contraste correctamente con el fondo
+  // Ajustamos la lÃ³gica para mostrar el logo que contraste correctamente con el fondo
   const logoUrl = isDarkContext 
     ? (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : getImageUrl('/system/logos/logo_white_sinfondo.png')) 
     : (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : getImageUrl('/system/logos/logo_black_sinfondo.png'));
@@ -86,7 +86,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
           </Link>
         </div>
 
-        {/* MENU ÚNICO */}
+        {/* MENU ÃšNICO */}
         <nav className={`nav-menu ${menuOpen ? "active" : ""}`}>
 
           <NavLink to="/" end onClick={closeMenu}>Inicio</NavLink>
@@ -94,7 +94,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
             {settings.store_name ? `Tienda ${settings.store_name}` : "Tienda"}
           </NavLink>
           <NavLink to="/entregas" onClick={closeMenu}>
-            Envíos y Entregas
+            EnvÃ­os y Entregas
           </NavLink>
           <NavLink to="/nosotros" onClick={closeMenu}>
             Nosotros
@@ -108,7 +108,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
                 className="nav-btn nav-btn-outline"
                 onClick={closeMenu}
               >
-                Iniciar sesión
+                Iniciar sesiÃ³n
               </Link>
 
               <Link
@@ -129,7 +129,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
               {hasDashboardAccess && (
                 <Link to="/dashboard" onClick={closeMenu}>
-                  Administración
+                  AdministraciÃ³n
                 </Link>
               )}
               
@@ -140,7 +140,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
               )}
 
               <button onClick={handleLogout}>
-                Cerrar sesión
+                Cerrar sesiÃ³n
               </button>
 
             </div>
@@ -158,7 +158,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
                 to="/login"
                 className="nav-btn nav-btn-outline"
               >
-                Iniciar sesión
+                Iniciar sesiÃ³n
               </Link>
 
               <Link
@@ -191,7 +191,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
                   {hasDashboardAccess && (
                     <Link to="/dashboard">
-                      Administración
+                      AdministraciÃ³n
                     </Link>
                   )}
                   
@@ -204,7 +204,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
                   <div className="divider" />
 
                   <button onClick={handleLogout}>
-                    Cerrar sesión
+                    Cerrar sesiÃ³n
                   </button>
 
                 </div>

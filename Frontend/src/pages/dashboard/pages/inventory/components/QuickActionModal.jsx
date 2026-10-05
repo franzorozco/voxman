@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../../utils/imageUtils';
 import React from 'react';
 import { PenTool, ArrowRightLeft, History, X, Package, Tag, MapPin } from 'lucide-react';
 import { API_BASE_URL } from '../../../../../config/api';
@@ -132,7 +132,7 @@ export default function QuickActionModal({ item, onClose, onAdjust, onTransfer }
 
         {/* ZONA DE ACCIONES */}
         <div style={{ padding: '24px', background: 'var(--bg-main)' }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Acciones Rápidas</h3>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Acciones RÃ¡pidas</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button 
@@ -146,7 +146,7 @@ export default function QuickActionModal({ item, onClose, onAdjust, onTransfer }
               </div>
               <div>
                 <div style={{ fontWeight: 600, fontSize: '16px' }}>Ajustar Stock</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{stock <= 0 ? "Registrar ingreso de mercadería" : "Sumar o restar unidades"}</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{stock <= 0 ? "Registrar ingreso de mercaderÃ­a" : "Sumar o restar unidades"}</div>
               </div>
             </button>
 
@@ -162,7 +162,7 @@ export default function QuickActionModal({ item, onClose, onAdjust, onTransfer }
               </div>
               <div>
                 <div style={{ fontWeight: 600, fontSize: '16px' }}>Transferir a Sucursal</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{canTransfer ? "Mover inventario a otra ubicación" : "No hay stock para transferir"}</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{canTransfer ? "Mover inventario a otra ubicaciÃ³n" : "No hay stock para transferir"}</div>
               </div>
             </button>
             <button 

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import * as Icons from "lucide-react";
 import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
 
@@ -22,20 +22,20 @@ export default function DeliveryMethods() {
         title: settings.shipping_opt1_title || "La Paz y El Alto",
         desc: settings.shipping_opt1_desc || "Entregas personales y coordinadas. Nos adaptamos a tus horarios y definimos un punto de encuentro o entrega a domicilio.",
         icon: "MapPin",
-        features: "Entregas en 24h a 48h hábiles.\nPago contra entrega disponible."
+        features: "Entregas en 24h a 48h hÃ¡biles.\nPago contra entrega disponible."
       },
       {
-        title: settings.shipping_opt2_title || "Envíos Nacionales",
+        title: settings.shipping_opt2_title || "EnvÃ­os Nacionales",
         desc: settings.shipping_opt2_desc || "Llegamos a los 9 departamentos de Bolivia mediante flotas seguras y empresas de courier de confianza.",
         icon: "Truck",
-        features: "Despachos en 24h hábiles.\nEmpaque premium y seguro."
+        features: "Despachos en 24h hÃ¡biles.\nEmpaque premium y seguro."
       }
     ];
   }
 
   const sectionOverline = settings.shipping_methods_overline || "Nuestras Rutas";
   const sectionTitle = settings.shipping_methods_title || "Opciones de Entrega";
-  const sectionSubtitle = settings.shipping_methods_subtitle || "Diseñadas para adaptarse a tu ritmo y a tu ubicación.";
+  const sectionSubtitle = settings.shipping_methods_subtitle || "DiseÃ±adas para adaptarse a tu ritmo y a tu ubicaciÃ³n.";
   const cardAnimation = settings.shipping_methods_animation || "fade-up";
 
   const renderIcon = (name, size) => {

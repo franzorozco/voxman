@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+﻿import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -107,7 +107,7 @@ export default function DeletedUsers() {
               <th>Email</th>
               <th>Usuario</th>
               <th>Nombre</th>
-              <th>Fecha Eliminación</th>
+              <th>Fecha EliminaciÃ³n</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -175,10 +175,10 @@ export default function DeletedUsers() {
         title={confirmModal.type === "restore" ? "Restaurar usuario" : "Eliminar permanente"}
         message={
           confirmModal.type === "restore" 
-          ? "¿Estás seguro de restaurar este usuario? Volverá a tener acceso al sistema." 
-          : "ADVERTENCIA: ¿Estás seguro de eliminar PERMANENTEMENTE este usuario? Esta acción no se puede deshacer."
+          ? "Â¿EstÃ¡s seguro de restaurar este usuario? VolverÃ¡ a tener acceso al sistema." 
+          : "ADVERTENCIA: Â¿EstÃ¡s seguro de eliminar PERMANENTEMENTE este usuario? Esta acciÃ³n no se puede deshacer."
         }
-        confirmText={confirmModal.type === "restore" ? "Sí, restaurar" : "Sí, eliminar definitivamente"}
+        confirmText={confirmModal.type === "restore" ? "SÃ­, restaurar" : "SÃ­, eliminar definitivamente"}
         type={confirmModal.type === "restore" ? "success" : "danger"}
       />
     </div>

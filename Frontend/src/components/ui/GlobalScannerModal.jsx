@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { X, Camera, ArrowRightToLine, Infinity } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { useScannerStore } from '../../store/scanner/useScannerStore';
@@ -53,7 +53,7 @@ export default function GlobalScannerModal() {
   const handleError = (error) => {
     console.error("Scanner Error:", error);
     if (error.name === "NotAllowedError" || error.message?.includes("Permission")) {
-      setError("Permiso de cámara denegado. Por favor permite el acceso a la cámara en tu navegador.");
+      setError("Permiso de cÃ¡mara denegado. Por favor permite el acceso a la cÃ¡mara en tu navegador.");
     }
   };
 
@@ -63,7 +63,7 @@ export default function GlobalScannerModal() {
         
         <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)' }}>
           <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', color: 'var(--text-main)' }}>
-            <Camera size={20} color="var(--color-primary)" /> Escanear Código
+            <Camera size={20} color="var(--color-primary)" /> Escanear CÃ³digo
           </h3>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -118,7 +118,7 @@ export default function GlobalScannerModal() {
 
         <div style={{ padding: '12px 16px', background: 'var(--bg-card)', textAlign: 'center' }}>
           <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>
-            Apunta la cámara hacia el código QR o barras.
+            Apunta la cÃ¡mara hacia el cÃ³digo QR o barras.
           </p>
         </div>
       </div>

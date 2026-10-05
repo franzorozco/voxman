@@ -1,15 +1,15 @@
-/* ============================================================
-   CATALOG — Diseño responsivo completo (Móvil / Tablet / PC)
-   Breakpoints: ≤480px | ≤768px | ≤1024px | >1024px
+﻿/* ============================================================
+   CATALOG â€” DiseÃ±o responsivo completo (MÃ³vil / Tablet / PC)
+   Breakpoints: â‰¤480px | â‰¤768px | â‰¤1024px | >1024px
 ============================================================ */
 
-/* ── Base ── */
+/* â”€â”€ Base â”€â”€ */
 .catalog-container {
   background-color: var(--bg-main);
   color: var(--text-main);
 }
 
-/* ── Animaciones ── */
+/* â”€â”€ Animaciones â”€â”€ */
 @keyframes fadeIn {
   from { opacity: 0.3; }
   to   { opacity: 1; }
@@ -34,7 +34,7 @@
   animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* ── Custom Scrollbar (sidebar) ── */
+/* â”€â”€ Custom Scrollbar (sidebar) â”€â”€ */
 .custom-scrollbar::-webkit-scrollbar       { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -45,7 +45,7 @@
   background-color: var(--text-muted);
 }
 
-/* ── Cabecera ── */
+/* â”€â”€ Cabecera â”€â”€ */
 .catalog-header-border {
   border-bottom: 1px solid var(--border-color);
 }
@@ -54,7 +54,7 @@
   color: var(--text-main);
 }
 
-/* ── Sidebar filtros ── */
+/* â”€â”€ Sidebar filtros â”€â”€ */
 .catalog-filter-list {
   border-bottom: 1px solid var(--border-color);
 }
@@ -75,7 +75,7 @@
   color: var(--color-primary, var(--text-main));
 }
 
-/* ── Tarjeta de producto ── */
+/* â”€â”€ Tarjeta de producto â”€â”€ */
 .catalog-product-img-placeholder {
   background-color: var(--bg-input);
 }
@@ -88,7 +88,7 @@
   color: var(--text-main);
 }
 
-/* ── Variante card (panel expand) ── */
+/* â”€â”€ Variante card (panel expand) â”€â”€ */
 .catalog-variant-card {
   background: var(--bg-card, #fff);
   border-radius: 8px;
@@ -103,19 +103,19 @@
 }
 
 /* =============================================================
-   BREADCRUMB MÓVIL (solo visible en ≤768px)
-   Aparece bajo el título "Catálogo"
+   BREADCRUMB MÃ“VIL (solo visible en â‰¤768px)
+   Aparece bajo el tÃ­tulo "CatÃ¡logo"
 ============================================================= */
 
 .catalog-header-breadcrumb {
-  display: none; /* oculto en desktop — se activa en móvil */
+  display: none; /* oculto en desktop â€” se activa en mÃ³vil */
   align-items: center;
   gap: 4px;
   font-size: 12px;
   color: var(--text-muted);
   flex-wrap: wrap;
   width: 100%;
-  order: 0; /* aparece justo debajo del título */
+  order: 0; /* aparece justo debajo del tÃ­tulo */
 }
 
 .catalog-breadcrumb-sep {
@@ -125,8 +125,8 @@
 }
 
 /* =============================================================
-   HEADER DEL CATÁLOGO — Responsivo
-   Título + controles (Filtros / Vista / Modo imagen)
+   HEADER DEL CATÃLOGO â€” Responsivo
+   TÃ­tulo + controles (Filtros / Vista / Modo imagen)
 ============================================================= */
 
 .catalog-header {
@@ -147,9 +147,9 @@
   flex-wrap: wrap;
 }
 
-/* Botón "Filtros" (solo móvil) */
+/* BotÃ³n "Filtros" (solo mÃ³vil) */
 .catalog-btn-filters {
-  display: none; /* oculto en desktop — visible en tablet/móvil */
+  display: none; /* oculto en desktop â€” visible en tablet/mÃ³vil */
   padding: 9px 18px;
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -177,7 +177,7 @@
   font-weight: 500;
 }
 
-/* Controles de modo imagen (Presentación / Vívido) */
+/* Controles de modo imagen (PresentaciÃ³n / VÃ­vido) */
 .catalog-image-controls {
   display: flex;
   gap: 10px;
@@ -190,8 +190,8 @@
 }
 
 /* =============================================================
-   GRID DE PRODUCTOS — Responsivo
-   Desktop: 3 col  |  Tablet: 2 col  |  Móvil: 2 col pequeño
+   GRID DE PRODUCTOS â€” Responsivo
+   Desktop: 3 col  |  Tablet: 2 col  |  MÃ³vil: 2 col pequeÃ±o
 ============================================================= */
 
 .catalog-layout {
@@ -227,7 +227,7 @@
 }
 
 /* =============================================================
-   TARJETA DE PRODUCTO — Responsivo
+   TARJETA DE PRODUCTO â€” Responsivo
 ============================================================= */
 
 .catalog-card-info {
@@ -252,7 +252,7 @@
   color: var(--text-main);
   line-height: 1.4;
   margin: 0;
-  /* Cortar texto largo en móvil */
+  /* Cortar texto largo en mÃ³vil */
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -261,7 +261,7 @@
 
 .catalog-card-price-row {
   display: flex;
-  align-items: baseline; /* alinea textos de distinto tamaño por línea base */
+  align-items: baseline; /* alinea textos de distinto tamaÃ±o por lÃ­nea base */
   gap: 6px;
   flex-wrap: nowrap;     /* nunca rompe la fila de precios */
   min-height: 22px;      /* altura fija para que no salten */
@@ -271,7 +271,7 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--text-main);
-  white-space: nowrap;   /* "Bs 147.25" siempre en una línea */
+  white-space: nowrap;   /* "Bs 147.25" siempre en una lÃ­nea */
   transition: opacity 0.25s ease; /* cambio suave si actualiza */
 }
 
@@ -283,7 +283,7 @@
   transition: opacity 0.25s ease;
 }
 
-/* ── Animación pop del botón "Agregar Rápido" ── */
+/* â”€â”€ AnimaciÃ³n pop del botÃ³n "Agregar RÃ¡pido" â”€â”€ */
 @keyframes quickAddPop {
   0%   { transform: scale(1); }
   25%  { transform: scale(0.82); }
@@ -298,7 +298,7 @@
   100% { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 
-/* Botón añadir rápido (icono bolsa) */
+/* BotÃ³n aÃ±adir rÃ¡pido (icono bolsa) */
 .catalog-card-add-btn {
   background: var(--bg-input, #f3f4f6);
   border: 1px solid var(--border-color);
@@ -380,7 +380,7 @@
 }
 
 /* =============================================================
-   BOTÓN "CARGAR MÁS"
+   BOTÃ“N "CARGAR MÃS"
 ============================================================= */
 
 .catalog-load-more-wrap {
@@ -415,7 +415,7 @@
 }
 
 /* =============================================================
-   OVERLAY DE FILTROS MÓVIL
+   OVERLAY DE FILTROS MÃ“VIL
 ============================================================= */
 
 .catalog-mobile-overlay-backdrop {
@@ -479,7 +479,7 @@
   color: var(--text-main);
 }
 
-/* Inputs del filtro móvil */
+/* Inputs del filtro mÃ³vil */
 .catalog-filter-input {
   width: 100%;
   padding: 10px 12px;
@@ -497,7 +497,7 @@
 }
 
 /* =============================================================
-   RESPONSIVE — Tablet (769px – 1024px)
+   RESPONSIVE â€” Tablet (769px â€“ 1024px)
 ============================================================= */
 
 @media (max-width: 1024px) {
@@ -508,12 +508,12 @@
     gap: 6px;
   }
 
-  /* Ocultar sidebar — los filtros van en el panel deslizante */
+  /* Ocultar sidebar â€” los filtros van en el panel deslizante */
   .catalog-sidebar {
     display: none !important;
   }
 
-  /* El área de productos ocupa todo el ancho */
+  /* El Ã¡rea de productos ocupa todo el ancho */
   .catalog-sidebar ~ div {
     grid-column: 1 / -1;
   }
@@ -547,7 +547,7 @@
 }
 
 /* =============================================================
-   RESPONSIVE — Móvil (≤ 768px)
+   RESPONSIVE â€” MÃ³vil (â‰¤ 768px)
 ============================================================= */
 
 @media (max-width: 768px) {
@@ -565,14 +565,14 @@
     order: -2; /* siempre primero */
   }
 
-  /* ── Breadcrumb: visible en móvil bajo el título ── */
+  /* â”€â”€ Breadcrumb: visible en mÃ³vil bajo el tÃ­tulo â”€â”€ */
   .catalog-header-breadcrumb {
     display: flex;
-    order: -1; /* justo después del título */
+    order: -1; /* justo despuÃ©s del tÃ­tulo */
     margin-bottom: 4px;
   }
 
-  /* ── Controles: fila extremo a extremo ── */
+  /* â”€â”€ Controles: fila extremo a extremo â”€â”€ */
   .catalog-controls {
     width: 100%;
     display: flex;
@@ -582,7 +582,7 @@
     gap: 4px 0;
   }
 
-  /* Línea 1: [Filtros] ←→ [Por Prendas | Por Productos] */
+  /* LÃ­nea 1: [Filtros] â†â†’ [Por Prendas | Por Productos] */
   .catalog-btn-filters {
     display: flex;
     align-items: center;
@@ -601,7 +601,7 @@
     margin-left: auto; /* empuja al extremo derecho */
   }
 
-  /* Línea 2: [Presentación / Vívido] sola, ancho completo */
+  /* LÃ­nea 2: [PresentaciÃ³n / VÃ­vido] sola, ancho completo */
   .catalog-image-controls {
     gap: 8px;
     font-size: 10px;
@@ -612,14 +612,14 @@
     margin-top: 4px;
   }
 
-  /* Grid columnas en móvil, con gap más pequeño */
+  /* Grid columnas en mÃ³vil, con gap mÃ¡s pequeÃ±o */
   .catalog-products-grid,
   .catalog-products-row {
     grid-template-columns: repeat(var(--catalog-cols-mobile, 2), 1fr);
     gap: 10px;
   }
 
-  /* Info de producto más compacta */
+  /* Info de producto mÃ¡s compacta */
   .catalog-card-info {
     margin-top: 8px;
     gap: 6px;
@@ -638,25 +638,25 @@
     font-size: 11px;
   }
 
-  /* Botón añadir más pequeño pero aun accesible (min 32px) */
+  /* BotÃ³n aÃ±adir mÃ¡s pequeÃ±o pero aun accesible (min 32px) */
   .catalog-card-add-btn {
     width: 32px;
     height: 32px;
     min-width: 32px;
   }
 
-  /* Swatches más pequeños en móvil */
+  /* Swatches mÃ¡s pequeÃ±os en mÃ³vil */
   .catalog-swatches {
     gap: 4px;
   }
 
-  /* Panel expand en móvil */
+  /* Panel expand en mÃ³vil */
   .catalog-expand-panel {
     padding: 16px;
     border-radius: 8px;
   }
 
-  /* Botón cargar más */
+  /* BotÃ³n cargar mÃ¡s */
   .catalog-load-more-btn {
     width: 100%;
     padding: 13px 24px;
@@ -664,7 +664,7 @@
 }
 
 /* =============================================================
-   RESPONSIVE — Móvil pequeño (≤ 480px)
+   RESPONSIVE â€” MÃ³vil pequeÃ±o (â‰¤ 480px)
 ============================================================= */
 
 @media (max-width: 480px) {
@@ -686,7 +686,7 @@
 
   .catalog-card-info {
     margin-top: 6px;
-    flex-direction: row; /* siempre en fila: texto izq, botón der */
+    flex-direction: row; /* siempre en fila: texto izq, botÃ³n der */
     align-items: flex-start;
     gap: 6px;
   }
@@ -708,7 +708,7 @@
     font-size: 10px;
   }
 
-  /* Botón: círculo compacto, NUNCA full-width */
+  /* BotÃ³n: cÃ­rculo compacto, NUNCA full-width */
   .catalog-card-add-btn {
     width: 30px !important;
     height: 30px !important;

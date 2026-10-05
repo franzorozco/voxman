@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getMovements } from "../../../../api/admin/inventory";
@@ -65,7 +65,7 @@ export default function InventoryMovements() {
   const getTypeText = (type) => {
     switch (type) {
       case 'purchase': return <span style={{ color: '#22c55e', fontWeight: 600 }}>Compra</span>;
-      case 'return': return <span style={{ color: '#22c55e', fontWeight: 600 }}>Devolución</span>;
+      case 'return': return <span style={{ color: '#22c55e', fontWeight: 600 }}>DevoluciÃ³n</span>;
       case 'transfer_in': return <span style={{ color: '#22c55e', fontWeight: 600 }}>Ingreso por Transferencia</span>;
       case 'sale': return <span style={{ color: '#ef4444', fontWeight: 600 }}>Venta</span>;
       case 'transfer_out': return <span style={{ color: '#ef4444', fontWeight: 600 }}>Salida por Transferencia</span>;
@@ -80,7 +80,7 @@ export default function InventoryMovements() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }} className="header-actions">
           <Link to="/dashboard/inventory" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ArrowLeft size={18} />
-            <span className="hide-on-mobile">Atrás</span>
+            <span className="hide-on-mobile">AtrÃ¡s</span>
           </Link>
           <h1 className="inventory-title">Historial de Movimientos</h1>
         </div>
@@ -245,7 +245,7 @@ export default function InventoryMovements() {
                 orderedAttrs.push(...otherAttrs);
                 if (mov.variant?.fit?.name) orderedAttrs.push(mov.variant.fit.name);
 
-                const attributesText = orderedAttrs.length > 0 ? orderedAttrs.join(", ") : "Única";
+                const attributesText = orderedAttrs.length > 0 ? orderedAttrs.join(", ") : "Ãšnica";
 
                 return (
                   <tr key={mov.id}>

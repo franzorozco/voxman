@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
 import { getActiveShorts } from '../../../api/shop/shorts';
@@ -104,11 +104,11 @@ const Home = () => {
     <div className="shop-home">
       {showHero && (
         <div className="shop-home-hero">
-          <h1 className="shop-home-title">{settings.shop_home_hero_title || "LO MÁS DESTACADO"}</h1>
+          <h1 className="shop-home-title">{settings.shop_home_hero_title || "LO MÃS DESTACADO"}</h1>
           <p className="shop-home-subtitle">{settings.shop_home_hero_subtitle || "Descubre las tendencias en moda masculina"}</p>
           <Link to="/shop/catalog" className="shop-home-catalog-btn">
-            {settings.shop_home_hero_btn_text || "Ver catálogo completo"}
-            <span className="shop-home-catalog-btn__arrow">→</span>
+            {settings.shop_home_hero_btn_text || "Ver catÃ¡logo completo"}
+            <span className="shop-home-catalog-btn__arrow">â†’</span>
           </Link>
         </div>
       )}

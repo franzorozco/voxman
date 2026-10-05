@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { X, Upload, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -60,7 +60,7 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
   };
 
   const productOptions = [
-    { value: "", label: "Ninguno (Catálogo General)" },
+    { value: "", label: "Ninguno (CatÃ¡logo General)" },
     ...products.map(p => ({ value: p.id, label: p.name }))
   ];
 
@@ -89,12 +89,12 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isEditing && !videoFile && !videoLink) {
-      toast.error("Debes proporcionar un archivo de video o un enlace válido");
+      toast.error("Debes proporcionar un archivo de video o un enlace vÃ¡lido");
       return;
     }
 
     if (priority < 1 || priority > 10) {
-      toast.error("La prioridad debe ser un número del 1 al 10");
+      toast.error("La prioridad debe ser un nÃºmero del 1 al 10");
       return;
     }
 
@@ -115,10 +115,10 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
 
       if (isEditing) {
         await updateShopShort(short.id, formData);
-        toast.success("Video actualizado con éxito");
+        toast.success("Video actualizado con Ã©xito");
       } else {
         await createShopShort(formData);
-        toast.success("Video creado con éxito");
+        toast.success("Video creado con Ã©xito");
       }
       onSaved();
       onClose();
@@ -171,7 +171,7 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
                     icon: <LinkIcon size={14} />
                   }, {
                     id: "gallery",
-                    label: "Galería de Videos",
+                    label: "GalerÃ­a de Videos",
                     icon: <ImageIcon size={14} />
                   }].map(tab => (
                     <button
@@ -306,19 +306,19 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
               </div>
 
               <div>
-                <label style={labelStyle}>Título (Opcional)</label>
+                <label style={labelStyle}>TÃ­tulo (Opcional)</label>
                 <input
                   type="text"
                   style={inputStyle}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Ej: Nueva Colección Verano"
+                  placeholder="Ej: Nueva ColecciÃ³n Verano"
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={labelStyle}>Categoría Vinculada (Opcional)</label>
+                  <label style={labelStyle}>CategorÃ­a Vinculada (Opcional)</label>
                   <CustomSelect
                     value={categoryId}
                     onChange={(e) => {
@@ -326,7 +326,7 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
                       setCategoryId(val);
                       if (val) setProductId(""); // Mutual exclusivity
                     }}
-                    placeholder={loadingData ? "Cargando..." : "Seleccione categoría..."}
+                    placeholder={loadingData ? "Cargando..." : "Seleccione categorÃ­a..."}
                     style={inputStyle}
                   >
                     {categoryOptions.map(opt => (
@@ -364,7 +364,7 @@ export default function ShopShortModal({ short, onClose, onSaved }) {
                     value={priority}
                     onChange={(e) => setPriority(parseInt(e.target.value) || 1)}
                   />
-                  <small style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', display: 'block' }}>Mayor número = aparece antes</small>
+                  <small style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', display: 'block' }}>Mayor nÃºmero = aparece antes</small>
                 </div>
 
                 <div>

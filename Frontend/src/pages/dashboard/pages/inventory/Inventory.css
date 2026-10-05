@@ -1,4 +1,4 @@
-/* src/pages/dashboard/pages/inventory/Inventory.css */
+﻿/* src/pages/dashboard/pages/inventory/Inventory.css */
 
 .inventory-container {
     padding: 20px;
@@ -159,7 +159,7 @@
     }
 
     /* Make camera button strict size again */
-    .filters-container > div:first-child > button[title="Escanear con Cámara"] {
+    .filters-container > div:first-child > button[title="Escanear con CÃ¡mara"] {
       flex: 0 0 42px !important;
       padding: 0 !important;
     }

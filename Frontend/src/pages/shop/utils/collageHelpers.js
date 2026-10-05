@@ -1,4 +1,4 @@
-export const formatCollageItems = (products, shorts) => {
+﻿export const formatCollageItems = (products, shorts) => {
   const collageItems = [];
 
   // 1. Procesar Productos
@@ -6,7 +6,7 @@ export const formatCollageItems = (products, shorts) => {
     const categoryId = product.category_id || (product.category ? product.category.id : '');
     const catalogUrl = `/shop/catalog?category=${categoryId}`;
 
-    // Imágenes por color (attribute_value_images) — las principales
+    // ImÃ¡genes por color (attribute_value_images) â€” las principales
     const colorImages = (product.attribute_value_images || [])
       .filter(img => img.is_main)
       .map(img => ({
@@ -23,7 +23,7 @@ export const formatCollageItems = (products, shorts) => {
     if (colorImages.length > 0) {
       collageItems.push(...colorImages);
     } else {
-      // Imágenes por variante única (variant_images) — primera de cada variante deduped by attrs
+      // ImÃ¡genes por variante Ãºnica (variant_images) â€” primera de cada variante deduped by attrs
       const variantImages = [];
       const seenAttrs = new Set();
       (product.product_variants || []).forEach(variant => {
@@ -53,7 +53,7 @@ export const formatCollageItems = (products, shorts) => {
       if (variantImages.length > 0) {
         collageItems.push(...variantImages);
       } else {
-        // Imágenes generales del producto (product_images) — la principal
+        // ImÃ¡genes generales del producto (product_images) â€” la principal
         const mainImg = (product.product_images || []).find(img => img.is_main);
         if (mainImg) {
           collageItems.push({
@@ -143,7 +143,7 @@ export const formatCollageItems = (products, shorts) => {
   formattedShorts.sort((a, b) => b.priority - a.priority);
 
   const videoIndices = [];
-  const MIN_VIDEO_GAP = 5; // Distancia mínima de 5 items entre videos
+  const MIN_VIDEO_GAP = 5; // Distancia mÃ­nima de 5 items entre videos
 
   formattedShorts.forEach((short) => {
     let insertIndex;

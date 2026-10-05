@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect, useRef } from "react";
 import { Plus, Search, Trash2, ArrowLeft, Save, ShoppingCart, Box, X } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -248,7 +248,7 @@ export default function CreatePurchase() {
             <input
               type="text"
               className="purchases-search-input"
-              placeholder="Buscar por código de barra, SKU o nombre..."
+              placeholder="Buscar por cÃ³digo de barra, SKU o nombre..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -385,7 +385,7 @@ export default function CreatePurchase() {
               value={formData.branch_id}
               onChange={e => setFormData({...formData, branch_id: e.target.value})}
             >
-              <option value="">Seleccione sucursal explícitamente</option>
+              <option value="">Seleccione sucursal explÃ­citamente</option>
               {branches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
@@ -399,7 +399,7 @@ export default function CreatePurchase() {
               value={formData.employee_id}
               onChange={e => setFormData({...formData, employee_id: e.target.value})}
             >
-              <option value="">Seleccione un empleado explícitamente</option>
+              <option value="">Seleccione un empleado explÃ­citamente</option>
               {employees.map(e => {
                 const profile = e.user?.profile || {};
                 const name = `${profile.first_name || 'Empleado'} ${profile.last_name_paternal || ''}`.trim();
@@ -409,7 +409,7 @@ export default function CreatePurchase() {
           </div>
 
           <div className="purchase-form-group">
-            <label>Número de Factura (Opcional)</label>
+            <label>NÃºmero de Factura (Opcional)</label>
             <input 
               type="text" 
               className="purchase-form-input"

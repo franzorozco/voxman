@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { adjustStock } from "../../../../api/admin/inventory";
 import toast from "react-hot-toast";
 import { X, ArrowLeft } from "lucide-react";
@@ -117,7 +117,7 @@ export default function AdjustStockModal({ item, onClose, onSuccess, onBack }) {
               required
               rows="3"
               style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', resize: 'none' }}
-              placeholder="Ej. Ingreso de mercadería, Producto dañado, Inventario físico..."
+              placeholder="Ej. Ingreso de mercaderÃ­a, Producto daÃ±ado, Inventario fÃ­sico..."
               value={formData.reference}
               onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
             ></textarea>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { FileText, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, RefreshCw, Building } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getFinanceReports } from "../../../../../api/admin/finance";
@@ -89,7 +89,7 @@ export default function FinanceReports() {
     const color = isPositive ? '#22c55e' : '#ef4444';
     return (
       <span style={{ color, fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
-        {isPositive ? '↑' : '↓'} {Math.abs(value).toFixed(1)}% vs ant.
+        {isPositive ? 'â†‘' : 'â†“'} {Math.abs(value).toFixed(1)}% vs ant.
       </span>
     );
   };
@@ -99,7 +99,7 @@ export default function FinanceReports() {
       <div className="reports-header">
         <div>
           <h1><FileText size={28} /> Reportes Contables</h1>
-          <p>Métricas financieras, rentabilidad y análisis de flujo general.</p>
+          <p>MÃ©tricas financieras, rentabilidad y anÃ¡lisis de flujo general.</p>
         </div>
         
         <div className="reports-filters" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', width: isMobile ? '100%' : 'auto' }}>
@@ -192,7 +192,7 @@ export default function FinanceReports() {
 
 <div className="charts-grid">
             <div className="chart-card" style={{ marginBottom: 0 }}>
-              <h3>Flujo Histórico (Ventas vs Egresos)</h3>
+              <h3>Flujo HistÃ³rico (Ventas vs Egresos)</h3>
               <div className="chart-scroll-container">
                 <div style={{ minWidth: '600px', height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -211,7 +211,7 @@ export default function FinanceReports() {
             </div>
 
             <div className="chart-card" style={{ marginBottom: 0 }}>
-              <h3>Distribución de Gastos</h3>
+              <h3>DistribuciÃ³n de Gastos</h3>
               <div className="chart-scroll-container">
                 <div style={{ minWidth: '350px', height: 300 }}>
                 {data?.expense_categories && data.expense_categories.length > 0 ? (
@@ -246,7 +246,7 @@ export default function FinanceReports() {
 
           <div className="table-card">
             <div className="table-header">
-              <h3>Desglose por Día</h3>
+              <h3>Desglose por DÃ­a</h3>
             </div>
             <div className="table-responsive">
               <table className="reports-table">

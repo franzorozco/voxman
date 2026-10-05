@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -91,7 +91,7 @@ export default function Tracking() {
       setIsEditingRecipient(false);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || "Error al guardar información");
+      alert(err.response?.data?.error || "Error al guardar informaciÃ³n");
     } finally {
       setSavingRecipient(false);
     }
@@ -118,7 +118,7 @@ export default function Tracking() {
           setCheckoutSession(null);
         }
       } catch (err) {
-        setError("No se pudo encontrar la información de este envío. Verifica que el enlace sea correcto.");
+        setError("No se pudo encontrar la informaciÃ³n de este envÃ­o. Verifica que el enlace sea correcto.");
       } finally {
         setLoading(false);
       }
@@ -201,7 +201,7 @@ export default function Tracking() {
       setDiscountMessage({ type: 'success', text: `Descuento aplicado: Bs. ${res.data.discount_amount}` });
       setDiscountCode('');
     } catch (err) {
-      setDiscountMessage({ type: 'error', text: err.response?.data?.error || "Error al aplicar el código" });
+      setDiscountMessage({ type: 'error', text: err.response?.data?.error || "Error al aplicar el cÃ³digo" });
     } finally {
       setApplyingDiscount(false);
     }
@@ -211,7 +211,7 @@ export default function Tracking() {
     return (
       <div className="tracking-container loading">
         <div className="spinner"></div>
-        <p>Cargando información de tu envío...</p>
+        <p>Cargando informaciÃ³n de tu envÃ­o...</p>
       </div>
     );
   }
@@ -220,7 +220,7 @@ export default function Tracking() {
     return (
       <div className="tracking-container error">
         <AlertCircle size={48} className="error-icon" />
-        <h2>Enlace no válido</h2>
+        <h2>Enlace no vÃ¡lido</h2>
         <p>{error}</p>
       </div>
     );
@@ -346,7 +346,7 @@ export default function Tracking() {
     <div className="tracking-wrapper">
       <div className="tracking-card">
         <div className="tracking-header">
-          <h1>Seguimiento de Envío</h1>
+          <h1>Seguimiento de EnvÃ­o</h1>
           <p className="tracking-ref"><strong>Ref: {schedule.shipment?.delivery_code || schedule.id.slice(0,8)} {sale?.invoice_number ? `| Venta: ${sale.invoice_number}` : ''}</strong></p>
         </div>
 
@@ -440,11 +440,11 @@ export default function Tracking() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', alignItems: 'start' }}>
           <div className="tracking-section" style={{ margin: 0 }}>
-          <h3 className="section-title"><Map size={20} /> Detalles Logísticos</h3>
+          <h3 className="section-title"><Map size={20} /> Detalles LogÃ­sticos</h3>
           <div className="details-grid">
             <div className="detail-item">
               <span className="detail-label">Cliente</span>
-              <span className="detail-value">{customerName} {customerCode ? `(Cód: ${customerCode})` : ''}</span>
+              <span className="detail-value">{customerName} {customerCode ? `(CÃ³d: ${customerCode})` : ''}</span>
             </div>
             {customerPhone && (
               <div className="detail-item">
@@ -453,7 +453,7 @@ export default function Tracking() {
               </div>
             )}
             <div className="detail-item">
-              <span className="detail-label">{schedule.shipment?.delivery_type === 'home_delivery' ? 'Dirección de Entrega' : 'Lugar de Entrega'}</span>
+              <span className="detail-label">{schedule.shipment?.delivery_type === 'home_delivery' ? 'DirecciÃ³n de Entrega' : 'Lugar de Entrega'}</span>
               <span className="detail-value">
                 {isPickup && pickupAddressStr ? (
                   <>
@@ -515,7 +515,7 @@ export default function Tracking() {
                     <input type="text" value={recipientForm.recipient_ci} onChange={(e) => setRecipientForm({...recipientForm, recipient_ci: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b' }} placeholder="Carnet de Identidad" />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Teléfono / WhatsApp</label>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>TelÃ©fono / WhatsApp</label>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <input type="text" placeholder="+591" 
                         value={(recipientForm.recipient_phone || '').includes(' ') ? (recipientForm.recipient_phone || '').split(' ')[0] : '+591'} 
@@ -526,7 +526,7 @@ export default function Tracking() {
                         }} 
                         style={{ width: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff', color: '#1e293b', textAlign: 'center' }} 
                       />
-                      <input type="text" placeholder="Número de contacto" 
+                      <input type="text" placeholder="NÃºmero de contacto" 
                         value={(recipientForm.recipient_phone || '').includes(' ') ? (recipientForm.recipient_phone || '').split(' ').slice(1).join(' ') : (recipientForm.recipient_phone || '')} 
                         onChange={(e) => {
                           const num = e.target.value;
@@ -577,7 +577,7 @@ export default function Tracking() {
                     <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment?.recipient_ci || <span style={{ color: '#94a3b8', fontWeight: 400, fontStyle: 'italic' }}>No especificado</span>}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Teléfono:</span>
+                    <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>TelÃ©fono:</span>
                     <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment?.recipient_phone || <span style={{ color: '#94a3b8', fontWeight: 400, fontStyle: 'italic' }}>No especificado</span>}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -592,7 +592,7 @@ export default function Tracking() {
           {isExternal && (
             <div style={{ marginTop: '20px', padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
               <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0', color: '#0f172a', fontSize: '16px' }}>
-                <Truck size={18} style={{ color: '#0ea5e9' }} /> Información de Transportadora
+                <Truck size={18} style={{ color: '#0ea5e9' }} /> InformaciÃ³n de Transportadora
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -600,7 +600,7 @@ export default function Tracking() {
                   <span style={{ color: '#0f172a', fontSize: '15px', fontWeight: 700 }}>{schedule.shipment?.external_company || 'Pendiente'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Nro. Guía:</span>
+                  <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Nro. GuÃ­a:</span>
                   <span style={{ color: '#0ea5e9', fontSize: '15px', fontWeight: 800, background: schedule.shipment?.external_guide ? '#e0f2fe' : '#f1f5f9', padding: '4px 10px', borderRadius: '6px' }}>{schedule.shipment?.external_guide || 'Pendiente'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -610,12 +610,12 @@ export default function Tracking() {
                 {schedule.shipment?.shipping_payment_type === 'collect' && (
                   <>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Costo de Envío:</span>
+                      <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Costo de EnvÃ­o:</span>
                       <span style={{ color: '#0f172a', fontSize: '14px', fontWeight: 600 }}>Bs. {Number(schedule.shipment.shipping_cost || 0).toFixed(2)}</span>
                     </div>
                     <div style={{ marginTop: '8px', padding: '10px', background: '#fffbeb', color: '#b45309', borderRadius: '8px', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center', border: '1px solid #fef3c7' }}>
                       <AlertCircle size={16} style={{ flexShrink: 0 }} />
-                      <p style={{ margin: 0, lineHeight: 1.4 }}>Recuerda que debes pagar el costo de envío directamente a la agencia de transporte al recoger tu paquete.</p>
+                      <p style={{ margin: 0, lineHeight: 1.4 }}>Recuerda que debes pagar el costo de envÃ­o directamente a la agencia de transporte al recoger tu paquete.</p>
                     </div>
                   </>
                 )}
@@ -654,7 +654,7 @@ export default function Tracking() {
               <textarea 
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Añade instrucciones especiales, referencias o indicaciones para la entrega..."
+                placeholder="AÃ±ade instrucciones especiales, referencias o indicaciones para la entrega..."
                 style={{ width: '100%', minHeight: '80px', padding: '12px', borderRadius: '8px', border: '1px solid #fcd34d', background: '#fff', color: '#92400e', fontSize: '14px', resize: 'vertical', fontFamily: 'inherit' }}
                 disabled={statusInfo.activeStep >= 5} // Disable if completed
               />
@@ -673,7 +673,7 @@ export default function Tracking() {
             </div>
           </div>
 
-          {/* Repartidor Info Oculto temporalmente a petición del usuario
+          {/* Repartidor Info Oculto temporalmente a peticiÃ³n del usuario
           {driver && statusInfo.activeStep >= 2 && statusInfo.activeStep < 5 && (
             <div className="driver-card">
               <div className="driver-info">
@@ -739,7 +739,7 @@ export default function Tracking() {
                               <>
                                 {item.bundle_group_id && (
                                   <span className="product-badge" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
-                                    ⭐ tem de Conjunto
+                                    â­ tem de Conjunto
                                   </span>
                                 )}
                                 {!hasDynamicTalla && variant?.size && <span className="product-badge">Talla: {variant.size.name}</span>}
@@ -802,14 +802,14 @@ export default function Tracking() {
             </div>
             {Number(shipment?.agency_dispatch_cost) > 0 && (
               <div className="summary-row">
-                <span>Costo de Envío a Agencia</span>
+                <span>Costo de EnvÃ­o a Agencia</span>
                 <span>Bs. {Number(shipment?.agency_dispatch_cost).toFixed(2)}</span>
               </div>
             )}
             
             {shipment?.shipping_payment_type !== 'collect' && Number(shipment?.shipping_cost) > 0 && (
               <div className="summary-row">
-                <span>Costo de Envío</span>
+                <span>Costo de EnvÃ­o</span>
                 <span>Bs. {Number(shipment?.shipping_cost || 0).toFixed(2)}</span>
               </div>
             )}
@@ -899,7 +899,7 @@ export default function Tracking() {
                 {hasDiscountOrGiftcard ? (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <span style={{ fontWeight: 700, color: '#10b981', display: 'block' }}>¡Cupón aplicado con éxito!</span>
+                      <span style={{ fontWeight: 700, color: '#10b981', display: 'block' }}>Â¡CupÃ³n aplicado con Ã©xito!</span>
                       <span style={{ fontSize: '13px', color: '#6b7280' }}>El descuento ya se refleja en tu total.</span>
                     </div>
                     <button 
@@ -912,11 +912,11 @@ export default function Tracking() {
                   </div>
                 ) : (
                   <div>
-                    <p style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 700, color: '#374151' }}>¿Tienes un código de descuento o Giftcard?</p>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 700, color: '#374151' }}>Â¿Tienes un cÃ³digo de descuento o Giftcard?</p>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <input 
                         type="text" 
-                        placeholder="VOX-XXXXXX o CÓDIGO" 
+                        placeholder="VOX-XXXXXX o CÃ“DIGO" 
                         value={discountCode}
                         onChange={(e) => setDiscountCode(e.target.value)}
                         style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: '2px solid #e5e7eb', background: '#ffffff', color: '#111827', fontSize: '15px', fontWeight: 600 }}
@@ -945,7 +945,7 @@ export default function Tracking() {
         </div>
         
         <div className="tracking-footer">
-          Gracias por tu preferencia. ¡Disfruta tu compra!
+          Gracias por tu preferencia. Â¡Disfruta tu compra!
         </div>
       </div>
     </div>

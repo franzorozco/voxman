@@ -1,14 +1,14 @@
-import DOMPurify from 'dompurify';
+﻿import DOMPurify from 'dompurify';
 
 /**
  * Sanitiza HTML que viene de la base de datos (p. ej. descripciones de productos)
  * antes de renderizarlo con dangerouslySetInnerHTML.
  *
- * Por qué: el token de sesión vive en localStorage, así que un <script> o un
- * onerror="..." guardado en una descripción podría robar la sesión de TODOS los
+ * Por quÃ©: el token de sesiÃ³n vive en localStorage, asÃ­ que un <script> o un
+ * onerror="..." guardado en una descripciÃ³n podrÃ­a robar la sesiÃ³n de TODOS los
  * clientes que abran ese producto.
  *
- * Permite el formato habitual (negritas, listas, enlaces, saltos de línea) y
+ * Permite el formato habitual (negritas, listas, enlaces, saltos de lÃ­nea) y
  * elimina scripts, handlers on*, iframes, estilos y URLs javascript:.
  */
 const ALLOWED_TAGS = [
@@ -17,7 +17,7 @@ const ALLOWED_TAGS = [
 ];
 const ALLOWED_ATTR = ['href', 'target', 'rel', 'title'];
 
-// Forzar rel seguro en enlaces que abren en otra pestaña
+// Forzar rel seguro en enlaces que abren en otra pestaÃ±a
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   if (node.tagName === 'A' && node.getAttribute('target') === '_blank') {
     node.setAttribute('rel', 'noopener noreferrer');

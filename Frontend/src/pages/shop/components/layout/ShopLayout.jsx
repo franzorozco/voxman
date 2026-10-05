@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../../../store/authStore";
@@ -98,22 +98,22 @@ const ShopNavbar = () => {
           </Link>
         </div>
 
-        {/* MENU ÚNICO */}
+        {/* MENU ÃšNICO */}
         <nav className={`shop-nav-menu ${menuOpen ? "active" : ""}`}>
           <NavLink to="/shop" end onClick={closeMenu}>Tienda</NavLink>
-          <NavLink to="/shop/catalog" onClick={closeMenu}>Catálogo</NavLink>
+          <NavLink to="/shop/catalog" onClick={closeMenu}>CatÃ¡logo</NavLink>
           {/* <NavLink to="/shop/collections" onClick={closeMenu}>Colecciones</NavLink> */}
 
           {!user ? (
             <div className="shop-nav-mobile-auth">
-              <button className="shop-nav-btn shop-nav-btn-outline" onClick={() => { closeMenu(); setModalMode('login'); setIsLoginModalOpen(true); }}>Iniciar sesión</button>
+              <button className="shop-nav-btn shop-nav-btn-outline" onClick={() => { closeMenu(); setModalMode('login'); setIsLoginModalOpen(true); }}>Iniciar sesiÃ³n</button>
               <button className="shop-nav-btn shop-nav-btn-solid" onClick={() => { closeMenu(); setModalMode('register'); setIsLoginModalOpen(true); }}>Registrarse</button>
             </div>
           ) : (
             <div className="shop-nav-mobile-user">
               <Link to="/profile" state={{ theme: 'light' }} onClick={closeMenu}>Ver perfil</Link>
               <Link to="/shop/orders" onClick={closeMenu}>Mis pedidos</Link>
-              <button onClick={handleLogout}>Cerrar sesión</button>
+              <button onClick={handleLogout}>Cerrar sesiÃ³n</button>
             </div>
           )}
         </nav>
@@ -130,7 +130,7 @@ const ShopNavbar = () => {
 
           {!user ? (
             <div className="shop-nav-desktop-auth">
-              <button className="shop-nav-btn shop-nav-btn-outline" onClick={() => { setModalMode('login'); setIsLoginModalOpen(true); }}>Iniciar sesión</button>
+              <button className="shop-nav-btn shop-nav-btn-outline" onClick={() => { setModalMode('login'); setIsLoginModalOpen(true); }}>Iniciar sesiÃ³n</button>
               <button className="shop-nav-btn shop-nav-btn-solid" onClick={() => { setModalMode('register'); setIsLoginModalOpen(true); }}>Registrarse</button>
             </div>
           ) : (
@@ -147,7 +147,7 @@ const ShopNavbar = () => {
                 <div className="shop-nav-dropdown">
                   <Link to="/profile" state={{ theme: 'light' }}>Ver perfil</Link>
                   <div className="shop-divider" />
-                  <button onClick={handleLogout}>Cerrar sesión</button>
+                  <button onClick={handleLogout}>Cerrar sesiÃ³n</button>
                 </div>
               )}
             </div>

@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../utils/imageUtils';
 import { sanitizeHtml } from '../../../utils/sanitizeHtml';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -130,7 +130,7 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
         border: 'none', color: '#fff', fontSize: '24px', width: '40px', height: '40px',
         borderRadius: '50%', zIndex: 1000000, display: 'flex', alignItems: 'center', 
         justifyContent: 'center', cursor: 'pointer'
-      }}>✕</button>
+      }}>âœ•</button>
       
       {/* Flecha Izquierda (solo PC) */}
       {currentIndex > 0 && (
@@ -140,7 +140,7 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
           width: '50px', height: '50px', borderRadius: '50%', zIndex: 1000000, cursor: 'pointer',
           display: window.innerWidth > 768 ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center'
         }}>
-          ‹
+          â€¹
         </button>
       )}
 
@@ -152,7 +152,7 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
           width: '50px', height: '50px', borderRadius: '50%', zIndex: 1000000, cursor: 'pointer',
           display: window.innerWidth > 768 ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center'
         }}>
-          ›
+          â€º
         </button>
       )}
 
@@ -186,7 +186,7 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
         display: 'flex', justifyContent: 'center', gap: '8px', zIndex: 1000000, pointerEvents: 'none'
       }}>
         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>
-          {window.innerWidth > 768 ? 'Usa las flechas para navegar' : 'Desliza para ver más'} • Mantén para zoom
+          {window.innerWidth > 768 ? 'Usa las flechas para navegar' : 'Desliza para ver mÃ¡s'} â€¢ MantÃ©n para zoom
         </p>
       </div>
     </div>
@@ -466,7 +466,7 @@ const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange, onSele
                 transition: 'all 0.2s'
               }}
             >
-              {added ? <Check size={12} /> : 'Añadir'}
+              {added ? <Check size={12} /> : 'AÃ±adir'}
             </button>
             </div>
 
@@ -504,7 +504,7 @@ const ConfigurableBundleItem = ({ prod, added, onAdd, onValidationChange, onSele
                 
                 {allSizesMeasurements && (
                   <div>
-                    <h4 style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#666', marginBottom: '8px', fontWeight: '600' }}>Guía de Tallas (cm):</h4>
+                    <h4 style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#666', marginBottom: '8px', fontWeight: '600' }}>GuÃ­a de Tallas (cm):</h4>
                     <div style={{ overflowX: 'auto', border: '1px solid #eee', borderRadius: '4px' }}>
                       <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
@@ -612,7 +612,7 @@ const FixedBundleItem = ({ prod, variant, added, onAdd }) => {
             display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s', flexShrink: 0
           }}
         >
-          {added ? <Check size={12} /> : 'Añadir'}
+          {added ? <Check size={12} /> : 'AÃ±adir'}
         </button>
       </div>
 
@@ -652,7 +652,7 @@ const FixedBundleItem = ({ prod, variant, added, onAdd }) => {
 
             {measurements && measurements.length > 0 && (
               <div>
-                <h4 style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#666', marginBottom: '8px', fontWeight: '600' }}>Guía de Tallas (cm):</h4>
+                <h4 style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#666', marginBottom: '8px', fontWeight: '600' }}>GuÃ­a de Tallas (cm):</h4>
                 <div style={{ overflowX: 'auto', border: '1px solid #eee', borderRadius: '4px' }}>
                   <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
@@ -750,7 +750,7 @@ const BundleDetail = () => {
 
   const handleAddBundle = async () => {
     try {
-      // 1. Recopilar todos los ítems del bundle con sus precios originales
+      // 1. Recopilar todos los Ã­tems del bundle con sus precios originales
       const itemsToAdd = [];
 
       for (const item of bundle.bundle_items) {
@@ -763,7 +763,7 @@ const BundleDetail = () => {
           (prod.product_variants?.length > 0 || prod.attribute_value_images?.length > 0);
 
         if (isConfigurable) {
-          // Ítem configurable: usa la selección actual del usuario
+          // Ãtem configurable: usa la selecciÃ³n actual del usuario
           const sel = selectionsMap[prod.id];
           itemsToAdd.push({
             productId: prod.id,
@@ -773,7 +773,7 @@ const BundleDetail = () => {
             size: sel?.size || null,
           });
         } else {
-          // Ítem fijo (variante preseleccionada)
+          // Ãtem fijo (variante preseleccionada)
           const variantPrice =
             variant?.price !== null && variant?.price !== undefined
               ? parseFloat(variant.price)
@@ -790,7 +790,7 @@ const BundleDetail = () => {
 
       if (itemsToAdd.length === 0) return;
 
-      // 2. Distribuir el precio del bundle proporcionalmente según el precio original de cada ítem
+      // 2. Distribuir el precio del bundle proporcionalmente segÃºn el precio original de cada Ã­tem
       const bundlePrice = parseFloat(bundle.base_price || 0);
       const totalOriginal = itemsToAdd.reduce((sum, i) => sum + i.originalPrice, 0);
 
@@ -802,12 +802,12 @@ const BundleDetail = () => {
             : parseFloat((bundlePrice / itemsToAdd.length).toFixed(2)),
       }));
 
-      // 3. Agregar al carrito (cada ítem individualmente, compartiendo bundle_group_id)
+      // 3. Agregar al carrito (cada Ã­tem individualmente, compartiendo bundle_group_id)
       await addBundleToCart(bundle.id, itemsWithBundlePrice);
       setAddedBundle(true);
       setTimeout(() => setAddedBundle(false), 2000);
     } catch (e) {
-      console.error('No se pudo añadir el conjunto:', e);
+      console.error('No se pudo aÃ±adir el conjunto:', e);
     }
   };
 
@@ -819,7 +819,7 @@ const BundleDetail = () => {
         setAddedItems(prev => ({ ...prev, [itemId]: false }));
       }, 2000);
     } catch (e) {
-      console.error("No se pudo añadir el artículo:", e);
+      console.error("No se pudo aÃ±adir el artÃ­culo:", e);
     }
   };
 
@@ -908,11 +908,11 @@ const BundleDetail = () => {
       {/* Breadcrumbs */}
       <nav className="product-breadcrumb">
         <Link to="/shop">Inicio</Link>
-        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
+        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>â€º</span>
         <Link to={`/shop/catalog?category=${bundle.category?.id || ''}`}>
-          {bundle.category?.name || 'Catálogo'}
+          {bundle.category?.name || 'CatÃ¡logo'}
         </Link>
-        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
+        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>â€º</span>
         <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{bundle.name} (Conjunto)</span>
       </nav>
 
@@ -952,7 +952,7 @@ const BundleDetail = () => {
               <h1 className="product-title" style={{ margin: 0 }}>{bundle.name}</h1>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {/* Wishlist Heart Button — bundles have no variant, so variant_id = null */}
+              {/* Wishlist Heart Button â€” bundles have no variant, so variant_id = null */}
               {(() => {
                 const inWishlist = isInWishlist(bundle.id, null);
                 return (
@@ -1021,7 +1021,7 @@ const BundleDetail = () => {
           {/* Included Items List */}
           <div className="mb-8">
             <div className="variant-section-title" style={{ marginBottom: '16px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
-              Artículos Incluidos ({bundle.bundle_items?.length || 0})
+              ArtÃ­culos Incluidos ({bundle.bundle_items?.length || 0})
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1073,15 +1073,15 @@ const BundleDetail = () => {
                     {addedBundle ? (
                       <>
                         <Check size={20} className="mr-2" />
-                        Añadido a la cesta
+                        AÃ±adido a la cesta
                       </>
                     ) : (
-                      'Añadir Conjunto a la Cesta'
+                      'AÃ±adir Conjunto a la Cesta'
                     )}
                   </button>
                   {!isBundleValid && (
                     <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '12px', textAlign: 'center', fontWeight: '500' }}>
-                      Por favor, selecciona la talla y color para todos los productos antes de añadir el conjunto.
+                      Por favor, selecciona la talla y color para todos los productos antes de aÃ±adir el conjunto.
                     </p>
                   )}
                 </>

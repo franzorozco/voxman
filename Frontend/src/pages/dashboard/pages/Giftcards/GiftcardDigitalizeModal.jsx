@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { X, Smartphone } from "lucide-react";
 import { digitalizeGiftcard } from "../../../../api/admin/giftcards";
 import api from "../../../../api/client";
@@ -59,7 +59,7 @@ export default function GiftcardDigitalizeModal({ isOpen, onClose, onSuccess, gi
       onSuccess();
       onClose();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Ocurrió un error al procesar la operación");
+      toast.error(error.response?.data?.message || "OcurriÃ³ un error al procesar la operaciÃ³n");
     } finally {
       setLoading(false);
     }
@@ -94,10 +94,10 @@ export default function GiftcardDigitalizeModal({ isOpen, onClose, onSuccess, gi
             
             <div className="gift-alert-box">
                 <p className="gift-alert-text">
-                    Al digitalizar la giftcard <strong>{giftcard.code}</strong>, quedará vinculada permanentemente al cliente seleccionado (propietario digital). El comprador original seguirá registrado para auditoría.
+                    Al digitalizar la giftcard <strong>{giftcard.code}</strong>, quedarÃ¡ vinculada permanentemente al cliente seleccionado (propietario digital). El comprador original seguirÃ¡ registrado para auditorÃ­a.
                 </p>
                 <div className="gift-alert-meta">
-                    <span><strong>Comprador:</strong> {giftcard.purchaser?.user?.profile?.first_name || 'Anónimo'}</span>
+                    <span><strong>Comprador:</strong> {giftcard.purchaser?.user?.profile?.first_name || 'AnÃ³nimo'}</span>
                     <span><strong>Saldo Actual:</strong> {giftcard.current_balance} Bs</span>
                 </div>
             </div>
@@ -111,7 +111,7 @@ export default function GiftcardDigitalizeModal({ isOpen, onClose, onSuccess, gi
                 loadOptions={loadCustomers}
                 value={selectedCustomer}
                 onChange={setSelectedCustomer}
-                placeholder="Busca por nombre o código..."
+                placeholder="Busca por nombre o cÃ³digo..."
                 noOptionsMessage={() => "Escribe para buscar..."}
                 styles={customStyles}
                 menuPosition="fixed"

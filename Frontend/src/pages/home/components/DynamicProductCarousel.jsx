@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { getProducts } from '../../../api/shop/products';
@@ -13,7 +13,7 @@ export default function DynamicProductCarousel() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const title = settings.home_carousel_title || "LO MÁS NUEVO";
+  const title = settings.home_carousel_title || "LO MÃS NUEVO";
   const listType = settings.home_carousel_type || "newest";
 
   useEffect(() => {
@@ -192,7 +192,7 @@ export default function DynamicProductCarousel() {
         
         <div style={{ textAlign: 'center', marginTop: '30px' }}>
           <Link to="/shop/catalog" className="dyn-carousel-view-all">
-            VER CATÁLOGO COMPLETO
+            VER CATÃLOGO COMPLETO
           </Link>
         </div>
 

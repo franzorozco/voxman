@@ -1,22 +1,22 @@
-import { getImageUrl } from '../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { VideoPlayer } from '../../../components/ui/videoHelpers';
 import '../Home/Home.css';
 
-/* ─────────────────────────────────────────────────────
-   LÍMITES
-   Móvil    → máx 10 filas  (2 cols × 10 = 20 celdas)
-   Tablet   → máx 10 filas  (3 cols × 10 = 30 celdas)
-   Desktop  → máx 10 filas  (4 cols × 10 = 40 celdas)
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   LÃMITES
+   MÃ³vil    â†’ mÃ¡x 10 filas  (2 cols Ã— 10 = 20 celdas)
+   Tablet   â†’ mÃ¡x 10 filas  (3 cols Ã— 10 = 30 celdas)
+   Desktop  â†’ mÃ¡x 10 filas  (4 cols Ã— 10 = 40 celdas)
 
-   Patrón móvil: [Normal][Normal] → [Wide 2×2] → repeat
+   PatrÃ³n mÃ³vil: [Normal][Normal] â†’ [Wide 2Ã—2] â†’ repeat
    Cada ciclo ocupa 3 filas (1 + 2 del wide).
-───────────────────────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const MAX_ROWS    = 10;
-const MOBILE_CYCLE = 3; // items por ciclo en móvil
+const MOBILE_CYCLE = 3; // items por ciclo en mÃ³vil
 
-/* Filtra items sin URL de imagen válida (evita celdas blancas) */
+/* Filtra items sin URL de imagen vÃ¡lida (evita celdas blancas) */
 const hasValidMedia = (item) => {
   if (item.type === 'video') return !!(item.url);
   return !!(item.url && item.url.trim() !== '');
@@ -26,7 +26,7 @@ const ShopCollageGrid = ({ items }) => {
   const gridRef = useRef(null);
   const [columns, setColumns] = useState(4);
 
-  /* ── Detección de ancho ── */
+  /* â”€â”€ DetecciÃ³n de ancho â”€â”€ */
   useEffect(() => {
     const update = () => {
       if      (window.innerWidth <= 768)  setColumns(2);
@@ -38,38 +38,38 @@ const ShopCollageGrid = ({ items }) => {
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  /* ── Calcular items a mostrar ── */
+  /* â”€â”€ Calcular items a mostrar â”€â”€ */
   const displayedItems = useMemo(() => {
     if (!items || items.length === 0) return [];
 
-    /* 1. Filtrar items sin media válida → elimina celdas blancas */
+    /* 1. Filtrar items sin media vÃ¡lida â†’ elimina celdas blancas */
     const valid = items.filter(hasValidMedia);
 
     const result  = [];
-    const MAX_AREA = MAX_ROWS * columns; // celdas máximas
+    const MAX_AREA = MAX_ROWS * columns; // celdas mÃ¡ximas
     let   totalArea = 0;
 
     if (columns === 2) {
-      /* ── MÓVIL: patrón [N][N][Wide 2×2] ── */
+      /* â”€â”€ MÃ“VIL: patrÃ³n [N][N][Wide 2Ã—2] â”€â”€ */
       for (let i = 0; i < valid.length; i++) {
         const posInCycle = i % MOBILE_CYCLE;
         const isWide     = valid[i].type === 'video' || posInCycle === 2;
         const area       = isWide ? 4 : 1;
 
-        /* Parar si agregar este item superaría el límite */
+        /* Parar si agregar este item superarÃ­a el lÃ­mite */
         if (totalArea + area > MAX_AREA) break;
 
         result.push({ ...valid[i], cssClass: isWide ? 'shop-collage-wide' : '', area });
         totalArea += area;
       }
 
-      /* Recortar hasta que el total sea par → fila final siempre completa */
+      /* Recortar hasta que el total sea par â†’ fila final siempre completa */
       while (result.length > 0 && totalArea % 2 !== 0) {
         totalArea -= result.pop().area;
       }
 
     } else {
-      /* ── TABLET / DESKTOP: layout editorial ── */
+      /* â”€â”€ TABLET / DESKTOP: layout editorial â”€â”€ */
       for (let i = 0; i < valid.length; i++) {
         const item = valid[i];
         let type = '', area = 1;
@@ -87,7 +87,7 @@ const ShopCollageGrid = ({ items }) => {
         totalArea += area;
       }
 
-      /* Garantizar llenado completo de la última fila */
+      /* Garantizar llenado completo de la Ãºltima fila */
       while (result.length > 0 && totalArea % columns !== 0) {
         totalArea -= result.pop().area;
       }
@@ -96,7 +96,7 @@ const ShopCollageGrid = ({ items }) => {
     return result;
   }, [items, columns]);
 
-  /* ── Estado vacío ── */
+  /* â”€â”€ Estado vacÃ­o â”€â”€ */
   if (!items || items.length === 0) {
     return (
       <div className="shop-home-loading">

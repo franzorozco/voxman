@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, Eye, MoreVertical } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
@@ -29,7 +29,7 @@ export default function Owners() {
       const res = await getOwners();
       setOwners(res.data || res);
     } catch (error) {
-      toast.error("Error al cargar los dueños/socios");
+      toast.error("Error al cargar los dueÃ±os/socios");
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export default function Owners() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de eliminar o desactivar este socio?")) return;
+    if (!window.confirm("Â¿EstÃ¡s seguro de eliminar o desactivar este socio?")) return;
     try {
       await deleteOwner(id);
       toast.success("Socio eliminado");
@@ -72,7 +72,7 @@ export default function Owners() {
   return (
     <div className="products-container fade-in">
       <div className="products-header">
-        <h1 className="products-title">Socios / Dueños</h1>
+        <h1 className="products-title">Socios / DueÃ±os</h1>
         <div style={{ display: 'flex', gap: '12px' }}>
           <CanAccess permission="manage_owners">
             <button 

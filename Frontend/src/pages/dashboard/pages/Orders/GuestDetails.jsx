@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { X, ShoppingBag, CreditCard, ChevronDown, ChevronUp, Clock, Store, User as UserIcon, Truck, MapPin, Calendar, Package, CalendarClock, Phone } from "lucide-react";
 import { getGuestHistory } from "../../../../api/admin/guests";
 import Spinner from "../../components/Spinner/Spinner";
@@ -144,20 +144,20 @@ export default function GuestDetails({ guestId, onClose }) {
                </h3>
                <div className="customer-modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                     <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Información Personal</h4>
+                     <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>InformaciÃ³n Personal</h4>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
                            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Nombre</label>
                            <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-main)' }}>{guest.name}</div>
                         </div>
                         <div>
-                           <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Teléfono / WhatsApp</label>
+                           <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>TelÃ©fono / WhatsApp</label>
                            <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{guest.whatsapp_phone || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No registrado</span>}</div>
                         </div>
                      </div>
                   </div>
                   <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                     <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Estadísticas</h4>
+                     <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>EstadÃ­sticas</h4>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
                            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Primera vez visto</label>
@@ -248,8 +248,8 @@ export default function GuestDetails({ guestId, onClose }) {
                                               </div>
                                               <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '2px' }}>
                                                 {variant?.sku && <span>SKU: {variant.sku}</span>}
-                                                {variant?.size?.name && <span>• Talla: {variant.size.name}</span>}
-                                                {variant?.fit?.name && <span>• Fit: {variant.fit.name}</span>}
+                                                {variant?.size?.name && <span>â€¢ Talla: {variant.size.name}</span>}
+                                                {variant?.fit?.name && <span>â€¢ Fit: {variant.fit.name}</span>}
                                               </div>
                                             </div>
                                           </div>
@@ -275,7 +275,7 @@ export default function GuestDetails({ guestId, onClose }) {
                                       </div>
                                       {shipment && shipment.delivery_type === 'external' && Number(shipment.agency_dispatch_cost || 0) > 0 && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
-                                          <span>Costo de Envío a Agencia:</span>
+                                          <span>Costo de EnvÃ­o a Agencia:</span>
                                           <span>Bs. {Number(shipment.agency_dispatch_cost).toFixed(2)}</span>
                                         </div>
                                       )}
@@ -325,7 +325,7 @@ export default function GuestDetails({ guestId, onClose }) {
                                           <>
                                             {shipment.delivery_schedule.driver.user?.employee?.employee_code && (
                                               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'var(--text-muted)' }}>Cód. Empleado:</span>
+                                                <span style={{ color: 'var(--text-muted)' }}>CÃ³d. Empleado:</span>
                                                 <span style={{ fontWeight: 500 }}>{shipment.delivery_schedule.driver.user.employee.employee_code}</span>
                                               </div>
                                             )}
@@ -364,7 +364,7 @@ export default function GuestDetails({ guestId, onClose }) {
                                             </div>
                                             <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
                                               {shipment.delivery_type === 'home_delivery' ? 'A Domicilio' : 
-                                               shipment.delivery_type === 'external' ? 'Envío Nacional' : 
+                                               shipment.delivery_type === 'external' ? 'EnvÃ­o Nacional' : 
                                                shipment.delivery_type === 'manual' ? 'Entrega Manual' : 
                                                'Punto de Encuentro'}
                                             </div>
@@ -394,7 +394,7 @@ export default function GuestDetails({ guestId, onClose }) {
                                             )}
                                             {shipment.recipient_phone && (
                                               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'var(--text-muted)' }}>Teléfono:</span>
+                                                <span style={{ color: 'var(--text-muted)' }}>TelÃ©fono:</span>
                                                 <span style={{ fontWeight: 500 }}>{shipment.recipient_phone}</span>
                                               </div>
                                             )}
@@ -411,18 +411,18 @@ export default function GuestDetails({ guestId, onClose }) {
                                       {(shipment.external_company || shipment.external_guide) && (
                                         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
                                           <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <Package size={14} /> Información de Transportadora
+                                            <Package size={14} /> InformaciÃ³n de Transportadora
                                           </h4>
                                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
                                             {shipment.shipping_payment_type === 'collect' && (
                                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                                <span style={{ color: 'var(--text-muted)' }}>Costo de Envío:</span>
+                                                <span style={{ color: 'var(--text-muted)' }}>Costo de EnvÃ­o:</span>
                                                 <span style={{ fontWeight: 500, color: 'var(--color-warning)' }}>Por pagar en destino</span>
                                               </div>
                                             )}
                                             {shipment.shipping_payment_type === 'paid' && (
                                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                                <span style={{ color: 'var(--text-muted)' }}>Costo de Envío:</span>
+                                                <span style={{ color: 'var(--text-muted)' }}>Costo de EnvÃ­o:</span>
                                                 <span style={{ fontWeight: 500, color: 'var(--color-success)' }}>Pagado (Bs. {Number(shipment.shipping_cost).toFixed(2)})</span>
                                               </div>
                                             )}
@@ -434,7 +434,7 @@ export default function GuestDetails({ guestId, onClose }) {
                                             )}
                                             {shipment.external_guide && (
                                               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'var(--text-muted)' }}>N° Guía / Rastreo:</span>
+                                                <span style={{ color: 'var(--text-muted)' }}>NÂ° GuÃ­a / Rastreo:</span>
                                                 <span style={{ fontWeight: 500, color: 'var(--color-primary)' }}>{shipment.external_guide}</span>
                                               </div>
                                             )}
@@ -464,7 +464,7 @@ export default function GuestDetails({ guestId, onClose }) {
                                   </>
                                 ) : (
                                   <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
-                                    No hay información de entrega asociada a esta compra.
+                                    No hay informaciÃ³n de entrega asociada a esta compra.
                                   </div>
                                 )}
                               </div>
@@ -479,7 +479,7 @@ export default function GuestDetails({ guestId, onClose }) {
               ) : (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
                   <ShoppingBag size={48} style={{ opacity: 0.2, marginBottom: '16px', margin: '0 auto' }} />
-                  <p>Este invitado aún no tiene historial de compras.</p>
+                  <p>Este invitado aÃºn no tiene historial de compras.</p>
                 </div>
               )}
             </div>

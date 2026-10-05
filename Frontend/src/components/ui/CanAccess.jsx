@@ -1,4 +1,4 @@
-import { useAuthStore } from "../../store/authStore";
+﻿import { useAuthStore } from "../../store/authStore";
 
 export default function CanAccess({ permission, role, children }) {
   const user = useAuthStore((state) => state.user);
@@ -22,6 +22,6 @@ export default function CanAccess({ permission, role, children }) {
     if (hasPermission) return children;
   }
 
-  // Si no pasó validaciones, no renderizamos nada
+  // Si no pasÃ³ validaciones, no renderizamos nada
   return null;
 }

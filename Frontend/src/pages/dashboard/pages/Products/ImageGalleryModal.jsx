@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo } from "react";
+﻿import React, { useRef, useState, useEffect, useMemo } from "react";
 import { UploadCloud, Star, Trash2 } from "lucide-react";
 import {
   DndContext,
@@ -78,7 +78,7 @@ function SortableGalleryItem({ id, item, idx, onMakeMain, onRemove }) {
 export default function ImageGalleryModal({ isOpen, onClose, title, images, onImagesChange }) {
   const fileInputRef = useRef(null);
 
-  // Mapeamos las imágenes de entrada a objetos internos con ID único para dnd-kit
+  // Mapeamos las imÃ¡genes de entrada a objetos internos con ID Ãºnico para dnd-kit
   const internalItems = useMemo(() => {
     return images.map((file, idx) => {
       // Create a unique ID that survives re-renders
@@ -151,7 +151,7 @@ export default function ImageGalleryModal({ isOpen, onClose, title, images, onIm
   return (
     <div className="modal-overlay gallery-overlay">
       <div className="modal gallery-modal" style={{ touchAction: 'none' }}>
-        <h2>{title || "Galería de Imágenes"}</h2>
+        <h2>{title || "GalerÃ­a de ImÃ¡genes"}</h2>
         
         <div 
           className="image-dropzone" 
@@ -163,10 +163,10 @@ export default function ImageGalleryModal({ isOpen, onClose, title, images, onIm
             <UploadCloud size={48} color="rgba(255,255,255,0.8)" />
           </div>
           <p className="image-dropzone-text">
-            Arrastra tus imágenes aquí o haz clic para seleccionar
+            Arrastra tus imÃ¡genes aquÃ­ o haz clic para seleccionar
           </p>
           <p className="image-dropzone-subtext">
-            Soporta JPG, PNG, WEBP. Mantén presionado y arrastra para reordenar (soportado en móviles).
+            Soporta JPG, PNG, WEBP. MantÃ©n presionado y arrastra para reordenar (soportado en mÃ³viles).
           </p>
           <input 
             type="file" 
@@ -204,7 +204,7 @@ export default function ImageGalleryModal({ isOpen, onClose, title, images, onIm
           </DndContext>
         ) : (
           <div className="gallery-empty">
-            No hay imágenes en esta galería.
+            No hay imÃ¡genes en esta galerÃ­a.
           </div>
         )}
 

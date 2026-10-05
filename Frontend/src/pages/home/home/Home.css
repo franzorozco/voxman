@@ -1,4 +1,4 @@
-.home {
+﻿.home {
   background: #0d0d0d;
   color: #fff;
 }
@@ -62,7 +62,7 @@
   transition: all 0.3s ease;
 }
 
-/* 🔥 HOVER */
+/* ðŸ”¥ HOVER */
 .card:hover {
   border-color: #c9a227;
   transform: translateY(-8px) scale(1.02);

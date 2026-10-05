@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+﻿import React, { useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../../../components/layout/Footer";
 import EntregasHero from "./components/EntregasHero";
@@ -12,7 +12,7 @@ export default function Entregas() {
 
   // Intersection Observer para las animaciones al hacer scroll
   useEffect(() => {
-    // Usamos setTimeout para asegurar que React haya pintado el DOM después de cambiar settings
+    // Usamos setTimeout para asegurar que React haya pintado el DOM despuÃ©s de cambiar settings
     const timer = setTimeout(() => {
       const elementos = document.querySelectorAll(".vox-reveal, .vox-reveal-left, .vox-reveal-right");
 

@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { X, Box, Tag, DollarSign, Image as ImageIcon, CheckCircle, XCircle, Info, Hash, PackageSearch, Edit2, Save, Copy, Check } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
@@ -88,7 +88,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
     try {
       setIsSaving(true);
       const res = await updateVariant(variant.id, infoState);
-      toast.success("Información actualizada correctamente");
+      toast.success("InformaciÃ³n actualizada correctamente");
       setIsEditingInfo(false);
       if (onVariantUpdated && res.data.variant) {
         onVariantUpdated(res.data.variant);
@@ -129,7 +129,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
         });
       });
       await updateProductMeasurements(product.id, formattedMeasurements);
-      toast.success("Medidas actualizadas. Recarga la página para ver los cambios.");
+      toast.success("Medidas actualizadas. Recarga la pÃ¡gina para ver los cambios.");
       setIsEditingMeas(false);
     } catch(e) {
       toast.error("Error al actualizar medidas");
@@ -140,10 +140,10 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
 
   
 
-  // Extraer todos los IDs de atributos de esta variante para buscar coincidencias de imágenes (como strings para IDs UUID)
+  // Extraer todos los IDs de atributos de esta variante para buscar coincidencias de imÃ¡genes (como strings para IDs UUID)
   const variantAttrIds = variant.variant_attribute_values?.map(vav => String(vav.attribute_value_id)) || [];
 
-  // Imágenes específicas de la variante (exclusivas o por color)
+  // ImÃ¡genes especÃ­ficas de la variante (exclusivas o por color)
   let specificImages = [];
   if (variant.variant_images && variant.variant_images.length > 0) {
     specificImages = (variant.variant_images || []).map(img => ({ ...img, tag: 'Variante' }));
@@ -153,10 +153,10 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
       .map(img => ({ ...img, tag: 'Color' }));
   }
 
-  // Imágenes globales del producto (portada y galería principal)
+  // ImÃ¡genes globales del producto (portada y galerÃ­a principal)
   const globalImages = product.product_images?.map(img => ({ ...img, tag: img.is_main ? 'Portada' : 'Global' })) || [];
 
-  // Imagen principal para la miniatura superior (prioriza específica, luego portada)
+  // Imagen principal para la miniatura superior (prioriza especÃ­fica, luego portada)
   const bestImage = specificImages[0]?.url || globalImages.find(img => img.is_main)?.url || globalImages[0]?.url;
   const imageUrl = getImageUrl(bestImage);
 
@@ -204,9 +204,9 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
         {/* Tabs */}
         <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid var(--border-color)', background: 'var(--bg-card)', padding: '0 24px', overflowX: 'auto' }}>
           {[
-            { id: 'info', label: 'Información', icon: Info },
+            { id: 'info', label: 'InformaciÃ³n', icon: Info },
             { id: 'inventory', label: 'Inventario y Stock', icon: PackageSearch },
-            { id: 'images', label: 'Galería y Colores', icon: ImageIcon },
+            { id: 'images', label: 'GalerÃ­a y Colores', icon: ImageIcon },
             { id: 'measurements', label: 'Medidas', icon: Hash }
           ].map(tab => (
             <button
@@ -232,11 +232,11 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
           {activeTab === 'info' && (
             <div className="pvm-content-grid">
               
-              {/* Identificación y Atributos */}
+              {/* IdentificaciÃ³n y Atributos */}
               <div className="pvm-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                   <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                    <Hash size={18} color="var(--color-primary)" /> Identificación y Atributos
+                    <Hash size={18} color="var(--color-primary)" /> IdentificaciÃ³n y Atributos
                   </h3>
                   {!isEditingInfo ? (
                     <button className="btn-secondary" onClick={handleEditInfo} style={{ padding: '4px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
@@ -256,7 +256,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Código SKU</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>CÃ³digo SKU</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontWeight: '600', color: 'var(--text-main)', background: 'var(--bg-overlay)', padding: '4px 10px', borderRadius: '6px' }}>{variant.sku}</span>
                       <CopyButton text={variant.sku} />
@@ -264,7 +264,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                   </div>
                   {variant.barcode && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Código de Lectura</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>CÃ³digo de Lectura</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{variant.barcode}</span>
                         <CopyButton text={variant.barcode} />
@@ -337,7 +337,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                   
                   {(!variant.size && !variant.fit && !variant.weight && (!variant.variant_attribute_values || variant.variant_attribute_values.length === 0)) && !isEditingInfo && (
                     <div style={{ padding: '10px', background: 'var(--bg-overlay)', borderRadius: '8px', color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center' }}>
-                      Esta es la variante base/genérica del producto. No tiene atributos específicos definidos.
+                      Esta es la variante base/genÃ©rica del producto. No tiene atributos especÃ­ficos definidos.
                     </div>
                   )}
                 </div>
@@ -412,13 +412,13 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                 <div className="pvm-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                   <span style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Costo Inmovilizado</span>
                   <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--color-danger)' }}>{formatMoney(totalStock * cost)}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Capital invertido en almacén</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Capital invertido en almacÃ©n</span>
                 </div>
               </div>
 
               <div className="pvm-card" style={{ padding: 0, overflow: 'hidden' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', padding: '20px' }}>
-                  <Tag size={18} color="var(--color-primary)" /> Distribución en Sucursales
+                  <Tag size={18} color="var(--color-primary)" /> DistribuciÃ³n en Sucursales
                 </h3>
                 
                 {variant.inventories?.length > 0 ? (
@@ -427,7 +427,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                       <thead style={{ background: 'var(--bg-overlay)' }}>
                         <tr>
                         <th style={{ textAlign: 'left', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Sucursal</th>
-                        <th style={{ textAlign: 'center', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Stock Mínimo</th>
+                        <th style={{ textAlign: 'center', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Stock MÃ­nimo</th>
                         <th style={{ textAlign: 'right', padding: '12px 20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>Stock Disponible</th>
                       </tr>
                     </thead>
@@ -448,7 +448,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                             <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                                 <span style={{ fontSize: '12px', color: `var(--color-${status})`, background: `var(--color-${status}-alpha, rgba(0,0,0,0.1))`, padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>
-                                  {status === 'danger' ? 'Agotado' : (status === 'warning' ? 'Bajo' : 'Óptimo')}
+                                  {status === 'danger' ? 'Agotado' : (status === 'warning' ? 'Bajo' : 'Ã“ptimo')}
                                 </span>
                                 <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--text-main)', width: '40px' }}>{stock}</span>
                               </div>
@@ -472,7 +472,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
             <div className="pvm-stack">
               <div className="pvm-card">
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                  Imágenes Específicas de esta Variante
+                  ImÃ¡genes EspecÃ­ficas de esta Variante
                 </h3>
                 
                 {specificImages.length > 0 ? (
@@ -488,7 +488,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                   </div>
                 ) : (
                   <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    <p style={{ margin: 0, fontSize: '14px' }}>Esta variante no tiene imágenes exclusivas ni imágenes por color asignadas.</p>
+                    <p style={{ margin: 0, fontSize: '14px' }}>Esta variante no tiene imÃ¡genes exclusivas ni imÃ¡genes por color asignadas.</p>
                   </div>
                 )}
               </div>
@@ -496,7 +496,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
               {globalImages.length > 0 && (
                 <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', padding: '24px' }}>
                   <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                    Imágenes Generales del Producto
+                    ImÃ¡genes Generales del Producto
                   </h3>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '12px' }}>

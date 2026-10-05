@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { Camera, Image as ImageIcon } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
@@ -151,11 +151,11 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
       }
 
       await updateProductImages(product.id, formData);
-      toast.success("Imágenes actualizadas correctamente");
+      toast.success("ImÃ¡genes actualizadas correctamente");
       onSaved();
     } catch (error) {
       console.error(error);
-      toast.error("Error al guardar imágenes");
+      toast.error("Error al guardar imÃ¡genes");
     } finally {
       setIsSubmitting(false);
     }
@@ -169,7 +169,7 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "16px", border: "1px solid var(--border-color)" }}>
-        <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "var(--text-main)" }}>Edición de Imágenes</h3>
+        <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "var(--text-main)" }}>EdiciÃ³n de ImÃ¡genes</h3>
         
         <div className="product-layout">
           
@@ -195,7 +195,7 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
 
           <div style={{ minWidth: 0, background: "rgba(255,255,255,0.02)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "20px" }}>
-              <div style={{ fontWeight: 600, color: "var(--text-main)" }}>Estrategia de Imágenes</div>
+              <div style={{ fontWeight: 600, color: "var(--text-main)" }}>Estrategia de ImÃ¡genes</div>
               <div className="variant-tabs" style={{ display: "flex", gap: "8px", background: "var(--bg-input)", padding: "4px", borderRadius: "8px" }}>
                 <button 
                   type="button" 
@@ -209,7 +209,7 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
                   style={{ padding: "6px 12px", borderRadius: "6px", background: advancedImageMode === "variant" ? "var(--color-primary)" : "transparent", color: advancedImageMode === "variant" ? "var(--color-primary-text)" : "var(--text-muted)", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: "500", transition: "0.2s" }}
                   onClick={() => handleImageModeSwitch("variant")}
                 >
-                  Por Variante (Únicas)
+                  Por Variante (Ãšnicas)
                 </button>
               </div>
             </div>
@@ -217,7 +217,7 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
             {advancedImageMode === "color" && (
               <div>
                 <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "16px" }}>
-                  Haz clic en un color para gestionar las fotos que se aplicarán a todas sus variantes:
+                  Haz clic en un color para gestionar las fotos que se aplicarÃ¡n a todas sus variantes:
                 </div>
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                   {colorValues.length === 0 && <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>No hay colores disponibles en las variantes.</span>}
@@ -264,7 +264,7 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
                       <th style={{ padding: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-muted)", fontWeight: 600 }}>SKU</th>
                       <th style={{ padding: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-muted)", fontWeight: 600 }}>Talla</th>
                       <th style={{ padding: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-muted)", fontWeight: 600 }}>Color</th>
-                      <th style={{ padding: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-muted)", fontWeight: 600 }}>Imágenes</th>
+                      <th style={{ padding: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-muted)", fontWeight: 600 }}>ImÃ¡genes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -275,8 +275,8 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
                       return (
                         <tr key={index} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                           <td style={{ padding: "10px", color: "var(--text-main)" }}>{v.sku}</td>
-                          <td style={{ padding: "10px", color: "var(--text-main)" }}>{sizeVal || "—"}</td>
-                          <td style={{ padding: "10px", color: "var(--text-main)" }}>{colorVal || "—"}</td>
+                          <td style={{ padding: "10px", color: "var(--text-main)" }}>{sizeVal || "â€”"}</td>
+                          <td style={{ padding: "10px", color: "var(--text-main)" }}>{colorVal || "â€”"}</td>
                           <td style={{ padding: "10px" }}>
                             <button
                               type="button"
@@ -312,7 +312,7 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
         <button className="btn-secondary" onClick={onCancel} disabled={isSubmitting}>Cancelar</button>
         <button className="btn-primary" onClick={handleSave} disabled={isSubmitting}>
-          {isSubmitting ? "Guardando..." : "Guardar Imágenes"}
+          {isSubmitting ? "Guardando..." : "Guardar ImÃ¡genes"}
         </button>
       </div>
 
@@ -321,8 +321,8 @@ export default function ProductImageEditor({ product, onSaved, onCancel }) {
         isOpen={galleryModalConfig.open}
         onClose={() => setGalleryModalConfig({ ...galleryModalConfig, open: false })}
         title={galleryModalConfig.type === "color" 
-          ? `Imágenes del Color: ${getAttributeDetails(galleryModalConfig.id)?.value || ""}`
-          : `Imágenes de la Variante #${galleryModalConfig.id + 1}`
+          ? `ImÃ¡genes del Color: ${getAttributeDetails(galleryModalConfig.id)?.value || ""}`
+          : `ImÃ¡genes de la Variante #${galleryModalConfig.id + 1}`
         }
         images={galleryModalConfig.type === "color" 
           ? (colorImages[galleryModalConfig.id] || []) 

@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getInventory, getInventoryStats } from "../../../../api/admin/inventory";
@@ -84,7 +84,7 @@ export default function Inventory() {
     }
 
     if (!filters.branch_id) {
-      toast.error("Selecciona una sucursal para ver opciones rápidas de escaneo.", { icon: '🏢' });
+      toast.error("Selecciona una sucursal para ver opciones rÃ¡pidas de escaneo.", { icon: 'ðŸ¢' });
       return;
     }
 
@@ -176,7 +176,7 @@ export default function Inventory() {
   return (
     <div className="inventory-container">
       <div className="inventory-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 className="inventory-title" style={{ margin: 0 }}>Gestión de Inventario</h1>
+        <h1 className="inventory-title" style={{ margin: 0 }}>GestiÃ³n de Inventario</h1>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
           
           <div style={{ position: 'relative' }}>
@@ -238,7 +238,7 @@ export default function Inventory() {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontWeight: 600, fontSize: '14px' }}>{branch.name}</span>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{branch.phone || "Sin teléfono"}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{branch.phone || "Sin telÃ©fono"}</span>
                         </div>
                       </button>
                     )
@@ -350,7 +350,7 @@ export default function Inventory() {
               <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Box size={18} color="var(--color-primary)" />
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ítems en Stock</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ãtems en Stock</span>
                 </div>
                 <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.total_items.toLocaleString()}</div>
               </div>
@@ -395,7 +395,7 @@ export default function Inventory() {
                 </div>
                 <button
                   onClick={() => openScanner(processScannedCode)}
-                  title="Escanear con Cámara"
+                  title="Escanear con CÃ¡mara"
                   style={{ width: '42px', height: '42px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s' }}
                 >
                   <Camera size={20} />
@@ -428,13 +428,13 @@ export default function Inventory() {
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Categoría</label>
+                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>CategorÃ­a</label>
                   <CustomSelect
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', transition: 'border 0.2s' }}
                     value={filters.category_id}
                     onChange={(e) => setFilters({ ...filters, category_id: e.target.value, page: 1 })}
                   >
-                    <option value="">Todas las categorías</option>
+                    <option value="">Todas las categorÃ­as</option>
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
@@ -456,7 +456,7 @@ export default function Inventory() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio Mínimo (Bs.)</label>
+                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio MÃ­nimo (Bs.)</label>
                   <input
                     type="number"
                     min="0"
@@ -469,7 +469,7 @@ export default function Inventory() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio Máximo (Bs.)</label>
+                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio MÃ¡ximo (Bs.)</label>
                   <input
                     type="number"
                     min="0"
@@ -629,7 +629,7 @@ export default function Inventory() {
                             <td>-</td>
                             <td>{group.branch?.name || "Sin sucursal"}</td>
                             <td>
-                              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Múltiples SKU</span>
+                              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>MÃºltiples SKU</span>
                             </td>
                             <td>
                               {isGroupOutOfStock ? (
@@ -691,7 +691,7 @@ export default function Inventory() {
                             orderedAttrs.push(...otherAttrs);
                             if (item.variant?.fit?.name) orderedAttrs.push(item.variant.fit.name);
 
-                            const attributesText = orderedAttrs.length > 0 ? orderedAttrs.join(", ") : "Única";
+                            const attributesText = orderedAttrs.length > 0 ? orderedAttrs.join(", ") : "Ãšnica";
 
                             return (
                               <tr key={item.id} style={{ background: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)' }}>

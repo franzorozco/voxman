@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import api from '../../api/client';
 import toast from 'react-hot-toast';
 
@@ -8,7 +8,7 @@ const useShopWishlistStore = create((set, get) => ({
 
   fetchWishlist: async () => {
     // Si no hay token guardado, ni siquiera intentamos pedir la wishlist
-    // (así evitamos el error 401 rojo en la consola)
+    // (asÃ­ evitamos el error 401 rojo en la consola)
     const token = localStorage.getItem('token') || localStorage.getItem('shop_auth_token');
     if (!token || token === 'undefined' || token === 'null') {
       set({ items: [], loading: false });
@@ -40,16 +40,16 @@ const useShopWishlistStore = create((set, get) => ({
       const response = await api.post('/v1/shop/wishlist/toggle', { product_id: productId, variant_id: variantId });
       set({ items: response.data.items || [] });
       if (response.data.status === 'added') {
-        toast.success('Agregado a favoritos ❤️');
+        toast.success('Agregado a favoritos â¤ï¸');
       } else {
-        toast('Eliminado de favoritos', { icon: '🤍' });
+        toast('Eliminado de favoritos', { icon: 'ðŸ¤' });
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);
       // Revert optimistic UI on error
       set({ items: currentItems });
       if (error.response?.status === 401 || error.response?.status === 403) {
-        toast.error('Inicia sesión para guardar favoritos.');
+        toast.error('Inicia sesiÃ³n para guardar favoritos.');
       } else {
         toast.error('No se pudo actualizar favoritos.');
       }

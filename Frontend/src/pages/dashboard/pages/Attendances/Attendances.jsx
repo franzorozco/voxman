@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Search, Clock, Calendar, RefreshCw, Plus, Edit, Trash2, CalendarDays, List as ListIcon, ShieldAlert, Filter } from "lucide-react";
 import { getAttendances, deleteAttendance } from "../../../../api/admin/attendances";
 import { getEmployees } from "../../../../api/admin/employees";
@@ -61,7 +61,7 @@ export default function Attendances() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este registro?")) return;
+    if (!window.confirm("Â¿Seguro que deseas eliminar este registro?")) return;
     try {
       await deleteAttendance(id);
       toast.success("Registro eliminado");
@@ -150,7 +150,7 @@ export default function Attendances() {
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              placeholder="Buscar por nombre, código o notas..." 
+              placeholder="Buscar por nombre, cÃ³digo o notas..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -216,7 +216,7 @@ export default function Attendances() {
           <table className="products-table">
             <thead>
               <tr>
-                {viewMode === 'daily' && <th>CÓDIGO</th>}
+                {viewMode === 'daily' && <th>CÃ“DIGO</th>}
                 {viewMode === 'daily' && <th>EMPLEADO</th>}
                 {viewMode === 'monthly' && <th>FECHA</th>}
                 <th>ENTRADA</th>
@@ -236,7 +236,7 @@ export default function Attendances() {
               ) : filteredAttendances.length === 0 ? (
                 <tr>
                   <td colSpan={viewMode === 'daily' ? "7" : "6"} className="text-center" style={{ padding: '40px', color: 'var(--text-muted)' }}>
-                    {viewMode === 'monthly' && !selectedEmployeeForMonth ? 'Selecciona un empleado para ver su historial mensual.' : 'No hay registros de asistencia para esta selección.'}
+                    {viewMode === 'monthly' && !selectedEmployeeForMonth ? 'Selecciona un empleado para ver su historial mensual.' : 'No hay registros de asistencia para esta selecciÃ³n.'}
                   </td>
                 </tr>
               ) : (
@@ -245,7 +245,7 @@ export default function Attendances() {
                   const fullName = `${profile.first_name || ''} ${profile.last_name_paternal || ''}`.trim() || 'Sin Nombre';
                   return (
                     <tr key={att.id} className="fade-in">
-                      {viewMode === 'daily' && <td data-label="CÓDIGO"><span className="customer-code">{att.employee?.employee_code}</span></td>}
+                      {viewMode === 'daily' && <td data-label="CÃ“DIGO"><span className="customer-code">{att.employee?.employee_code}</span></td>}
                       {viewMode === 'daily' && <td data-label="EMPLEADO"><span style={{ fontWeight: 600 }}>{fullName}</span></td>}
                       
                       {viewMode === 'monthly' && (

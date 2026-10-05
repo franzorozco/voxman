@@ -1,4 +1,4 @@
-/* =========================
+﻿/* =========================
    RESET BASE & VARIABLES
 ========================= */
 *,
@@ -217,7 +217,7 @@ body {
 }
 
 /* =========================
-   ERRORES & VALIDACIÓN
+   ERRORES & VALIDACIÃ“N
 ========================= */
 .error {
   display: flex;
@@ -273,7 +273,7 @@ body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.strength-fill.débil { width: 33%; background: var(--color-danger); }
+.strength-fill.dÃ©bil { width: 33%; background: var(--color-danger); }
 .strength-fill.media { width: 66%; background: var(--color-warning); }
 .strength-fill.fuerte { width: 100%; background: var(--color-success); }
 
@@ -288,12 +288,12 @@ body {
   gap: 4px;
 }
 
-.strength-text.débil { color: var(--color-danger); }
+.strength-text.dÃ©bil { color: var(--color-danger); }
 .strength-text.media { color: var(--color-warning); }
 .strength-text.fuerte { color: var(--color-success); }
 
 /* =========================
-   NAVEGACIÓN ENTRE AUTH
+   NAVEGACIÃ“N ENTRE AUTH
 ========================= */
 .auth-footer {
   margin-top: 25px;
@@ -317,7 +317,7 @@ body {
 }
 
 /* =========================
-   MENSAJE DE ÉXITO
+   MENSAJE DE Ã‰XITO
 ========================= */
 .success-message {
   display: flex;
@@ -347,5 +347,6 @@ body {
   .register-card h2 {
     font-size: 28px;
   }
-}
+}
+
 

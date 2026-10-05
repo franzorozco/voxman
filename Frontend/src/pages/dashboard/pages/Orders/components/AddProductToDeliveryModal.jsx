@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { X, Camera, Plus } from "lucide-react";
 import { getProducts } from "../../../../../api/admin/products";
@@ -139,7 +139,7 @@ export default function AddProductToDeliveryModal({ onClose, onAddProduct }) {
                   type="button"
                   onClick={() => openScanner(processScannedCode, true)}
                   className="scanner-btn"
-                  title="Escanear código de barras o QR"
+                  title="Escanear cÃ³digo de barras o QR"
                 >
                   <Camera size={18} />
                 </button>

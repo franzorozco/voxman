@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import "./Hero.css";
 import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
@@ -46,7 +46,7 @@ export default function Hero({ title, subtitle }) {
   }, []);
 
   const handleMouseEnter = (index) => {
-    // Al entrar a una columna, cancelamos la desaparición del efecto
+    // Al entrar a una columna, cancelamos la desapariciÃ³n del efecto
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
@@ -54,8 +54,8 @@ export default function Hero({ title, subtitle }) {
 
     if (hoveredIdx === index) return;
 
-    // Retardo pequeño para confirmar que el usuario quiere ver esta imagen
-    // y no está simplemente cruzando el mouse para llegar a un botón.
+    // Retardo pequeÃ±o para confirmar que el usuario quiere ver esta imagen
+    // y no estÃ¡ simplemente cruzando el mouse para llegar a un botÃ³n.
     if (enterTimeoutRef.current) {
       clearTimeout(enterTimeoutRef.current);
     }
