@@ -1,13 +1,13 @@
-﻿import { X, CheckCircle, Clock, Archive, XCircle } from "lucide-react";
+import { X, CheckCircle, Clock, Archive, XCircle } from "lucide-react";
 
 export default function ExpenseDetailModal({ isOpen, onClose, expense }) {
   if (!isOpen || !expense) return null;
 
   const getSplitTypeLabel = (type) => {
     switch(type) {
-      case 'equal': return 'DivisiÃ³n 50/50';
+      case 'equal': return 'División 50/50';
       case 'proportional': return 'Proporcional a ventas';
-      case 'single_owner': return 'Un solo dueÃ±o';
+      case 'single_owner': return 'Un solo dueño';
       case 'custom': return 'Personalizado';
       default: return type;
     }
@@ -50,11 +50,11 @@ export default function ExpenseDetailModal({ isOpen, onClose, expense }) {
                 <p style={{ margin: 0, fontWeight: 500 }}>{new Date(expense.expense_date).toLocaleDateString()}</p>
               </div>
               <div>
-                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: 'var(--text-muted)' }}>CategorÃ­a</p>
+                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: 'var(--text-muted)' }}>Categoría</p>
                 <p style={{ margin: 0, fontWeight: 500 }}>{expense.category || 'General'}</p>
               </div>
               <div>
-                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: 'var(--text-muted)' }}>Tipo de DivisiÃ³n</p>
+                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: 'var(--text-muted)' }}>Tipo de División</p>
                 <p style={{ margin: 0, fontWeight: 500 }}>{getSplitTypeLabel(expense.split_type)}</p>
               </div>
               <div>
@@ -62,7 +62,7 @@ export default function ExpenseDetailModal({ isOpen, onClose, expense }) {
                 <p style={{ margin: 0, fontWeight: 500 }}>
                   {expense.is_recurring ? (
                     <span style={{ color: 'var(--color-primary-text)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14}/> {expense.recurrence_interval === 'monthly' ? 'Mensual' : expense.recurrence_interval === 'weekly' ? 'Semanal' : 'Anual'}</span>
-                  ) : 'Ãšnico'}
+                  ) : 'Único'}
                 </p>
               </div>
             </div>
@@ -70,7 +70,7 @@ export default function ExpenseDetailModal({ isOpen, onClose, expense }) {
 
           {/* Splits Details */}
           <div>
-            <h3 style={{ fontSize: '15px', margin: '0 0 10px 0' }}>DistribuciÃ³n y Estado de Pagos</h3>
+            <h3 style={{ fontSize: '15px', margin: '0 0 10px 0' }}>Distribución y Estado de Pagos</h3>
             <div className="table-responsive" style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead style={{ background: 'var(--bg-overlay)' }}>

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createEmployee, updateEmployee } from "../../../../api/admin/employees";
@@ -127,7 +127,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>CÃ³digo de Empleado (Manual) *</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Empleado (Manual) *</label>
                 <input 
                   type="text" 
                   style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
@@ -171,7 +171,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>TelÃ©fono</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
                 <input 
                   type="text" 
                   style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
@@ -190,7 +190,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
                     style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
                   />
                   <label htmlFor="create_web_account" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
-                    Habilitar cuenta web (Correo y ContraseÃ±a)
+                    Habilitar cuenta web (Correo y Contraseña)
                   </label>
                 </div>
 
@@ -198,7 +198,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                        Correo ElectrÃ³nico *
+                        Correo Electrónico *
                       </label>
                       <input 
                         type="email" 
@@ -211,14 +211,14 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
 
                     <div>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                        ContraseÃ±a {isEditing ? '(Opcional, dejar vacÃ­o para no cambiar)' : '*'}
+                        Contraseña {isEditing ? '(Opcional, dejar vacío para no cambiar)' : '*'}
                       </label>
                       <input 
                         type="password" 
                         style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                         value={formData.password}
                         onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        placeholder={isEditing ? "********" : "Ingresar contraseÃ±a"}
+                        placeholder={isEditing ? "********" : "Ingresar contraseña"}
                         required={createWebAccount && !isEditing}
                       />
                     </div>
@@ -271,7 +271,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>ComisiÃ³n (%)</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Comisión (%)</label>
                   <input 
                     type="number" 
                     step="0.01"
@@ -286,7 +286,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
 
               <div className="modal-form-grid">
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Fecha ContrataciÃ³n</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Fecha Contratación</label>
                   <input 
                     type="date" 
                     style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
@@ -336,7 +336,7 @@ export default function EmployeeModal({ employee, onClose, onSuccess }) {
                   style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
                 />
                 <label htmlFor="is_active_checkbox" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}>
-                  Empleado Activo (Permite iniciar sesiÃ³n en el sistema)
+                  Empleado Activo (Permite iniciar sesión en el sistema)
                 </label>
               </div>
 

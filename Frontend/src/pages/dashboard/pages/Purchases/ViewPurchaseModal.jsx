@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState } from "react";
 import { X, FileText, ShoppingCart, Info, MapPin, User, Hash, Printer, DollarSign, Plus } from "lucide-react";
 import { API_BASE_URL } from "../../../../config/api";
@@ -62,7 +62,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
   };
 
   const handleRegisterPayment = async () => {
-    if (!paymentAmount || Number(paymentAmount) <= 0) return toast.error("Ingresa un monto vÃ¡lido");
+    if (!paymentAmount || Number(paymentAmount) <= 0) return toast.error("Ingresa un monto válido");
     try {
       setSubmittingPayment(true);
       await registerPurchasePayment(purchase.id, {
@@ -88,7 +88,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
         shipping_cost: shippingCost || 0,
         other_costs: otherCost || 0
       });
-      toast.success("Costos de importaciÃ³n actualizados");
+      toast.success("Costos de importación actualizados");
       setIsAddingCost(false);
       setShippingCost("");
       setOtherCost("");
@@ -162,7 +162,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
             </div>
 
             <div className="modal-info-item">
-              <div className="modal-info-label">Fecha de EmisiÃ³n</div>
+              <div className="modal-info-label">Fecha de Emisión</div>
               <div className="modal-info-value">
                 {new Date(purchase.created_at).toLocaleString()}
               </div>
@@ -277,7 +277,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
                         <thead style={{ background: 'var(--bg-overlay)', borderBottom: '1px solid var(--border-color)' }}>
                           <tr>
                             <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)' }}>Fecha</th>
-                            <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)' }}>MÃ©todo</th>
+                            <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--text-muted)' }}>Método</th>
                             <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--text-muted)' }}>Monto</th>
                           </tr>
                         </thead>
@@ -325,7 +325,7 @@ export default function ViewPurchaseModal({ purchase, onClose, onUpdate }) {
           {purchase.status === 'pending' && (
             <div className="no-print" style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
               <h3 style={{ fontSize: '15px', color: 'var(--text-main)', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MapPin size={16} color="var(--color-warning)" /> Costos de ImportaciÃ³n (Landed Cost)
+                <MapPin size={16} color="var(--color-warning)" /> Costos de Importación (Landed Cost)
               </h3>
               {!isAddingCost ? (
                 <button style={{ background: 'transparent', border: '1px dashed var(--border-color)', color: 'var(--text-main)', padding: '10px', width: '100%', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => setIsAddingCost(true)}>

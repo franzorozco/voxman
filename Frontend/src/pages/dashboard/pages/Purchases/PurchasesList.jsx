@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, FileText, XCircle, RefreshCw, Eye, Package, Filter, MoreVertical } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
@@ -38,7 +38,7 @@ export default function PurchasesList() {
       setPurchases(purRes.data.data || purRes.data); // handle pagination
       setStats(statsRes.data);
     } catch (error) {
-      toast.error("Error al cargar Ã³rdenes de compra");
+      toast.error("Error al cargar órdenes de compra");
       console.error(error);
     } finally {
       setLoading(false);
@@ -50,7 +50,7 @@ export default function PurchasesList() {
   }, [search, statusFilter]);
 
   const handleCancel = async (id) => {
-    if (window.confirm("Â¿EstÃ¡s seguro de cancelar esta orden de compra?")) {
+    if (window.confirm("¿Estás seguro de cancelar esta orden de compra?")) {
       try {
         const { data } = await cancelPurchase(id);
         toast.success(data.message);
@@ -74,7 +74,7 @@ export default function PurchasesList() {
       <div className="products-header">
         <h1 className="products-title">
           <FileText size={28} className="text-primary" />
-          Ã“rdenes de Compra
+          Órdenes de Compra
         </h1>
 
         <div className="purchases-header-actions">
@@ -116,7 +116,7 @@ export default function PurchasesList() {
               <FileText size={24} />
             </div>
             <div className="metric-content">
-              <div className="metric-label">MercaderÃ­a Recibida</div>
+              <div className="metric-label">Mercadería Recibida</div>
               <div className="metric-value">Bs. {Number(stats.monthly_purchases).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function PurchasesList() {
                           <Link
                             to={`/dashboard/purchases/receive/${purchase.id}`}
                             className="btn-convert"
-                            title="Recepcionar MercaderÃ­a"
+                            title="Recepcionar Mercadería"
                           >
                             <Package size={16} />
                           </Link>

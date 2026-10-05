@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getRoles, createRole, updateRole, deleteRole } from "../../../../api/admin/roles";
 import { Shield, Users, KeyRound, Edit, Trash2, Plus } from "lucide-react";
 
@@ -35,10 +35,10 @@ export default function Roles() {
     try {
       if (selected) {
         await updateRole(selected.id, data);
-        toast.success("Rol actualizado con Ã©xito");
+        toast.success("Rol actualizado con éxito");
       } else {
         await createRole(data);
-        toast.success("Rol creado con Ã©xito");
+        toast.success("Rol creado con éxito");
       }
       setOpen(false);
       loadRoles();
@@ -150,9 +150,9 @@ export default function Roles() {
             <div className="modal-confirm-icon-box">
               <Trash2 size={32} />
             </div>
-            <h2 className="modal-confirm-title">Â¿Eliminar rol?</h2>
+            <h2 className="modal-confirm-title">¿Eliminar rol?</h2>
             <p className="modal-confirm-text">
-              EstÃ¡s a punto de eliminar el rol <b>{roleToDelete?.name}</b>. Esta acciÃ³n removerÃ¡ el nivel de acceso a todos los usuarios que lo posean.
+              Estás a punto de eliminar el rol <b>{roleToDelete?.name}</b>. Esta acción removerá el nivel de acceso a todos los usuarios que lo posean.
             </p>
 
             <div className="modal-confirm-actions">

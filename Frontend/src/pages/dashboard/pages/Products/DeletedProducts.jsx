@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
@@ -224,7 +224,7 @@ export default function DeletedProducts() {
                 <th>SKU</th>
                 <th>Atributos</th>
                 <th>Precio</th>
-                <th>Fecha EliminaciÃ³n</th>
+                <th>Fecha Eliminación</th>
               </tr>
             </thead>
             <tbody>
@@ -279,7 +279,7 @@ export default function DeletedProducts() {
                 <th>Producto</th>
                 <th>Precio</th>
                 <th>Stock Total</th>
-                <th>{activeTab === 'deleted' ? 'Fecha EliminaciÃ³n' : 'Estado'}</th>
+                <th>{activeTab === 'deleted' ? 'Fecha Eliminación' : 'Estado'}</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -408,15 +408,15 @@ export default function DeletedProducts() {
         }
         message={
           confirmModal.type === "restore" 
-          ? "Â¿EstÃ¡s seguro de restaurar este producto? VolverÃ¡ a estar disponible con sus variantes e inventario intactos." 
+          ? "¿Estás seguro de restaurar este producto? Volverá a estar disponible con sus variantes e inventario intactos." 
           : confirmModal.type === "softDelete"
-          ? "Â¿EstÃ¡s seguro de mover este producto a la papelera?"
-          : "ADVERTENCIA: Â¿EstÃ¡s seguro de eliminar PERMANENTEMENTE este producto? Esta acciÃ³n no se puede deshacer y borrarÃ¡ todas las imÃ¡genes, variantes e inventario asociados."
+          ? "¿Estás seguro de mover este producto a la papelera?"
+          : "ADVERTENCIA: ¿Estás seguro de eliminar PERMANENTEMENTE este producto? Esta acción no se puede deshacer y borrará todas las imágenes, variantes e inventario asociados."
         }
         confirmText={
-          confirmModal.type === "restore" ? "SÃ­, restaurar" : 
-          confirmModal.type === "softDelete" ? "SÃ­, eliminar" : 
-          "SÃ­, eliminar definitivamente"
+          confirmModal.type === "restore" ? "Sí, restaurar" : 
+          confirmModal.type === "softDelete" ? "Sí, eliminar" : 
+          "Sí, eliminar definitivamente"
         }
         type={confirmModal.type === "restore" ? "success" : "danger"}
       />

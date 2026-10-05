@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../utils/imageUtils';
+import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
@@ -20,12 +20,12 @@ const Catalog = () => {
   const navigate = useNavigate();
   const addToCart = useShopCartStore(state => state.addItem);
   const [addedAnimationItems, setAddedAnimationItems] = useState({});
-  // ðŸ”’ Solo aceptar UUIDs vÃ¡lidos desde la URL (evita enviar basura al backend)
+  // 🔒 Solo aceptar UUIDs válidos desde la URL (evita enviar basura al backend)
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const rawCategory = searchParams.get('category');
   const initialCategory = rawCategory && UUID_RE.test(rawCategory) ? rawCategory : null;
 
-  // â”€â”€ Settings del Dashboard â”€â”€
+  // ── Settings del Dashboard ──
   const { settings: shopSettings, fetchSettings: fetchShopSettings } = useShopSettingsStore();
   useEffect(() => { fetchShopSettings(); }, [fetchShopSettings]);
 
@@ -66,7 +66,7 @@ const Catalog = () => {
   const [selectedQuickSize, setSelectedQuickSize] = useState({});
   const [selectedQuickColor, setSelectedQuickColor] = useState({});
 
-  // Nuevos estados para filtros y paginaciÃ³n
+  // Nuevos estados para filtros y paginación
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300); // 300ms debounce
   const [minPrice, setMinPrice] = useState('');
@@ -119,7 +119,7 @@ const Catalog = () => {
 
   // Removido fetchWishlist para no sobrecargar
 
-  // Reiniciar la pÃ¡gina y limpiar productos cuando cambian los filtros
+  // Reiniciar la página y limpiar productos cuando cambian los filtros
   useEffect(() => {
     setCurrentPage(1);
     setProducts([]);
@@ -127,7 +127,7 @@ const Catalog = () => {
     setVisibleCount(parseInt(cfg('catalog_products_per_page', '12'), 10));
   }, [selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, shopSettings]);
 
-  // Obtener productos desde el backend (paginaciÃ³n server-side)
+  // Obtener productos desde el backend (paginación server-side)
   useEffect(() => {
     if (!categoriesLoaded) return;
     if (!hasMore && currentPage > 1) return;
@@ -182,7 +182,7 @@ const Catalog = () => {
 
   
 
-  // Extraer las variantes de un producto especÃ­fico
+  // Extraer las variantes de un producto específico
   const getVariantsForProduct = (product) => {
     const variants = [];
     const attrImages = product.attribute_value_images || [];
@@ -381,7 +381,7 @@ const Catalog = () => {
     });
   }, [baseItems, products]);
 
-  // 4. PaginaciÃ³n / Cargar MÃ¡s: Eliminamos el slice() ya que la paginaciÃ³n es por servidor
+  // 4. Paginación / Cargar Más: Eliminamos el slice() ya que la paginación es por servidor
   const displayItems = processedItems.slice(0, visibleCount);
 
   const animationKey = `${viewMode}-${imageMode}-${selectedCategory}-${sortBy}-${searchQuery}`;
@@ -440,7 +440,7 @@ const Catalog = () => {
   // Renderizar grid
   const renderProductGrid = () => {
     if ((viewMode || 'prendas') === 'producto') {
-      // Agrupar en filas segÃºn columnas configuradas
+      // Agrupar en filas según columnas configuradas
       const colCount = parseInt(cfg('catalog_grid_cols_desktop', '3'), 10);
       const rows = [];
       for (let i = 0; i < displayItems.length; i += colCount) {
@@ -480,7 +480,7 @@ const Catalog = () => {
                         position: 'relative'
                       }}
                     >
-                      {/* BOTÃ“N WISHLIST */}
+                      {/* BOTÓN WISHLIST */}
                       <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                         {item.has_discount && cfg('catalog_badge_show_discount', '1') !== '0' && (
                           <div style={{ backgroundColor: cfg('catalog_badge_discount_bg', 'var(--text-main)'), color: cfg('catalog_badge_discount_text', 'var(--bg-main, #fff)'), fontSize: `${cfg('catalog_badge_discount_size', '14')}px`, fontWeight: '600', padding: '6px 12px', borderRadius: `${cfg('catalog_badge_discount_radius', '4')}px`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
@@ -540,7 +540,7 @@ const Catalog = () => {
                           }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                            <p style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--text-main)' }}>AÃ±adir RÃ¡pido</p>
+                            <p style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--text-main)' }}>Añadir Rápido</p>
                             <button onClick={() => setQuickAddProductId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                               <X size={16} />
                             </button>
@@ -613,7 +613,7 @@ const Catalog = () => {
                         >
                           {item.name}
                         </h3>
-                        {/* PRECIOS â€” nowrap garantizado por clase CSS */}
+                        {/* PRECIOS — nowrap garantizado por clase CSS */}
                         <div className="catalog-card-price-row">
                           {item.has_discount ? (
                             <>
@@ -652,7 +652,7 @@ const Catalog = () => {
                         )}
                       </div>
 
-                      {/* BOTÃ“N AÃ‘ADIR RÃPIDO con animaciÃ³n pop */}
+                      {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
                       {cfg('catalog_show_quick_add', '1') !== '0' && !item.is_bundle && quickAddProductId !== item.id && (
                         <button
                           className="catalog-card-add-btn"
@@ -664,7 +664,7 @@ const Catalog = () => {
                             }, 400);
                             handleQuickAddClick(e, item.id);
                           }}
-                          title="AÃ±adir rÃ¡pido"
+                          title="Añadir rápido"
                         >
                           <ShoppingBag size={17} />
                         </button>
@@ -842,7 +842,7 @@ const Catalog = () => {
                       </div>
                     )}
                   </div>
-                  {/* BOTÃ“N WISHLIST */}
+                  {/* BOTÓN WISHLIST */}
                   <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                     {item.has_discount && cfg('catalog_badge_show_discount', '1') !== '0' && (
                       <div style={{ backgroundColor: cfg('catalog_badge_discount_bg', 'var(--text-main)'), color: cfg('catalog_badge_discount_text', 'var(--bg-main, #fff)'), fontSize: `${cfg('catalog_badge_discount_size', '14')}px`, fontWeight: '600', padding: '6px 12px', borderRadius: `${cfg('catalog_badge_discount_radius', '4')}px`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', letterSpacing: '0.05em' }}>
@@ -885,7 +885,7 @@ const Catalog = () => {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                        <p style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--text-main)' }}>AÃ±adir RÃ¡pido</p>
+                        <p style={{ fontSize: '13px', fontWeight: 600, margin: 0, color: 'var(--text-main)' }}>Añadir Rápido</p>
                         <button onClick={() => setQuickAddProductId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
                           <X size={16} />
                         </button>
@@ -958,7 +958,7 @@ const Catalog = () => {
                     >
                       {item.name}
                     </h3>
-                    {/* PRECIOS â€” nowrap por clase CSS */}
+                    {/* PRECIOS — nowrap por clase CSS */}
                     <div className="catalog-card-price-row">
                       {item.has_discount ? (
                         <>
@@ -997,7 +997,7 @@ const Catalog = () => {
                     )}
                   </div>
 
-                  {/* BOTÃ“N AÃ‘ADIR RÃPIDO con animaciÃ³n pop */}
+                  {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
                   {cfg('catalog_show_quick_add', '1') !== '0' && !item.is_bundle && quickAddProductId !== item.id && (
                     <button
                       className="catalog-card-add-btn"
@@ -1009,7 +1009,7 @@ const Catalog = () => {
                         }, 400);
                         handleQuickAddClick(e, item.id);
                       }}
-                      title="AÃ±adir rÃ¡pido"
+                      title="Añadir rápido"
                     >
                       <ShoppingBag size={17} />
                     </button>
@@ -1035,7 +1035,7 @@ const Catalog = () => {
       '--catalog-cols-mobile': cfg('catalog_grid_cols_mobile', '2'),
       '--catalog-grid-gap': `${cfg('catalog_grid_gap', '24')}px`,
     }}>
-      {/* â”€â”€ OVERLAY FILTROS MÃ“VIL â”€â”€ */}
+      {/* ── OVERLAY FILTROS MÓVIL ── */}
       {isMobileFiltersOpen && (
         <>
           <div className="catalog-mobile-overlay-backdrop" onClick={() => setIsMobileFiltersOpen(false)} />
@@ -1057,8 +1057,8 @@ const Catalog = () => {
               />
             </div>
 
-            {/* CategorÃ­as */}
-            <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-main)', marginBottom: '12px' }}>CategorÃ­as</h3>
+            {/* Categorías */}
+            <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-main)', marginBottom: '12px' }}>Categorías</h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <li>
                 <button className="catalog-filter-link" style={{ fontWeight: selectedCategory === null ? 700 : 400, color: selectedCategory === null ? 'var(--text-main)' : 'var(--text-muted)' }}
@@ -1093,7 +1093,7 @@ const Catalog = () => {
             <h3 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-main)', marginBottom: '12px' }}>Precio (Bs)</h3>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
               <input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="Min" className="catalog-filter-input" style={{ flex: 1 }} />
-              <span style={{ color: 'var(--text-muted)', alignSelf: 'center' }}>â€”</span>
+              <span style={{ color: 'var(--text-muted)', alignSelf: 'center' }}>—</span>
               <input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="Max" className="catalog-filter-input" style={{ flex: 1 }} />
             </div>
 
@@ -1109,29 +1109,29 @@ const Catalog = () => {
         </>
       )}
 
-      {/* â”€â”€ HEADER: TÃ­tulo + Controles â”€â”€ */}
+      {/* ── HEADER: Título + Controles ── */}
       <div className="catalog-header">
         <h1 className="catalog-title" style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-          {cfg('catalog_title', 'CatÃ¡logo')}
+          {cfg('catalog_title', 'Catálogo')}
         </h1>
 
-        {/* Breadcrumbs â€” solo visibles en mÃ³vil, bajo el tÃ­tulo */}
+        {/* Breadcrumbs — solo visibles en móvil, bajo el título */}
         <nav className="catalog-header-breadcrumb">
           <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>{cfg('catalog_breadcrumb_home', 'Inicio')}</Link>
-          <span className="catalog-breadcrumb-sep">â€º</span>
-          <span style={{ color: 'var(--text-main)' }}>{cfg('catalog_title', 'CatÃ¡logo')}</span>
+          <span className="catalog-breadcrumb-sep">›</span>
+          <span style={{ color: 'var(--text-main)' }}>{cfg('catalog_title', 'Catálogo')}</span>
           {selectedCategory && (
             <>
-              <span className="catalog-breadcrumb-sep">â€º</span>
+              <span className="catalog-breadcrumb-sep">›</span>
               <span style={{ color: 'var(--text-muted)' }}>
-                {categories.find(c => c.id === selectedCategory)?.name || 'CategorÃ­a'}
+                {categories.find(c => c.id === selectedCategory)?.name || 'Categoría'}
               </span>
             </>
           )}
         </nav>
 
         <div className="catalog-controls">
-          {/* BotÃ³n Filtros â€” orden 1 en mÃ³vil */}
+          {/* Botón Filtros — orden 1 en móvil */}
           <button
             type="button"
             className="catalog-btn-filters"
@@ -1140,7 +1140,7 @@ const Catalog = () => {
             Filtros
           </button>
 
-          {/* Vista: Por Prendas / Por Productos â€” orden 2 en mÃ³vil (sube al lado de Filtros) */}
+          {/* Vista: Por Prendas / Por Productos — orden 2 en móvil (sube al lado de Filtros) */}
           {cfg('catalog_show_view_toggle', '1') !== '0' && (
             <div className="catalog-view-controls">
               <button
@@ -1170,7 +1170,7 @@ const Catalog = () => {
             </div>
           )}
 
-          {/* Modo imagen: PresentaciÃ³n / VÃ­vido â€” orden 3 en mÃ³vil (baja a su propia fila) */}
+          {/* Modo imagen: Presentación / Vívido — orden 3 en móvil (baja a su propia fila) */}
           {(viewMode || 'prendas') === 'prendas' && cfg('catalog_show_image_toggle', '1') !== '0' && (
             <div className="catalog-image-controls">
               <button
@@ -1182,7 +1182,7 @@ const Catalog = () => {
                   fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
                 }}
               >
-                {cfg('catalog_label_presentacion', 'PresentaciÃ³n')}
+                {cfg('catalog_label_presentacion', 'Presentación')}
               </button>
               <span style={{ color: 'var(--border-color)' }}>/</span>
               <button
@@ -1194,7 +1194,7 @@ const Catalog = () => {
                   fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit'
                 }}
               >
-                {cfg('catalog_label_vivido', 'VÃ­vido')}
+                {cfg('catalog_label_vivido', 'Vívido')}
               </button>
             </div>
           )}
@@ -1205,7 +1205,7 @@ const Catalog = () => {
         <h2 id="products-heading" className="sr-only">Productos</h2>
         <div className="catalog-layout" style={{ "--sidebar-width": `${cfg("catalog_sidebar_width", "220")}px`, "--sidebar-gap": `${cfg("catalog_sidebar_gap", "40")}px` }}>
 
-          {/* â”€â”€ SIDEBAR FILTROS (solo desktop) â”€â”€ */}
+          {/* ── SIDEBAR FILTROS (solo desktop) ── */}
           <form style={{ display: 'block' }} className="catalog-sidebar">
             <h3 className="sr-only">Filtros</h3>
 
@@ -1235,28 +1235,28 @@ const Catalog = () => {
             <nav style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '32px' }}>
               <Link to="/" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>{cfg('catalog_breadcrumb_home', 'Inicio')}</Link>
               <span style={{ margin: '0 8px' }}>&gt;</span>
-              <Link to="/shop/catalog" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>{cfg('catalog_title', 'CatÃ¡logo')}</Link>
+              <Link to="/shop/catalog" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>{cfg('catalog_title', 'Catálogo')}</Link>
               {selectedCategory && (
                 <>
                   <span style={{ margin: '0 8px' }}>&gt;</span>
                   <span style={{ color: 'var(--text-muted)' }}>
-                    {categories.find(c => c.id === selectedCategory)?.name || 'CategorÃ­a'}
+                    {categories.find(c => c.id === selectedCategory)?.name || 'Categoría'}
                   </span>
                 </>
               )}
             </nav>
             )}
 
-            {/* CategorÃ­as */}
+            {/* Categorías */}
             {cfg('catalog_show_categories', '1') !== '0' && (
             <div style={{ marginBottom: '32px' }}>
-              <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>{cfg('catalog_sidebar_categories_title', 'CategorÃ­as')}</h4>
+              <h4 style={{ fontSize: '12px', fontWeight: 700, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-main)' }}>{cfg('catalog_sidebar_categories_title', 'Categorías')}</h4>
               <ul role="list" className="catalog-filter-list" style={{ listStyle: 'none', padding: 0, margin: 0, paddingBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <li>
                   <button type="button" className="catalog-filter-link"
                     onClick={() => { setSelectedCategory(null); setExpandedProductId(null); }}
                     style={{ fontWeight: selectedCategory === null ? 700 : 400, color: selectedCategory === null ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                    {cfg('catalog_sidebar_all_categories', 'Todas las CategorÃ­as')}
+                    {cfg('catalog_sidebar_all_categories', 'Todas las Categorías')}
                   </button>
                 </li>
                 {displayCategories.map((parent) => {
@@ -1296,7 +1296,7 @@ const Catalog = () => {
                   onFocus={(e) => e.target.style.borderBottom = '1px solid var(--text-main)'}
                   onBlur={(e) => e.target.style.borderBottom = '1px solid var(--border-color)'}
                 />
-                <span style={{ color: 'var(--text-muted)' }}>â€”</span>
+                <span style={{ color: 'var(--text-muted)' }}>—</span>
                 <input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="Max"
                   style={{ width: '45%', padding: '6px 0', border: 'none', borderBottom: '1px solid var(--border-color)', backgroundColor: 'transparent', fontSize: '13px', outline: 'none', color: 'var(--text-main)' }}
                   onFocus={(e) => e.target.style.borderBottom = '1px solid var(--text-main)'}
@@ -1324,16 +1324,16 @@ const Catalog = () => {
             )}
           </form>
 
-          {/* â”€â”€ ÃREA DE PRODUCTOS â”€â”€ */}
+          {/* ── ÁREA DE PRODUCTOS ── */}
           <div>
             {isLoading ? (
-              <p style={{ color: 'var(--text-muted)', paddingTop: '40px' }}>Cargando catÃ¡logo...</p>
+              <p style={{ color: 'var(--text-muted)', paddingTop: '40px' }}>Cargando catálogo...</p>
             ) : (
               <>
                 {renderProductGrid()}
                 {isLoading && (
                   <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    Cargando mÃ¡s productos...
+                    Cargando más productos...
                   </div>
                 )}
               </>

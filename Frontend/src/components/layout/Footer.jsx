@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from "react";
+import React, { useEffect } from "react";
 import "./Footer.css";
 import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import { Phone, Mail } from "lucide-react";
@@ -20,7 +20,7 @@ export default function Footer() {
           <h2 className="logo">{settings?.store_name || "VOXman"}</h2>
           <p>
             Moda masculina moderna, minimalista y con identidad.
-            DiseÃ±ada para hombres que buscan estilo y presencia.
+            Diseñada para hombres que buscan estilo y presencia.
           </p>
         </div>
 
@@ -36,9 +36,9 @@ export default function Footer() {
         <div className="footer-column">
           <h3>Ayuda</h3>
           <a href="#">Contacto</a>
-          <a href="#">EnvÃ­os</a>
+          <a href="#">Envíos</a>
           <a href="#">Devoluciones</a>
-          <a href="#">GuÃ­a de tallas</a>
+          <a href="#">Guía de tallas</a>
         </div>
 
         {/* CONTACT */}
@@ -85,7 +85,7 @@ export default function Footer() {
 
       {/* BOTTOM BAR */}
       <div className="footer-bottom">
-        <p>Â© {new Date().getFullYear()} {settings?.store_name || "VOXman"}. Todos los derechos reservados.</p>
+        <p>© {new Date().getFullYear()} {settings?.store_name || "VOXman"}. Todos los derechos reservados.</p>
       </div>
     </footer>
   );

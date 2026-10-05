@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, User, Phone, Mail, Building, FileText, ShoppingBag, DollarSign } from "lucide-react";
 import { getSupplierProfile } from "../../../../api/admin/suppliers";
@@ -51,7 +51,7 @@ export default function SupplierProfile() {
               {supplier.name}
             </h1>
             <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-              {supplier.company_name || 'Sin RazÃ³n Social'}
+              {supplier.company_name || 'Sin Razón Social'}
             </span>
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function SupplierProfile() {
         {/* Contact Info Card */}
         <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-            InformaciÃ³n de Contacto
+            Información de Contacto
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <User size={16} color="var(--text-muted)" />
@@ -89,7 +89,7 @@ export default function SupplierProfile() {
               <DollarSign size={24} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>Total Comprado (HistÃ³rico)</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>Total Comprado (Histórico)</div>
               <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>
                 Bs. {Number(stats?.total_spent || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
               </div>
@@ -101,7 +101,7 @@ export default function SupplierProfile() {
               <ShoppingBag size={24} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>Total de Ã“rdenes</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>Total de Órdenes</div>
               <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>
                 {stats?.total_purchases || 0} compras
               </div>
@@ -112,14 +112,14 @@ export default function SupplierProfile() {
 
       <div style={{ background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
         <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
-          <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text-main)' }}>Historial de Compras (Ãšltimas 20)</h3>
+          <h3 style={{ margin: 0, fontSize: '18px', color: 'var(--text-main)' }}>Historial de Compras (Últimas 20)</h3>
         </div>
         <div className="table-wrapper">
           <table className="suppliers-table">
             <thead>
               <tr>
                 <th>Fecha</th>
-                <th>NÂ° Factura</th>
+                <th>N° Factura</th>
                 <th>Estado</th>
                 <th style={{ textAlign: 'right' }}>Total</th>
               </tr>

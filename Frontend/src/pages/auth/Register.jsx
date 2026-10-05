@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { registerUser, getGoogleAuthUrl } from "../../api/admin/auth";
 import { useAuthStore } from "../../store/authStore";
 import toast from "react-hot-toast";
@@ -76,15 +76,15 @@ export default function Register() {
 
     if (name === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) error = "Correo invÃ¡lido";
+      if (!emailRegex.test(value)) error = "Correo inválido";
     }
 
     if (name === "username") {
-      if (value.length < 3) error = "MÃ­nimo 3 caracteres";
+      if (value.length < 3) error = "Mínimo 3 caracteres";
       else if (/\s/.test(value)) error = "Sin espacios";
       else {
         const userRegex = /^[a-zA-Z0-9_]+$/;
-        if (!userRegex.test(value)) error = "Solo letras, nÃºmeros y guiones bajos";
+        if (!userRegex.test(value)) error = "Solo letras, números y guiones bajos";
       }
     }
 
@@ -94,13 +94,13 @@ export default function Register() {
       const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
       if (value.length < 8) {
-        error = "MÃ­nimo 8 caracteres";
+        error = "Mínimo 8 caracteres";
         setPasswordStrength("");
       } else if (value.length > 72) {
-        error = "MÃ¡ximo 72 caracteres";
+        error = "Máximo 72 caracteres";
       } else if (!hasLetters || !hasNumbers) {
-        error = "Debe incluir letras y nÃºmeros";
-        setPasswordStrength("DÃ©bil");
+        error = "Debe incluir letras y números";
+        setPasswordStrength("Débil");
       } else if (hasSpecial) {
         setPasswordStrength("Fuerte");
       } else {
@@ -110,12 +110,12 @@ export default function Register() {
 
     if (name === "password_confirmation") {
       if (value !== form.password) {
-        error = "Las contraseÃ±as no coinciden";
+        error = "Las contraseñas no coinciden";
       }
     }
 
     if (name === "username") {
-      if (value.length < 3) error = "MÃ­nimo 3 caracteres";
+      if (value.length < 3) error = "Mínimo 3 caracteres";
       else if (/\s/.test(value)) error = "Sin espacios";
     }
 
@@ -150,7 +150,7 @@ export default function Register() {
     e.preventDefault();
 
     if (!acceptedTerms) {
-      toast.error("Debes aceptar los tÃ©rminos y condiciones");
+      toast.error("Debes aceptar los términos y condiciones");
       return;
     }
 
@@ -204,7 +204,7 @@ export default function Register() {
   const renderStrengthIcon = () => {
     if (!passwordStrength) return null;
     const str = passwordStrength.toLowerCase();
-    if (str === "dÃ©bil") return <ShieldAlert size={14} />;
+    if (str === "débil") return <ShieldAlert size={14} />;
     if (str === "media") return <Shield size={14} />;
     if (str === "fuerte") return <ShieldCheck size={14} />;
     return null;
@@ -216,7 +216,7 @@ export default function Register() {
 
       <div className="register-card">
         <h2>VOXMAN</h2>
-        <p className="subtitle">Ãšnete al estilo</p>
+        <p className="subtitle">Únete al estilo</p>
 
         {success ? (
           <div className="success-message">
@@ -234,7 +234,7 @@ export default function Register() {
                 type="email"
                 autoComplete="email"
                 maxLength={150}
-                placeholder="Correo electrÃ³nico"
+                placeholder="Correo electrónico"
                 value={form.email}
                 onChange={handleChange}
                 disabled={isGoogleReg}
@@ -282,7 +282,7 @@ export default function Register() {
                 </div>
                 <div className="input-group">
                   <Phone size={18} className="input-icon" style={{ padding: 0 }} />
-                  <input name="phone" type="tel" inputMode="tel" maxLength={30} placeholder="TelÃ©fono" value={form.phone} onChange={handleChange} />
+                  <input name="phone" type="tel" inputMode="tel" maxLength={30} placeholder="Teléfono" value={form.phone} onChange={handleChange} />
                 </div>
               </>
             ) : (
@@ -296,7 +296,7 @@ export default function Register() {
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
                       maxLength={72}
-                      placeholder="ContraseÃ±a"
+                      placeholder="Contraseña"
                       onChange={handleChange}
                     />
                     <button
@@ -315,7 +315,7 @@ export default function Register() {
                       <div className={`strength-fill ${passwordStrength.toLowerCase()}`}></div>
                     </div>
                     <div className={`strength-text ${passwordStrength.toLowerCase()}`}>
-                      {renderStrengthIcon()} {passwordStrength || "â€”"}
+                      {renderStrengthIcon()} {passwordStrength || "—"}
                     </div>
                   </div>
                 </div>
@@ -333,7 +333,7 @@ export default function Register() {
                   <input
                     name="password_confirmation"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Confirmar contraseÃ±a"
+                    placeholder="Confirmar contraseña"
                     onChange={handleChange}
                   />
                 </div>
@@ -356,7 +356,7 @@ export default function Register() {
                 style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
               />
               <label htmlFor="terms" style={{ fontSize: '13px', color: 'var(--text-main)', cursor: 'pointer' }}>
-                Acepto los <span style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'underline' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }}>TÃ©rminos y Condiciones</span>
+                Acepto los <span style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'underline' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }}>Términos y Condiciones</span>
               </label>
             </div>
 
@@ -368,7 +368,7 @@ export default function Register() {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
                   <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--border-color)' }} />
-                  <span style={{ padding: '0 10px', color: 'var(--text-muted)', fontSize: '12px' }}>O REGÃSTRATE CON</span>
+                  <span style={{ padding: '0 10px', color: 'var(--text-muted)', fontSize: '12px' }}>O REGÍSTRATE CON</span>
                   <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--border-color)' }} />
                 </div>
 
@@ -407,8 +407,8 @@ export default function Register() {
             )}
 
             <div className="auth-footer">
-              Â¿Ya tienes cuenta?
-              <Link to="/login" className="auth-link">Inicia sesiÃ³n</Link>
+              ¿Ya tienes cuenta?
+              <Link to="/login" className="auth-link">Inicia sesión</Link>
             </div>
           </form>
         )}
@@ -418,12 +418,12 @@ export default function Register() {
       {showTermsModal && (
         <div className="modal-overlay fade-in" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="modal-content" style={{ maxWidth: '500px', width: '90%', background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '20px', color: 'var(--text-main)' }}>TÃ©rminos y Condiciones</h3>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '20px', color: 'var(--text-main)' }}>Términos y Condiciones</h3>
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px', color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
-              <p>1. <strong>AceptaciÃ³n:</strong> Al crear una cuenta, aceptas estar sujeto a estos tÃ©rminos y condiciones.</p>
-              <p>2. <strong>Uso de cuenta:</strong> Eres responsable de mantener la confidencialidad de tu contraseÃ±a.</p>
-              <p>3. <strong>Privacidad:</strong> Tu informaciÃ³n personal serÃ¡ tratada conforme a nuestra polÃ­tica de privacidad.</p>
-              <p><em>(AquÃ­ puedes agregar todo el texto legal de tu empresa mÃ¡s adelante...)</em></p>
+              <p>1. <strong>Aceptación:</strong> Al crear una cuenta, aceptas estar sujeto a estos términos y condiciones.</p>
+              <p>2. <strong>Uso de cuenta:</strong> Eres responsable de mantener la confidencialidad de tu contraseña.</p>
+              <p>3. <strong>Privacidad:</strong> Tu información personal será tratada conforme a nuestra política de privacidad.</p>
+              <p><em>(Aquí puedes agregar todo el texto legal de tu empresa más adelante...)</em></p>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
               <button 

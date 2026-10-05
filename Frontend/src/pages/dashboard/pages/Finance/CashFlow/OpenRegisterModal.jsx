@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { openCashRegister } from '../../../../../api/admin/finance';
 import { toast } from 'react-hot-toast';
 import { X, Unlock } from 'lucide-react';
@@ -50,11 +50,11 @@ const OpenRegisterModal = ({ isOpen, onClose, onSuccess, branch }) => {
         {/* Body */}
         <form onSubmit={handleSubmit} style={{ padding: '20px', overflowY: 'auto' }}>
           <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '14px', lineHeight: '1.5' }}>
-            Para habilitar el cobro y las transacciones de esta sucursal, debes registrar con cuÃ¡nto dinero inicia la caja hoy.
+            Para habilitar el cobro y las transacciones de esta sucursal, debes registrar con cuánto dinero inicia la caja hoy.
           </p>
 
           <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '6px' }}>Monto Inicial de Caja (FÃ­sico) - Bs.</label>
+            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '6px' }}>Monto Inicial de Caja (Físico) - Bs.</label>
             <input 
               type="number" 
               step="0.01"

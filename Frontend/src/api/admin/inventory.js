@@ -1,4 +1,4 @@
-﻿// src/api/inventory.js
+// src/api/inventory.js
 
 import api from "../client";
 

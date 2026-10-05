@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createSupplier, updateSupplier } from "../../../../api/admin/suppliers";
@@ -65,7 +65,7 @@ export default function SupplierModal({ supplier, onClose }) {
       }
       onClose();
     } catch (error) {
-      toast.error(error.response?.data?.message || "OcurriÃ³ un error al guardar el proveedor");
+      toast.error(error.response?.data?.message || "Ocurrió un error al guardar el proveedor");
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export default function SupplierModal({ supplier, onClose }) {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>RazÃ³n Social (Opcional)</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Razón Social (Opcional)</label>
               <input
                 type="text"
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
@@ -111,7 +111,7 @@ export default function SupplierModal({ supplier, onClose }) {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>NIT / IdentificaciÃ³n Fiscal</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>NIT / Identificación Fiscal</label>
               <input
                 type="text"
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
@@ -128,33 +128,33 @@ export default function SupplierModal({ supplier, onClose }) {
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                 value={formData.contact_name}
                 onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
-                placeholder="Ej. Juan PÃ©rez"
+                placeholder="Ej. Juan Pérez"
               />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>TelÃ©fono</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <CustomSelect
                       value={phoneCode}
                       onChange={(e) => setPhoneCode(e.target.value)}
                       style={{ width: '120px', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
                     >
-                      <option value="+591">ðŸ‡§ðŸ‡´ +591</option>
-                      <option value="+52">ðŸ‡²ðŸ‡½ +52</option>
-                      <option value="+51">ðŸ‡µðŸ‡ª +51</option>
-                      <option value="+54">ðŸ‡¦ðŸ‡· +54</option>
-                      <option value="+56">ðŸ‡¨ðŸ‡± +56</option>
-                      <option value="+57">ðŸ‡¨ðŸ‡´ +57</option>
-                      <option value="+58">ðŸ‡»ðŸ‡ª +58</option>
-                      <option value="+593">ðŸ‡ªðŸ‡¨ +593</option>
-                      <option value="+595">ðŸ‡µðŸ‡¾ +595</option>
-                      <option value="+598">ðŸ‡ºðŸ‡¾ +598</option>
-                      <option value="+507">ðŸ‡µðŸ‡¦ +507</option>
-                      <option value="+506">ðŸ‡¨ðŸ‡· +506</option>
-                      <option value="+34">ðŸ‡ªðŸ‡¸ +34</option>
-                      <option value="+1">ðŸ‡ºðŸ‡¸ +1</option>
+                      <option value="+591">🇧🇴 +591</option>
+                      <option value="+52">🇲🇽 +52</option>
+                      <option value="+51">🇵🇪 +51</option>
+                      <option value="+54">🇦🇷 +54</option>
+                      <option value="+56">🇨🇱 +56</option>
+                      <option value="+57">🇨🇴 +57</option>
+                      <option value="+58">🇻🇪 +58</option>
+                      <option value="+593">🇪🇨 +593</option>
+                      <option value="+595">🇵🇾 +595</option>
+                      <option value="+598">🇺🇾 +598</option>
+                      <option value="+507">🇵🇦 +507</option>
+                      <option value="+506">🇨🇷 +506</option>
+                      <option value="+34">🇪🇸 +34</option>
+                      <option value="+1">🇺🇸 +1</option>
                     </CustomSelect>
                     <input
                       type="text"
@@ -180,7 +180,7 @@ export default function SupplierModal({ supplier, onClose }) {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Correo ElectrÃ³nico</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Correo Electrónico</label>
               <input
                 type="email"
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px', outline: 'none' }}
@@ -204,7 +204,7 @@ export default function SupplierModal({ supplier, onClose }) {
                 style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: 'var(--color-primary-text)', fontWeight: 600, cursor: 'pointer', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}
                 disabled={loading}
               >
-                {loading ? <span className="animate-spin">â³</span> : <Save size={18} />}
+                {loading ? <span className="animate-spin">⏳</span> : <Save size={18} />}
                 {loading ? "Guardando..." : "Guardar Cambios"}
               </button>
             </div>

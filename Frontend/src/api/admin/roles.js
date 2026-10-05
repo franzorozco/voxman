@@ -1,4 +1,4 @@
-﻿// src/api/roles.js
+// src/api/roles.js
 
 import api from "../client";
 

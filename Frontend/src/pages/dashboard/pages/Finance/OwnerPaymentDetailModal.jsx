@@ -1,4 +1,4 @@
-﻿import { X, ArrowUpCircle, ArrowDownCircle, Info, CalendarDays, History, Banknote } from "lucide-react";
+import { X, ArrowUpCircle, ArrowDownCircle, Info, CalendarDays, History, Banknote } from "lucide-react";
 
 export default function OwnerPaymentDetailModal({ payment, onClose }) {
   if (!payment) return null;
@@ -38,13 +38,13 @@ export default function OwnerPaymentDetailModal({ payment, onClose }) {
               <div>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tipo de Movimiento</label>
                 <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>
-                  {payment.type === 'deposit' ? 'InyecciÃ³n de Capital' : 'Retiro de Utilidades / Capital'}
+                  {payment.type === 'deposit' ? 'Inyección de Capital' : 'Retiro de Utilidades / Capital'}
                 </div>
               </div>
               <div>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Origen / Destino</label>
                 <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>
-                  {payment.fund_source === 'cash' ? 'Caja FÃ­sica' : payment.fund_source === 'bank' ? 'Cuenta Bancaria' : 'N/A'}
+                  {payment.fund_source === 'cash' ? 'Caja Física' : payment.fund_source === 'bank' ? 'Cuenta Bancaria' : 'N/A'}
                 </div>
               </div>
               <div>
@@ -70,13 +70,13 @@ export default function OwnerPaymentDetailModal({ payment, onClose }) {
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>MÃ©todo de Pago</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Método de Pago</label>
                 <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>
                   {payment.payment_method || 'No especificado'}
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>NÃºmero de Referencia</label>
+                <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Número de Referencia</label>
                 <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>
                   {payment.reference_number || 'N/A'}
                 </div>

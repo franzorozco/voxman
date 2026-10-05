@@ -1,4 +1,4 @@
-﻿// services/sizes.js
+// services/sizes.js
 
 import api from "../client";
 

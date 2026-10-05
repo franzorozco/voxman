@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { X, RotateCcw } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createReturn } from "../../../../api/admin/returns";
@@ -12,11 +12,11 @@ export default function SaleReturnModal({ detail, onClose, onReturnSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (quantity < 1 || quantity > detail.quantity) {
-      toast.error("Cantidad invÃ¡lida");
+      toast.error("Cantidad inválida");
       return;
     }
     if (!reason.trim()) {
-      toast.error("Debes ingresar un motivo para la devoluciÃ³n");
+      toast.error("Debes ingresar un motivo para la devolución");
       return;
     }
 
@@ -27,11 +27,11 @@ export default function SaleReturnModal({ detail, onClose, onReturnSuccess }) {
         quantity: quantity,
         reason: reason
       });
-      toast.success("Solicitud de devoluciÃ³n creada correctamente");
+      toast.success("Solicitud de devolución creada correctamente");
       onReturnSuccess();
       onClose();
     } catch (error) {
-      const msg = error.response?.data?.message || "Error al solicitar devoluciÃ³n";
+      const msg = error.response?.data?.message || "Error al solicitar devolución";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -50,7 +50,7 @@ export default function SaleReturnModal({ detail, onClose, onReturnSuccess }) {
         
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <RotateCcw size={18} className="text-primary"/> Solicitar DevoluciÃ³n
+            <RotateCcw size={18} className="text-primary"/> Solicitar Devolución
           </h2>
           <button onClick={onClose} disabled={loading} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={20} />
@@ -81,7 +81,7 @@ export default function SaleReturnModal({ detail, onClose, onReturnSuccess }) {
 
           <div>
             <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>
-              Motivo de DevoluciÃ³n
+              Motivo de Devolución
             </label>
             <textarea 
               value={reason}

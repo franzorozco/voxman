@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useRef } from 'react';
 import { API_BASE_URL } from "../../../../config/api";
 import { X, Download } from 'lucide-react';
@@ -46,7 +46,7 @@ export default function GiftcardCoupon({ isOpen, giftcard, onClose }) {
 
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '20px', color: 'var(--text-main)' }}>Generar Ticket (PNG)</h2>
 
-        {/* CONTENEDOR DEL CUPÃ“N (Lo que se va a imprimir) */}
+        {/* CONTENEDOR DEL CUPÓN (Lo que se va a imprimir) */}
         <div 
           ref={couponRef}
           style={{
@@ -112,7 +112,7 @@ export default function GiftcardCoupon({ isOpen, giftcard, onClose }) {
           </div>
 
           <div style={{ fontSize: '12px', color: '#888', textAlign: 'center', borderTop: '1px dashed #444', paddingTop: '15px', width: '100%' }}>
-            VÃ¡lido hasta: <strong style={{ color: '#fff' }}>{validUntil}</strong>
+            Válido hasta: <strong style={{ color: '#fff' }}>{validUntil}</strong>
           </div>
         </div>
 

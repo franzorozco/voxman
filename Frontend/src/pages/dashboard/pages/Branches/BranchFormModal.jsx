@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect, useRef } from "react";
 import { createBranch, updateBranch } from "../../../../api/admin/branches";
 import { getEmployees } from "../../../../api/admin/employees";
@@ -177,7 +177,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
         <div className="branch-modal-header">
           <h2>{branch ? "Editar Sucursal" : "Nueva Sucursal"}</h2>
           <button className="close-btn" onClick={onClose}>
-            âœ•
+            ✕
           </button>
         </div>
 
@@ -208,7 +208,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
             </div>
 
             <div className="form-group">
-              <label>TelÃ©fono</label>
+              <label>Teléfono</label>
               <input 
                 name="phone" 
                 value={formData.phone} 
@@ -235,7 +235,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
             </div>
 
             <div className="form-group full-width">
-              <h3 style={{ marginTop: '16px', marginBottom: '8px' }}>UbicaciÃ³n</h3>
+              <h3 style={{ marginTop: '16px', marginBottom: '8px' }}>Ubicación</h3>
               <hr style={{ borderColor: 'var(--border-color)', marginBottom: '16px' }} />
             </div>
 
@@ -250,8 +250,8 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
             </div>
 
             <div className="form-group full-width">
-              <label>DirecciÃ³n exacta (Calle, Nro)</label>
-              <input name="addr_street" value={formData.address.street} onChange={handleInputChange} placeholder="Ej. Av. San MartÃ­n #123" />
+              <label>Dirección exacta (Calle, Nro)</label>
+              <input name="addr_street" value={formData.address.street} onChange={handleInputChange} placeholder="Ej. Av. San Martín #123" />
             </div>
 
             <div className="form-group full-width">
@@ -260,7 +260,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
             </div>
 
             <div className="form-group full-width image-upload-section">
-              <h3 style={{ marginBottom: '8px' }}>ImÃ¡genes de la Sucursal</h3>
+              <h3 style={{ marginBottom: '8px' }}>Imágenes de la Sucursal</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>Haz clic en una imagen para hacerla principal (portada).</p>
               
               <div className="image-preview-grid">
@@ -272,7 +272,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
                     onClick={() => { setPrimaryImageId(img.id); setPrimaryImageIndex(null); }}
                   >
                     <img src={img?.image_url?.startsWith('http') ? img.image_url : getImageUrl(img?.image_url)} alt="Branch" />
-                    <button type="button" className="image-remove-btn" onClick={(e) => { e.stopPropagation(); handleRemoveExistingImage(img.id); }}>âœ•</button>
+                    <button type="button" className="image-remove-btn" onClick={(e) => { e.stopPropagation(); handleRemoveExistingImage(img.id); }}>✕</button>
                     {primaryImageId === img.id && <span className="primary-badge">Portada</span>}
                   </div>
                 ))}
@@ -285,7 +285,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
                     onClick={() => { setPrimaryImageIndex(index); setPrimaryImageId(null); }}
                   >
                     <img src={URL.createObjectURL(file)} alt="New" />
-                    <button type="button" className="image-remove-btn" onClick={(e) => { e.stopPropagation(); handleRemoveNewImage(index); }}>âœ•</button>
+                    <button type="button" className="image-remove-btn" onClick={(e) => { e.stopPropagation(); handleRemoveNewImage(index); }}>✕</button>
                     {primaryImageId === null && primaryImageIndex === index && <span className="primary-badge">Portada</span>}
                   </div>
                 ))}
@@ -297,7 +297,7 @@ export default function BranchFormModal({ branch, onClose, onSave }) {
                   onClick={() => fileInputRef.current.click()}
                 >
                   <span style={{ fontSize: '24px' }}>+</span>
-                  <span style={{ fontSize: '12px' }}>AÃ±adir Foto</span>
+                  <span style={{ fontSize: '12px' }}>Añadir Foto</span>
                 </button>
                 <input 
                   type="file" 

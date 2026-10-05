@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2, Eye, ArchiveRestore, Filter, MoreVertical, RefreshCw } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
@@ -50,7 +50,7 @@ export default function Employees() {
   }, [filters]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Â¿EstÃ¡s seguro de desactivar este empleado? Se enviarÃ¡ a la papelera.")) return;
+    if (!window.confirm("¿Estás seguro de desactivar este empleado? Se enviará a la papelera.")) return;
     try {
       await deleteEmployee(id);
       toast.success("Empleado desactivado y enviado a la papelera");
@@ -106,7 +106,7 @@ export default function Employees() {
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              placeholder="Buscar por cÃ³digo, email, nombre o telÃ©fono..." 
+              placeholder="Buscar por código, email, nombre o teléfono..." 
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             />
@@ -142,9 +142,9 @@ export default function Employees() {
                 value={filters.sortBy}
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
               >
-                <option value="created_at">MÃ¡s recientes</option>
+                <option value="created_at">Más recientes</option>
                 <option value="base_salary">Sueldo Base</option>
-                <option value="hire_date">Fecha ContrataciÃ³n</option>
+                <option value="hire_date">Fecha Contratación</option>
               </CustomSelect>
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function Employees() {
           <table className="products-table">
             <thead>
               <tr>
-                <th>CÃ³digo</th>
+                <th>Código</th>
                 <th>Empleado</th>
                 <th>Rol</th>
                 <th>Contacto</th>
@@ -174,7 +174,7 @@ export default function Employees() {
                 
                 return (
                   <tr key={e.id}>
-                    <td data-label="Código" style={{ position: 'relative' }}>
+                    <td data-label="C�digo" style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
     <RowDropdown rowId={e.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
           

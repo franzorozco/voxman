@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getDeliveryZones, createDeliveryZone, updateDeliveryZone } from '../../../../api/admin/orderNetwork';
 import { toast } from 'react-hot-toast';
 import { MarkerF } from '@react-google-maps/api';
@@ -34,7 +34,7 @@ export default function DeliveryZonesModal({ onClose }) {
     "Santa Cruz": { lat: -17.7833, lng: -63.1821 },
     "La Paz": { lat: -16.4897, lng: -68.1193 },
     "Oruro": { lat: -17.9833, lng: -67.1500 },
-    "PotosÃ­": { lat: -19.5836, lng: -65.7531 },
+    "Potosí": { lat: -19.5836, lng: -65.7531 },
     "Tarija": { lat: -21.5355, lng: -64.7296 },
     "Sucre": { lat: -19.0333, lng: -65.2627 },
     "Beni": { lat: -14.8333, lng: -64.9000 },
@@ -79,7 +79,7 @@ export default function DeliveryZonesModal({ onClose }) {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!formData.latitude || !formData.longitude) {
-      toast.error("Por favor, selecciona una ubicaciÃ³n en el mapa");
+      toast.error("Por favor, selecciona una ubicación en el mapa");
       return;
     }
     
@@ -131,7 +131,7 @@ export default function DeliveryZonesModal({ onClose }) {
   };
 
   const generateShareText = () => {
-    let text = "ðŸŒŸ ðŸ“ *PUNTOS DE ENTREGA DISPONIBLES* ðŸ“ ðŸŒŸ\n\n";
+    let text = "🌟 📍 *PUNTOS DE ENTREGA DISPONIBLES* 📍 🌟\n\n";
     
     const grouped = zones.reduce((acc, zone) => {
       if (!acc[zone.city]) acc[zone.city] = [];
@@ -141,22 +141,22 @@ export default function DeliveryZonesModal({ onClose }) {
 
     selectedCities.forEach(city => {
       if (grouped[city] && grouped[city].length > 0) {
-        text += `ðŸ™ï¸ *${city.toUpperCase()}:*\n`;
+        text += `🏙️ *${city.toUpperCase()}:*\n`;
         grouped[city].forEach(zone => {
-          const costStr = Number(zone.base_cost) > 0 ? ` (Bs. ${Number(zone.base_cost).toFixed(2)} ðŸ’µ)` : ' (Gratis ðŸ†“)';
-          text += `âœ¨ ðŸ”¸ ${zone.name}${costStr}\n`;
+          const costStr = Number(zone.base_cost) > 0 ? ` (Bs. ${Number(zone.base_cost).toFixed(2)} 💵)` : ' (Gratis 🆓)';
+          text += `✨ 🔸 ${zone.name}${costStr}\n`;
         });
         text += "\n";
       }
     });
     
-    text += "ðŸ“¦ ðŸ›µ _Â¡Hacemos envÃ­os a todos estos puntos!_\nðŸ’¬ *EscrÃ­benos para coordinar tu entrega.* ðŸ‘‡";
+    text += "📦 🛵 _¡Hacemos envíos a todos estos puntos!_\n💬 *Escríbenos para coordinar tu entrega.* 👇";
     return text;
   };
 
   const handleCopyShare = () => {
     navigator.clipboard.writeText(generateShareText());
-    toast.success("Â¡Texto copiado al portapapeles!");
+    toast.success("¡Texto copiado al portapapeles!");
   };
   
   const handleWhatsAppShare = () => {
@@ -274,7 +274,7 @@ export default function DeliveryZonesModal({ onClose }) {
                     <option value="Cochabamba">Cochabamba</option>
                     <option value="Santa Cruz">Santa Cruz</option>
                     <option value="Oruro">Oruro</option>
-                    <option value="PotosÃ­">PotosÃ­</option>
+                    <option value="Potosí">Potosí</option>
                     <option value="Tarija">Tarija</option>
                     <option value="Sucre">Sucre</option>
                     <option value="Beni">Beni</option>
@@ -300,7 +300,7 @@ export default function DeliveryZonesModal({ onClose }) {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>UbicaciÃ³n en el Mapa</label>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Ubicación en el Mapa</label>
                 <div style={{ height: '300px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                   <GoogleMapWrapper
                     mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -328,7 +328,7 @@ export default function DeliveryZonesModal({ onClose }) {
                   </GoogleMapWrapper>
                 </div>
                 {!formData.latitude && (
-                  <span style={{ fontSize: '12px', color: 'var(--color-danger)' }}>* Haz clic en el mapa para marcar la ubicaciÃ³n.</span>
+                  <span style={{ fontSize: '12px', color: 'var(--color-danger)' }}>* Haz clic en el mapa para marcar la ubicación.</span>
                 )}
               </div>
 
@@ -375,7 +375,7 @@ export default function DeliveryZonesModal({ onClose }) {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>PrevisualizaciÃ³n del Mensaje:</label>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>Previsualización del Mensaje:</label>
                 <textarea 
                   readOnly
                   value={generateShareText()}

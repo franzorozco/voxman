@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getProducts } from "../../../../api/admin/products";
 import { getBranches } from "../../../../api/admin/branches";
 import { createCart } from "../../../../api/admin/carts";
@@ -359,7 +359,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
     const existingItem = cartItems.find(item => item.variant?.sku === code || item.variant?.barcode === code);
     if (existingItem) {
        updateQuantity(existingItem.variant.id, 1);
-       toast.success(`Se sumÃ³ 1 unidad de ${existingItem.variant.sku}`);
+       toast.success(`Se sumó 1 unidad de ${existingItem.variant.sku}`);
        return;
     }
 
@@ -385,7 +385,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
             }
         }
         
-        toast.error("Producto escaneado no encontrado.", { icon: 'ðŸ”' });
+        toast.error("Producto escaneado no encontrado.", { icon: '🔍' });
     } catch (error) {
         console.error("Error scanning product:", error);
         toast.error("Error al buscar producto escaneado.");
@@ -468,7 +468,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
               .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
               
             if (newQuantity + branchUsedByOthers > branchStock) {
-               toast.error(`Stock insuficiente en esta sucursal. Usa el botÃ³n "Extraer de otra" para dividir.`);
+               toast.error(`Stock insuficiente en esta sucursal. Usa el botón "Extraer de otra" para dividir.`);
                return prev;
             }
           }
@@ -505,7 +505,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
         
       if (totalRequested >= parseInt(item.maxStock, 10)) {
-        toast.error(`Has alcanzado el stock total disponible (${item.maxStock}). No puedes agregar mÃ¡s.`);
+        toast.error(`Has alcanzado el stock total disponible (${item.maxStock}). No puedes agregar más.`);
         return prev;
       }
 
@@ -673,7 +673,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
     return (
       <div className="modal-overlay">
         <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', padding: '30px' }}>
-          <h2 style={{ color: 'var(--color-success)', marginBottom: '16px' }}>Â¡Entrega Agendada!</h2>
+          <h2 style={{ color: 'var(--color-success)', marginBottom: '16px' }}>¡Entrega Agendada!</h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Comparte este enlace con el cliente para que pueda hacer seguimiento de su pedido.</p>
           
           <input 
@@ -729,7 +729,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                       type="button"
                       onClick={() => openScanner(processScannedCode, true)}
                       className="scanner-btn"
-                      title="Escanear cÃ³digo de barras o QR"
+                      title="Escanear código de barras o QR"
                     >
                       <Camera size={18} />
                     </button>
@@ -793,7 +793,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
               </>
             ) : (
               <form id="delivery-form" onSubmit={handleSubmit} className="delivery-form">
-                <h3>Datos de LogÃ­stica</h3>
+                <h3>Datos de Logística</h3>
                 {step === 2 ? (
                   <>
                     <div className="delivery-sections">
@@ -986,7 +986,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                 }
                               }}
                             >
-                              <option value="">-- Selecciona una direcciÃ³n guardada --</option>
+                              <option value="">-- Selecciona una dirección guardada --</option>
                               {selectedCustomer.addresses.map(a => (
                                 <option key={a.id} value={a.id}>
                                   {a.street}, {a.zone} {a.reference ? `(${a.reference})` : ''}
@@ -994,14 +994,14 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                               ))}
                             </CustomSelect>
                             <div className="form-group">
-                              <label>Costo de EnvÃ­o (Bs) *</label>
+                              <label>Costo de Envío (Bs) *</label>
                               <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({...deliveryData, shipping_cost: e.target.value})} />
                             </div>
                           </div>
                         ) : meetingPointType === 'external' ? (
                           <div className="form-group" style={{ margin: 0, padding: '10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '8px', fontSize: '13px' }}>
                             <MapPin size={16} style={{ display: 'inline', marginRight: '6px' }} />
-                            Para envÃ­os a Nivel Nacional, por favor llena los detalles de destino y la persona que recibe en la secciÃ³n inferior.
+                            Para envíos a Nivel Nacional, por favor llena los detalles de destino y la persona que recibe en la sección inferior.
                           </div>
                         ) : (
                           <div className="manual-location-container">
@@ -1028,19 +1028,19 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                   if (lat !== null && lng !== null) {
                                     setMapCenter({ lat, lng });
                                     setDeliveryData(prev => ({ ...prev, latitude: lat, longitude: lng }));
-                                    toast.success("UbicaciÃ³n detectada correctamente");
+                                    toast.success("Ubicación detectada correctamente");
                                     e.target.value = '';
                                   } else if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
                                     toast.error("Por favor abre el link corto en tu navegador y pega el enlace completo que aparece en la barra de direcciones.");
                                   }
                                 }}
                               />
-                              <label>Especifica la DirecciÃ³n o Lugar *</label>
+                              <label>Especifica la Dirección o Lugar *</label>
                               <input 
                                 type="text" 
                                 required
                                 className="form-control"
-                                placeholder="Ej: Av. Las AmÃ©ricas, Edificio Los Pinos Piso 4..."
+                                placeholder="Ej: Av. Las Américas, Edificio Los Pinos Piso 4..."
                                 value={deliveryData.meeting_point}
                                 onChange={(e) => setDeliveryData({...deliveryData, meeting_point: e.target.value})}
                               />
@@ -1070,7 +1070,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                               {deliveryData.latitude && ` (Lat: ${Number(deliveryData.latitude).toFixed(5)}, Lng: ${Number(deliveryData.longitude).toFixed(5)})`}
                             </small>
                             <div className="form-group">
-                              <label>Costo de EnvÃ­o (Bs) *</label>
+                              <label>Costo de Envío (Bs) *</label>
                               <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({...deliveryData, shipping_cost: e.target.value})} />
                             </div>
                           </div>
@@ -1116,7 +1116,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                 <input type="text" required={customerSearchType === 'guest'} className="form-control" value={deliveryData.guest_name} onChange={(e) => setDeliveryData({...deliveryData, guest_name: e.target.value})} />
                               </div>
                               <div className="form-group">
-                                <label>TelÃ©fono (WhatsApp) *</label>
+                                <label>Teléfono (WhatsApp) *</label>
                                 <div className="phone-fields">
                                   <input 
                                     type="text" 
@@ -1159,7 +1159,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                   <input 
                                     type="text" 
                                     className="form-control" 
-                                    placeholder="Buscar por nombre, telÃ©fono o cÃ³digo..." 
+                                    placeholder="Buscar por nombre, teléfono o código..." 
                                     value={customerSearchQuery} 
                                     onChange={(e) => {
                                       setCustomerSearchQuery(e.target.value);
@@ -1172,13 +1172,13 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                       {isSearchingCustomer ? (
                                         <div className="dropdown-item">Buscando cliente...</div>
                                       ) : customersList.length === 0 ? (
-                                        <div className="dropdown-item">No se encontraron clientes con esa bÃºsqueda.</div>
+                                        <div className="dropdown-item">No se encontraron clientes con esa búsqueda.</div>
                                       ) : (
                                         customersList.map(c => {
                                           const name = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}` :
                                                       (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` : 
                                                       (c.user?.username || c.customer_code));
-                                          const phone = c.pos_profile?.phone || c.user?.profile?.phone || "Sin TelÃ©fono";
+                                          const phone = c.pos_profile?.phone || c.user?.profile?.phone || "Sin Teléfono";
                                           
                                           return (
                                             <div 
@@ -1192,7 +1192,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                               }}
                                             >
                                               <div style={{ fontWeight: 600 }}>{name.trim()}</div>
-                                              <div style={{ fontSize: '12px' }}>Tel: {phone} | CÃ³d: {c.customer_code}</div>
+                                              <div style={{ fontSize: '12px' }}>Tel: {phone} | Cód: {c.customer_code}</div>
                                             </div>
                                           );
                                         })
@@ -1229,7 +1229,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                               />
                               {isDestinationsDropdownOpen && historicalDestinations.length > 0 && (
                                 <div style={{ marginTop: '8px', padding: '12px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '500' }}>Destinos anteriores registrados para este nÃºmero/cliente:</div>
+                                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '500' }}>Destinos anteriores registrados para este número/cliente:</div>
                                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                     {historicalDestinations.map((dest, idx) => (
                                       <button
@@ -1295,7 +1295,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                   <input type="text" className="form-control" required value={deliveryData.recipient_ci} onChange={e => setDeliveryData({...deliveryData, recipient_ci: e.target.value})} placeholder="Nro de CI" />
                                 </div>
                                 <div className="form-group" style={{ margin: 0, gridColumn: '1 / -1' }}>
-                                  <label>TelÃ©fono de Contacto *</label>
+                                  <label>Teléfono de Contacto *</label>
                                   <div className="phone-fields">
                                     <input type="text" className="form-control" placeholder="+591" 
                                       value={(deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ')[0] : '+591'} 
@@ -1305,7 +1305,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                         setDeliveryData({...deliveryData, recipient_phone: `${code} ${num}`.trim()});
                                       }} 
                                     />
-                                    <input type="text" className="form-control" required placeholder="NÃºmero de celular" 
+                                    <input type="text" className="form-control" required placeholder="Número de celular" 
                                       value={(deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ').slice(1).join(' ') : (deliveryData.recipient_phone || '')} 
                                       onChange={e => {
                                         const num = e.target.value;
@@ -1319,16 +1319,16 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                             </div>
                             
                             <div className="form-group" style={{ margin: 0, marginTop: '5px' }}>
-                              <label>Costo de EnvÃ­o a Agencia (Bs) *</label>
+                              <label>Costo de Envío a Agencia (Bs) *</label>
                               <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.agency_dispatch_cost || ''} onChange={(e) => setDeliveryData({...deliveryData, agency_dispatch_cost: e.target.value})} />
                             </div>
                           </div>
                         </div>
                       )}
 
-                      {/* CARD 3: InformaciÃ³n de entrega */}
+                      {/* CARD 3: Información de entrega */}
                       <div className="delivery-card">
-                        <h4 style={{ margin: 0 }}>InformaciÃ³n de entrega</h4>
+                        <h4 style={{ margin: 0 }}>Información de entrega</h4>
                         
                         <div className="form-group">
                           <label>Encargado de la Entrega (Opcional)</label>
@@ -1351,7 +1351,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                               <input 
                                 type="text" 
                                 className="form-control" 
-                                placeholder="Buscar repartidor por nombre, telÃ©fono o cÃ³digo..." 
+                                placeholder="Buscar repartidor por nombre, teléfono o código..." 
                                 value={driverSearchQuery} 
                                 onChange={(e) => {
                                   setDriverSearchQuery(e.target.value);
@@ -1380,7 +1380,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                           }}
                                         >
                                           <div style={{ fontWeight: 600 }}>{name || `Empleado ${employee.employee_code}`}</div>
-                                          <div style={{ fontSize: '12px' }}>Tel: {employee.phone} | CÃ³d: {employee.employee_code}</div>
+                                          <div style={{ fontSize: '12px' }}>Tel: {employee.phone} | Cód: {employee.employee_code}</div>
                                         </div>
                                       );
                                     })
@@ -1393,7 +1393,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
 
                         <div className="date-time-fields">
                           <div className="form-group">
-                            <label>Fecha de ProgramaciÃ³n *</label>
+                            <label>Fecha de Programación *</label>
                             <input type="date" required className="form-control" value={deliveryData.scheduled_date} onChange={(e) => setDeliveryData({...deliveryData, scheduled_date: e.target.value})} />
                           </div>
                           <div className="form-group">
@@ -1418,7 +1418,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
             <div className="cart-items-list">
               {cartItems.length === 0 ? (
                 <div className="empty-cart-message">
-                  El carrito estÃ¡ vacÃ­o
+                  El carrito está vacío
                 </div>
               ) : (
                 cartItems.map(item => {
@@ -1510,7 +1510,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                   <span>Bs. {subtotalAmount.toFixed(2)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
-                  <span>Costo de EnvÃ­o:</span>
+                  <span>Costo de Envío:</span>
                   <span>{meetingPointType === 'external' ? 'Se define al remitir' : `Bs. ${shippingAmount.toFixed(2)}`}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 700, marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-color)' }}>
@@ -1668,7 +1668,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
             </div>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: 'var(--text-main)' }}>Cancelar Entrega</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '24px', lineHeight: '1.5' }}>
-              Â¿EstÃ¡s seguro de que deseas cancelar esta entrega? <br/><strong>Esta acciÃ³n no se puede deshacer.</strong>
+              ¿Estás seguro de que deseas cancelar esta entrega? <br/><strong>Esta acción no se puede deshacer.</strong>
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button 
@@ -1685,7 +1685,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                 style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
                 disabled={loading}
               >
-                {loading ? 'Cancelando...' : 'SÃ­, Cancelar'}
+                {loading ? 'Cancelando...' : 'Sí, Cancelar'}
               </button>
             </div>
           </div>

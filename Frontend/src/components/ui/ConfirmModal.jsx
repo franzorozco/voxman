@@ -1,12 +1,12 @@
-﻿import React, { useEffect } from "react";
+import React, { useEffect } from "react";
 import { AlertTriangle, Info, Trash2, CheckCircle } from "lucide-react";
 
 export default function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  title = "Confirmar acciÃ³n",
-  message = "Â¿EstÃ¡s seguro de realizar esta acciÃ³n?",
+  title = "Confirmar acción",
+  message = "¿Estás seguro de realizar esta acción?",
   confirmText = "Confirmar",
   cancelText = "Cancelar",
   type = "danger", // 'danger' | 'warning' | 'success' | 'info'

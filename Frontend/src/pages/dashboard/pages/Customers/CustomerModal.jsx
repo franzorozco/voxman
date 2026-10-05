@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createCustomer, updateCustomer } from "../../../../api/admin/customers";
@@ -49,8 +49,8 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
     setLoading(true);
     
     try {
-      // Si la cuenta web no estÃ¡ habilitada, limpiamos los campos de email y password
-      // para que el backend no los procese y genere los ficticios automÃ¡ticamente.
+      // Si la cuenta web no está habilitada, limpiamos los campos de email y password
+      // para que el backend no los procese y genere los ficticios automáticamente.
       const payload = { ...formData };
       if (!createWebAccount) {
         payload.email = "";
@@ -89,7 +89,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
           <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>CÃ³digo de Cliente (Manual) *</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Cliente (Manual) *</label>
               <input 
                 type="text" 
                 style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
@@ -132,7 +132,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>TelÃ©fono</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input 
                   type="text" 
@@ -152,7 +152,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
                      const code = (formData.phone || '').includes(' ') ? (formData.phone || '').split(' ')[0] : '+591';
                      setFormData({...formData, phone: `${code} ${e.target.value}`.trim()});
                   }}
-                  placeholder="NÃºmero de telÃ©fono"
+                  placeholder="Número de teléfono"
                 />
               </div>
             </div>
@@ -167,7 +167,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
                   style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
                 />
                 <label htmlFor="create_web_account" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
-                  Habilitar cuenta web (Correo y ContraseÃ±a)
+                  Habilitar cuenta web (Correo y Contraseña)
                 </label>
               </div>
 
@@ -175,7 +175,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                      Correo ElectrÃ³nico *
+                      Correo Electrónico *
                     </label>
                     <input 
                       type="email" 
@@ -188,14 +188,14 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
 
                   <div>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                      ContraseÃ±a {isEditing ? '(Opcional, dejar vacÃ­o para no cambiar)' : '*'}
+                      Contraseña {isEditing ? '(Opcional, dejar vacío para no cambiar)' : '*'}
                     </label>
                     <input 
                       type="password" 
                       style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
                       value={formData.password}
                       onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      placeholder={isEditing ? "********" : "Ingresar contraseÃ±a"}
+                      placeholder={isEditing ? "********" : "Ingresar contraseña"}
                       required={createWebAccount && !isEditing}
                     />
                   </div>
@@ -212,7 +212,7 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
                 style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
               />
               <label htmlFor="is_active_checkbox" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}>
-                Cliente Activo (Permite iniciar sesiÃ³n y comprar)
+                Cliente Activo (Permite iniciar sesión y comprar)
               </label>
             </div>
 

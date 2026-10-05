@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle, Printer, CalendarClock, StickyNote, Sparkles } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -36,7 +36,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
   }, [saleId, onClose]);
 
   const handleStatusChange = async (newStatus) => {
-    if (!window.confirm(`Â¿EstÃ¡s seguro de cambiar el estado a ${newStatus}?`)) return;
+    if (!window.confirm(`¿Estás seguro de cambiar el estado a ${newStatus}?`)) return;
     
     try {
       setActionLoading(true);
@@ -104,7 +104,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               )}
             </div>
             {sale.shipments?.[0]?.delivery_code && (
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Entrega: {sale.shipments[0].delivery_code}</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>C�digo de Entrega: {sale.shipments[0].delivery_code}</span>
             )}
           </div>
           <button onClick={onClose} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px', flexShrink: 0 }}>
@@ -125,20 +125,20 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 <div>
                   {sale.customer.user?.profile ? (
                     <>
-                      <div style={{ fontWeight: 600 }}>{sale.customer.user.profile.first_name} {sale.customer.user.profile.last_name_paternal} <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 500, marginLeft: '8px' }}>â€¢ Cliente Web</span></div>
+                      <div style={{ fontWeight: 600 }}>{sale.customer.user.profile.first_name} {sale.customer.user.profile.last_name_paternal} <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 500, marginLeft: '8px' }}>• Cliente Web</span></div>
                       <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Email: {sale.customer.user.email}</div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>TelÃ©fono: {sale.customer.user.profile.phone || 'N/A'}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Teléfono: {sale.customer.user.profile.phone || 'N/A'}</div>
                     </>
                   ) : (sale.customer.pos_profile || sale.customer.posProfile) ? (
                     <>
-                      <div style={{ fontWeight: 600 }}>{(sale.customer.pos_profile || sale.customer.posProfile).first_name} {(sale.customer.pos_profile || sale.customer.posProfile).last_name_paternal} <span style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: 500, marginLeft: '8px' }}>â€¢ Cliente Caja (POS)</span></div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>TelÃ©fono: {(sale.customer.pos_profile || sale.customer.posProfile).phone || 'N/A'}</div>
+                      <div style={{ fontWeight: 600 }}>{(sale.customer.pos_profile || sale.customer.posProfile).first_name} {(sale.customer.pos_profile || sale.customer.posProfile).last_name_paternal} <span style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: 500, marginLeft: '8px' }}>• Cliente Caja (POS)</span></div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Teléfono: {(sale.customer.pos_profile || sale.customer.posProfile).phone || 'N/A'}</div>
                     </>
                   ) : (
                     <div style={{ color: 'var(--text-muted)' }}>Cliente sin perfil</div>
                   )}
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>DNI/NIT: {sale.customer.tax_id || 'N/A'}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>CÃ³digo: {sale.customer.customer_code}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Código: {sale.customer.customer_code}</div>
                   
                   <CanAccess permission="view_loyalty_points">
                     <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
@@ -159,10 +159,10 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                   <div style={{ fontWeight: 600 }}>
                     {sale.guest.name}
                     <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 600, background: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px' }}>
-                      â€¢ Entrega Agendada
+                      • Entrega Agendada
                     </span>
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>TelÃ©fono: {sale.guest.whatsapp_phone || 'N/A'}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Teléfono: {sale.guest.whatsapp_phone || 'N/A'}</div>
                   {sale.guest.email && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Email: {sale.guest.email}</div>}
                   {sale.guest.social_media_platform && (
                     <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Contacto por: {sale.guest.social_media_platform}</div>
@@ -232,7 +232,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                     <th style={{textAlign: 'right'}}>P. Unitario</th>
                     <th style={{textAlign: 'right'}}>Descuento</th>
                     <th style={{textAlign: 'right'}}>Subtotal</th>
-                    <th style={{textAlign: 'center'}}>DevoluciÃ³n</th>
+                    <th style={{textAlign: 'center'}}>Devolución</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -288,7 +288,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                               
                               {detail.bundle_group_id && (
                                 <span style={{ color: '#d97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>
-                                  <Sparkles size={10} /> Ãtem de Conjunto
+                                  <Sparkles size={10} /> Ítem de Conjunto
                                 </span>
                               )}
 
@@ -299,12 +299,12 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                               )}
                               {detail.return_request && detail.return_request.status === 'pending' && (
                                 <span style={{ fontSize: '10px', color: '#b45309', fontWeight: 600, background: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
-                                  DevoluciÃ³n Solicitada
+                                  Devolución Solicitada
                                 </span>
                               )}
                               {detail.return_request && detail.return_request.status === 'rejected' && (
                                 <span style={{ fontSize: '10px', color: '#b91c1c', fontWeight: 600, background: '#fee2e2', padding: '2px 6px', borderRadius: '4px' }}>
-                                  DevoluciÃ³n Rechazada
+                                  Devolución Rechazada
                                 </span>
                               )}
                               {((detail.return_request && detail.return_request.status === 'approved') || (detail.deleted_at && !detail.return_request)) && (
@@ -380,7 +380,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                               Giftcard {transaction.giftcard?.code || ''}
                             </div>
                             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                              Tarjeta de Regalo ({transaction.type === 'issue' ? 'EmisiÃ³n' : transaction.type === 'reload' ? 'Recarga' : transaction.type})
+                              Tarjeta de Regalo ({transaction.type === 'issue' ? 'Emisión' : transaction.type === 'reload' ? 'Recarga' : transaction.type})
                             </div>
                           </div>
                         </div>
@@ -407,7 +407,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               <table className="products-table" style={{ marginTop: '10px' }}>
                 <thead>
                   <tr>
-                    <th>MÃ©todo</th>
+                    <th>Método</th>
                     <th style={{textAlign: 'center'}}>Referencia</th>
                     <th style={{textAlign: 'center'}}>Estado</th>
                     <th style={{textAlign: 'right'}}>Monto</th>
@@ -438,7 +438,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-            {/* EnvÃ­os */}
+            {/* Envíos */}
             {sale.shipments && sale.shipments.length > 0 && (
               <div className="sale-detail-section" style={{ marginBottom: 0 }}>
                 <div className="sale-detail-title">
@@ -448,7 +448,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                   {sale.shipments.map((shipment) => (
                     <div key={shipment.id} style={{ padding: '12px', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <div style={{ fontWeight: 500 }}>CÃ³digo de Entrega: {shipment.delivery_code || 'N/A'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '8px' }}>(Tracking: {shipment.tracking_code || 'N/A'})</span></div>
+                        <div style={{ fontWeight: 500 }}>Código de Entrega: {shipment.delivery_code || 'N/A'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '8px' }}>(Tracking: {shipment.tracking_code || 'N/A'})</span></div>
                         <span className={`status-badge ${shipment.status === 'delivered' ? 'status-success' : 'status-warning'}`}>
                           {shipment.status}
                         </span>
@@ -483,7 +483,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                   <textarea 
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="AÃ±ade notas internas visibles solo para el personal..."
+                    placeholder="Añade notas internas visibles solo para el personal..."
                     style={{ width: '100%', padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', minHeight: '80px', color: 'var(--text-main)', resize: 'vertical', outline: 'none' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
@@ -519,14 +519,14 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 
                 {sale.shipments?.[0]?.agency_dispatch_cost > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Costo de EnvÃ­o a Agencia:</span>
+                    <span style={{ color: 'var(--text-muted)' }}>Costo de Envío a Agencia:</span>
                     <span>Bs. {parseFloat(sale.shipments[0].agency_dispatch_cost).toFixed(2)}</span>
                   </div>
                 )}
                 
                 {sale.shipments?.[0] && sale.shipments[0].shipping_payment_type !== 'collect' && Number(sale.shipments[0].shipping_cost) > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Costo de EnvÃ­o:</span>
+                    <span style={{ color: 'var(--text-muted)' }}>Costo de Envío:</span>
                     <span>Bs. {parseFloat(sale.shipments[0].shipping_cost).toFixed(2)}</span>
                   </div>
                 )}
@@ -538,7 +538,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                       <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat(sale.dynamic_global_discount || sale.discount_total).toFixed(2)}</span>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'right' }}>
                           {sale?.sale_applied_discounts?.find(d => d.sale_detail_id == null)?.discount?.code && (
-                              <div style={{ marginBottom: '2px', fontWeight: 600 }}>CupÃ³n aplicado: {sale.sale_applied_discounts.find(d => d.sale_detail_id == null).discount.code}</div>
+                              <div style={{ marginBottom: '2px', fontWeight: 600 }}>Cupón aplicado: {sale.sale_applied_discounts.find(d => d.sale_detail_id == null).discount.code}</div>
                           )}
                           {sale?.giftcard_transactions?.map(tx => (
                               <div key={tx.id} style={{ marginBottom: '2px', fontWeight: 600 }}>Giftcard usada: {tx.giftcard?.code} (-Bs. {Number(tx.amount).toFixed(2)})</div>

@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../utils/imageUtils';
+import { getImageUrl } from '../../../utils/imageUtils';
 import { sanitizeHtml } from '../../../utils/sanitizeHtml';
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
@@ -54,7 +54,7 @@ const ZoomableImage = ({ src, alt, className, style, onClick, disableTouchZoom =
 
   const handleClick = (e) => {
     const duration = Date.now() - clickStartTime.current;
-    // Si mantuvieron presionado por mÃ¡s de 200ms, fue un zoom, no abrimos el modal
+    // Si mantuvieron presionado por más de 200ms, fue un zoom, no abrimos el modal
     if (duration > 200) {
       e.preventDefault();
       e.stopPropagation();
@@ -135,7 +135,7 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
         borderRadius: '50%', zIndex: 1000000, display: 'flex', alignItems: 'center', 
         justifyContent: 'center', cursor: 'pointer'
       }}>
-        âœ•
+        ✕
       </button>
 
       {/* Flecha Izquierda (solo PC) */}
@@ -146,7 +146,7 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
           width: '50px', height: '50px', borderRadius: '50%', zIndex: 1000000, cursor: 'pointer',
           display: window.innerWidth > 768 ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center'
         }}>
-          â€¹
+          ‹
         </button>
       )}
 
@@ -158,7 +158,7 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
           width: '50px', height: '50px', borderRadius: '50%', zIndex: 1000000, cursor: 'pointer',
           display: window.innerWidth > 768 ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center'
         }}>
-          â€º
+          ›
         </button>
       )}
       
@@ -192,7 +192,7 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
         display: 'flex', justifyContent: 'center', gap: '8px', zIndex: 1000000, pointerEvents: 'none'
       }}>
         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>
-          {window.innerWidth > 768 ? 'Usa las flechas para navegar' : 'Desliza para ver mÃ¡s'} â€¢ MantÃ©n para zoom
+          {window.innerWidth > 768 ? 'Usa las flechas para navegar' : 'Desliza para ver más'} • Mantén para zoom
         </p>
       </div>
     </div>
@@ -222,7 +222,7 @@ const ProductDetail = () => {
   // Accordion states
   const [openAccordion, setOpenAccordion] = useState('description');
 
-  // Animation state para el botÃ³n "AÃ±adir a la Cesta"
+  // Animation state para el botón "Añadir a la Cesta"
   const [addedAnimation, setAddedAnimation] = useState(false);
 
   const addToCart = useShopCartStore((state) => state.addToCart);
@@ -543,11 +543,11 @@ const ProductDetail = () => {
       {/* Breadcrumbs */}
       <nav className="product-breadcrumb">
         <Link to="/shop">Inicio</Link>
-        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>â€º</span>
+        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
         <Link to={`/shop/catalog?category=${product.category?.id || ''}`}>
-          {product.category?.name || 'CatÃ¡logo'}
+          {product.category?.name || 'Catálogo'}
         </Link>
-        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>â€º</span>
+        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
         <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{product.name}</span>
       </nav>
 
@@ -555,7 +555,7 @@ const ProductDetail = () => {
         
         {/* Left Column: Gallery */}
         <div className="product-gallery-container">
-          {/* ImÃ¡genes normales */}
+          {/* Imágenes normales */}
           {displayImages.length > 0 ? (
             displayImages.map((img, idx) => (
               <div key={`${img}-${idx}`} className="product-gallery-item">
@@ -708,7 +708,7 @@ const ProductDetail = () => {
           {selectedSize && selectedVariantStock === 1 && (
             <div style={{ marginTop: '-20px', marginBottom: '24px', fontSize: '13px', color: '#ef4444', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }}></span>
-              Â¡Date prisa, quedan pocas unidades!
+              ¡Date prisa, quedan pocas unidades!
             </div>
           )}
 
@@ -718,11 +718,11 @@ const ProductDetail = () => {
             onClick={handleAddToCart}
             disabled={isCartLoading || (availableSizes.length > 0 && !selectedSize) || addedAnimation}
           >
-            {isCartLoading ? 'AÃ±adiendo...' : addedAnimation ? (
+            {isCartLoading ? 'Añadiendo...' : addedAnimation ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Check size={18} /> Â¡AÃ±adido!
+                <Check size={18} /> ¡Añadido!
               </span>
-            ) : 'AÃ±adir a la cesta'}
+            ) : 'Añadir a la cesta'}
           </button>
 
           {/* Accordions */}
@@ -732,12 +732,12 @@ const ProductDetail = () => {
                 className="accordion-header"
                 onClick={() => setOpenAccordion(openAccordion === 'description' ? null : 'description')}
               >
-                <span>DescripciÃ³n</span>
+                <span>Descripción</span>
                 {openAccordion === 'description' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               <div className={`accordion-content ${openAccordion === 'description' ? 'open' : ''}`}>
                 <div className="accordion-body">
-                  <div dangerouslySetInnerHTML={{ __html: product.description ? sanitizeHtml(product.description) : 'Sin descripciÃ³n detallada.' }} />
+                  <div dangerouslySetInnerHTML={{ __html: product.description ? sanitizeHtml(product.description) : 'Sin descripción detallada.' }} />
                   
                   {selectedVariant && selectedVariant.variant_attribute_values?.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -754,7 +754,7 @@ const ProductDetail = () => {
 
                   {allSizesMeasurements && (
                     <div className="mt-6 pt-4 border-t border-gray-200">
-                      <h4 className="font-semibold text-[11px] uppercase tracking-wider mb-3 text-gray-500">GuÃ­a de Tallas (cm):</h4>
+                      <h4 className="font-semibold text-[11px] uppercase tracking-wider mb-3 text-gray-500">Guía de Tallas (cm):</h4>
                       <div className="overflow-x-auto rounded border border-gray-200">
                         <table className="w-full text-left text-sm border-collapse min-w-[300px]">
                           <thead>
@@ -788,13 +788,13 @@ const ProductDetail = () => {
                 className="accordion-header"
                 onClick={() => setOpenAccordion(openAccordion === 'shipping' ? null : 'shipping')}
               >
-                <span>EnvÃ­o y Devoluciones</span>
+                <span>Envío y Devoluciones</span>
                 {openAccordion === 'shipping' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               <div className={`accordion-content ${openAccordion === 'shipping' ? 'open' : ''}`}>
                 <div className="accordion-body">
-                  <p>Los envÃ­os se realizan en un plazo de 24 a 48 horas laborables.</p>
-                  <p className="mt-2">Dispones de 30 dÃ­as desde la fecha de envÃ­o para realizar una devoluciÃ³n de tu compra de manera gratuita.</p>
+                  <p>Los envíos se realizan en un plazo de 24 a 48 horas laborables.</p>
+                  <p className="mt-2">Dispones de 30 días desde la fecha de envío para realizar una devolución de tu compra de manera gratuita.</p>
                 </div>
               </div>
             </div>
@@ -806,7 +806,7 @@ const ProductDetail = () => {
       {/* Related Products Section */}
       {relatedProducts.length > 0 && (
         <div className="related-products-section">
-          <h3 className="related-products-title">TambiÃ©n podrÃ­a interesarte</h3>
+          <h3 className="related-products-title">También podría interesarte</h3>
           <div className="related-products-grid">
             {relatedProducts.map(rel => {
               const linkUrl = `/shop/product/${rel.productId}${rel.colorName ? `?color=${encodeURIComponent(rel.colorName)}` : ''}`;

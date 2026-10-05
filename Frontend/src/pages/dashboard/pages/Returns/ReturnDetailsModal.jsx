@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState } from "react";
 import { X, Undo2, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -20,28 +20,28 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
   });
 
   const handleApprove = async () => {
-    if (!window.confirm("Â¿EstÃ¡s seguro de aprobar esta devoluciÃ³n y reintegrar el stock?")) return;
+    if (!window.confirm("¿Estás seguro de aprobar esta devolución y reintegrar el stock?")) return;
     try {
       setLoading(true);
       await approveReturn(returnItem.id, formData);
-      toast.success("DevoluciÃ³n aprobada y stock reintegrado");
+      toast.success("Devolución aprobada y stock reintegrado");
       onClose(true); // pass true to trigger reload
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error al aprobar devoluciÃ³n");
+      toast.error(error.response?.data?.message || "Error al aprobar devolución");
     } finally {
       setLoading(false);
     }
   };
 
   const handleReject = async () => {
-    if (!window.confirm("Â¿Denegar permanentemente esta devoluciÃ³n?")) return;
+    if (!window.confirm("¿Denegar permanentemente esta devolución?")) return;
     try {
       setLoading(true);
       await rejectReturn(returnItem.id);
-      toast.success("DevoluciÃ³n rechazada");
+      toast.success("Devolución rechazada");
       onClose(true);
     } catch (error) {
-      toast.error("Error al rechazar devoluciÃ³n");
+      toast.error("Error al rechazar devolución");
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
         <div className="modal-header">
           <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Undo2 className="text-primary" />
-            Detalle de DevoluciÃ³n {returnItem.reference_number ? `(${returnItem.reference_number})` : ""}
+            Detalle de Devolución {returnItem.reference_number ? `(${returnItem.reference_number})` : ""}
           </h2>
           <button className="modal-close" onClick={() => onClose(false)}><X size={20} /></button>
         </div>
@@ -122,11 +122,11 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
 
           {returnItem.status === 'pending' || returnItem.status === 'inspection' ? (
             <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-main)' }}>Opciones de ResoluciÃ³n</h4>
+              <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-main)' }}>Opciones de Resolución</h4>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Destino LogÃ­stico (Restock)</label>
+                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Destino Logístico (Restock)</label>
                   <CustomSelect 
                     style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                     value={formData.restock_destination}
@@ -139,14 +139,14 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>MÃ©todo de Reembolso</label>
+                    <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Método de Reembolso</label>
                     <CustomSelect 
                       style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                       value={formData.refund_method}
                       onChange={(e) => setFormData({...formData, refund_method: e.target.value})}
                     >
                       <option value="cash">Efectivo</option>
-                      <option value="credit">CrÃ©dito en Tienda / Giftcard</option>
+                      <option value="credit">Crédito en Tienda / Giftcard</option>
                       <option value="transfer">Transferencia / Tarjeta</option>
                     </CustomSelect>
                   </div>
@@ -171,7 +171,7 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
                     style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'transparent', border: '1px solid #f44336', color: '#f44336', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontWeight: 600 }}
                   >
                     <XCircle size={18} />
-                    Denegar DevoluciÃ³n
+                    Denegar Devolución
                   </button>
                   <button 
                     onClick={handleApprove} 
@@ -179,7 +179,7 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
                     style={{ flex: 1, padding: '12px', borderRadius: '8px', background: '#4caf50', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontWeight: 600 }}
                   >
                     <CheckCircle size={18} />
-                    Aprobar DevoluciÃ³n
+                    Aprobar Devolución
                   </button>
                 </div>
               </CanAccess>
@@ -187,12 +187,12 @@ export default function ReturnDetailsModal({ returnItem, onClose }) {
           ) : (
             <div style={{ textAlign: 'center', padding: '20px', background: 'var(--bg-input)', borderRadius: '12px' }}>
               <div style={{ fontWeight: 600, fontSize: '16px', color: returnItem.status === 'approved' ? '#4caf50' : '#f44336' }}>
-                {returnItem.status === 'approved' ? 'DevoluciÃ³n Aprobada' : 'DevoluciÃ³n Rechazada'}
+                {returnItem.status === 'approved' ? 'Devolución Aprobada' : 'Devolución Rechazada'}
               </div>
               {returnItem.status === 'approved' && (
                 <div style={{ marginTop: '8px', fontSize: '14px' }}>
-                  Se reembolsÃ³ <strong>Bs. {Number(returnItem.refund_amount).toFixed(2)}</strong> mediante <strong>{returnItem.refund_method}</strong>.<br/>
-                  El producto se enviÃ³ a: <strong>{returnItem.restock_destination === 'inventory' ? 'Inventario' : 'Cuarentena'}</strong>.
+                  Se reembolsó <strong>Bs. {Number(returnItem.refund_amount).toFixed(2)}</strong> mediante <strong>{returnItem.refund_method}</strong>.<br/>
+                  El producto se envió a: <strong>{returnItem.restock_destination === 'inventory' ? 'Inventario' : 'Cuarentena'}</strong>.
                 </div>
               )}
             </div>

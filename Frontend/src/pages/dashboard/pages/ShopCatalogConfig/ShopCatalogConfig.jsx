@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ShoppingBag, Save, Eye, EyeOff, Grid, Columns, Type, Palette,
   SlidersHorizontal, Tag, LayoutGrid, Settings2, Image as ImageIcon
@@ -21,14 +21,14 @@ const TABS = [
 ];
 
 const SECTION_KEYS = [
-  { key: "catalog_show_search", label: "Buscador", desc: "Campo de bÃºsqueda de productos en el sidebar." },
-  { key: "catalog_show_breadcrumbs", label: "Breadcrumbs", desc: "Ruta de navegaciÃ³n (Inicio > CatÃ¡logo > CategorÃ­a)." },
-  { key: "catalog_show_categories", label: "Filtro de CategorÃ­as", desc: "Lista jerÃ¡rquica de categorÃ­as en el sidebar." },
-  { key: "catalog_show_price_filter", label: "Filtro de Precio", desc: "Campos de precio mÃ­nimo y mÃ¡ximo." },
+  { key: "catalog_show_search", label: "Buscador", desc: "Campo de búsqueda de productos en el sidebar." },
+  { key: "catalog_show_breadcrumbs", label: "Breadcrumbs", desc: "Ruta de navegación (Inicio > Catálogo > Categoría)." },
+  { key: "catalog_show_categories", label: "Filtro de Categorías", desc: "Lista jerárquica de categorías en el sidebar." },
+  { key: "catalog_show_price_filter", label: "Filtro de Precio", desc: "Campos de precio mínimo y máximo." },
   { key: "catalog_show_sort", label: "Ordenar por", desc: "Selector de ordenamiento (Recomendados, Precio, Nombre)." },
   { key: "catalog_show_view_toggle", label: "Toggle de Vista", desc: "Botones para alternar entre vista Por Prendas y Por Productos." },
-  { key: "catalog_show_image_toggle", label: "Toggle de Imagen", desc: "Botones para alternar entre PresentaciÃ³n y VÃ­vido." },
-  { key: "catalog_show_load_more", label: "BotÃ³n Cargar MÃ¡s", desc: "BotÃ³n para cargar mÃ¡s productos al final de la grilla." }
+  { key: "catalog_show_image_toggle", label: "Toggle de Imagen", desc: "Botones para alternar entre Presentación y Vívido." },
+  { key: "catalog_show_load_more", label: "Botón Cargar Más", desc: "Botón para cargar más productos al final de la grilla." }
 ];
 
 export default function ShopCatalogConfig() {
@@ -59,7 +59,7 @@ export default function ShopCatalogConfig() {
       const data = await getCategories();
       setCategories(data);
     } catch (err) {
-      toast.error("Error al cargar categorÃ­as");
+      toast.error("Error al cargar categorías");
     } finally {
       setLoadingCats(false);
     }
@@ -110,7 +110,7 @@ export default function ShopCatalogConfig() {
       <div className={`${theme} hc-style-1`}>
         <div className="hc-style-2">
           <div className="w-8 h-8 rounded-full border-2 animate-spin hc-style-3" />
-          <span className="hc-style-4">Cargando configuraciÃ³nâ€¦</span>
+          <span className="hc-style-4">Cargando configuración…</span>
         </div>
       </div>
     );
@@ -170,10 +170,10 @@ export default function ShopCatalogConfig() {
             <div className="hc-style-9">
               <ShoppingBag size={18} />
             </div>
-            <h1 className="hc-style-10">ConfiguraciÃ³n del CatÃ¡logo (Shop)</h1>
+            <h1 className="hc-style-10">Configuración del Catálogo (Shop)</h1>
           </div>
           <p className="hc-style-11">
-            Personaliza el diseÃ±o, la grilla, las tarjetas, los filtros y las etiquetas de la pÃ¡gina de catÃ¡logo de la tienda online.
+            Personaliza el diseño, la grilla, las tarjetas, los filtros y las etiquetas de la página de catálogo de la tienda online.
           </p>
         </div>
 
@@ -198,23 +198,23 @@ export default function ShopCatalogConfig() {
           ))}
         </div>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ═══════════════════════════════════════════════
             TAB: GENERAL
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        ═══════════════════════════════════════════════ */}
         {activeTab === "general" && (
           <div>
-            {/* TÃ­tulo de la PÃ¡gina */}
+            {/* Título de la Página */}
             <div className="hc-style-14">
-              <h3 className="hc-style-15">Textos de la PÃ¡gina</h3>
+              <h3 className="hc-style-15">Textos de la Página</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TÃ­tulo Principal</span>
+                  <span className="hc-style-18">Título Principal</span>
                   <input
                     type="text"
-                    value={settings.catalog_title ?? "CatÃ¡logo"}
+                    value={settings.catalog_title ?? "Catálogo"}
                     onChange={e => setSetting("catalog_title", e.target.value)}
                     className="hc-style-19"
-                    placeholder="CatÃ¡logo"
+                    placeholder="Catálogo"
                   />
                 </label>
                 <label className="hc-style-17">
@@ -238,13 +238,13 @@ export default function ShopCatalogConfig() {
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Texto del BotÃ³n "Cargar MÃ¡s"</span>
+                  <span className="hc-style-18">Texto del Botón "Cargar Más"</span>
                   <input
                     type="text"
-                    value={settings.catalog_load_more_text ?? "Cargar MÃ¡s"}
+                    value={settings.catalog_load_more_text ?? "Cargar Más"}
                     onChange={e => setSetting("catalog_load_more_text", e.target.value)}
                     className="hc-style-19"
-                    placeholder="Cargar MÃ¡s"
+                    placeholder="Cargar Más"
                   />
                 </label>
                 <label className="hc-style-17">
@@ -280,8 +280,8 @@ export default function ShopCatalogConfig() {
                     value={settings.catalog_default_image_mode || "presentacion"}
                     onChange={e => setSetting("catalog_default_image_mode", e.target.value)}
                   >
-                    <option value="presentacion">PresentaciÃ³n (imagen principal)</option>
-                    <option value="vivido">VÃ­vido (imagen alternativa / puesta)</option>
+                    <option value="presentacion">Presentación (imagen principal)</option>
+                    <option value="vivido">Vívido (imagen alternativa / puesta)</option>
                   </CustomSelect>
                 </label>
                 <label className="hc-style-17">
@@ -297,7 +297,7 @@ export default function ShopCatalogConfig() {
                   </CustomSelect>
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Productos por PÃ¡gina (carga inicial)</span>
+                  <span className="hc-style-18">Productos por Página (carga inicial)</span>
                   <input
                     type="number"
                     min="4"
@@ -308,7 +308,7 @@ export default function ShopCatalogConfig() {
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Productos adicionales al "Cargar MÃ¡s"</span>
+                  <span className="hc-style-18">Productos adicionales al "Cargar Más"</span>
                   <input
                     type="number"
                     min="4"
@@ -321,25 +321,25 @@ export default function ShopCatalogConfig() {
               </div>
             </div>
 
-            {/* Filtro de CategorÃ­as (cuÃ¡les se muestran) */}
+            {/* Filtro de Categorías (cuáles se muestran) */}
             <div className="hc-style-14">
-              <h3 className="hc-style-15">CategorÃ­as Visibles en el CatÃ¡logo</h3>
+              <h3 className="hc-style-15">Categorías Visibles en el Catálogo</h3>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>
-                Selecciona quÃ© categorÃ­as estarÃ¡n disponibles en el filtro del catÃ¡logo. Por defecto se muestran todas.
+                Selecciona qué categorías estarán disponibles en el filtro del catálogo. Por defecto se muestran todas.
               </p>
               <CustomSelect
                 value={settings.catalog_category_filter || "all"}
                 onChange={e => setSetting("catalog_category_filter", e.target.value)}
                 style={{ marginBottom: '15px' }}
               >
-                <option value="all">Mostrar TODAS las categorÃ­as</option>
-                <option value="include">SOLO mostrar ciertas categorÃ­as</option>
-                <option value="exclude">OCULTAR ciertas categorÃ­as</option>
+                <option value="all">Mostrar TODAS las categorías</option>
+                <option value="include">SOLO mostrar ciertas categorías</option>
+                <option value="exclude">OCULTAR ciertas categorías</option>
               </CustomSelect>
 
               {(settings.catalog_category_filter === 'include' || settings.catalog_category_filter === 'exclude') && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
-                  {loadingCats ? <span style={{ fontSize: '12px' }}>Cargando categorÃ­as...</span> : categories.map(cat => {
+                  {loadingCats ? <span style={{ fontSize: '12px' }}>Cargando categorías...</span> : categories.map(cat => {
                     let selectedCats = [];
                     try {
                       selectedCats = JSON.parse(settings.catalog_visible_categories || "[]");
@@ -379,16 +379,16 @@ export default function ShopCatalogConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ═══════════════════════════════════════════════
             TAB: GRILLA Y LAYOUT
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        ═══════════════════════════════════════════════ */}
         {activeTab === "grid" && (
           <div>
             <div className="hc-style-14">
               <h3 className="hc-style-15">Columnas de la Grilla</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Columnas en Desktop (â‰¥1025px)</span>
+                  <span className="hc-style-18">Columnas en Desktop (≥1025px)</span>
                   <CustomSelect
                     value={settings.catalog_grid_cols_desktop || "3"}
                     onChange={e => setSetting("catalog_grid_cols_desktop", e.target.value)}
@@ -399,7 +399,7 @@ export default function ShopCatalogConfig() {
                   </CustomSelect>
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Columnas en Tablet (769px â€“ 1024px)</span>
+                  <span className="hc-style-18">Columnas en Tablet (769px – 1024px)</span>
                   <CustomSelect
                     value={settings.catalog_grid_cols_tablet || "2"}
                     onChange={e => setSetting("catalog_grid_cols_tablet", e.target.value)}
@@ -409,7 +409,7 @@ export default function ShopCatalogConfig() {
                   </CustomSelect>
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Columnas en MÃ³vil (â‰¤768px)</span>
+                  <span className="hc-style-18">Columnas en Móvil (≤768px)</span>
                   <CustomSelect
                     value={settings.catalog_grid_cols_mobile || "2"}
                     onChange={e => setSetting("catalog_grid_cols_mobile", e.target.value)}
@@ -425,7 +425,7 @@ export default function ShopCatalogConfig() {
               <h3 className="hc-style-15">Espaciado</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">SeparaciÃ³n entre Tarjetas (Gap) â€” px</span>
+                  <span className="hc-style-18">Separación entre Tarjetas (Gap) — px</span>
                   <input
                     type="number"
                     min="0"
@@ -447,7 +447,7 @@ export default function ShopCatalogConfig() {
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">SeparaciÃ³n Sidebar â†” Grilla (px)</span>
+                  <span className="hc-style-18">Separación Sidebar ↔ Grilla (px)</span>
                   <input
                     type="number"
                     min="10"
@@ -458,7 +458,7 @@ export default function ShopCatalogConfig() {
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Ancho MÃ¡ximo del Contenedor (px)</span>
+                  <span className="hc-style-18">Ancho Máximo del Contenedor (px)</span>
                   <input
                     type="number"
                     min="900"
@@ -473,9 +473,9 @@ export default function ShopCatalogConfig() {
 
             {/* Preview de la grilla */}
             <div className="hc-style-14">
-              <h3 className="hc-style-15">PrevisualizaciÃ³n del Grid</h3>
+              <h3 className="hc-style-15">Previsualización del Grid</h3>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
-                Vista aproximada de cÃ³mo se verÃ¡ la grilla con la configuraciÃ³n actual (Desktop).
+                Vista aproximada de cómo se verá la grilla con la configuración actual (Desktop).
               </p>
               <div style={{
                 display: 'grid',
@@ -508,16 +508,16 @@ export default function ShopCatalogConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ═══════════════════════════════════════════════
             TAB: TARJETAS
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        ═══════════════════════════════════════════════ */}
         {activeTab === "cards" && (
           <div>
             <div className="hc-style-14">
               <h3 className="hc-style-15">Imagen del Producto</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">ProporciÃ³n de Imagen (Aspect Ratio)</span>
+                  <span className="hc-style-18">Proporción de Imagen (Aspect Ratio)</span>
                   <CustomSelect
                     value={settings.catalog_card_aspect_ratio || "1 / 1"}
                     onChange={e => setSetting("catalog_card_aspect_ratio", e.target.value)}
@@ -525,7 +525,7 @@ export default function ShopCatalogConfig() {
                     <option value="1 / 1">Cuadrada (1:1)</option>
                     <option value="3 / 4">Vertical (3:4)</option>
                     <option value="4 / 5">Alta (4:5)</option>
-                    <option value="2 / 3">MÃ¡s Alta (2:3)</option>
+                    <option value="2 / 3">Más Alta (2:3)</option>
                     <option value="4 / 3">Horizontal (4:3)</option>
                   </CustomSelect>
                 </label>
@@ -535,9 +535,9 @@ export default function ShopCatalogConfig() {
                     value={settings.catalog_card_object_fit || "contain"}
                     onChange={e => setSetting("catalog_card_object_fit", e.target.value)}
                   >
-                    <option value="contain">Contener (contain) â€” sin recorte</option>
-                    <option value="cover">Cubrir (cover) â€” puede recortar</option>
-                    <option value="fill">Rellenar (fill) â€” puede deformar</option>
+                    <option value="contain">Contener (contain) — sin recorte</option>
+                    <option value="cover">Cubrir (cover) — puede recortar</option>
+                    <option value="fill">Rellenar (fill) — puede deformar</option>
                   </CustomSelect>
                 </label>
                 <label className="hc-style-17">
@@ -565,10 +565,10 @@ export default function ShopCatalogConfig() {
             </div>
 
             <div className="hc-style-14">
-              <h3 className="hc-style-15">TipografÃ­a</h3>
+              <h3 className="hc-style-15">Tipografía</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TamaÃ±o del Nombre (px)</span>
+                  <span className="hc-style-18">Tamaño del Nombre (px)</span>
                   <input
                     type="number"
                     min="10"
@@ -592,7 +592,7 @@ export default function ShopCatalogConfig() {
                   </CustomSelect>
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TamaÃ±o del Precio (px)</span>
+                  <span className="hc-style-18">Tamaño del Precio (px)</span>
                   <input
                     type="number"
                     min="10"
@@ -603,15 +603,15 @@ export default function ShopCatalogConfig() {
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">LÃ­neas MÃ¡ximas del Nombre</span>
+                  <span className="hc-style-18">Líneas Máximas del Nombre</span>
                   <CustomSelect
                     value={settings.catalog_card_name_lines || "2"}
                     onChange={e => setSetting("catalog_card_name_lines", e.target.value)}
                   >
-                    <option value="1">1 lÃ­nea</option>
-                    <option value="2">2 lÃ­neas</option>
-                    <option value="3">3 lÃ­neas</option>
-                    <option value="none">Sin lÃ­mite</option>
+                    <option value="1">1 línea</option>
+                    <option value="2">2 líneas</option>
+                    <option value="3">3 líneas</option>
+                    <option value="none">Sin límite</option>
                   </CustomSelect>
                 </label>
               </div>
@@ -624,7 +624,7 @@ export default function ShopCatalogConfig() {
                   <div>
                     <span className="hc-style-21">Mostrar Swatches de Color</span>
                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      PequeÃ±os cÃ­rculos de color debajo del precio.
+                      Pequeños círculos de color debajo del precio.
                     </p>
                   </div>
                   <ToggleSwitch
@@ -633,7 +633,7 @@ export default function ShopCatalogConfig() {
                   />
                 </div>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">MÃ¡ximo Swatches Visibles</span>
+                  <span className="hc-style-18">Máximo Swatches Visibles</span>
                   <input
                     type="number"
                     min="2"
@@ -644,7 +644,7 @@ export default function ShopCatalogConfig() {
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TamaÃ±o de Swatch (px)</span>
+                  <span className="hc-style-18">Tamaño de Swatch (px)</span>
                   <input
                     type="number"
                     min="8"
@@ -658,13 +658,13 @@ export default function ShopCatalogConfig() {
             </div>
 
             <div className="hc-style-14">
-              <h3 className="hc-style-15">BotÃ³n "AÃ±adir RÃ¡pido"</h3>
+              <h3 className="hc-style-15">Botón "Añadir Rápido"</h3>
               <div className="hc-style-16">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <span className="hc-style-21">Mostrar BotÃ³n de AÃ±adir RÃ¡pido</span>
+                    <span className="hc-style-21">Mostrar Botón de Añadir Rápido</span>
                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      BotÃ³n circular con Ã­cono de bolsa para agregar rÃ¡pido.
+                      Botón circular con ícono de bolsa para agregar rápido.
                     </p>
                   </div>
                   <ToggleSwitch
@@ -673,7 +673,7 @@ export default function ShopCatalogConfig() {
                   />
                 </div>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TamaÃ±o del BotÃ³n (px)</span>
+                  <span className="hc-style-18">Tamaño del Botón (px)</span>
                   <input
                     type="number"
                     min="24"
@@ -688,34 +688,34 @@ export default function ShopCatalogConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ═══════════════════════════════════════════════
             TAB: SIDEBAR Y FILTROS
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        ═══════════════════════════════════════════════ */}
         {activeTab === "sidebar" && (
           <div>
             <div className="hc-style-14">
-              <h3 className="hc-style-15">TÃ­tulo de Secciones del Sidebar</h3>
+              <h3 className="hc-style-15">Título de Secciones del Sidebar</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TÃ­tulo de "CategorÃ­as"</span>
+                  <span className="hc-style-18">Título de "Categorías"</span>
                   <input
                     type="text"
-                    value={settings.catalog_sidebar_categories_title ?? "CategorÃ­as"}
+                    value={settings.catalog_sidebar_categories_title ?? "Categorías"}
                     onChange={e => setSetting("catalog_sidebar_categories_title", e.target.value)}
                     className="hc-style-19"
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Texto "Todas las CategorÃ­as"</span>
+                  <span className="hc-style-18">Texto "Todas las Categorías"</span>
                   <input
                     type="text"
-                    value={settings.catalog_sidebar_all_categories ?? "Todas las CategorÃ­as"}
+                    value={settings.catalog_sidebar_all_categories ?? "Todas las Categorías"}
                     onChange={e => setSetting("catalog_sidebar_all_categories", e.target.value)}
                     className="hc-style-19"
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TÃ­tulo de "Precio"</span>
+                  <span className="hc-style-18">Título de "Precio"</span>
                   <input
                     type="text"
                     value={settings.catalog_sidebar_price_title ?? "Precio (Bs)"}
@@ -724,7 +724,7 @@ export default function ShopCatalogConfig() {
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TÃ­tulo de "Ordenar por"</span>
+                  <span className="hc-style-18">Título de "Ordenar por"</span>
                   <input
                     type="text"
                     value={settings.catalog_sidebar_sort_title ?? "Ordenar por"}
@@ -738,7 +738,7 @@ export default function ShopCatalogConfig() {
             <div className="hc-style-14">
               <h3 className="hc-style-15">Opciones de Ordenamiento</h3>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>
-                Selecciona quÃ© opciones de ordenamiento estarÃ¡n disponibles para el usuario.
+                Selecciona qué opciones de ordenamiento estarán disponibles para el usuario.
               </p>
               {[
                 { key: "catalog_sort_show_recomendados", label: "Recomendados", defaultVal: "1" },
@@ -778,19 +778,19 @@ export default function ShopCatalogConfig() {
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Texto "PresentaciÃ³n"</span>
+                  <span className="hc-style-18">Texto "Presentación"</span>
                   <input
                     type="text"
-                    value={settings.catalog_label_presentacion ?? "PresentaciÃ³n"}
+                    value={settings.catalog_label_presentacion ?? "Presentación"}
                     onChange={e => setSetting("catalog_label_presentacion", e.target.value)}
                     className="hc-style-19"
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Texto "VÃ­vido"</span>
+                  <span className="hc-style-18">Texto "Vívido"</span>
                   <input
                     type="text"
-                    value={settings.catalog_label_vivido ?? "VÃ­vido"}
+                    value={settings.catalog_label_vivido ?? "Vívido"}
                     onChange={e => setSetting("catalog_label_vivido", e.target.value)}
                     className="hc-style-19"
                   />
@@ -800,9 +800,9 @@ export default function ShopCatalogConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ═══════════════════════════════════════════════
             TAB: ETIQUETAS (BADGES)
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        ═══════════════════════════════════════════════ */}
         {activeTab === "badges" && (
           <div>
             {/* Badge Descuento */}
@@ -819,7 +819,7 @@ export default function ShopCatalogConfig() {
                 <ColorPicker label="Color de Fondo" settingKey="catalog_badge_discount_bg" defaultValue="#000000" />
                 <ColorPicker label="Color de Texto" settingKey="catalog_badge_discount_text" defaultValue="#ffffff" />
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TamaÃ±o de Fuente (px)</span>
+                  <span className="hc-style-18">Tamaño de Fuente (px)</span>
                   <input
                     type="number"
                     min="8"
@@ -920,7 +920,7 @@ export default function ShopCatalogConfig() {
 
             {/* Preview de badges */}
             <div className="hc-style-14">
-              <h3 className="hc-style-15">PrevisualizaciÃ³n de Etiquetas</h3>
+              <h3 className="hc-style-15">Previsualización de Etiquetas</h3>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '20px', background: 'var(--bg-overlay)', borderRadius: '8px' }}>
                 {(settings.catalog_badge_show_discount === undefined || String(settings.catalog_badge_show_discount) !== "0") && (
                   <div style={{
@@ -970,9 +970,9 @@ export default function ShopCatalogConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ═══════════════════════════════════════════════
             TAB: SECCIONES (TOGGLES DE VISIBILIDAD)
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        ═══════════════════════════════════════════════ */}
         {activeTab === "sections" && (
           <div className="hc-style-141">
             {SECTION_KEYS.map((s, idx) => {
@@ -1015,9 +1015,9 @@ export default function ShopCatalogConfig() {
 
       </div>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      {/* ═══════════════════════════════════════════════
           BARRA DE GUARDADO FLOTANTE
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      ═══════════════════════════════════════════════ */}
       {dirty.size > 0 && (
         <div className="hc-style-147">
           <div className="hc-style-148">

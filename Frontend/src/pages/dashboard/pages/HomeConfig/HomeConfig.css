@@ -1,4 +1,4 @@
-﻿.hc-style-1 { background: var(--bg-main); min-height: 100%; display: flex; align-items: center; justify-content: center; }
+.hc-style-1 { background: var(--bg-main); min-height: 100%; display: flex; align-items: center; justify-content: center; }
 .hc-style-2 { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-muted); }
 .hc-style-3 { border-color: var(--color-primary); border-top-color: transparent; }
 .hc-style-4 { font-size: 14px; }

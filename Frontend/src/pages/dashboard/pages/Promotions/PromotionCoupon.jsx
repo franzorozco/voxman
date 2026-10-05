@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useRef } from 'react';
 import { API_BASE_URL } from "../../../../config/api";
 import { X, Download } from 'lucide-react';
@@ -47,7 +47,7 @@ export default function PromotionCoupon({ promotion, onClose }) {
 
         <h2 className="promo-coupon-title">Generar Ticket (PNG)</h2>
 
-        {/* CONTENEDOR DEL CUPÃ“N (Lo que se va a imprimir) */}
+        {/* CONTENEDOR DEL CUPÓN (Lo que se va a imprimir) */}
         <div 
           ref={couponRef}
           className="promo-coupon-print-area"
@@ -86,7 +86,7 @@ export default function PromotionCoupon({ promotion, onClose }) {
           )}
 
           <div className="promo-coupon-footer">
-            VÃ¡lido hasta: <strong>{validUntil}</strong>
+            Válido hasta: <strong>{validUntil}</strong>
           </div>
         </div>
 

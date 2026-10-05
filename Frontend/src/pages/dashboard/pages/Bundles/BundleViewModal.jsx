@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React from 'react';
 import { X, Package, DollarSign, Target, CheckCircle2, AlertCircle, TrendingDown, Users, PieChart, Tag, Hash, Building2 } from 'lucide-react';
 import { API_BASE_URL } from '../../../../config/api';
@@ -95,7 +95,7 @@ export default function BundleViewModal({ bundle, onClose }) {
                 <h2 className="bvm-name">{bundle.name}</h2>
                 <StatusBadge />
               </div>
-              <p className="bvm-category">{bundle.category?.name || 'Sin categorÃ­a'}</p>
+              <p className="bvm-category">{bundle.category?.name || 'Sin categoría'}</p>
               <span className="bvm-stock-badge">
                 <Package size={13} color="var(--color-primary)" />
                 <b>{bundle.virtualStock || 0}</b> posibles (Stock Virtual)
@@ -140,11 +140,11 @@ export default function BundleViewModal({ bundle, onClose }) {
 
           {/* Items Section - No wrapper border */}
           <h3 className="bvm-section-title">
-            <Package size={17} color="var(--color-primary)" /> Ãtems del Conjunto
+            <Package size={17} color="var(--color-primary)" /> Ítems del Conjunto
           </h3>
           
           {enrichedItems.length === 0 ? (
-            <p className="bvm-empty-msg">Este conjunto no tiene Ã­tems asignados.</p>
+            <p className="bvm-empty-msg">Este conjunto no tiene ítems asignados.</p>
           ) : (
             <div className="bvm-items-list">
               {enrichedItems.map((item, idx) => {
@@ -158,7 +158,7 @@ export default function BundleViewModal({ bundle, onClose }) {
                   const fit = item.variant.fit?.name || '';
                   const otherAttrs = (item.variant.variant_attribute_values || []).map(val => val.attribute_value?.value).filter(Boolean);
                   itemName = item.product?.name || 'Producto';
-                  attributesText = [fit, size, ...otherAttrs].filter(Boolean).join(" Â· ");
+                  attributesText = [fit, size, ...otherAttrs].filter(Boolean).join(" · ");
                   sku = item.variant.sku || "N/A";
                   
                   const colorId = item.variant.variant_attribute_values?.[0]?.attribute_value_id;
@@ -194,7 +194,7 @@ export default function BundleViewModal({ bundle, onClose }) {
                           {attributesText && <span><Tag size={11} /> {attributesText}</span>}
                         </div>
                       </div>
-                      <div className="bvm-item-qty-badge">Ã—{item.quantity}</div>
+                      <div className="bvm-item-qty-badge">×{item.quantity}</div>
                     </div>
 
                     {/* Item financials grid */}
@@ -222,11 +222,11 @@ export default function BundleViewModal({ bundle, onClose }) {
             </div>
           )}
 
-          {/* LiquidaciÃ³n por Socio */}
+          {/* Liquidación por Socio */}
           {ownerDistribution.length > 0 && (
             <div className="bvm-settlement-section">
               <h3 className="bvm-section-title">
-                <PieChart size={17} color="var(--color-success)" /> LiquidaciÃ³n por Socio
+                <PieChart size={17} color="var(--color-success)" /> Liquidación por Socio
               </h3>
               
               {/* Desktop table */}

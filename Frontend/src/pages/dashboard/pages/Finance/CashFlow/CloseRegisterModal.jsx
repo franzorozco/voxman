@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { closeCashRegister } from '../../../../../api/admin/finance';
 import { toast } from 'react-hot-toast';
 import { X, Lock, AlertTriangle } from 'lucide-react';
@@ -24,7 +24,7 @@ const CloseRegisterModal = ({ isOpen, onClose, onSuccess, branch }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!amount) {
-      toast.error("Ingresa el monto de cierre (monto fÃ­sico).");
+      toast.error("Ingresa el monto de cierre (monto físico).");
       return;
     }
     
@@ -67,12 +67,12 @@ const CloseRegisterModal = ({ isOpen, onClose, onSuccess, branch }) => {
         {/* Body */}
         <form onSubmit={handleSubmit} style={{ padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
-            <p style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '13px' }}>Saldo FÃ­sico TeÃ³rico (SegÃºn Sistema)</p>
+            <p style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '13px' }}>Saldo Físico Teórico (Según Sistema)</p>
             <h3 style={{ margin: 0, fontSize: '24px', color: 'var(--text-main)' }}>Bs. {Number(theoreticalBalance).toFixed(2)}</h3>
           </div>
 
           <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '6px' }}>Dinero FÃ­sico Real (Arqueo) - Bs.</label>
+            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '6px' }}>Dinero Físico Real (Arqueo) - Bs.</label>
             <input 
               type="number" 
               step="0.01"
@@ -80,7 +80,7 @@ const CloseRegisterModal = ({ isOpen, onClose, onSuccess, branch }) => {
               value={amount} 
               onChange={e => setAmount(e.target.value)}
               required
-              placeholder="Â¿CuÃ¡nto dinero hay realmente en caja?"
+              placeholder="¿Cuánto dinero hay realmente en caja?"
               autoFocus
               style={{ fontSize: '20px', fontWeight: 'bold', padding: '12px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', width: '100%', boxSizing: 'border-box', outline: 'none' }}
             />
@@ -103,7 +103,7 @@ const CloseRegisterModal = ({ isOpen, onClose, onSuccess, branch }) => {
                   {diff > 0 ? 'Sobrante detectado' : 'Faltante detectado'} (Bs. {Math.abs(diff).toFixed(2)})
                 </p>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-main)' }}>
-                  Al cerrar, se generarÃ¡ un movimiento de ajuste automÃ¡tico en tesorerÃ­a.
+                  Al cerrar, se generará un movimiento de ajuste automático en tesorería.
                 </p>
               </div>
             </div>

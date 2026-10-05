@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getBundles, deleteBundle, updateBundle } from "../../../../api/admin/bundles";
 import { getCategories } from "../../../../api/admin/categories";
 import { getOwners } from "../../../../api/admin/owners";
@@ -280,7 +280,7 @@ export default function Bundles() {
         {showFilters && (
           <div className="filters-panel">
             <div className="filter-group">
-              <label className="filter-label">CategorÃ­a</label>
+              <label className="filter-label">Categoría</label>
               <CustomSelect
                 className="filter-select"
                 value={filters.category}
@@ -425,13 +425,13 @@ export default function Bundles() {
         title="Eliminar conjunto"
         message={
           confirmModal.type === "singleDelete" || confirmModal.type === "bulkDelete"
-            ? "Â¿EstÃ¡s seguro de eliminar este conjunto? Esta acciÃ³n no se puede deshacer."
-            : "Â¿EstÃ¡s seguro de cambiar el estado de estos conjuntos?"
+            ? "¿Estás seguro de eliminar este conjunto? Esta acción no se puede deshacer."
+            : "¿Estás seguro de cambiar el estado de estos conjuntos?"
         }
         confirmText={
           confirmModal.type === "singleDelete" || confirmModal.type === "bulkDelete"
-            ? "SÃ­, eliminar"
-            : "SÃ­, cambiar"
+            ? "Sí, eliminar"
+            : "Sí, cambiar"
         }
         type={
           confirmModal.type === "singleDelete" || confirmModal.type === "bulkDelete"

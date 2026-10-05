@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../utils/imageUtils';
+import { getImageUrl } from '../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { Outlet, Link, NavLink, useLocation } from "react-router-dom";
 import { useThemeStore } from "../../store/themeStore";
@@ -100,10 +100,10 @@ const DashboardLayout = () => {
               <LogOut size={38} />
             </div>
 
-            <h2>Cerrar sesiÃ³n</h2>
+            <h2>Cerrar sesión</h2>
 
             <p>
-              Â¿EstÃ¡s seguro de que deseas cerrar sesiÃ³n?
+              ¿Estás seguro de que deseas cerrar sesión?
             </p>
 
             <div className="logout-actions">
@@ -119,7 +119,7 @@ const DashboardLayout = () => {
                 className="confirm-btn"
                 onClick={handleLogout}
               >
-                SÃ­, cerrar sesiÃ³n
+                Sí, cerrar sesión
               </button>
 
             </div>
@@ -136,7 +136,7 @@ const DashboardLayout = () => {
           className="toggle-btn"
           onClick={() => setCollapsed(!collapsed)}
         >
-          â˜°
+          ☰
         </button>
 
         {/* SIDEBAR */}
@@ -163,7 +163,7 @@ const DashboardLayout = () => {
               <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" end />
             </div>
 
-            {/* 2. VENTAS Y FACTURACIÃ“N */}
+            {/* 2. VENTAS Y FACTURACIÓN */}
             <CanAccess permission={['manage_sales', 'view_sales', 'view_users', 'view_returns', 'view_carts']}>
               <div className="nav-section">
                 <p className="section-title">
@@ -187,14 +187,14 @@ const DashboardLayout = () => {
               </div>
             </CanAccess>
 
-            {/* 3. CATÃLOGO E INVENTARIO */}
+            {/* 3. CATÁLOGO E INVENTARIO */}
             <CanAccess permission={['view_products', 'view_inventory_own_branch', 'adjust_inventory', 'transfer_inventory']}>
               <div className="nav-section">
                 <p className="section-title">
-                  {!collapsed && "CATÃLOGO E INVENTARIO"}
+                  {!collapsed && "CATÁLOGO E INVENTARIO"}
                 </p>
                 <CanAccess permission="manage_settings">
-                  <NavItem to="/dashboard/settings" icon={Settings} label="Ajustes de CatÃ¡logo" />
+                  <NavItem to="/dashboard/settings" icon={Settings} label="Ajustes de Catálogo" />
                 </CanAccess>
                 <CanAccess permission="view_products">
                   <NavItem to="/dashboard/products" icon={Package} label="Productos" />
@@ -209,7 +209,7 @@ const DashboardLayout = () => {
                   <NavItem to="/dashboard/inventory/quarantine" icon={AlertTriangle} label="Mermas y Cuarentena" />
                 </CanAccess>
                 <CanAccess permission="transfer_inventory">
-                  <NavItem to="/dashboard/inventory/transfers" icon={Truck} label="Traslados (PrÃ³ximamente)" />
+                  <NavItem to="/dashboard/inventory/transfers" icon={Truck} label="Traslados (Próximamente)" />
                 </CanAccess>
               </div>
             </CanAccess>
@@ -224,7 +224,7 @@ const DashboardLayout = () => {
                   <NavItem to="/dashboard/suppliers" icon={Truck} label="Proveedores" />
                 </CanAccess>
                 <CanAccess permission="view_purchases">
-                  <NavItem to="/dashboard/purchases" icon={FileText} label="Ã“rdenes de Compra" />
+                  <NavItem to="/dashboard/purchases" icon={FileText} label="Órdenes de Compra" />
                 </CanAccess>
                 <CanAccess permission="manage_expenses">
                   <NavItem to="/dashboard/purchases/accounts-payable" icon={DollarSign} label="Cuentas por Pagar" />
@@ -257,19 +257,19 @@ const DashboardLayout = () => {
                   {!collapsed && "RECURSOS HUMANOS"}
                 </p>
                 <CanAccess permission="view_owners">
-                  <NavItem to="/dashboard/owners" icon={UserRoundSearch} label="Socios / DueÃ±os" />
+                  <NavItem to="/dashboard/owners" icon={UserRoundSearch} label="Socios / Dueños" />
                 </CanAccess>
                 <CanAccess permission="manage_executives">
                   <NavItem to="/dashboard/employees" icon={UserRoundSearch} label="Personal" />
                 </CanAccess>
 
                 <CanAccess permission="manage_user_salaries">
-                  <NavItem to="/dashboard/payroll" icon={FileText} label="NÃ³mina y Pagos" />
+                  <NavItem to="/dashboard/payroll" icon={FileText} label="Nómina y Pagos" />
                 </CanAccess>
               </div>
             </CanAccess>
 
-            {/* 7. MARKETING Y FIDELIZACIÃ“N */}
+            {/* 7. MARKETING Y FIDELIZACIÓN */}
             <CanAccess permission={['view_promotions', 'view_giftcards', 'manage_settings']}>
               <div className="nav-section">
                 <p className="section-title">
@@ -288,7 +288,7 @@ const DashboardLayout = () => {
                   <NavItem to="/dashboard/shop-config" icon={Film} label="Config. Shop" />
                 </CanAccess>
                 <CanAccess permission="manage_settings">
-                  <NavItem to="/dashboard/ShopCatalog-config" icon={Store} label="Config. CatÃ¡logo" />
+                  <NavItem to="/dashboard/ShopCatalog-config" icon={Store} label="Config. Catálogo" />
                 </CanAccess>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/promotions" icon={BadgePercent} label="Promociones" />
@@ -300,7 +300,7 @@ const DashboardLayout = () => {
             </CanAccess>
 
 
-            {/* 9. SISTEMA Y CONFIGURACIÃ“N */}
+            {/* 9. SISTEMA Y CONFIGURACIÓN */}
             <CanAccess permission={['view_branches', 'view_users', 'manage_roles', 'manage_settings', 'view_audit_logs']}>
               <div className="nav-section">
                 <p className="section-title">
@@ -320,7 +320,7 @@ const DashboardLayout = () => {
                 </CanAccess>
 
                 <CanAccess permission="view_audit_logs">
-                  <NavItem to="/dashboard/logs" icon={FileText} label="AuditorÃ­a (Logs)" />
+                  <NavItem to="/dashboard/logs" icon={FileText} label="Auditoría (Logs)" />
                 </CanAccess>
                 <CanAccess permission="manage_settings">
                   <NavItem to="/dashboard/system-settings" icon={Settings2} label="Ajustes Globales" />
@@ -330,7 +330,7 @@ const DashboardLayout = () => {
 
           </nav>
           <div className="sidebar-footer">
-            {!collapsed && `VOXman Â© ${new Date().getFullYear()}`}
+            {!collapsed && `VOXman © ${new Date().getFullYear()}`}
           </div>
 
         </aside>
@@ -341,7 +341,7 @@ const DashboardLayout = () => {
           <div className="topbar">
 
             <div className="topbar-left">
-              <h3>Panel de AdministraciÃ³n</h3>
+              <h3>Panel de Administración</h3>
             </div>
 
             <div className="topbar-right">
@@ -361,7 +361,7 @@ const DashboardLayout = () => {
                 <UserCircle2 size={34} />
                 <div className="topbar-user-info">
                   <span className="user-name">
-                    {user?.username || "SIN SESIÃ“N"}
+                    {user?.username || "SIN SESIÓN"}
                   </span>
                   <small className="user-email">
                     {user?.email || "correo@voxman.com"}
@@ -421,7 +421,7 @@ const DashboardLayout = () => {
                         }}
                       >
                         <LogOut size={16} />
-                        <span>Cerrar sesiÃ³n</span>
+                        <span>Cerrar sesión</span>
                       </button>
                     </div>
                   </>

@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { X, UserCheck, Zap } from 'lucide-react';
 
 export default function CheckoutAuthModal({ isOpen, onClose, onSelectOption, theme = 'light' }) {
@@ -85,10 +85,10 @@ export default function CheckoutAuthModal({ isOpen, onClose, onSelectOption, the
               Tengo Cuenta
             </h3>
             <p style={{ color: mutedColor }}>
-              Inicia sesiÃ³n o regÃ­strate para gestionar tus pedidos y tener control sobre tus entregas.
+              Inicia sesión o regístrate para gestionar tus pedidos y tener control sobre tus entregas.
             </p>
             <button className="auth-btn-outline" style={{ color: textColor, borderColor: textColor }}>
-              Iniciar SesiÃ³n
+              Iniciar Sesión
             </button>
           </div>
 
@@ -102,10 +102,10 @@ export default function CheckoutAuthModal({ isOpen, onClose, onSelectOption, the
               <Zap size={32} color={textColor} strokeWidth={1.5} />
             </div>
             <h3 style={{ color: textColor }}>
-              Compra RÃ¡pida
+              Compra Rápida
             </h3>
             <p style={{ color: mutedColor }}>
-              ContinÃºa como invitado. Entregas de productos con limitantes y previa confirmaciÃ³n manual.
+              Continúa como invitado. Entregas de productos con limitantes y previa confirmación manual.
             </p>
             <button className="auth-btn-solid" style={{ background: textColor, color: modalBg, borderColor: textColor }}>
               Continuar como Invitado

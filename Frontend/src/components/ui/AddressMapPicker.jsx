@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleMap, Marker, useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { Navigation, MapPin, Search, X, Loader2 } from 'lucide-react';
 
@@ -95,12 +95,12 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
   const reverseGeocode = useCallback((latLng) => {
     if (!geocoderRef.current) return;
     setGeocoding(true);
-    setStatusMsg('Obteniendo direcciÃ³n...');
+    setStatusMsg('Obteniendo dirección...');
     geocoderRef.current.geocode({ location: latLng }, (results, status) => {
       setGeocoding(false);
       if (status === 'OK' && results[0]) {
         const parsed = parseGeocodeResult(results[0]);
-        setStatusMsg('âœ“ DirecciÃ³n cargada');
+        setStatusMsg('✓ Dirección cargada');
         onAddressSelect({
           lat: latLng.lat,
           lng: latLng.lng,
@@ -108,7 +108,7 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
         });
         setTimeout(() => setStatusMsg(''), 2500);
       } else {
-        setStatusMsg('No se pudo obtener la direcciÃ³n. Llena los campos manualmente.');
+        setStatusMsg('No se pudo obtener la dirección. Llena los campos manualmente.');
         onAddressSelect({ lat: latLng.lat, lng: latLng.lng });
       }
     });
@@ -122,11 +122,11 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
 
   const handleGeolocate = useCallback(() => {
     if (!navigator.geolocation) {
-      setStatusMsg('Tu navegador no soporta geolocalizaciÃ³n.');
+      setStatusMsg('Tu navegador no soporta geolocalización.');
       return;
     }
     setLocating(true);
-    setStatusMsg('Obteniendo tu ubicaciÃ³n...');
+    setStatusMsg('Obteniendo tu ubicación...');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const latLng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -138,7 +138,7 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
       },
       (err) => {
         setLocating(false);
-        setStatusMsg('No se pudo obtener tu ubicaciÃ³n. AsegÃºrate de dar permisos.');
+        setStatusMsg('No se pudo obtener tu ubicación. Asegúrate de dar permisos.');
         console.error('Geolocation error:', err);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -162,7 +162,7 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
     setZoom(17);
 
     const parsed = parseGeocodeResult(place);
-    setStatusMsg('âœ“ DirecciÃ³n cargada');
+    setStatusMsg('✓ Dirección cargada');
     onAddressSelect({ lat: latLng.lat, lng: latLng.lng, ...parsed });
     setTimeout(() => setStatusMsg(''), 2500);
   }, [onAddressSelect]);
@@ -176,7 +176,7 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
   if (loadError) {
     return (
       <div style={{ padding: '16px', color: 'var(--color-danger, #ef4444)', fontSize: '13px' }}>
-        Error cargando Google Maps. Verifica tu conexiÃ³n o la clave API.
+        Error cargando Google Maps. Verifica tu conexión o la clave API.
       </div>
     );
   }
@@ -206,7 +206,7 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
           >
             <input
               type="text"
-              placeholder="Busca una direcciÃ³n o lugar..."
+              placeholder="Busca una dirección o lugar..."
               style={{
                 width: '100%',
                 padding: '8px 10px 8px 32px',
@@ -227,7 +227,7 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
           type="button"
           onClick={handleGeolocate}
           disabled={locating}
-          title="Usar mi ubicaciÃ³n actual"
+          title="Usar mi ubicación actual"
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
@@ -240,7 +240,7 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
             ? <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} />
             : <Navigation size={14} />
           }
-          <span className="map-geolocate-label">Mi ubicaciÃ³n</span>
+          <span className="map-geolocate-label">Mi ubicación</span>
         </button>
 
         {/* Clear marker button */}
@@ -299,7 +299,7 @@ export default function AddressMapPicker({ onAddressSelect, initialLat, initialL
       {/* Helper hint */}
       <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
         <MapPin size={11} />
-        Toca o haz clic en el mapa para marcar tu direcciÃ³n exacta
+        Toca o haz clic en el mapa para marcar tu dirección exacta
       </p>
     </div>
   );

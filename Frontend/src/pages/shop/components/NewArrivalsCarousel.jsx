@@ -1,4 +1,4 @@
-﻿import React, { useRef } from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../../../utils/imageUtils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';

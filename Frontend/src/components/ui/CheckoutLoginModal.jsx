@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, X, User, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
 import { loginShopUser, registerShopUser } from "../../api/shop/auth";
 import { getGoogleAuthUrl } from "../../api/admin/auth";
@@ -93,21 +93,21 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
   if (!isOpen) return null;
 
-  // VALIDACIÃ“N
+  // VALIDACIÓN
   const validate = (name, value) => {
     let error = "";
 
     if (name === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) error = "Correo invÃ¡lido";
+      if (!emailRegex.test(value)) error = "Correo inválido";
     }
 
     if (name === "username") {
-      if (value.length < 3) error = "MÃ­nimo 3 caracteres";
+      if (value.length < 3) error = "Mínimo 3 caracteres";
       else if (/\s/.test(value)) error = "Sin espacios";
       else {
         const userRegex = /^[a-zA-Z0-9_]+$/;
-        if (!userRegex.test(value)) error = "Solo letras, nÃºmeros y guiones bajos";
+        if (!userRegex.test(value)) error = "Solo letras, números y guiones bajos";
       }
     }
 
@@ -118,27 +118,27 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
         if (value.length < 8) {
-          error = "MÃ­nimo 8 caracteres";
+          error = "Mínimo 8 caracteres";
           setPasswordStrength("");
         } else if (value.length > 72) {
-          error = "MÃ¡ximo 72 caracteres";
+          error = "Máximo 72 caracteres";
         } else if (!hasLetters || !hasNumbers) {
-          error = "Debe incluir letras y nÃºmeros";
-          setPasswordStrength("DÃ©bil");
+          error = "Debe incluir letras y números";
+          setPasswordStrength("Débil");
         } else if (hasSpecial) {
           setPasswordStrength("Fuerte");
         } else {
           setPasswordStrength("Media");
         }
       } else {
-        // En login solo validamos longitud mÃ­nima por seguridad bÃ¡sica
+        // En login solo validamos longitud mínima por seguridad básica
         if (value.length < 8) {
-          error = "MÃ­nimo 8 caracteres";
+          error = "Mínimo 8 caracteres";
         }
       }
 
       if (mode === 'register' && form.password_confirmation && value !== form.password_confirmation) {
-        setErrors((prev) => ({ ...prev, password_confirmation: "Las contraseÃ±as no coinciden" }));
+        setErrors((prev) => ({ ...prev, password_confirmation: "Las contraseñas no coinciden" }));
       } else if (mode === 'register' && form.password_confirmation && value === form.password_confirmation) {
         setErrors((prev) => ({ ...prev, password_confirmation: "" }));
       }
@@ -146,7 +146,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
     if (name === "password_confirmation") {
       if (value !== form.password) {
-        error = "Las contraseÃ±as no coinciden";
+        error = "Las contraseñas no coinciden";
       }
     }
 
@@ -193,7 +193,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       const token = res.data?.token;
       const user = res.data?.user;
 
-      if (!token) throw new Error("No llegÃ³ token del backend");
+      if (!token) throw new Error("No llegó token del backend");
 
       localStorage.setItem("token", token);
       localStorage.setItem("shop_auth_token", token);
@@ -202,7 +202,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       // Update global session
       useAuthStore.getState().login({ user, token });
 
-      setSuccessMessage("Â¡Bienvenido de vuelta!");
+      setSuccessMessage("¡Bienvenido de vuelta!");
       setSuccess(true);
 
       setTimeout(() => {
@@ -214,7 +214,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
     } catch (error) {
       console.log(error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Error al iniciar sesiÃ³n");
+      toast.error(error.response?.data?.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -224,7 +224,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     e.preventDefault();
 
     if (!acceptedTerms) {
-      toast.error("Debes aceptar los tÃ©rminos y condiciones");
+      toast.error("Debes aceptar los términos y condiciones");
       return;
     }
 
@@ -245,7 +245,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         const token = res.data?.token;
         const user = res.data?.user;
 
-        if (!token) throw new Error("No llegÃ³ token del backend");
+        if (!token) throw new Error("No llegó token del backend");
 
         localStorage.setItem("token", token);
         localStorage.setItem("shop_auth_token", token);
@@ -253,7 +253,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         
         useAuthStore.getState().login({ user, token });
 
-        setSuccessMessage("Â¡Cuenta creada con Ã©xito!");
+        setSuccessMessage("¡Cuenta creada con éxito!");
         setSuccess(true);
         setTimeout(() => {
           onClose();
@@ -278,7 +278,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       const token = res.data?.token;
       const user = res.data?.user;
 
-      if (!token) throw new Error("No llegÃ³ token del backend");
+      if (!token) throw new Error("No llegó token del backend");
 
       localStorage.setItem("token", token);
       localStorage.setItem("shop_auth_token", token);
@@ -288,7 +288,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       useAuthStore.getState().login({ user, token });
 
       if (res && res.data) {
-        setSuccessMessage("Â¡Cuenta creada con Ã©xito!");
+        setSuccessMessage("¡Cuenta creada con éxito!");
         setSuccess(true);
         // Automatically login
         setTimeout(() => {
@@ -308,7 +308,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
   const renderStrengthIcon = () => {
     if (!passwordStrength) return null;
     const str = passwordStrength.toLowerCase();
-    if (str === "dÃ©bil") return <ShieldAlert size={14} />;
+    if (str === "débil") return <ShieldAlert size={14} />;
     if (str === "media") return <Shield size={14} />;
     if (str === "fuerte") return <ShieldCheck size={14} />;
     return null;
@@ -390,8 +390,8 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
           }}>
             <div style={{
               height: '100%',
-              width: passwordStrength === 'DÃ©bil' ? '33%' : passwordStrength === 'Media' ? '66%' : passwordStrength === 'Fuerte' ? '100%' : '0%',
-              backgroundColor: passwordStrength === 'DÃ©bil' ? '#ef4444' : passwordStrength === 'Media' ? '#f59e0b' : passwordStrength === 'Fuerte' ? '#10b981' : 'transparent',
+              width: passwordStrength === 'Débil' ? '33%' : passwordStrength === 'Media' ? '66%' : passwordStrength === 'Fuerte' ? '100%' : '0%',
+              backgroundColor: passwordStrength === 'Débil' ? '#ef4444' : passwordStrength === 'Media' ? '#f59e0b' : passwordStrength === 'Fuerte' ? '#10b981' : 'transparent',
               borderRadius: '4px',
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
             }}></div>
@@ -404,9 +404,9 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            color: passwordStrength === 'DÃ©bil' ? '#ef4444' : passwordStrength === 'Media' ? '#f59e0b' : passwordStrength === 'Fuerte' ? '#10b981' : mutedColor
+            color: passwordStrength === 'Débil' ? '#ef4444' : passwordStrength === 'Media' ? '#f59e0b' : passwordStrength === 'Fuerte' ? '#10b981' : mutedColor
           }}>
-            {renderStrengthIcon()} {passwordStrength || "â€”"}
+            {renderStrengthIcon()} {passwordStrength || "—"}
           </div>
         </div>
       )}
@@ -478,7 +478,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
             VOXMAN
           </h2>
           <p style={{ margin: 0, color: mutedColor, fontSize: '14px' }}>
-            {mode === 'login' ? "Iniciar sesiÃ³n para continuar" : "Ãšnete al estilo para continuar"}
+            {mode === 'login' ? "Iniciar sesión para continuar" : "Únete al estilo para continuar"}
           </p>
         </div>
 
@@ -512,7 +512,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                 name="email"
                 type="email"
                 maxLength={150}
-                placeholder="Correo electrÃ³nico"
+                placeholder="Correo electrónico"
                 value={form.email}
                 onChange={handleChange}
                 disabled={mode === 'google_register'}
@@ -544,12 +544,12 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                   <div style={{ flex: 1, minWidth: 0 }}>{renderInput("last_name_paternal", "Ap. Paterno", "text", User, 100)}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>{renderInput("last_name_maternal", "Ap. Materno", "text", User, 100)}</div>
                 </div>
-                {renderInput("phone", "TelÃ©fono", "text", User, 30)}
+                {renderInput("phone", "Teléfono", "text", User, 30)}
               </>
             ) : (
               <>
-                {renderInput("password", "ContraseÃ±a", showPassword ? "text" : "password", Lock, 72)}
-                {mode === 'register' && renderInput("password_confirmation", "Confirmar contraseÃ±a", showPassword ? "text" : "password", Lock, 72)}
+                {renderInput("password", "Contraseña", showPassword ? "text" : "password", Lock, 72)}
+                {mode === 'register' && renderInput("password_confirmation", "Confirmar contraseña", showPassword ? "text" : "password", Lock, 72)}
               </>
             )}
 
@@ -568,7 +568,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                   </label>
                 </div>
                 <Link to="/forgot-password" onClick={onClose} style={{ color: mutedColor, fontSize: '13px', textDecoration: 'underline', fontWeight: 600 }}>
-                  Â¿Olvidaste tu contraseÃ±a?
+                  ¿Olvidaste tu contraseña?
                 </Link>
               </div>
             )}
@@ -583,7 +583,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                   style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: textColor }}
                 />
                 <label htmlFor="terms" style={{ fontSize: '13px', color: textColor, cursor: 'pointer' }}>
-                  Acepto los <span style={{ fontWeight: 600, textDecoration: 'underline' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }}>TÃ©rminos y Condiciones</span>
+                  Acepto los <span style={{ fontWeight: 600, textDecoration: 'underline' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTermsModal(true); }}>Términos y Condiciones</span>
                 </label>
               </div>
             )}
@@ -605,14 +605,14 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                 marginTop: '8px'
               }}
             >
-              {loading ? (mode === 'google_register' ? 'Completando...' : (mode === 'login' ? 'Iniciando...' : 'Creando...')) : (mode === 'google_register' ? 'Completar Registro' : (mode === 'login' ? 'Iniciar sesiÃ³n' : 'Crear cuenta'))}
+              {loading ? (mode === 'google_register' ? 'Completando...' : (mode === 'login' ? 'Iniciando...' : 'Creando...')) : (mode === 'google_register' ? 'Completar Registro' : (mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'))}
             </button>
 
             {mode !== 'google_register' && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', margin: '16px 0' }}>
                   <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${borderColor}` }} />
-                  <span style={{ padding: '0 10px', color: mutedColor, fontSize: '12px' }}>O {mode === 'login' ? 'INICIA SESIÃ“N' : 'REGÃSTRATE'} CON</span>
+                  <span style={{ padding: '0 10px', color: mutedColor, fontSize: '12px' }}>O {mode === 'login' ? 'INICIA SESIÓN' : 'REGÍSTRATE'} CON</span>
                   <hr style={{ flex: 1, border: 'none', borderTop: `1px solid ${borderColor}` }} />
                 </div>
 
@@ -651,7 +651,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
             <div style={{ textAlign: 'center', marginTop: '12px' }}>
               <span style={{ color: mutedColor, fontSize: '13px' }}>
-                {mode === 'login' ? "Â¿No tienes una cuenta? " : "Â¿Ya tienes cuenta? "}
+                {mode === 'login' ? "¿No tienes una cuenta? " : "¿Ya tienes cuenta? "}
               </span>
               <button
                 type="button"
@@ -670,7 +670,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                   textDecoration: 'underline'
                 }}
               >
-                {mode === 'login' ? "Ãšnete al estilo" : "Inicia sesiÃ³n"}
+                {mode === 'login' ? "Únete al estilo" : "Inicia sesión"}
               </button>
             </div>
 
@@ -682,12 +682,12 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       {showTermsModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ maxWidth: '500px', width: '90%', backgroundColor: modalBg, borderRadius: '16px', padding: '24px', border: `1px solid ${borderColor}`, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '20px', color: textColor }}>TÃ©rminos y Condiciones</h3>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '20px', color: textColor }}>Términos y Condiciones</h3>
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px', color: mutedColor, fontSize: '14px', lineHeight: '1.6' }}>
-              <p>1. <strong>AceptaciÃ³n:</strong> Al crear una cuenta, aceptas estar sujeto a estos tÃ©rminos y condiciones.</p>
-              <p>2. <strong>Uso de cuenta:</strong> Eres responsable de mantener la confidencialidad de tu contraseÃ±a.</p>
-              <p>3. <strong>Privacidad:</strong> Tu informaciÃ³n personal serÃ¡ tratada conforme a nuestra polÃ­tica de privacidad.</p>
-              <p><em>(AquÃ­ puedes agregar todo el texto legal de tu empresa mÃ¡s adelante...)</em></p>
+              <p>1. <strong>Aceptación:</strong> Al crear una cuenta, aceptas estar sujeto a estos términos y condiciones.</p>
+              <p>2. <strong>Uso de cuenta:</strong> Eres responsable de mantener la confidencialidad de tu contraseña.</p>
+              <p>3. <strong>Privacidad:</strong> Tu información personal será tratada conforme a nuestra política de privacidad.</p>
+              <p><em>(Aquí puedes agregar todo el texto legal de tu empresa más adelante...)</em></p>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
               <button 

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { X, ArrowRight } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { transferCash } from "../../../../../api/admin/finance";
@@ -62,7 +62,7 @@ export default function TransferModal({ branches, bankBalance, onClose }) {
       }
 
       await transferCash(payload);
-      toast.success("Transferencia registrada con Ã©xito");
+      toast.success("Transferencia registrada con éxito");
       onClose(true);
     } catch (error) {
       toast.error(error?.response?.data?.error || "Error al procesar transferencia");
@@ -153,7 +153,7 @@ export default function TransferModal({ branches, bankBalance, onClose }) {
               name="notes" 
               value={formData.notes} 
               onChange={handleChange} 
-              placeholder="Ej. DepÃ³sito del cierre de caja del dÃ­a de hoy"
+              placeholder="Ej. Depósito del cierre de caja del día de hoy"
               rows="3"
               style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', boxSizing: 'border-box', outline: 'none', resize: 'vertical' }}
             ></textarea>

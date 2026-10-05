@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { getSupplierReturns } from "../../../../api/admin/supplierReturns";
@@ -99,7 +99,7 @@ const SupplierReturns = () => {
                           </div>
                         </div>
                       ) : (
-                        <div style={{ color: 'var(--text-muted)' }}>MÃºltiples / General</div>
+                        <div style={{ color: 'var(--text-muted)' }}>Múltiples / General</div>
                       )}
                     </td>
                     <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</td>

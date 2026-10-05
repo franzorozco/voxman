@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { createGiftcard, reloadGiftcard } from "../../../../api/admin/giftcards";
 import api from "../../../../api/client";
@@ -68,7 +68,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
     e.preventDefault();
     
     if (parseFloat(amount) < (isReload ? 1 : 50)) {
-      toast.error(`El monto mÃ­nimo es ${isReload ? '1Bs' : '50Bs'}`);
+      toast.error(`El monto mínimo es ${isReload ? '1Bs' : '50Bs'}`);
       return;
     }
 
@@ -89,7 +89,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
       onSuccess();
       onClose();
     } catch (error) {
-      toast.error("OcurriÃ³ un error al procesar la operaciÃ³n");
+      toast.error("Ocurrió un error al procesar la operación");
     } finally {
       setLoading(false);
     }
@@ -135,7 +135,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
             {!isReload && (
               <>
                 <div className="form-group" style={{ marginBottom: '16px' }}>
-                  <label>CÃ³digo de Giftcard *</label>
+                  <label>Código de Giftcard *</label>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input
                       type="text"
@@ -158,7 +158,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
                 </div>
 
                 <div className="form-group" style={{ marginTop: '16px' }}>
-                  <label>Asignar Comprador (BÃºsqueda Asyncrona)</label>
+                  <label>Asignar Comprador (Búsqueda Asyncrona)</label>
                   <AsyncSelect
                     isClearable
                     cacheOptions
@@ -171,12 +171,12 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
                     menuPosition="fixed"
                   />
                   <small className="gift-helper-text">
-                    Opcional. Deja vacÃ­o si se vende de forma anÃ³nima.
+                    Opcional. Deja vacío si se vende de forma anónima.
                   </small>
                 </div>
 
                 <div className="form-group" style={{ marginTop: '16px' }}>
-                  <label>Fecha de expiraciÃ³n (Opcional)</label>
+                  <label>Fecha de expiración (Opcional)</label>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                     <button 
                       type="button" 
@@ -192,7 +192,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
                       style={{ flex: 1, padding: '6px', fontSize: '0.85rem', borderRadius: '6px', border: presetDuration === '1y' ? '1px solid var(--color-primary)' : '1px solid var(--border-color)', background: presetDuration === '1y' ? 'var(--bg-overlay)' : 'transparent', color: presetDuration === '1y' ? 'var(--color-primary)' : 'var(--text-muted)' }}
                       onClick={() => { setPresetDuration('1y'); setExpiresAt(addMonths(12)); }}
                     >
-                      1 AÃ±o
+                      1 Año
                     </button>
                     <button 
                       type="button" 
@@ -200,7 +200,7 @@ export default function GiftcardModal({ isOpen, onClose, onSuccess, mode, giftca
                       style={{ flex: 1, padding: '6px', fontSize: '0.85rem', borderRadius: '6px', border: presetDuration === '5y' ? '1px solid var(--color-primary)' : '1px solid var(--border-color)', background: presetDuration === '5y' ? 'var(--bg-overlay)' : 'transparent', color: presetDuration === '5y' ? 'var(--color-primary)' : 'var(--text-muted)' }}
                       onClick={() => { setPresetDuration('5y'); setExpiresAt(addMonths(60)); }}
                     >
-                      5 AÃ±os
+                      5 Años
                     </button>
                     <button 
                       type="button" 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Search, Plus, Trash2, Camera } from 'lucide-react';
 import { getCustomers } from '../../../../api/admin/customers';
 import { getProducts } from '../../../../api/admin/products';
@@ -92,7 +92,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
        // Get the index and increment using the existing function
        const index = items.findIndex(item => item.variant_id === existingItem.variant_id);
        updateQuantity(index, 1);
-       toast.success(`Se sumÃ³ 1 unidad de ${existingItem.variant.sku}`);
+       toast.success(`Se sumó 1 unidad de ${existingItem.variant.sku}`);
        return;
     }
 
@@ -118,7 +118,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
             }
         }
         
-        toast.error("Producto escaneado no encontrado.", { icon: 'ðŸ”' });
+        toast.error("Producto escaneado no encontrado.", { icon: '🔍' });
     } catch (error) {
         console.error("Error scanning product:", error);
         toast.error("Error al buscar producto escaneado.");
@@ -139,7 +139,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
     if (existingItemIndex >= 0) {
       const currentQty = items[existingItemIndex].quantity;
       if (currentQty + 1 > totalStock) {
-        toast.error(`No puedes agregar mÃ¡s. El stock mÃ¡ximo disponible es ${totalStock}.`);
+        toast.error(`No puedes agregar más. El stock máximo disponible es ${totalStock}.`);
         return;
       }
       const newItems = [...items];
@@ -166,7 +166,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
 
     if (newQuantity > 0) {
       if (newQuantity > maxStock) {
-        toast.error(`Stock insuficiente. El mÃ¡ximo disponible es ${maxStock}.`);
+        toast.error(`Stock insuficiente. El máximo disponible es ${maxStock}.`);
         return;
       }
       newItems[index].quantity = newQuantity;
@@ -179,7 +179,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
     const removedItem = newItems[index];
     newItems.splice(index, 1);
     
-    // Si era parte de un conjunto, romper el conjunto para los Ã­tems restantes
+    // Si era parte de un conjunto, romper el conjunto para los ítems restantes
     if (removedItem.bundle_group_id) {
        newItems.forEach(item => {
            if (item.bundle_group_id === removedItem.bundle_group_id) {
@@ -227,19 +227,19 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
       onSuccess();
     } catch (error) {
       console.error('Error saving cart:', error);
-      alert(error.response?.data?.message || "OcurriÃ³ un error al guardar la proforma.");
+      alert(error.response?.data?.message || "Ocurrió un error al guardar la proforma.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const getCustomerName = (cust) => {
-    if (!cust) return 'AnÃ³nimo';
+    if (!cust) return 'Anónimo';
     if (cust.user?.profile) return `${cust.user.profile.first_name} ${cust.user.profile.last_name_paternal || ''}`;
     if (cust.posProfile) return `${cust.posProfile.first_name} ${cust.posProfile.last_name_paternal || ''}`;
     if (cust.pos_profile) return `${cust.pos_profile.first_name} ${cust.pos_profile.last_name_paternal || ''}`;
     if (cust.whatsapp_phone) return `${cust.name || 'Invitado'}`; // Para guest
-    return 'Cliente AnÃ³nimo';
+    return 'Cliente Anónimo';
   };
 
   return (
@@ -255,7 +255,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
             <div className="dropdown-container cart-form-dropdown-wrapper">
               <input 
                 type="text" 
-                placeholder="Buscar cliente (dejar vacÃ­o para AnÃ³nimo)..." 
+                placeholder="Buscar cliente (dejar vacío para Anónimo)..." 
                 value={selectedCustomer ? getCustomerName(selectedCustomer) : searchCustomer}
                 onChange={(e) => {
                   setSearchCustomer(e.target.value);
@@ -280,9 +280,9 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
                     >
                       <div style={{ fontWeight: '600' }}>{getCustomerName(cust)}</div>
                       <div style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>
-                        {cust.customer_code && <span style={{ marginRight: '8px' }}>CÃ³d: {cust.customer_code}</span>}
-                        {cust.user?.email && <span style={{ marginRight: '8px' }}>âœ‰ {cust.user.email}</span>}
-                        {(cust.pos_profile?.phone || cust.user?.profile?.phone) && <span>ðŸ“ž {cust.pos_profile?.phone || cust.user?.profile?.phone}</span>}
+                        {cust.customer_code && <span style={{ marginRight: '8px' }}>Cód: {cust.customer_code}</span>}
+                        {cust.user?.email && <span style={{ marginRight: '8px' }}>✉ {cust.user.email}</span>}
+                        {(cust.pos_profile?.phone || cust.user?.profile?.phone) && <span>📞 {cust.pos_profile?.phone || cust.user?.profile?.phone}</span>}
                       </div>
                     </div>
                   ))}
@@ -295,7 +295,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
                 className="btn-clear cart-form-clear-btn"
                 onClick={() => setSelectedCustomer(null)}
               >
-                Limpiar Cliente (Venta AnÃ³nima)
+                Limpiar Cliente (Venta Anónima)
               </button>
             )}
           </div>
@@ -319,7 +319,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
                 type="button"
                 onClick={() => openScanner(processScannedCode, true)}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 16px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s' }}
-                title="Escanear cÃ³digo de barras o QR"
+                title="Escanear código de barras o QR"
               >
                 <Camera size={18} />
               </button>
@@ -381,7 +381,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
                   <th>Precio (Bs)</th>
                   <th>Cantidad</th>
                   <th>Subtotal</th>
-                  <th className="cart-form-text-center">AcciÃ³n</th>
+                  <th className="cart-form-text-center">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -401,7 +401,7 @@ export default function CartFormModal({ cart, onClose, onSuccess }) {
                           <span>{item.product?.name || 'Producto'}</span>
                           {isBundleItem && (
                             <span style={{ fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px', border: '1px solid #fde68a' }}>
-                              âœ¨ Ãtem de Conjunto
+                              ✨ Ítem de Conjunto
                             </span>
                           )}
                         </div>

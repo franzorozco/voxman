@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createOwnerPayment, updateOwnerPayment } from "../../../../api/admin/finance";
@@ -132,7 +132,7 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
                 <label>Tipo de Movimiento</label>
                 <CustomSelect name="type" value={formData.type} onChange={handleChange}>
                   <option value="withdrawal">Retiro de Capital</option>
-                  <option value="deposit">InyecciÃ³n de Capital</option>
+                  <option value="deposit">Inyección de Capital</option>
                 </CustomSelect>
               </div>
 
@@ -161,13 +161,13 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
             <div className="form-group">
               <label style={{ color: 'var(--color-primary)' }}>Origen / Destino de Fondos</label>
               <CustomSelect name="fund_source" value={formData.fund_source} onChange={handleChange}>
-                <option value="cash">Caja FÃ­sica (Tienda)</option>
+                <option value="cash">Caja Física (Tienda)</option>
                 <option value="bank">Cuenta Bancaria (Marca)</option>
               </CustomSelect>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '5px' }}>
                 {formData.type === 'withdrawal' 
-                  ? "âš ï¸ El dinero se restarÃ¡ del saldo de esta cuenta en la sucursal elegida." 
-                  : "âœ… El dinero se sumarÃ¡ al saldo de esta cuenta en la sucursal elegida."}
+                  ? "⚠️ El dinero se restará del saldo de esta cuenta en la sucursal elegida." 
+                  : "✅ El dinero se sumará al saldo de esta cuenta en la sucursal elegida."}
               </span>
             </div>
 
@@ -178,7 +178,7 @@ export default function OwnerPaymentModal({ payment, onClose, onSuccess }) {
 
             <div className="modal-form-row">
               <div className="form-group">
-                <label>MÃ©todo de Pago</label>
+                <label>Método de Pago</label>
                 <CustomSelect name="payment_method" value={formData.payment_method} onChange={handleChange}>
                   <option value="Efectivo">Efectivo</option>
                   <option value="Transferencia">Transferencia</option>

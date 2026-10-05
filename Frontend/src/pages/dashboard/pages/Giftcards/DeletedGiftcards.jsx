@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Search, RotateCcw, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDeletedGiftcards, restoreGiftcard, forceDeleteGiftcard } from "../../../../api/admin/giftcards";
@@ -43,7 +43,7 @@ export default function DeletedGiftcards() {
   };
 
   const handleForceDelete = async (id) => {
-    if (!window.confirm("Â¿EstÃ¡s 100% seguro de que deseas eliminar permanentemente esta Giftcard? Esta acciÃ³n no se puede deshacer y el saldo se perderÃ¡ por completo.")) return;
+    if (!window.confirm("¿Estás 100% seguro de que deseas eliminar permanentemente esta Giftcard? Esta acción no se puede deshacer y el saldo se perderá por completo.")) return;
     try {
       await forceDeleteGiftcard(id);
       toast.success("Eliminada permanentemente");
@@ -83,7 +83,7 @@ export default function DeletedGiftcards() {
             <Search size={18} className="gift-search-icon" />
             <input 
               type="text" 
-              placeholder="Buscar por cÃ³digo..." 
+              placeholder="Buscar por código..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="gift-search-input"
@@ -101,7 +101,7 @@ export default function DeletedGiftcards() {
           <table className="gift-table">
             <thead>
               <tr>
-                <th>CÃ³digo</th>
+                <th>Código</th>
                 <th>Saldo Restante</th>
                 <th>Vencimiento</th>
                 <th>Estado</th>
@@ -112,15 +112,15 @@ export default function DeletedGiftcards() {
               {filteredGiftcards.length > 0 ? (
                 filteredGiftcards.map((g) => (
                   <tr key={g.id}>
-                    <td data-label="CÃ³digo">
+                    <td data-label="Código">
                       <div className="gift-code-wrapper">
                         <span className="gift-code-text">
-                          {visibleCodes[g.id] ? g.code : "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"}
+                          {visibleCodes[g.id] ? g.code : "••••••••"}
                         </span>
                         <button 
                           className="gift-visibility-btn" 
                           onClick={() => setVisibleCodes(prev => ({...prev, [g.id]: !prev[g.id]}))}
-                          title={visibleCodes[g.id] ? "Ocultar cÃ³digo" : "Mostrar cÃ³digo"}
+                          title={visibleCodes[g.id] ? "Ocultar código" : "Mostrar código"}
                         >
                           {visibleCodes[g.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -165,7 +165,7 @@ export default function DeletedGiftcards() {
               ) : (
                 <tr>
                   <td colSpan="5" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
-                    La papelera estÃ¡ vacÃ­a.
+                    La papelera está vacía.
                   </td>
                 </tr>
               )}

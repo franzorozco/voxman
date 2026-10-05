@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Search, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDeletedSuppliers, restoreSupplier, forceDeleteSupplier } from "../../../../api/admin/suppliers";
@@ -29,7 +29,7 @@ export default function DeletedSuppliers() {
   }, []);
 
   const handleRestore = async (id) => {
-    if (window.confirm("Â¿Deseas restaurar este proveedor? VolverÃ¡ a estar disponible en el sistema.")) {
+    if (window.confirm("¿Deseas restaurar este proveedor? Volverá a estar disponible en el sistema.")) {
       try {
         const { data } = await restoreSupplier(id);
         toast.success(data.message);
@@ -41,7 +41,7 @@ export default function DeletedSuppliers() {
   };
 
   const handleForceDelete = async (id) => {
-    if (window.confirm("âš ï¸ ADVERTENCIA: Esta acciÃ³n eliminarÃ¡ permanentemente al proveedor y podrÃ­a afectar el historial de compras. Â¿EstÃ¡s absolutamente seguro?")) {
+    if (window.confirm("⚠️ ADVERTENCIA: Esta acción eliminará permanentemente al proveedor y podría afectar el historial de compras. ¿Estás absolutamente seguro?")) {
       try {
         const { data } = await forceDeleteSupplier(id);
         toast.success(data.message);
@@ -95,7 +95,7 @@ export default function DeletedSuppliers() {
               <th>Empresa</th>
               <th>Contacto</th>
               <th>NIT</th>
-              <th>Fecha EliminaciÃ³n</th>
+              <th>Fecha Eliminación</th>
               <th style={{ textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
@@ -106,7 +106,7 @@ export default function DeletedSuppliers() {
               </tr>
             ) : filteredSuppliers.length === 0 ? (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>La papelera estÃ¡ vacÃ­a</td>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>La papelera está vacía</td>
               </tr>
             ) : (
               filteredSuppliers.map((supplier) => (

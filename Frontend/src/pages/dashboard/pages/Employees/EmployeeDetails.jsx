@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, User, Phone, Mail, Building, Briefcase, Calendar, DollarSign, Percent, Info, TrendingUp, Activity, ShoppingCart, List, ShieldCheck, Wallet, Banknote, Plus, Save } from "lucide-react";
 import { getEmployeeById, getEmployeeStats, assignRoleToEmployee } from "../../../../api/admin/employees";
 import { toast } from "react-hot-toast";
@@ -98,7 +98,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                 <User size={24} color="var(--color-primary)" />
                 Expediente de Empleado
               </h2>
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>CÃ³digo: {employeeData.employee_code}</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>Código: {employeeData.employee_code}</span>
             </div>
             <button onClick={onClose} style={{ background: 'var(--bg-overlay)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', display: 'flex', padding: '8px', borderRadius: '50%' }}>
               <X size={20} />
@@ -153,7 +153,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                 {/* Contact Info */}
                 <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Info size={16} /> InformaciÃ³n de Contacto
+                    <Info size={16} /> Información de Contacto
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -170,7 +170,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                 {/* Employment Info */}
                 <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Briefcase size={16} /> InformaciÃ³n Laboral
+                    <Briefcase size={16} /> Información Laboral
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     
@@ -193,7 +193,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <Calendar size={18} color="var(--color-primary)" />
                       <div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Fecha de ContrataciÃ³n</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Fecha de Contratación</span>
                         <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500 }}>{employeeData.hire_date ? new Date(employeeData.hire_date).toLocaleDateString() : 'N/A'}</span>
                       </div>
                     </div>
@@ -204,7 +204,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                 {/* Compensations Info */}
                 <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <DollarSign size={16} /> Compensaciones EstÃ¡ticas
+                    <DollarSign size={16} /> Compensaciones Estáticas
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     
@@ -219,7 +219,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                       <Percent size={18} color="var(--color-primary)" style={{ marginTop: '2px' }} />
                       <div>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>ComisiÃ³n Base</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Comisión Base</span>
                         <span style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: 'bold' }}>{Number(employeeData.commission_percentage).toFixed(2)}%</span>
                       </div>
                     </div>
@@ -251,7 +251,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                 </div>
 
                 <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(20,184,166,0.1) 100%)', border: '1px solid rgba(16,185,129,0.2)', padding: '20px', borderRadius: '16px' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '13px', display: 'block', marginBottom: '8px', fontWeight: 500 }}>ComisiÃ³n Estimada</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '13px', display: 'block', marginBottom: '8px', fontWeight: 500 }}>Comisión Estimada</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                     <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>Bs. {Number(stats.current_month.estimated_commissions).toFixed(2)}</span>
                   </div>
@@ -264,7 +264,7 @@ export default function EmployeeDetails({ employee, onClose }) {
               {/* Chart */}
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
                 <h4 style={{ fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Activity size={16} /> HistÃ³rico de Ventas (6 Meses)
+                  <Activity size={16} /> Histórico de Ventas (6 Meses)
                 </h4>
                 
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '180px', gap: '12px', paddingBottom: '10px' }}>
@@ -296,7 +296,7 @@ export default function EmployeeDetails({ employee, onClose }) {
               {/* Recent Sales */}
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px' }}>
                 <h4 style={{ fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <List size={16} /> Ãšltimas 5 Ventas
+                  <List size={16} /> Últimas 5 Ventas
                 </h4>
                 
                 {stats.recent_sales.length === 0 ? (
@@ -341,7 +341,7 @@ export default function EmployeeDetails({ employee, onClose }) {
 
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px' }}>
                 <h4 style={{ fontSize: '14px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Banknote size={16} /> Ãšltimos Pagos Registrados
+                  <Banknote size={16} /> Últimos Pagos Registrados
                 </h4>
                 
                 {payments.length === 0 ? (
@@ -351,7 +351,7 @@ export default function EmployeeDetails({ employee, onClose }) {
                     {payments.map(payment => (
                       <div key={payment.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                         <div>
-                          <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500, display: 'block' }}>Pago de NÃ³mina</span>
+                          <span style={{ color: 'var(--text-main)', fontSize: '14px', fontWeight: 500, display: 'block' }}>Pago de Nómina</span>
                           <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{new Date(payment.payment_date).toLocaleDateString()}</span>
                         </div>
                         <div style={{ textAlign: 'right' }}>
@@ -370,7 +370,7 @@ export default function EmployeeDetails({ employee, onClose }) {
             <div className="fade-in">
               <h3 style={{ fontSize: '16px', color: 'var(--text-main)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <ShieldCheck size={20} color="var(--color-primary)" />
-                GestiÃ³n de Roles y Permisos
+                Gestión de Roles y Permisos
               </h3>
 
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>

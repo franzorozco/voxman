@@ -1,4 +1,4 @@
-﻿import { API_BASE_URL, URL_BASE_IMG } from '../config/api';
+import { API_BASE_URL, URL_BASE_IMG } from '../config/api';
 
 export const getImageUrl = (url) => {
   if (!url) {

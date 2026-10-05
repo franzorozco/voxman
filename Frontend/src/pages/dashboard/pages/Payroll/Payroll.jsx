@@ -1,4 +1,4 @@
-Ôªøimport { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Search, DollarSign, RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2, Printer, MoreVertical, Eye } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { getEmployees } from "../../../../api/admin/employees";
@@ -98,7 +98,7 @@ export default function Payroll() {
           // No auto deduct, user has to click checkbox
       }
     } catch (err) {
-      toast.error("Error al calcular n√≥mina");
+      toast.error("Error al calcular nÛmina");
       setSelectedEmployee(null);
     } finally {
       setPayrollLoading(false);
@@ -138,7 +138,7 @@ export default function Payroll() {
   };
 
   const handleDeletePayment = async (id) => {
-    if (!window.confirm("¬øSeguro que deseas anular este pago?")) return;
+    if (!window.confirm("øSeguro que deseas anular este pago?")) return;
     try {
       await deletePayroll(id);
       toast.success("Pago anulado");
@@ -161,7 +161,7 @@ export default function Payroll() {
   return (
     <div className="products-container fade-in">
       <div className="products-header">
-        <h1 className="products-title">N√≥mina y Pagos</h1>
+        <h1 className="products-title">NÛmina y Pagos</h1>
         
         <div style={{ display: "flex", gap: "12px", width: isMobile ? "100%" : "auto" }}>
           <CustomSelect 
@@ -223,11 +223,11 @@ export default function Payroll() {
             <table className="products-table">
               <thead>
                 <tr>
-                  <th>C√ìDIGO</th>
+                  <th>C”DIGO</th>
                   <th>EMPLEADO</th>
-                  <th>D√çA DE PAGO</th>
+                  <th>DÕA DE PAGO</th>
                   <th>SUELDO BASE</th>
-                  <th className="text-right" style={{ display: isMobile ? "none" : "table-cell" }}>ACCI√ìN</th>
+                  <th className="text-right" style={{ display: isMobile ? "none" : "table-cell" }}>ACCI”N</th>
                 </tr>
               </thead>
               <tbody>
@@ -280,14 +280,14 @@ export default function Payroll() {
                             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{emp.role}</span>
                           </div>
                         </td>
-                        <td data-label="D√çA DE PAGO">
+                        <td data-label="DÕA DE PAGO">
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--bg-input)', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', border: '1px solid var(--border-color)' }}>
                                 <Clock size={14} color="var(--text-muted)" />
-                                D√≠a {hireDay} de cada mes
+                                DÌa {hireDay} de cada mes
                             </span>
                         </td>
                         <td data-label="SUELDO BASE">Bs. {Number(emp.base_salary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td className="text-right" style={{ display: isMobile ? "none" : "table-cell" }} data-label="ACCI√ìN">
+                        <td className="text-right" style={{ display: isMobile ? "none" : "table-cell" }} data-label="ACCI”N">
                           {isPaid ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: 600, padding: '8px 16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>
                                 <CheckCircle size={16} /> Pagado
@@ -398,7 +398,7 @@ export default function Payroll() {
           <div className="modal-content" style={{ maxWidth: '500px' }}>
             <div className="modal-header">
               <h3>Calcular Pago: {selectedEmployee.user?.profile?.first_name} {selectedEmployee.user?.profile?.last_name_paternal}</h3>
-              <button className="btn-icon" onClick={() => setSelectedEmployee(null)}>√ó</button>
+              <button className="btn-icon" onClick={() => setSelectedEmployee(null)}>◊</button>
             </div>
             
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -421,7 +421,7 @@ export default function Payroll() {
                           </h4>
                           <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-main)' }}>
                               En este ciclo, el empleado tuvo <strong>{payrollData.absences_count} faltas</strong> y <strong>{payrollData.lates_count} atrasos</strong>.
-                              <br />(Sueldo por d√≠a aprox: Bs. {payrollData.salary_per_day.toFixed(2)})
+                              <br />(Sueldo por dÌa aprox: Bs. {payrollData.salary_per_day.toFixed(2)})
                           </p>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', color: 'var(--text-main)', fontWeight: 500 }}>
                               <input 
@@ -430,7 +430,7 @@ export default function Payroll() {
                                   onChange={(e) => setAutoDeduct(e.target.checked)}
                                   style={{ width: '18px', height: '18px', accentColor: '#f59e0b' }}
                               />
-                              Aplicar descuento autom√°ticamente
+                              Aplicar descuento autom·ticamente
                           </label>
                       </div>
                   )}
