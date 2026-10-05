@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { usePosStore } from '../../store/pos/usePosStore';
@@ -35,7 +35,7 @@ const Pos = () => {
             setBranchId(user.employee.branch_id, user.employee.branch?.name || 'Sucursal Asignada');
         }
 
-        // Si es admin y no ha seleccionado sucursal, podrÃ­amos forzar a abrir el modal
+        // Si es admin y no ha seleccionado sucursal, podríamos forzar a abrir el modal
         if (hasSellAll && !branchId) {
             fetchBranches();
             setShowBranchModal(true);
@@ -89,7 +89,7 @@ const Pos = () => {
                 </div>
 
                 <div className="relative flex items-center gap-6">
-                    {/* BotÃ³n de Tema */}
+                    {/* Botón de Tema */}
                     <button 
                         onClick={toggleTheme}
                         className="p-2 rounded-full hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-text)] transition-colors focus:outline-none"
@@ -142,7 +142,7 @@ const Pos = () => {
                                         className="w-full px-4 py-2 text-sm flex items-center gap-3 text-red-500 hover:bg-red-500 hover:text-white transition-colors text-left"
                                     >
                                         <LogOut size={16} />
-                                        <span>Cerrar SesiÃ³n</span>
+                                        <span>Cerrar Sesión</span>
                                     </button>
                                 </div>
                             </div>
@@ -169,7 +169,7 @@ const Pos = () => {
                 )}
             </main>
 
-            {/* Modal de SelecciÃ³n de Sucursal */}
+            {/* Modal de Selección de Sucursal */}
             {showBranchModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
                     <div className="bg-[var(--bg-main)] text-[var(--text-main)] w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden">

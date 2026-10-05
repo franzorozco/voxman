@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MoreVertical, Heart } from 'lucide-react';
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
 import { useAuthStore } from '../../../store/authStore';
@@ -36,7 +36,7 @@ const ProductCardMenu = ({ productId, variantId = null, className = '', style = 
     e.preventDefault();
     e.stopPropagation();
     if (!isCustomer) {
-      alert('Debes iniciar sesiÃ³n como cliente para usar la lista de deseos.');
+      alert('Debes iniciar sesión como cliente para usar la lista de deseos.');
       setIsOpen(false);
       return;
     }

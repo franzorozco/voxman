@@ -1,4 +1,4 @@
-﻿import { X, Calendar, DollarSign, Activity } from "lucide-react";
+import { X, Calendar, DollarSign, Activity } from "lucide-react";
 import "./Giftcards.css";
 
 export default function GiftcardHistoryModal({ isOpen, onClose, giftcard }) {
@@ -14,7 +14,7 @@ export default function GiftcardHistoryModal({ isOpen, onClose, giftcard }) {
 
   const translateType = (type) => {
     const types = {
-      'issue': 'EmisiÃ³n',
+      'issue': 'Emisión',
       'reload': 'Recarga',
       'payment': 'Pago',
       'refund': 'Reembolso'
@@ -62,24 +62,24 @@ export default function GiftcardHistoryModal({ isOpen, onClose, giftcard }) {
             <div className="timeline">
               {giftcard.transactions.map((t, index) => {
                 let title = translateType(t.type);
-                let description = t.notes || "Sin descripciÃ³n adicional";
+                let description = t.notes || "Sin descripción adicional";
 
                 if (t.type === 'issue') {
                     if (giftcard.purchaser) {
                         description = `Adquirida originalmente por ${giftcard.purchaser.user?.profile?.first_name || ''} ${giftcard.purchaser.user?.profile?.last_name || ''}. ${t.notes || ''}`;
                     } else {
-                        description = `EmisiÃ³n de tarjeta anÃ³nima. ${t.notes || ''}`;
+                        description = `Emisión de tarjeta anónima. ${t.notes || ''}`;
                     }
                 } else if (t.type === 'payment') {
                     if (t.sale) {
-                        description = `Descuento automÃ¡tico por pago en la Factura/Venta #${t.sale.invoice_number || t.sale.id}. ${t.notes || ''}`;
+                        description = `Descuento automático por pago en la Factura/Venta #${t.sale.invoice_number || t.sale.id}. ${t.notes || ''}`;
                     } else {
                         description = `Pago realizado. ${t.notes || ''}`;
                     }
                 } else if (t.type === 'reload') {
                     description = `Aumento de saldo manual. ${t.notes || ''}`;
                 } else if (t.type === 'refund') {
-                    description = `DevoluciÃ³n o anulaciÃ³n procesada. ${t.notes || ''}`;
+                    description = `Devolución o anulación procesada. ${t.notes || ''}`;
                 }
 
                 return (

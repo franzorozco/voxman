@@ -1,4 +1,4 @@
-﻿import api from '../client';
+import api from '../client';
 
 export const getDeliverySchedules = (params = {}) => {
   return api.get('/v1/admin/order-network', { params });

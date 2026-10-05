@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, lazy, Suspense } from "react";
+import React, { useEffect, useMemo, lazy, Suspense } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../../../components/layout/Footer";
 import Hero from "../components/Hero";
@@ -28,7 +28,7 @@ export default function Home() {
 
   const showTopBars    = isEnabled(settings.home_show_top_bars);
 
-  /* â”€â”€ Parse top bars â”€â”€ */
+  /* ── Parse top bars ── */
   const topBars = useMemo(() => {
     if (!showTopBars) return [];
     try {
@@ -49,38 +49,38 @@ export default function Home() {
     <div className="home" style={{ paddingTop: '70px', backgroundColor: '#000' }}>
       <Navbar isDarkThemeOverride={true} />
 
-      {/* above_hero â€” encima del hero (pegado debajo de la navbar) */}
+      {/* above_hero — encima del hero (pegado debajo de la navbar) */}
       <Suspense fallback={null}>
         {renderTopBars("above_hero")}
       </Suspense>
 
       {showHero && (
         <Hero
-          title={settings.home_hero_title || "VÃ˜Xman"}
+          title={settings.home_hero_title || "VØXman"}
           subtitle={settings.home_hero_subtitle || "Estilo masculino moderno, minimalista y potente."}
         />
       )}
 
       <Suspense fallback={<div style={{height: "20vh"}}></div>}>
-        {/* below_hero â€” justo debajo del hero */}
+        {/* below_hero — justo debajo del hero */}
         {renderTopBars("below_hero")}
 
         {showValueProps && <ValueProps />}
 
-        {/* below_value_props â€” debajo de beneficios */}
+        {/* below_value_props — debajo de beneficios */}
         {renderTopBars("below_value_props")}
 
         {showCarousel && <DynamicProductCarousel />}
 
-        {/* below_carousel â€” debajo del carrusel */}
+        {/* below_carousel — debajo del carrusel */}
         {renderTopBars("below_carousel")}
 
         {showCategories && <FeaturedCategories />}
 
-        {/* below_categories â€” debajo de categorÃ­as */}
+        {/* below_categories — debajo de categorías */}
         {renderTopBars("below_categories")}
 
-        {/* above_footer â€” justo antes del footer */}
+        {/* above_footer — justo antes del footer */}
         {renderTopBars("above_footer")}
       </Suspense>
 

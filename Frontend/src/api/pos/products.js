@@ -1,4 +1,4 @@
-﻿import client from '../client';
+import client from '../client';
 
 export const getPosProducts = async (params) => {
     const { data } = await client.get('/pos/products', { params });

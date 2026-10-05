@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../../api/client';
 import toast from 'react-hot-toast';
 import Spinner from './Spinner/Spinner';
@@ -40,7 +40,7 @@ export default function DiscountInput({
     const codeToValidate = (rawCode || '').toString().trim();
     
     if (!codeToValidate) {
-      toast.error('Por favor, ingresa un cÃ³digo.');
+      toast.error('Por favor, ingresa un código.');
       return;
     }
 
@@ -66,7 +66,7 @@ export default function DiscountInput({
         if (onValidated) onValidated(data);
       }
     } catch (error) {
-      const msg = error.response?.data?.message || 'Error al validar el cÃ³digo';
+      const msg = error.response?.data?.message || 'Error al validar el código';
       toast.error(msg);
       setValidationResult(null);
       if (onValidated) onValidated(null);
@@ -84,12 +84,12 @@ export default function DiscountInput({
   return (
     <div style={{ marginTop: '16px', padding: '16px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
       <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: 'var(--text-main)', fontSize: '14px' }}>
-        CÃ³digo de Descuento o Giftcard
+        Código de Descuento o Giftcard
       </label>
       
       {autoDiscounts.length > 0 && !validationResult && (
         <div style={{ marginBottom: '16px' }}>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Descuentos AutomÃ¡ticos Disponibles:</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>Descuentos Automáticos Disponibles:</span>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {autoDiscounts.map(d => {
               const codeOrId = d.code || d.id;

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -104,9 +104,9 @@ export default function DeletedBranches() {
           <thead>
             <tr>
               <th>Nombre</th>
-              <th>DirecciÃ³n</th>
-              <th>TelÃ©fono</th>
-              <th>Fecha EliminaciÃ³n</th>
+              <th>Dirección</th>
+              <th>Teléfono</th>
+              <th>Fecha Eliminación</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -130,7 +130,7 @@ export default function DeletedBranches() {
                   <td>
                     {b.address 
                       ? `${b.address.street || ''} ${b.address.city ? ', ' + b.address.city : ''}` 
-                      : 'Sin direcciÃ³n'}
+                      : 'Sin dirección'}
                   </td>
                   <td>{b.phone || '-'}</td>
                   <td>
@@ -177,10 +177,10 @@ export default function DeletedBranches() {
         title={confirmModal.type === "restore" ? "Restaurar sucursal" : "Eliminar permanente"}
         message={
           confirmModal.type === "restore" 
-          ? "Â¿EstÃ¡s seguro de restaurar esta sucursal? VolverÃ¡ a estar activa en el sistema." 
-          : "ADVERTENCIA: Â¿EstÃ¡s seguro de eliminar PERMANENTEMENTE esta sucursal? Esta acciÃ³n no se puede deshacer y borrarÃ¡ todos sus datos definitivamente."
+          ? "¿Estás seguro de restaurar esta sucursal? Volverá a estar activa en el sistema." 
+          : "ADVERTENCIA: ¿Estás seguro de eliminar PERMANENTEMENTE esta sucursal? Esta acción no se puede deshacer y borrará todos sus datos definitivamente."
         }
-        confirmText={confirmModal.type === "restore" ? "SÃ­, restaurar" : "SÃ­, eliminar definitivamente"}
+        confirmText={confirmModal.type === "restore" ? "Sí, restaurar" : "Sí, eliminar definitivamente"}
         type={confirmModal.type === "restore" ? "success" : "danger"}
       />
     </div>

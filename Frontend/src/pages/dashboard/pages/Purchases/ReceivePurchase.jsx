@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Package, ArrowLeft, CheckCircle, AlertTriangle, XCircle, Info, Save } from "lucide-react";
@@ -126,7 +126,7 @@ export default function ReceivePurchase() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.employee_id) return toast.error("Seleccione quiÃ©n estÃ¡ recepcionando");
+    if (!formData.employee_id) return toast.error("Seleccione quién está recepcionando");
     
     // Validate that at least something is being processed
     const hasProcessedItems = receptionItems.some(i => i.received_quantity > 0 || i.damaged_quantity > 0 || i.wrong_quantity > 0);
@@ -157,10 +157,10 @@ export default function ReceivePurchase() {
       };
 
       const { data } = await receivePurchase(payload);
-      toast.success(data.message || "MercaderÃ­a recepcionada correctamente");
+      toast.success(data.message || "Mercadería recepcionada correctamente");
       navigate("/dashboard/purchases");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error al procesar recepciÃ³n");
+      toast.error(error.response?.data?.message || "Error al procesar recepción");
     } finally {
       setSubmitting(false);
     }
@@ -182,9 +182,9 @@ export default function ReceivePurchase() {
         <div>
           <h1 className="purchases-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Package size={28} className="text-primary" />
-            RecepciÃ³n de MercaderÃ­a
+            Recepción de Mercadería
           </h1>
-          <p>VerificaciÃ³n fÃ­sica y actualizaciÃ³n de inventario</p>
+          <p>Verificación física y actualización de inventario</p>
         </div>
         
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -197,7 +197,7 @@ export default function ReceivePurchase() {
             disabled={submitting}
           >
             {submitting ? <Spinner size={16} color="#fff" /> : <Save size={16} />}
-            Finalizar RecepciÃ³n
+            Finalizar Recepción
           </button>
         </div>
       </div>
@@ -210,12 +210,12 @@ export default function ReceivePurchase() {
             <div><span className="text-muted">Nro Factura/Doc:</span> {purchase.invoice_number || "N/A"}</div>
             <div><span className="text-muted">Proveedor:</span> {purchase.supplier?.name}</div>
             <div><span className="text-muted">Sucursal Destino:</span> <span style={{ fontWeight: 600 }}>{purchase.branch?.name}</span></div>
-            <div><span className="text-muted">Fecha EmisiÃ³n:</span> {new Date(purchase.created_at).toLocaleDateString()}</div>
+            <div><span className="text-muted">Fecha Emisión:</span> {new Date(purchase.created_at).toLocaleDateString()}</div>
           </div>
         </div>
 
         <div className="purchase-panel">
-          <div className="purchase-panel-title">Responsable de RecepciÃ³n</div>
+          <div className="purchase-panel-title">Responsable de Recepción</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label>Almacenista / Recepcionista</label>
@@ -237,7 +237,7 @@ export default function ReceivePurchase() {
               <input 
                 type="text" 
                 className="purchase-form-input" 
-                placeholder="Ej. Cajas llegaron mojadas, transportista llegÃ³ tarde..."
+                placeholder="Ej. Cajas llegaron mojadas, transportista llegó tarde..."
                 value={formData.notes}
                 onChange={(e) => setFormData({...formData, notes: e.target.value})}
               />
@@ -246,11 +246,11 @@ export default function ReceivePurchase() {
         </div>
       </div>
 
-      {/* Formulario de VerificaciÃ³n (Tabla) */}
+      {/* Formulario de Verificación (Tabla) */}
       <div className="purchase-panel">
         <div className="purchase-panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckCircle size={18} className="text-primary" />
-          VerificaciÃ³n FÃ­sica de Productos
+          Verificación Física de Productos
         </div>
         
         <div className="table-container" style={{ marginTop: '15px' }}>
@@ -259,8 +259,8 @@ export default function ReceivePurchase() {
               <tr>
                 <th>Producto</th>
                 <th style={{ textAlign: 'center', width: '100px', background: 'var(--bg-secondary)' }}>Esperado (OC)</th>
-                <th style={{ textAlign: 'center', width: '100px' }}>Recibido FÃ­sico</th>
-                <th style={{ textAlign: 'center', width: '100px', color: '#eab308' }}>DaÃ±ado</th>
+                <th style={{ textAlign: 'center', width: '100px' }}>Recibido Físico</th>
+                <th style={{ textAlign: 'center', width: '100px', color: '#eab308' }}>Dañado</th>
                 <th style={{ textAlign: 'center', width: '100px', color: '#ef4444' }}>Equivocado</th>
                 <th style={{ textAlign: 'center', width: '100px', color: '#8b5cf6' }}>Extra</th>
                 <th style={{ textAlign: 'center', width: '110px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>Aceptado (A Stock)</th>
@@ -302,7 +302,7 @@ export default function ReceivePurchase() {
                     />
                   </td>
 
-                  {/* DAÃ‘ADO */}
+                  {/* DAÑADO */}
                   <td style={{ textAlign: 'center' }}>
                     <input 
                       type="number" 
@@ -361,9 +361,9 @@ export default function ReceivePurchase() {
         <div style={{ marginTop: '15px', padding: '15px', background: 'var(--bg-overlay)', borderRadius: '8px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
           <Info size={20} className="text-primary" style={{ flexShrink: 0, marginTop: '2px' }} />
           <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-            <strong>Instrucciones:</strong> Por defecto, se asume que se recibiÃ³ todo en perfecto estado. Si hubo problemas, ajuste los valores de <em>DaÃ±ado</em> o <em>Equivocado</em>. 
-            El sistema calcularÃ¡ automÃ¡ticamente el <strong>Aceptado</strong> (Recibido FÃ­sico - DaÃ±ado - Equivocado).
-            SÃ³lo la cantidad <strong>Aceptada</strong> serÃ¡ aÃ±adida al stock para venta. Las mermas se guardarÃ¡n en el registro histÃ³rico de la orden para posteriores reclamaciones al proveedor.
+            <strong>Instrucciones:</strong> Por defecto, se asume que se recibió todo en perfecto estado. Si hubo problemas, ajuste los valores de <em>Dañado</em> o <em>Equivocado</em>. 
+            El sistema calculará automáticamente el <strong>Aceptado</strong> (Recibido Físico - Dañado - Equivocado).
+            Sólo la cantidad <strong>Aceptada</strong> será añadida al stock para venta. Las mermas se guardarán en el registro histórico de la orden para posteriores reclamaciones al proveedor.
           </div>
         </div>
 
@@ -374,9 +374,9 @@ export default function ReceivePurchase() {
             isOpen={showConfirmModal}
             onClose={() => setShowConfirmModal(false)}
             onConfirm={handleConfirmSubmit}
-            title="Finalizar RecepciÃ³n"
-            message="Â¿EstÃ¡ seguro de finalizar la recepciÃ³n? El inventario serÃ¡ actualizado y la orden pasarÃ¡ a estado 'Recepcionado'."
-            confirmText="SÃ­, finalizar"
+            title="Finalizar Recepción"
+            message="¿Está seguro de finalizar la recepción? El inventario será actualizado y la orden pasará a estado 'Recepcionado'."
+            confirmText="Sí, finalizar"
             type="primary"
           />
         )}

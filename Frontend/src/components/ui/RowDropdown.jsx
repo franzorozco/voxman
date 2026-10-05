@@ -1,11 +1,11 @@
-﻿import { useRef, useEffect, useLayoutEffect, useState } from "react";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MoreVertical } from "lucide-react";
 
 /**
- * RowDropdown â€“ menÃº de 3 puntitos con posicionamiento dinÃ¡mico real.
- * Usa createPortal inyectÃ¡ndolo en el nodo que contiene el tema (.admin-theme).
- * SE OCULTA AUTOMÃTICAMENTE EN ESCRITORIO (> 768px).
+ * RowDropdown – menú de 3 puntitos con posicionamiento dinámico real.
+ * Usa createPortal inyectándolo en el nodo que contiene el tema (.admin-theme).
+ * SE OCULTA AUTOMÁTICAMENTE EN ESCRITORIO (> 768px).
  */
 export default function RowDropdown({ rowId, activeId, setActiveId, children }) {
   const btnRef = useRef(null);

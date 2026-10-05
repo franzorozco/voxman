@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Search, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDeletedEmployees, restoreEmployee } from "../../../../api/admin/employees";
@@ -27,7 +27,7 @@ export default function DeletedEmployees() {
   }, [searchQuery]);
 
   const handleRestore = async (id) => {
-    if (!window.confirm("Â¿EstÃ¡s seguro de restaurar este empleado? VolverÃ¡ a estar activo.")) return;
+    if (!window.confirm("¿Estás seguro de restaurar este empleado? Volverá a estar activo.")) return;
     try {
       await restoreEmployee(id);
       toast.success("Empleado restaurado exitosamente");
@@ -68,7 +68,7 @@ export default function DeletedEmployees() {
           <table className="products-table">
             <thead>
               <tr>
-                <th>CÃ³digo</th>
+                <th>Código</th>
                 <th>Empleado</th>
                 <th>Contacto</th>
                 <th>Desactivado el</th>
@@ -123,7 +123,7 @@ export default function DeletedEmployees() {
                   <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                       <Trash2 size={48} style={{ opacity: 0.2 }} />
-                      <p>La papelera estÃ¡ vacÃ­a</p>
+                      <p>La papelera está vacía</p>
                     </div>
                   </td>
                 </tr>

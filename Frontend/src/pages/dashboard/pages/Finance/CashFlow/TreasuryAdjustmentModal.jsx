@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { addTreasuryAdjustment } from '../../../../../api/admin/finance';
 import { toast } from 'react-hot-toast';
 import { X, Save, TrendingUp, TrendingDown } from 'lucide-react';
@@ -25,7 +25,7 @@ const TreasuryAdjustmentModal = ({ isOpen, onClose, onSuccess, branches }) => {
     setLoading(true);
     try {
       await addTreasuryAdjustment(formData);
-      toast.success("Ajuste registrado con Ã©xito.");
+      toast.success("Ajuste registrado con éxito.");
       onSuccess();
       onClose();
     } catch (error) {
@@ -66,7 +66,7 @@ const TreasuryAdjustmentModal = ({ isOpen, onClose, onSuccess, branches }) => {
               ))}
             </CustomSelect>
             <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '6px', fontSize: '12px' }}>
-              El ajuste se aplicarÃ¡ a la caja fÃ­sica de esta sucursal (debe estar abierta).
+              El ajuste se aplicará a la caja física de esta sucursal (debe estar abierta).
             </small>
           </div>
 
@@ -133,7 +133,7 @@ const TreasuryAdjustmentModal = ({ isOpen, onClose, onSuccess, branches }) => {
           </div>
 
           <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '6px' }}>Motivo / DescripciÃ³n</label>
+            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '13px', marginBottom: '6px' }}>Motivo / Descripción</label>
             <textarea 
               value={formData.description} 
               onChange={e => setFormData({...formData, description: e.target.value})}

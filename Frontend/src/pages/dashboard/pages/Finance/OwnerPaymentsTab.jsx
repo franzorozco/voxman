@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Edit, Archive, XCircle, AlertCircle, ArrowDownCircle, ArrowUpCircle, Eye, List, History } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getOwnerPayments, archiveOwnerPayment, annulOwnerPayment } from "../../../../api/admin/finance";
@@ -57,7 +57,7 @@ export default function OwnerPaymentsTab() {
   };
 
   const handleArchive = async (id) => {
-    if (!window.confirm("Â¿EstÃ¡s seguro de archivar este movimiento? No se eliminarÃ¡ del Kardex, pero se ocultarÃ¡ de la vista principal.")) return;
+    if (!window.confirm("¿Estás seguro de archivar este movimiento? No se eliminará del Kardex, pero se ocultará de la vista principal.")) return;
     try {
       await archiveOwnerPayment(id);
       toast.success("Movimiento archivado");
@@ -68,7 +68,7 @@ export default function OwnerPaymentsTab() {
   };
 
   const handleAnnul = async (id) => {
-    if (!window.confirm("Â¿EstÃ¡s seguro de anular este movimiento? Se invalidarÃ¡ esta transacciÃ³n (solo posible dentro de las 24 horas).")) return;
+    if (!window.confirm("¿Estás seguro de anular este movimiento? Se invalidará esta transacción (solo posible dentro de las 24 horas).")) return;
     try {
       await annulOwnerPayment(id);
       toast.success("Movimiento anulado");
@@ -221,7 +221,7 @@ export default function OwnerPaymentsTab() {
                   <td data-label="Tipo">
                     {p.type === 'deposit' ? (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-success)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                        <ArrowDownCircle size={14} /> InyecciÃ³n
+                        <ArrowDownCircle size={14} /> Inyección
                       </span>
                     ) : (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--color-warning)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
@@ -236,7 +236,7 @@ export default function OwnerPaymentsTab() {
                   </td>
                   <td data-label="Cuenta">
                     <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>
-                      {p.fund_source === 'cash' ? 'Caja FÃ­sica' : p.fund_source === 'bank' ? 'Cuenta Bancaria' : 'N/A'}
+                      {p.fund_source === 'cash' ? 'Caja Física' : p.fund_source === 'bank' ? 'Cuenta Bancaria' : 'N/A'}
                     </span>
                   </td>
                   <td data-label="Estado">

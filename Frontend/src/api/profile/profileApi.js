@@ -1,4 +1,4 @@
-﻿import api from '../client';
+import api from '../client';
 
 /**
  * Obtener perfil completo del usuario autenticado
@@ -17,7 +17,7 @@ export const updateProfile = async (data) => {
 };
 
 /**
- * Cambiar contraseÃ±a de la cuenta
+ * Cambiar contraseña de la cuenta
  */
 export const changePassword = async ({ current_password, new_password, new_password_confirmation }) => {
   const res = await api.put('/v1/shop/profile/password', {
@@ -29,7 +29,7 @@ export const changePassword = async ({ current_password, new_password, new_passw
 };
 
 /**
- * Agregar una nueva direcciÃ³n de envÃ­o
+ * Agregar una nueva dirección de envío
  */
 export const addAddress = async (data) => {
   const res = await api.post('/v1/shop/delivery-options/add-address', data);
@@ -37,7 +37,7 @@ export const addAddress = async (data) => {
 };
 
 /**
- * Actualizar una direcciÃ³n existente
+ * Actualizar una dirección existente
  */
 export const updateAddress = async (id, data) => {
   const res = await api.put(`/v1/shop/delivery-options/addresses/${id}`, data);
@@ -45,7 +45,7 @@ export const updateAddress = async (id, data) => {
 };
 
 /**
- * Eliminar una direcciÃ³n
+ * Eliminar una dirección
  */
 export const deleteAddress = async (id) => {
   const res = await api.delete(`/v1/shop/delivery-options/addresses/${id}`);

@@ -1,11 +1,11 @@
-﻿export default function UserViewModal({ user, onClose }) {
+export default function UserViewModal({ user, onClose }) {
   if (!user) return null;
 
   return (
     <div className="modal-overlay">
       <div className="modal">
 
-        <h2>InformaciÃ³n del usuario</h2>
+        <h2>Información del usuario</h2>
 
         <div className="user-view-grid">
 
@@ -30,7 +30,7 @@
           </div>
 
           <div>
-            <strong>TelÃ©fono:</strong>
+            <strong>Teléfono:</strong>
             <p>{user.profile?.phone || "-"}</p>
           </div>
 
@@ -62,7 +62,7 @@
           {user.customer?.is_active && (
             <>
               <div>
-                <strong>CÃ³digo Cliente:</strong>
+                <strong>Código Cliente:</strong>
                 <p>{user.customer.customer_code}</p>
               </div>
 
@@ -82,7 +82,7 @@
           {user.employee?.is_active && (
             <>
               <div>
-                <strong>CÃ³digo Empleado:</strong>
+                <strong>Código Empleado:</strong>
                 <p>{user.employee.employee_code}</p>
               </div>
 
@@ -97,7 +97,7 @@
               </div>
 
               <div>
-                <strong>ComisiÃ³n:</strong>
+                <strong>Comisión:</strong>
                 <p>{user.employee.commission_percentage}%</p>
               </div>
             </>

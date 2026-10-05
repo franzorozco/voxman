@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../../utils/imageUtils';
 import { useState, useEffect, useRef } from "react";
 import { X, Search, Package, Check, ChevronDown, Plus } from "lucide-react";
 import { adjustStock, batchAdjustStock, getInventory } from "../../../../../api/admin/inventory";
@@ -165,7 +165,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
           [foundVariant.id]: (prev[foundVariant.id] || 0) + 1
         }));
         
-        toast.success(`+1 aÃ±adido: ${foundVariant.sku}`);
+        toast.success(`+1 añadido: ${foundVariant.sku}`);
       } else {
         toast.error(`SKU ${code} no encontrado`);
       }
@@ -207,7 +207,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
         await batchAdjustStock({
           branch_id: selectedBranchId,
           items: itemsToAdjust,
-          reference: reference || "Ingreso Masivo de stock (CatÃ¡logo)"
+          reference: reference || "Ingreso Masivo de stock (Catálogo)"
         });
         toast.success("Stock masivo ingresado correctamente.");
         onSuccess();
@@ -237,7 +237,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
           variant_id: selectedVariant.id,
           branch_id: selectedBranchId,
           quantity: qty,
-          reference: reference || "Ingreso de nuevo stock (CatÃ¡logo)"
+          reference: reference || "Ingreso de nuevo stock (Catálogo)"
         });
         toast.success("Stock ingresado correctamente a la sucursal.");
         onSuccess();
@@ -292,7 +292,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
             </CustomSelect>
             {!!defaultBranchId && (
               <small style={{ color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
-                * Has ingresado desde una sucursal especÃ­fica. El ingreso estÃ¡ bloqueado a esta sucursal por seguridad.
+                * Has ingresado desde una sucursal específica. El ingreso está bloqueado a esta sucursal por seguridad.
               </small>
             )}
           </div>
@@ -317,7 +317,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
                     <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input
                       type="text"
-                      placeholder="Buscar en el catÃ¡logo global por nombre o SKU..."
+                      placeholder="Buscar en el catálogo global por nombre o SKU..."
                       value={searchQuery}
                       onChange={handleSearch}
                       onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
@@ -330,7 +330,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
                   <button
                     type="button"
                     onClick={handleScanClick}
-                    title="Escanear con CÃ¡mara"
+                    title="Escanear con Cámara"
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '45px', height: '45px', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--color-primary)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500, flexShrink: 0 }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'rgba(99,102,241,0.05)' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-card)' }}
@@ -391,7 +391,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
                       <Check size={12} />
                     </div>
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{selectedProduct.category?.name || "Sin categorÃ­a"}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{selectedProduct.category?.name || "Sin categoría"}</div>
                 </div>
               </div>
             )}
@@ -415,7 +415,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
                   if (variant.size) {
                     attrsText += (attrsText ? ", " : "") + variant.size.name;
                   }
-                  if (!attrsText) attrsText = "EstÃ¡ndar";
+                  if (!attrsText) attrsText = "Estándar";
 
                   const isSelected = selectedVariant?.id === variant.id || hasPermission;
                   const currentStock = localInventory[variant.id] || 0;
@@ -503,7 +503,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
           {((hasPermission && selectedProduct) || (!hasPermission && selectedVariant)) && (
             <div style={{ animation: 'fadeIn 0.3s ease', background: 'var(--bg-input)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
               <label style={{ display: 'block', marginBottom: '15px', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                4. Detalles Adicionales de RecepciÃ³n
+                4. Detalles Adicionales de Recepción
               </label>
 
               <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
@@ -536,7 +536,7 @@ export default function ReceiveStockModal({ defaultBranchId, onClose, onSuccess 
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: 'var(--text-main)' }}>Motivo / Referencia (Opcional)</label>
                   <input
                     type="text"
-                    placeholder="Ej. Llegada de nuevo lote, devoluciÃ³n..."
+                    placeholder="Ej. Llegada de nuevo lote, devolución..."
                     value={reference}
                     onChange={(e) => setReference(e.target.value)}
                     style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '14px' }}

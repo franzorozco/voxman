@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Search, DollarSign, RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2, Printer, MoreVertical, Eye } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { getEmployees } from "../../../../api/admin/employees";

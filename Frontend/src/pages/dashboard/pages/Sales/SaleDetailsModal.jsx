@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { X, FileText, User, Store, MapPin, CreditCard, RotateCcw, Truck, CheckCircle, Printer, CalendarClock, StickyNote, Sparkles } from "lucide-react";
 import { toast } from "react-hot-toast";

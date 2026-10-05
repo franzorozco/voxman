@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Search, Eye, Filter, CheckCircle, XCircle, ShoppingBag, Clock, RotateCcw, MoreVertical, RefreshCw } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
@@ -151,7 +151,7 @@ export default function Sales() {
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               type="text"
-              placeholder="Buscar por NÂ° Factura..."
+              placeholder="Buscar por N° Factura..."
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -192,7 +192,7 @@ export default function Sales() {
                 onChange={(e) => setFilters({ ...filters, source: e.target.value })}
               >
                 <option value="">Todos (Web/Tienda/Entregas)</option>
-                <option value="store">Tienda FÃ­sica</option>
+                <option value="store">Tienda Física</option>
                 <option value="web">Tienda Web</option>
                 <option value="order_network">Entregas Agendadas</option>
               </CustomSelect>
@@ -304,10 +304,10 @@ export default function Sales() {
                       <div className="invoice-content">
                         <div style={{ fontWeight: 600 }}>{sale.invoice_number || 'S/N'}</div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          {sale.source === 'store' ? <span style={{color: 'var(--color-warning)'}}>â€¢ Tienda FÃ­sica</span> : 
-                           sale.source === 'web' ? <span style={{color: 'var(--color-primary)'}}>â€¢ Tienda Web</span> : 
-                           sale.source === 'order_network' ? <span style={{color: '#10b981'}}>â€¢ Entrega Agendada</span> :
-                           `â€¢ ${sale.source || 'Tienda'}`}
+                          {sale.source === 'store' ? <span style={{color: 'var(--color-warning)'}}>• Tienda Física</span> : 
+                           sale.source === 'web' ? <span style={{color: 'var(--color-primary)'}}>• Tienda Web</span> : 
+                           sale.source === 'order_network' ? <span style={{color: '#10b981'}}>• Entrega Agendada</span> :
+                           `• ${sale.source || 'Tienda'}`}
                         </div>
                       </div>
                     </div>
@@ -343,7 +343,7 @@ export default function Sales() {
                         ) : (
                           <div style={{ color: 'var(--text-muted)' }}>Cliente sin perfil</div>
                         )}
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>CÃ³d: {sale.customer.customer_code}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Cód: {sale.customer.customer_code}</div>
                       </div>
                     ) : sale.guest ? (
                       <div>
@@ -388,7 +388,7 @@ export default function Sales() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '12px' }}>
                         {sale.payments.map((p, index) => (
                           <div key={p.id || index} style={{ color: 'var(--text-main)' }}>
-                            â€¢ {p.payment_method?.name || 'Otro'}
+                            • {p.payment_method?.name || 'Otro'}
                           </div>
                         ))}
                       </div>
@@ -417,7 +417,7 @@ export default function Sales() {
                     {sale.source === 'order_network' && sale.shipments?.[0]?.delivery_schedule && (
                       <div style={{ marginTop: '4px' }}>
                         <span className={`status-badge ${sale.shipments[0].delivery_schedule.status === 'completed' ? 'status-success' : 'status-warning'}`} style={{ fontSize: '10px', padding: '2px 4px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}>
-                          EnvÃ­os: {sale.shipments[0].delivery_schedule.status === 'at_the_meeting_point' ? 'En el punto' : sale.shipments[0].delivery_schedule.status === 'on_the_way' ? 'En camino' : sale.shipments[0].delivery_schedule.status === 'completed' ? 'Completado' : sale.shipments[0].delivery_schedule.status === 'cancelled' ? 'Cancelado' : sale.shipments[0].delivery_schedule.status === 'pending' ? 'Pendiente' : sale.shipments[0].delivery_schedule.status === 'assigned' ? 'Asignado' : sale.shipments[0].delivery_schedule.status}
+                          Envíos: {sale.shipments[0].delivery_schedule.status === 'at_the_meeting_point' ? 'En el punto' : sale.shipments[0].delivery_schedule.status === 'on_the_way' ? 'En camino' : sale.shipments[0].delivery_schedule.status === 'completed' ? 'Completado' : sale.shipments[0].delivery_schedule.status === 'cancelled' ? 'Cancelado' : sale.shipments[0].delivery_schedule.status === 'pending' ? 'Pendiente' : sale.shipments[0].delivery_schedule.status === 'assigned' ? 'Asignado' : sale.shipments[0].delivery_schedule.status}
                         </span>
                       </div>
                     )}

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload, RefreshCw, Users } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
@@ -64,7 +64,7 @@ export default function Customers() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Â¿EstÃ¡s seguro de eliminar este cliente? Se enviarÃ¡ a la papelera.")) return;
+    if (!window.confirm("¿Estás seguro de eliminar este cliente? Se enviará a la papelera.")) return;
     try {
       await deleteCustomer(id);
       toast.success("Cliente enviado a la papelera");
@@ -155,7 +155,7 @@ export default function Customers() {
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              placeholder="Buscar por cÃ³digo, email, nombre o CI/DNI..." 
+              placeholder="Buscar por código, email, nombre o CI/DNI..." 
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             />
@@ -209,7 +209,7 @@ export default function Customers() {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Puntos MÃ­nimos</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Puntos Mínimos</label>
               <input 
                 type="number"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
@@ -226,7 +226,7 @@ export default function Customers() {
                 value={filters.sortBy}
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
               >
-                <option value="created_at">MÃ¡s recientes</option>
+                <option value="created_at">Más recientes</option>
                 <option value="points">Puntos</option>
                 <option value="total_purchases">Total Comprado</option>
               </CustomSelect>
@@ -262,7 +262,7 @@ export default function Customers() {
           <table className="products-table">
             <thead>
               <tr>
-                <th>CÃ³digo</th>
+                <th>Código</th>
                 <th>Cliente</th>
                 <th>Contacto</th>
                 <th>Puntos</th>
@@ -280,7 +280,7 @@ export default function Customers() {
 
                 return (
                   <tr key={c.id}>
-                    <td data-label="CÃ³digo" className="first-col-mobile">
+                    <td data-label="Código" className="first-col-mobile">
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <div className="hide-on-pc">
                             <RowDropdown rowId={c.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
@@ -329,7 +329,7 @@ export default function Customers() {
                     <td data-label="Contacto">
                       <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', color: 'var(--text-muted)', gap: '2px' }}>
                         <span style={{ color: 'var(--text-main)' }}>{c.user?.email || 'Sin Correo'}</span>
-                        {profile.phone && <span>ðŸ“ž {profile.phone}</span>}
+                        {profile.phone && <span>📞 {profile.phone}</span>}
                       </div>
                     </td>
                     <td data-label="Puntos">

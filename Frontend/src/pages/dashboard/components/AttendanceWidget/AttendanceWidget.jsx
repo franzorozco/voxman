@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { checkIn, checkOut, getAttendanceStatus } from "../../../../api/admin/attendances";
 import { Clock } from "lucide-react";
 import { useAuthStore } from "../../../../store/authStore";

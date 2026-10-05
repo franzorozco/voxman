@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../utils/imageUtils';
+import { getImageUrl } from '../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { User, Phone, ArrowRight, ArrowLeft, CheckCircle, X, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
@@ -54,10 +54,10 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
       if (value.trim().length < 3) error = "El nombre es requerido y debe tener al menos 3 caracteres";
     }
     if (name === "whatsapp_phone") {
-      if (value.trim().replace(/\D/g,'').length < 7) error = "El nÃºmero debe tener al menos 7 dÃ­gitos";
+      if (value.trim().replace(/\D/g,'').length < 7) error = "El número debe tener al menos 7 dígitos";
     }
     if (name === "country_code") {
-      if (!/^\+\d{1,4}$/.test(value.trim())) error = "CÃ³digo invÃ¡lido (ej: +591)";
+      if (!/^\+\d{1,4}$/.test(value.trim())) error = "Código inválido (ej: +591)";
     }
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
@@ -75,7 +75,7 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
       return;
     }
     if (items.length === 0) {
-      toast.error("Tu carrito estÃ¡ vacÃ­o");
+      toast.error("Tu carrito está vacío");
       return;
     }
 
@@ -120,7 +120,7 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
 
       const refNumber = response.data.reference_number || "DESCONOCIDO";
       let waNumber = response.data.whatsapp_number || "59157003312";
-      // Limpiar el nÃºmero de espacios, el signo +, guiones, etc. para que sea compatible con wa.me
+      // Limpiar el número de espacios, el signo +, guiones, etc. para que sea compatible con wa.me
       waNumber = waNumber.replace(/\D/g, ''); 
       
       const msg = `Hola VOXman, te escribe ${form.name} y quisiera coordinar la entrega de mi pedido por favor. este es mi codigo: ${refNumber}`;
@@ -221,7 +221,7 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
                 width: '100%'
               }}>
                 <p style={{ margin: 0, fontSize: '14px', color: warningText, fontWeight: '500', lineHeight: '1.5' }}>
-                  âš ï¸ <strong>IMPORTANTE:</strong> Debes enviar el mensaje de WhatsApp si quieres continuar con tu entrega. Si no envÃ­as el mensaje, no podrÃ¡s hacerlo de nuevo y perderÃ¡s el seguimiento.
+                  ⚠️ <strong>IMPORTANTE:</strong> Debes enviar el mensaje de WhatsApp si quieres continuar con tu entrega. Si no envías el mensaje, no podrás hacerlo de nuevo y perderás el seguimiento.
                 </p>
               </div>
 
@@ -264,7 +264,7 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
             <>
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                 <h2 style={{ margin: '0 0 4px 0', fontSize: '24px', fontWeight: '700', letterSpacing: '0.05em', color: textColor }}>
-                  COMPRA RÃPIDA
+                  COMPRA RÁPIDA
                 </h2>
                 <p style={{ margin: 0, color: mutedColor, fontSize: '14px' }}>
                   {step === 1 ? "Ingresa tus datos para continuar" : "Confirma tu orden"}
@@ -320,7 +320,7 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
                         <input
                           name="whatsapp_phone"
                           type="tel"
-                          placeholder="NÃºmero de WhatsApp"
+                          placeholder="Número de WhatsApp"
                           value={form.whatsapp_phone}
                           onChange={handleChange}
                           style={{ flex: 1, background: 'transparent', border: 'none', padding: '12px', color: textColor, fontSize: '15px', outline: 'none' }}
@@ -366,7 +366,7 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
                           <div style={{ flex: 1 }}>
                             <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: textColor, lineHeight: '1.2' }}>{item.name}</p>
                             <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: mutedColor }}>
-                              {item.color} {item.size ? `â€¢ Talla ${item.size}` : ''} â€¢ Cant: {item.quantity}
+                              {item.color} {item.size ? `• Talla ${item.size}` : ''} • Cant: {item.quantity}
                             </p>
                           </div>
                           <div style={{ textAlign: 'right' }}>

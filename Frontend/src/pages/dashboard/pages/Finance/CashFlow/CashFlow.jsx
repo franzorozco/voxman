@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Building, Banknote, CreditCard, RefreshCw, ArrowRightLeft, PlusCircle, Unlock, Lock, AlertCircle, TrendingUp } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getCashFlow } from "../../../../../api/admin/finance";
@@ -268,7 +268,7 @@ export default function CashFlow() {
                 <th style={{ padding: '12px 8px' }}>Fecha y Hora</th>
                 <th style={{ padding: '12px 8px' }}>Tipo</th>
                 <th style={{ padding: '12px 8px' }}>Sucursal</th>
-                <th style={{ padding: '12px 8px' }}>DescripciÃ³n</th>
+                <th style={{ padding: '12px 8px' }}>Descripción</th>
                 <th style={{ padding: '12px 8px', textAlign: 'right' }}>Monto (Bs.)</th>
               </tr>
             </thead>

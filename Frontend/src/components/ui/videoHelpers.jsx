@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../utils/imageUtils';
+import { getImageUrl } from '../../utils/imageUtils';
 import React from 'react';
 import { API_BASE_URL } from '../../config/api';
 

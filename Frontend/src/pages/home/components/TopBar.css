@@ -1,4 +1,4 @@
-﻿/* â”€â”€â”€ TopBar / Cintillo de anuncios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── TopBar / Cintillo de anuncios ─────────────────────────────── */
 
 .topbar {
   width: 100%;
@@ -152,7 +152,7 @@
   transform: translateY(-50%) scale(1.1);
 }
 
-/* â”€â”€â”€ Nuevos Efectos Visuales â”€â”€â”€ */
+/* ─── Nuevos Efectos Visuales ─── */
 
 .topbar--effect-border-glow {
   box-shadow: inset 0 3px 8px -1px currentColor, inset 0 -3px 8px -1px currentColor;
@@ -290,7 +290,7 @@
   100% { background-position: 100% 50%; }
 }
 
-/* â”€â”€â”€ Responsive â”€â”€â”€ */
+/* ─── Responsive ─── */
 @media (max-width: 768px) {
   .topbar {
     padding: 8px 16px;

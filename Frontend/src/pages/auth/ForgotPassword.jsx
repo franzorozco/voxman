@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { forgotPassword } from "../../api/admin/auth";
 import toast from "react-hot-toast";
@@ -40,14 +40,14 @@ export default function ForgotPassword() {
 
       <div className="register-card">
         <h2>VOXMAN</h2>
-        <p className="subtitle">Recuperar contraseÃ±a</p>
+        <p className="subtitle">Recuperar contraseña</p>
 
         {success ? (
           <div className="success-message" style={{ textAlign: 'center' }}>
             <CheckCircle size={48} color="#33d9b2" style={{ margin: '0 auto 16px' }} />
-            <span style={{ display: 'block', marginBottom: '8px' }}>Â¡Solicitud recibida!</span>
+            <span style={{ display: 'block', marginBottom: '8px' }}>¡Solicitud recibida!</span>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.5' }}>
-              Si <strong>{email}</strong> estÃ¡ registrado, recibirÃ¡s un enlace para restablecer tu contraseÃ±a. Revisa tu bandeja de entrada o carpeta de spam.
+              Si <strong>{email}</strong> está registrado, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada o carpeta de spam.
             </p>
             <button 
               className="auth-btn-primary" 
@@ -60,14 +60,14 @@ export default function ForgotPassword() {
         ) : (
           <form onSubmit={handleSubmit}>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px', lineHeight: '1.5', textAlign: 'center' }}>
-              Ingresa el correo electrÃ³nico asociado a tu cuenta y te enviaremos un enlace para restablecer tu contraseÃ±a.
+              Ingresa el correo electrónico asociado a tu cuenta y te enviaremos un enlace para restablecer tu contraseña.
             </p>
 
             <div className="input-group">
               <Mail size={18} className="input-icon" />
               <input
                 type="email"
-                placeholder="Correo electrÃ³nico"
+                placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -84,8 +84,8 @@ export default function ForgotPassword() {
             </button>
 
             <div className="auth-footer">
-              Â¿Recordaste tu contraseÃ±a?
-              <Link to="/login" className="auth-link">Inicia sesiÃ³n</Link>
+              ¿Recordaste tu contraseña?
+              <Link to="/login" className="auth-link">Inicia sesión</Link>
             </div>
           </form>
         )}

@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React from 'react';
 import { Printer, X } from 'lucide-react';
 import './ThermalReceiptModal.css';
@@ -46,7 +46,7 @@ export default function ThermalReceiptModal({ sale, onClose }) {
 
           <div className="receipt-info">
             <p><span>Fecha:</span> <span>{formatDate(sale.created_at)}</span></p>
-            <p><span>NÂ° Factura:</span> <span>{sale.invoice_number || sale.id.split('-')[0].toUpperCase()}</span></p>
+            <p><span>N° Factura:</span> <span>{sale.invoice_number || sale.id.split('-')[0].toUpperCase()}</span></p>
             <p><span>Vendedor:</span> <span>{sale.user?.profile?.first_name || 'Admin'}</span></p>
             <p><span>Cliente:</span> <span>{sale.customer?.user?.profile?.first_name ? `${sale.customer.user.profile.first_name} ${sale.customer.user.profile.last_name || ''}` : 'Consumidor Final'}</span></p>
           </div>
@@ -57,7 +57,7 @@ export default function ThermalReceiptModal({ sale, onClose }) {
             <thead>
               <tr>
                 <th className="receipt-item-qty">Cant</th>
-                <th className="receipt-item-desc">DescripciÃ³n</th>
+                <th className="receipt-item-desc">Descripción</th>
                 <th className="receipt-item-price">Total</th>
               </tr>
             </thead>
@@ -115,7 +115,7 @@ export default function ThermalReceiptModal({ sale, onClose }) {
                   <span>Descuento Global:</span>
                   <span style={{ fontSize: '10px', color: '#666' }}>
                     {sale.sale_applied_discounts?.filter(d => !d.sale_detail_id).map(d => d.discount?.code).filter(Boolean).join(', ') 
-                       ? `CupÃ³n: ${sale.sale_applied_discounts.filter(d => !d.sale_detail_id).map(d => d.discount?.code).filter(Boolean).join(', ')}`
+                       ? `Cupón: ${sale.sale_applied_discounts.filter(d => !d.sale_detail_id).map(d => d.discount?.code).filter(Boolean).join(', ')}`
                        : 'Manual / Giftcard'}
                   </span>
                 </span>
@@ -131,7 +131,7 @@ export default function ThermalReceiptModal({ sale, onClose }) {
           {sale.payments?.length > 0 && (
             <div className="receipt-payments">
               <div className="receipt-divider"></div>
-              <strong style={{ display: 'block', marginBottom: '6px' }}>MÃ‰TODOS DE PAGO:</strong>
+              <strong style={{ display: 'block', marginBottom: '6px' }}>MÉTODOS DE PAGO:</strong>
               {sale.payments.map((payment) => (
                 <div key={payment.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                   <span>{payment.payment_method?.name || 'Pago'} {payment.transaction_reference ? `(${payment.transaction_reference})` : ''}</span>
@@ -144,7 +144,7 @@ export default function ThermalReceiptModal({ sale, onClose }) {
           <div className="receipt-divider"></div>
           
           <div className="receipt-footer">
-            <p style={{ fontWeight: 'bold', margin: '0 0 4px 0' }}>Â¡Gracias por tu compra!</p>
+            <p style={{ fontWeight: 'bold', margin: '0 0 4px 0' }}>¡Gracias por tu compra!</p>
             <p style={{ margin: 0 }}>voxman.com</p>
           </div>
 

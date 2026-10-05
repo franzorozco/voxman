@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { X, ArrowRight } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { transferOwnerFunds } from "../../../../api/admin/finance";
@@ -62,7 +62,7 @@ export default function OwnerTransferModal({ transferData, onClose, onSuccess })
       }
 
       await transferOwnerFunds(payload);
-      toast.success("Transferencia registrada con Ã©xito");
+      toast.success("Transferencia registrada con éxito");
       onSuccess();
     } catch (error) {
       toast.error(error?.response?.data?.error || "Error al procesar transferencia");
@@ -100,7 +100,7 @@ export default function OwnerTransferModal({ transferData, onClose, onSuccess })
             <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>ORIGEN</label>
                 <CustomSelect name="from_fund" value={formData.from_fund} onChange={handleChange}  style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
-                    <option value="cash">Caja FÃ­sica (Tienda)</option>
+                    <option value="cash">Caja Física (Tienda)</option>
                     <option value="bank">Cuenta Bancaria (Marca)</option>
                 </CustomSelect>
             </div>
@@ -112,7 +112,7 @@ export default function OwnerTransferModal({ transferData, onClose, onSuccess })
                 <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>DESTINO</label>
                 <CustomSelect name="to_fund" value={formData.to_fund} onChange={handleChange}  style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '8px', padding: '10px', width: '100%', outline: 'none' }}>
                     <option value="bank">Cuenta Bancaria (Marca)</option>
-                    <option value="cash">Caja FÃ­sica (Tienda)</option>
+                    <option value="cash">Caja Física (Tienda)</option>
                 </CustomSelect>
             </div>
           </div>

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { createOwnerPayment } from "../../../../api/admin/finance";
 import { toast } from "react-hot-toast";
@@ -45,7 +45,7 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.amount || formData.amount <= 0) {
-      toast.error("Por favor, ingresa un monto vÃ¡lido mayor a 0.");
+      toast.error("Por favor, ingresa un monto válido mayor a 0.");
       return;
     }
     
@@ -129,7 +129,7 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
                 onChange={(e) => setFormData({ ...formData, fund_source: e.target.value })}
                 required
               >
-                <option value="cash">Caja FÃ­sica (Tienda)</option>
+                <option value="cash">Caja Física (Tienda)</option>
                 <option value="bank">Cuenta Bancaria</option>
               </CustomSelect>
             </div>
@@ -162,7 +162,7 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div className="form-group" style={{ margin: 0 }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>MÃ©todo de Pago</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Método de Pago</label>
                 <CustomSelect 
                    
                   value={formData.payment_method} 
@@ -177,7 +177,7 @@ export default function WithdrawModal({ isOpen, onClose, onSuccess, initialData 
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nro. Referencia (AutomÃ¡tico)</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nro. Referencia (Automático)</label>
                 <input type="text" className="form-control" value={formData.reference_number} readOnly style={{ backgroundColor: 'var(--bg-overlay)' }} />
               </div>
             </div>

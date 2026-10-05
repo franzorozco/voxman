@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Tag, Settings2, CalendarClock, Target, Zap } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Select from "react-select";
@@ -106,7 +106,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
         active: promotion.active !== undefined ? promotion.active : true,
         
         brands: promotion.brands ? promotion.brands.map(b => ({ value: b.id, label: b.name })) : [],
-        categories: promotion.categories ? promotion.categories.map(c => ({ value: c.id, label: c.name })) : (promotion.discount_categories ? promotion.discount_categories.map(dc => ({ value: dc.category_id, label: dc.category?.name || 'CategorÃ­a' })) : []),
+        categories: promotion.categories ? promotion.categories.map(c => ({ value: c.id, label: c.name })) : (promotion.discount_categories ? promotion.discount_categories.map(dc => ({ value: dc.category_id, label: dc.category?.name || 'Categoría' })) : []),
         branches: promotion.branches ? promotion.branches.map(b => ({ value: b.id, label: b.name })) : [],
         
         // These are now handled by AsyncSelect, so we store the {value, label} object array directly
@@ -161,10 +161,10 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
 
       if (promotion) {
         await updatePromotion(promotion.id, payload);
-        toast.success("PromociÃ³n actualizada");
+        toast.success("Promoción actualizada");
       } else {
         await createPromotion(payload);
-        toast.success("PromociÃ³n creada");
+        toast.success("Promoción creada");
       }
       onSuccess();
     } catch (error) {
@@ -287,7 +287,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
       <div className="modal" style={{ maxWidth: "1000px", width: "95%", height: isMobile ? "90vh" : "auto", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
         <h2 className="promo-modal-header" style={{ padding: isMobile ? "16px" : "20px 30px", borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Tag className="text-primary" size={24} />
-          {promotion ? "Editar PromociÃ³n" : "Nueva PromociÃ³n"}
+          {promotion ? "Editar Promoción" : "Nueva Promoción"}
           <button type="button" className="promo-modal-close-btn" style={{ marginLeft: 'auto' }} onClick={onClose}>
             <X size={20} />
           </button>
@@ -308,15 +308,15 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                 {/* Left Column: Basic Info & Limits */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   
-                  {/* Card 1: ConfiguraciÃ³n BÃ¡sica */}
+                  {/* Card 1: Configuración Básica */}
                   <div style={{ background: "var(--bg-card)", padding: isMobile ? "16px" : "24px", borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                      <Settings2 size={20} className="text-primary" /> ConfiguraciÃ³n Principal
+                      <Settings2 size={20} className="text-primary" /> Configuración Principal
                     </div>
                     
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                        <label>Nombre de la PromociÃ³n *</label>
+                        <label>Nombre de la Promoción *</label>
                         <input 
                           type="text" 
                           name="name" 
@@ -357,18 +357,18 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
 
                       {formData.type === 'percentage' && (
                         <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                          <label>LÃ­mite de Descuento (Monto MÃ¡ximo en Bs.)</label>
+                          <label>Límite de Descuento (Monto Máximo en Bs.)</label>
                           <input 
                             type="number" 
                             step="0.01"
                             name="max_discount_amount" 
                             value={formData.max_discount_amount} 
                             onChange={handleChange} 
-                            placeholder="Ej: 100 (Dejar vacÃ­o para no tener lÃ­mite)"
+                            placeholder="Ej: 100 (Dejar vacío para no tener límite)"
                             style={{ width: '100%', boxSizing: 'border-box' }}
                           />
                           <small className="promo-helper-text" style={{ fontSize: '11px', marginTop: '4px' }}>
-                            Establece un tope monetario mÃ¡ximo. Si el 50% de un producto de 1000 Bs es 500 Bs, pero el lÃ­mite es 100 Bs, el descuento serÃ¡ 100 Bs.
+                            Establece un tope monetario máximo. Si el 50% de un producto de 1000 Bs es 500 Bs, pero el límite es 100 Bs, el descuento será 100 Bs.
                           </small>
                         </div>
                       )}
@@ -379,7 +379,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                             <input type="checkbox" name="active" checked={formData.active} onChange={handleChange} className="promo-toggle-input" />
                             <span className="promo-toggle-slider"></span>
                           </label>
-                          <span className="promo-toggle-text">PromociÃ³n Activa</span>
+                          <span className="promo-toggle-text">Promoción Activa</span>
                         </div>
                         
                         <div className="promo-toggle-wrapper">
@@ -387,13 +387,13 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                             <input type="checkbox" name="is_automatic" checked={formData.is_automatic} onChange={handleChange} className="promo-toggle-input" />
                             <span className="promo-toggle-slider"></span>
                           </label>
-                          <span className="promo-toggle-text">Aplicar AutomÃ¡ticamente</span>
+                          <span className="promo-toggle-text">Aplicar Automáticamente</span>
                         </div>
                       </div>
 
                       {!formData.is_automatic && (
                         <div className="form-group" style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={14} className="text-primary"/> CÃ³digo del CupÃ³n *</label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={14} className="text-primary"/> Código del Cupón *</label>
                           <input 
                             type="text" 
                             name="code" 
@@ -412,21 +412,21 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                     </div>
                   </div>
 
-                  {/* Card 2: Condiciones y LÃ­mites */}
+                  {/* Card 2: Condiciones y Límites */}
                   <div style={{ background: "var(--bg-card)", padding: isMobile ? "16px" : "24px", borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                      <CalendarClock size={20} className="text-primary" /> Condiciones y LÃ­mites
+                      <CalendarClock size={20} className="text-primary" /> Condiciones y Límites
                     </div>
                     
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "16px" }}>
                       <div className="form-group">
-                        <label>Compra MÃ­nima (Bs)</label>
-                        <input type="number" step="0.01" name="min_purchase_amount" value={formData.min_purchase_amount} onChange={handleChange} placeholder="Sin mÃ­nimo" style={{ width: '100%', boxSizing: 'border-box' }} />
+                        <label>Compra Mínima (Bs)</label>
+                        <input type="number" step="0.01" name="min_purchase_amount" value={formData.min_purchase_amount} onChange={handleChange} placeholder="Sin mínimo" style={{ width: '100%', boxSizing: 'border-box' }} />
                       </div>
 
                       <div className="form-group">
-                        <label>Cant. MÃ­nima (Items)</label>
-                        <input type="number" name="min_quantity" value={formData.min_quantity} onChange={handleChange} placeholder="Sin mÃ­nimo" style={{ width: '100%', boxSizing: 'border-box' }} />
+                        <label>Cant. Mínima (Items)</label>
+                        <input type="number" name="min_quantity" value={formData.min_quantity} onChange={handleChange} placeholder="Sin mínimo" style={{ width: '100%', boxSizing: 'border-box' }} />
                       </div>
 
                       <div className="form-group">
@@ -440,12 +440,12 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                       </div>
 
                       <div className="form-group">
-                        <label>VÃ¡lido Desde</label>
+                        <label>Válido Desde</label>
                         <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} style={{ width: '100%', boxSizing: 'border-box', colorScheme: 'dark' }} />
                       </div>
 
                       <div className="form-group">
-                        <label>VÃ¡lido Hasta</label>
+                        <label>Válido Hasta</label>
                         <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} style={{ width: '100%', boxSizing: 'border-box', colorScheme: 'dark' }} />
                       </div>
                     </div>
@@ -457,10 +457,10 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   {/* Card 3: Filtros */}
                   <div style={{ background: "var(--bg-card)", padding: isMobile ? "16px" : "24px", borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', height: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--text-main)', fontWeight: 600, fontSize: '16px' }}>
-                      <Target size={20} className="text-primary" /> Objetivos EspecÃ­ficos (Filtros)
+                      <Target size={20} className="text-primary" /> Objetivos Específicos (Filtros)
                     </div>
                     <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--border-color)' }}>
-                      Si dejas estos campos vacÃ­os, el descuento se aplicarÃ¡ de forma global. Selecciona opciones especÃ­ficas para restringir la promociÃ³n.
+                      Si dejas estos campos vacíos, el descuento se aplicará de forma global. Selecciona opciones específicas para restringir la promoción.
                     </p>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -471,8 +471,8 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                       </div>
 
                       <div className="form-group">
-                        <label>CategorÃ­as</label>
-                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.categories} loadOptions={loadCategories} value={formData.categories} onChange={(selected) => setFormData({...formData, categories: selected || []})} placeholder="Buscar categorÃ­as..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
+                        <label>Categorías</label>
+                        <AsyncSelect isMulti cacheOptions defaultOptions={formData.categories} loadOptions={loadCategories} value={formData.categories} onChange={(selected) => setFormData({...formData, categories: selected || []})} placeholder="Buscar categorías..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
                       </div>
 
                       <div className="form-group">
@@ -481,7 +481,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                       </div>
 
                       <div className="form-group">
-                        <label>Productos EspecÃ­ficos</label>
+                        <label>Productos Específicos</label>
                         <AsyncSelect isMulti cacheOptions defaultOptions={formData.products} loadOptions={loadProducts} value={formData.products} onChange={(selected) => setFormData({...formData, products: selected || []})} placeholder="Buscar productos..." noOptionsMessage={() => "Escribe para buscar..."} styles={customStyles} menuPosition="fixed" />
                       </div>
 
@@ -511,7 +511,7 @@ export default function PromotionModal({ promotion, onClose, onSuccess }) {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary promo-btn-submit" disabled={loading} style={{ flex: 1, width: "100%", fontSize: "14px", height: "42px", fontWeight: 600 }}>
-                  {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Guardar PromociÃ³n"}
+                  {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Guardar Promoción"}
                 </button>
               </div>
             </>

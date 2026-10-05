@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { getRoles } from "../../../../api/admin/roles";
 import { restoreUser } from "../../../../api/admin/users";
@@ -62,14 +62,14 @@ export default function UserForm({ user, onClose, onSubmit }) {
   if (!form.username) {
     newErrors.username = "Username es obligatorio";
   } else if (!usernameRegex.test(form.username)) {
-    newErrors.username = "Solo letras, nÃºmeros y _ (sin espacios)";
+    newErrors.username = "Solo letras, números y _ (sin espacios)";
   }
 
   // PASSWORD
   if (!user && !form.password) {
     newErrors.password = "Password obligatorio";
   } else if (form.password && form.password.length < 6) {
-    newErrors.password = "MÃ­nimo 6 caracteres";
+    newErrors.password = "Mínimo 6 caracteres";
   }
 
   // NOMBRE
@@ -77,9 +77,9 @@ export default function UserForm({ user, onClose, onSubmit }) {
     newErrors.first_name = "Nombre obligatorio";
   }
 
-  // TELÃ‰FONO
+  // TELÉFONO
   if (form.phone && !phoneRegex.test(form.phone)) {
-    newErrors.phone = "Solo nÃºmeros";
+    newErrors.phone = "Solo números";
   }
 
   // FECHA
@@ -87,7 +87,7 @@ export default function UserForm({ user, onClose, onSubmit }) {
     if (form.birthdate > today) {
       newErrors.birthdate = "No puede ser futura";
     } else if (form.birthdate < minDate) {
-      newErrors.birthdate = "Fecha no vÃ¡lida";
+      newErrors.birthdate = "Fecha no válida";
     }
   }
 
@@ -100,7 +100,7 @@ export default function UserForm({ user, onClose, onSubmit }) {
   return Object.keys(newErrors).length === 0;
 };
 
-  // ðŸ”¹ cargar roles
+  // 🔹 cargar roles
   useEffect(() => {
     const loadRoles = async () => {
       try {
@@ -114,7 +114,7 @@ export default function UserForm({ user, onClose, onSubmit }) {
     loadRoles();
   }, []);
 
-  // ðŸ”¹ cargar usuario
+  // 🔹 cargar usuario
   useEffect(() => {
     if (user) {
       setForm({
@@ -157,7 +157,7 @@ export default function UserForm({ user, onClose, onSubmit }) {
   // Auto-generar username basado en nombres o email
   useEffect(() => {
     if (user && user.username) return; // Si estamos editando y ya tiene, no tocar
-    if (isUsernameTouched) return; // Si el usuario ya lo modificÃ³ a mano, no tocar
+    if (isUsernameTouched) return; // Si el usuario ya lo modificó a mano, no tocar
 
     let generatedUsername = "";
     
@@ -197,17 +197,17 @@ const validateField = (name, value) => {
   switch (name) {
     case "email":
       if (!value) return "Email es obligatorio";
-      if (!emailRegex.test(value)) return "Email no vÃ¡lido";
+      if (!emailRegex.test(value)) return "Email no válido";
       return "";
 
     case "username":
       if (!value) return "Username es obligatorio";
-      if (!usernameRegex.test(value)) return "Solo letras, nÃºmeros y _";
+      if (!usernameRegex.test(value)) return "Solo letras, números y _";
       return "";
 
     case "password":
       if (!user && !value) return "Password obligatorio";
-      if (value && value.length < 6) return "MÃ­nimo 6 caracteres";
+      if (value && value.length < 6) return "Mínimo 6 caracteres";
       return "";
 
     case "first_name":
@@ -215,7 +215,7 @@ const validateField = (name, value) => {
       return "";
 
     case "phone":
-      if (value && !phoneRegex.test(value)) return "Solo nÃºmeros";
+      if (value && !phoneRegex.test(value)) return "Solo números";
       return "";
 
     default:
@@ -268,16 +268,16 @@ const handleSubmit = async (e) => {
 
   } catch (error) {
 
-    // ðŸ”¥ ESTE ES EL BLOQUE CLAVE
+    // 🔥 ESTE ES EL BLOQUE CLAVE
     if (error.response?.status === 409) {
-      // ðŸ‘‰ NO es error real
-      // ðŸ‘‰ Users.jsx ya maneja el modal
+      // 👉 NO es error real
+      // 👉 Users.jsx ya maneja el modal
       return;
     }
 
     const data = error.response?.data;
 
-    // âŒ ERRORES REALES
+    // ❌ ERRORES REALES
     if (data?.field === "username") {
       setErrors((prev) => ({
         ...prev,
@@ -445,7 +445,7 @@ const handleSubmit = async (e) => {
             </div>
 
             <div className="form-group">
-              <label>TelÃ©fono</label>
+              <label>Teléfono</label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
                   name="phone_code"
@@ -458,7 +458,7 @@ const handleSubmit = async (e) => {
                   name="phone"
                   value={form.phone}
                   onChange={handleChange}
-                  placeholder="NÃºmero de telÃ©fono"
+                  placeholder="Número de teléfono"
                   className={errors.phone ? "input-error" : ""}
                   style={{ flex: 1 }}
                 />
@@ -479,7 +479,7 @@ const handleSubmit = async (e) => {
             </div>
 
             <div className="form-group">
-              <label>GÃ©nero</label>
+              <label>Género</label>
               <CustomSelect name="gender" value={form.gender} onChange={handleChange}>
                 <option value="">Seleccione</option>
                 <option value="male">Masculino</option>
@@ -568,11 +568,11 @@ const handleSubmit = async (e) => {
         {/* ================= CUSTOMER ================= */}
         {form.types.includes("customer") && (
           <div className="form-section">
-            <h3>InformaciÃ³n del Cliente</h3>
+            <h3>Información del Cliente</h3>
 
             <div className="form-grid">
               <div className="form-group">
-                <label>CÃ³digo</label>
+                <label>Código</label>
                 <input
                   name="customer_code"
                   value={form.customer_code}
@@ -596,11 +596,11 @@ const handleSubmit = async (e) => {
 
         {form.types.includes("employee") && (
           <div className="form-section">
-            <h3>InformaciÃ³n del Empleado</h3>
+            <h3>Información del Empleado</h3>
 
             <div className="form-grid">
               <div className="form-group">
-                <label>CÃ³digo</label>
+                <label>Código</label>
                 <input
                   name="employee_code"
                   value={form.employee_code}
@@ -636,7 +636,7 @@ const handleSubmit = async (e) => {
                   </div>
 
                   <div className="form-group">
-                    <label>% ComisiÃ³n</label>
+                    <label>% Comisión</label>
                     <input
                       type="number"
                       name="commission_percentage"
@@ -656,11 +656,11 @@ const handleSubmit = async (e) => {
           <h3>Roles</h3>
 
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', marginTop: '-4px' }}>
-            Selecciona los roles que determinarÃ¡n los permisos de este usuario en el sistema.
+            Selecciona los roles que determinarán los permisos de este usuario en el sistema.
           </p>
           <div className="roles-grid">
             {availableRoles.filter(role => {
-              if (form.types.length === 0) return false; // No mostrar roles si no se seleccionÃ³ tipo
+              if (form.types.length === 0) return false; // No mostrar roles si no se seleccionó tipo
               if (form.types.includes("owner") && !role.is_employee && !role.is_customer) return true;
               if (form.types.includes("customer") && role.is_customer) return true;
               if (form.types.includes("employee") && role.is_employee) return true;

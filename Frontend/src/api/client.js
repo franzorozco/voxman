@@ -1,4 +1,4 @@
-﻿import axios from "axios";
+import axios from "axios";
 import { API_URL } from "../config/api";
 import { usePosStore } from "../store/pos/usePosStore";
 
@@ -49,14 +49,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // 1. Limpiar estado de autenticaciÃ³n (Zustand)
-      // Importamos dinÃ¡micamente para evitar ciclos o usamos el local storage directo
+      // 1. Limpiar estado de autenticación (Zustand)
+      // Importamos dinámicamente para evitar ciclos o usamos el local storage directo
       // Pero mejor cargar el store
       import("../store/authStore").then((module) => {
         const logout = module.useAuthStore.getState().logout;
         if (logout) logout();
         
-        // 2. Solo redirigir si no estamos ya en /login y NO estamos en la tienda pÃºblica
+        // 2. Solo redirigir si no estamos ya en /login y NO estamos en la tienda pública
         const currentPath = window.location.pathname;
         if (currentPath !== "/login" && !currentPath.startsWith("/shop")) {
           window.location.href = "/login";

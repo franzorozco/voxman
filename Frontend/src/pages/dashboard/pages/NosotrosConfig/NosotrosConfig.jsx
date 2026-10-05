@@ -1,4 +1,4 @@
-﻿import "../HomeConfig/HomeConfig.css";
+import "../HomeConfig/HomeConfig.css";
 import "./NosotrosConfig.css";
 import React, { useState, useEffect } from "react";
 import { Save, Plus, Trash2, Edit2, ListOrdered, Image as ImageIcon, Layers, Eye, EyeOff, FileText, Users, Target } from "lucide-react";
@@ -18,7 +18,7 @@ const TABS = [
   { id: "hero", label: "Hero", icon: <ImageIcon size={15} /> },
   { id: "history", label: "Historia", icon: <FileText size={15} /> },
   { id: "founders", label: "Fundadores", icon: <Users size={15} /> },
-  { id: "mvp", label: "MisiÃ³n/VisiÃ³n", icon: <Target size={15} /> },
+  { id: "mvp", label: "Misión/Visión", icon: <Target size={15} /> },
   { id: "sections", label: "Secciones", icon: <Layers size={15} /> }
 ];
 
@@ -79,9 +79,9 @@ export default function NosotrosConfig() {
 
   // --- Handlers: Historia ---
   const storyParagraphs = getArraySetting("about_story_paragraphs", [
-    "VOXman no naciÃ³ en una sala de juntas. NaciÃ³ de conversaciones a altas horas de la noche...",
+    "VOXman no nació en una sala de juntas. Nació de conversaciones a altas horas de la noche...",
     "Esta marca es el reflejo vivo de nuestra historia...",
-    "No importa cuÃ¡ntas veces la vida se ponga difÃ­cil..."
+    "No importa cuántas veces la vida se ponga difícil..."
   ]);
   const addStoryParagraph = () => updateArraySetting("about_story_paragraphs", [...storyParagraphs, ""]);
   const updateStoryParagraph = (index, value) => {
@@ -96,8 +96,8 @@ export default function NosotrosConfig() {
 
   // --- Handlers: Fundadores ---
   const defaultFounders = [
-    { name: "Franz Orozco", role: "Desarrollo y VisiÃ³n EstratÃ©gica", text: "La lÃ³gica, el cÃ³digo...", image: "/system/global/Franz.jpg" },
-    { name: "Rous Vidal", role: "EstÃ©tica, Arte y DirecciÃ³n Visual", text: "El alma creativa...", image: "/system/global/Rous.jpg" }
+    { name: "Franz Orozco", role: "Desarrollo y Visión Estratégica", text: "La lógica, el código...", image: "/system/global/Franz.jpg" },
+    { name: "Rous Vidal", role: "Estética, Arte y Dirección Visual", text: "El alma creativa...", image: "/system/global/Rous.jpg" }
   ];
   const founders = getArraySetting("about_founders_list", defaultFounders);
   const addFounder = () => updateArraySetting("about_founders_list", [...founders, { name: "Nuevo", role: "", text: "", image: "" }]);
@@ -107,7 +107,7 @@ export default function NosotrosConfig() {
     updateArraySetting("about_founders_list", newArr);
   };
   const removeFounder = (index) => {
-    if(!window.confirm("Â¿Eliminar?")) return;
+    if(!window.confirm("¿Eliminar?")) return;
     const newArr = founders.filter((_, i) => i !== index);
     updateArraySetting("about_founders_list", newArr);
   };
@@ -125,7 +125,7 @@ export default function NosotrosConfig() {
   // --- Handlers: Valores ---
   const defaultValues = [
     { title: "Autenticidad", text: "No seguimos moldes...", icon: "Award" },
-    { title: "Calidad", text: "AtenciÃ³n obsesiva...", icon: "Star" },
+    { title: "Calidad", text: "Atención obsesiva...", icon: "Star" },
     { title: "Resiliencia", text: "Crecemos ante la adversidad...", icon: "Shield" }
   ];
   const valuesList = getArraySetting("about_values_list", defaultValues);
@@ -136,7 +136,7 @@ export default function NosotrosConfig() {
     updateArraySetting("about_values_list", newArr);
   };
   const removeValue = (index) => {
-    if(!window.confirm("Â¿Eliminar?")) return;
+    if(!window.confirm("¿Eliminar?")) return;
     const newArr = valuesList.filter((_, i) => i !== index);
     updateArraySetting("about_values_list", newArr);
   };
@@ -207,9 +207,9 @@ export default function NosotrosConfig() {
 
   const SECTION_KEYS = [
     { key: "about_section_hero_show", label: "Hero (Inicio)", desc: "El banner de bienvenida de Nosotros." },
-    { key: "about_section_history_show", label: "Nuestra Historia", desc: "La secciÃ³n que cuenta el origen de la marca." },
-    { key: "about_section_founders_show", label: "Los Fundadores", desc: "La cuadrÃ­cula con los fundadores/dueÃ±os." },
-    { key: "about_section_mvp_show", label: "MisiÃ³n, VisiÃ³n y Valores", desc: "Las tarjetas de misiÃ³n, visiÃ³n y los pilares." }
+    { key: "about_section_history_show", label: "Nuestra Historia", desc: "La sección que cuenta el origen de la marca." },
+    { key: "about_section_founders_show", label: "Los Fundadores", desc: "La cuadrícula con los fundadores/dueños." },
+    { key: "about_section_mvp_show", label: "Misión, Visión y Valores", desc: "Las tarjetas de misión, visión y los pilares." }
   ];
 
   return (
@@ -220,7 +220,7 @@ export default function NosotrosConfig() {
             <div className="hc-style-9">
               <Users size={18} />
             </div>
-            <h1 className="hc-style-10">ConfiguraciÃ³n Nosotros</h1>
+            <h1 className="hc-style-10">Configuración Nosotros</h1>
           </div>
           <p className="hc-style-11">
             Personaliza los textos, opciones y la historia de tu marca.
@@ -254,9 +254,9 @@ export default function NosotrosConfig() {
           ))}
         </div>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: SECTIONS
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "sections" && (
           <div className="hc-style-141">
             {SECTION_KEYS.map((s, idx) => {
@@ -282,28 +282,28 @@ export default function NosotrosConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: HERO
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "hero" && (
           <div>
             <div className="hc-style-14">
               <h3 className="hc-style-15">Textos Principales (Hero)</h3>
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TÃ­tulo</span>
-                  <input type="text" value={settings.about_hero_title ?? "MÃS QUE ROPA, UNA IDENTIDAD."} onChange={e => setSetting("about_hero_title", e.target.value)} className="hc-style-19" />
+                  <span className="hc-style-18">Título</span>
+                  <input type="text" value={settings.about_hero_title ?? "MÁS QUE ROPA, UNA IDENTIDAD."} onChange={e => setSetting("about_hero_title", e.target.value)} className="hc-style-19" />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">SubtÃ­tulo</span>
-                  <textarea rows={2} value={settings.about_hero_subtitle ?? "Forjados en la perseverancia. Construidos con pasiÃ³n."} onChange={e => setSetting("about_hero_subtitle", e.target.value)} className="hc-style-19 nc-textarea-resize" />
+                  <span className="hc-style-18">Subtítulo</span>
+                  <textarea rows={2} value={settings.about_hero_subtitle ?? "Forjados en la perseverancia. Construidos con pasión."} onChange={e => setSetting("about_hero_subtitle", e.target.value)} className="hc-style-19 nc-textarea-resize" />
                 </label>
               </div>
             </div>
             
             <div className="hc-style-14 nc-mt-20">
               <h3 className="hc-style-15">Video de Fondo</h3>
-              <p className="nc-text-muted-sm">Puedes poner un video de fondo. Si lo dejas vacÃ­o, serÃ¡ negro o usarÃ¡ el fondo predeterminado.</p>
+              <p className="nc-text-muted-sm">Puedes poner un video de fondo. Si lo dejas vacío, será negro o usará el fondo predeterminado.</p>
               {settings.about_hero_video ? (
                 <div 
                   onClick={() => setIsVideoModalOpen(true)}
@@ -371,7 +371,7 @@ export default function NosotrosConfig() {
               <div className="hc-style-16">
                 <div className="nc-grid-auto">
                   <label className="hc-style-17">
-                    <span className="hc-style-18">Color de SuperposiciÃ³n</span>
+                    <span className="hc-style-18">Color de Superposición</span>
                     <div className="nc-color-input-wrapper">
                       <input type="color" value={settings.about_hero_overlay_color || "#000000"} onChange={e => setSetting("about_hero_overlay_color", e.target.value)} className="nc-color-picker" />
                       <input type="text" value={settings.about_hero_overlay_color || "#000000"} onChange={e => setSetting("about_hero_overlay_color", e.target.value)} className="hc-style-19 nc-flex-1" />
@@ -387,9 +387,9 @@ export default function NosotrosConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: HISTORY
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "history" && (
           <div>
             <div className="hc-style-14">
@@ -397,24 +397,24 @@ export default function NosotrosConfig() {
               <div className="hc-style-16">
                 <div className="nc-grid-2">
                   <label className="hc-style-17">
-                    <span className="hc-style-18">Sobre-tÃ­tulo</span>
+                    <span className="hc-style-18">Sobre-título</span>
                     <input type="text" value={settings.about_story_overline ?? "El Origen"} onChange={e => setSetting("about_story_overline", e.target.value)} className="hc-style-19" />
                   </label>
                   <label className="hc-style-17">
-                    <span className="hc-style-18">TÃ­tulo Principal</span>
-                    <input type="text" value={settings.about_story_title ?? "El Inicio de un SueÃ±o"} onChange={e => setSetting("about_story_title", e.target.value)} className="hc-style-19" />
+                    <span className="hc-style-18">Título Principal</span>
+                    <input type="text" value={settings.about_story_title ?? "El Inicio de un Sueño"} onChange={e => setSetting("about_story_title", e.target.value)} className="hc-style-19" />
                   </label>
                 </div>
 
                 <div className="nc-mt-20">
-                  <h4 className="hc-style-18 nc-mb-10">PÃ¡rrafos de la Historia</h4>
+                  <h4 className="hc-style-18 nc-mb-10">Párrafos de la Historia</h4>
                   {storyParagraphs.map((p, i) => (
                     <div key={i} className="nc-paragraph-row">
                       <textarea rows={2} value={p} onChange={e => updateStoryParagraph(i, e.target.value)} className="hc-style-19 nc-textarea-flex" />
                       <button onClick={() => removeStoryParagraph(i)} className="nc-btn-icon-danger"><Trash2 size={18} /></button>
                     </div>
                   ))}
-                  <button onClick={addStoryParagraph} className="nc-btn-add"><Plus size={14} /> AÃ±adir PÃ¡rrafo</button>
+                  <button onClick={addStoryParagraph} className="nc-btn-add"><Plus size={14} /> Añadir Párrafo</button>
                 </div>
               </div>
             </div>
@@ -423,14 +423,14 @@ export default function NosotrosConfig() {
               <h3 className="hc-style-15">Tarjeta de Promesa (Derecha)</h3>
               <div className="hc-style-16 nc-grid-promise">
                 <div>
-                  <label className="hc-style-18 nc-block nc-mb-8">Ãcono</label>
+                  <label className="hc-style-18 nc-block nc-mb-8">Ícono</label>
                   <div onClick={() => openIconPicker({ type: 'story' })} className="nc-icon-box">
                     {renderIcon(settings.about_story_card_icon || "Heart", 22)}
                   </div>
                 </div>
                 <div className="nc-flex-col-15">
                   <label className="hc-style-17">
-                    <span className="hc-style-18">TÃ­tulo de Tarjeta</span>
+                    <span className="hc-style-18">Título de Tarjeta</span>
                     <input type="text" value={settings.about_story_card_title ?? "Nuestra Promesa"} onChange={e => setSetting("about_story_card_title", e.target.value)} className="hc-style-19" />
                   </label>
                   <label className="hc-style-17">
@@ -443,32 +443,32 @@ export default function NosotrosConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: FOUNDERS
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "founders" && (
           <div>
             <div className="hc-style-14 nc-mb-20">
-              <h3 className="hc-style-15">Textos de SecciÃ³n</h3>
+              <h3 className="hc-style-15">Textos de Sección</h3>
               <div className="hc-style-16 nc-grid-auto">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Sobre-tÃ­tulo</span>
+                  <span className="hc-style-18">Sobre-título</span>
                   <input type="text" value={settings.about_founders_overline ?? "Los Creadores"} onChange={e => setSetting("about_founders_overline", e.target.value)} className="hc-style-19" />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TÃ­tulo</span>
+                  <span className="hc-style-18">Título</span>
                   <input type="text" value={settings.about_founders_title ?? "Quienes Somos"} onChange={e => setSetting("about_founders_title", e.target.value)} className="hc-style-19" />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">SubtÃ­tulo</span>
-                  <input type="text" value={settings.about_founders_subtitle ?? "Dos mentes, un solo corazÃ³n..."} onChange={e => setSetting("about_founders_subtitle", e.target.value)} className="hc-style-19" />
+                  <span className="hc-style-18">Subtítulo</span>
+                  <input type="text" value={settings.about_founders_subtitle ?? "Dos mentes, un solo corazón..."} onChange={e => setSetting("about_founders_subtitle", e.target.value)} className="hc-style-19" />
                 </label>
               </div>
             </div>
 
             <div className="nc-header-between">
               <h3 className="hc-style-21 nc-m-0">Listado de Fundadores / Equipo</h3>
-              <button onClick={addFounder} className="nc-btn-add-primary"><Plus size={16} /> AÃ±adir Persona</button>
+              <button onClick={addFounder} className="nc-btn-add-primary"><Plus size={16} /> Añadir Persona</button>
             </div>
 
             {founders.map((f, index) => (
@@ -484,7 +484,7 @@ export default function NosotrosConfig() {
                 <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
                   {/* Left: Image */}
                   <div className="hc-style-17" style={{ flexShrink: 0 }}>
-                    <span className="hc-style-18">FotografÃ­a</span>
+                    <span className="hc-style-18">Fotografía</span>
                     <div 
                       onClick={() => setSelectingFounderImage(index)}
                       style={{
@@ -545,7 +545,7 @@ export default function NosotrosConfig() {
                       </label>
                     </div>
                     <label className="hc-style-17" style={{ flex: 1 }}>
-                      <span className="hc-style-18">DescripciÃ³n</span>
+                      <span className="hc-style-18">Descripción</span>
                       <textarea rows={3} value={f.text || ""} onChange={e => updateFounder(index, "text", e.target.value)} className="hc-style-19 nc-textarea-flex" style={{ minHeight: "84px" }} />
                     </label>
                   </div>
@@ -555,33 +555,33 @@ export default function NosotrosConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: MVP
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "mvp" && (
           <div>
             <div className="hc-style-14 nc-mb-20">
-              <h3 className="hc-style-15">MisiÃ³n y VisiÃ³n</h3>
+              <h3 className="hc-style-15">Misión y Visión</h3>
               <div className="hc-style-16 nc-grid-mvp">
                 {/* Mision */}
                 <div>
-                  <h4 className="nc-mvp-title">MisiÃ³n</h4>
+                  <h4 className="nc-mvp-title">Misión</h4>
                   <div className="nc-flex-gap-15-mb">
                     <div onClick={() => openIconPicker({ type: 'mission' })} className="nc-icon-box-sm">
                       {renderIcon(settings.about_mvp_mission_icon || "Target", 20)}
                     </div>
-                    <input type="text" value={settings.about_mvp_mission_title ?? "Nuestra MisiÃ³n"} onChange={e => setSetting("about_mvp_mission_title", e.target.value)} className="hc-style-19" />
+                    <input type="text" value={settings.about_mvp_mission_title ?? "Nuestra Misión"} onChange={e => setSetting("about_mvp_mission_title", e.target.value)} className="hc-style-19" />
                   </div>
-                  <textarea rows={3} value={settings.about_mvp_mission_text ?? "Ofrecer mÃ¡s que prendas..."} onChange={e => setSetting("about_mvp_mission_text", e.target.value)} className="hc-style-19 nc-textarea-resize" />
+                  <textarea rows={3} value={settings.about_mvp_mission_text ?? "Ofrecer más que prendas..."} onChange={e => setSetting("about_mvp_mission_text", e.target.value)} className="hc-style-19 nc-textarea-resize" />
                 </div>
                 {/* Vision */}
                 <div>
-                  <h4 className="nc-mvp-title">VisiÃ³n</h4>
+                  <h4 className="nc-mvp-title">Visión</h4>
                   <div className="nc-flex-gap-15-mb">
                     <div onClick={() => openIconPicker({ type: 'vision' })} className="nc-icon-box-sm">
                       {renderIcon(settings.about_mvp_vision_icon || "Compass", 20)}
                     </div>
-                    <input type="text" value={settings.about_mvp_vision_title ?? "Nuestra VisiÃ³n"} onChange={e => setSetting("about_mvp_vision_title", e.target.value)} className="hc-style-19" />
+                    <input type="text" value={settings.about_mvp_vision_title ?? "Nuestra Visión"} onChange={e => setSetting("about_mvp_vision_title", e.target.value)} className="hc-style-19" />
                   </div>
                   <textarea rows={3} value={settings.about_mvp_vision_text ?? "Posicionarnos como referente..."} onChange={e => setSetting("about_mvp_vision_text", e.target.value)} className="hc-style-19 nc-textarea-resize" />
                 </div>
@@ -591,14 +591,14 @@ export default function NosotrosConfig() {
             <div className="hc-style-14 nc-mb-20">
               <h3 className="hc-style-15">Textos de Valores / Pilares</h3>
               <div className="hc-style-16 nc-grid-2">
-                <label className="hc-style-17"><span className="hc-style-18">Sobre-tÃ­tulo</span><input type="text" value={settings.about_values_overline ?? "La Esencia"} onChange={e => setSetting("about_values_overline", e.target.value)} className="hc-style-19" /></label>
-                <label className="hc-style-17"><span className="hc-style-18">TÃ­tulo</span><input type="text" value={settings.about_values_title ?? "Nuestros Pilares"} onChange={e => setSetting("about_values_title", e.target.value)} className="hc-style-19" /></label>
+                <label className="hc-style-17"><span className="hc-style-18">Sobre-título</span><input type="text" value={settings.about_values_overline ?? "La Esencia"} onChange={e => setSetting("about_values_overline", e.target.value)} className="hc-style-19" /></label>
+                <label className="hc-style-17"><span className="hc-style-18">Título</span><input type="text" value={settings.about_values_title ?? "Nuestros Pilares"} onChange={e => setSetting("about_values_title", e.target.value)} className="hc-style-19" /></label>
               </div>
             </div>
 
             <div className="nc-header-between">
               <h3 className="hc-style-21 nc-m-0">Listado de Valores</h3>
-              <button onClick={addValue} className="nc-btn-add-primary"><Plus size={16} /> AÃ±adir Valor</button>
+              <button onClick={addValue} className="nc-btn-add-primary"><Plus size={16} /> Añadir Valor</button>
             </div>
 
             {valuesList.map((v, index) => (
@@ -614,8 +614,8 @@ export default function NosotrosConfig() {
                     {renderIcon(v.icon || "Star", 22)}
                   </div>
                   <div className="nc-flex-col-15-flex1">
-                    <label className="hc-style-17"><span className="hc-style-18">TÃ­tulo del Valor</span><input type="text" value={v.title || ""} onChange={e => updateValue(index, "title", e.target.value)} className="hc-style-19" /></label>
-                    <label className="hc-style-17"><span className="hc-style-18">DescripciÃ³n</span><textarea rows={2} value={v.text || ""} onChange={e => updateValue(index, "text", e.target.value)} className="hc-style-19 nc-textarea-resize" /></label>
+                    <label className="hc-style-17"><span className="hc-style-18">Título del Valor</span><input type="text" value={v.title || ""} onChange={e => updateValue(index, "title", e.target.value)} className="hc-style-19" /></label>
+                    <label className="hc-style-17"><span className="hc-style-18">Descripción</span><textarea rows={2} value={v.text || ""} onChange={e => updateValue(index, "text", e.target.value)} className="hc-style-19 nc-textarea-resize" /></label>
                   </div>
                 </div>
               </div>
@@ -625,7 +625,7 @@ export default function NosotrosConfig() {
 
       </div>
 
-      {/* â”€â”€ Floating Save Bar â”€â”€ */}
+      {/* ── Floating Save Bar ── */}
       {dirty.size > 0 && <div className="hc-style-147">
           <div className="hc-style-148">
             <span className="hc-style-85">

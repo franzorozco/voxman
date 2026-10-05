@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Search, User, MapPin } from "lucide-react";
 import { searchGuests } from "../../../../api/admin/guests";
 import GuestDetails from "./GuestDetails";
@@ -57,7 +57,7 @@ export default function GuestHistorySearchModal({ onClose }) {
             <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               type="text" 
-              placeholder="Buscar por nÃºmero de WhatsApp o nombre..." 
+              placeholder="Buscar por número de WhatsApp o nombre..." 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               style={{ width: '100%', padding: '16px 16px 16px 48px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '15px', outline: 'none' }}

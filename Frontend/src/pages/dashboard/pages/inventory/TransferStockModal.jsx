@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { transferStock } from "../../../../api/admin/inventory";
 import toast from "react-hot-toast";
 import { X, ArrowRight, ArrowLeft } from "lucide-react";
@@ -23,7 +23,7 @@ export default function TransferStockModal({ item, branches, onClose, onSuccess,
     }
     
     if (formData.quantity > item.stock) {
-      toast.error("No puedes transferir mÃ¡s del stock disponible.");
+      toast.error("No puedes transferir más del stock disponible.");
       return;
     }
 

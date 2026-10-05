@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Store, MapPin, Truck, Home, ArrowLeft, MapIcon, Loader2, Navigation, Calendar, Plus } from "lucide-react";
 import { getDeliveryBranches, getDeliveryZones, addDeliveryAddress } from "../../api/shop/auth";
 import { getImageUrl } from "../../utils/imageUtils";
@@ -75,9 +75,9 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
   const activeBorder = "#c9a227"; 
 
   const deliveryMethods = [
-    { id: "pickup", title: "Recojo en sucursal", description: "Recoge tu pedido personalmente en nuestra tienda fÃ­sica.", icon: Store, settingKey: "delivery_pickup" },
-    { id: "meetup", title: "Encuentro en punto definido", description: "Acordamos un lugar cÃ©ntrico para entregarte tu pedido.", icon: MapPin, settingKey: "delivery_scheduled_point" },
-    { id: "national", title: "EnvÃ­o a nivel nacional", description: "EnvÃ­os a todo el paÃ­s mediante encomienda.", icon: Truck, settingKey: "delivery_national" },
+    { id: "pickup", title: "Recojo en sucursal", description: "Recoge tu pedido personalmente en nuestra tienda física.", icon: Store, settingKey: "delivery_pickup" },
+    { id: "meetup", title: "Encuentro en punto definido", description: "Acordamos un lugar céntrico para entregarte tu pedido.", icon: MapPin, settingKey: "delivery_scheduled_point" },
+    { id: "national", title: "Envío a nivel nacional", description: "Envíos a todo el país mediante encomienda.", icon: Truck, settingKey: "delivery_national" },
     { id: "delivery", title: "Delivery a hogar", description: "Recibe tu pedido directamente en la puerta de tu casa.", icon: Home, settingKey: "delivery_home" }
   ].filter(m => settings[m.settingKey] !== "false");
 
@@ -133,7 +133,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
           ...prev, city: city || prev.city, state: state || prev.state, country: country || prev.country,
           street: street || prev.street, zone: zone || prev.zone,
         }));
-        toast.success("DirecciÃ³n autocompletada");
+        toast.success("Dirección autocompletada");
       }
     });
   };
@@ -161,13 +161,13 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
       detailData = { zone_id: z.id, city: z.city, zone_name: z.name, base_cost: z.base_cost };
     } else if (selectedMethod === 'national') {
       if (!nationalForm.destination || !nationalForm.company || !nationalForm.date) {
-        return toast.error("Por favor completa los detalles del envÃ­o");
+        return toast.error("Por favor completa los detalles del envío");
       }
-      finalSelection = `EnvÃ­o a nivel nacional (Destino: ${nationalForm.destination}, Empresa: ${nationalForm.company}, Fecha: ${nationalForm.date})`;
+      finalSelection = `Envío a nivel nacional (Destino: ${nationalForm.destination}, Empresa: ${nationalForm.company}, Fecha: ${nationalForm.date})`;
       detailData = { ...nationalForm };
     } else if (selectedMethod === 'delivery') {
       if (isAddingAddress) {
-        if (!markerPos) return toast.error("Por favor marca tu ubicaciÃ³n en el mapa");
+        if (!markerPos) return toast.error("Por favor marca tu ubicación en el mapa");
         if (!addressForm.street) return toast.error("La calle/avenida es requerida");
         
         try {
@@ -179,10 +179,10 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
           detailData = { address_id: res.data?.address?.id, ...payload };
         } catch (error) {
           setLoading(false);
-          return toast.error(error.response?.data?.message || "Error al guardar la direcciÃ³n");
+          return toast.error(error.response?.data?.message || "Error al guardar la dirección");
         }
       } else {
-        if (!selectedAddress) return toast.error("Selecciona una direcciÃ³n de entrega");
+        if (!selectedAddress) return toast.error("Selecciona una dirección de entrega");
         const a = addresses.find(x => x.id === selectedAddress);
         finalSelection = `Delivery a hogar (${a.street}, ${a.zone || a.city})`;
         detailData = { address_id: a.id, city: a.city, zone: a.zone, street: a.street, latitude: a.latitude, longitude: a.longitude };
@@ -216,7 +216,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
               <img src={getImageUrl(b.image)} alt={b.name} style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} />
               <div>
                 <h4 style={{ margin: '0 0 4px 0', color: textColor, fontSize: '15px' }}>{b.name}</h4>
-                <p style={{ margin: '0 0 2px 0', color: mutedColor, fontSize: '13px' }}>{b.address || 'Sin direcciÃ³n registrada'}</p>
+                <p style={{ margin: '0 0 2px 0', color: mutedColor, fontSize: '13px' }}>{b.address || 'Sin dirección registrada'}</p>
                 {b.phone && <p style={{ margin: 0, color: mutedColor, fontSize: '12px' }}>Tel: {b.phone}</p>}
               </div>
             </div>
@@ -276,10 +276,10 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: mutedColor }}>Empresa de envÃ­o preferida</label>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: mutedColor }}>Empresa de envío preferida</label>
             <div style={{ position: 'relative' }}>
               <Truck size={16} color={mutedColor} style={{ position: 'absolute', left: '12px', top: '14px' }} />
-              <input type="text" placeholder="Ej: Flota Copacabana, Boliviana de AviaciÃ³n..." style={{...inputStyle, paddingLeft: '36px'}} value={nationalForm.company} onChange={e => setNationalForm({...nationalForm, company: e.target.value})} />
+              <input type="text" placeholder="Ej: Flota Copacabana, Boliviana de Aviación..." style={{...inputStyle, paddingLeft: '36px'}} value={nationalForm.company} onChange={e => setNationalForm({...nationalForm, company: e.target.value})} />
             </div>
           </div>
           <div>
@@ -330,7 +330,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
                 padding: '12px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s'
               }}
             >
-              <Plus size={16} /> AÃ±adir nueva ubicaciÃ³n
+              <Plus size={16} /> Añadir nueva ubicación
             </button>
           </div>
         );
@@ -344,7 +344,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
             </button>
           )}
           
-          <p style={{ margin: 0, fontSize: '13px', color: mutedColor }}>1. Toca el mapa para indicar dÃ³nde quieres recibir tu pedido.</p>
+          <p style={{ margin: 0, fontSize: '13px', color: mutedColor }}>1. Toca el mapa para indicar dónde quieres recibir tu pedido.</p>
           <div style={{ borderRadius: '12px', overflow: 'hidden', border: `1px solid ${borderColor}`, position: 'relative', flexShrink: 0, height: '300px', minHeight: '300px' }}>
             <GoogleMapWrapper 
               mapContainerStyle={{ width: '100%', height: '100%' }} 
@@ -358,7 +358,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
             {!markerPos && (
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.1)' }}>
                 <span style={{ background: modalBg, color: textColor, padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '500', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
-                  Selecciona una ubicaciÃ³n
+                  Selecciona una ubicación
                 </span>
               </div>
             )}
@@ -418,7 +418,7 @@ export default function CheckoutDeliveryModal({ isOpen, onClose, onSuccess, user
                 {step === 1 ? "Tipo de Entrega" : deliveryMethods.find(m => m.id === selectedMethod)?.title}
               </h2>
               <p style={{ margin: '4px 0 0 0', color: mutedColor, fontSize: '14px' }}>
-                {step === 1 ? "Â¿CÃ³mo prefieres recibir tu pedido?" : "Completa los detalles de entrega"}
+                {step === 1 ? "¿Cómo prefieres recibir tu pedido?" : "Completa los detalles de entrega"}
               </p>
             </div>
           </div>

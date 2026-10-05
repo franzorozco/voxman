@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload, Link as LinkIcon, Image as ImageIcon, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -25,7 +25,7 @@ export default function FounderImagePickerModal({ isOpen, onClose, onSelect, cur
           });
           setGallery(res.data.data || []);
         } catch (e) {
-          toast.error("Error al cargar la galerÃ­a de imÃ¡genes");
+          toast.error("Error al cargar la galería de imágenes");
         } finally {
           setLoading(false);
         }
@@ -41,7 +41,7 @@ export default function FounderImagePickerModal({ isOpen, onClose, onSelect, cur
     if (!file) return;
 
     if (file.size > 50 * 1024 * 1024) {
-      toast.error("La imagen es muy grande. MÃ¡ximo 50MB");
+      toast.error("La imagen es muy grande. Máximo 50MB");
       return;
     }
 
@@ -94,7 +94,7 @@ export default function FounderImagePickerModal({ isOpen, onClose, onSelect, cur
           {[
             { id: "upload", label: "Subir desde PC", icon: <Upload size={14} /> },
             { id: "url", label: "Pegar URL", icon: <LinkIcon size={14} /> },
-            { id: "gallery", label: "GalerÃ­a de Variantes", icon: <ImageIcon size={14} /> }
+            { id: "gallery", label: "Galería de Variantes", icon: <ImageIcon size={14} /> }
           ].map(t => (
             <button
               key={t.id}
@@ -203,11 +203,11 @@ export default function FounderImagePickerModal({ isOpen, onClose, onSelect, cur
               
               {loading ? (
                 <div className="hc-style-77">
-                  Cargando galerÃ­a...
+                  Cargando galería...
                 </div>
               ) : filteredGallery.length === 0 ? (
                 <div className="hc-style-77">
-                  No se encontraron imÃ¡genes.
+                  No se encontraron imágenes.
                 </div>
               ) : (
                 <div className="hc-style-78" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))' }}>

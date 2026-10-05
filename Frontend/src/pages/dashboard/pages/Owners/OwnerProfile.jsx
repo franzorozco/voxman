@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Wallet, Package, TrendingUp, TrendingDown, DollarSign, PlusCircle, MinusCircle, UserCircle2 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -63,8 +63,8 @@ export default function OwnerProfile() {
             <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 4px 0', color: 'var(--text-main)', lineHeight: '1.2' }}>{fullName}</h1>
             <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '14px', display: 'flex', flexWrap: 'wrap', gap: '4px 8px' }}>
               <span>{owner.user?.email}</span>
-              <span>â€¢</span>
-              <span>{profile.phone || "Sin telÃ©fono"}</span>
+              <span>•</span>
+              <span>{profile.phone || "Sin teléfono"}</span>
             </p>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function OwnerProfile() {
                 {/* CASH */}
                 <div style={{ marginBottom: '16px', background: 'var(--bg-overlay)', padding: '12px', borderRadius: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>Caja FÃ­sica (Billetes)</span>
+                    <span style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>Caja Física (Billetes)</span>
                     <span style={{ fontWeight: 'bold', color: b.cash.net_liquidity >= 0 ? '#22c55e' : '#ef4444' }}>
                       Bs. {b.cash.net_liquidity.toFixed(2)}
                     </span>
@@ -237,7 +237,7 @@ export default function OwnerProfile() {
                   <th>Fecha</th>
                   <th>Tipo</th>
                   <th>Monto</th>
-                  <th>MÃ©todo</th>
+                  <th>Método</th>
                   <th>Ref / Notas</th>
                   <th>Estado</th>
                 </tr>
@@ -259,7 +259,7 @@ export default function OwnerProfile() {
                         )}
                       </td>
                       <td data-label="Monto" style={{ fontWeight: 600 }}>Bs. {(parseFloat(payment.amount) || parseFloat(payment.total_amount) || 0).toFixed(2)}</td>
-                      <td data-label="MÃ©todo">{payment.fund_source === 'cash' ? 'Caja Fuerte' : 'Banco'}</td>
+                      <td data-label="Método">{payment.fund_source === 'cash' ? 'Caja Fuerte' : 'Banco'}</td>
                       <td data-label="Ref / Notas">
                         <div style={{ fontSize: '13px' }}>{payment.reference_number || '-'}</div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{payment.notes}</div>
@@ -287,7 +287,7 @@ export default function OwnerProfile() {
       {activeTab === 'products' && (
         <div className="table-card">
           <div className="table-header">
-            <h3>CatÃ¡logo Propio</h3>
+            <h3>Catálogo Propio</h3>
           </div>
           <div className="table-responsive">
             <table className="reports-table">

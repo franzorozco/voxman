@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { Search, Filter, RefreshCw, Eye, Undo2, DollarSign, PackageOpen, MoreVertical } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";

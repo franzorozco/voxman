@@ -1,4 +1,4 @@
-﻿import "../HomeConfig/HomeConfig.css";
+import "../HomeConfig/HomeConfig.css";
 import "./EntregasConfig.css";
 import React, { useState, useEffect } from "react";
 import CustomSelect from "../../../../components/ui/CustomSelect";
@@ -14,7 +14,7 @@ import { URL_BASE_VIDEOS } from "../../../../config/api";
 
 const TABS = [
   { id: "hero", label: "Hero (Inicio)", icon: <ImageIcon size={15} /> },
-  { id: "options", label: "Opciones de EnvÃ­o", icon: <MapPin size={15} /> },
+  { id: "options", label: "Opciones de Envío", icon: <MapPin size={15} /> },
   { id: "process", label: "Proceso (Pasos)", icon: <ListOrdered size={15} /> },
   { id: "sections", label: "Secciones", icon: <Layers size={15} /> }
 ];
@@ -75,25 +75,25 @@ export default function EntregasConfig() {
     setSetting(key, JSON.stringify(array));
   };
 
-  // --- Handlers para Opciones de EnvÃ­o ---
+  // --- Handlers para Opciones de Envío ---
   const defaultDelivery = [
     {
       title: "La Paz y El Alto",
       desc: "Entregas personales y coordinadas. Nos adaptamos a tus horarios y definimos un punto de encuentro o entrega a domicilio.",
       icon: "MapPin",
-      features: "Entregas en 24h a 48h hÃ¡biles.\nPago contra entrega disponible."
+      features: "Entregas en 24h a 48h hábiles.\nPago contra entrega disponible."
     },
     {
-      title: "EnvÃ­os Nacionales",
+      title: "Envíos Nacionales",
       desc: "Llegamos a los 9 departamentos de Bolivia mediante flotas seguras y empresas de courier de confianza.",
       icon: "Truck",
-      features: "Despachos en 24h hÃ¡biles.\nEmpaque premium y seguro."
+      features: "Despachos en 24h hábiles.\nEmpaque premium y seguro."
     }
   ];
   const deliveryMethods = getArraySetting("shipping_delivery_methods", defaultDelivery);
   
   const addDeliveryMethod = () => {
-    const newArr = [...deliveryMethods, { title: "Nueva OpciÃ³n", desc: "", icon: "Truck", features: "" }];
+    const newArr = [...deliveryMethods, { title: "Nueva Opción", desc: "", icon: "Truck", features: "" }];
     updateArraySetting("shipping_delivery_methods", newArr);
   };
 
@@ -104,7 +104,7 @@ export default function EntregasConfig() {
   };
 
   const removeDeliveryMethod = (index) => {
-    if(!window.confirm("Â¿Eliminar esta opciÃ³n?")) return;
+    if(!window.confirm("¿Eliminar esta opción?")) return;
     const newArr = deliveryMethods.filter((_, i) => i !== index);
     updateArraySetting("shipping_delivery_methods", newArr);
   };
@@ -122,9 +122,9 @@ export default function EntregasConfig() {
 
   // --- Handlers para Proceso ---
   const defaultProcess = [
-    { title: "Eliges y Confirmas", desc: "Realizas tu pedido a travÃ©s de nuestra web o WhatsApp. Te confirmamos el stock inmediatamente." },
-    { title: "Empaque y PreparaciÃ³n", desc: "Preparamos tu orden con nuestra firma de empaque premium, asegurando que tu prenda llegue impecable." },
-    { title: "Despacho y Seguimiento", desc: "Coordinamos la entrega o realizamos el envÃ­o nacional. Te enviamos la guÃ­a o el comprobante para que sepas dÃ³nde estÃ¡ tu compra." }
+    { title: "Eliges y Confirmas", desc: "Realizas tu pedido a través de nuestra web o WhatsApp. Te confirmamos el stock inmediatamente." },
+    { title: "Empaque y Preparación", desc: "Preparamos tu orden con nuestra firma de empaque premium, asegurando que tu prenda llegue impecable." },
+    { title: "Despacho y Seguimiento", desc: "Coordinamos la entrega o realizamos el envío nacional. Te enviamos la guía o el comprobante para que sepas dónde está tu compra." }
   ];
   const processSteps = getArraySetting("shipping_process_steps", defaultProcess);
   
@@ -140,7 +140,7 @@ export default function EntregasConfig() {
   };
 
   const removeProcessStep = (index) => {
-    if(!window.confirm("Â¿Eliminar este paso?")) return;
+    if(!window.confirm("¿Eliminar este paso?")) return;
     const newArr = processSteps.filter((_, i) => i !== index);
     updateArraySetting("shipping_process_steps", newArr);
   };
@@ -184,7 +184,7 @@ export default function EntregasConfig() {
       }
       toast.success(`Configuraciones guardadas`);
       setDirty(new Set());
-      // Forzar recarga en el store pÃºblico para que los cambios se vean sin presionar F5
+      // Forzar recarga en el store público para que los cambios se vean sin presionar F5
       fetchPublicSettings(true);
     } catch (e) {
       toast.error("Error al guardar algunos cambios");
@@ -211,28 +211,28 @@ export default function EntregasConfig() {
 
   const SECTION_KEYS = [
     { key: "shipping_section_hero_show", label: "Hero (Inicio)", desc: "El banner de video o imagen con texto animado." },
-    { key: "shipping_section_methods_show", label: "Opciones de EnvÃ­o", desc: "La cuadrÃ­cula con los mÃ©todos de entrega disponibles." },
-    { key: "shipping_section_process_show", label: "Proceso (Pasos)", desc: "La lista de pasos o tarjetitas de cÃ³mo funciona la compra." }
+    { key: "shipping_section_methods_show", label: "Opciones de Envío", desc: "La cuadrícula con los métodos de entrega disponibles." },
+    { key: "shipping_section_process_show", label: "Proceso (Pasos)", desc: "La lista de pasos o tarjetitas de cómo funciona la compra." }
   ];
 
   return (
     <div className={`${theme} hc-style-5`}>
       <div className="hc-style-6">
         
-        {/* â”€â”€ Header â”€â”€ */}
+        {/* ── Header ── */}
         <div className="hc-style-7">
           <div className="hc-style-8">
             <div className="hc-style-9">
               <Truck size={18} />
             </div>
-            <h1 className="hc-style-10">ConfiguraciÃ³n de Entregas</h1>
+            <h1 className="hc-style-10">Configuración de Entregas</h1>
           </div>
           <p className="hc-style-11">
-            Personaliza los textos, opciones y pasos de la pÃ¡gina pÃºblica de entregas y envÃ­os.
+            Personaliza los textos, opciones y pasos de la página pública de entregas y envíos.
           </p>
         </div>
 
-        {/* â”€â”€ Tabs â”€â”€ */}
+        {/* ── Tabs ── */}
         <div className="hc-style-12">
           {TABS.map(t => (
             <button
@@ -245,9 +245,9 @@ export default function EntregasConfig() {
           ))}
         </div>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: SECTIONS
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "sections" && (
           <div className="hc-style-141">
             {SECTION_KEYS.map((s, idx) => {
@@ -276,9 +276,9 @@ export default function EntregasConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: HERO
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "hero" && (
           <div>
             <div className="hc-style-14">
@@ -286,21 +286,21 @@ export default function EntregasConfig() {
               
               <div className="ec-grid-2 ec-mb-20">
                 <div>
-                  <label className="hc-style-18 ec-block ec-mb-8">Ãcono Principal</label>
+                  <label className="hc-style-18 ec-block ec-mb-8">Ícono Principal</label>
                   <div className="ec-relative">
                     <div 
                       onClick={() => openIconPicker({ type: 'hero' })}
                       className="ec-icon-btn-lg"
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
-                      title="Clic para cambiar Ã­cono"
+                      title="Clic para cambiar ícono"
                     >
-                      {settings.shipping_hero_icon ? renderIcon(settings.shipping_hero_icon, 28) : <span className="ec-empty-icon">Sin Ãcono</span>}
+                      {settings.shipping_hero_icon ? renderIcon(settings.shipping_hero_icon, 28) : <span className="ec-empty-icon">Sin Ícono</span>}
                     </div>
                     {settings.shipping_hero_icon && (
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSetting("shipping_hero_icon", ""); }}
-                        title="Quitar Ãcono"
+                        title="Quitar Ícono"
                         className="ec-btn-remove-icon"
                       >
                         <Icons.X size={14} strokeWidth={3} />
@@ -322,7 +322,7 @@ export default function EntregasConfig() {
                       {settings.shipping_hero_video ? (
                         <video src={settings.shipping_hero_video.startsWith('http') ? settings.shipping_hero_video : `${URL_BASE_VIDEOS}/${settings.shipping_hero_video}`} className="ec-video-preview" muted />
                       ) : (
-                        <span className="ec-empty-icon">AÃ±adir Video</span>
+                        <span className="ec-empty-icon">Añadir Video</span>
                       )}
                     </div>
                     {settings.shipping_hero_video && (
@@ -340,7 +340,7 @@ export default function EntregasConfig() {
 
               <div className="hc-style-16">
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TÃ­tulo Principal (Opcional)</span>
+                  <span className="hc-style-18">Título Principal (Opcional)</span>
                   <input
                     type="text"
                     value={settings.shipping_hero_title || ""}
@@ -348,11 +348,11 @@ export default function EntregasConfig() {
                     onFocus={e => e.target.style.borderColor = "var(--color-primary)"}
                     onBlur={e => e.target.style.borderColor = "var(--border-color)"}
                     className="hc-style-19"
-                    placeholder="Ej: LLEGAMOS DONDE TÃš ESTÃ‰S. (DÃ©jalo en blanco para ocultar)"
+                    placeholder="Ej: LLEGAMOS DONDE TÚ ESTÉS. (Déjalo en blanco para ocultar)"
                   />
                 </label>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">SubtÃ­tulo (Opcional)</span>
+                  <span className="hc-style-18">Subtítulo (Opcional)</span>
                   <input
                     type="text"
                     value={settings.shipping_hero_subtitle || ""}
@@ -360,14 +360,14 @@ export default function EntregasConfig() {
                     onFocus={e => e.target.style.borderColor = "var(--color-primary)"}
                     onBlur={e => e.target.style.borderColor = "var(--border-color)"}
                     className="hc-style-19"
-                    placeholder="Ej: EnvÃ­os rÃ¡pidos, seguros... (DÃ©jalo en blanco para ocultar)"
+                    placeholder="Ej: Envíos rápidos, seguros... (Déjalo en blanco para ocultar)"
                   />
                 </label>
               </div>
             </div>
 
             <div className="hc-style-14 ec-mt-20">
-              <h3 className="hc-style-15">Ajustes de DiseÃ±o Visual</h3>
+              <h3 className="hc-style-15">Ajustes de Diseño Visual</h3>
               
               <div className="ec-grid-auto ec-mb-20">
                 {/* Opacidad del Video */}
@@ -391,7 +391,7 @@ export default function EntregasConfig() {
 
                 {/* Color del Overlay */}
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Color de SuperposiciÃ³n</span>
+                  <span className="hc-style-18">Color de Superposición</span>
                   <div className="ec-flex-center">
                     <input
                       type="color"
@@ -421,9 +421,9 @@ export default function EntregasConfig() {
                   </div>
                 </label>
 
-                {/* AlineaciÃ³n Vertical */}
+                {/* Alineación Vertical */}
                 <label className="hc-style-17">
-                  <span className="hc-style-18">AlineaciÃ³n Vertical</span>
+                  <span className="hc-style-18">Alineación Vertical</span>
                   <CustomSelect
                     value={settings.shipping_hero_align_v || "center"}
                     onChange={e => setSetting("shipping_hero_align_v", e.target.value)}
@@ -435,9 +435,9 @@ export default function EntregasConfig() {
                   </CustomSelect>
                 </label>
 
-                {/* AlineaciÃ³n Horizontal */}
+                {/* Alineación Horizontal */}
                 <label className="hc-style-17">
-                  <span className="hc-style-18">AlineaciÃ³n Horizontal</span>
+                  <span className="hc-style-18">Alineación Horizontal</span>
                   <CustomSelect
                     value={settings.shipping_hero_align_h || "center"}
                     onChange={e => setSetting("shipping_hero_align_h", e.target.value)}
@@ -449,30 +449,30 @@ export default function EntregasConfig() {
                   </CustomSelect>
                 </label>
 
-                {/* TamaÃ±o TÃ­tulo */}
+                {/* Tamaño Título */}
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TamaÃ±o del TÃ­tulo</span>
+                  <span className="hc-style-18">Tamaño del Título</span>
                   <CustomSelect
                     value={settings.shipping_hero_title_size || "md"}
                     onChange={e => setSetting("shipping_hero_title_size", e.target.value)}
                     className="ec-cursor-pointer"
                   >
-                    <option value="sm">PequeÃ±o</option>
+                    <option value="sm">Pequeño</option>
                     <option value="md">Normal</option>
                     <option value="lg">Grande</option>
                     <option value="xl">Extra Grande</option>
                   </CustomSelect>
                 </label>
 
-                {/* TamaÃ±o SubtÃ­tulo */}
+                {/* Tamaño Subtítulo */}
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TamaÃ±o del SubtÃ­tulo</span>
+                  <span className="hc-style-18">Tamaño del Subtítulo</span>
                   <CustomSelect
                     value={settings.shipping_hero_subtitle_size || "md"}
                     onChange={e => setSetting("shipping_hero_subtitle_size", e.target.value)}
                     className="ec-cursor-pointer"
                   >
-                    <option value="sm">PequeÃ±o</option>
+                    <option value="sm">Pequeño</option>
                     <option value="md">Normal</option>
                     <option value="lg">Grande</option>
                   </CustomSelect>
@@ -481,7 +481,7 @@ export default function EntregasConfig() {
             </div>
 
             <div className="hc-style-14 ec-mt-20">
-              <h3 className="hc-style-15">Indicador de Scroll (AnimaciÃ³n)</h3>
+              <h3 className="hc-style-15">Indicador de Scroll (Animación)</h3>
               
               <div className="ec-grid-auto ec-mb-20">
                 {/* Mostrar Indicador */}
@@ -492,28 +492,28 @@ export default function EntregasConfig() {
                     onChange={e => setSetting("shipping_hero_scroll_show", e.target.value)}
                     className="ec-cursor-pointer"
                   >
-                    <option value="1">SÃ­, Mostrar</option>
+                    <option value="1">Sí, Mostrar</option>
                     <option value="0">No, Ocultar</option>
                   </CustomSelect>
                 </label>
 
-                {/* Tipo de AnimaciÃ³n */}
+                {/* Tipo de Animación */}
                 <label className="hc-style-17">
-                  <span className="hc-style-18">Tipo de AnimaciÃ³n</span>
+                  <span className="hc-style-18">Tipo de Animación</span>
                   <CustomSelect
                     value={settings.shipping_hero_scroll_type || "mouse"}
                     onChange={e => setSetting("shipping_hero_scroll_type", e.target.value)}
                     className="ec-cursor-pointer"
                   >
-                    <option value="mouse">RatÃ³n Scrolleando (ClÃ¡sico)</option>
+                    <option value="mouse">Ratón Scrolleando (Clásico)</option>
                     <option value="arrow">Flecha Rebotando</option>
                     <option value="dot">Punto Parpadeante</option>
                   </CustomSelect>
                 </label>
 
-                {/* PosiciÃ³n */}
+                {/* Posición */}
                 <label className="hc-style-17">
-                  <span className="hc-style-18">PosiciÃ³n en Pantalla</span>
+                  <span className="hc-style-18">Posición en Pantalla</span>
                   <CustomSelect
                     value={settings.shipping_hero_scroll_pos || "bottom_center"}
                     onChange={e => setSetting("shipping_hero_scroll_pos", e.target.value)}
@@ -528,15 +528,15 @@ export default function EntregasConfig() {
                   </CustomSelect>
                 </label>
 
-                {/* TamaÃ±o */}
+                {/* Tamaño */}
                 <label className="hc-style-17">
-                  <span className="hc-style-18">TamaÃ±o</span>
+                  <span className="hc-style-18">Tamaño</span>
                   <CustomSelect
                     value={settings.shipping_hero_scroll_size || "md"}
                     onChange={e => setSetting("shipping_hero_scroll_size", e.target.value)}
                     className="ec-cursor-pointer"
                   >
-                    <option value="sm">PequeÃ±o</option>
+                    <option value="sm">Pequeño</option>
                     <option value="md">Normal</option>
                     <option value="lg">Grande</option>
                   </CustomSelect>
@@ -562,24 +562,24 @@ export default function EntregasConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: OPTIONS
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "options" && (
           <div>
             <div className="ec-header-between">
               <p className="hc-style-11 ec-m-0">Opciones de entrega disponibles para los clientes.</p>
               <button onClick={addDeliveryMethod} className="ec-btn-add">
-                <Plus size={16} /> AÃ±adir OpciÃ³n
+                <Plus size={16} /> Añadir Opción
               </button>
             </div>
 
             <div className="hc-style-14 ec-mb-20">
-              <h3 className="hc-style-15">Textos y AnimaciÃ³n de la SecciÃ³n</h3>
+              <h3 className="hc-style-15">Textos y Animación de la Sección</h3>
               <div className="hc-style-16">
                 <div className="ec-grid-auto-15">
                   <label className="hc-style-17">
-                    <span className="hc-style-18">Sobre-tÃ­tulo (PequeÃ±o)</span>
+                    <span className="hc-style-18">Sobre-título (Pequeño)</span>
                     <input
                       type="text"
                       value={settings.shipping_methods_overline ?? "Nuestras Rutas"}
@@ -588,7 +588,7 @@ export default function EntregasConfig() {
                     />
                   </label>
                   <label className="hc-style-17">
-                    <span className="hc-style-18">TÃ­tulo Principal</span>
+                    <span className="hc-style-18">Título Principal</span>
                     <input
                       type="text"
                       value={settings.shipping_methods_title ?? "Opciones de Entrega"}
@@ -597,7 +597,7 @@ export default function EntregasConfig() {
                     />
                   </label>
                   <label className="hc-style-17">
-                    <span className="hc-style-18">Estilo de AnimaciÃ³n</span>
+                    <span className="hc-style-18">Estilo de Animación</span>
                     <CustomSelect
                       value={settings.shipping_methods_animation || "fade-up"}
                       onChange={e => setSetting("shipping_methods_animation", e.target.value)}
@@ -611,10 +611,10 @@ export default function EntregasConfig() {
                   </label>
                 </div>
                 <label className="hc-style-17">
-                  <span className="hc-style-18">SubtÃ­tulo</span>
+                  <span className="hc-style-18">Subtítulo</span>
                   <input
                     type="text"
-                    value={settings.shipping_methods_subtitle ?? "DiseÃ±adas para adaptarse a tu ritmo y a tu ubicaciÃ³n."}
+                    value={settings.shipping_methods_subtitle ?? "Diseñadas para adaptarse a tu ritmo y a tu ubicación."}
                     onChange={e => setSetting("shipping_methods_subtitle", e.target.value)}
                     className="hc-style-19"
                   />
@@ -642,30 +642,30 @@ export default function EntregasConfig() {
                   </button>
                 </div>
                 
-                <h3 className="hc-style-15">OpciÃ³n {index + 1}</h3>
+                <h3 className="hc-style-15">Opción {index + 1}</h3>
                 
                 <div className="ec-grid-icon-title">
                   <div>
-                    <label className="hc-style-18 ec-block ec-mb-8">Ãcono</label>
+                    <label className="hc-style-18 ec-block ec-mb-8">Ícono</label>
                     <div 
                       onClick={() => openIconPicker({ type: 'option', index })}
                       className="ec-icon-btn-sm"
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
-                      title="Clic para cambiar Ã­cono"
+                      title="Clic para cambiar ícono"
                     >
                       {renderIcon(method.icon || "MapPin", 22)}
                     </div>
                   </div>
                   <div className="hc-style-16 ec-flex-col-center">
                     <label className="hc-style-17">
-                      <span className="hc-style-18">TÃ­tulo</span>
+                      <span className="hc-style-18">Título</span>
                       <input
                         type="text"
                         value={method.title || ""}
                         onChange={e => updateDeliveryMethod(index, "title", e.target.value)}
                         className="hc-style-19"
-                        placeholder="Ej: EnvÃ­os Nacionales"
+                        placeholder="Ej: Envíos Nacionales"
                       />
                     </label>
                   </div>
@@ -673,7 +673,7 @@ export default function EntregasConfig() {
 
                 <div className="ec-flex-col">
                   <label className="hc-style-17">
-                    <span className="hc-style-18">DescripciÃ³n</span>
+                    <span className="hc-style-18">Descripción</span>
                     <textarea
                       rows={2}
                       value={method.desc || ""}
@@ -683,7 +683,7 @@ export default function EntregasConfig() {
                     />
                   </label>
                   <label className="hc-style-17">
-                    <span className="hc-style-18">CaracterÃ­sticas adicionales (Una por lÃ­nea)</span>
+                    <span className="hc-style-18">Características adicionales (Una por línea)</span>
                     <textarea
                       rows={3}
                       value={method.features || ""}
@@ -698,24 +698,24 @@ export default function EntregasConfig() {
           </div>
         )}
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        {/* ══════════════════════════════
              TAB: PROCESS
-         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+         ══════════════════════════════ */}
         {activeTab === "process" && (
           <div>
             <div className="ec-header-between">
-              <p className="hc-style-11 ec-m-0">Pasos del proceso de compra y envÃ­o.</p>
+              <p className="hc-style-11 ec-m-0">Pasos del proceso de compra y envío.</p>
               <button onClick={addProcessStep} className="ec-btn-add">
-                <Plus size={16} /> AÃ±adir Paso
+                <Plus size={16} /> Añadir Paso
               </button>
             </div>
 
             <div className="hc-style-14 ec-mb-20">
-              <h3 className="hc-style-15">Textos, Layout y AnimaciÃ³n de la SecciÃ³n</h3>
+              <h3 className="hc-style-15">Textos, Layout y Animación de la Sección</h3>
               <div className="hc-style-16">
                 <div className="ec-grid-auto-15">
                   <label className="hc-style-17">
-                    <span className="hc-style-18">Sobre-tÃ­tulo (PequeÃ±o)</span>
+                    <span className="hc-style-18">Sobre-título (Pequeño)</span>
                     <input
                       type="text"
                       value={settings.shipping_process_overline ?? "Paso a Paso"}
@@ -724,16 +724,16 @@ export default function EntregasConfig() {
                     />
                   </label>
                   <label className="hc-style-17">
-                    <span className="hc-style-18">TÃ­tulo Principal</span>
+                    <span className="hc-style-18">Título Principal</span>
                     <input
                       type="text"
-                      value={settings.shipping_process_title ?? "Â¿CÃ³mo es el proceso?"}
+                      value={settings.shipping_process_title ?? "¿Cómo es el proceso?"}
                       onChange={e => setSetting("shipping_process_title", e.target.value)}
                       className="hc-style-19"
                     />
                   </label>
                   <label className="hc-style-17">
-                    <span className="hc-style-18">Estilo de AnimaciÃ³n</span>
+                    <span className="hc-style-18">Estilo de Animación</span>
                     <CustomSelect
                       value={settings.shipping_process_animation || "fade-left"}
                       onChange={e => setSetting("shipping_process_animation", e.target.value)}
@@ -752,7 +752,7 @@ export default function EntregasConfig() {
                       onChange={e => setSetting("shipping_process_layout", e.target.value)}
                       className="ec-cursor-pointer"
                     >
-                      <option value="list">Lista Vertical (ClÃ¡sica)</option>
+                      <option value="list">Lista Vertical (Clásica)</option>
                       <option value="cards">Tarjetas en Grilla</option>
                     </CustomSelect>
                   </label>
@@ -784,17 +784,17 @@ export default function EntregasConfig() {
                 
                 <div className="ec-flex-col">
                   <label className="hc-style-17">
-                    <span className="hc-style-18">TÃ­tulo del Paso</span>
+                    <span className="hc-style-18">Título del Paso</span>
                     <input
                       type="text"
                       value={step.title || ""}
                       onChange={e => updateProcessStep(index, "title", e.target.value)}
                       className="hc-style-19"
-                      placeholder="Ej: Empaque y PreparaciÃ³n"
+                      placeholder="Ej: Empaque y Preparación"
                     />
                   </label>
                   <label className="hc-style-17">
-                    <span className="hc-style-18">DescripciÃ³n</span>
+                    <span className="hc-style-18">Descripción</span>
                     <textarea
                       rows={2}
                       value={step.desc || ""}
@@ -833,14 +833,14 @@ export default function EntregasConfig() {
 
       </div>
 
-      {/* â”€â”€ Icon Picker Modal â”€â”€ */}
+      {/* ── Icon Picker Modal ── */}
       <IconPickerModal 
         isOpen={isIconModalOpen}
         onClose={() => setIsIconModalOpen(false)}
         onSelect={handleSelectIcon}
       />
 
-      {/* â”€â”€ Video Picker Modal â”€â”€ */}
+      {/* ── Video Picker Modal ── */}
       <VideoPickerModal
         isOpen={isVideoModalOpen}
         onClose={() => setIsVideoModalOpen(false)}
@@ -848,7 +848,7 @@ export default function EntregasConfig() {
         onSelect={(url) => setSetting("shipping_hero_video", url)}
       />
 
-      {/* â”€â”€ Floating Save Bar â”€â”€ */}
+      {/* ── Floating Save Bar ── */}
       {dirty.size > 0 && (
         <div className="hc-style-147">
           <div className="hc-style-148">

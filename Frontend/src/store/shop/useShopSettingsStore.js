@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 
@@ -18,7 +18,7 @@ export const useShopSettingsStore = create((set, get) => ({
     } catch (error) {
       console.error('Error fetching settings:', error);
       set({
-        error: error?.response?.data?.message ?? error?.message ?? 'Error al cargar la configuraciÃ³n.',
+        error: error?.response?.data?.message ?? error?.message ?? 'Error al cargar la configuración.',
       });
     } finally {
       set({ loading: false });

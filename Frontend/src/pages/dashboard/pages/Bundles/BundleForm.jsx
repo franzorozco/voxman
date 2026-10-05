@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../../utils/imageUtils';
+import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Camera } from "lucide-react";
 import AsyncSelect from "react-select/async";
@@ -126,7 +126,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
         const mainImage = p.product_images?.find(img => img.is_main)?.url || p.product_images?.[0]?.url;
         const imageUrl = mainImage ? (mainImage.startsWith('http') ? mainImage : getImageUrl(mainImage)) : null;
 
-        // OpciÃ³n de elegir el producto completo (dinÃ¡mico)
+        // Opción de elegir el producto completo (dinámico)
         const productCost = p.product_variants?.length > 0 ? parseFloat(p.product_variants[0].cost || 0) : 0;
         options.push({ 
           value: p.id, 
@@ -139,7 +139,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
           attributesText: ''
         });
         
-        // OpciÃ³n de elegir variantes especÃ­ficas (fijo)
+        // Opción de elegir variantes específicas (fijo)
         if (p.product_variants) {
           p.product_variants.forEach(v => {
             let variantImage = v.variant_images?.[0]?.url;
@@ -309,7 +309,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                 base_price: calculateTotal(newItems).toFixed(2)
             };
         });
-        toast.success(`+1 aÃ±adido: ${v.sku}`);
+        toast.success(`+1 añadido: ${v.sku}`);
       } else {
         toast.error(`SKU ${code} no encontrado`);
       }
@@ -456,7 +456,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
           
           {/* Columna Izquierda: Info Principal */}
           <div className="form-info-col">
-            <h3 className="bfm-section-title">InformaciÃ³n del Conjunto</h3>
+            <h3 className="bfm-section-title">Información del Conjunto</h3>
             <div className="bfm-form-grid">
               <div className="form-group">
                 <label>Nombre del Conjunto</label>
@@ -505,7 +505,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                     return (
                       <div className={`bfm-margin-box ${margin >= 0 ? 'margin-positive' : 'margin-negative'}`}>
                         <div className="bfm-margin-col">
-                          <span className="bfm-margin-lbl">Costo Total Ãtems</span>
+                          <span className="bfm-margin-lbl">Costo Total Ítems</span>
                           <span className="bfm-margin-val">Bs. {totalCost.toFixed(2)}</span>
                         </div>
                         <div className="bfm-margin-col bfm-margin-col-right">
@@ -523,7 +523,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
 
               <div className="bundle-form-row-grid">
                 <div className="form-group">
-                  <label>CategorÃ­a <span className="bfm-optional-label">(Opcional)</span></label>
+                  <label>Categoría <span className="bfm-optional-label">(Opcional)</span></label>
                   <CustomSelect  value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
                     <option value="">Seleccione...</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -540,12 +540,12 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
               </div>
 
               <div className="form-group">
-                <label>DescripciÃ³n</label>
+                <label>Descripción</label>
                 <textarea className="form-control" rows="3" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })}></textarea>
               </div>
 
               <div className="form-group">
-                <label>ImÃ¡genes del Conjunto</label>
+                <label>Imágenes del Conjunto</label>
                 <div className="bfm-custom-upload-zone">
                   <input 
                     type="file" 
@@ -567,7 +567,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                       <div className="bfm-upload-icon-wrapper">
                         <Camera size={32} />
                       </div>
-                      <span className="bfm-upload-text">Haz clic para aÃ±adir imagen</span>
+                      <span className="bfm-upload-text">Haz clic para añadir imagen</span>
                       <span className="bfm-upload-subtext">JPG, PNG o WEBP</span>
                     </label>
                   )}
@@ -576,9 +576,9 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
             </div>
           </div>
 
-          {/* Columna Derecha: Ãtems del Conjunto */}
+          {/* Columna Derecha: Ítems del Conjunto */}
           <div className="form-items-col">
-            <h3 className="bfm-section-title">Ãtems del Conjunto</h3>
+            <h3 className="bfm-section-title">Ítems del Conjunto</h3>
             <p className="bfm-section-desc">Selecciona Productos (el cliente elige talla/color) o Variantes (talla/color fijo).</p>
 
             <div className="bundle-items-cards">
@@ -590,7 +590,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                   
                   {/* Select Header */}
                   <div className="bfm-item-header">
-                     <label className="bfm-item-label">Ãtem {index + 1}</label>
+                     <label className="bfm-item-label">Ítem {index + 1}</label>
                      <AsyncSelect
                         className="bundle-item-select"
                         styles={selectStyles}
@@ -621,7 +621,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                         <div className="bfm-item-details-wrapper">
                           <div className="bfm-item-details-grid">
                             <div>
-                              <span>SKU / CÃ³d.</span>
+                              <span>SKU / Cód.</span>
                               <strong>{item.selectOption.sku || 'N/A'}</strong>
                             </div>
                             <div>
@@ -635,7 +635,7 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
                           </div>
                           
                           <div className="bfm-item-cost">
-                            <span>Costo Interno (FÃ¡brica)</span>
+                            <span>Costo Interno (Fábrica)</span>
                             <strong>Bs. {parseFloat(item.selectOption.cost || 0).toFixed(2)}</strong>
                           </div>
                         </div>
@@ -661,13 +661,13 @@ export default function BundleForm({ bundle, categories, owners, productTypes, o
 
             <div className="bfm-add-actions">
               <button type="button" className="btn-add-item bfm-add-btn" onClick={handleAddItem}>
-                <Plus size={18} /> Agregar Ãtem Manual
+                <Plus size={18} /> Agregar Ítem Manual
               </button>
               <button
                 type="button"
                 className="bfm-scanner-btn"
                 onClick={() => openScanner(processScannedCode, true)}
-                title="Escanear Ãtem"
+                title="Escanear Ítem"
               >
                 <Camera size={20} />
               </button>

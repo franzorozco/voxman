@@ -1,4 +1,4 @@
-﻿import api from "../client";
+import api from "../client";
 
 export const loginShopUser = (data) => api.post("/login", data);
 export const registerShopUser = (data) => api.post("/register", data);

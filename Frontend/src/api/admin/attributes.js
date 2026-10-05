@@ -1,4 +1,4 @@
-﻿// services/attributes.js
+// services/attributes.js
 
 import api from "../client";
 

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Ruler, Save, Edit2, Copy } from "lucide-react";
 import api from "../../../../api/client";
 import { updateProductMeasurements } from "../../../../api/admin/products";
@@ -152,12 +152,12 @@ export default function MeasurementsModal({ product, onClose, onSaved }) {
           <div>
             <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px", fontSize: "1.2rem", fontWeight: "600" }}>
               <Ruler size={20} className="text-primary" />
-              Medidas FÃ­sicas: {product.name}
+              Medidas Físicas: {product.name}
             </h2>
             <p style={{ margin: "5px 0 0 0", fontSize: "0.85rem", color: "var(--text-muted)" }}>
               {isEditing 
-                ? "Ingresa los centÃ­metros exactos de las prendas para el almacÃ©n y control de tallas."
-                : "CatÃ¡logo de medidas fÃ­sicas actuales para todas las variantes."}
+                ? "Ingresa los centímetros exactos de las prendas para el almacén y control de tallas."
+                : "Catálogo de medidas físicas actuales para todas las variantes."}
             </p>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}>
@@ -171,15 +171,15 @@ export default function MeasurementsModal({ product, onClose, onSaved }) {
             <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>Cargando esquema de medidas...</div>
           ) : requiredMeasurements.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px" }}>
-              <div style={{ fontSize: "3rem", marginBottom: "15px" }}>ðŸ¤·â€â™‚ï¸</div>
+              <div style={{ fontSize: "3rem", marginBottom: "15px" }}>🤷‍♂️</div>
               <h3 style={{ margin: 0, fontWeight: 500, color: "var(--text-main)" }}>Sin Medidas Requeridas</h3>
               <p style={{ color: "var(--text-muted)", marginTop: "10px" }}>
-                El Tipo de Producto ("{product.product_type?.name}") no tiene medidas asociadas. Ve a ConfiguraciÃ³n de CatÃ¡logo para agregarle medidas si es necesario.
+                El Tipo de Producto ("{product.product_type?.name}") no tiene medidas asociadas. Ve a Configuración de Catálogo para agregarle medidas si es necesario.
               </p>
             </div>
           ) : product.product_variants?.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px", color: "var(--color-danger)" }}>
-              Este producto aÃºn no tiene variantes generadas.
+              Este producto aún no tiene variantes generadas.
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -200,7 +200,7 @@ export default function MeasurementsModal({ product, onClose, onSaved }) {
                     <tr style={{ background: "var(--bg-hover, rgba(0,0,0,0.02))", borderBottom: "2px solid var(--border-color)" }}>
                       <td colSpan={2} style={{ padding: "15px 12px", fontSize: "0.9rem", color: "var(--text-main)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontWeight: "600", color: "var(--primary-color)" }}>Rellenado RÃ¡pido</span>
+                          <span style={{ fontWeight: "600", color: "var(--primary-color)" }}>Rellenado Rápido</span>
                           <button 
                             className="btn-secondary" 
                             style={{ padding: "4px 8px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "5px" }}
@@ -252,7 +252,7 @@ export default function MeasurementsModal({ product, onClose, onSaved }) {
                         <td style={{ padding: "15px 12px", fontFamily: "monospace", fontSize: "0.9rem", color: "var(--text-main)" }}>{variant.sku}</td>
                         <td style={{ padding: "15px 12px", fontSize: "0.9rem" }}>
                           <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4", display: "block" }}>
-                            {detailParts.join(" â€¢ ") || "EstÃ¡ndar"}
+                            {detailParts.join(" • ") || "Estándar"}
                           </span>
                         </td>
                         

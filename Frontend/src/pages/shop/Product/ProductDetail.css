@@ -1,5 +1,5 @@
-﻿/* ============================================================
-   SHOP PRODUCT DETAIL â€” DiseÃ±o responsivo premium
+/* ============================================================
+   SHOP PRODUCT DETAIL — Diseño responsivo premium
    Breakpoints: <=480px | <=768px | <=1024px | >1024px
 ============================================================ */
 
@@ -29,7 +29,7 @@
 /* Breadcrumbs */
 .product-breadcrumb {
   max-width: 1200px;
-  margin: 0 auto 32px auto; /* MÃ¡s aire abajo hacia la imagen */
+  margin: 0 auto 32px auto; /* Más aire abajo hacia la imagen */
   padding: 16px 16px 0; /* Aire justo debajo del nav */
   font-size: 11px;
   text-transform: uppercase;
@@ -209,7 +209,7 @@
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.05em;
-  border-radius: 0px; /* Bordes rectos para un look mÃ¡s editorial/minimalista */
+  border-radius: 0px; /* Bordes rectos para un look más editorial/minimalista */
 }
 
 /* Variante labels */

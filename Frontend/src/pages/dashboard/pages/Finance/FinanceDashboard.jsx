@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getFinanceDashboard, getOwnerLedger } from "../../../../api/admin/finance";
 import { getBranches } from "../../../../api/admin/branches";
 import { DollarSign, TrendingDown, TrendingUp, Wallet, ArrowDownCircle, ArrowUpCircle, Activity, CreditCard, ChevronRight, History, DownloadCloud, Gift, Building, ArrowRight } from "lucide-react";
