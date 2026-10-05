@@ -15,4 +15,10 @@ class UserProfile extends BaseUserProfile
 		'birthdate',
 		'gender'
 	];
+
+	public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }

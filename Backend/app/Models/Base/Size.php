@@ -31,11 +31,11 @@ class Size extends Model
 {
 	use SoftDeletes;
 	protected $table = 'sizes';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid'
 	];
 
 	public function variant_sizes()

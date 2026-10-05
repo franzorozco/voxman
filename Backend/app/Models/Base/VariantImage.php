@@ -6,7 +6,7 @@
 
 namespace App\Models\Base;
 
-use App\Models\ProductVariant;
+use App\Models\Catalog\ProductVariant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,12 +25,11 @@ use Illuminate\Database\Eloquent\Model;
 class VariantImage extends Model
 {
 	protected $table = 'variant_images';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid',
-		'variant_id' => 'uuid'
 	];
 
 	public function product_variant()

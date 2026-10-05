@@ -23,11 +23,11 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentMethod extends Model
 {
 	protected $table = 'payment_methods';
+	protected $keyType = 'string';
 	public $incrementing = false;
 	public $timestamps = false;
 
 	protected $casts = [
-		'id' => 'uuid'
 	];
 
 	public function payments()

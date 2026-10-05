@@ -6,10 +6,11 @@
 
 namespace App\Models\Base;
 
-use App\Models\OwnerPayment;
-use App\Models\Product;
-use App\Models\SaleDetail;
-use App\Models\User;
+use App\Models\Finance\OwnerPayment;
+use App\Models\Catalog\Product;
+use App\Models\Sales\SaleDetail;
+use App\Models\Core\User;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,7 @@ class Owner extends Model
 {
 	use SoftDeletes;
 	protected $table = 'owners';
+	protected $keyType = 'string';
 	public $incrementing = false;
 
 	protected $casts = [

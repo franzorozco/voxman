@@ -8,6 +8,7 @@ class AttributeValue extends BaseAttributeValue
 {
 	protected $fillable = [
 		'attribute_id',
-		'value'
+		'value',
+		'hex_code'
 	];
 }
