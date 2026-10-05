@@ -62,7 +62,12 @@ class SystemSettingController extends Controller
 
                 if (!$result) {
                     Log::error('[SystemSetting] put() returned false — upload failed silently');
-                    return response()->json(['message' => 'Error al subir imagen al almacenamiento'], 500);
+                    
+        // Invalidar caché público cuando se modifican las configuraciones
+        \Illuminate\Support\Facades\Cache::forget('public_shop_settings');
+        \Illuminate\Support\Facades\Cache::forget('shop_featured_categories');
+
+        return response()->json(['message' => 'Error al subir imagen al almacenamiento'], 500);
                 }
 
                 Log::info('[SystemSetting] uploaded to S3', ['path' => $fullPath]);
@@ -70,7 +75,12 @@ class SystemSettingController extends Controller
 
             } catch (\Exception $e) {
                 Log::error('[SystemSetting] S3 upload exception: ' . $e->getMessage());
-                return response()->json(['message' => 'Error al subir el archivo'], 500);
+                
+        // Invalidar caché público cuando se modifican las configuraciones
+        \Illuminate\Support\Facades\Cache::forget('public_shop_settings');
+        \Illuminate\Support\Facades\Cache::forget('shop_featured_categories');
+
+        return response()->json(['message' => 'Error al subir el archivo'], 500);
             }
 
         } else {
@@ -85,9 +95,15 @@ class SystemSettingController extends Controller
             ]);
         }
 
+        
+        // Invalidar caché público cuando se modifican las configuraciones
+        \Illuminate\Support\Facades\Cache::forget('public_shop_settings');
+        \Illuminate\Support\Facades\Cache::forget('shop_featured_categories');
+
         return response()->json([
             'message' => 'Configuración actualizada correctamente',
             'setting' => $setting->fresh(),
         ]);
     }
 }
+

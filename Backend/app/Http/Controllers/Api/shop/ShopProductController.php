@@ -19,11 +19,8 @@ class ShopProductController extends Controller
             'product_variants.variant_images',
             'product_variants.variant_attribute_values.attribute_value.attribute',
             'product_variants.size',
-            'product_variants.fit',
             'brand',
-            'category',
-            'bundle_items.product',
-            'bundle_items.variant'
+            'category'
         ])->where('is_active', true);
 
         // Filtro por categoría — solo UUIDs válidos (la columna es uuid en PostgreSQL;
@@ -257,6 +254,94 @@ class ShopProductController extends Controller
         }
     }
 
+    private function applyPreparedDiscountsToProduct($product, $preparedDiscounts)
+    {
+        foreach ($product->product_variants as $variant) {
+            $variant->active_discounts = collect();
+            $variant->base_price = $variant->price ?: $product->base_price;
+            $variant->discounted_price = $variant->base_price;
+            $variant->has_discount = false;
+            $variant->discount_label = null;
+        }
+
+        $product->has_discount = false;
+        $product->discount_label = null;
+        $product->discounted_price = $product->base_price;
+
+        foreach ($preparedDiscounts as $pd) {
+            $discount = $pd->model;
+            if ($discount->usage_limit && $discount->used_count >= $discount->usage_limit) continue;
+            if ($discount->usage_limit_per_customer || $discount->customers->isNotEmpty()) continue;
+
+            $discountCategories = $pd->categories;
+            $discountBrands = $pd->brands;
+            $discountProducts = $pd->products;
+            $discountVariants = $pd->variants;
+            
+            $hasItemRestrictions = !empty($discountCategories) || !empty($discountBrands) || !empty($discountProducts) || !empty($discountVariants);
+
+            $productApplies = false;
+            if (!$hasItemRestrictions) {
+                $productApplies = true;
+            } elseif (in_array($product->id, $discountProducts) || in_array($product->brand_id, $discountBrands) || in_array($product->category_id, $discountCategories)) {
+                $productApplies = true;
+            }
+
+            if ($productApplies) {
+                $discountAmount = 0;
+                if ($discount->type === 'percentage') {
+                    $discountAmount = $product->base_price * ($discount->value / 100);
+                    $label = "-".floatval($discount->value)."%";
+                } else {
+                    $discountAmount = $discount->value;
+                    $label = "-Bs ".floatval($discount->value);
+                }
+                if ($discount->max_discount_amount) {
+                    $discountAmount = min($discountAmount, $discount->max_discount_amount);
+                }
+                $discountAmount = min($discountAmount, $product->base_price);
+                
+                $newPrice = max(0, $product->base_price - $discountAmount);
+                if ($newPrice < $product->discounted_price) {
+                    $product->discounted_price = $newPrice;
+                    $product->has_discount = true;
+                    $product->discount_label = $label;
+                }
+            }
+
+            foreach ($product->product_variants as $variant) {
+                $variantApplies = $productApplies || in_array($variant->id, $discountVariants);
+                
+                if ($variantApplies) {
+                    $variant->active_discounts->push($discount);
+                    
+                    $discountAmount = 0;
+                    if ($discount->type === 'percentage') {
+                        $discountAmount = $variant->base_price * ($discount->value / 100);
+                        $label = "-".floatval($discount->value)."%";
+                    } else {
+                        $discountAmount = $discount->value;
+                        $label = "-Bs ".floatval($discount->value);
+                    }
+                    
+                    if ($discount->max_discount_amount) {
+                        $discountAmount = min($discountAmount, $discount->max_discount_amount);
+                    }
+                    $discountAmount = min($discountAmount, $variant->base_price);
+                    
+                    $newPrice = max(0, $variant->base_price - $discountAmount);
+                    if ($newPrice < $variant->discounted_price) {
+                        $variant->discounted_price = $newPrice;
+                        $variant->has_discount = true;
+                        $variant->discount_label = $label;
+                    }
+                }
+            }
+        }
+
+        return $product;
+    }
+
     private function applyDiscountsToProduct($product, $automaticDiscounts)
     {
         foreach ($product->product_variants as $variant) {
@@ -346,5 +431,11 @@ class ShopProductController extends Controller
         return $product;
     }
 }
+
+
+
+
+
+
 
 

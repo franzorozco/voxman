@@ -21,6 +21,12 @@ class FinanceDashboardController extends Controller
     {
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
+        
+        // OPTIMIZATION: Cache finance dashboard aggregates for 1 minute (60s)
+        // to prevent DB overload when multiple widgets/users load the dashboard simultaneously
+        $cacheKey = 'finance_dash_' . ($startDate ? substr($startDate, 0, 10) : 'all') . '_' . ($endDate ? substr($endDate, 0, 10) : 'all') . '_' . $request->query('branch_id', 'all');
+        
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function() use ($request, $startDate, $endDate) {
         if ($startDate && $endDate) {
             $startDate = \Carbon\Carbon::parse($startDate)->startOfDay();
             $endDate = \Carbon\Carbon::parse($endDate)->endOfDay();
@@ -432,6 +438,7 @@ class FinanceDashboardController extends Controller
         ];
 
         return response()->json($data);
+        });
     }
 
     public function ownerLedger(Request $request, $id)
@@ -561,3 +568,4 @@ class FinanceDashboardController extends Controller
         return response()->json(array_reverse($ledger));
     }
 }
+

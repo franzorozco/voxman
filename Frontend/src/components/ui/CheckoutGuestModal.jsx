@@ -128,6 +128,7 @@ export default function CheckoutGuestModal({ isOpen, onClose, onSuccessRedirect,
 
       setSuccessData({ waUrl, message: msg });
       setSuccess(true);
+      useShopCartStore.getState().clearCart();
 
     } catch (error) {
       console.error("Error creating guest checkout", error);

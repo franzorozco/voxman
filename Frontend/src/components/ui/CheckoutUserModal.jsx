@@ -38,7 +38,7 @@ export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmo
       setSuccessData({ waUrl, message: msg });
       setSuccess(true);
       
-      useShopCartStore.setState({ items: [], total: 0 });
+      useShopCartStore.getState().clearCart();
 
     } catch (error) {
       console.error("Error creating auth checkout", error);

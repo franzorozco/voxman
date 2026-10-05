@@ -350,19 +350,21 @@ class CustomerController extends Controller
 
     public function kpis()
     {
-        $totalCustomers = Customer::count();
-        $activeCustomers = Customer::where('is_active', true)->count();
-        $newThisMonth = Customer::whereMonth('created_at', now()->month)
-                                ->whereYear('created_at', now()->year)
-                                ->count();
-        $totalPoints = Customer::sum('points') ?? 0;
+        return \Illuminate\Support\Facades\Cache::remember('admin_customer_kpis', 60, function() {
+            $totalCustomers = Customer::count();
+            $activeCustomers = Customer::where('is_active', true)->count();
+            $newThisMonth = Customer::whereMonth('created_at', now()->month)
+                                    ->whereYear('created_at', now()->year)
+                                    ->count();
+            $totalPoints = Customer::sum('points') ?? 0;
 
-        return response()->json([
-            'totalCustomers' => $totalCustomers,
-            'activeCustomers' => $activeCustomers,
-            'newThisMonth' => $newThisMonth,
-            'totalPoints' => $totalPoints
-        ]);
+            return response()->json([
+                'totalCustomers' => $totalCustomers,
+                'activeCustomers' => $activeCustomers,
+                'newThisMonth' => $newThisMonth,
+                'totalPoints' => $totalPoints
+            ]);
+        });
     }
 
     public function updateTags(Request $request, $id)
@@ -515,3 +517,4 @@ class CustomerController extends Controller
         }
     }
 }
+

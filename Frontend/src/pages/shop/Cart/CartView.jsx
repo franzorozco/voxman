@@ -37,21 +37,39 @@ const CartView = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    window.appliedShopDiscount = appliedDiscount;
-  }, [appliedDiscount]);
+    const clearDiscount = async () => {
+      try {
+        const { default: api } = await import('../../../api/client');
+        await api.post('/v1/shop/cart/remove-discount');
+        useShopCartStore.setState({ appliedGlobalDiscount: null });
+        setAppliedDiscount(null);
+        setDiscountCode('');
+        fetchCart();
+      } catch (e) {
+        console.error("Error clearing discount on enter/leave", e);
+      }
+    };
 
-  useEffect(() => {
-    fetchCart();
+    // Al entrar a la pgina de carrito, limpiamos cualquier descuento previo
+    clearDiscount();
+
+    return () => {
+      // Al salir de la pgina de carrito, tambin lo limpiamos
+      clearDiscount();
+    };
   }, [fetchCart]);
 
   useEffect(() => {
-    if (appliedGlobalDiscount && !appliedDiscount) {
+    if (appliedGlobalDiscount) {
       setAppliedDiscount({
         id: appliedGlobalDiscount.id,
         code: appliedGlobalDiscount.code,
         discount_amount: appliedGlobalDiscount.amount
       });
       setDiscountCode(appliedGlobalDiscount.code);
+    } else {
+      setAppliedDiscount(null);
+      setDiscountCode('');
     }
   }, [appliedGlobalDiscount]);
 

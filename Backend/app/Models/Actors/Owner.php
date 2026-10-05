@@ -8,6 +8,7 @@ class Owner extends BaseOwner
 {
 	protected $fillable = [
 		'user_id',
+		'notification_email',
 		'is_active'
 	];
 

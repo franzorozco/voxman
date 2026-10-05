@@ -258,6 +258,14 @@ class DiscountValidationService
                 $variant = \App\Models\Catalog\ProductVariant::with('product')->find($variantId);
                 if (!$variant) continue;
 
+                $isBundleItem = is_array($item) ? !empty($item['bundle_group_id']) : !empty($item->bundle_group_id);
+                if ($isBundleItem) continue;
+
+                $hasIndividualDiscount = is_array($item) 
+                    ? (!empty($item['applied_discount_id']) || !empty($item['discount_label'])) 
+                    : (!empty($item->applied_discount_id) || !empty($item->discount_label));
+                if ($hasIndividualDiscount) continue;
+
                 $itemValid = true;
                 if ($hasItemRestrictions) {
                     $itemValid = false;

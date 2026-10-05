@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+﻿import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   TrendingUp, ShoppingBag, Users, Package, AlertTriangle,
@@ -260,7 +260,7 @@ export default function Home() {
   })();
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Buenos días" : hour < 18 ? "Buenas tardes" : "Buenas noches";
+  const greeting = hour < 12 ? "Buenos dÃ­as" : hour < 18 ? "Buenas tardes" : "Buenas noches";
 
   const getDeliveryTypeLabel = (type) => {
     if (type === 'home_delivery') return { label: "A Domicilio", cls: "type-home" };
@@ -274,7 +274,7 @@ export default function Home() {
 
       <div className="hd-top">
         <div className="hd-greeting">
-          <h1 className="hd-greeting-title">{greeting}, {userName} 👋</h1>
+          <h1 className="hd-greeting-title">{greeting}, {userName} ðŸ‘‹</h1>
           <p className="hd-greeting-sub">
             {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
@@ -284,10 +284,10 @@ export default function Home() {
             <Calendar size={16} className="hd-filter-icon" />
             <select value={dateRange} onChange={e => setDateRange(e.target.value)} className="hd-filter-select">
               <option value="today">Hoy</option>
-              <option value="7d">Últimos 7 días</option>
-              <option value="30d">Últimos 30 días</option>
+              <option value="7d">Ãšltimos 7 dÃ­as</option>
+              <option value="30d">Ãšltimos 30 dÃ­as</option>
               <option value="month">Este Mes</option>
-              <option value="year">Este Año</option>
+              <option value="year">Este AÃ±o</option>
               <option value="all">Todo el Historial</option>
             </select>
           </div>
@@ -305,8 +305,8 @@ export default function Home() {
         {canAny(P.inventory) && <KpiCard icon={AlertTriangle} label="Alertas de stock" value={fmtNum(inventoryStats?.low_stock_alerts)} sub="Productos agotados o bajos" color={inventoryStats?.low_stock_alerts > 0 ? "kpi-orange" : "kpi-green"} loading={loadingKpis} /> }
         {canAny(P.customers) && <KpiCard icon={Users} label="Clientes totales" value={fmtNum(customerKpis?.total_customers)} sub={`${fmtNum(customerKpis?.new_this_month ?? 0)} nuevos`} color="kpi-teal" loading={loadingKpis} /> }
         {canAny(P.finance) && <KpiCard icon={CreditCard} label="Caja disponible" value={fmt(cashBalance)} sub={`Banco: ${fmt(bankBalance)}`} color="kpi-indigo" loading={loadingKpis} /> }
-        {canAny(P.sales) && <KpiCard icon={ShoppingBag} label="Ticket promedio" value={fmt(salesData?.average_ticket)} sub="Por transacción" color="kpi-rose" loading={loadingKpis} /> }
-        {canAny(P.sales) && <KpiCard icon={BarChart2} label="Descuentos dados" value={fmt(salesData?.total_discount)} sub="Total del período" color="kpi-amber" loading={loadingKpis} /> }
+        {canAny(P.sales) && <KpiCard icon={ShoppingBag} label="Ticket promedio" value={fmt(salesData?.average_ticket)} sub="Por transacciÃ³n" color="kpi-rose" loading={loadingKpis} /> }
+        {canAny(P.sales) && <KpiCard icon={BarChart2} label="Descuentos dados" value={fmt(salesData?.total_discount)} sub="Total del perÃ­odo" color="kpi-amber" loading={loadingKpis} /> }
       </div>
 
       <div className="hd-charts-section">
@@ -316,7 +316,7 @@ export default function Home() {
             {loadingTables ? (
               <div className="hd-skeleton hd-skeleton-row" style={{height: '100%'}} />
             ) : chartDataSales.length === 0 ? (
-              <p className="hd-empty">No hay suficientes datos para el gráfico.</p>
+              <p className="hd-empty">No hay suficientes datos para el grÃ¡fico.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <AreaChart data={chartDataSales} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -365,21 +365,21 @@ export default function Home() {
       </div>
 
       <div className="hd-section">
-        <h2 className="hd-section-title">Módulos del Sistema</h2>
+        <h2 className="hd-section-title">MÃ³dulos del Sistema</h2>
         <div className="hd-quick-links">
           {[
             { to: "/dashboard/sales",       icon: ShoppingBag,   label: "Ventas",        sub: "Historial y detalles",     color: "ql-green"   },
             { to: "/dashboard/inventory",   icon: Warehouse,     label: "Inventario",    sub: "Stock y movimientos",      color: "ql-blue"    },
-            { to: "/dashboard/products",    icon: Package,       label: "Productos",     sub: "Catálogo y variantes",     color: "ql-purple"  },
+            { to: "/dashboard/products",    icon: Package,       label: "Productos",     sub: "CatÃ¡logo y variantes",     color: "ql-purple"  },
             { to: "/dashboard/customers",   icon: Users,         label: "Clientes",      sub: "Base de clientes",         color: "ql-teal"    },
-            { to: "/dashboard/orders",      icon: Truck,         label: "Pedidos",       sub: "Delivery y envíos",        color: "ql-orange"  },
+            { to: "/dashboard/orders",      icon: Truck,         label: "Pedidos",       sub: "Delivery y envÃ­os",        color: "ql-orange"  },
             { to: "/dashboard/carts",       icon: ShoppingCart,  label: "Proformas",     sub: "Carritos activos",         color: "ql-indigo"  },
             { to: "/dashboard/returns",     icon: RotateCcw,     label: "Devoluciones",  sub: "Solicitudes pendientes",   color: "ql-rose"    },
             { to: "/dashboard/promotions",  icon: Tag,           label: "Promociones",   sub: "Descuentos y cupones",     color: "ql-amber"   },
             { to: "/dashboard/giftcards",   icon: Gift,          label: "Giftcards",     sub: "Tarjetas de regalo",       color: "ql-pink"    },
             { to: "/dashboard/finance",     icon: DollarSign,    label: "Finanzas",      sub: "Dashboard financiero",     color: "ql-emerald" },
             { to: "/dashboard/purchases",   icon: FileText,      label: "Compras",       sub: "Abastecimiento",           color: "ql-sky"     },
-            { to: "/dashboard/logs",        icon: Activity,      label: "Auditoría",     sub: "Registro de sistema",      color: "ql-slate"   },
+            { to: "/dashboard/logs",        icon: Activity,      label: "AuditorÃ­a",     sub: "Registro de sistema",      color: "ql-slate"   },
           ].filter((m) => canAny(LINK_PERMS[m.to])).map(({ to, icon: Icon, label, sub, color }) => (
             <Link key={to} to={to} className={`hd-ql-card ${color}`}>
               <div className="hd-ql-icon"><Icon size={22} /></div>
@@ -461,7 +461,7 @@ export default function Home() {
                           </span>
                         </td>
                         <td><StatusBadge status={o.status} /></td>
-                        <td className="hd-muted">{o.scheduled_date || "—"}</td>
+                        <td className="hd-muted">{o.scheduled_date || "â€”"}</td>
                       </tr>
                     );
                   })}
@@ -479,7 +479,7 @@ export default function Home() {
           {loadingTables ? (
             <div className="hd-table-loading">{[...Array(3)].map((_,i)=><div key={i} className="hd-skeleton hd-skeleton-row"/>)}</div>
           ) : pendingReturns.length === 0 ? (
-            <p className="hd-empty">Sin devoluciones pendientes 🎉</p>
+            <p className="hd-empty">Sin devoluciones pendientes ðŸŽ‰</p>
           ) : (
             <div className="hd-table-scroll">
               <table className="hd-table">
@@ -488,7 +488,7 @@ export default function Home() {
                   {pendingReturns.map((r) => (
                     <tr key={r.id}>
                       <td className="hd-mono">{r.id?.slice(0,8)}</td>
-                      <td>{r.reason?.slice(0,28) || "—"}</td>
+                      <td>{r.reason?.slice(0,28) || "â€”"}</td>
                       <td>{r.quantity}</td>
                       <td><StatusBadge status={r.status} /></td>
                     </tr>
@@ -503,10 +503,11 @@ export default function Home() {
 
       <p className="hd-last-refresh">
         <Clock size={13} />
-        Última actualización: {lastRefresh.toLocaleTimeString("es-ES")}
+        Ãšltima actualizaciÃ³n: {lastRefresh.toLocaleTimeString("es-ES")}
       </p>
 
     </div>
   );
 }
+
 

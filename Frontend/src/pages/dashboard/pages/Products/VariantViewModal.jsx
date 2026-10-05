@@ -146,7 +146,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
   // Imágenes específicas de la variante (exclusivas o por color)
   let specificImages = [];
   if (variant.variant_images && variant.variant_images.length > 0) {
-    specificImages = variant.variant_images.map(img => ({ ...img, tag: 'Variante' }));
+    specificImages = (variant.variant_images || []).map(img => ({ ...img, tag: 'Variante' }));
   } else if (product.attribute_value_images && variantAttrIds.length > 0) {
     specificImages = product.attribute_value_images
       .filter(img => variantAttrIds.includes(String(img.attribute_value_id)))
@@ -432,7 +432,7 @@ export default function VariantViewModal({ variant, product, requiredMeasurement
                       </tr>
                     </thead>
                     <tbody>
-                      {variant.inventories.map(inv => {
+                      {(variant.inventories || []).map(inv => {
                         const stock = inv.stock || inv.quantity || 0;
                         const minStock = inv.min_stock || 0;
                         const status = stock === 0 ? 'danger' : (stock <= minStock ? 'warning' : 'success');

@@ -246,3 +246,4 @@ class SaleController extends Controller
         return response()->json(['message' => 'Sale cancelled successfully']);
     }
 }
+

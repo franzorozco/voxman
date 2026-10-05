@@ -113,7 +113,7 @@ const Home = () => {
         </div>
       )}
 
-      {showCategories && <ShopFeaturedCategories categories={settings.shop_home_featured_categories} />}
+      
       
       {showCollage && (
         collageLoading ? (
@@ -122,7 +122,7 @@ const Home = () => {
           <ShopCollageGrid items={images} />
         )
       )}
-
+      {showCategories && <ShopFeaturedCategories categories={settings.shop_home_featured_categories} />}
       {showNewArrivals && (
         carouselLoading ? (
           <div className="shop-home-loading"><div className="shop-home-loader" /></div>

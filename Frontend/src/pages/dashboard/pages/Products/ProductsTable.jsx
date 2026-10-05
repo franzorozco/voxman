@@ -221,7 +221,7 @@ export default function ProductsTable({
                   <td>
                     {(p.tags || []).length > 0 ? (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '160px' }}>
-                        {p.tags.map((tag, idx) => (
+                        {(p.tags || []).map((tag, idx) => (
                           <span key={idx} style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '12px', background: 'var(--color-primary-alpha, rgba(99,102,241,0.15))', color: 'var(--color-primary)', fontSize: '10px', fontWeight: '600', whiteSpace: 'nowrap' }}>
                             {tag}
                           </span>
@@ -346,21 +346,23 @@ export default function ProductsTable({
                   <td className="actions-col">
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
                       <CanAccess permission="view_products">
-                        <button className="btn-view" onClick={() => onView(p)}>
+                        <button type="button" className="btn-secondary" style={{ position: 'relative', zIndex: 10, padding: '6px 10px', fontSize: '13px' }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(p); }}>
                           Ver
                         </button>
                       </CanAccess>
 
                       <CanAccess permission="edit_products">
-                        <button className="btn-edit" onClick={() => onEdit(p)}>
+                        <button type="button" className="btn-edit" style={{ position: 'relative', zIndex: 10 }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(p); }}>
                           Variables
                         </button>
                       </CanAccess>
 
                       <CanAccess permission="delete_products">
                         <button
+                          type="button"
                           className="btn-delete"
-                          onClick={() => onDelete(p.id)}
+                          style={{ position: 'relative', zIndex: 10 }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(p.id); }}
                         >
                           Eliminar
                         </button>

@@ -99,6 +99,7 @@ class ShopCheckoutController extends Controller
                     'quantity' => $item['quantity'],
                     'line_subtotal' => $lineSubtotal,
                     'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                    'applied_discount_id' => $item['applied_discount_id'] ?? null,
                     'discount_label' => $item['discount_label'] ?? null
                 ];
             }
@@ -166,6 +167,9 @@ class ShopCheckoutController extends Controller
             Cache::forget("cart:{$cartToken}");
 
             DB::commit();
+
+            // Notificar a los owners de los productos
+            \App\Jobs\SendNewOrderOwnerEmails::dispatch($cart->id);
 
             $waSetting = \App\Models\System\SystemSetting::where('key', 'whatsapp_orders')->first();
             $waNumber = $waSetting ? $waSetting->value : '59157003312';
@@ -257,6 +261,7 @@ class ShopCheckoutController extends Controller
                     'quantity' => $item['quantity'],
                     'line_subtotal' => $lineSubtotal,
                     'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                    'applied_discount_id' => $item['applied_discount_id'] ?? null,
                     'discount_label' => $item['discount_label'] ?? null
                 ];
             }
@@ -349,6 +354,9 @@ class ShopCheckoutController extends Controller
             Cache::forget("cart:{$cartToken}");
 
             DB::commit();
+
+            // Notificar a los owners de los productos
+            \App\Jobs\SendNewOrderOwnerEmails::dispatch($cart->id);
 
             $waSetting = \App\Models\System\SystemSetting::where('key', 'whatsapp_orders')->first();
             $waNumber = $waSetting ? $waSetting->value : '59157003312';

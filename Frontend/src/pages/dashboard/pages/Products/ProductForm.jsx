@@ -576,7 +576,7 @@ const getAttributeValueName = (valueId) => {
 
   useEffect(() => {
     if (product) {
-      const transformedVariants = product.product_variants.map(v => {
+      const transformedVariants = (product.product_variants || []).map(v => {
         const attributeMap = {};
         v.variant_attribute_values?.forEach(av => {
           const attributeId = av.attribute_value?.attribute?.id;
@@ -629,7 +629,7 @@ const getAttributeValueName = (valueId) => {
         });
       } else {
         let hasVariantImages = false;
-        product.product_variants.forEach((v, index) => {
+        (product.product_variants || []).forEach((v, index) => {
           if (v.variant_images && v.variant_images.length > 0) {
             hasVariantImages = true;
             initialVariantImages[index] = v.variant_images.map(img => getImageUrl(img.url));

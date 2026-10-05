@@ -112,7 +112,8 @@ export default function Profile() {
     phone_number: "",
     customer_code: "",
     birthdate: "",
-    gender: "Prefiero no decirlo"
+    gender: "Prefiero no decirlo",
+    notification_email: ""
   });
 
   // Password Change Form
@@ -178,7 +179,8 @@ export default function Profile() {
           phone_number: pNum,
           customer_code: customer?.customer_code || "",
           birthdate: prof.birthdate ? prof.birthdate.split("T")[0] : "",
-          gender: ["Masculino", "Femenino", "Prefiero no decirlo"].includes(prof.gender) ? prof.gender : "Prefiero no decirlo"
+          gender: ["Masculino", "Femenino", "Prefiero no decirlo"].includes(prof.gender) ? prof.gender : "Prefiero no decirlo",
+          notification_email: res?.user?.owner?.notification_email || userData?.owner?.notification_email || ""
         });
 
         // Populate addresses from customers collection
@@ -223,7 +225,8 @@ export default function Profile() {
           phone_number: pNum,
           customer_code: customer?.customer_code || "",
           birthdate: prof.birthdate ? prof.birthdate.split("T")[0] : "",
-          gender: ["Masculino", "Femenino", "Prefiero no decirlo"].includes(prof.gender) ? prof.gender : "Prefiero no decirlo"
+          gender: ["Masculino", "Femenino", "Prefiero no decirlo"].includes(prof.gender) ? prof.gender : "Prefiero no decirlo",
+          notification_email: res?.user?.owner?.notification_email || userData?.owner?.notification_email || ""
         });
         if (customer?.addresses) {
           setAddresses(customer.addresses);
@@ -279,6 +282,7 @@ export default function Profile() {
         last_name_maternal: profileForm.last_name_maternal?.trim() || null,
         gender: profileForm.gender?.trim() || null,
         customer_code: profileForm.customer_code?.trim() || null,
+        notification_email: profileForm.notification_email?.trim() || null,
       };
       const res = await updateProfile(payload);
       toast.success("Perfil actualizado con éxito.");
@@ -808,6 +812,31 @@ export default function Profile() {
                       {!profileForm.phone_number && <MissingDataPointer message="Falta completar teléfono" />}
                     </div>
                   </div>
+
+                  {/* SECCIÓN EXCLUSIVA PARA OWNERS */}
+                  {userData?.owner && (
+                    <>
+                      <hr style={{ border: "0", borderTop: "1px solid var(--border-color)", margin: "24px 0" }} />
+                      <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>
+                        Configuración de Tienda (Owner)
+                      </h3>
+                      <div className="profile-form-grid">
+                        <div className="profile-form-group">
+                          <label className="profile-label">Correo para notificaciones de ventas</label>
+                          <input
+                            type="email"
+                            className="profile-input"
+                            placeholder="Ej. ventas@miempresa.com"
+                            value={profileForm.notification_email}
+                            onChange={(e) => setProfileForm({ ...profileForm, notification_email: e.target.value })}
+                          />
+                          <span className="profile-input-help" style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "4px", display: "block" }}>
+                            Si lo dejas en blanco, las notificaciones llegarán a tu correo principal de inicio de sesión.
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   <div className="profile-actions-row">
                     <button

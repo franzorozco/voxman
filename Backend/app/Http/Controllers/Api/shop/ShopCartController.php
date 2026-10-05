@@ -39,17 +39,34 @@ public function syncCartPrices(&$cartData)
     {
         if (empty($cartData['items'])) return false;
 
-        // Fetch all active automatic discounts
-        $automaticDiscounts = \App\Models\Discount\Discount::with(['categories', 'brands', 'products', 'variants', 'customers'])
-            ->where('is_automatic', true)
-            ->where('active', true)
-            ->where(function($q) {
-                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-            })
-            ->where(function($q) {
-                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-            })
-            ->get();
+        // Fetch all active automatic discounts with caching for high performance
+        $automaticDiscounts = \Illuminate\Support\Facades\Cache::remember('active_automatic_discounts', 300, function () {
+            return \App\Models\Discount\Discount::with(['categories', 'brands', 'products', 'variants', 'customers'])
+                ->where('is_automatic', true)
+                ->where('active', true)
+                ->where(function($q) {
+                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+                })
+                ->where(function($q) {
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                })
+                ->get();
+        });
+
+        // Pre-fetch all products and variants to prevent N+1 Queries
+        $productIds = [];
+        $variantIds = [];
+        foreach ($cartData['items'] as $item) {
+            if (empty($item['bundle_group_id'])) {
+                $productIds[] = $item['product_id'];
+                if (!empty($item['variant_id'])) {
+                    $variantIds[] = $item['variant_id'];
+                }
+            }
+        }
+        
+        $products = \App\Models\Catalog\Product::whereIn('id', array_unique($productIds))->get()->keyBy('id');
+        $variants = \App\Models\Catalog\ProductVariant::whereIn('id', array_unique($variantIds))->get()->keyBy('id');
 
         $changed = false;
 
@@ -60,12 +77,12 @@ public function syncCartPrices(&$cartData)
                 continue;
             }
 
-            $product = \App\Models\Catalog\Product::find($item['product_id']);
+            $product = $products->get($item['product_id']);
             if (!$product) continue;
 
             $variant = null;
             if (!empty($item['variant_id'])) {
-                $variant = \App\Models\Catalog\ProductVariant::find($item['variant_id']);
+                $variant = $variants->get($item['variant_id']);
                 // Security: ensure the variant actually belongs to the product
                 if ($variant && $variant->product_id !== $product->id) {
                     $variant = null; // Ignore invalid variant to prevent price manipulation
@@ -80,6 +97,7 @@ public function syncCartPrices(&$cartData)
             // Find best automatic discount for this item
             $bestDiscountPrice = $basePrice;
             $bestDiscountLabel = null;
+            $bestDiscountId = null;
 
             foreach ($automaticDiscounts as $discount) {
                 // Ignore if usage limits exceeded or requires a specific customer
@@ -113,6 +131,7 @@ public function syncCartPrices(&$cartData)
                     if ($discounted < $bestDiscountPrice) {
                         $bestDiscountPrice = max(0, $discounted);
                         $bestDiscountLabel = $currentLabel;
+                        $bestDiscountId = $discount->id;
                     }
                 }
             }
@@ -123,9 +142,11 @@ public function syncCartPrices(&$cartData)
                 $item['price'] = (float)$bestDiscountPrice;
                 if ($bestDiscountLabel) {
                     $item['discount_label'] = $bestDiscountLabel;
+                    $item['applied_discount_id'] = $bestDiscountId;
                     $item['has_discount'] = true;
                 } else {
                     $item['discount_label'] = null;
+                    $item['applied_discount_id'] = null;
                     $item['has_discount'] = false;
                 }
                 $changed = true;
@@ -148,10 +169,8 @@ public function syncCartPrices(&$cartData)
         if ($cartData) {
             $changed = $this->syncCartPrices($cartData);
             if ($changed) {
-                        $this->syncCartPrices($cartData);
-        $this->recalculateTotal($cartData);
-        $this->syncCartPrices($cartData);
-        $this->saveCartData($cartToken, $cartData);
+                $this->recalculateTotal($cartData);
+                $this->saveCartData($cartToken, $cartData);
             }
             return response()->json($cartData);
         }
@@ -373,13 +392,20 @@ public function syncCartPrices(&$cartData)
         $totalOriginalPrice = 0;
         $processedItems = [];
 
+        // OPTIMIZATION: Pre-fetch all products and variants for the bundle to avoid N+1 queries
+        $reqProductIds = array_column($items, 'product_id');
+        $reqVariantIds = array_filter(array_column($items, 'variant_id'));
+
+        $prefetchedProducts = Product::with(['product_images', 'attribute_value_images.attributeValue'])->whereIn('id', $reqProductIds)->get()->keyBy('id');
+        $prefetchedVariants = ProductVariant::with(['size', 'variant_images', 'variant_attribute_values.attribute_value.attribute'])->whereIn('id', $reqVariantIds)->get()->keyBy('id');
+
         foreach ($items as $itemReq) {
-            $product = Product::with(['product_images', 'attribute_value_images.attributeValue'])->find($itemReq['product_id']);
+            $product = $prefetchedProducts->get($itemReq['product_id']);
             if (!$product) continue;
 
             $variant = null;
             if (!empty($itemReq['variant_id'])) {
-                $variant = ProductVariant::with(['size', 'variant_images', 'variant_attribute_values.attribute_value.attribute'])->find($itemReq['variant_id']);
+                $variant = $prefetchedVariants->get($itemReq['variant_id']);
                 if (!$variant || $variant->product_id !== $product->id) {
                     return response()->json(['error' => 'Variant mismatch or not found for product ' . $product->name], 400);
                 }
@@ -628,7 +654,9 @@ public function syncCartPrices(&$cartData)
                 'variant_id' => $item['variant_id'],
                 'quantity' => $item['quantity'],
                 'line_subtotal' => $lineSubtotal,
-                'bundle_group_id' => $item['bundle_group_id'] ?? null
+                'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                'applied_discount_id' => $item['applied_discount_id'] ?? null,
+                'discount_label' => $item['discount_label'] ?? null
             ];
         }
 
@@ -669,7 +697,6 @@ public function syncCartPrices(&$cartData)
         
         $this->syncCartPrices($cartData);
         $this->recalculateTotal($cartData);
-        $this->syncCartPrices($cartData); // Note: Calling it twice seems redundant, but preserving existing flow.
         
         // Re-validate global discount if prices changed after sync
         $newServerSubtotal = $cartData['total'];
@@ -679,7 +706,9 @@ public function syncCartPrices(&$cartData)
                 'variant_id' => $item['variant_id'],
                 'quantity' => $item['quantity'],
                 'line_subtotal' => $item['price'] * $item['quantity'],
-                'bundle_group_id' => $item['bundle_group_id'] ?? null
+                'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                'applied_discount_id' => $item['applied_discount_id'] ?? null,
+                'discount_label' => $item['discount_label'] ?? null
             ];
         }
         $newResult = $discountService->validateCode(
@@ -842,3 +871,5 @@ public function validateStock(Request $request)
         return response()->json(['valid' => true, 'cart' => $cartData]);
     }
 }
+
+

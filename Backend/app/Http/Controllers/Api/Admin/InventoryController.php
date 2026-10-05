@@ -346,15 +346,17 @@ class InventoryController extends Controller
     {
         $branchId = $request->get('branch_id');
 
-        $query = Inventory::with('variant');
+        $cacheKey = 'inventory_stats_' . ($branchId ?: 'all');
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function() use ($branchId) {
+            $query = Inventory::with('variant');
 
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
-        }
+            if ($branchId) {
+                $query->where('branch_id', $branchId);
+            }
 
-        $inventories = $query->get();
+            $inventories = $query->get();
 
-        $totalItems = 0;
+            $totalItems = 0;
         $totalCostValue = 0;
         $totalRetailValue = 0;
         $lowStockCount = 0;
@@ -381,7 +383,8 @@ class InventoryController extends Controller
             'total_retail_value' => $totalRetailValue,
             'low_stock_alerts' => $lowStockCount
         ]);
-    }
+    });
+}
 
     public function audit(Request $request)
     {

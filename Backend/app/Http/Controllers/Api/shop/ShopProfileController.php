@@ -9,7 +9,7 @@ class ShopProfileController extends Controller
 {
     private function formatUser($user)
     {
-        $user->loadMissing('profile', 'customers.addresses', 'employee.branch');
+        $user->loadMissing('profile', 'customers.addresses', 'employee.branch', 'owner');
         
         return [
             'id' => $user->id,
@@ -25,6 +25,7 @@ class ShopProfileController extends Controller
                     'name' => $user->employee->branch->name
                 ] : null,
             ] : null,
+            'owner' => $user->owner,
             'roles' => $user->getRoleNames(), 
             'permissions' => $user->getAllPermissions()->pluck('name'),
             'profile' => $user->profile,
@@ -58,7 +59,8 @@ class ShopProfileController extends Controller
             'street' => 'nullable|string|max:150',
             'reference' => 'nullable|string',
             'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric'
+            'longitude' => 'nullable|numeric',
+            'notification_email' => 'nullable|email|max:255'
         ]);
 
         $user = $request->user();
@@ -84,6 +86,13 @@ class ShopProfileController extends Controller
                         'birthdate' => $request->birthdate,
                         'gender' => $request->gender,
                         'phone' => $request->phone
+                    ]);
+                }
+
+                // Si el usuario tiene perfil de Owner, actualizar su correo de notificaciones
+                if ($user->owner && $request->has('notification_email')) {
+                    $user->owner->update([
+                        'notification_email' => $request->notification_email
                     ]);
                 }
 

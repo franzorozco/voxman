@@ -31,7 +31,10 @@ class ShopSettingsController extends Controller
 
         // Keys de shop_home_ y catalog_ se administran explícitamente en DB,
         // así que sí las incluimos — pero solo con prefijos conocidos y controlados.
-        $settings = \App\Models\System\SystemSetting::where(function ($q) use ($allowedKeys) {
+        // OPTIMIZATION: Settings cambian raramente. Cacheamos en RAM por 10 minutos (600s)
+        // para evitar m�ltiples consultas a la DB por cada visitante de la p�gina principal.
+        $settings = \Illuminate\Support\Facades\Cache::remember('public_shop_settings', 600, function() use ($allowedKeys) {
+            return \App\Models\System\SystemSetting::where(function ($q) use ($allowedKeys) {
                 $q->whereIn('key', $allowedKeys)
                   ->orWhere(function ($q2) {
                       // Solo sub-prefijos específicos permitidos
@@ -47,7 +50,10 @@ class ShopSettingsController extends Controller
                 'aws_key', 'aws_secret', 'mail_password', 'db_password',
             ])
             ->pluck('value', 'key');
+        });
 
         return response()->json($settings);
     }
 }
+
+

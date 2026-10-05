@@ -76,7 +76,6 @@ const Catalog = () => {
   const [sortBy, setSortBy] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(12);
 
 
   const categoriesFetchedRef = useRef(false);
@@ -124,8 +123,7 @@ const Catalog = () => {
     setCurrentPage(1);
     setProducts([]);
     setHasMore(true);
-    setVisibleCount(parseInt(cfg('catalog_products_per_page', '12'), 10));
-  }, [selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, shopSettings]);
+  }, [selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy]);
 
   // Obtener productos desde el backend (paginación server-side)
   useEffect(() => {
@@ -382,7 +380,7 @@ const Catalog = () => {
   }, [baseItems, products]);
 
   // 4. Paginación / Cargar Más: Eliminamos el slice() ya que la paginación es por servidor
-  const displayItems = processedItems.slice(0, visibleCount);
+  const displayItems = processedItems;
 
   const animationKey = `${viewMode}-${imageMode}-${selectedCategory}-${sortBy}-${searchQuery}`;
 

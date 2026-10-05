@@ -10,7 +10,8 @@ import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import "./Carts.css";
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getCartDetails } from "../../../../api/admin/carts";
 
 export default function Carts() {
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -39,6 +40,28 @@ export default function Carts() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCart, setEditingCart] = useState(null);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const openCartId = searchParams.get('open_cart');
+    if (openCartId) {
+      const loadCart = async () => {
+        try {
+          const res = await getCartDetails(openCartId);
+          setSelectedCart(res.data);
+          setIsDetailsOpen(true);
+          
+          // Remove param from url to prevent reopening on manual refresh
+          searchParams.delete('open_cart');
+          setSearchParams(searchParams, { replace: true });
+        } catch (error) {
+          toast.error("No se pudo cargar el carrito solicitado");
+        }
+      };
+      loadCart();
+    }
+  }, [searchParams, setSearchParams]);
 
   const fetchCarts = async (currentFilters) => {
     try {

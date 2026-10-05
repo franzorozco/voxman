@@ -43,7 +43,9 @@ class ShopDiscountController extends Controller
                 'variant_id' => $item['variant_id'],
                 'quantity' => $item['quantity'],
                 'line_subtotal' => $lineSubtotal,
-                'bundle_group_id' => $item['bundle_group_id'] ?? null
+                'bundle_group_id' => $item['bundle_group_id'] ?? null,
+                'applied_discount_id' => $item['applied_discount_id'] ?? null,
+                'discount_label' => $item['discount_label'] ?? null
             ];
         }
 
