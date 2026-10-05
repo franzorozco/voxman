@@ -1,0 +1,255 @@
+/* ========================================================
+   DASHBOARD
+======================================================== */
+
+/* ----------------------------------------------------
+   TEMA DEL DASHBOARD CLARO
+---------------------------------------------------- */
+.admin-theme {
+  --color-primary: #000000; /* Negro Puro */
+  --color-primary-text: #ffffff;       /* Azul principal */
+  --color-primary-hover: #333333;
+  --color-secondary: #f3f4f6; /* Gris muy suave */     /* Botones secundarios / nav */
+  --color-danger: #ef4444;        /* Rojo eliminar/error */
+  --color-danger-hover: #dc2626;
+  --color-warning: #f59e0b;       /* Naranja advertencia */
+  --color-warning-hover: #d97706;
+  --color-success: #10b981;       /* Verde xito */
+  
+  --bg-main: #ffffff;             /* Fondo gris super claro */
+  --bg-card: #ffffff;             /* Fondo de tarjetas */
+  --bg-input: #f9fafb;            /* Fondo de inputs */
+  
+  --text-main: #000000;           /* Texto oscuro principal */
+  --text-muted: #000000; /* Gris plomo */          /* Texto secundario gris */
+  
+  --border-color: #c9c9c9;        /* Bordes sutiles */
+  --border-focus: rgba(37, 99, 235, 0.4);
+  --bg-overlay: rgba(0, 0, 0, 0.05); /* Transparencia clara */
+  color-scheme: light;
+
+}
+
+/* ----------------------------------------------------
+   TEMA DEL DASHBOARD OSCURO
+---------------------------------------------------- */
+.admin-theme-dark {
+  --color-primary: #ffffff;
+  --color-primary-text: #000000;       
+  --color-primary-hover: #ffffff;
+  --color-secondary: #1f2937;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #f59e0b;       
+  --color-warning-hover: #d97706;
+  --color-success: #10b981;       
+  
+  --bg-main: #000000;             /* Fondo principal negro */
+  --bg-card: #000000;             /* Fondo de sidebar y cards */
+  --bg-input: #000000;            /* Fondo de inputs */
+  
+  --text-main: #ffffff;           /* Texto blanco principal */
+  --text-muted: #9ca3af; /* Texto secundario */
+  
+  --border-color: rgba(255, 255, 255, 0.06); /* Bordes sutiles oscuros */
+  --border-focus: rgba(37, 99, 235, 0.4);
+  --bg-overlay: rgba(255, 255, 255, 0.05); /* Transparencia oscura */
+  color-scheme: dark;
+}
+
+
+
+/* ========================================================
+   PAGINAS PBLICAS
+======================================================== */
+.home-theme {
+  --color-primary: #c9a227;       /* Dorado premium */
+  --color-primary-hover: #e6c65c;
+  --color-secondary: #1a1a1a;
+  --color-danger: #ff5252;
+  --color-warning: #ffb142;
+  --color-success: #33d9b2;
+  
+  --bg-main: #0d0d0d;             /* Fondo principal muy oscuro */
+  --bg-card: rgba(15, 15, 15, 0.65); /* Fondo glassmorphism */
+  --bg-input: rgba(20, 20, 20, 0.6);
+  
+  --text-main: #ffffff;           /* Texto claro principal */
+  --text-muted: #a0a0a0;          /* Texto gris sutil */
+  
+  --border-color: rgba(255, 255, 255, 0.08); /* Bordes sutiles claros */
+  --border-focus: rgba(201, 162, 39, 0.5);   /* Foco dorado */
+  color-scheme: dark;
+}
+
+
+/* ========================================================
+   MODULO POS
+======================================================== */
+/* ----------------------------------------------------
+   TEMA DEL POS CLARO
+---------------------------------------------------- */
+.pos-theme {
+  --color-primary: #000000;       /* Negro puro */
+  --color-primary-text: #ffffff;
+  --color-primary-hover: #333333;
+  --color-secondary: #e5e7eb;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #f59e0b;       
+  --color-success: #10b981;       
+  
+  --bg-main: #ffffff;             /* Fondo blanco puro */
+  --bg-card: #ffffff;             
+  --bg-input: #ffffff;            
+  
+  --text-main: #000000;           /* Texto negro puro */
+  --text-muted: #6b7280;          
+  
+  --border-color: #000000;        /* Bordes negros */
+  --border-focus: #000000;
+  --bg-overlay: rgba(0, 0, 0, 0.05);
+  color-scheme: light;
+}
+
+/* ----------------------------------------------------
+   TEMA DEL POS OSCURO
+---------------------------------------------------- */
+.pos-theme-dark {
+  --color-primary: #ffffff;       /* Blanco puro */
+  --color-primary-text: #000000;       
+  --color-primary-hover: #e5e7eb;
+  --color-secondary: #1f2937;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #fbbf24;       
+  --color-success: #34d399;       
+  
+  --bg-main: #0a0a0a;             /* Fondo casi negro puro (muy oscuro) */
+  --bg-card: #0a0a0a;             
+  --bg-input: #0a0a0a;            
+  
+  --text-main: #ffffff;           /* Texto blanco puro */
+  --text-muted: #9ca3af; 
+  
+  --border-color: #ffffff;        /* Bordes blancos */
+  --border-focus: #ffffff;
+  --bg-overlay: rgba(255, 255, 255, 0.05);
+  color-scheme: dark;
+}
+
+/* ========================================================
+   MODULO SHOP (TIENDA ONLINE)
+======================================================== */
+/* ----------------------------------------------------
+   TEMA DEL SHOP CLARO
+---------------------------------------------------- */
+.shop-theme {
+  --color-primary: #000000;       /* Negro elegante */
+  --color-primary-text: #ffffff;
+  --color-primary-hover: #333333;
+  --color-secondary: #f3f4f6;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #f59e0b;       
+  --color-success: #10b981;       
+  
+  --bg-main: #ffffff;             /* Blanco puro premium */
+  --bg-card: #ffffff;             
+  --bg-input: #f9fafb;            
+  
+  --text-main: #111827;           /* Texto muy oscuro */
+  --text-muted: #6b7280;          
+  
+  --border-color: #e5e7eb;        /* Bordes sutiles */
+  --border-focus: #000000;
+  --bg-overlay: rgba(0, 0, 0, 0.05);
+  color-scheme: light;
+}
+
+/* ----------------------------------------------------
+   TEMA DEL SHOP OSCURO
+---------------------------------------------------- */
+.shop-theme-dark {
+  --color-primary: #ffffff;       
+  --color-primary-text: #000000;       
+  --color-primary-hover: #e5e7eb;
+  --color-secondary: #1f2937;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #fbbf24;       
+  --color-success: #34d399;       
+  
+  --bg-main: #0f172a;             /* Fondo slate oscuro elegante */
+  --bg-card: #1e293b;             
+  --bg-input: #334155;            
+  
+  --text-main: #f8fafc;           
+  --text-muted: #94a3b8; 
+  
+  --border-color: #334155;        
+  --border-focus: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+
+
+
+
+/* ========================================================
+   MODULO PROFILE (PERFIL DE USUARIO)
+======================================================== */
+/* ----------------------------------------------------
+   TEMA DEL PROFILE CLARO
+---------------------------------------------------- */
+.profile-theme {
+  --color-primary: #000000;       /* Negro elegante */
+  --color-primary-text: #ffffff;
+  --color-primary-hover: #333333;
+  --color-secondary: #f3f4f6;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #f59e0b;       
+  --color-success: #10b981;       
+  
+  --bg-main: #ffffff;             /* Blanco puro premium */
+  --bg-card: #ffffff;             
+  --bg-input: #f9fafb;            
+  
+  --text-main: #111827;           /* Texto muy oscuro */
+  --text-muted: #6b7280;          
+  
+  --border-color: #e5e7eb;        /* Bordes sutiles */
+  --border-focus: #000000;
+  --bg-overlay: rgba(0, 0, 0, 0.05);
+  color-scheme: light;
+}
+
+/* ----------------------------------------------------
+   TEMA DEL PROFILE OSCURO
+---------------------------------------------------- */
+.profile-theme-dark {
+  --color-primary: #ffffff;       
+  --color-primary-text: #000000;       
+  --color-primary-hover: #cccccc;
+  --color-secondary: #1a1a1a;     
+  --color-danger: #ef4444;        
+  --color-danger-hover: #dc2626;
+  --color-warning: #fbbf24;       
+  --color-success: #34d399;       
+  
+  --bg-main: #000000;             /* Fondo negro puro */
+  --bg-card: #0a0a0a;             /* Fondo tarjeta casi negro */
+  --bg-input: #111111;            /* Fondo input oscuro */
+  
+  --text-main: #ffffff;           
+  --text-muted: #a3a3a3; 
+  
+  --border-color: #262626;        
+  --border-focus: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+

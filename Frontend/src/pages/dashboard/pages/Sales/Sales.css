@@ -1,0 +1,255 @@
+.sales-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sales-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sales-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.sales-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.sales-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-card);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  flex: 1;
+  min-width: 250px;
+  color: var(--text-muted);
+}
+
+.sales-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+.sales-filter-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-card);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+}
+
+.sales-select-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-main);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sales-table-container {
+  background-color: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sales-table th {
+  background-color: var(--bg-main);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: left;
+  padding: 16px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.sales-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.sales-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sales-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-btn {
+  color: var(--color-primary);
+}
+
+.view-btn:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.1);
+}
+
+/* Modal details */
+.sale-detail-section {
+  margin-bottom: 24px;
+  background: var(--bg-main);
+  padding: 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+.sale-detail-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .sale-detail-section {
+    border: none;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 30px;
+  }
+}
+
+/* MOBILE KPI SETTINGS */
+@media (max-width: 768px) {
+  .sales-kpi-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .sales-kpi-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+    gap: 4px !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .sales-kpi-label {
+    font-size: 10px !important;
+    letter-spacing: 0 !important;
+    line-height: 1.2 !important;
+  }
+  .sales-kpi-value {
+    font-size: 20px !important;
+  }
+
+  /* HIDE ACTION COLUMNS ON MOBILE */
+  .actions-col {
+    display: none !important;
+  }
+
+  /* MOBILE TABLE ACTIONS DROPDOWN */
+  
+  .hide-on-pc {
+    display: block !important;
+  }
+}
+
+/* DESKTOP HIDE ACTIONS DROPDOWN */
+@media (min-width: 769px) {
+  .hide-on-pc {
+    display: none !important;
+  }
+}
+
+/* DROPDOWN STYLING */
+.mobile-actions-dropdown {
+  position: relative;
+}
+.dropdown-toggle {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 50;
+  min-width: 140px;
+  padding: 4px;
+}
+.mobile-actions-dropdown:focus-within .dropdown-content,
+.mobile-actions-dropdown:hover .dropdown-content {
+  display: block;
+}
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.dropdown-item:hover {
+  background: var(--bg-input);
+  color: var(--color-primary);
+}
+
+.sales-table:focus-within { overflow: visible !important; }
+
