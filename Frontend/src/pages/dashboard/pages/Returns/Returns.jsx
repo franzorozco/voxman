@@ -101,7 +101,7 @@ export default function Returns() {
             <Filter size={24} />
           </div>
           <div className="metric-content">
-            <div className="metric-label">Tasa de Devoluci髇</div>
+            <div className="metric-label">Tasa de Devoluci贸n</div>
             <div className="metric-value">{summary.return_rate}%</div>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function Returns() {
               >
                 <option value="">Todos los Estados</option>
                 <option value="pending">Pendiente</option>
-                <option value="inspection">En Inspecci髇</option>
+                <option value="inspection">En Inspecci贸n</option>
                 <option value="approved">Aprobado / Reembolsado</option>
                 <option value="rejected">Rechazado</option>
               </CustomSelect>
@@ -181,7 +181,7 @@ export default function Returns() {
                 <th>Estado</th>
                 <th>Reembolso</th>
                 <th>Fecha</th>
-                <th className="actions-col" style={{ textAlign: 'right' }}>Acci髇</th>
+                <th className="actions-col" style={{ textAlign: 'right' }}>Acci贸n</th>
               </tr>
             </thead>
             <tbody>
@@ -252,7 +252,7 @@ export default function Returns() {
                     <td>
                       <span className={`status-badge status-${ret.status}`}>
                         {ret.status === 'pending' && 'Pendiente'}
-                        {ret.status === 'inspection' && 'Inspecci髇'}
+                        {ret.status === 'inspection' && 'Inspecci贸n'}
                         {ret.status === 'approved' && 'Aprobado'}
                         {ret.status === 'rejected' && 'Rechazado'}
                       </span>

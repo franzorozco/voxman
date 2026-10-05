@@ -116,7 +116,7 @@ export default function FinanceDashboard() {
             <h1 style={{ fontSize: '28px', fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-main)' }}>
             Resumen General
             </h1>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '15px' }}>Control de ingresos, gastos y tesorería en tiempo real.</p>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '15px' }}>Control de ingresos, gastos y tesorerÃ­a en tiempo real.</p>
         </div>
         <div className="responsive-filters finance-filters">
             <div style={{ zIndex: 10 }}>
@@ -182,9 +182,9 @@ export default function FinanceDashboard() {
               <div style={{ background: 'var(--bg-overlay)', padding: '8px', borderRadius: '10px', color: 'var(--color-primary)', display: 'flex' }}>
                 <Activity size={20} />
               </div>
-              Tesorería Global de la Marca
+              TesorerÃ­a Global de la Marca
             </h2>
-            <p style={{ margin: '5px 0 0 46px', fontSize: '14px', color: 'var(--text-muted)' }}>Balance real de los fondos físicos y digitales de la tienda.</p>
+            <p style={{ margin: '5px 0 0 46px', fontSize: '14px', color: 'var(--text-muted)' }}>Balance real de los fondos fÃ­sicos y digitales de la tienda.</p>
           </div>
           <div className="treasury-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', padding: '20px', background: 'transparent' }}>
   
@@ -240,7 +240,7 @@ export default function FinanceDashboard() {
       Bs. {Number(summary.treasury.details.giftcard?.sales || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
     </div>
     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', borderTop: '1px solid rgba(168, 85, 247, 0.2)', paddingTop: '10px', lineHeight: '1.4' }}>
-      Suma a Ingresos Brutos, pero no inyecta dinero f�sico nuevo a las cajas.
+      Suma a Ingresos Brutos, pero no inyecta dinero físico nuevo a las cajas.
     </div>
   </div>
 
@@ -366,7 +366,7 @@ export default function FinanceDashboard() {
                       </div>
                       <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px' }}>
-                        <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>Proyección (Restando Deudas):</span>
+                        <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>ProyecciÃ³n (Restando Deudas):</span>
                         <span style={{ fontWeight: 700, color: (activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed - activeOwnerData.pending_debts) >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
                           Bs. {Number(activeOwnerData.sales_revenue - activeOwnerData.expenses_assumed - activeOwnerData.pending_debts).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </span>
@@ -386,7 +386,7 @@ export default function FinanceDashboard() {
                               {b.branch_name}
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", gap: "8px", flexWrap: "wrap" }}>
-                              <span style={{ color: 'var(--text-muted)' }}>Caja Física:</span>
+                              <span style={{ color: 'var(--text-muted)' }}>Caja FÃ­sica:</span>
                               <div style={{ color: "var(--color-primary)", fontWeight: 600 }}>
                                 Bs. {Number(b.cash_balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                               </div>
@@ -464,10 +464,10 @@ export default function FinanceDashboard() {
                       <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--text-main)' }}>Historial de Movimientos (Kardex)</h3>
                     </div>
 
-                    {/* Gráfico de Evolución */}
+                    {/* GrÃ¡fico de EvoluciÃ³n */}
                     {ledgerData.length > 0 && (
                       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
-                        <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', color: 'var(--text-main)' }}>Evolución del Capital</h3>
+                        <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', color: 'var(--text-main)' }}>EvoluciÃ³n del Capital</h3>
                         <div className="chart-scroll-container" style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                           <div style={{ minWidth: '500px', height: '250px' }}>
                             <ResponsiveContainer width="100%" height="100%">
@@ -490,7 +490,7 @@ export default function FinanceDashboard() {
                           <tr>
                             <th>Fecha</th>
                             <th>Sucursal</th>
-                            <th>Descripción</th>
+                            <th>DescripciÃ³n</th>
                             <th>Tipo</th>
                             <th style={{ textAlign: 'right' }}>Monto (Bs)</th>
                             <th style={{ textAlign: 'right' }}>Saldo Ant. (Bs)</th>

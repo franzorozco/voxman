@@ -23,7 +23,7 @@ export default function Promotions() {
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [selectedCouponPromo, setSelectedCouponPromo] = useState(null);
 
-  // Menú de acciones (Dropdown)
+  // MenÃº de acciones (Dropdown)
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -64,13 +64,13 @@ export default function Promotions() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas desactivar/eliminar esta promoción?")) return;
+    if (!window.confirm("Â¿Seguro que deseas desactivar/eliminar esta promociÃ³n?")) return;
     try {
       await deletePromotion(id);
-      toast.success("Promoción eliminada");
+      toast.success("PromociÃ³n eliminada");
       fetchPromotions();
     } catch (error) {
-      toast.error("Error al eliminar la promoción");
+      toast.error("Error al eliminar la promociÃ³n");
     }
   };
 
@@ -102,7 +102,7 @@ export default function Promotions() {
           </div>
           <div>
             <h1 className="products-title promo-header-title">Promociones y Descuentos</h1>
-            <p className="promo-header-subtitle">Gestión de ofertas y cupones</p>
+            <p className="promo-header-subtitle">GestiÃ³n de ofertas y cupones</p>
           </div>
         </div>
 
@@ -115,10 +115,10 @@ export default function Promotions() {
     className="btn-primary" 
     onClick={() => handleOpenModal()}
     style={{ flex: isMobile ? 1 : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px' }}
-    title="Nueva Promoci�n"
+    title="Nueva Promoción"
   >
     <Plus size={18} />
-    {!isMobile && "Nueva Promoci�n"}
+    {!isMobile && "Nueva Promoción"}
   </button>
   <button 
     className="btn-secondary" 
@@ -138,7 +138,7 @@ export default function Promotions() {
       <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
       <input 
         style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-        placeholder="Buscar por nombre o c�digo..." 
+        placeholder="Buscar por nombre o código..." 
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
       />
@@ -165,7 +165,7 @@ export default function Promotions() {
           <option value="active">Activas</option>
           <option value="scheduled">Programadas (Futuras)</option>
           <option value="expired">Expiradas</option>
-          <option value="exhausted">Agotadas (L�mite de usos)</option>
+          <option value="exhausted">Agotadas (Límite de usos)</option>
           <option value="inactive">Inactivas</option>
         </CustomSelect>
       </div>
@@ -183,11 +183,11 @@ export default function Promotions() {
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Código</th>
+                <th>CÃ³digo</th>
                 <th>Tipo</th>
                 <th>Valor</th>
                 <th>Alcance (Targets)</th>
-                <th>Límites</th>
+                <th>LÃ­mites</th>
                 <th>Vigencia</th>
                 <th>Estado</th>
                 <th width="80" style={{ display: isMobile ? "none" : "table-cell" }}>Acciones</th>
@@ -200,7 +200,7 @@ export default function Promotions() {
                   // Calculate target count
                   let targetLabels = [];
                   if (promo.brands?.length) targetLabels.push(`${promo.brands.length} Marcas`);
-                  if (promo.categories?.length || promo.discount_categories?.length) targetLabels.push(`${(promo.categories || promo.discount_categories).length} Categorías`);
+                  if (promo.categories?.length || promo.discount_categories?.length) targetLabels.push(`${(promo.categories || promo.discount_categories).length} CategorÃ­as`);
                   if (promo.products?.length) targetLabels.push(`${promo.products.length} Productos`);
                   if (promo.variants?.length) targetLabels.push(`${promo.variants.length} Variantes`);
                   if (promo.branches?.length) targetLabels.push(`${promo.branches.length} Sucursales`);
@@ -216,7 +216,7 @@ export default function Promotions() {
                     statusClass = 'status-inactive';
                   } else if (promo.usage_limit && promo.used_count >= promo.usage_limit) {
                     statusText = 'Agotado';
-                    statusClass = 'status-inactive'; // Podríamos usar un gris
+                    statusClass = 'status-inactive'; // PodrÃ­amos usar un gris
                   } else if (promo.end_date && new Date(promo.end_date).setHours(23,59,59,999) < new Date().getTime()) {
                     statusText = 'Expirado';
                     statusClass = 'status-inactive';
@@ -250,19 +250,19 @@ export default function Promotions() {
     <span className="promo-name">{promo.name}</span>
   </div>
 </td>
-                    <td data-label="Código">
+                    <td data-label="CÃ³digo">
                       {promo.is_automatic ? (
-                        <span className="promo-automatic-label">Automático</span>
+                        <span className="promo-automatic-label">AutomÃ¡tico</span>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span className="promo-code-badge">
-                            {visibleCodes[promo.id] ? promo.code : '••••••••'}
+                            {visibleCodes[promo.id] ? promo.code : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
                           </span>
                           <button 
                             className="btn-secondary" 
                             style={{ padding: '4px', border: 'none', background: 'transparent' }}
                             onClick={() => setVisibleCodes(prev => ({ ...prev, [promo.id]: !prev[promo.id] }))}
-                            title={visibleCodes[promo.id] ? "Ocultar código" : "Mostrar código"}
+                            title={visibleCodes[promo.id] ? "Ocultar cÃ³digo" : "Mostrar cÃ³digo"}
                           >
                             {visibleCodes[promo.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
@@ -290,7 +290,7 @@ export default function Promotions() {
                           ))}
                           {targetLabels.length > 3 && (
                             <span className="promo-target-badge overflow">
-                              +{targetLabels.length - 3} más
+                              +{targetLabels.length - 3} mÃ¡s
                             </span>
                           )}
                         </div>
@@ -300,7 +300,7 @@ export default function Promotions() {
                         </span>
                       )}
                     </td>
-                    <td data-label="Límites">
+                    <td data-label="LÃ­mites">
                       <div className="promo-limits-text" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         {promo.usage_limit ? (
                           <span>Global: {promo.used_count || 0}/{promo.usage_limit}</span>
@@ -309,7 +309,7 @@ export default function Promotions() {
                           <span>Por cliente: {promo.usage_limit_per_customer}</span>
                         ) : null}
                         {!promo.usage_limit && !promo.usage_limit_per_customer && (
-                          <span>Sin límite</span>
+                          <span>Sin lÃ­mite</span>
                         )}
                       </div>
                     </td>
