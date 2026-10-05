@@ -77,6 +77,7 @@ const Catalog = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [visibleCount, setVisibleCount] = useState(12);
+  const [hideOutOfStock, setHideOutOfStock] = useState(false);
 
 
   const categoriesFetchedRef = useRef(false);
@@ -125,7 +126,7 @@ const Catalog = () => {
     setProducts([]);
     setHasMore(true);
     setVisibleCount(parseInt(cfg('catalog_products_per_page', '12'), 10));
-  }, [selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, shopSettings]);
+  }, [selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock, shopSettings]);
 
   // Obtener productos desde el backend (paginación server-side)
   useEffect(() => {
@@ -148,6 +149,7 @@ const Catalog = () => {
         if (debouncedMinPrice) params.min_price = debouncedMinPrice;
         if (debouncedMaxPrice) params.max_price = debouncedMaxPrice;
         if (sortBy) params.list_type = sortBy;
+        if (hideOutOfStock) params.hide_out_of_stock = 1;
 
         const response = await getProducts(params);
         const fetchedProducts = response.data?.data || response.data || [];
@@ -299,7 +301,9 @@ const Catalog = () => {
             image: mainImg.url,
             image2: secondImg?.url || mainImg.url,
             active_discounts: product.active_discounts,
-            is_bundle: product.is_bundle
+            is_bundle: product.is_bundle,
+            stock: product.stock,
+            in_stock: product.in_stock
           });
         });
       } else {
@@ -328,7 +332,9 @@ const Catalog = () => {
                 image: variant.variant_images[0].url,
                 image2: secondImg?.url || variant.variant_images[0].url,
                 active_discounts: product.active_discounts,
-                is_bundle: product.is_bundle
+                is_bundle: product.is_bundle,
+                stock: product.stock,
+                in_stock: product.in_stock
               });
             }
           }
@@ -349,7 +355,9 @@ const Catalog = () => {
               discount_label: product.discount_label,
               image: imageUrl,
               image2: imageUrl2,
-              is_bundle: product.is_bundle
+              is_bundle: product.is_bundle,
+              stock: product.stock,
+              in_stock: product.in_stock
             });
           }
         }
@@ -501,7 +509,7 @@ const Catalog = () => {
                             {cfg('catalog_badge_new_text', 'Nuevo')}
                           </div>
                         )}
-                        {(item.stock <= 0 || item.stock_quantity === 0 || item.in_stock === false) && cfg('catalog_badge_show_soldout', '1') !== '0' && (
+                        {(item.stock <= 0 || item.in_stock === false) && cfg('catalog_badge_show_soldout', '1') !== '0' && (
                           <div style={{ backgroundColor: cfg('catalog_badge_soldout_bg', '#ef4444'), color: cfg('catalog_badge_soldout_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                             {cfg('catalog_badge_soldout_text', 'Agotado')}
                           </div>
@@ -654,20 +662,29 @@ const Catalog = () => {
 
                       {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
                       {cfg('catalog_show_quick_add', '1') !== '0' && !item.is_bundle && quickAddProductId !== item.id && (
-                        <button
-                          className="catalog-card-add-btn"
-                          onClick={(e) => {
-                            const btn = e.currentTarget; // capturar ANTES de que React limpie currentTarget
-                            btn.classList.add('pop');
-                            setTimeout(() => {
-                              if (btn.isConnected) btn.classList.remove('pop'); // solo si sigue en el DOM
-                            }, 400);
-                            handleQuickAddClick(e, item.id);
-                          }}
-                          title="Añadir rápido"
-                        >
-                          <ShoppingBag size={17} />
-                        </button>
+                        (item.stock <= 0 || item.in_stock === false) ? (
+                          <button
+                            className="catalog-card-add-btn"
+                            onClick={(e) => { e.stopPropagation(); alert("Funcionalidad 'Avísame' en desarrollo."); }}
+                            title="Avísame cuando haya stock"
+                            style={{ width: 'auto', padding: '0 10px', borderRadius: '16px', fontSize: '11px', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }}
+                          >
+                            Avísame
+                          </button>
+                        ) : (
+                          <button
+                            className="catalog-card-add-btn"
+                            onClick={(e) => {
+                              const btn = e.currentTarget;
+                              btn.classList.add('pop');
+                              setTimeout(() => { if (btn.isConnected) btn.classList.remove('pop'); }, 400);
+                              handleQuickAddClick(e, item.id);
+                            }}
+                            title="Añadir rápido"
+                          >
+                            <ShoppingBag size={17} />
+                          </button>
+                        )
                       )}
                     </div>
                     {isExpanded && (
@@ -836,7 +853,7 @@ const Catalog = () => {
                         {cfg('catalog_badge_new_text', 'Nuevo')}
                       </div>
                     )}
-                    {(item.stock <= 0 || item.stock_quantity === 0 || item.in_stock === false) && cfg('catalog_badge_show_soldout', '1') !== '0' && (
+                    {(item.stock <= 0 || item.in_stock === false) && cfg('catalog_badge_show_soldout', '1') !== '0' && (
                       <div style={{ backgroundColor: cfg('catalog_badge_soldout_bg', '#ef4444'), color: cfg('catalog_badge_soldout_text_color', '#fff'), fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         {cfg('catalog_badge_soldout_text', 'Agotado')}
                       </div>
@@ -999,20 +1016,29 @@ const Catalog = () => {
 
                   {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
                   {cfg('catalog_show_quick_add', '1') !== '0' && !item.is_bundle && quickAddProductId !== item.id && (
-                    <button
-                      className="catalog-card-add-btn"
-                      onClick={(e) => {
-                        const btn = e.currentTarget; // capturar ANTES de que React limpie currentTarget
-                        btn.classList.add('pop');
-                        setTimeout(() => {
-                          if (btn.isConnected) btn.classList.remove('pop'); // solo si sigue en el DOM
-                        }, 400);
-                        handleQuickAddClick(e, item.id);
-                      }}
-                      title="Añadir rápido"
-                    >
-                      <ShoppingBag size={17} />
-                    </button>
+                    (item.stock <= 0 || item.in_stock === false) ? (
+                      <button
+                        className="catalog-card-add-btn"
+                        onClick={(e) => { e.stopPropagation(); alert("Funcionalidad 'Avísame' en desarrollo."); }}
+                        title="Avísame cuando haya stock"
+                        style={{ width: 'auto', padding: '0 10px', borderRadius: '16px', fontSize: '11px', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }}
+                      >
+                        Avísame
+                      </button>
+                    ) : (
+                      <button
+                        className="catalog-card-add-btn"
+                        onClick={(e) => {
+                          const btn = e.currentTarget;
+                          btn.classList.add('pop');
+                          setTimeout(() => { if (btn.isConnected) btn.classList.remove('pop'); }, 400);
+                          handleQuickAddClick(e, item.id);
+                        }}
+                        title="Añadir rápido"
+                      >
+                        <ShoppingBag size={17} />
+                      </button>
+                    )
                   )}
                 </div>
               </div>
@@ -1105,6 +1131,20 @@ const Catalog = () => {
               <option value="price_desc">Mayor a Menor</option>
               <option value="name_asc">Nombre: A - Z</option>
             </select>
+            
+            {/* Ocultar Agotados (Mobile) */}
+            <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input 
+                type="checkbox" 
+                id="hideOutOfStockMobile" 
+                checked={hideOutOfStock} 
+                onChange={(e) => setHideOutOfStock(e.target.checked)}
+                style={{ accentColor: 'var(--text-main)', cursor: 'pointer', width: '18px', height: '18px' }}
+              />
+              <label htmlFor="hideOutOfStockMobile" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer' }}>
+                Ocultar agotados
+              </label>
+            </div>
           </div>
         </>
       )}
@@ -1322,6 +1362,20 @@ const Catalog = () => {
               </CustomSelect>
             </div>
             )}
+
+            {/* Ocultar Agotados */}
+            <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input 
+                type="checkbox" 
+                id="hideOutOfStock" 
+                checked={hideOutOfStock} 
+                onChange={(e) => setHideOutOfStock(e.target.checked)}
+                style={{ accentColor: 'var(--text-main)', cursor: 'pointer' }}
+              />
+              <label htmlFor="hideOutOfStock" style={{ fontSize: '13px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: '500' }}>
+                Ocultar agotados
+              </label>
+            </div>
           </form>
 
           {/* ── ÁREA DE PRODUCTOS ── */}

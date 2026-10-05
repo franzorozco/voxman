@@ -21,7 +21,15 @@ class ShopProductController extends Controller
             'product_variants.size',
             'brand',
             'category'
-        ])->where('is_active', true);
+        ])
+        ->withSum('inventories', 'stock')
+        ->where('is_active', true);
+
+        if ($request->boolean('hide_out_of_stock')) {
+            $query->whereHas('inventories', function($q) {
+                $q->where('stock', '>', 0);
+            });
+        }
 
         // Filtro por categoría — solo UUIDs válidos (la columna es uuid en PostgreSQL;
         // un valor inválido provocaba un error 500 con la página de debug completa)
@@ -62,8 +70,17 @@ class ShopProductController extends Controller
             $query->where('base_price', '<=', (float) $maxPrice);
         }
 
-        // Ordenamiento — whitelist estricta. Cualquier valor no reconocido (incl. 'recomendados')
-        // cae al orden por defecto: sin ORDER BY la paginación de PostgreSQL no es determinista.
+        // Ordenamiento — primero los que tienen stock
+        // Subconsulta compatible con PostgreSQL para no usar el alias en expresiones de order by
+        $query->orderByRaw('(
+            SELECT CASE WHEN SUM(inventories.stock) > 0 THEN 1 ELSE 0 END
+            FROM inventories
+            INNER JOIN product_variants ON inventories.variant_id = product_variants.id
+            WHERE product_variants.product_id = products.id
+            AND inventories.deleted_at IS NULL
+            AND product_variants.deleted_at IS NULL
+        ) DESC');
+
         $type = is_string($request->input('list_type')) ? $request->input('list_type') : '';
         if ($type === 'trending') {
             $query->orderBy('views', 'desc');
@@ -203,6 +220,20 @@ class ShopProductController extends Controller
     private function toPublic($product)
     {
         $product->makeHidden(self::HIDDEN_PRODUCT);
+
+        if (isset($product->inventories_sum_stock)) {
+            $product->stock = (int) $product->inventories_sum_stock;
+            $product->in_stock = $product->stock > 0;
+        } elseif ($product->relationLoaded('product_variants')) {
+            $stock = 0;
+            foreach ($product->product_variants as $variant) {
+                if ($variant->relationLoaded('inventories')) {
+                    $stock += $variant->inventories->sum('stock');
+                }
+            }
+            $product->stock = $stock;
+            $product->in_stock = $stock > 0;
+        }
 
         if ($product->relationLoaded('product_variants')) {
             $this->hideVariants($product->product_variants);

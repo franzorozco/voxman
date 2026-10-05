@@ -40,4 +40,16 @@ class Product extends BaseProduct
     {
         return $this->hasMany(\App\Models\Shop\ShopShort::class, 'product_id')->where('is_active', true);
     }
+
+    public function inventories()
+    {
+        return $this->hasManyThrough(
+            \App\Models\Inventory\Inventory::class,
+            \App\Models\Catalog\ProductVariant::class,
+            'product_id',
+            'variant_id',
+            'id',
+            'id'
+        );
+    }
 }
