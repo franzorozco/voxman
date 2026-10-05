@@ -1,17 +1,17 @@
-/* ============================================
-   SHOP HOME — COLLAGE GRID
+﻿/* ============================================
+   SHOP HOME â€” COLLAGE GRID
 ============================================ */
 
-/* ═══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    BASE
-═══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .shop-home {
   background-color: var(--bg-main);
   min-height: 100vh;
 }
 
-/* ── Loading ── */
+/* â”€â”€ Loading â”€â”€ */
 .shop-home-loading {
   display: flex;
   align-items: center;
@@ -33,7 +33,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Hero ── */
+/* â”€â”€ Hero â”€â”€ */
 .shop-home-hero {
   text-align: center;
   padding: 60px 20px 40px;
@@ -56,7 +56,7 @@
   letter-spacing: 1px;
 }
 
-/* ── Botón CTA → catálogo ── */
+/* â”€â”€ BotÃ³n CTA â†’ catÃ¡logo â”€â”€ */
 .shop-home-catalog-btn {
   display: inline-flex;
   align-items: center;
@@ -89,9 +89,9 @@
   transform: translateX(5px);
 }
 
-/* ═══════════════════════════════════════════
-   COLLAGE GRID — BASE (Desktop 4 col)
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   COLLAGE GRID â€” BASE (Desktop 4 col)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .shop-collage-grid {
   display: grid;
@@ -102,12 +102,12 @@
   padding: 0 4px 4px;
 }
 
-/* ── Variantes de tamaño ── */
+/* â”€â”€ Variantes de tamaÃ±o â”€â”€ */
 .shop-collage-large { grid-column: span 2; grid-row: span 2; }
 .shop-collage-tall  { grid-row: span 2; }
 .shop-collage-wide  { grid-column: span 2; }
 
-/* ── Item ── */
+/* â”€â”€ Item â”€â”€ */
 .shop-collage-item {
   position: relative;
   overflow: hidden;
@@ -116,7 +116,7 @@
   background-color: #f0f0f0;
 }
 
-/* ── Imagen ── */
+/* â”€â”€ Imagen â”€â”€ */
 .shop-collage-img {
   width: 100%;
   height: 100%;
@@ -125,7 +125,7 @@
   transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* ── Overlay degradado (siempre visible) ── */
+/* â”€â”€ Overlay degradado (siempre visible) â”€â”€ */
 .shop-collage-overlay {
   position: absolute;
   inset: 0;
@@ -163,7 +163,7 @@
   letter-spacing: 0.5px;
 }
 
-/* ── "Explorar" — siempre visible ── */
+/* â”€â”€ "Explorar" â€” siempre visible â”€â”€ */
 .shop-collage-action {
   font-size: 11px;
   font-weight: 600;
@@ -174,11 +174,11 @@
   display: block;    /* block para que ::after herede el ancho completo */
 }
 
-/* ── Línea deslizante ──
+/* â”€â”€ LÃ­nea deslizante â”€â”€
    Usamos scaleX en lugar de width: es GPU-acelerado
    y funciona en todos los navegadores / dispositivos.
-   transform-origin: left → crece de izquierda a derecha.
-── */
+   transform-origin: left â†’ crece de izquierda a derecha.
+â”€â”€ */
 .shop-collage-action::after {
   content: '';
   display: block;
@@ -190,11 +190,11 @@
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* ═══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    EFECTO HOVER / TOUCH
-   Desktop/tablet → :hover
-   Móvil          → .is-touched (añadida por JS en touchstart)
-═══════════════════════════════════════════ */
+   Desktop/tablet â†’ :hover
+   MÃ³vil          â†’ .is-touched (aÃ±adida por JS en touchstart)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 /* Zoom imagen */
 .shop-collage-item:hover .shop-collage-img,
@@ -202,13 +202,13 @@
   transform: scale(1.05);
 }
 
-/* ✨ Línea se despliega al pasar cursor o dedo */
+/* âœ¨ LÃ­nea se despliega al pasar cursor o dedo */
 .shop-collage-item:hover .shop-collage-action::after,
 .shop-collage-item.is-touched .shop-collage-action::after {
   transform: scaleX(1);
 }
 
-/* ── Sentinel de lazy loading ── */
+/* â”€â”€ Sentinel de lazy loading â”€â”€ */
 .shop-collage-sentinel {
   width: 100%;
   height: 1px;
@@ -216,9 +216,9 @@
   pointer-events: none;
 }
 
-/* ═══════════════════════════════════════════
-   RESPONSIVE — Tablet (769px – 1024px)
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   RESPONSIVE â€” Tablet (769px â€“ 1024px)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 @media (max-width: 1024px) {
   .shop-collage-grid {
@@ -232,10 +232,10 @@
   }
 }
 
-/* ═══════════════════════════════════════════
-   RESPONSIVE — Móvil (≤ 768px)
-   Patrón: [mini][mini] → [wide 2×2] → repeat
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   RESPONSIVE â€” MÃ³vil (â‰¤ 768px)
+   PatrÃ³n: [mini][mini] â†’ [wide 2Ã—2] â†’ repeat
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 @media (max-width: 768px) {
 
@@ -269,7 +269,7 @@
     padding: 0 2px 2px;
   }
 
-  /* Wide = 2 cols × 2 filas */
+  /* Wide = 2 cols Ã— 2 filas */
   .shop-collage-wide { grid-column: span 2; grid-row: span 2; }
   .shop-collage-large { grid-column: span 1; grid-row: span 1; }
   .shop-collage-tall  { grid-row: span 1; }
@@ -293,9 +293,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════
-   RESPONSIVE — Móvil pequeño (≤ 480px)
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   RESPONSIVE â€” MÃ³vil pequeÃ±o (â‰¤ 480px)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 @media (max-width: 480px) {
 

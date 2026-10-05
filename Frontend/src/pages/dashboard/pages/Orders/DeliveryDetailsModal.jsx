@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign, Store, MessageCircle } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
@@ -43,19 +43,19 @@ const STEPS_EXTERNAL = [
 ];
 
 const STEPS_PICKUP = [
-  { key: 'requested', label: 'Solicitado', description: 'Esperando confirmación o pago.' },
+  { key: 'requested', label: 'Solicitado', description: 'Esperando confirmaciÃ³n o pago.' },
   { key: 'reserved', label: 'Reservado', description: 'Pago confirmado, inventario reservado.' },
-  { key: 'preparing', label: 'Preparando', description: 'El pedido se está alistando.' },
-  { key: 'ready_for_pickup', label: 'Listo para recoger', description: 'El pedido está listo en la sucursal.' },
+  { key: 'preparing', label: 'Preparando', description: 'El pedido se estÃ¡ alistando.' },
+  { key: 'ready_for_pickup', label: 'Listo para recoger', description: 'El pedido estÃ¡ listo en la sucursal.' },
   { key: 'completed', label: 'Completado', description: 'El pedido fue entregado.' }
 ];
 
 const TRANSPORT_COMPANIES = [
-  { name: 'BoA (Boliviana de Aviación)', type: 'Avión' },
-  { name: 'EcoJet', type: 'Avión' },
+  { name: 'BoA (Boliviana de AviaciÃ³n)', type: 'AviÃ³n' },
+  { name: 'EcoJet', type: 'AviÃ³n' },
   { name: 'Trans Copacabana S.A.', type: 'Bus' },
   { name: 'Flota Copacabana MEM 1', type: 'Bus' },
-  { name: 'Bolívar', type: 'Bus' },
+  { name: 'BolÃ­var', type: 'Bus' },
   { name: 'El Dorado', type: 'Bus' },
   { name: 'Cosmos', type: 'Bus' },
   { name: 'Naser', type: 'Bus' },
@@ -278,7 +278,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       toast.success(res.data.message);
       fetchDetails();
     } catch (err) {
-      toast.error("Error al cambiar estado de edición");
+      toast.error("Error al cambiar estado de ediciÃ³n");
       console.error(err);
     } finally {
       setTogglingEdit(false);
@@ -309,7 +309,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       await updateDeliveryStatus(scheduleId, payload);
       const { data } = await getDeliveryDetails(scheduleId);
       setDetails(data.schedule);
-      toast.success(newStatus === 'cancelled' ? "Entrega cancelada" : "Actualización exitosa");
+      toast.success(newStatus === 'cancelled' ? "Entrega cancelada" : "ActualizaciÃ³n exitosa");
       onStatusChange();
     } catch (error) {
       toast.error("Error al actualizar estado");
@@ -382,7 +382,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const customer = sale?.customer;
   const guest = sale?.guest;
 
-  let clientName = "Anónimo";
+  let clientName = "AnÃ³nimo";
   let clientPhone = "No especificado";
   let clientType = "Desconocido";
   let clientCode = "N/A";
@@ -519,14 +519,14 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     // Local states
     pending: { color: '#eab308', rgb: '234, 179, 8', title: 'ENTREGA PENDIENTE', icon: <Clock size={24} />, pulse: false },
     assigned: { color: '#3b82f6', rgb: '59, 130, 246', title: 'ENTREGA AGENDADA', icon: <CalendarClock size={24} />, pulse: false },
-    on_the_way: { color: '#8b5cf6', rgb: '139, 92, 246', title: '¡EL PEDIDO ESTÁ EN CAMINO!', icon: <Truck size={28} className="pulse-anim" />, pulse: true },
-    at_the_meeting_point: { color: '#f97316', rgb: '249, 115, 22', title: '¡REPARTIDOR EN EL PUNTO!', icon: <MapPin size={28} className="pulse-anim" />, pulse: true },
+    on_the_way: { color: '#8b5cf6', rgb: '139, 92, 246', title: 'Â¡EL PEDIDO ESTÃ EN CAMINO!', icon: <Truck size={28} className="pulse-anim" />, pulse: true },
+    at_the_meeting_point: { color: '#f97316', rgb: '249, 115, 22', title: 'Â¡REPARTIDOR EN EL PUNTO!', icon: <MapPin size={28} className="pulse-anim" />, pulse: true },
     completed: { color: '#10b981', rgb: '16, 185, 129', title: 'ENTREGA COMPLETADA', icon: <CheckCircle size={28} />, pulse: false },
     cancelled: { color: '#ef4444', rgb: '239, 68, 68', title: 'ENTREGA CANCELADA', icon: <Ban size={28} className="pulse-anim" />, pulse: true },
     // External states
     prepared: { color: '#f97316', rgb: '249, 115, 22', title: 'PEDIDO PREPARADO', icon: <Package size={24} />, pulse: false },
     packaged: { color: '#0ea5e9', rgb: '14, 165, 233', title: 'PEDIDO EMPAQUETADO', icon: <Package size={24} />, pulse: false },
-    shipped: { color: '#3b82f6', rgb: '59, 130, 246', title: '¡PEDIDO REMITIDO!', icon: <Truck size={28} className="pulse-anim" />, pulse: true }
+    shipped: { color: '#3b82f6', rgb: '59, 130, 246', title: 'Â¡PEDIDO REMITIDO!', icon: <Truck size={28} className="pulse-anim" />, pulse: true }
   };
 
   const currentTheme = statusTheme[details.status] || statusTheme.pending;
@@ -554,7 +554,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     const sale = details.shipment?.sale;
     const items = sale?.sale_details || [];
     const recipientName = details.shipment?.recipient_name || 'Sin nombre';
-    const recipientPhone = details.shipment?.recipient_phone || 'Sin teléfono';
+    const recipientPhone = details.shipment?.recipient_phone || 'Sin telÃ©fono';
     const recipientCI = details.shipment?.recipient_ci || 'Sin CI';
     const destination = details.shipment?.destination_city || 'Sin destino';
     const total = parseFloat(grandTotal).toFixed(2);
@@ -596,7 +596,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Etiqueta de Envío - ${deliveryCode}</title>
+          <title>Etiqueta de EnvÃ­o - ${deliveryCode}</title>
           <style>
             @page { size: 8.5in 5.5in; margin: 0; }
             @media print {
@@ -663,16 +663,16 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div class="info-label">Carnet de Identidad (CI)</div>
             <div class="info-value">${recipientCI}</div>
             
-            <div class="info-label">Teléfono de Contacto</div>
+            <div class="info-label">TelÃ©fono de Contacto</div>
             <div class="info-value">${recipientPhone}</div>
           </div>
           <div class="right-col">
             <div class="logo-container">
               <img src="${logoUrl}" class="logo" alt="Logo" onerror="this.style.display='none'" />
             </div>
-            <div class="order-title">Detalle Envío</div>
+            <div class="order-title">Detalle EnvÃ­o</div>
             <div class="ref-info">
-              Ref Envío: <strong>${deliveryCode}</strong><br/>
+              Ref EnvÃ­o: <strong>${deliveryCode}</strong><br/>
               ${saleCode ? `Ref Venta: <strong>${saleCode}</strong>` : ''}
             </div>
             <div class="items-container">
@@ -836,7 +836,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   </div>
                   {clientCode !== 'N/A' && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Cód. Cliente:</span>
+                      <span style={{ color: 'var(--text-muted)' }}>CÃ³d. Cliente:</span>
                       <span style={{ fontWeight: 500 }}>{clientCode}</span>
                     </div>
                   )}
@@ -918,7 +918,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                             )}
                             {isBundleItem && (
                               <div style={{ alignSelf: 'flex-start', fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>
-                                ⭐ Ítem de Conjunto
+                                â­ Ãtem de Conjunto
                               </div>
                             )}
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
@@ -935,18 +935,18 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
                                   SKU: <b>{variant?.sku || 'N/A'}</b>
                                   {variant?.variant_attribute_values?.map((v, i) => (
-                                    <span key={i}> • {v.attribute_value?.attribute?.name || 'Atributo'}: {v.attribute_value?.value || 'N/A'}</span>
+                                    <span key={i}> â€¢ {v.attribute_value?.attribute?.name || 'Atributo'}: {v.attribute_value?.value || 'N/A'}</span>
                                   ))}
                                   {!variant?.variant_attribute_values?.some(v => v.attribute_value?.attribute?.name?.toLowerCase() === 'talla' || v.attribute_value?.attribute?.name?.toLowerCase() === 'size') && variant?.size && (
-                                    <span> • Talla: {variant.size.name}</span>
+                                    <span> â€¢ Talla: {variant.size.name}</span>
                                   )}
                                   {!variant?.variant_attribute_values?.some(v => v.attribute_value?.attribute?.name?.toLowerCase() === 'color' || v.attribute_value?.attribute?.name?.toLowerCase() === 'fit') && variant?.fit && (
-                                    <span> • Color/Fit: {variant.fit.name}</span>
+                                    <span> â€¢ Color/Fit: {variant.fit.name}</span>
                                   )}
                                 </div>
                                 {!isOutOfStock && !item.deleted_at && relevantReservations.length > 0 && (
                                   <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '4px' }}>
-                                    Extraído de <b>{branchName}</b>
+                                    ExtraÃ­do de <b>{branchName}</b>
                                   </div>
                                 )}
                                 {!isOutOfStock && !item.deleted_at && relevantReservations.length === 0 && (
@@ -1015,13 +1015,13 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   )}
                   {Number(details?.shipment?.agency_dispatch_cost) > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
-                      <span>Costo de Envío a Agencia:</span>
+                      <span>Costo de EnvÃ­o a Agencia:</span>
                       <span>Bs. {Number(details?.shipment?.agency_dispatch_cost).toFixed(2)}</span>
                     </div>
                   )}
                   {details?.shipment?.shipping_payment_type !== 'collect' && Number(details?.shipment?.shipping_cost) > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
-                      <span>Costo de Envío:</span>
+                      <span>Costo de EnvÃ­o:</span>
                       <span>Bs. {Number(details?.shipment?.shipping_cost || 0).toFixed(2)}</span>
                     </div>
                   )}
@@ -1046,7 +1046,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                   <textarea 
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Añade notas para la entrega, instrucciones especiales, etc."
+                    placeholder="AÃ±ade notas para la entrega, instrucciones especiales, etc."
                     style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '13px', resize: 'vertical' }}
                     disabled={isCancelled}
                   />
@@ -1089,7 +1089,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     <>
                       {details.driver.user?.employee?.employee_code && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Cód. Empleado:</span>
+                          <span style={{ color: 'var(--text-muted)' }}>CÃ³d. Empleado:</span>
                           <span style={{ fontWeight: 500 }}>{details.driver.user.employee.employee_code}</span>
                         </div>
                       )}
@@ -1136,7 +1136,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       <AlertTriangle size={14} /> Faltan datos para proceder
                     </h4>
                     <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#a16207', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {!hasValidClient && <li>Falta asignar un cliente válido.</li>}
+                      {!hasValidClient && <li>Falta asignar un cliente vÃ¡lido.</li>}
                       {!hasValidLocation && <li>Falta definir el lugar de entrega o destino.</li>}
                       {!hasValidTime && <li>Falta definir la fecha o el horario.</li>}
                       {!hasValidStock && <li>Faltan resolver problemas de stock en los productos.</li>}
@@ -1190,7 +1190,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                                 gap: '4px'
                               }}
                             >
-                              {togglingEdit ? '...' : (details.shipment?.recipient_edit_session?.is_shared ? <><Lock size={12} /> Dejar de Compartir</> : <><Unlock size={12} /> Compartir Edición</>)}
+                              {togglingEdit ? '...' : (details.shipment?.recipient_edit_session?.is_shared ? <><Lock size={12} /> Dejar de Compartir</> : <><Unlock size={12} /> Compartir EdiciÃ³n</>)}
                             </button>
                           </CanAccess>
                         </div>
@@ -1211,7 +1211,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       )}
                       {details.shipment?.recipient_phone && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Teléfono:</span>
+                          <span style={{ color: 'var(--text-muted)' }}>TelÃ©fono:</span>
                           <span style={{ fontWeight: 500 }}>{details.shipment.recipient_phone}</span>
                         </div>
                       )}
@@ -1228,7 +1228,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 {(details.shipment?.external_company || details.shipment?.external_guide) && (
                   <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
                     <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Truck size={14} /> Información de Transportadora
+                      <Truck size={14} /> InformaciÃ³n de Transportadora
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
                       {details.shipment?.external_company && (
@@ -1239,19 +1239,19 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       )}
                       {details.shipment?.external_guide && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Nro. de Guía:</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Nro. de GuÃ­a:</span>
                           <span style={{ fontWeight: 500, color: 'var(--color-primary)' }}>{details.shipment.external_guide}</span>
                         </div>
                       )}
                       {details.shipment?.shipping_payment_type && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Pago de Envío:</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Pago de EnvÃ­o:</span>
                           <span style={{ fontWeight: 500 }}>{details.shipment.shipping_payment_type === 'collect' ? 'Por Pagar (En Destino)' : 'Pagado (En Origen)'}</span>
                         </div>
                       )}
                       {details.shipment?.shipping_payment_type === 'collect' && Number(details.shipment.shipping_cost) > 0 && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>Costo de Envío:</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Costo de EnvÃ­o:</span>
                           <span style={{ fontWeight: 600 }}>Bs. {Number(details.shipment.shipping_cost).toFixed(2)}</span>
                         </div>
                       )}
@@ -1304,7 +1304,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       disabled={updating}
                     >
                       <AlertTriangle size={20} />
-                      Completar información
+                      Completar informaciÃ³n
                     </button>
                   ) : (
                     <button 
@@ -1350,7 +1350,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 const link = generateWhatsAppLink ? generateWhatsAppLink(details, clientPhone, clientName) : `https://wa.me/${clientPhone.replace(/\D/g, '')}`;
                 if (link && link !== "#") window.open(link, '_blank');
               }}
-              title={clientPhone === "No especificado" ? "El cliente no tiene teléfono registrado" : "Enviar mensaje de estado"}
+              title={clientPhone === "No especificado" ? "El cliente no tiene telÃ©fono registrado" : "Enviar mensaje de estado"}
             >
               <MessageCircle size={18} /> WhatsApp
             </button>
@@ -1403,7 +1403,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               )}
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Nro. de Guía / Tracking *</label>
+                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Nro. de GuÃ­a / Tracking *</label>
                 <input 
                   type="text" 
                   className="form-control" 
@@ -1415,7 +1415,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Costo de Envío (Bs) *</label>
+                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Costo de EnvÃ­o (Bs) *</label>
                 <input 
                   type="number" 
                   min="0"
@@ -1429,7 +1429,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Tipo de Pago de Envío</label>
+                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px', display: 'block' }}>Tipo de Pago de EnvÃ­o</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button 
                     onClick={() => setShippingPaymentType('paid')}
@@ -1466,7 +1466,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     return;
                   }
                   if (!externalGuide || shippingCost === '') {
-                    toast.error('Completa los datos de guía y costo');
+                    toast.error('Completa los datos de guÃ­a y costo');
                     return;
                   }
                   setShowShippedModal(false);
@@ -1504,7 +1504,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             </div>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: 'var(--text-main)' }}>Quitar Producto</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '24px', lineHeight: '1.5' }}>
-              ¿Seguro que deseas quitar UNA unidad de esta prenda de la venta? <br/><strong>Se devolverá al stock disponible.</strong>
+              Â¿Seguro que deseas quitar UNA unidad de esta prenda de la venta? <br/><strong>Se devolverÃ¡ al stock disponible.</strong>
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button 
@@ -1517,7 +1517,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 onClick={handleConfirmRemoveItem}
                 style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#f59e0b', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
               >
-                Sí, Quitar
+                SÃ­, Quitar
               </button>
             </div>
           </div>
@@ -1531,7 +1531,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             </div>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: 'var(--text-main)' }}>Cancelar Entrega</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '24px', lineHeight: '1.5' }}>
-              ¿Estás seguro de que deseas cancelar esta entrega? <br/><strong>Esta acción no se puede deshacer.</strong>
+              Â¿EstÃ¡s seguro de que deseas cancelar esta entrega? <br/><strong>Esta acciÃ³n no se puede deshacer.</strong>
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button 
@@ -1549,7 +1549,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
                 disabled={updating}
               >
-                Sí, Cancelar
+                SÃ­, Cancelar
               </button>
             </div>
           </div>
@@ -1668,7 +1668,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 ) : (
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>Código de Descuento o Giftcard</label>
+                      <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>CÃ³digo de Descuento o Giftcard</label>
                       <button 
                         onClick={() => setShowDiscountInput(false)}
                         style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '12px' }}

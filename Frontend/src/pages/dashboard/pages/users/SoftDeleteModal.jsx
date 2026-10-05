@@ -1,4 +1,4 @@
-export default function SoftDeleteModal({
+﻿export default function SoftDeleteModal({
   data,
   formData,
   onClose,
@@ -18,7 +18,7 @@ export default function SoftDeleteModal({
           <p><strong>Username:</strong> {data.username}</p>
         </div>
 
-        <p>Este usuario fue eliminado anteriormente. ¿Qué deseas hacer?</p>
+        <p>Este usuario fue eliminado anteriormente. Â¿QuÃ© deseas hacer?</p>
 
         <div className="modal-actions">
 

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
 
 export default function HowItWorks() {
@@ -14,14 +14,14 @@ export default function HowItWorks() {
   // Fallback
   if (steps.length === 0) {
     steps = [
-      { title: "Eliges y Confirmas", desc: "Realizas tu pedido a través de nuestra web o WhatsApp. Te confirmamos el stock inmediatamente." },
-      { title: "Empaque y Preparación", desc: "Preparamos tu orden con nuestra firma de empaque premium, asegurando que tu prenda llegue impecable." },
-      { title: "Despacho y Seguimiento", desc: "Coordinamos la entrega o realizamos el envío nacional. Te enviamos la guía o el comprobante para que sepas dónde está tu compra." }
+      { title: "Eliges y Confirmas", desc: "Realizas tu pedido a travÃ©s de nuestra web o WhatsApp. Te confirmamos el stock inmediatamente." },
+      { title: "Empaque y PreparaciÃ³n", desc: "Preparamos tu orden con nuestra firma de empaque premium, asegurando que tu prenda llegue impecable." },
+      { title: "Despacho y Seguimiento", desc: "Coordinamos la entrega o realizamos el envÃ­o nacional. Te enviamos la guÃ­a o el comprobante para que sepas dÃ³nde estÃ¡ tu compra." }
     ];
   }
 
   const sectionOverline = settings.shipping_process_overline || "Paso a Paso";
-  const sectionTitle = settings.shipping_process_title || "¿Cómo es el proceso?";
+  const sectionTitle = settings.shipping_process_title || "Â¿CÃ³mo es el proceso?";
   const layout = settings.shipping_process_layout || "list";
   const animation = settings.shipping_process_animation || "fade-left";
 

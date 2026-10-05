@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { getPermissions } from "../../../../api/admin/permissions";
 import { Key, Shield } from "lucide-react";
 import "./Permissions.css";
@@ -29,21 +29,21 @@ export default function Permissions() {
     const name = p.name;
     
     if (name.includes('sale') || name.includes('loyalty')) group = "Ventas";
-    else if (name.includes('order')) group = "Pedidos y Envíos";
+    else if (name.includes('order')) group = "Pedidos y EnvÃ­os";
     else if (name.includes('return')) group = "Devoluciones";
     else if (name.includes('cart')) group = "Carritos y Proformas";
     else if (name.includes('inventory')) group = "Inventario";
-    else if (name.includes('product') || name.includes('categor') || name.includes('discount')) group = "Catálogo de Productos";
+    else if (name.includes('product') || name.includes('categor') || name.includes('discount')) group = "CatÃ¡logo de Productos";
     else if (name.includes('finance') || name.includes('cashflow') || name.includes('expense') || name.includes('salary') || name.includes('salaries')) group = "Finanzas y Salarios";
     else if (name.includes('user') || name.includes('role') || name.includes('executive')) group = "Usuarios y Roles";
-    else if (name.includes('owner')) group = "Socios / Dueños";
+    else if (name.includes('owner')) group = "Socios / DueÃ±os";
     else if (name.includes('purchase') || name.includes('supplier')) group = "Compras y Proveedores";
     else if (name.includes('branch')) group = "Sucursales";
     else if (name.includes('giftcard')) group = "Giftcards";
     else if (name.includes('promotion')) group = "Promociones";
-    else if (name.includes('setting')) group = "Ajustes y Configuración";
-    else if (name.includes('audit')) group = "Auditoría";
-    else group = "Ajustes y Configuración";
+    else if (name.includes('setting')) group = "Ajustes y ConfiguraciÃ³n";
+    else if (name.includes('audit')) group = "AuditorÃ­a";
+    else group = "Ajustes y ConfiguraciÃ³n";
     if (!acc[group]) acc[group] = [];
     acc[group].push(p);
     return acc;

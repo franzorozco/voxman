@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { getBranches, deleteBranch } from "../../../../api/admin/branches";
@@ -129,7 +129,7 @@ export default function Branches() {
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              placeholder="Buscar sucursal por nombre o teléfono..."
+              placeholder="Buscar sucursal por nombre o telÃ©fono..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -167,7 +167,7 @@ export default function Branches() {
         <div className="view-toggle-segmented" style={{ display: 'inline-flex', background: 'var(--bg-input)', padding: '4px', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
           <button 
             onClick={() => setViewMode('grid')}
-            title="Vista de Cuadrícula"
+            title="Vista de CuadrÃ­cula"
             style={{ 
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', border: 'none', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.3s ease',
               background: viewMode === 'grid' ? 'var(--bg-card)' : 'transparent', 
@@ -214,7 +214,7 @@ export default function Branches() {
 
             const addressStr = branch.address 
               ? `${branch.address.street || ''} ${branch.address.city ? ', ' + branch.address.city : ''}`.trim() 
-              : 'Sin dirección registrada';
+              : 'Sin direcciÃ³n registrada';
 
             return (
               <div className="branch-card" key={branch.id}>
@@ -233,7 +233,7 @@ export default function Branches() {
                     </div>
                     <div className="info-item">
                       <Phone size={16} />
-                      <span>{branch.phone || 'Sin teléfono'}</span>
+                      <span>{branch.phone || 'Sin telÃ©fono'}</span>
                     </div>
                     <div className="info-item">
                       <User size={16} />
@@ -263,8 +263,8 @@ export default function Branches() {
           <thead>
             <tr>
               <th>Nombre</th>
-              <th>Dirección</th>
-              <th>Teléfono</th>
+              <th>DirecciÃ³n</th>
+              <th>TelÃ©fono</th>
               <th>Gerente</th>
               <th>Estado</th>
               <th style={{ display: isMobile ? "none" : "table-cell" }}>Acciones</th>
@@ -313,7 +313,7 @@ export default function Branches() {
                   <td>
                     {branch.address 
                       ? `${branch.address.street || ''} ${branch.address.city ? ', ' + branch.address.city : ''}` 
-                      : 'Sin dirección'}
+                      : 'Sin direcciÃ³n'}
                   </td>
                   <td>{branch.phone || '-'}</td>
                   <td>
@@ -362,8 +362,8 @@ export default function Branches() {
         onClose={() => setConfirmModal({ isOpen: false, id: null })}
         onConfirm={() => handleDelete(confirmModal.id)}
         title="Eliminar sucursal"
-        message="¿Estás seguro de eliminar esta sucursal? Se moverá a la papelera."
-        confirmText="Sí, eliminar"
+        message="Â¿EstÃ¡s seguro de eliminar esta sucursal? Se moverÃ¡ a la papelera."
+        confirmText="SÃ­, eliminar"
         type="danger"
       />
     </div>

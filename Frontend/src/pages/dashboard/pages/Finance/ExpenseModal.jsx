@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createExpense, updateExpense, payExpenseSplit } from "../../../../api/admin/finance";
@@ -129,7 +129,7 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
       if (dataToSend.recurrence_interval === "") delete dataToSend.recurrence_interval;
       
       if (formData.status === 'paid' && formData.deducted_from_wallet && !formData.fund_source) {
-        toast.error("Debes seleccionar de qué cuenta saldrá el dinero (Caja o Banco).");
+        toast.error("Debes seleccionar de quÃ© cuenta saldrÃ¡ el dinero (Caja o Banco).");
         setLoading(false);
         return;
       }
@@ -137,7 +137,7 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
       if (formData.split_type === 'custom') {
         const totalCustom = formData.splits.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
         if (Math.abs(totalCustom - Number(formData.amount)) > 0.01) {
-          toast.error("La suma de la división personalizada no coincide con el monto total del gasto.");
+          toast.error("La suma de la divisiÃ³n personalizada no coincide con el monto total del gasto.");
           setLoading(false);
           return;
         }
@@ -167,11 +167,11 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
   const handlePaySplit = async (splitId, deductedFromWallet, fundSource, branchId) => {
     setSplitError(null);
     if (deductedFromWallet && !fundSource) {
-      setSplitError("Debes seleccionar de qué cuenta saldrá el dinero (Caja o Banco).");
+      setSplitError("Debes seleccionar de quÃ© cuenta saldrÃ¡ el dinero (Caja o Banco).");
       return;
     }
     if (deductedFromWallet && !branchId) {
-      setSplitError("Debes seleccionar de qué sucursal se hará el descuento.");
+      setSplitError("Debes seleccionar de quÃ© sucursal se harÃ¡ el descuento.");
       return;
     }
     
@@ -239,22 +239,22 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                                 )}
 
                                 <div>
-                                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '10px', display: 'block' }}>¿Cómo realizarás este pago?</label>
+                                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '10px', display: 'block' }}>Â¿CÃ³mo realizarÃ¡s este pago?</label>
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     <div 
                                       onClick={() => { setFormData({...formData, deducted_from_wallet: false}); setSplitError(null); }}
                                       style={{ padding: '12px', borderRadius: '8px', border: !formData.deducted_from_wallet ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', background: !formData.deducted_from_wallet ? 'rgba(59, 130, 246, 0.05)' : 'var(--bg-card)', cursor: 'pointer', transition: 'all 0.2s' }}
                                     >
-                                      <strong style={{ color: !formData.deducted_from_wallet ? 'var(--color-primary)' : 'var(--text-main)', display: 'block', fontSize: '14px' }}>💳 Lo pagué de mi bolsillo</strong>
-                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Solo marcar como pagado. No se descontará dinero de la tienda.</span>
+                                      <strong style={{ color: !formData.deducted_from_wallet ? 'var(--color-primary)' : 'var(--text-main)', display: 'block', fontSize: '14px' }}>ðŸ’³ Lo paguÃ© de mi bolsillo</strong>
+                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Solo marcar como pagado. No se descontarÃ¡ dinero de la tienda.</span>
                                     </div>
 
                                     <div 
                                       onClick={() => { setFormData({...formData, deducted_from_wallet: true}); setSplitError(null); }}
                                       style={{ padding: '12px', borderRadius: '8px', border: formData.deducted_from_wallet ? '2px solid var(--color-danger)' : '1px solid var(--border-color)', background: formData.deducted_from_wallet ? 'rgba(239, 68, 68, 0.05)' : 'var(--bg-card)', cursor: 'pointer', transition: 'all 0.2s' }}
                                     >
-                                      <strong style={{ color: formData.deducted_from_wallet ? 'var(--color-danger)' : 'var(--text-main)', display: 'block', fontSize: '14px' }}>🏪 Sacar dinero de la tienda</strong>
-                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>El dinero se restará físicamente de la Caja o Banco de la tienda seleccionada.</span>
+                                      <strong style={{ color: formData.deducted_from_wallet ? 'var(--color-danger)' : 'var(--text-main)', display: 'block', fontSize: '14px' }}>ðŸª Sacar dinero de la tienda</strong>
+                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>El dinero se restarÃ¡ fÃ­sicamente de la Caja o Banco de la tienda seleccionada.</span>
                                     </div>
                                   </div>
                                 </div>
@@ -263,14 +263,14 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                     <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                                       <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
-                                        ¿De qué cuenta se pagará tu cuota?
+                                        Â¿De quÃ© cuenta se pagarÃ¡ tu cuota?
                                       </label>
                                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                         <div 
                                           onClick={() => setFormData({...formData, fund_source: 'cash'})}
                                           style={{ padding: '10px', borderRadius: '6px', border: formData.fund_source === 'cash' ? '2px solid var(--color-primary)' : '1px solid var(--border-color)', background: formData.fund_source === 'cash' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-input)', cursor: 'pointer', textAlign: 'center', fontSize: '13px', color: formData.fund_source === 'cash' ? 'var(--color-primary)' : 'var(--text-main)', fontWeight: formData.fund_source === 'cash' ? 600 : 400, transition: 'all 0.2s ease' }}
                                         >
-                                          Caja Física
+                                          Caja FÃ­sica
                                         </div>
                                         <div 
                                           onClick={() => setFormData({...formData, fund_source: 'bank'})}
@@ -283,7 +283,7 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                                     
                                     <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                                       <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '10px' }}>
-                                        ¿De qué sucursal se hará el descuento?
+                                        Â¿De quÃ© sucursal se harÃ¡ el descuento?
                                       </label>
                                       <CustomSelect 
                                         
@@ -354,7 +354,7 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                   </div>
 
                   <div className="form-group">
-                    <label>Categoría</label>
+                    <label>CategorÃ­a</label>
                     <CustomSelect name="category" value={formData.category} onChange={handleChange}>
                       <option value="General">General</option>
                       <option value="Alquiler">Alquiler</option>
@@ -379,8 +379,8 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                     <div className="form-group">
                       <label style={{ color: 'var(--color-primary)' }}>Origen de Fondos <span className="text-danger">*</span></label>
                       <CustomSelect name="fund_source" value={formData.fund_source} onChange={handleChange} required>
-                        <option value="">Selecciona de dónde salió el dinero</option>
-                        <option value="cash">Caja Física (Dinero en Tienda)</option>
+                        <option value="">Selecciona de dÃ³nde saliÃ³ el dinero</option>
+                        <option value="cash">Caja FÃ­sica (Dinero en Tienda)</option>
                         <option value="bank">Cuenta Bancaria (Transferencia)</option>
                       </CustomSelect>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
@@ -419,24 +419,24 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
                       onChange={handleChange}
                       style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                     />
-                    <label htmlFor="is_recurring" style={{ color: 'var(--color-primary)', cursor: 'pointer', margin: 0 }}>¿Es un Gasto Recurrente?</label>
+                    <label htmlFor="is_recurring" style={{ color: 'var(--color-primary)', cursor: 'pointer', margin: 0 }}>Â¿Es un Gasto Recurrente?</label>
                   </div>
                   
                   {formData.is_recurring && (
                     <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      A partir de la fecha seleccionada, al marcar este gasto como pagado, se generará automáticamente el gasto del próximo ciclo en estado "Pendiente".
+                      A partir de la fecha seleccionada, al marcar este gasto como pagado, se generarÃ¡ automÃ¡ticamente el gasto del prÃ³ximo ciclo en estado "Pendiente".
                     </span>
                   )}
                 </div>
 
                 <div className="form-group">
-                  <label>Descripción (Opcional)</label>
+                  <label>DescripciÃ³n (Opcional)</label>
                   <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Detalles adicionales..." style={{ minHeight: '80px' }}></textarea>
                 </div>
 
                 <div style={{ background: 'var(--bg-overlay)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <div className="form-group">
-                    <label style={{ color: 'var(--color-primary)' }}>¿Cómo se divide este gasto entre los socios?</label>
+                    <label style={{ color: 'var(--color-primary)' }}>Â¿CÃ³mo se divide este gasto entre los socios?</label>
                     <CustomSelect name="split_type" value={formData.split_type} onChange={handleChange}>
                       <option value="equal">Dividir en partes iguales (50/50)</option>
                       <option value="proportional">Dividir proporcional a las ventas del mes</option>
@@ -458,7 +458,7 @@ export default function ExpenseModal({ expense, onClose, onSuccess, isQuickPay =
 
                   {formData.split_type === 'custom' && (
                     <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Asignación Manual (Bs)</label>
+                      <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>AsignaciÃ³n Manual (Bs)</label>
                       {owners.map(o => {
                         const splitValue = formData.splits.find(s => s.owner_id === o.id)?.amount || '';
                         return (

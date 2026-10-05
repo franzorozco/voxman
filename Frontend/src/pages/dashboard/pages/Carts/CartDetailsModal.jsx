@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import { X, Package, Edit, CheckCircle, Truck, Bell, Trash2, RefreshCw } from "lucide-react";
 import "./Carts.css";
 import { API_BASE_URL } from "../../../../config/api";
@@ -102,7 +102,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                       ? (cart.customer.user 
                           ? (cart.customer.user.profile?.first_name + " " + (cart.customer.user.profile?.last_name_paternal || "")) 
                           : (cart.customer.posProfile?.first_name + " " + (cart.customer.posProfile?.last_name_paternal || ""))) 
-                      : (cart.guest ? (cart.guest.name || "Invitado") : "Usuario Anónimo")}
+                      : (cart.guest ? (cart.guest.name || "Invitado") : "Usuario AnÃ³nimo")}
                   </div>
                 </div>
                 <div>
@@ -120,7 +120,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                   </div>
                 </div>
                 <div>
-                  <div className="modal-info-label">Fecha de Creación</div>
+                  <div className="modal-info-label">Fecha de CreaciÃ³n</div>
                   <div className="font-semibold">{new Date(cart.created_at).toLocaleString()}</div>
                 </div>
                 <div>
@@ -137,7 +137,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                 <div style={{ height: '100%', padding: '16px', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Truck size={16} className="text-primary" />
-                    Información de Entrega
+                    InformaciÃ³n de Entrega
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
                     <div>
@@ -148,7 +148,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                     {cart.delivery_details.type === 'pickup' && (
                       <>
                         {cart.delivery_details.branch_name && <div><div className="modal-info-label">Sucursal</div><div className="modal-info-value">{cart.delivery_details.branch_name}</div></div>}
-                        {cart.delivery_details.address && <div><div className="modal-info-label">Dirección</div><div className="modal-info-value">{cart.delivery_details.address}</div></div>}
+                        {cart.delivery_details.address && <div><div className="modal-info-label">DirecciÃ³n</div><div className="modal-info-value">{cart.delivery_details.address}</div></div>}
                       </>
                     )}
 
@@ -165,7 +165,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                         {cart.delivery_details.zone && <div><div className="modal-info-label">Zona</div><div className="modal-info-value">{cart.delivery_details.zone}</div></div>}
                         {cart.delivery_details.street && <div><div className="modal-info-label">Calle</div><div className="modal-info-value">{cart.delivery_details.street}</div></div>}
                         {cart.delivery_details.reference && <div><div className="modal-info-label">Referencia</div><div className="modal-info-value">{cart.delivery_details.reference}</div></div>}
-                        {cart.delivery_details.address && <div><div className="modal-info-label">Dirección</div><div className="modal-info-value">{cart.delivery_details.address}</div></div>}
+                        {cart.delivery_details.address && <div><div className="modal-info-label">DirecciÃ³n</div><div className="modal-info-value">{cart.delivery_details.address}</div></div>}
                       </>
                     )}
 
@@ -173,7 +173,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                       <>
                         {cart.delivery_details.destination && <div><div className="modal-info-label">Destino</div><div className="modal-info-value">{cart.delivery_details.destination}</div></div>}
                         {cart.delivery_details.company && <div><div className="modal-info-label">Agencia</div><div className="modal-info-value">{cart.delivery_details.company}</div></div>}
-                        {cart.delivery_details.date && <div><div className="modal-info-label">Fecha de Envío</div><div className="modal-info-value">{cart.delivery_details.date}</div></div>}
+                        {cart.delivery_details.date && <div><div className="modal-info-label">Fecha de EnvÃ­o</div><div className="modal-info-value">{cart.delivery_details.date}</div></div>}
                       </>
                     )}
                   </div>
@@ -224,7 +224,7 @@ export default function CartDetailsModal({ cart, onClose, onEdit, onConvert, onC
                             <span className="modal-product-name">{item.product_variant?.product?.name || "Desconocido"}</span>
                             {isBundleItem && (
                               <span style={{ fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '4px', border: '1px solid #fde68a' }}>
-                                ✨ Ítem de Conjunto
+                                âœ¨ Ãtem de Conjunto
                               </span>
                             )}
                             {hasDiscount && (

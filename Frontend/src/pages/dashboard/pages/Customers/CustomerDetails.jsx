@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { X, MapPin, ShoppingBag, Gift, Ticket, Award, CreditCard, ChevronDown, ChevronUp, Clock, Store, User as UserIcon, Tag, Plus, Minus, History } from "lucide-react";
 import { getCustomerById, updateCustomerTags, adjustCustomerPoints, getCustomerTimeline } from "../../../../api/admin/customers";
 import { toast } from "react-hot-toast";
@@ -140,7 +140,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                 </div>
                 <div style={{ display: 'flex', gap: '20px', color: 'var(--text-muted)', fontSize: '14px', marginTop: '12px', flexWrap: 'wrap' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><UserIcon size={14}/> {customer.user?.email || 'Sin correo registrado'}</span>
-                  {profile.phone && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📞 {profile.phone}</span>}
+                  {profile.phone && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>ðŸ“ž {profile.phone}</span>}
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14}/> Miembro desde {new Date(customer.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default function CustomerDetails({ customerId, onClose }) {
             { id: 'overview', label: 'Resumen' },
             { id: 'timeline', label: 'Historial' },
             { id: 'sales', label: `Compras (${customer.sales?.length || 0})` },
-            { id: 'management', label: 'Gestión CRM' },
+            { id: 'management', label: 'GestiÃ³n CRM' },
             { id: 'giftcards', label: `Giftcards (${customer.received_giftcards?.length || 0})` },
             { id: 'discounts', label: 'Cupones' },
             { id: 'addresses', label: 'Direcciones' }
@@ -230,24 +230,24 @@ export default function CustomerDetails({ customerId, onClose }) {
                </h3>
                <div className="customer-modal-grid-2">
                   <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                     <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Información Personal</h4>
+                     <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>InformaciÃ³n Personal</h4>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
                            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Nombre Completo</label>
                            <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-main)' }}>{fullName}</div>
                         </div>
                         <div>
-                           <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Correo Electrónico</label>
+                           <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Correo ElectrÃ³nico</label>
                            <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{customer.user?.email || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No registrado (POS)</span>}</div>
                         </div>
                         <div>
-                           <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Teléfono</label>
+                           <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>TelÃ©fono</label>
                            <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{profile.phone || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No registrado</span>}</div>
                         </div>
                         {isWebCustomer && (
                           <>
                             <div>
-                               <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Género</label>
+                               <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>GÃ©nero</label>
                                <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{profile.gender === 'male' ? 'Masculino' : profile.gender === 'female' ? 'Femenino' : profile.gender === 'other' ? 'Otro' : <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No especificado</span>}</div>
                             </div>
                             <div>
@@ -259,7 +259,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                      </div>
                   </div>
                   <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                     <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Estadísticas de Cuenta</h4>
+                     <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>EstadÃ­sticas de Cuenta</h4>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
                            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Fecha de Registro</label>
@@ -283,12 +283,12 @@ export default function CustomerDetails({ customerId, onClose }) {
           {activeTab === 'timeline' && (
             <div className="fade-in">
               <h3 style={{ fontSize: '20px', marginBottom: '24px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <History size={20} color="var(--color-primary)"/> Línea de Tiempo
+                <History size={20} color="var(--color-primary)"/> LÃ­nea de Tiempo
               </h3>
               
               {timeline.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                  No hay actividad registrada aún.
+                  No hay actividad registrada aÃºn.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', paddingLeft: '20px' }}>
@@ -323,7 +323,7 @@ export default function CustomerDetails({ customerId, onClose }) {
           {activeTab === 'management' && (
             <div className="fade-in">
               <h3 style={{ fontSize: '20px', marginBottom: '24px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Store size={20} color="var(--color-primary)"/> Gestión de Cliente (CRM)
+                <Store size={20} color="var(--color-primary)"/> GestiÃ³n de Cliente (CRM)
               </h3>
               
               <div className="customer-modal-grid-2">
@@ -459,7 +459,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                               
                               {/* Items List */}
                               <div>
-                                <h5 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '1px' }}>Artículos ({sale.sale_details?.length || 0})</h5>
+                                <h5 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '1px' }}>ArtÃ­culos ({sale.sale_details?.length || 0})</h5>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                   {sale.sale_details?.map(detail => (
                                     <div key={detail.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -499,7 +499,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                                   </div>
                                 </div>
 
-                                <h5 style={{ margin: '24px 0 16px 0', fontSize: '14px', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '1px' }}>Métodos Utilizados</h5>
+                                <h5 style={{ margin: '24px 0 16px 0', fontSize: '14px', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '1px' }}>MÃ©todos Utilizados</h5>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                   {sale.payments?.map(payment => (
                                     <div key={payment.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', background: 'var(--bg-overlay)', padding: '8px 12px', borderRadius: '6px' }}>
@@ -526,7 +526,7 @@ export default function CustomerDetails({ customerId, onClose }) {
               ) : (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
                   <ShoppingBag size={48} style={{ opacity: 0.2, marginBottom: '16px', margin: '0 auto' }} />
-                  <p>Este cliente aún no tiene historial de compras.</p>
+                  <p>Este cliente aÃºn no tiene historial de compras.</p>
                 </div>
               )}
             </div>
@@ -587,9 +587,9 @@ export default function CustomerDetails({ customerId, onClose }) {
                                   </div>
                                   <div>
                                     <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '14px' }}>
-                                      {tx.type === 'issue' ? 'Emisión / Carga' : tx.type === 'redemption' ? 'Uso en Compra' : 'Reembolso'}
+                                      {tx.type === 'issue' ? 'EmisiÃ³n / Carga' : tx.type === 'redemption' ? 'Uso en Compra' : 'Reembolso'}
                                     </div>
-                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{new Date(tx.created_at).toLocaleString()} • {tx.notes || 'Automático'}</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{new Date(tx.created_at).toLocaleString()} â€¢ {tx.notes || 'AutomÃ¡tico'}</div>
                                   </div>
                                 </div>
                                 <div style={{ fontWeight: 700, fontSize: '16px', color: tx.type === 'issue' ? 'var(--color-success)' : 'var(--color-warning)' }}>
@@ -636,7 +636,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                           </div>
                           <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>{disc.name}</div>
                           <div style={{ fontSize: '12px', display: 'inline-block', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: '4px', border: '1px dotted var(--color-primary)' }}>
-                            CÓDIGO: {disc.code || 'AUTOMÁTICO'}
+                            CÃ“DIGO: {disc.code || 'AUTOMÃTICO'}
                           </div>
                         </div>
                       </div>
@@ -677,7 +677,7 @@ export default function CustomerDetails({ customerId, onClose }) {
               ) : (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
                   <MapPin size={48} style={{ opacity: 0.2, marginBottom: '16px', margin: '0 auto' }} />
-                  <p>No hay direcciones de envío guardadas.</p>
+                  <p>No hay direcciones de envÃ­o guardadas.</p>
                 </div>
               )}
             </div>

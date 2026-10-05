@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit, Truck, MoreVertical } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
@@ -94,7 +94,7 @@ export default function Carts() {
       type: 'delete',
       cartId: id,
       title: 'Eliminar Proforma',
-      message: '¿Estás seguro de eliminar permanentemente esta proforma? Esta acción no se puede deshacer.'
+      message: 'Â¿EstÃ¡s seguro de eliminar permanentemente esta proforma? Esta acciÃ³n no se puede deshacer.'
     });
   };
 
@@ -104,7 +104,7 @@ export default function Carts() {
       type: 'convert',
       cartId: id,
       title: 'Convertir a Venta',
-      message: '¿Convertir esta proforma en una venta exitosa? El stock se descontará de forma definitiva.'
+      message: 'Â¿Convertir esta proforma en una venta exitosa? El stock se descontarÃ¡ de forma definitiva.'
     });
   };
 
@@ -114,7 +114,7 @@ export default function Carts() {
       type: 'convert_order',
       cartId: id,
       title: 'Convertir a Entrega',
-      message: '¿Convertir esta proforma en una entrega pendiente? Podrás completar los datos de envío desde la página de Entregas.'
+      message: 'Â¿Convertir esta proforma en una entrega pendiente? PodrÃ¡s completar los datos de envÃ­o desde la pÃ¡gina de Entregas.'
     });
   };
 
@@ -174,12 +174,12 @@ export default function Carts() {
     }
 
     if (!phone) {
-      toast.error("El cliente no tiene un número de WhatsApp registrado.");
+      toast.error("El cliente no tiene un nÃºmero de WhatsApp registrado.");
       return;
     }
 
     const cleanPhone = phone.replace(/\D/g, '');
-    const message = `Hola ${name}, te contactamos de VOXman. Notamos que tienes un carrito de compras activo con algunos artículos. ¿Podemos ayudarte en algo para que concretes tu pedido?`;
+    const message = `Hola ${name}, te contactamos de VOXman. Notamos que tienes un carrito de compras activo con algunos artÃ­culos. Â¿Podemos ayudarte en algo para que concretes tu pedido?`;
     window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
 
     try {
@@ -191,7 +191,7 @@ export default function Carts() {
   };
 
   const handleRestore = async (id) => {
-    if (window.confirm("¿Seguro que deseas restaurar este carrito? Se extenderá su fecha de vencimiento.")) {
+    if (window.confirm("Â¿Seguro que deseas restaurar este carrito? Se extenderÃ¡ su fecha de vencimiento.")) {
       try {
         await restoreCart(id);
         toast.success("Carrito restaurado exitosamente.");
@@ -216,7 +216,7 @@ export default function Carts() {
         mappedType: cart.delivery_details.converted_mapped_type
       });
     } else {
-      toast.error("Datos de conversión no encontrados.");
+      toast.error("Datos de conversiÃ³n no encontrados.");
     }
   };
 
@@ -301,7 +301,7 @@ export default function Carts() {
             <CheckCircle size={24} />
           </div>
           <div className="metric-content">
-            <div className="metric-label">Tasa de Conversión</div>
+            <div className="metric-label">Tasa de ConversiÃ³n</div>
             <div className="metric-value">{summary.conversion_rate}%</div>
           </div>
         </div>
@@ -351,10 +351,10 @@ export default function Carts() {
                 value={filters.source}
                 onChange={(e) => setFilters({ ...filters, source: e.target.value })}
               >
-                <option value="">Todos los Orígenes</option>
-                <option value="store">Tienda Física</option>
+                <option value="">Todos los OrÃ­genes</option>
+                <option value="store">Tienda FÃ­sica</option>
                 <option value="web">Tienda Web</option>
-                <option value="mobile">App Móvil</option>
+                <option value="mobile">App MÃ³vil</option>
               </CustomSelect>
             </div>
 
@@ -384,13 +384,13 @@ export default function Carts() {
                 value={filters.sortBy}
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
               >
-                <option value="created_at">Fecha de Creación</option>
+                <option value="created_at">Fecha de CreaciÃ³n</option>
                 <option value="status">Estado</option>
                 <option value="source">Origen</option>
               </CustomSelect>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Dirección</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>DirecciÃ³n</label>
               <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sortDir}
@@ -461,7 +461,7 @@ export default function Carts() {
                             )}
                             {cart.status === 'ordered' && (
                               <button style={{ background: "transparent", border: "none", padding: "10px 12px", textAlign: "left", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", color: "var(--text-main)", width: "100%", fontSize: "14px" }} onClick={() => handleReopenSuccessModal(cart)}>
-                                <Eye size={16} /> Ver Conversión
+                                <Eye size={16} /> Ver ConversiÃ³n
                               </button>
                             )}
                             <CanAccess permission="delete_carts">
@@ -479,7 +479,7 @@ export default function Carts() {
                         ? (cart.customer.user 
                             ? (cart.customer.user.profile?.first_name + " " + (cart.customer.user.profile?.last_name_paternal || "")) 
                             : (cart.customer.posProfile?.first_name + " " + (cart.customer.posProfile?.last_name_paternal || ""))) 
-                        : (cart.guest ? (cart.guest.name || "Invitado") : "Anónimo")}
+                        : (cart.guest ? (cart.guest.name || "Invitado") : "AnÃ³nimo")}
                     </td>
                     <td style={{ fontWeight: 600 }}>Bs. {Number(cart.total_amount ?? cart.total_amount_calculated).toFixed(2)}</td>
                     <td>
@@ -528,7 +528,7 @@ export default function Carts() {
                         </>
                       )}
                       {cart.status === 'ordered' && (
-                        <button className="btn-convert-order" onClick={() => handleReopenSuccessModal(cart)} title="Ver detalles de la conversión">
+                        <button className="btn-convert-order" onClick={() => handleReopenSuccessModal(cart)} title="Ver detalles de la conversiÃ³n">
                           <Truck size={18} />
                         </button>
                       )}
@@ -597,9 +597,9 @@ export default function Carts() {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
               <CheckCircle size={48} color="#10b981" />
             </div>
-            <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>Aplicación correcta</h2>
+            <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>AplicaciÃ³n correcta</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
-              La entrega se ha creado correctamente. A continuación los datos aplicados:
+              La entrega se ha creado correctamente. A continuaciÃ³n los datos aplicados:
             </p>
             
             <div style={{ background: 'var(--bg-input)', padding: '16px', borderRadius: '8px', textAlign: 'left', marginBottom: '24px', fontSize: '14px' }}>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { getImageUrl } from '../../../../utils/imageUtils';
 import {
   API_BASE_URL
@@ -93,7 +93,7 @@ export default function ProductsTable({
 
             <th>Etiquetas</th>
             <th>Propietario</th>
-            <th>Categoría</th>
+            <th>CategorÃ­a</th>
             <th>Descuento</th>
 
             <SortableTh label="Precio" field="price" />
@@ -228,12 +228,12 @@ export default function ProductsTable({
                         ))}
                       </div>
                     ) : (
-                      <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>—</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>â€”</span>
                     )}
                   </td>
 
                   <td>{p.owner_name || "Sin propietario"}</td>
-                  <td>{p.category?.name || "Sin categoría"}</td>
+                  <td>{p.category?.name || "Sin categorÃ­a"}</td>
 
                   {/* DISCOUNT */}
                   <td>
@@ -288,7 +288,7 @@ export default function ProductsTable({
                             width: "fit-content",
                           }}
                         >
-                          Categoría
+                          CategorÃ­a
                         </span>
 
                         <small style={{ fontWeight: 600 }}>

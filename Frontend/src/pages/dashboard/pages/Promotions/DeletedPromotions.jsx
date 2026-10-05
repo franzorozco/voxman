@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { ArrowLeft, RefreshCw, Trash2, Search, Ticket, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDeletedPromotions, restorePromotion, forceDeletePromotion } from "../../../../api/admin/discounts";
@@ -28,10 +28,10 @@ export default function DeletedPromotions() {
   };
 
   const handleRestore = async (id) => {
-    if (!window.confirm("¿Deseas restaurar esta promoción?")) return;
+    if (!window.confirm("Â¿Deseas restaurar esta promociÃ³n?")) return;
     try {
       await restorePromotion(id);
-      toast.success("Promoción restaurada");
+      toast.success("PromociÃ³n restaurada");
       fetchDeleted();
     } catch (error) {
       toast.error("Error al restaurar");
@@ -39,10 +39,10 @@ export default function DeletedPromotions() {
   };
 
   const handleForceDelete = async (id) => {
-    if (!window.confirm("¿Eliminar permanentemente? Esta acción es irreversible.")) return;
+    if (!window.confirm("Â¿Eliminar permanentemente? Esta acciÃ³n es irreversible.")) return;
     try {
       await forceDeletePromotion(id);
-      toast.success("Promoción eliminada permanentemente");
+      toast.success("PromociÃ³n eliminada permanentemente");
       fetchDeleted();
     } catch (error) {
       toast.error("Error al eliminar");
@@ -93,11 +93,11 @@ export default function DeletedPromotions() {
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Código</th>
+                <th>CÃ³digo</th>
                 <th>Tipo</th>
                 <th>Valor</th>
                 <th>Alcance</th>
-                <th>Eliminación</th>
+                <th>EliminaciÃ³n</th>
                 <th width="150">Acciones</th>
               </tr>
             </thead>
@@ -107,7 +107,7 @@ export default function DeletedPromotions() {
                   // Calculate target count
                   let targetLabels = [];
                   if (promo.brands?.length) targetLabels.push(`${promo.brands.length} Marcas`);
-                  if (promo.categories?.length || promo.discount_categories?.length) targetLabels.push(`${(promo.categories || promo.discount_categories).length} Categorías`);
+                  if (promo.categories?.length || promo.discount_categories?.length) targetLabels.push(`${(promo.categories || promo.discount_categories).length} CategorÃ­as`);
                   if (promo.products?.length) targetLabels.push(`${promo.products.length} Productos`);
                   if (promo.variants?.length) targetLabels.push(`${promo.variants.length} Variantes`);
                   if (promo.branches?.length) targetLabels.push(`${promo.branches.length} Sucursales`);
@@ -119,19 +119,19 @@ export default function DeletedPromotions() {
                     <td data-label="Nombre">
                       <span className="promo-name">{promo.name}</span>
                     </td>
-                    <td data-label="Código">
+                    <td data-label="CÃ³digo">
                       {!promo.code ? (
-                        <span className="promo-automatic-label">Automático</span>
+                        <span className="promo-automatic-label">AutomÃ¡tico</span>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span className="promo-code-badge">
-                            {visibleCodes[promo.id] ? promo.code : '••••••••'}
+                            {visibleCodes[promo.id] ? promo.code : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
                           </span>
                           <button 
                             className="btn-secondary" 
                             style={{ padding: '4px', border: 'none', background: 'transparent' }}
                             onClick={() => setVisibleCodes(prev => ({ ...prev, [promo.id]: !prev[promo.id] }))}
-                            title={visibleCodes[promo.id] ? "Ocultar código" : "Mostrar código"}
+                            title={visibleCodes[promo.id] ? "Ocultar cÃ³digo" : "Mostrar cÃ³digo"}
                           >
                             {visibleCodes[promo.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
@@ -159,7 +159,7 @@ export default function DeletedPromotions() {
                           ))}
                           {targetLabels.length > 3 && (
                             <span className="promo-target-badge overflow">
-                              +{targetLabels.length - 3} más
+                              +{targetLabels.length - 3} mÃ¡s
                             </span>
                           )}
                         </div>
@@ -169,7 +169,7 @@ export default function DeletedPromotions() {
                         </span>
                       )}
                     </td>
-                    <td data-label="Eliminación">{new Date(promo.deleted_at).toLocaleDateString()}</td>
+                    <td data-label="EliminaciÃ³n">{new Date(promo.deleted_at).toLocaleDateString()}</td>
                     <td className="promo-actions-cell">
                       <span className="promo-actions-wrapper">
                         <button 
@@ -194,7 +194,7 @@ export default function DeletedPromotions() {
               ) : (
                 <tr>
                   <td colSpan="7" className="promo-empty-text">
-                    La papelera está vacía
+                    La papelera estÃ¡ vacÃ­a
                   </td>
                 </tr>
               )}

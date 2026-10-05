@@ -1,4 +1,4 @@
-import { X, Printer } from "lucide-react";
+﻿import { X, Printer } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -34,7 +34,7 @@ export default function PayslipModal({ payment, onClose }) {
           <div className="payslip-header-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', fontSize: '14px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <p style={{ margin: '0 0 5px 0' }}><strong>Empleado:</strong> {fullName}</p>
-              <p style={{ margin: '0 0 5px 0' }}><strong>Código:</strong> {payment.employee?.employee_code}</p>
+              <p style={{ margin: '0 0 5px 0' }}><strong>CÃ³digo:</strong> {payment.employee?.employee_code}</p>
               <p style={{ margin: '0' }}><strong>Cargo:</strong> {payment.employee?.role}</p>
             </div>
             <div className="payslip-header-right" style={{ textAlign: 'right' }}>
@@ -86,7 +86,7 @@ export default function PayslipModal({ payment, onClose }) {
               </tr>
               <tr>
                 <td colSpan="3" style={{ padding: '15px 0', textAlign: 'right', fontSize: '18px' }}>
-                  <strong>LÍQUIDO PAGABLE: Bs. {Number(payment.total_paid).toFixed(2)}</strong>
+                  <strong>LÃQUIDO PAGABLE: Bs. {Number(payment.total_paid).toFixed(2)}</strong>
                 </td>
               </tr>
             </tfoot>

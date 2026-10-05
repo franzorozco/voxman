@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import toast from "react-hot-toast";
@@ -7,16 +7,16 @@ import { exchangeGoogleCode } from "../../api/admin/auth";
 
 // Mensajes para los errores que devuelve el backend en /login?error=...
 const ERROR_MESSAGES = {
-  email_not_verified: "Tu correo de Google no está verificado.",
-  account_disabled: "Tu cuenta está desactivada. Contacta a soporte.",
-  invalid_state: "La sesión de Google expiró. Inténtalo de nuevo.",
+  email_not_verified: "Tu correo de Google no estÃ¡ verificado.",
+  account_disabled: "Tu cuenta estÃ¡ desactivada. Contacta a soporte.",
+  invalid_state: "La sesiÃ³n de Google expirÃ³. IntÃ©ntalo de nuevo.",
 };
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuthStore();
-  // React StrictMode ejecuta los efectos 2 veces; el código es de un solo uso, así que solo se canjea una vez
+  // React StrictMode ejecuta los efectos 2 veces; el cÃ³digo es de un solo uso, asÃ­ que solo se canjea una vez
   const handled = useRef(false);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function OAuthCallback() {
     handled.current = true;
 
     const handleCallback = async () => {
-      // 🔒 La URL ya no trae el token de sesión, solo un código de un solo uso (60 s).
+      // ðŸ”’ La URL ya no trae el token de sesiÃ³n, solo un cÃ³digo de un solo uso (60 s).
       // Se borra de la barra de direcciones/historial de inmediato.
       const params = new URLSearchParams(location.search);
       const code = params.get("code");
@@ -32,7 +32,7 @@ export default function OAuthCallback() {
       window.history.replaceState({}, "", "/auth/callback");
 
       if (error) {
-        toast.error(ERROR_MESSAGES[error] || "Error al iniciar sesión con Google");
+        toast.error(ERROR_MESSAGES[error] || "Error al iniciar sesiÃ³n con Google");
         navigate("/login", { replace: true });
         return;
       }
@@ -47,7 +47,7 @@ export default function OAuthCallback() {
         const res = await exchangeGoogleCode(code);
         data = res.data;
       } catch (err) {
-        toast.error(err.response?.data?.message || "Error al iniciar sesión con Google");
+        toast.error(err.response?.data?.message || "Error al iniciar sesiÃ³n con Google");
         navigate("/login", { replace: true });
         return;
       }
@@ -61,7 +61,7 @@ export default function OAuthCallback() {
         return;
       }
 
-      // Usuario existente: iniciar sesión
+      // Usuario existente: iniciar sesiÃ³n
       if (data.type === "login" && data.token) {
         const token = data.token;
         try {
@@ -79,10 +79,10 @@ export default function OAuthCallback() {
 
           login({ user: res.data.user, token });
 
-          toast.success("¡Bienvenido!");
+          toast.success("Â¡Bienvenido!");
           navigate(origin === "shop" ? "/shop" : "/dashboard/home", { replace: true });
         } catch (err) {
-          toast.error("Error al obtener la información del usuario");
+          toast.error("Error al obtener la informaciÃ³n del usuario");
           navigate(origin === "shop" ? "/shop" : "/login", { replace: true });
         }
         return;
@@ -97,7 +97,7 @@ export default function OAuthCallback() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-main)', color: 'var(--text-main)' }}>
       <div style={{ textAlign: 'center' }}>
-        <h3 style={{ marginBottom: '10px' }}>Iniciando sesión...</h3>
+        <h3 style={{ marginBottom: '10px' }}>Iniciando sesiÃ³n...</h3>
         <p style={{ color: 'var(--text-muted)' }}>Conectando con Google</p>
       </div>
     </div>

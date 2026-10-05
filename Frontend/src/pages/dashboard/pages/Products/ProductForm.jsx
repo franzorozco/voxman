@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import { API_BASE_URL } from "../../../../config/api";
 import { useEffect, useState, useRef } from "react";
 import { getAttributes } from "../../../../api/admin/attributes";
@@ -382,7 +382,7 @@ export default function ProductForm({
   const [showSwitchWarning, setShowSwitchWarning] = useState(false);
   const [showStrategyWarning, setShowStrategyWarning] = useState(false);
 
-  // Imágenes por Variante o Color
+  // ImÃ¡genes por Variante o Color
   const [colorImages, setColorImages] = useState({});
   const [variantImages, setVariantImages] = useState({});
   const [advancedImageMode, setAdvancedImageMode] = useState("color");
@@ -458,7 +458,7 @@ export default function ProductForm({
     // Check if any defined axis is empty
     const emptyDefinedAxis = simpleConfig.axes.find(a => a.id && a.values.length === 0);
     if (emptyDefinedAxis) {
-      setSimpleModeError("Hay ejes configurados que no tienen ningún valor seleccionado.");
+      setSimpleModeError("Hay ejes configurados que no tienen ningÃºn valor seleccionado.");
       return;
     }
 
@@ -1078,14 +1078,14 @@ const getAttributeValueName = (valueId) => {
             <div className="product-form-right">
               <div className="form-grid">
 
-                {/* TODO TU FORM ACTUAL AQUÃ  */}
+                {/* TODO TU FORM ACTUAL AQUÃƒ  */}
                 <div className="form-group">
                   <label>Nombre</label>
                   <input name="name" value={form.name} onChange={handleChange} />
                 </div>
 
                 <div className="form-group">
-                  <label>Categoría</label>
+                  <label>CategorÃ­a</label>
                   <CustomSelect name="category_id" value={form.category_id} onChange={handleChange}>
                     <option value="">Seleccionar</option>
                     {categories.map(c => (
@@ -1141,7 +1141,7 @@ const getAttributeValueName = (valueId) => {
                 </div>
 
                 <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                  <label>Descripción</label>
+                  <label>DescripciÃ³n</label>
                   <textarea rows={4} name="description" value={form.description} onChange={handleChange} />
                 </div>
 
@@ -1188,7 +1188,7 @@ const getAttributeValueName = (valueId) => {
                             Variantes Generadas
                           </div>
                           <div className="variants-preview-description">
-                            Vista rápida en tiempo real de las variantes configuradas
+                            Vista rÃ¡pida en tiempo real de las variantes configuradas
                           </div>
                         </div>
 
@@ -1298,7 +1298,7 @@ const getAttributeValueName = (valueId) => {
                 </div>
 
                 <div className="variants-description">
-                  Configura variantes automáticas o manuales
+                  Configura variantes automÃ¡ticas o manuales
                   para este producto
                 </div>
               </div>
@@ -1325,11 +1325,11 @@ const getAttributeValueName = (valueId) => {
                 <div className="simple-mode-header">
                   <div>
                     <div className="simple-mode-title">
-                      Generación Automática
+                      GeneraciÃ³n AutomÃ¡tica
                     </div>
                     <div className="simple-mode-description">
                       Combina colores, tallas y atributos
-                      globales automáticamente
+                      globales automÃ¡ticamente
                     </div>
                   </div>
                 </div>
@@ -1437,7 +1437,7 @@ const getAttributeValueName = (valueId) => {
                             </button>
                           )}
                           {currentType === "attribute" && !isColorGrid && (
-                            <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: axisIndex, attributeId: axis.id }); setShowCreateAttribute(true); }} title="Crear nueva opción">
+                            <button type="button" className="add-mini-btn" onClick={() => { setActiveCreateContext({ mode: "simple", axisIndex: axisIndex, attributeId: axis.id }); setShowCreateAttribute(true); }} title="Crear nueva opciÃ³n">
                               <Plus size={18} strokeWidth={2.5} />
                             </button>
                           )}
@@ -1446,7 +1446,7 @@ const getAttributeValueName = (valueId) => {
                     );
                   })}
                   
-                  {/* BOTÓN PARA AGREGAR EJE */}
+                  {/* BOTÃ“N PARA AGREGAR EJE */}
                     <div style={{display: 'flex', justifyContent: 'center', marginTop: 10, gridColumn: '1 / -1'}}>
                       <CustomDropdown
                         buttonText="Agregar Eje"
@@ -1554,7 +1554,7 @@ const getAttributeValueName = (valueId) => {
                     <div style={{ marginBottom: 15 }}>
                       <h4 style={{ margin: 0 }}>Atributos Compartidos</h4>
                       <p style={{ margin: "5px 0 0 0", fontSize: "13px", color: "var(--text-muted)" }}>
-                        Estos atributos se aplicarán a todas las variantes (Selección Única).
+                        Estos atributos se aplicarÃ¡n a todas las variantes (SelecciÃ³n Ãšnica).
                       </p>
                     </div>
                   
@@ -1691,7 +1691,7 @@ const getAttributeValueName = (valueId) => {
                   return (
                     <div style={{ marginTop: 20, marginBottom: 20 }}>
                       <div style={{ fontSize: "0.95rem", fontWeight: 600, marginBottom: 15, color: "var(--text-main)" }}>
-                        Gestión de Imágenes por Color
+                        GestiÃ³n de ImÃ¡genes por Color
                       </div>
                       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                         {colorValues.map(colorId => {
@@ -1723,7 +1723,7 @@ const getAttributeValueName = (valueId) => {
                 {/* ====================================================== */}
 
                 <button type="button" className="simple-generate-btn btn-primary" onClick={generateSimpleVariants} >
-                  Generar Variantes Automáticamente
+                  Generar Variantes AutomÃ¡ticamente
                 </button>
                 {simpleModeError && (
                   <div className="error-text" style={{ color: "var(--color-danger)", marginTop: "10px", fontSize: "0.9rem", textAlign: "center" }}>
@@ -1745,13 +1745,13 @@ const getAttributeValueName = (valueId) => {
               {/* ADVANCED MODE HEADERS (IMAGE MODE TOGGLE) */}
               <div style={{ marginBottom: "20px", background: "var(--bg-overlay)", padding: "15px", borderRadius: "12px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: advancedImageMode === "color" ? "15px" : "0" }}>
-                  <div style={{ fontWeight: 600 }}>Estrategia de Imágenes</div>
+                  <div style={{ fontWeight: 600 }}>Estrategia de ImÃ¡genes</div>
                   <div className="variant-tabs">
                     <button type="button" className={`variant-tab ${advancedImageMode === "color" ? "active" : ""}`} onClick={() => handleImageModeSwitch("color")}>
                       Por Color (Compartidas)
                     </button>
                     <button type="button" className={`variant-tab ${advancedImageMode === "variant" ? "active" : ""}`} onClick={() => handleImageModeSwitch("variant")}>
-                      Por Variante (Únicas)
+                      Por Variante (Ãšnicas)
                     </button>
                   </div>
                 </div>
@@ -1759,7 +1759,7 @@ const getAttributeValueName = (valueId) => {
                 {advancedImageMode === "color" && (
                   <div>
                     <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "10px" }}>
-                      Imágenes compartidas por color entre todas las variantes
+                      ImÃ¡genes compartidas por color entre todas las variantes
                     </div>
                     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                       {Array.from(new Set(form.variants.map(v => v.attribute_value_ids?.[colorAttribute?.id]).filter(Boolean))).map(colorId => {
@@ -1798,7 +1798,7 @@ const getAttributeValueName = (valueId) => {
                     </div>
 
                     <div className="variant-card-subtitle">
-                      Configuración individual de variante
+                      ConfiguraciÃ³n individual de variante
                     </div>
                   </div>
 
@@ -1970,7 +1970,7 @@ const getAttributeValueName = (valueId) => {
                                 </button>
                               )}
                               {currentType === "attribute" && !isColorGrid && (
-                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setActiveCreateContext({ mode: "advanced", variantIndex: index, attributeId: currentId }); setShowCreateAttribute(true); }} title="Crear nueva opción">
+                                <button type="button" className="add-mini-btn" onClick={(e) => { e.preventDefault(); setActiveCreateContext({ mode: "advanced", variantIndex: index, attributeId: currentId }); setShowCreateAttribute(true); }} title="Crear nueva opciÃ³n">
                                   <Plus size={18} strokeWidth={2.5} />
                                 </button>
                               )}
@@ -2058,7 +2058,7 @@ const getAttributeValueName = (valueId) => {
                 </div>
 
                 <div className="variant-section-title">
-                  Información generada
+                  InformaciÃ³n generada
                 </div>
 
                 <div className="form-grid">
@@ -2096,7 +2096,7 @@ const getAttributeValueName = (valueId) => {
                   </div>
 
                   <div className="add-variant-subtitle">
-                    Crear una nueva configuración
+                    Crear una nueva configuraciÃ³n
                   </div>
                 </div>
               </button>
@@ -2106,7 +2106,7 @@ const getAttributeValueName = (valueId) => {
           </div>
 
           {/* =======================================
-              MODAL VER TODOS (DINÃ MICO PARA EJE N)
+              MODAL VER TODOS (DINÃƒ MICO PARA EJE N)
           ======================================= */}
           {activeAxisModal !== null && (() => {
             const axis = simpleConfig.axes[activeAxisModal];
@@ -2287,9 +2287,9 @@ const getAttributeValueName = (valueId) => {
                 {/* HEADER */}
                 <div className="create-modal-header">
                   <div>
-                    <h2>🎨 Nuevo Color</h2>
+                    <h2>ðŸŽ¨ Nuevo Color</h2>
                     <p>
-                      Agrega un color rápidamente sin salir
+                      Agrega un color rÃ¡pidamente sin salir
                       del formulario
                     </p>
                   </div>
@@ -2376,7 +2376,7 @@ const getAttributeValueName = (valueId) => {
                   {/* HEX */}
                   <div className="form-field-modern">
                     <label>
-                      Código HEX
+                      CÃ³digo HEX
                     </label>
 
                     <input
@@ -2421,7 +2421,7 @@ const getAttributeValueName = (valueId) => {
                 {/* HEADER */}
                 <div className="create-modal-header">
                   <div>
-                    <h2>📏 Nueva Talla</h2>
+                    <h2>ðŸ“ Nueva Talla</h2>
                     <p>
                       Crea una talla sin abandonar
                       el formulario
@@ -2453,7 +2453,7 @@ const getAttributeValueName = (valueId) => {
                       </div>
 
                       <div className="size-preview-description">
-                        Así se mostrará tu talla
+                        AsÃ­ se mostrarÃ¡ tu talla
                       </div>
                     </div>
                   </div>
@@ -2477,7 +2477,7 @@ const getAttributeValueName = (valueId) => {
 
                   <div className="form-field-modern">
                     <label>
-                      Descripción
+                      DescripciÃ³n
                     </label>
 
                     <textarea
@@ -2521,7 +2521,7 @@ const getAttributeValueName = (valueId) => {
           <div className="form-actions" style={{ flexWrap: "wrap" }}>
             {variantMode === "advanced" && hasDuplicates && (
               <div style={{ width: "100%", color: "var(--color-danger)", marginBottom: "10px", fontSize: "0.9rem", textAlign: "right" }}>
-                Existen variantes duplicadas con el mismo color y talla. Por favor, corrígelas.
+                Existen variantes duplicadas con el mismo color y talla. Por favor, corrÃ­gelas.
               </div>
             )}
             {variantMode === "simple" && form.variants.length === 0 && (
@@ -2559,7 +2559,7 @@ const getAttributeValueName = (valueId) => {
               <div className="selector-modal" style={{ padding: "20px", width: "min(450px, 95vw)", height: "auto", maxHeight: "90vh", overflowY: "auto" }}>
                 <div className="create-modal-header">
                   <div>
-                    <h2>📝 Nueva Opción</h2>
+                    <h2>ðŸ“ Nueva OpciÃ³n</h2>
                     <p>
                       Crea un nuevo valor para este atributo
                     </p>
@@ -2581,7 +2581,7 @@ const getAttributeValueName = (valueId) => {
                   </div>
 
                   <div className="form-group">
-                    <label>Nombre de la Opción</label>
+                    <label>Nombre de la OpciÃ³n</label>
                     <input
                       type="text"
                       className="form-control"
@@ -2606,7 +2606,7 @@ const getAttributeValueName = (valueId) => {
                       className="save-btn btn-primary"
                       onClick={handleCreateAttribute}
                     >
-                      Guardar Opción
+                      Guardar OpciÃ³n
                     </button>
                   </div>
                 </div>
@@ -2622,7 +2622,7 @@ const getAttributeValueName = (valueId) => {
               <div className="selector-modal" style={{ padding: "20px", width: "min(450px, 95vw)", height: "auto", maxHeight: "90vh", overflowY: "auto" }}>
                 <div className="create-modal-header">
                   <div>
-                    <h2>👕 Nuevo Fit</h2>
+                    <h2>ðŸ‘• Nuevo Fit</h2>
                     <p>
                       Crea un nuevo Fit para el producto
                     </p>
@@ -2656,7 +2656,7 @@ const getAttributeValueName = (valueId) => {
                     />
                   </div>
                   <div className="form-group" style={{marginTop: '10px'}}>
-                    <label>Descripción</label>
+                    <label>DescripciÃ³n</label>
                     <input
                       type="text"
                       className="form-control"
@@ -2706,9 +2706,9 @@ const getAttributeValueName = (valueId) => {
               <h3>Advertencia</h3>
             </div>
             <div className="warning-modal-body">
-              Al cambiar al Modo Simple y regenerar las variantes, perderás los precios y cantidades que hayas configurado manualmente.
+              Al cambiar al Modo Simple y regenerar las variantes, perderÃ¡s los precios y cantidades que hayas configurado manualmente.
               <br /><br />
-              ¿Deseas continuar?
+              Â¿Deseas continuar?
             </div>
             <div className="warning-modal-footer">
               <button type="button" className="warning-btn-cancel" onClick={() => setShowSwitchWarning(false)}>
@@ -2732,17 +2732,17 @@ const getAttributeValueName = (valueId) => {
               <div className="warning-icon-wrapper">
                 <AlertTriangle size={24} />
               </div>
-              <h3>Pérdida de Datos</h3>
+              <h3>PÃ©rdida de Datos</h3>
             </div>
             <div className="warning-modal-body">
-              ¿Estás seguro? Al pasar a la estrategia <strong>'Por Color'</strong> perderás todas las configuraciones individuales de imagen de cada variante actual.
+              Â¿EstÃ¡s seguro? Al pasar a la estrategia <strong>'Por Color'</strong> perderÃ¡s todas las configuraciones individuales de imagen de cada variante actual.
             </div>
             <div className="warning-modal-footer">
               <button type="button" className="warning-btn-cancel" onClick={() => setShowStrategyWarning(false)}>
                 Cancelar
               </button>
               <button type="button" className="warning-btn-confirm" onClick={confirmStrategySwitch}>
-                Sí, cambiar a Por Color
+                SÃ­, cambiar a Por Color
               </button>
             </div>
           </div>
@@ -2753,8 +2753,8 @@ const getAttributeValueName = (valueId) => {
         isOpen={galleryModalConfig.open}
         onClose={() => setGalleryModalConfig({ ...galleryModalConfig, open: false })}
         title={galleryModalConfig.type === "color" 
-          ? `Imágenes del Color: ${colorAttribute?.attribute_values?.find(c => String(c.id) === String(galleryModalConfig.id))?.value || ""}`
-          : `Imágenes de la Variante #${galleryModalConfig.id + 1}`
+          ? `ImÃ¡genes del Color: ${colorAttribute?.attribute_values?.find(c => String(c.id) === String(galleryModalConfig.id))?.value || ""}`
+          : `ImÃ¡genes de la Variante #${galleryModalConfig.id + 1}`
         }
         images={galleryModalConfig.type === "color" 
           ? (colorImages[galleryModalConfig.id] || []) 

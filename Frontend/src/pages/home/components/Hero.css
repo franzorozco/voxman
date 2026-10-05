@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;800&display=swap');
 
 .hero {
   position: relative;
@@ -94,7 +94,7 @@
 
 
 .hero-tag {
-  display: none; /* 👈 oculto por defecto */
+  display: none; /* ðŸ‘ˆ oculto por defecto */
 }
 
 
@@ -260,7 +260,7 @@
   
   .hero.has-hover .hero-split .hero-col.is-hovered {
     filter: brightness(1.15) grayscale(0%);
-    flex: 2; /* Resalta haciéndose más ancha */
+    flex: 2; /* Resalta haciÃ©ndose mÃ¡s ancha */
     z-index: 1;
   }
 

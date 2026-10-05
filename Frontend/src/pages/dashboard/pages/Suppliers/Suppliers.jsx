@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Plus, Search, Trash2, Edit, Truck, RefreshCw, RotateCcw } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
@@ -49,7 +49,7 @@ export default function Suppliers() {
   }, [search]);
 
   const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este proveedor?")) {
+    if (window.confirm("Â¿EstÃ¡s seguro de que deseas eliminar este proveedor?")) {
       try {
         const { data } = await deleteSupplier(id);
         toast.success(data.message);
@@ -150,7 +150,7 @@ export default function Suppliers() {
               <th>Empresa</th>
               <th>Contacto</th>
               <th>NIT</th>
-              <th>Teléfono</th>
+              <th>TelÃ©fono</th>
               <th>Estado</th>
               <th style={{ textAlign: 'right' }}>Acciones</th>
             </tr>

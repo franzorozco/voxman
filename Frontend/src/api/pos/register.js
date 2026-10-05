@@ -1,4 +1,4 @@
-import client from '../client';
+﻿import client from '../client';
 
 export const checkCashRegisterStatus = async () => {
     const { data } = await client.get('/pos/cash-register/status');

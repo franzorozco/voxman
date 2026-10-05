@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { 
   User, 
@@ -90,7 +90,7 @@ export default function Profile() {
   const { profileIsDark, toggleProfileTheme, setProfileTheme } = useThemeStore();
 
   useEffect(() => {
-    // Si la ruta anterior nos pasó un tema específico, lo aplicamos al montar
+    // Si la ruta anterior nos pasÃ³ un tema especÃ­fico, lo aplicamos al montar
     if (location.state && location.state.theme !== undefined) {
       setProfileTheme(location.state.theme === 'dark');
     }
@@ -195,7 +195,7 @@ export default function Profile() {
       console.error("Error loading profile:", err);
       // If unauthorized (token expired/invalid), force logout and redirect
       if (err.response && err.response.status === 401) {
-        toast.error("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+        toast.error("Tu sesiÃ³n ha expirado. Por favor inicia sesiÃ³n nuevamente.");
         logout();
         navigate("/login");
         return;
@@ -232,7 +232,7 @@ export default function Profile() {
           setAddresses(customer.addresses);
         }
       } else {
-        toast.error("Por favor inicia sesión para acceder a tu perfil.");
+        toast.error("Por favor inicia sesiÃ³n para acceder a tu perfil.");
         navigate("/login");
       }
     } finally {
@@ -247,7 +247,7 @@ export default function Profile() {
   // Frontend auth validation: redirect if logged out from elsewhere (e.g. Navbar)
   useEffect(() => {
     if (!loading && !authUser && !token) {
-      toast.error("Por favor inicia sesión para acceder a tu perfil.");
+      toast.error("Por favor inicia sesiÃ³n para acceder a tu perfil.");
       navigate("/login");
     }
   }, [authUser, token, loading, navigate]);
@@ -285,7 +285,7 @@ export default function Profile() {
         notification_email: profileForm.notification_email?.trim() || null,
       };
       const res = await updateProfile(payload);
-      toast.success("Perfil actualizado con éxito.");
+      toast.success("Perfil actualizado con Ã©xito.");
       setShowConfirmCodeModal(false);
       if (res?.user) {
         setUserData(res.user);
@@ -306,18 +306,18 @@ export default function Profile() {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.new_password.length < 8) {
-      toast.error("La nueva contraseña debe tener al menos 8 caracteres.");
+      toast.error("La nueva contraseÃ±a debe tener al menos 8 caracteres.");
       return;
     }
     if (passwordForm.new_password !== passwordForm.new_password_confirmation) {
-      toast.error("Las nuevas contraseñas no coinciden.");
+      toast.error("Las nuevas contraseÃ±as no coinciden.");
       return;
     }
 
     try {
       setSavingPassword(true);
       await changePassword(passwordForm);
-      toast.success("¡Contraseña actualizada exitosamente!");
+      toast.success("Â¡ContraseÃ±a actualizada exitosamente!");
       setPasswordForm({
         current_password: "",
         new_password: "",
@@ -325,7 +325,7 @@ export default function Profile() {
       });
     } catch (err) {
       console.error("Error changing password:", err);
-      toast.error(err.response?.data?.message || "Error al cambiar contraseña.");
+      toast.error(err.response?.data?.message || "Error al cambiar contraseÃ±a.");
     } finally {
       setSavingPassword(false);
     }
@@ -335,7 +335,7 @@ export default function Profile() {
   const handleAddressSubmit = async (e) => {
     e.preventDefault();
     if (!addressForm.street.trim()) {
-      toast.error("La calle / dirección es requerida.");
+      toast.error("La calle / direcciÃ³n es requerida.");
       return;
     }
 
@@ -343,7 +343,7 @@ export default function Profile() {
       setSavingAddress(true);
       if (editingAddressId) {
         const res = await updateAddress(editingAddressId, addressForm);
-        toast.success("Dirección actualizada.");
+        toast.success("DirecciÃ³n actualizada.");
         if (res?.user?.customers?.[0]?.addresses) {
           setAddresses(res.user.customers[0].addresses);
         } else {
@@ -351,7 +351,7 @@ export default function Profile() {
         }
       } else {
         const res = await addAddress(addressForm);
-        toast.success("Dirección guardada exitosamente.");
+        toast.success("DirecciÃ³n guardada exitosamente.");
         if (res?.user?.customers?.[0]?.addresses) {
           setAddresses(res.user.customers[0].addresses);
         } else {
@@ -372,7 +372,7 @@ export default function Profile() {
       });
     } catch (err) {
       console.error("Error saving address:", err);
-      toast.error(err.response?.data?.message || "Error al guardar dirección.");
+      toast.error(err.response?.data?.message || "Error al guardar direcciÃ³n.");
     } finally {
       setSavingAddress(false);
     }
@@ -394,20 +394,20 @@ export default function Profile() {
   };
 
   const handleDeleteAddress = async (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta dirección?")) return;
+    if (!window.confirm("Â¿EstÃ¡s seguro de que deseas eliminar esta direcciÃ³n?")) return;
     try {
       await deleteAddress(id);
-      toast.success("Dirección eliminada.");
+      toast.success("DirecciÃ³n eliminada.");
       setAddresses(prev => prev.filter(a => a.id !== id));
     } catch (err) {
       console.error("Error deleting address:", err);
-      toast.error("Error al eliminar la dirección.");
+      toast.error("Error al eliminar la direcciÃ³n.");
     }
   };
 
   const handleLogout = () => {
     logout();
-    toast.success("Sesión cerrada.");
+    toast.success("SesiÃ³n cerrada.");
     navigate("/");
   };
 
@@ -533,7 +533,7 @@ export default function Profile() {
               ) : (
                 <div className="profile-avatar-fallback">{userInitials}</div>
               )}
-              <div className="profile-online-badge" title="En línea" />
+              <div className="profile-online-badge" title="En lÃ­nea" />
             </div>
 
             <div className="profile-user-meta">
@@ -547,7 +547,7 @@ export default function Profile() {
 
               <div className="profile-badges-row">
                 <span className="profile-tag-badge tag-code">
-                  CÓDIGO: {customerInfo?.customer_code || "CLI-VOX"}
+                  CÃ“DIGO: {customerInfo?.customer_code || "CLI-VOX"}
                 </span>
                 {customerInfo?.points !== undefined && (
                   <span className="profile-tag-badge tag-vip">
@@ -604,7 +604,7 @@ export default function Profile() {
               onClick={() => setActiveTab("addresses")}
             >
               <span className="profile-nav-btn-left">
-                <MapPin size={18} /> Direcciones de Envío
+                <MapPin size={18} /> Direcciones de EnvÃ­o
               </span>
               <span className="profile-nav-badge-new">{addresses.length}</span>
             </button>
@@ -670,7 +670,7 @@ export default function Profile() {
               onClick={handleLogout}
             >
               <span className="profile-nav-btn-left">
-                <LogOut size={18} /> Cerrar Sesión
+                <LogOut size={18} /> Cerrar SesiÃ³n
               </span>
             </button>
           </aside>
@@ -685,12 +685,12 @@ export default function Profile() {
                 <div className="profile-card-header">
                   <div className="profile-card-title-group">
                     <h2><User size={22} /> Datos Personales y del Cliente</h2>
-                    <p>Mantén tu información actualizada para tus envíos y facturación.</p>
+                    <p>MantÃ©n tu informaciÃ³n actualizada para tus envÃ­os y facturaciÃ³n.</p>
                   </div>
                 </div>
 
                 <form onSubmit={handleProfileSubmit}>
-                  {/* SECCIÓN: DATOS PERSONALES */}
+                  {/* SECCIÃ“N: DATOS PERSONALES */}
                   <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>Datos Personales</h3>
                   <div className="profile-form-grid" style={{ marginBottom: "24px" }}>
                     <div className="profile-form-group">
@@ -711,7 +711,7 @@ export default function Profile() {
                       <input
                         type="text"
                         className="profile-input"
-                        placeholder="Ej. Pérez"
+                        placeholder="Ej. PÃ©rez"
                         value={profileForm.last_name_paternal}
                         onChange={(e) => setProfileForm({ ...profileForm, last_name_paternal: e.target.value })}
                       />
@@ -723,7 +723,7 @@ export default function Profile() {
                       <input
                         type="text"
                         className="profile-input"
-                        placeholder="Ej. Gómez"
+                        placeholder="Ej. GÃ³mez"
                         value={profileForm.last_name_maternal}
                         onChange={(e) => setProfileForm({ ...profileForm, last_name_maternal: e.target.value })}
                       />
@@ -741,7 +741,7 @@ export default function Profile() {
                     </div>
 
                     <div className="profile-form-group">
-                      <label className="profile-label">Género</label>
+                      <label className="profile-label">GÃ©nero</label>
                       <select
                         className="profile-select"
                         value={profileForm.gender}
@@ -756,11 +756,11 @@ export default function Profile() {
 
                   <hr style={{ border: "0", borderTop: "1px solid var(--border-color)", margin: "24px 0" }} />
 
-                  {/* SECCIÓN: DATOS DEL CLIENTE */}
+                  {/* SECCIÃ“N: DATOS DEL CLIENTE */}
                   <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>Datos del Cliente</h3>
                   <div className="profile-form-grid">
                     <div className="profile-form-group">
-                      <label className="profile-label">Número de Carnet</label>
+                      <label className="profile-label">NÃºmero de Carnet</label>
                       <input
                         type="text"
                         pattern="[0-9]*"
@@ -778,19 +778,19 @@ export default function Profile() {
                       {!canChangeCustomerCode ? (
                         <span className="profile-input-help" style={{ color: "var(--color-warning, #f59e0b)", display: "flex", gap: "4px", alignItems: "center", marginTop: "4px" }}>
                           <AlertCircle size={12} />
-                          Solo puedes cambiar este dato cada 2 meses. Próximo cambio disponible: {nextAllowedChangeDate}
+                          Solo puedes cambiar este dato cada 2 meses. PrÃ³ximo cambio disponible: {nextAllowedChangeDate}
                         </span>
                       ) : (
                         <span className="profile-input-help" style={{ color: "var(--text-muted)", display: "flex", gap: "4px", alignItems: "center", marginTop: "4px", fontSize: "11px" }}>
                           <AlertCircle size={12} />
-                          Nota: Si cambias o guardas tu carnet, no podrás volver a modificarlo durante 2 meses. Piensa bien tu decisión.
+                          Nota: Si cambias o guardas tu carnet, no podrÃ¡s volver a modificarlo durante 2 meses. Piensa bien tu decisiÃ³n.
                         </span>
                       )}
-                      {canChangeCustomerCode && !profileForm.customer_code && <MissingDataPointer message="Falta completar número de carnet" />}
+                      {canChangeCustomerCode && !profileForm.customer_code && <MissingDataPointer message="Falta completar nÃºmero de carnet" />}
                     </div>
 
                     <div className="profile-form-group">
-                      <label className="profile-label">Teléfono / Celular</label>
+                      <label className="profile-label">TelÃ©fono / Celular</label>
                       <div style={{ display: "flex", gap: "8px" }}>
                         <input
                           type="text"
@@ -809,16 +809,16 @@ export default function Profile() {
                           onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value })}
                         />
                       </div>
-                      {!profileForm.phone_number && <MissingDataPointer message="Falta completar teléfono" />}
+                      {!profileForm.phone_number && <MissingDataPointer message="Falta completar telÃ©fono" />}
                     </div>
                   </div>
 
-                  {/* SECCIÓN EXCLUSIVA PARA OWNERS */}
+                  {/* SECCIÃ“N EXCLUSIVA PARA OWNERS */}
                   {userData?.owner && (
                     <>
                       <hr style={{ border: "0", borderTop: "1px solid var(--border-color)", margin: "24px 0" }} />
                       <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>
-                        Configuración de Tienda (Owner)
+                        ConfiguraciÃ³n de Tienda (Owner)
                       </h3>
                       <div className="profile-form-grid">
                         <div className="profile-form-group">
@@ -831,7 +831,7 @@ export default function Profile() {
                             onChange={(e) => setProfileForm({ ...profileForm, notification_email: e.target.value })}
                           />
                           <span className="profile-input-help" style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "4px", display: "block" }}>
-                            Si lo dejas en blanco, las notificaciones llegarán a tu correo principal de inicio de sesión.
+                            Si lo dejas en blanco, las notificaciones llegarÃ¡n a tu correo principal de inicio de sesiÃ³n.
                           </span>
                         </div>
                       </div>
@@ -856,7 +856,7 @@ export default function Profile() {
               <div className="profile-content-card">
                 <div className="profile-card-header">
                   <div className="profile-card-title-group">
-                    <h2><MapPin size={22} /> Direcciones de Envío</h2>
+                    <h2><MapPin size={22} /> Direcciones de EnvÃ­o</h2>
                     <p>Gestiona los puntos donde recibes tus pedidos de VOXman.</p>
                   </div>
                   <button
@@ -876,7 +876,7 @@ export default function Profile() {
                       setShowAddressModal(true);
                     }}
                   >
-                    <Plus size={16} /> Nueva Dirección
+                    <Plus size={16} /> Nueva DirecciÃ³n
                   </button>
                 </div>
 
@@ -891,7 +891,7 @@ export default function Profile() {
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                       <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>
-                        {editingAddressId ? "Editar Dirección" : "Agregar Nueva Dirección"}
+                        {editingAddressId ? "Editar DirecciÃ³n" : "Agregar Nueva DirecciÃ³n"}
                       </h3>
                       <button
                         onClick={() => setShowAddressModal(false)}
@@ -906,7 +906,7 @@ export default function Profile() {
                       {/* MAP PICKER */}
                       <div style={{ marginBottom: "20px" }}>
                         <label className="profile-label" style={{ display: "block", marginBottom: "8px" }}>
-                          Ubicación en el mapa
+                          UbicaciÃ³n en el mapa
                         </label>
                         <AddressMapPicker
                           initialLat={addressForm.latitude}
@@ -930,7 +930,7 @@ export default function Profile() {
                       {/* MANUAL FIELDS (editable after map selection) */}
                       <div className="profile-form-grid">
                         <div className="profile-form-group">
-                          <label className="profile-label">País</label>
+                          <label className="profile-label">PaÃ­s</label>
                           <input
                             type="text"
                             className="profile-input"
@@ -973,11 +973,11 @@ export default function Profile() {
                         </div>
 
                         <div className="profile-form-group full-width">
-                          <label className="profile-label">Calle, Avenida y Número *</label>
+                          <label className="profile-label">Calle, Avenida y NÃºmero *</label>
                           <input
                             type="text"
                             className="profile-input"
-                            placeholder="Ej. Av. Ballivián #123, Edif. Los Pinos Piso 4"
+                            placeholder="Ej. Av. BalliviÃ¡n #123, Edif. Los Pinos Piso 4"
                             value={addressForm.street}
                             onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
                             required
@@ -989,7 +989,7 @@ export default function Profile() {
                           <input
                             type="text"
                             className="profile-input"
-                            placeholder="Ej. Portón negro frente a la farmacia"
+                            placeholder="Ej. PortÃ³n negro frente a la farmacia"
                             value={addressForm.reference}
                             onChange={(e) => setAddressForm({ ...addressForm, reference: e.target.value })}
                           />
@@ -1009,7 +1009,7 @@ export default function Profile() {
                           className="profile-btn-primary"
                           disabled={savingAddress}
                         >
-                          {savingAddress ? "Guardando..." : (editingAddressId ? "Actualizar Dirección" : "Guardar Dirección")}
+                          {savingAddress ? "Guardando..." : (editingAddressId ? "Actualizar DirecciÃ³n" : "Guardar DirecciÃ³n")}
                         </button>
                       </div>
                     </form>
@@ -1021,7 +1021,7 @@ export default function Profile() {
                   <div className="profile-empty-state">
                     <MapPin size={48} />
                     <h3>No tienes direcciones registradas</h3>
-                    <p>Agrega tu primera dirección para hacer tus compras mucho más rápido.</p>
+                    <p>Agrega tu primera direcciÃ³n para hacer tus compras mucho mÃ¡s rÃ¡pido.</p>
                   </div>
                 ) : (
                   <div className="profile-addresses-grid">
@@ -1029,7 +1029,7 @@ export default function Profile() {
                       <div key={addr.id || idx} className="profile-address-card">
                         <div>
                           <div className="profile-address-header">
-                            <MapPin size={16} /> Dirección #{idx + 1}
+                            <MapPin size={16} /> DirecciÃ³n #{idx + 1}
                           </div>
                           <p className="profile-address-street">{addr.street}</p>
                           <p className="profile-address-details">
@@ -1070,14 +1070,14 @@ export default function Profile() {
               <div className="profile-content-card">
                 <div className="profile-card-header">
                   <div className="profile-card-title-group">
-                    <h2><Lock size={22} /> Seguridad & Contraseña</h2>
-                    <p>Protege tu cuenta actualizando regularmente tu contraseña.</p>
+                    <h2><Lock size={22} /> Seguridad & ContraseÃ±a</h2>
+                    <p>Protege tu cuenta actualizando regularmente tu contraseÃ±a.</p>
                   </div>
                 </div>
 
                 <div className="profile-form-grid" style={{ marginBottom: "24px" }}>
                   <div className="profile-form-group">
-                    <label className="profile-label">Correo Electrónico</label>
+                    <label className="profile-label">Correo ElectrÃ³nico</label>
                     <input
                       type="email"
                       className="profile-input"
@@ -1100,16 +1100,16 @@ export default function Profile() {
 
                 <hr style={{ border: "0", borderTop: "1px solid var(--border-color)", margin: "24px 0" }} />
 
-                <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>Cambiar Contraseña</h3>
+                <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px", color: "var(--text-color)" }}>Cambiar ContraseÃ±a</h3>
                 <form onSubmit={handlePasswordSubmit}>
                   <div className="profile-form-grid">
                     <div className="profile-form-group full-width">
-                      <label className="profile-label">Contraseña Actual *</label>
+                      <label className="profile-label">ContraseÃ±a Actual *</label>
                       <div style={{ position: "relative" }}>
                         <input
                           type={showCurrentPassword ? "text" : "password"}
                           className="profile-input"
-                          placeholder="Tu contraseña actual"
+                          placeholder="Tu contraseÃ±a actual"
                           value={passwordForm.current_password}
                           onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
                           required
@@ -1134,12 +1134,12 @@ export default function Profile() {
                     </div>
 
                     <div className="profile-form-group">
-                      <label className="profile-label">Nueva Contraseña *</label>
+                      <label className="profile-label">Nueva ContraseÃ±a *</label>
                       <div style={{ position: "relative" }}>
                         <input
                           type={showNewPassword ? "text" : "password"}
                           className="profile-input"
-                          placeholder="Mínimo 8 caracteres"
+                          placeholder="MÃ­nimo 8 caracteres"
                           value={passwordForm.new_password}
                           onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
                           required
@@ -1162,15 +1162,15 @@ export default function Profile() {
                           {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
-                      <span className="profile-input-help">Usa letras, números y caracteres especiales.</span>
+                      <span className="profile-input-help">Usa letras, nÃºmeros y caracteres especiales.</span>
                     </div>
 
                     <div className="profile-form-group">
-                      <label className="profile-label">Confirmar Nueva Contraseña *</label>
+                      <label className="profile-label">Confirmar Nueva ContraseÃ±a *</label>
                       <input
                         type="password"
                         className="profile-input"
-                        placeholder="Repite la nueva contraseña"
+                        placeholder="Repite la nueva contraseÃ±a"
                         value={passwordForm.new_password_confirmation}
                         onChange={(e) => setPasswordForm({ ...passwordForm, new_password_confirmation: e.target.value })}
                         required
@@ -1185,7 +1185,7 @@ export default function Profile() {
                       className="profile-btn-primary"
                       disabled={savingPassword}
                     >
-                      {savingPassword ? "Actualizando..." : "Actualizar Contraseña"}
+                      {savingPassword ? "Actualizando..." : "Actualizar ContraseÃ±a"}
                     </button>
                   </div>
                 </form>
@@ -1207,10 +1207,10 @@ export default function Profile() {
                       border: "1px solid var(--border-color)"
                     }}>
                       <div>
-                        <h4 style={{ margin: "0 0 4px 0", fontSize: "13px", fontWeight: 600 }}>Autenticación en Dos Pasos (2FA)</h4>
-                        <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)" }}>Añade una capa extra de seguridad usando Google Authenticator.</p>
+                        <h4 style={{ margin: "0 0 4px 0", fontSize: "13px", fontWeight: 600 }}>AutenticaciÃ³n en Dos Pasos (2FA)</h4>
+                        <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)" }}>AÃ±ade una capa extra de seguridad usando Google Authenticator.</p>
                       </div>
-                      <span className="profile-tag-badge tag-vip">Próximamente</span>
+                      <span className="profile-tag-badge tag-vip">PrÃ³ximamente</span>
                     </div>
 
                     <div style={{
@@ -1274,9 +1274,9 @@ export default function Profile() {
                   <div className="profile-empty-state" style={{ padding: "32px 0" }}>
                     <Package size={48} />
                     <h3>No tienes pedidos registrados</h3>
-                    <p>Cuando realices tu primera compra, aparecerá aquí.</p>
+                    <p>Cuando realices tu primera compra, aparecerÃ¡ aquÃ­.</p>
                     <Link to="/shop/catalog" className="profile-btn-primary" style={{ display: "inline-flex", marginTop: "8px" }}>
-                      Explorar Catálogo
+                      Explorar CatÃ¡logo
                     </Link>
                   </div>
                 ) : (
@@ -1296,7 +1296,7 @@ export default function Profile() {
                         <div key={order.id} className="profile-order-card">
                           <div className="order-meta-group">
                             <h4>Pedido {order.invoice_number ? `#${order.invoice_number}` : `#${order.id.slice(0, 8).toUpperCase()}`}</h4>
-                            <p>Realizado el {orderDate} • {order.financials?.items_count || 0} artículo{order.financials?.items_count !== 1 ? "s" : ""}</p>
+                            <p>Realizado el {orderDate} â€¢ {order.financials?.items_count || 0} artÃ­culo{order.financials?.items_count !== 1 ? "s" : ""}</p>
                           </div>
                           <span className={`order-status-badge ${statusInfo.cssClass}`} style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color, borderColor: statusInfo.color }}>
                             {statusInfo.label}
@@ -1328,11 +1328,11 @@ export default function Profile() {
                 <div className="profile-card-header">
                   <div className="profile-card-title-group">
                     <h2><Heart size={22} /> Lista de Deseos</h2>
-                    <p>Tus prendas favoritas guardadas para después.</p>
+                    <p>Tus prendas favoritas guardadas para despuÃ©s.</p>
                   </div>
                   {wishlistItems.length > 0 && (
                     <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                      {wishlistItems.length} artículo{wishlistItems.length !== 1 ? "s" : ""}
+                      {wishlistItems.length} artÃ­culo{wishlistItems.length !== 1 ? "s" : ""}
                     </span>
                   )}
                 </div>
@@ -1345,10 +1345,10 @@ export default function Profile() {
                 ) : wishlistItems.length === 0 ? (
                   <div className="profile-empty-state">
                     <Heart size={48} />
-                    <h3>Tu lista de deseos está vacía</h3>
-                    <p>Explora nuestro catálogo exclusivo y guarda los productos que más te gusten.</p>
+                    <h3>Tu lista de deseos estÃ¡ vacÃ­a</h3>
+                    <p>Explora nuestro catÃ¡logo exclusivo y guarda los productos que mÃ¡s te gusten.</p>
                     <Link to="/shop/catalog" className="profile-btn-primary" style={{ display: "inline-flex" }}>
-                      Explorar Catálogo
+                      Explorar CatÃ¡logo
                     </Link>
                   </div>
                 ) : (
@@ -1432,7 +1432,7 @@ export default function Profile() {
                             {/* Date + Remove */}
                             <div className="profile-wishlist-footer">
                               <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                                {item.created_at ? new Date(item.created_at).toLocaleDateString("es-BO", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                                {item.created_at ? new Date(item.created_at).toLocaleDateString("es-BO", { day: "numeric", month: "short", year: "numeric" }) : "â€”"}
                               </span>
                               <button
                                 className="profile-wishlist-remove-btn"
@@ -1457,26 +1457,26 @@ export default function Profile() {
               <div className="profile-content-card">
                 <div className="profile-card-header">
                   <div className="profile-card-title-group">
-                    <h2><Award size={22} /> Membresía VOXman Club</h2>
+                    <h2><Award size={22} /> MembresÃ­a VOXman Club</h2>
                     <p>Gana puntos con cada compra y accede a drops exclusivos.</p>
                   </div>
                 </div>
 
-                {/* Black Card de Membresía */}
+                {/* Black Card de MembresÃ­a */}
                 <div className="profile-membership-card">
                   <div className="membership-top-row">
-                    <span className="membership-brand">VØXMAN</span>
+                    <span className="membership-brand">VÃ˜XMAN</span>
                     <span className="membership-tier-badge" style={{ color: getMembershipTier(customerInfo?.points || 0).color }}>Nivel {getMembershipTier(customerInfo?.points || 0).name}</span>
                   </div>
 
                   <div className="membership-bottom-row">
                     <div>
-                      <div className="membership-holder-label">Titular de la Membresía</div>
+                      <div className="membership-holder-label">Titular de la MembresÃ­a</div>
                       <div className="membership-holder-name">
                         {userData?.full_name || userData?.username || "Cliente VOXman"}
                       </div>
                       <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", marginTop: "4px" }}>
-                        CÓDIGO: {customerInfo?.customer_code || "CLI-VOX"}
+                        CÃ“DIGO: {customerInfo?.customer_code || "CLI-VOX"}
                       </div>
                     </div>
 
@@ -1503,7 +1503,7 @@ export default function Profile() {
                   <div className="profile-benefit-item">
                     <div className="profile-benefit-icon"><Package size={20} /></div>
                     <div className="profile-benefit-info">
-                      <h4>Envíos Preferenciales</h4>
+                      <h4>EnvÃ­os Preferenciales</h4>
                       <p>Entregas express prioritarias sin costo extra.</p>
                     </div>
                   </div>
@@ -1511,8 +1511,8 @@ export default function Profile() {
                   <div className="profile-benefit-item">
                     <div className="profile-benefit-icon"><Award size={20} /></div>
                     <div className="profile-benefit-info">
-                      <h4>Descuento de Cumpleaños</h4>
-                      <p>15% OFF en todo tu mes de cumpleaños.</p>
+                      <h4>Descuento de CumpleaÃ±os</h4>
+                      <p>15% OFF en todo tu mes de cumpleaÃ±os.</p>
                     </div>
                   </div>
                 </div>
@@ -1525,7 +1525,7 @@ export default function Profile() {
                 <div className="profile-card-header">
                   <div className="profile-card-title-group">
                     <h2><Settings size={22} /> Preferencias del Sistema</h2>
-                    <p>Personaliza tu experiencia de navegación y avisos.</p>
+                    <p>Personaliza tu experiencia de navegaciÃ³n y avisos.</p>
                   </div>
                 </div>
 
@@ -1565,7 +1565,7 @@ export default function Profile() {
                     <div>
                       <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: 600 }}>Avisos por WhatsApp</h4>
                       <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)" }}>
-                        Recibir estado de envíos y promociones relámpago.
+                        Recibir estado de envÃ­os y promociones relÃ¡mpago.
                       </p>
                     </div>
                     <input type="checkbox" defaultChecked style={{ width: "20px", height: "20px", accentColor: "var(--color-primary)" }} />
@@ -1595,15 +1595,15 @@ export default function Profile() {
         </div>
       </main>
 
-      {/* MODAL DE CONFIRMACIÓN DE CARNET */}
+      {/* MODAL DE CONFIRMACIÃ“N DE CARNET */}
       {showConfirmCodeModal && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 10000 }}>
           <div style={{ background: "var(--bg-card, #fff)", padding: "24px", borderRadius: "12px", maxWidth: "400px", width: "90%", border: "1px solid var(--border-color)" }}>
             <h3 style={{ marginTop: 0, color: "var(--text-color, #000)" }}>Confirmar Cambio de Carnet</h3>
             <p style={{ color: "var(--text-muted, #666)", fontSize: "14px", lineHeight: "1.5" }}>
-              Estás a punto de cambiar tu Número de Carnet a <strong>{profileForm.customer_code}</strong>.
+              EstÃ¡s a punto de cambiar tu NÃºmero de Carnet a <strong>{profileForm.customer_code}</strong>.
               <br /><br />
-              Atención: Si procedes, <strong>no podrás modificarlo de nuevo durante los próximos 2 meses</strong>. Piensa bien tu decisión, ¿estás seguro de que la información es correcta?
+              AtenciÃ³n: Si procedes, <strong>no podrÃ¡s modificarlo de nuevo durante los prÃ³ximos 2 meses</strong>. Piensa bien tu decisiÃ³n, Â¿estÃ¡s seguro de que la informaciÃ³n es correcta?
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
               <button 
@@ -1621,7 +1621,7 @@ export default function Profile() {
                 }} 
                 disabled={savingProfile}
               >
-                {savingProfile ? "Guardando..." : "Sí, estoy seguro"}
+                {savingProfile ? "Guardando..." : "SÃ­, estoy seguro"}
               </button>
             </div>
           </div>

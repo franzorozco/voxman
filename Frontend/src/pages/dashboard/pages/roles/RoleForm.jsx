@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { getPermissions } from "../../../../api/admin/permissions";
 import { X, Check } from "lucide-react";
 
@@ -59,21 +59,21 @@ export default function RoleForm({ role, onClose, onSubmit }) {
     const name = p.name;
     
     if (name.includes('sale') || name.includes('loyalty')) group = "Ventas";
-    else if (name.includes('order')) group = "Pedidos y Envíos";
+    else if (name.includes('order')) group = "Pedidos y EnvÃ­os";
     else if (name.includes('return')) group = "Devoluciones";
     else if (name.includes('cart')) group = "Carritos y Proformas";
     else if (name.includes('inventory')) group = "Inventario";
-    else if (name.includes('product') || name.includes('categor') || name.includes('discount')) group = "Catálogo de Productos";
+    else if (name.includes('product') || name.includes('categor') || name.includes('discount')) group = "CatÃ¡logo de Productos";
     else if (name.includes('finance') || name.includes('cashflow') || name.includes('expense') || name.includes('salary') || name.includes('salaries')) group = "Finanzas y Salarios";
     else if (name.includes('user') || name.includes('role') || name.includes('executive')) group = "Usuarios y Roles";
-    else if (name.includes('owner')) group = "Socios / Dueños";
+    else if (name.includes('owner')) group = "Socios / DueÃ±os";
     else if (name.includes('purchase') || name.includes('supplier')) group = "Compras y Proveedores";
     else if (name.includes('branch')) group = "Sucursales";
     else if (name.includes('giftcard')) group = "Giftcards";
     else if (name.includes('promotion')) group = "Promociones";
-    else if (name.includes('setting')) group = "Ajustes y Configuración";
-    else if (name.includes('audit')) group = "Auditoría";
-    else group = "Ajustes y Configuración";
+    else if (name.includes('setting')) group = "Ajustes y ConfiguraciÃ³n";
+    else if (name.includes('audit')) group = "AuditorÃ­a";
+    else group = "Ajustes y ConfiguraciÃ³n";
     if (!acc[group]) acc[group] = [];
     acc[group].push(p);
     return acc;
@@ -127,7 +127,7 @@ export default function RoleForm({ role, onClose, onSubmit }) {
                 onChange={(e) => setRoleType(e.target.value)}
                 className="role-form-input"
               >
-                <option value="none">Sin asignación específica (General)</option>
+                <option value="none">Sin asignaciÃ³n especÃ­fica (General)</option>
                 <option value="employee">Empleados (Staff del sistema)</option>
                 <option value="customer">Clientes</option>
               </CustomSelect>
@@ -154,7 +154,7 @@ export default function RoleForm({ role, onClose, onSubmit }) {
                           onClick={() => toggleGroup(groupName)}
                           className={`role-perm-group-toggle ${allSelected ? "deselect" : "select"}`}
                         >
-                        {allSelected ? 'Deseleccionar Módulo' : 'Seleccionar Todo'}
+                        {allSelected ? 'Deseleccionar MÃ³dulo' : 'Seleccionar Todo'}
                       </button>
                     </div>
                     <div className="role-perm-items-grid">

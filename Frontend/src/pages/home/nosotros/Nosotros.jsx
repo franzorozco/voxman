@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+﻿import React, { useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../../../components/layout/Footer";
 import * as Icons from "lucide-react";
@@ -55,9 +55,9 @@ export default function Nosotros() {
   };
 
   const storyParagraphs = getArraySetting("about_story_paragraphs", [
-    "VOXman no nació en una sala de juntas. Nació de conversaciones a altas horas de la noche, de caminatas después de entrenar y del profundo deseo de dos mentes apasionadas por construir algo propio.",
-    "Esta marca es el reflejo vivo de nuestra historia. Hemos atravesado tormentas y días soleados, tiempos donde todo parecía ir en contra y momentos donde el esfuerzo daba sus primeros frutos. Cada hilo, cada diseño y cada línea de código en este proyecto lleva impregnada nuestra resiliencia.",
-    "No importa cuántas veces la vida se ponga difícil, aprendimos que luchando juntos no hay barrera insuperable. Creamos VOXman para transmitir esa energía: la confianza de que puedes enfrentar al mundo y ganar."
+    "VOXman no naciÃ³ en una sala de juntas. NaciÃ³ de conversaciones a altas horas de la noche, de caminatas despuÃ©s de entrenar y del profundo deseo de dos mentes apasionadas por construir algo propio.",
+    "Esta marca es el reflejo vivo de nuestra historia. Hemos atravesado tormentas y dÃ­as soleados, tiempos donde todo parecÃ­a ir en contra y momentos donde el esfuerzo daba sus primeros frutos. Cada hilo, cada diseÃ±o y cada lÃ­nea de cÃ³digo en este proyecto lleva impregnada nuestra resiliencia.",
+    "No importa cuÃ¡ntas veces la vida se ponga difÃ­cil, aprendimos que luchando juntos no hay barrera insuperable. Creamos VOXman para transmitir esa energÃ­a: la confianza de que puedes enfrentar al mundo y ganar."
   ]);
 
   const StoryIconCmp = settings.about_story_card_icon && Icons[settings.about_story_card_icon] 
@@ -87,9 +87,9 @@ export default function Nosotros() {
             <div className="vox-hero-logo-container">
               <img src={heroLogo} alt="VOXman Logo" className="vox-hero-logo" />
             </div>
-            <h1 className="vox-hero-title">{settings.about_hero_title || "MÁS QUE ROPA, UNA IDENTIDAD."}</h1>
+            <h1 className="vox-hero-title">{settings.about_hero_title || "MÃS QUE ROPA, UNA IDENTIDAD."}</h1>
             <p className="vox-hero-subtitle">
-              {settings.about_hero_subtitle || "Forjados en la perseverancia. Construidos con pasión."}
+              {settings.about_hero_subtitle || "Forjados en la perseverancia. Construidos con pasiÃ³n."}
             </p>
           </div>
           <div className="vox-scroll-indicator" style={{ zIndex: 2 }}>
@@ -105,7 +105,7 @@ export default function Nosotros() {
             <div className="vox-story-grid">
               <div className="vox-story-text vox-reveal-left">
                 <span className="vox-overline">{settings.about_story_overline || "El Origen"}</span>
-                <h2 className="vox-section-title">{settings.about_story_title || "El Inicio de un Sueño"}</h2>
+                <h2 className="vox-section-title">{settings.about_story_title || "El Inicio de un SueÃ±o"}</h2>
                 <div className="vox-story-paragraphs">
                   {storyParagraphs.map((p, i) => (
                     <p key={i} dangerouslySetInnerHTML={{ __html: p }} />
@@ -117,7 +117,7 @@ export default function Nosotros() {
                 <div className="vox-story-image-glass">
                   <StoryIconCmp strokeWidth={1} size={56} className="vox-heart-icon" />
                   <h3>{settings.about_story_card_title || "Nuestra Promesa"}</h3>
-                  <p>{settings.about_story_card_text || "\"Construir algo verdadero, algo que dure y que trascienda. Todo lo que hacemos, lo hacemos con el corazón y una obsesión por la excelencia.\""}</p>
+                  <p>{settings.about_story_card_text || "\"Construir algo verdadero, algo que dure y que trascienda. Todo lo que hacemos, lo hacemos con el corazÃ³n y una obsesiÃ³n por la excelencia.\""}</p>
                 </div>
               </div>
             </div>
@@ -132,13 +132,13 @@ export default function Nosotros() {
             <div className="vox-section-header vox-reveal">
               <span className="vox-overline">{settings.about_founders_overline || "Los Creadores"}</span>
               <h2 className="vox-section-title">{settings.about_founders_title || "Quienes Somos"}</h2>
-              <p className="vox-section-subtitle">{settings.about_founders_subtitle || "Dos mentes, un solo corazón detrás de la marca."}</p>
+              <p className="vox-section-subtitle">{settings.about_founders_subtitle || "Dos mentes, un solo corazÃ³n detrÃ¡s de la marca."}</p>
             </div>
 
             <div className="vox-founders-grid">
               {(getArraySetting("about_founders_list", [
-                { name: "Franz Orozco", role: "Desarrollo y Visión Estratégica", text: "La lógica, el código...", image: "/system/global/Franz.jpg" },
-                { name: "Rous Vidal", role: "Estética, Arte y Dirección Visual", text: "El alma creativa...", image: "/system/global/Rous.jpg" }
+                { name: "Franz Orozco", role: "Desarrollo y VisiÃ³n EstratÃ©gica", text: "La lÃ³gica, el cÃ³digo...", image: "/system/global/Franz.jpg" },
+                { name: "Rous Vidal", role: "EstÃ©tica, Arte y DirecciÃ³n Visual", text: "El alma creativa...", image: "/system/global/Rous.jpg" }
               ])).map((f, i) => (
                 <div key={i} className={`vox-founder-card vox-reveal ${i % 2 !== 0 ? 'delay-1' : ''}`}>
                   <div className="vox-founder-image-box">
@@ -162,7 +162,7 @@ export default function Nosotros() {
         </section>
       )}
 
-      {/* MISIÓN, VISIÓN Y VALORES */}
+      {/* MISIÃ“N, VISIÃ“N Y VALORES */}
       {String(settings.about_section_mvp_show) !== "0" && (
         <>
           <section className="vox-mv-section">
@@ -175,8 +175,8 @@ export default function Nosotros() {
                       return <MIcon strokeWidth={1.5} size={36} />;
                     })()}
                   </div>
-                  <h3>{settings.about_mvp_mission_title || "Nuestra Misión"}</h3>
-                  <p>{settings.about_mvp_mission_text || "Ofrecer más que prendas de vestir. Entregamos herramientas de confianza. Nuestra misión es confeccionar moda que haga sentir a cada persona segura de sí misma, respaldada por una calidad inquebrantable y un diseño que hable por su carácter."}</p>
+                  <h3>{settings.about_mvp_mission_title || "Nuestra MisiÃ³n"}</h3>
+                  <p>{settings.about_mvp_mission_text || "Ofrecer mÃ¡s que prendas de vestir. Entregamos herramientas de confianza. Nuestra misiÃ³n es confeccionar moda que haga sentir a cada persona segura de sÃ­ misma, respaldada por una calidad inquebrantable y un diseÃ±o que hable por su carÃ¡cter."}</p>
                 </div>
 
                 <div className="vox-mv-card vox-reveal-right delay-1">
@@ -186,8 +186,8 @@ export default function Nosotros() {
                       return <VIcon strokeWidth={1.5} size={36} />;
                     })()}
                   </div>
-                  <h3>{settings.about_mvp_vision_title || "Nuestra Visión"}</h3>
-                  <p>{settings.about_mvp_vision_text || "Posicionarnos como el referente definitivo de la moda y la superación a nivel nacional. Aspiramos a ser una marca que no solo vista cuerpos, sino que inspire historias de éxito, demostrando que desde cero se puede llegar a lo más alto."}</p>
+                  <h3>{settings.about_mvp_vision_title || "Nuestra VisiÃ³n"}</h3>
+                  <p>{settings.about_mvp_vision_text || "Posicionarnos como el referente definitivo de la moda y la superaciÃ³n a nivel nacional. Aspiramos a ser una marca que no solo vista cuerpos, sino que inspire historias de Ã©xito, demostrando que desde cero se puede llegar a lo mÃ¡s alto."}</p>
                 </div>
               </div>
             </div>
@@ -203,7 +203,7 @@ export default function Nosotros() {
               <div className="vox-values-grid">
                 {(getArraySetting("about_values_list", [
                   { title: "Autenticidad", text: "No seguimos moldes, creamos nuestra propia identidad con originalidad pura.", icon: "Award" },
-                  { title: "Calidad", text: "Atención obsesiva a los detalles para entregar un producto que perdure en el tiempo.", icon: "Star" },
+                  { title: "Calidad", text: "AtenciÃ³n obsesiva a los detalles para entregar un producto que perdure en el tiempo.", icon: "Star" },
                   { title: "Resiliencia", text: "Crecemos ante la adversidad. Nunca nos rendimos, siempre encontramos un camino.", icon: "Shield" }
                 ])).map((val, idx) => {
                   const ValIcon = val.icon && Icons[val.icon] ? Icons[val.icon] : Star;

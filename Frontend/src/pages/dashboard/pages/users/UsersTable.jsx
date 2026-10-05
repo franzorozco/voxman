@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+﻿import { useMemo, useState, useEffect } from "react";
 import { Filter, Search, MoreVertical, Eye, Edit, FileText, Trash2 } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
@@ -18,7 +18,7 @@ export default function UsersTable({
 }){
 
   // =========================
-  // 🧠 STATES
+  // ðŸ§  STATES
   // =========================
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState(null);
@@ -33,7 +33,7 @@ export default function UsersTable({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   // =========================
-  // ⏳ LOADING CONTROL
+  // â³ LOADING CONTROL
   // =========================
   useEffect(() => {
     if (Array.isArray(users)) {
@@ -43,7 +43,7 @@ export default function UsersTable({
 
 
   // =========================
-  // 🔎 FILTRADO + ORDENAMIENTO
+  // ðŸ”Ž FILTRADO + ORDENAMIENTO
   // =========================
   const filteredUsers = useMemo(() => {
     let data = [...users];
@@ -167,7 +167,7 @@ export default function UsersTable({
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-              placeholder="Buscar usuario por nombre, email o código..."
+              placeholder="Buscar usuario por nombre, email o cÃ³digo..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -223,9 +223,9 @@ export default function UsersTable({
                   setFilters({ ...filters, sort: e.target.value })
                 }
               >
-                <option value="created_at_desc">Más recientes</option>
-                <option value="created_at_asc">Más antiguos</option>
-                <option value="points_desc">Más puntos</option>
+                <option value="created_at_desc">MÃ¡s recientes</option>
+                <option value="created_at_asc">MÃ¡s antiguos</option>
+                <option value="points_desc">MÃ¡s puntos</option>
                 <option value="points_asc">Menos puntos</option>
               </CustomSelect>
             </div>
@@ -375,7 +375,7 @@ export default function UsersTable({
                     </td>
                     <td>
                       {u.employee?.is_active
-                        ? `${u.employee.employee_code || "Sin código"} (${u.employee.role})`
+                        ? `${u.employee.employee_code || "Sin cÃ³digo"} (${u.employee.role})`
                         : "-"}
                     </td>
 
@@ -431,8 +431,8 @@ export default function UsersTable({
           setConfirmId(null);
         }}
         title="Eliminar usuario"
-        message="¿Seguro que deseas eliminar este usuario?"
-        confirmText="Sí, eliminar"
+        message="Â¿Seguro que deseas eliminar este usuario?"
+        confirmText="SÃ­, eliminar"
         type="danger"
       />
 

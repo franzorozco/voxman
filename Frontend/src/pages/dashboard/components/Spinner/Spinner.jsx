@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import './Spinner.css';
 
 export default function Spinner({ size = 38, color = "#2563eb", trackColor = "#e5e7eb", borderWidth = 4, className = "", style = {} }) {

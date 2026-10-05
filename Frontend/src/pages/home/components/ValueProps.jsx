@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import * as Icons from 'lucide-react';
 import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
 import './ValueProps.css';
@@ -7,12 +7,12 @@ const DEFAULT_PROPS = [
   {
     icon: 'MessageCircle',
     title: 'Contacto Directo',
-    desc: 'Coordina tu entrega de forma rápida sin registros obligatorios.'
+    desc: 'Coordina tu entrega de forma rÃ¡pida sin registros obligatorios.'
   },
   {
     icon: 'Truck',
-    title: 'Envíos y Delivery',
-    desc: 'Entregas en La Paz, El Alto, Zona Sur, y envíos seguros a nivel nacional.'
+    title: 'EnvÃ­os y Delivery',
+    desc: 'Entregas en La Paz, El Alto, Zona Sur, y envÃ­os seguros a nivel nacional.'
   },
   {
     icon: 'PackageCheck',
@@ -22,7 +22,7 @@ const DEFAULT_PROPS = [
   {
     icon: 'UserPlus',
     title: 'Ventajas Exclusivas',
-    desc: 'Crea tu cuenta (opcional) para agilizar envíos y guardar direcciones.'
+    desc: 'Crea tu cuenta (opcional) para agilizar envÃ­os y guardar direcciones.'
   }
 ];
 
@@ -88,12 +88,12 @@ export default function ValueProps() {
       <div className="vp-container">
         
         <div className="vp-left">
-          <h4 className="vp-subtitle">La Experiencia VØXman</h4>
-          <h2 className="vp-title">COMPRAS SIN FRICCIÓN.</h2>
+          <h4 className="vp-subtitle">La Experiencia VÃ˜Xman</h4>
+          <h2 className="vp-title">COMPRAS SIN FRICCIÃ“N.</h2>
           <p className="vp-desc">
-            Nos adaptamos a ti. Olvídate de los procesos automatizados y fríos. 
-            Disfruta de una atención humana, directa y a tu medida, desde el primer 
-            contacto hasta que la prenda está en tus manos.
+            Nos adaptamos a ti. OlvÃ­date de los procesos automatizados y frÃ­os. 
+            Disfruta de una atenciÃ³n humana, directa y a tu medida, desde el primer 
+            contacto hasta que la prenda estÃ¡ en tus manos.
           </p>
         </div>
 

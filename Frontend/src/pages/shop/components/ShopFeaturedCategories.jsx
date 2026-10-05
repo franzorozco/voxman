@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { getImageUrl } from '../../../utils/imageUtils';
@@ -22,7 +22,7 @@ export default function ShopFeaturedCategories({ categories }) {
   return (
     <section className="shop-fc-section">
       <div className="shop-fc-header">
-        <h2 className="shop-fc-title">CATEGORÍAS DESTACADAS</h2>
+        <h2 className="shop-fc-title">CATEGORÃAS DESTACADAS</h2>
         <Link to="/shop/catalog" className="shop-fc-link">
           VER TODO <ArrowRight size={16} />
         </Link>

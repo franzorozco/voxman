@@ -1,4 +1,4 @@
-import "./HomeConfig.css";
+﻿import "./HomeConfig.css";
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { X, Search } from 'lucide-react';
@@ -15,7 +15,7 @@ export default function IconPickerModal({
       <div className="hc-style-157">
         {/* Header */}
         <div className="hc-style-158">
-          <h3 className="hc-style-159">Seleccionar Ícono</h3>
+          <h3 className="hc-style-159">Seleccionar Ãcono</h3>
           <button onClick={onClose} className="hc-style-160">
             <X size={20} />
           </button>

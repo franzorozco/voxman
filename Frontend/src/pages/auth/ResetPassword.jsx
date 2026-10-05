@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { resetPassword } from "../../api/admin/auth";
 import toast from "react-hot-toast";
@@ -28,12 +28,12 @@ export default function ResetPassword() {
   const validate = (name, value) => {
     let error = "";
     if (name === "password") {
-      if (value.length < 8) error = "Mínimo 8 caracteres";
-      else if (value.length > 72) error = "Máximo 72 caracteres";
-      else if (!/[a-zA-Z]/.test(value) || !/\d/.test(value)) error = "Debe incluir letras y números";
+      if (value.length < 8) error = "MÃ­nimo 8 caracteres";
+      else if (value.length > 72) error = "MÃ¡ximo 72 caracteres";
+      else if (!/[a-zA-Z]/.test(value) || !/\d/.test(value)) error = "Debe incluir letras y nÃºmeros";
     }
     if (name === "password_confirmation" && value !== form.password) {
-      error = "Las contraseñas no coinciden";
+      error = "Las contraseÃ±as no coinciden";
     }
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
@@ -48,7 +48,7 @@ export default function ResetPassword() {
     e.preventDefault();
 
     if (!form.password || form.password !== form.password_confirmation) {
-      toast.error("Revisa las contraseñas");
+      toast.error("Revisa las contraseÃ±as");
       return;
     }
     if (errors.password) {
@@ -62,7 +62,7 @@ export default function ResetPassword() {
       setSuccess(true);
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error al restablecer contraseña");
+      toast.error(err.response?.data?.message || "Error al restablecer contraseÃ±a");
     } finally {
       setLoading(false);
     }
@@ -74,18 +74,18 @@ export default function ResetPassword() {
 
       <div className="register-card">
         <h2>VOXMAN</h2>
-        <p className="subtitle">Nueva contraseña</p>
+        <p className="subtitle">Nueva contraseÃ±a</p>
 
         {success ? (
           <div className="success-message" style={{ textAlign: 'center' }}>
             <CheckCircle size={48} color="#33d9b2" style={{ margin: '0 auto 16px' }} />
-            <span style={{ display: 'block', marginBottom: '8px' }}>¡Contraseña actualizada!</span>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Serás redirigido al inicio de sesión.</p>
+            <span style={{ display: 'block', marginBottom: '8px' }}>Â¡ContraseÃ±a actualizada!</span>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>SerÃ¡s redirigido al inicio de sesiÃ³n.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
-              Crea una nueva contraseña para tu cuenta <strong>{form.email}</strong>.
+              Crea una nueva contraseÃ±a para tu cuenta <strong>{form.email}</strong>.
             </p>
 
             <div className="password-group">
@@ -94,7 +94,7 @@ export default function ResetPassword() {
                 <input
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Nueva contraseña"
+                  placeholder="Nueva contraseÃ±a"
                   value={form.password}
                   onChange={handleChange}
                 />
@@ -119,7 +119,7 @@ export default function ResetPassword() {
                 <input
                   name="password_confirmation"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Confirmar contraseña"
+                  placeholder="Confirmar contraseÃ±a"
                   value={form.password_confirmation}
                   onChange={handleChange}
                 />
@@ -133,7 +133,7 @@ export default function ResetPassword() {
             </div>
 
             <button type="submit" className={`auth-btn-primary ${loading ? "loading" : ""}`}>
-              {loading ? "Actualizando..." : "Restablecer contraseña"}
+              {loading ? "Actualizando..." : "Restablecer contraseÃ±a"}
             </button>
           </form>
         )}

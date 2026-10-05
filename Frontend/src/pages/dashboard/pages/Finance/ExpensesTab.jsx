@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, CalendarDays, CheckCircle, Archive, XCircle, List, History, Eye, Building, Edit2, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getExpenses, deleteExpense, createExpense, payExpenseSplit, archiveExpense, annulExpense } from "../../../../api/admin/finance";
@@ -73,7 +73,7 @@ export default function ExpensesTab() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de eliminar este gasto pendiente?")) return;
+    if (!window.confirm("Â¿EstÃ¡s seguro de eliminar este gasto pendiente?")) return;
     try {
       await deleteExpense(id);
       toast.success("Gasto eliminado");
@@ -84,7 +84,7 @@ export default function ExpensesTab() {
   };
 
   const handleArchive = async (id) => {
-    if (!window.confirm("¿Archivar este gasto? Desaparecerá de esta vista pero mantendrá los cálculos financieros intactos en el Kardex.")) return;
+    if (!window.confirm("Â¿Archivar este gasto? DesaparecerÃ¡ de esta vista pero mantendrÃ¡ los cÃ¡lculos financieros intactos en el Kardex.")) return;
     try {
       await archiveExpense(id);
       toast.success("Gasto archivado");
@@ -95,7 +95,7 @@ export default function ExpensesTab() {
   };
 
   const handleAnnul = async (id) => {
-    if (!window.confirm("¿Estás seguro de anular este gasto? El dinero regresará a la tesorería.")) return;
+    if (!window.confirm("Â¿EstÃ¡s seguro de anular este gasto? El dinero regresarÃ¡ a la tesorerÃ­a.")) return;
     try {
       await annulExpense(id);
       toast.success("Gasto anulado correctamente");
@@ -112,9 +112,9 @@ export default function ExpensesTab() {
 
   const getSplitTypeLabel = (type) => {
     switch(type) {
-      case 'equal': return 'División 50/50';
+      case 'equal': return 'DivisiÃ³n 50/50';
       case 'proportional': return 'Proporcional a ventas';
-      case 'single_owner': return 'Un solo dueño';
+      case 'single_owner': return 'Un solo dueÃ±o';
       case 'custom': return 'Personalizado';
       default: return type;
     }
@@ -202,10 +202,10 @@ export default function ExpensesTab() {
         )}
       </div>
 
-      {/* Gráfico de Distribución de Gastos */}
+      {/* GrÃ¡fico de DistribuciÃ³n de Gastos */}
       {categoryData.length > 0 && (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
-          <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', color: 'var(--text-main)' }}>Distribución de Gastos por Categoría</h3>
+          <h3 style={{ margin: '0 0 15px 0', fontSize: '16px', color: 'var(--text-main)' }}>DistribuciÃ³n de Gastos por CategorÃ­a</h3>
           <div style={{ width: '100%', height: '250px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -291,7 +291,7 @@ export default function ExpensesTab() {
               onClick={() => { setSelectedExpense(null); setIsModalOpen(true); }}
               style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
             >
-              <Plus size={18} /> Añadir Gasto
+              <Plus size={18} /> AÃ±adir Gasto
             </button>
           </CanAccess>
         </div>
@@ -308,9 +308,9 @@ export default function ExpensesTab() {
                   <th>Fecha</th>
                   <th>Sucursal</th>
                   <th>Concepto</th>
-                  <th>Categoría</th>
+                  <th>CategorÃ­a</th>
                   <th>Monto</th>
-                  <th>Tipo de División</th>
+                  <th>Tipo de DivisiÃ³n</th>
                   <th>Estado</th>
                   <th style={{ textAlign: 'center' }}>Acciones</th>
                 </tr>
@@ -333,7 +333,7 @@ export default function ExpensesTab() {
                         {e.description && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{e.description}</span>}
                       </div>
                     </td>
-                    <td data-label="Categoría">
+                    <td data-label="CategorÃ­a">
                       <span style={{ background: 'var(--bg-overlay)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 500 }}>
                         {e.category || 'General'}
                       </span>
@@ -341,7 +341,7 @@ export default function ExpensesTab() {
                     <td data-label="Monto">
                       <span style={{ fontWeight: 'bold', color: '#ef4444' }}>Bs. {Number(e.amount).toFixed(2)}</span>
                     </td>
-                    <td data-label="Tipo de División">
+                    <td data-label="Tipo de DivisiÃ³n">
                       <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                         {getSplitTypeLabel(e.split_type)}
                       </span>
@@ -476,7 +476,7 @@ export default function ExpensesTab() {
                   <td>{tx.ownerName}</td>
                   <td>
                     <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>
-                      {tx.fund_source === 'cash' ? 'Caja Física' : tx.fund_source === 'bank' ? 'Cuenta Bancaria' : 'N/A'}
+                      {tx.fund_source === 'cash' ? 'Caja FÃ­sica' : tx.fund_source === 'bank' ? 'Cuenta Bancaria' : 'N/A'}
                     </span>
                   </td>
                   <td style={{ color: tx.status === 'annulled' ? 'var(--text-muted)' : '#ef4444', fontWeight: 'bold' }}>

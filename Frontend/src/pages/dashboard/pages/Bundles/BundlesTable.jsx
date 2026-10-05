@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState } from "react";
 import { Edit2, Trash2, Eye, MoreVertical, CheckSquare } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
@@ -46,8 +46,8 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
             <th className="bt-col-img">Img</th>
             <th>Nombre</th>
             <th>Precio</th>
-            <th>Categoría</th>
-            <th>Ítems</th>
+            <th>CategorÃ­a</th>
+            <th>Ãtems</th>
             <th>Stock Virtual</th>
             <th>Estado</th>
             <th className="actions-col">Acciones</th>
@@ -104,7 +104,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                 <td onClick={() => onView && onView(bundle)} className="bt-clickable-td">
                   <div className="bt-cell-name">
                     {bundle.name}
-                    {selectedRows.includes(bundle.id) && <span className="hide-on-pc" style={{ color: 'var(--color-primary)', marginLeft: '6px' }}>✓</span>}
+                    {selectedRows.includes(bundle.id) && <span className="hide-on-pc" style={{ color: 'var(--color-primary)', marginLeft: '6px' }}>âœ“</span>}
                   </div>
                   {bundle.slug && <div className="bt-cell-slug">{bundle.slug}</div>}
                 </td>
@@ -121,7 +121,7 @@ export default function BundlesTable({ bundles, loading, selectedRows, setSelect
                 <td>{bundle.category?.name || "-"}</td>
                 <td>
                   <span className="bundle-badge">
-                    {bundle.bundle_items?.length || 0} ítems
+                    {bundle.bundle_items?.length || 0} Ã­tems
                   </span>
                 </td>
                 <td>

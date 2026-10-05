@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, Search, User as UserIcon, Link2, CheckCircle } from 'lucide-react';
 import { searchUnlinkedUsers, searchPosCustomers, linkUserToCustomer } from '../../../../api/admin/customers';
 import { toast } from 'react-hot-toast';
@@ -147,7 +147,7 @@ export default function LinkCustomerModal({ onClose, onSuccess }) {
                 <Search size={16} className="link-search-icon" />
                 <input
                   type="text"
-                  placeholder="Buscar por nombre o código..."
+                  placeholder="Buscar por nombre o cÃ³digo..."
                   value={customerQuery}
                   onChange={(e) => setCustomerQuery(e.target.value)}
                   className="link-search-input"
@@ -169,7 +169,7 @@ export default function LinkCustomerModal({ onClose, onSuccess }) {
                         className="link-result-item"
                       >
                         <span className="link-result-item-main">{fullName}</span>
-                        <span className="link-result-item-sub">Cód: {c.customer_code}</span>
+                        <span className="link-result-item-sub">CÃ³d: {c.customer_code}</span>
                       </div>
                     )
                   })}
@@ -188,7 +188,7 @@ export default function LinkCustomerModal({ onClose, onSuccess }) {
                       <span className="link-selected-name">
                         {`${(selectedCustomer.pos_profile || selectedCustomer.posProfile)?.first_name || ''} ${(selectedCustomer.pos_profile || selectedCustomer.posProfile)?.last_name_paternal || ''}`.trim() || 'Sin Nombre'}
                       </span>
-                      <span className="link-selected-desc">Cód: {selectedCustomer.customer_code}</span>
+                      <span className="link-selected-desc">CÃ³d: {selectedCustomer.customer_code}</span>
                     </div>
                   </div>
                 </div>
@@ -197,7 +197,7 @@ export default function LinkCustomerModal({ onClose, onSuccess }) {
           </div>
           
           <div className="link-modal-note">
-            <strong>Nota:</strong> Al vincular, la cuenta Web será la oficial. Los datos del perfil de Caja (POS) que no estén en la cuenta Web serán migrados y luego el perfil de caja se ocultará (se borrará mediante soft-delete). No se perderán puntos ni compras.
+            <strong>Nota:</strong> Al vincular, la cuenta Web serÃ¡ la oficial. Los datos del perfil de Caja (POS) que no estÃ©n en la cuenta Web serÃ¡n migrados y luego el perfil de caja se ocultarÃ¡ (se borrarÃ¡ mediante soft-delete). No se perderÃ¡n puntos ni compras.
           </div>
         </div>
 
@@ -215,7 +215,7 @@ export default function LinkCustomerModal({ onClose, onSuccess }) {
             onClick={handleSubmit}
             disabled={!selectedUser || !selectedCustomer || isSubmitting}
           >
-            {isSubmitting ? 'Vinculando...' : 'Confirmar Vinculación'}
+            {isSubmitting ? 'Vinculando...' : 'Confirmar VinculaciÃ³n'}
           </button>
         </div>
       </div>

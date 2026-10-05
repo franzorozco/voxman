@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { X, ShoppingBag, MapPin, CheckCircle, Truck, Store, MapIcon, Home, User as UserIcon } from 'lucide-react';
 import { initAuthCheckout, updateCustomerProfile } from '../../api/shop/auth';
 import useShopCartStore from '../../store/shop/useShopCartStore';
@@ -32,7 +32,7 @@ export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmo
       
       const deliveryMethodStr = typeof deliveryType === 'object' ? deliveryType.text : deliveryType;
 
-      const msg = `Hola te escribe ${userName}, y quisiera hacer mi pedido de unos productos de su tienda, el código de mi carrito es ${refNumber} y elegí la opción de entrega: ${deliveryMethodStr} por favor.`;
+      const msg = `Hola te escribe ${userName}, y quisiera hacer mi pedido de unos productos de su tienda, el cÃ³digo de mi carrito es ${refNumber} y elegÃ­ la opciÃ³n de entrega: ${deliveryMethodStr} por favor.`;
       const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
 
       setSuccessData({ waUrl, message: msg });
@@ -95,7 +95,7 @@ export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmo
 
               <div style={{ backgroundColor: warningBg, border: `1px solid ${warningBorder}`, padding: '16px', borderRadius: '8px', marginBottom: '24px', width: '100%' }}>
                 <p style={{ margin: 0, fontSize: '14px', color: warningText, fontWeight: '500', lineHeight: '1.5' }}>
-                  ⚠️ <strong>IMPORTANTE:</strong> Tu reserva expira en 20 minutos. Debes enviar el mensaje de WhatsApp para que procesemos tu orden.
+                  âš ï¸ <strong>IMPORTANTE:</strong> Tu reserva expira en 20 minutos. Debes enviar el mensaje de WhatsApp para que procesemos tu orden.
                 </p>
               </div>
 
@@ -144,11 +144,11 @@ export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmo
                         <p style={{ margin: 0, color: textColor, fontWeight: '500' }}>{customerProfile.first_name || ''} {customerProfile.last_name_paternal || ''} {customerProfile.last_name_maternal || ''}</p>
                       </div>
                       <div>
-                        <p style={{ margin: '0 0 4px', color: mutedColor, fontSize: '12px' }}>Código de Cliente</p>
+                        <p style={{ margin: '0 0 4px', color: mutedColor, fontSize: '12px' }}>CÃ³digo de Cliente</p>
                         <p style={{ margin: 0, color: textColor, fontWeight: '500' }}>{customerCode}</p>
                       </div>
                       <div>
-                        <p style={{ margin: '0 0 4px', color: mutedColor, fontSize: '12px' }}>Teléfono</p>
+                        <p style={{ margin: '0 0 4px', color: mutedColor, fontSize: '12px' }}>TelÃ©fono</p>
                         <p style={{ margin: 0, color: textColor, fontWeight: '500' }}>{primaryPhone}</p>
                       </div>
                     </div>
@@ -178,7 +178,7 @@ export default function CheckoutUserModal({ isOpen, onClose, cartItems, totalAmo
                         <div style={{ flex: 1 }}>
                           <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: textColor, lineHeight: '1.2' }}>{item.name}</p>
                           <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: mutedColor }}>
-                            {item.color} {item.size ? `• Talla ${item.size}` : ''} • Cant: {item.quantity}
+                            {item.color} {item.size ? `â€¢ Talla ${item.size}` : ''} â€¢ Cant: {item.quantity}
                           </p>
                         </div>
                         <div style={{ textAlign: 'right' }}>

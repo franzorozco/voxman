@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Plus, Search, Trash2, Edit, Ticket, RefreshCw, Eye, EyeOff, Smartphone, MoreVertical, Filter } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
@@ -79,7 +79,7 @@ export default function Giftcards() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas desactivar/eliminar esta Giftcard?")) return;
+    if (!window.confirm("Â¿Seguro que deseas desactivar/eliminar esta Giftcard?")) return;
     try {
       await deleteGiftcard(id);
       toast.success("Giftcard eliminada");
@@ -116,7 +116,7 @@ export default function Giftcards() {
           </div>
           <div>
             <h1 className="products-title gift-header-title">Giftcards y Cupones</h1>
-            <p className="gift-header-subtitle">Gestión de tarjetas de regalo y saldos</p>
+            <p className="gift-header-subtitle">GestiÃ³n de tarjetas de regalo y saldos</p>
           </div>
         </div>
 
@@ -152,7 +152,7 @@ export default function Giftcards() {
       <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
       <input 
         style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-        placeholder="Buscar por c�digo..." 
+        placeholder="Buscar por código..." 
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
       />
@@ -195,7 +195,7 @@ export default function Giftcards() {
           <table className="gift-table">
             <thead>
               <tr>
-                <th>Código</th>
+                <th>CÃ³digo</th>
                 <th>Propietario / Comprador</th>
                 <th>Saldo Original</th>
                 <th>Saldo Actual</th>
@@ -217,7 +217,7 @@ export default function Giftcards() {
                     statusClass = 'status-inactive';
                   } else if (g.current_balance <= 0) {
                     statusText = 'Agotada';
-                    statusClass = 'status-inactive'; // Podríamos usar otra clase si tuviéramos
+                    statusClass = 'status-inactive'; // PodrÃ­amos usar otra clase si tuviÃ©ramos
                   } else if (g.expires_at && new Date(g.expires_at).setHours(23,59,59,999) < new Date().getTime()) {
                     statusText = 'Expirada';
                     statusClass = 'status-inactive';
@@ -225,14 +225,14 @@ export default function Giftcards() {
 
                   return (
                   <tr key={g.id}>
-                    <td data-label="C�digo" style={{ position: 'relative' }}>
+                    <td data-label="Código" style={{ position: 'relative' }}>
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <RowDropdown rowId={g.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
         <button 
           onClick={() => { handleOpenCoupon(g); setActiveDropdown(null); }}
           style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-main)', width: '100%', fontSize: '14px' }}
         >
-          <Ticket size={16} /> Imprimir Cup�n
+          <Ticket size={16} /> Imprimir Cupón
         </button>
         {can('edit_giftcards') && !g.is_digitalized && g.is_active && (
           <button 
@@ -265,12 +265,12 @@ export default function Giftcards() {
       </RowDropdown>
     <div className="gift-code-wrapper">
       <span className="gift-code-text">
-                          {visibleCodes[g.id] ? g.code : "••••••••"}
+                          {visibleCodes[g.id] ? g.code : "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"}
                         </span>
                         <button 
                           className="gift-visibility-btn" 
                           onClick={() => setVisibleCodes(prev => ({...prev, [g.id]: !prev[g.id]}))}
-                          title={visibleCodes[g.id] ? "Ocultar código" : "Mostrar código"}
+                          title={visibleCodes[g.id] ? "Ocultar cÃ³digo" : "Mostrar cÃ³digo"}
                         >
                           {visibleCodes[g.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -314,7 +314,7 @@ export default function Giftcards() {
                       <div className="gift-actions-wrapper">
                         <button 
                           className="btn-secondary gift-ticket-btn"
-                          title="Imprimir Cupón"
+                          title="Imprimir CupÃ³n"
                           onClick={() => handleOpenCoupon(g)}
                         >
                           <Ticket size={18} />
@@ -323,7 +323,7 @@ export default function Giftcards() {
                         {can('edit_giftcards') && !g.is_digitalized && (
                           <button 
                             className="btn-secondary gift-digitalize-btn"
-                            title="Digitalizar (Asignar Dueño)"
+                            title="Digitalizar (Asignar DueÃ±o)"
                             onClick={() => handleOpenDigitalize(g)}
                             disabled={!g.is_active}
                           >

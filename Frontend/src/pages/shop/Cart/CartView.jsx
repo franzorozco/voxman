@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, Loader2 } from 'lucide-react';
@@ -126,13 +126,13 @@ const CartView = () => {
         useShopCartStore.setState({ appliedGlobalDiscount: appliedData });
         
         import('react-hot-toast').then(({ default: toast }) => {
-          toast.success("Cupón aplicado exitosamente");
+          toast.success("CupÃ³n aplicado exitosamente");
         });
       } else {
         setAppliedDiscount(null);
         useShopCartStore.setState({ appliedGlobalDiscount: null });
         import('react-hot-toast').then(({ default: toast }) => {
-          toast.error(res.data.message || "Cupón inválido");
+          toast.error(res.data.message || "CupÃ³n invÃ¡lido");
         });
       }
     } catch (err) {
@@ -140,7 +140,7 @@ const CartView = () => {
       setAppliedDiscount(null);
       useShopCartStore.setState({ appliedGlobalDiscount: null });
       import('react-hot-toast').then(({ default: toast }) => {
-        toast.error(err.response?.data?.message || "Error al validar el cupón");
+        toast.error(err.response?.data?.message || "Error al validar el cupÃ³n");
       });
     } finally {
       setDiscountLoading(false);
@@ -263,12 +263,12 @@ const CartView = () => {
         <div className="lg:col-span-7">
           <section aria-labelledby="cart-heading">
             <h2 id="cart-heading" className="sr-only">
-              Artículos en tu cesta
+              ArtÃ­culos en tu cesta
             </h2>
 
             {items.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-lg cart-empty-text mb-4">Tu cesta está vacía</p>
+                <p className="text-lg cart-empty-text mb-4">Tu cesta estÃ¡ vacÃ­a</p>
                 <Link to="/shop" className="text-indigo-600 hover:text-indigo-500 font-medium cart-empty-link">
                   Continuar comprando
                 </Link>
@@ -298,7 +298,7 @@ const CartView = () => {
                               </h4>
                               {item.bundle_group_id && (
                                 <span style={{ fontSize: '11px', color: '#b45309', fontWeight: '600', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', marginTop: '6px', border: '1px solid #fde68a' }}>
-                                  📦 Ítem de Conjunto
+                                  ðŸ“¦ Ãtem de Conjunto
                                 </span>
                               )}
                             </div>
@@ -321,7 +321,7 @@ const CartView = () => {
                           
                           {(item.color || item.size) && (
                             <div className="mt-1 text-sm cart-item-attributes space-y-1">
-                              <p>{item.color} {item.color && item.size ? '•' : ''} {item.size ? `Talla ${item.size}` : ''}</p>
+                              <p>{item.color} {item.color && item.size ? 'â€¢' : ''} {item.size ? `Talla ${item.size}` : ''}</p>
                             </div>
                           )}
                         </div>
@@ -372,7 +372,7 @@ const CartView = () => {
           {/* Discount Input Area */}
           <div className="mt-6 border-t border-gray-200 pt-4">
             <label htmlFor="discount-code" className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">
-              Código de descuento
+              CÃ³digo de descuento
             </label>
             <div className="flex gap-2">
               <input
@@ -382,7 +382,7 @@ const CartView = () => {
                 onChange={(e) => setDiscountCode(e.target.value)}
                 disabled={appliedDiscount !== null || discountLoading}
                 className="flex-1 rounded-none border-b border-t-0 border-l-0 border-r-0 border-gray-300 px-0 py-2 text-sm bg-transparent focus:border-black focus:outline-none focus:ring-0 disabled:text-gray-400 uppercase"
-                placeholder="Ingresa tu cupón"
+                placeholder="Ingresa tu cupÃ³n"
               />
               {appliedDiscount ? (
                 <button

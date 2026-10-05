@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+﻿import { useEffect, useState, useMemo } from "react";
 
 import {
   getProducts,
@@ -88,7 +88,7 @@ export default function Products() {
         setScannedVariantId(foundVariant.id);
         setViewOpen(true);
     } else {
-        toast.error("Producto o variante no encontrada", { icon: '🔍' });
+        toast.error("Producto o variante no encontrada", { icon: 'ðŸ”' });
     }
   };
 
@@ -455,7 +455,7 @@ export default function Products() {
             <button
               onClick={() => openScanner(processScannedCode)}
               style={{ width: '42px', height: '42px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s' }}
-              title="Escanear código de barras o QR"
+              title="Escanear cÃ³digo de barras o QR"
             >
               <Camera size={18} />
             </button>
@@ -472,7 +472,7 @@ export default function Products() {
         {showFilters && (
           <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Categoría</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>CategorÃ­a</label>
               <CustomSelect
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.category}
@@ -543,7 +543,7 @@ export default function Products() {
               >
                 <option value="">Todos</option>
                 <option value="in_stock">En Stock</option>
-                <option value="low_stock">Stock Bajo (Crítico)</option>
+                <option value="low_stock">Stock Bajo (CrÃ­tico)</option>
                 <option value="out_of_stock">Sin Stock</option>
               </CustomSelect>
             </div>
@@ -563,7 +563,7 @@ export default function Products() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio Mínimo (Bs)</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio MÃ­nimo (Bs)</label>
               <input
                 type="number"
                 placeholder="0"
@@ -574,7 +574,7 @@ export default function Products() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio Máximo (Bs)</label>
+              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio MÃ¡ximo (Bs)</label>
               <input
                 type="number"
                 placeholder="0"
@@ -667,7 +667,7 @@ export default function Products() {
         <div className="modal-overlay" style={{ backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="modal-content" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.6)' }}>
             <div className="modal-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 'none' }}>
-              <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 600 }}>Edición Masiva</h2>
+              <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 600 }}>EdiciÃ³n Masiva</h2>
               <button onClick={() => setBulkEditOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', padding: '4px' }}>
                 <X size={20} />
               </button>
@@ -686,7 +686,7 @@ export default function Products() {
                 </CustomSelect>
               </div>
               <div className="form-group" style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Categoría</label>
+                <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>CategorÃ­a</label>
                 <CustomSelect
                   
                   style={{ width: '100%', padding: '12px', background: 'var(--bg-secondary)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}
@@ -742,13 +742,13 @@ export default function Products() {
           "Inactivar productos"
         }
         message={
-          confirmModal.type === "bulkDelete" ? `¿Estás seguro de eliminar ${selectedRows.length} productos? Se enviarán a la papelera.` :
-          confirmModal.type === "singleDelete" ? "¿Estás seguro de eliminar este producto? Se enviará a la papelera." :
-          confirmModal.type === "bulkActive" ? `¿Estás seguro de cambiar el estado de ${selectedRows.length} productos a Activo?` :
-          `¿Estás seguro de cambiar el estado de ${selectedRows.length} productos a Inactivo?`
+          confirmModal.type === "bulkDelete" ? `Â¿EstÃ¡s seguro de eliminar ${selectedRows.length} productos? Se enviarÃ¡n a la papelera.` :
+          confirmModal.type === "singleDelete" ? "Â¿EstÃ¡s seguro de eliminar este producto? Se enviarÃ¡ a la papelera." :
+          confirmModal.type === "bulkActive" ? `Â¿EstÃ¡s seguro de cambiar el estado de ${selectedRows.length} productos a Activo?` :
+          `Â¿EstÃ¡s seguro de cambiar el estado de ${selectedRows.length} productos a Inactivo?`
         }
         confirmText={
-          confirmModal.type.includes("Delete") ? "Sí, eliminar" : "Sí, confirmar"
+          confirmModal.type.includes("Delete") ? "SÃ­, eliminar" : "SÃ­, confirmar"
         }
         type={
           confirmModal.type.includes("Delete") ? "danger" : 

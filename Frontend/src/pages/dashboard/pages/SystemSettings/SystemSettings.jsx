@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useEffect, useRef } from 'react';
 import { Settings2, Save, Image, Type, Hash, ToggleLeft, Link2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,7 +16,7 @@ const TYPE_ICONS = {
 const TYPE_LABELS = {
   image:   'Imagen',
   string:  'Texto',
-  integer: 'Número',
+  integer: 'NÃºmero',
   boolean: 'Booleano',
   url:     'URL',
 };
@@ -67,7 +67,7 @@ export default function SystemSettings() {
       toast.success('Todos los cambios guardados correctamente');
       fetchSettings(); // Refresh to get the updated URLs for images
     } catch {
-      toast.error('Ocurrió un error al guardar algunos cambios');
+      toast.error('OcurriÃ³ un error al guardar algunos cambios');
     } finally {
       setIsSavingAll(false);
     }
@@ -107,22 +107,22 @@ export default function SystemSettings() {
     <div className={theme} style={{ background: 'var(--bg-main)', minHeight: '100%', color: 'var(--text-main)' }}>
       <div className="max-w-4xl mx-auto p-6 md:p-8 pb-28">
 
-        {/* ── Header ── */}
+        {/* â”€â”€ Header â”€â”€ */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-1">
             <div className="flex items-center justify-center w-9 h-9 rounded-lg" style={{ background: 'var(--color-primary)', color: 'var(--color-primary-text)' }}>
               <Settings2 size={18} />
             </div>
             <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-main)' }}>
-              Configuración del Sistema
+              ConfiguraciÃ³n del Sistema
             </h1>
           </div>
           <p className="mt-1 text-sm ml-12" style={{ color: 'var(--text-muted)' }}>
-            Administra los parámetros globales de tu plataforma
+            Administra los parÃ¡metros globales de tu plataforma
           </p>
         </div>
 
-        {/* ── Grouped Settings ── */}
+        {/* â”€â”€ Grouped Settings â”€â”€ */}
         {orderedGroups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 rounded-xl border" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}>
             <Settings2 size={40} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
@@ -157,7 +157,7 @@ export default function SystemSettings() {
         )}
       </div>
 
-      {/* ── Floating Save Bar ── */}
+      {/* â”€â”€ Floating Save Bar â”€â”€ */}
       {dirtyFields.size > 0 && (
         <div 
           className="fixed bottom-0 left-0 right-0 p-4 border-t flex justify-center z-50 transition-all duration-300"
@@ -206,9 +206,9 @@ export default function SystemSettings() {
   );
 }
 
-/* ────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Single Setting Row
-──────────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function SettingRow({ setting, isDark, isDirty, isLast, onChange }) {
   const fileRef = useRef(null);
   const previewSrc = setting.value instanceof File
@@ -224,7 +224,7 @@ function SettingRow({ setting, isDark, isDirty, isLast, onChange }) {
       }}
       className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4 transition-all"
     >
-      {/* ── Left: label + description ── */}
+      {/* â”€â”€ Left: label + description â”€â”€ */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-sm font-semibold truncate" style={{ color: 'var(--text-main)' }}>
@@ -250,7 +250,7 @@ function SettingRow({ setting, isDark, isDirty, isLast, onChange }) {
         )}
       </div>
 
-      {/* ── Right: control ── */}
+      {/* â”€â”€ Right: control â”€â”€ */}
       <div className="flex items-center justify-end gap-2 sm:w-[52%] shrink-0">
         {setting.type === 'image' ? (
           <ImageField
@@ -269,7 +269,7 @@ function SettingRow({ setting, isDark, isDirty, isLast, onChange }) {
   );
 }
 
-/* ── Image Field ── */
+/* â”€â”€ Image Field â”€â”€ */
 function ImageField({ previewSrc, fileRef, onChange, isDark }) {
   return (
     <div className="flex items-center gap-2 flex-1">
@@ -309,7 +309,7 @@ function ImageField({ previewSrc, fileRef, onChange, isDark }) {
   );
 }
 
-/* ── Text Input ── */
+/* â”€â”€ Text Input â”€â”€ */
 function TextInput({ value, onChange, isDark }) {
   return (
     <input
@@ -329,7 +329,7 @@ function TextInput({ value, onChange, isDark }) {
   );
 }
 
-/* ── Boolean Toggle ── */
+/* â”€â”€ Boolean Toggle â”€â”€ */
 function BooleanField({ value, onChange }) {
   const active = value === 'true' || value === true || value === 1 || value === '1';
   return (

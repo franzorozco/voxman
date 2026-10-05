@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { getCarts } from "../../../../api/admin/carts";
 import { getDeliverySchedules, getDeliveryDrivers } from "../../../../api/admin/orderNetwork";
 import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle, Store } from "lucide-react";
@@ -163,7 +163,7 @@ export default function Orders() {
       if (isPastB && !isPastA) return -1;
 
       if (isPastA && isPastB) {
-        return new Date(b) - new Date(a); // Pasados: descendente (más recientes primero)
+        return new Date(b) - new Date(a); // Pasados: descendente (mÃ¡s recientes primero)
       }
 
       return new Date(a) - new Date(b); // Futuros: ascendente
@@ -189,7 +189,7 @@ export default function Orders() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         
         if (d.getTime() === today.getTime()) dateLabel = "Hoy, " + d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-        else if (d.getTime() === tomorrow.getTime()) dateLabel = "Mañana, " + d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+        else if (d.getTime() === tomorrow.getTime()) dateLabel = "MaÃ±ana, " + d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
         else dateLabel = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
         
         dateLabel = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
@@ -204,7 +204,7 @@ export default function Orders() {
     const cleanPhone = phone.replace(/\D/g, '');
     
     // Extraer primer nombre
-    const firstName = name && name !== "Anónimo" ? name.split(" ")[0] : "";
+    const firstName = name && name !== "AnÃ³nimo" ? name.split(" ")[0] : "";
     const greeting = firstName ? `Hola ${firstName}` : "Hola";
     
     let productDetails = "tus productos";
@@ -223,7 +223,7 @@ export default function Orders() {
     
     const trackingUrl = `${FRONTEND_URL}/tracking/${schedule.id}`;
     const deliveryType = schedule.shipment?.delivery_type || 'scheduled_point';
-    const meetPoint = schedule.meeting_point || "la ubicación acordada";
+    const meetPoint = schedule.meeting_point || "la ubicaciÃ³n acordada";
     const time = schedule.time_window || "una hora a convenir";
     const date = schedule.scheduled_date || "hoy";
     
@@ -233,88 +233,88 @@ export default function Orders() {
     if (deliveryType === 'pickup') {
       switch (schedule.status) {
         case "requested":
-          message = `${greeting}, te escribimos de VOXman respecto a tu solicitud de compra de ${productDetails}. Por favor, confírmanos cuando realices el pago para reservar tu pedido. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          message = `${greeting}, te escribimos de VOXman respecto a tu solicitud de compra de ${productDetails}. Por favor, confÃ­rmanos cuando realices el pago para reservar tu pedido. \n\nSigue tu pedido aquÃ­: ${trackingUrl}`;
           break;
         case "reserved":
-          message = `${greeting}, ¡pago confirmado! Hemos reservado tu pedido de ${productDetails}. Pronto comenzaremos a prepararlo.`;
+          message = `${greeting}, Â¡pago confirmado! Hemos reservado tu pedido de ${productDetails}. Pronto comenzaremos a prepararlo.`;
           break;
         case "preparing":
-          message = `${greeting}, estamos alistando y preparando tu pedido de ${productDetails} en sucursal. Te avisaremos apenas esté listo para recoger.`;
+          message = `${greeting}, estamos alistando y preparando tu pedido de ${productDetails} en sucursal. Te avisaremos apenas estÃ© listo para recoger.`;
           break;
         case "ready_for_pickup":
-          message = `${greeting}, ¡buenas noticias! Tu pedido de ${productDetails} ya está listo y esperando en la sucursal. Puedes pasar a recogerlo cuando gustes. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          message = `${greeting}, Â¡buenas noticias! Tu pedido de ${productDetails} ya estÃ¡ listo y esperando en la sucursal. Puedes pasar a recogerlo cuando gustes. \n\nSigue tu pedido aquÃ­: ${trackingUrl}`;
           break;
         case "completed":
-          message = `${greeting}, gracias por visitarnos en sucursal y llevarte ${productDetails}. ¡Que lo disfrutes mucho!`;
+          message = `${greeting}, gracias por visitarnos en sucursal y llevarte ${productDetails}. Â¡Que lo disfrutes mucho!`;
           break;
         default:
-          message = `${greeting}, te escribimos de VOXman respecto a tu pedido de ${productDetails} (Recojo en sucursal). Puedes ver todos los detalles aquí: ${trackingUrl}`;
+          message = `${greeting}, te escribimos de VOXman respecto a tu pedido de ${productDetails} (Recojo en sucursal). Puedes ver todos los detalles aquÃ­: ${trackingUrl}`;
       }
     } 
-    // 2. ENVÍO NACIONAL (EXTERNAL)
+    // 2. ENVÃO NACIONAL (EXTERNAL)
     else if (deliveryType === 'external') {
       switch (schedule.status) {
         case "pending":
-          message = `${greeting}, recibimos tu pedido nacional de ${productDetails}. Por favor envíanos el comprobante de pago para procesarlo. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          message = `${greeting}, recibimos tu pedido nacional de ${productDetails}. Por favor envÃ­anos el comprobante de pago para procesarlo. \n\nSigue tu pedido aquÃ­: ${trackingUrl}`;
           break;
         case "prepared":
-          message = `${greeting}, ¡tu pedido de ${productDetails} ya está preparado! En breve lo empacaremos para llevarlo a la agencia.`;
+          message = `${greeting}, Â¡tu pedido de ${productDetails} ya estÃ¡ preparado! En breve lo empacaremos para llevarlo a la agencia.`;
           break;
         case "packaged":
-          message = `${greeting}, ya empaquetamos y aseguramos tu pedido de ${productDetails}. Estamos listos para llevarlo a la agencia de envío.`;
+          message = `${greeting}, ya empaquetamos y aseguramos tu pedido de ${productDetails}. Estamos listos para llevarlo a la agencia de envÃ­o.`;
           break;
         case "shipped":
-          message = `${greeting}, ¡ya dejamos tu paquete en la agencia (Remitido)! Aquí tienes los detalles del envío en tu enlace de seguimiento: ${trackingUrl}`;
+          message = `${greeting}, Â¡ya dejamos tu paquete en la agencia (Remitido)! AquÃ­ tienes los detalles del envÃ­o en tu enlace de seguimiento: ${trackingUrl}`;
           break;
         case "completed":
-          message = `${greeting}, damos por finalizado tu pedido de ${productDetails}. ¡Muchísimas gracias por confiar en VOXman! Esperamos que llegue todo excelente y disfrutes tu compra.`;
+          message = `${greeting}, damos por finalizado tu pedido de ${productDetails}. Â¡MuchÃ­simas gracias por confiar en VOXman! Esperamos que llegue todo excelente y disfrutes tu compra.`;
           break;
         default:
-          message = `${greeting}, te escribimos de VOXman respecto a tu envío nacional de ${productDetails}. Puedes ver todos los detalles aquí: ${trackingUrl}`;
+          message = `${greeting}, te escribimos de VOXman respecto a tu envÃ­o nacional de ${productDetails}. Puedes ver todos los detalles aquÃ­: ${trackingUrl}`;
       }
     } 
     // 3. DELIVERY A HOGAR (HOME_DELIVERY)
     else if (deliveryType === 'home_delivery') {
       switch (schedule.status) {
         case "pending":
-          message = `${greeting}, recibimos tu pedido de ${productDetails} para envío a domicilio. Por favor envíanos el comprobante de pago para agendar la entrega. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          message = `${greeting}, recibimos tu pedido de ${productDetails} para envÃ­o a domicilio. Por favor envÃ­anos el comprobante de pago para agendar la entrega. \n\nSigue tu pedido aquÃ­: ${trackingUrl}`;
           break;
         case "assigned":
-          message = `${greeting}, te escribimos de VOXman. Tu pedido de ${productDetails} fue agendado para llevarlo a tu domicilio el día ${date} a las ${time}. ¿Nos confirmas que habrá alguien para recibirlo? \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          message = `${greeting}, te escribimos de VOXman. Tu pedido de ${productDetails} fue agendado para llevarlo a tu domicilio el dÃ­a ${date} a las ${time}. Â¿Nos confirmas que habrÃ¡ alguien para recibirlo? \n\nSigue tu pedido aquÃ­: ${trackingUrl}`;
           break;
         case "on_the_way":
-          message = `${greeting}, ¡ya estamos en camino! Nuestro repartidor va rumbo a tu domicilio con tu pedido de ${productDetails}. Espéranos por favor.`;
+          message = `${greeting}, Â¡ya estamos en camino! Nuestro repartidor va rumbo a tu domicilio con tu pedido de ${productDetails}. EspÃ©ranos por favor.`;
           break;
         case "at_the_meeting_point":
-          message = `${greeting}, ¡ya estamos afuera de tu domicilio! Por favor sal a recibir tu paquete.`;
+          message = `${greeting}, Â¡ya estamos afuera de tu domicilio! Por favor sal a recibir tu paquete.`;
           break;
         case "completed":
-          message = `${greeting}, muchas gracias por tu compra de ${productDetails}. ¡Esperamos que lo disfrutes y verte pronto por VOXman!`;
+          message = `${greeting}, muchas gracias por tu compra de ${productDetails}. Â¡Esperamos que lo disfrutes y verte pronto por VOXman!`;
           break;
         default:
-          message = `${greeting}, te escribimos de VOXman respecto a tu delivery de ${productDetails}. Puedes ver todos los detalles aquí: ${trackingUrl}`;
+          message = `${greeting}, te escribimos de VOXman respecto a tu delivery de ${productDetails}. Puedes ver todos los detalles aquÃ­: ${trackingUrl}`;
       }
     } 
     // 4. RECOJO EN PUNTO FIJO/MANUAL (SCHEDULED_POINT)
     else {
       switch (schedule.status) {
         case "pending":
-          message = `${greeting}, recibimos tu pedido de ${productDetails} para entrega en punto. Por favor envíanos el comprobante de pago para agendar la entrega. \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          message = `${greeting}, recibimos tu pedido de ${productDetails} para entrega en punto. Por favor envÃ­anos el comprobante de pago para agendar la entrega. \n\nSigue tu pedido aquÃ­: ${trackingUrl}`;
           break;
         case "assigned":
-          message = `${greeting}, te escribimos de VOXman para confirmar tu entrega (Agendado) de ${productDetails} el día ${date} a las ${time} en ${meetPoint}. ¿Me confirmas tu asistencia por favor? \n\nSigue tu pedido aquí: ${trackingUrl}`;
+          message = `${greeting}, te escribimos de VOXman para confirmar tu entrega (Agendado) de ${productDetails} el dÃ­a ${date} a las ${time} en ${meetPoint}. Â¿Me confirmas tu asistencia por favor? \n\nSigue tu pedido aquÃ­: ${trackingUrl}`;
           break;
         case "on_the_way":
-          message = `${greeting}, ¡ya estamos en camino al punto de encuentro! Nos vemos en ${meetPoint} para entregarte ${productDetails}.`;
+          message = `${greeting}, Â¡ya estamos en camino al punto de encuentro! Nos vemos en ${meetPoint} para entregarte ${productDetails}.`;
           break;
         case "at_the_meeting_point":
-          message = `${greeting}, ya nos encontramos en el punto de encuentro (${meetPoint}). ¡Te estamos esperando!`;
+          message = `${greeting}, ya nos encontramos en el punto de encuentro (${meetPoint}). Â¡Te estamos esperando!`;
           break;
         case "completed":
-          message = `${greeting}, muchas gracias por tu compra de ${productDetails}. ¡Esperamos que lo disfrutes y verte pronto por VOXman!`;
+          message = `${greeting}, muchas gracias por tu compra de ${productDetails}. Â¡Esperamos que lo disfrutes y verte pronto por VOXman!`;
           break;
         default:
-          message = `${greeting}, te escribimos de VOXman respecto a tu entrega en ${meetPoint}. Puedes ver todos los detalles aquí: ${trackingUrl}`;
+          message = `${greeting}, te escribimos de VOXman respecto a tu entrega en ${meetPoint}. Puedes ver todos los detalles aquÃ­: ${trackingUrl}`;
       }
     }
     
@@ -379,7 +379,7 @@ export default function Orders() {
 
       <div className="orders-kpi-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
         <div className="orders-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.3s ease' }}>
-          <span className="orders-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total de Envíos</span>
+          <span className="orders-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total de EnvÃ­os</span>
           <span className="orders-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>{schedules.length || 0}</span>
         </div>
         <div className="orders-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.4s ease' }}>
@@ -522,7 +522,7 @@ export default function Orders() {
                   const customer = schedule.shipment?.sale?.customer;
                   const guest = schedule.shipment?.sale?.guest;
                   
-                  let nameToDisplay = "Anónimo";
+                  let nameToDisplay = "AnÃ³nimo";
                   let phoneToDisplay = "N/A";
                   
                   if (customer) {
@@ -582,7 +582,7 @@ export default function Orders() {
                               
                               {schedule.shipment?.sale?.customer?.customer_code && (
                                 <span style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '2px 8px', borderRadius: '12px', color: 'var(--text-muted)', fontWeight: 600, marginLeft: '4px' }}>
-                                  Cód: {schedule.shipment.sale.customer.customer_code}
+                                  CÃ³d: {schedule.shipment.sale.customer.customer_code}
                                 </span>
                               )}
                             </div>
@@ -648,7 +648,7 @@ export default function Orders() {
                           <div className="info-item">
                             <MapPin size={16} className="icon" />
                             <div>
-                              <span>{schedule.shipment?.delivery_type === 'home_delivery' ? 'Dirección de Entrega' : (schedule.shipment?.delivery_type === 'external' ? 'Destino' : 'Punto de Encuentro')}</span>
+                              <span>{schedule.shipment?.delivery_type === 'home_delivery' ? 'DirecciÃ³n de Entrega' : (schedule.shipment?.delivery_type === 'external' ? 'Destino' : 'Punto de Encuentro')}</span>
                               <strong>
                                 {schedule.shipment?.delivery_type === 'home_delivery' && schedule.shipment?.address 
                                   ? `${schedule.shipment.address.street}, ${schedule.shipment.address.zone}` 
@@ -726,7 +726,7 @@ export default function Orders() {
             Anterior
           </button>
           <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-main)' }}>
-            Página {pagination.current_page} de {pagination.last_page}
+            PÃ¡gina {pagination.current_page} de {pagination.last_page}
           </span>
           <button
             className="btn-secondary"

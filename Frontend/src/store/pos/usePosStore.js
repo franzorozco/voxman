@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 
 export const usePosStore = create((set, get) => ({
     // Estado de la caja y sucursal
@@ -8,7 +8,7 @@ export const usePosStore = create((set, get) => ({
 
     // Estado del carrito
     cartItems: [],
-    selectedCustomer: null, // Si es null, es cliente genérico
+    selectedCustomer: null, // Si es null, es cliente genÃ©rico
 
     // Acciones de Caja y Sucursal
     setBranchId: (branchId, branchName = '') => set({ branchId, branchName }),

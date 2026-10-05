@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { ArrowLeft, Search, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getDeletedCustomers, restoreCustomer } from "../../../../api/admin/customers";
@@ -27,7 +27,7 @@ export default function DeletedCustomers() {
   }, [searchQuery]);
 
   const handleRestore = async (id) => {
-    if (!window.confirm("Â¿EstÃ¡s seguro de restaurar este cliente? VolverÃ¡ a estar activo.")) return;
+    if (!window.confirm("Ã‚Â¿EstÃƒÂ¡s seguro de restaurar este cliente? VolverÃƒÂ¡ a estar activo.")) return;
     try {
       await restoreCustomer(id);
       toast.success("Cliente restaurado exitosamente");
@@ -68,7 +68,7 @@ export default function DeletedCustomers() {
           <table className="products-table">
             <thead>
               <tr>
-                <th>CÃ³digo</th>
+                <th>CÃƒÂ³digo</th>
                 <th>Cliente</th>
                 <th>Contacto</th>
                 <th>Eliminado el</th>
@@ -124,7 +124,7 @@ export default function DeletedCustomers() {
                   <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                       <Trash2 size={48} style={{ opacity: 0.2 }} />
-                      <p>La papelera estÃ¡ vacÃ­a</p>
+                      <p>La papelera estÃƒÂ¡ vacÃƒÂ­a</p>
                     </div>
                   </td>
                 </tr>

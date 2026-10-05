@@ -1,4 +1,4 @@
-import client from '../client';
+﻿import client from '../client';
 const BASE_URL = "/v1/admin/shop-shorts";
 
 export const getShopShorts = () =>

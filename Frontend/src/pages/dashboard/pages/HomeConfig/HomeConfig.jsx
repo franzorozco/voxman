@@ -1,4 +1,4 @@
-import "./HomeConfig.css";
+﻿import "./HomeConfig.css";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { LayoutDashboard, Image, EyeOff, Eye, Save, RefreshCw, Check, X, Grid, Upload, Link as LinkIcon, Megaphone, Truck } from "lucide-react";
 import toast from "react-hot-toast";
@@ -16,7 +16,7 @@ const TABS = [{
   icon: <Image size={15} />
 }, {
   id: "categories",
-  label: "Categorías",
+  label: "CategorÃ­as",
   icon: <Grid size={15} />
 }, {
   id: "carousel",
@@ -46,7 +46,7 @@ const SECTION_KEYS = [{
 }, {
   key: "home_show_carousel",
   label: "Carrusel de Productos",
-  desc: "Carrusel de Novedades, Más Vendidos, etc."
+  desc: "Carrusel de Novedades, MÃ¡s Vendidos, etc."
 }, {
   key: "home_show_categories",
   label: "Categorias",
@@ -65,14 +65,14 @@ export default function HomeConfig() {
   const [saving, setSaving] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(true);
 
-  /* ── variant images picker state ── */
+  /* â”€â”€ variant images picker state â”€â”€ */
   const [allImages, setAllImages] = useState([]);
   const [loadingImgs, setLoadingImgs] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  /* ── categories state ── */
+  /* â”€â”€ categories state â”€â”€ */
   const [allCategories, setAllCategories] = useState([]);
   const [loadingCats, setLoadingCats] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -84,7 +84,7 @@ export default function HomeConfig() {
   const [dragOverHeroIdx, setDragOverHeroIdx] = useState(null);
   const [dragOverCatIdx, setDragOverCatIdx] = useState(null);
 
-  /* ── backgrounds state ── */
+  /* â”€â”€ backgrounds state â”€â”€ */
   const [selectingBackground, setSelectingBackground] = useState(false);
   const [bgModalTab, setBgModalTab] = useState("gallery"); // gallery | upload | url
   const [allBackgrounds, setAllBackgrounds] = useState([]);
@@ -125,11 +125,11 @@ export default function HomeConfig() {
   const DEFAULT_VALUE_PROPS = [{
     icon: 'MessageCircle',
     title: 'Contacto Directo',
-    desc: 'Coordina tu entrega de forma rápida sin registros obligatorios.'
+    desc: 'Coordina tu entrega de forma rÃ¡pida sin registros obligatorios.'
   }, {
     icon: 'Truck',
-    title: 'Envíos y Delivery',
-    desc: 'Entregas en La Paz, El Alto, Zona Sur, y envíos seguros a nivel nacional.'
+    title: 'EnvÃ­os y Delivery',
+    desc: 'Entregas en La Paz, El Alto, Zona Sur, y envÃ­os seguros a nivel nacional.'
   }, {
     icon: 'PackageCheck',
     title: 'Reservas Flexibles',
@@ -137,7 +137,7 @@ export default function HomeConfig() {
   }, {
     icon: 'UserPlus',
     title: 'Ventajas Exclusivas',
-    desc: 'Crea tu cuenta (opcional) para agilizar envíos y guardar direcciones.'
+    desc: 'Crea tu cuenta (opcional) para agilizar envÃ­os y guardar direcciones.'
   }];
 
   /* valueProps = array parsed from JSON setting */
@@ -161,7 +161,7 @@ export default function HomeConfig() {
     }
   })();
 
-  /* ── Top Bars position options ── */
+  /* â”€â”€ Top Bars position options â”€â”€ */
   const POSITION_OPTIONS = [{
     value: "above_hero",
     label: "Encima del Hero (arriba de todo)"
@@ -176,7 +176,7 @@ export default function HomeConfig() {
     label: "Debajo del Carrusel"
   }, {
     value: "below_categories",
-    label: "Debajo de Categorías"
+    label: "Debajo de CategorÃ­as"
   }, {
     value: "above_footer",
     label: "Antes del Footer"
@@ -201,7 +201,7 @@ export default function HomeConfig() {
     fetchSettings();
   }, [fetchSettings]);
 
-  /* ── Fetch variant images ── */
+  /* â”€â”€ Fetch variant images â”€â”€ */
   const fetchVariantImages = useCallback(async (pageNum = 1, append = false) => {
     try {
       setLoadingImgs(true);
@@ -228,14 +228,14 @@ export default function HomeConfig() {
     if (activeTab === "hero" && allImages.length === 0) fetchVariantImages(1, false);
   }, [activeTab, fetchVariantImages, allImages.length]);
 
-  /* ── Fetch categories ── */
+  /* â”€â”€ Fetch categories â”€â”€ */
   const fetchCategoriesList = useCallback(async () => {
     try {
       setLoadingCats(true);
       const data = await getCategories();
       setAllCategories(data);
     } catch {
-      toast.error("Error al cargar categorías");
+      toast.error("Error al cargar categorÃ­as");
     } finally {
       setLoadingCats(false);
     }
@@ -243,11 +243,11 @@ export default function HomeConfig() {
   useEffect(() => {
     if (activeTab === "categories" && allCategories.length === 0) {
       fetchCategoriesList();
-      if (allImages.length === 0) fetchVariantImages(1, false); // También necesitamos imágenes para las categorías
+      if (allImages.length === 0) fetchVariantImages(1, false); // TambiÃ©n necesitamos imÃ¡genes para las categorÃ­as
     }
   }, [activeTab, fetchCategoriesList, fetchVariantImages, allCategories.length, allImages.length]);
 
-  /* ── Helpers ── */
+  /* â”€â”€ Helpers â”€â”€ */
   const setSetting = (key, value) => {
     setSettings(prev => ({
       ...prev,
@@ -280,7 +280,7 @@ export default function HomeConfig() {
       current.splice(existingIdx, 1);
     } else {
       if (current.length >= 5) {
-        toast.error("Máximo 5 categorías destacadas permitidas.");
+        toast.error("MÃ¡ximo 5 categorÃ­as destacadas permitidas.");
         return;
       }
       current.push({
@@ -310,13 +310,13 @@ export default function HomeConfig() {
   };
   const addValueProp = () => {
     if (valueProps.length >= 4) {
-      toast.error("Máximo 4 beneficios.");
+      toast.error("MÃ¡ximo 4 beneficios.");
       return;
     }
     const next = [...valueProps, {
       icon: 'Star',
       title: 'Nuevo Beneficio',
-      desc: 'Descripción del beneficio'
+      desc: 'DescripciÃ³n del beneficio'
     }];
     setSetting("home_value_props", JSON.stringify(next));
   };
@@ -325,15 +325,15 @@ export default function HomeConfig() {
     setSetting("home_value_props", JSON.stringify(next));
   };
 
-  /* ── TopBars CRUD ── */
+  /* â”€â”€ TopBars CRUD â”€â”€ */
   const addTopBar = () => {
     if (topBars.length >= 6) {
-      toast.error("Máximo 6 cintillos permitidos.");
+      toast.error("MÃ¡ximo 6 cintillos permitidos.");
       return;
     }
     const next = [...topBars, {
       id: Date.now(),
-      text: "¡Nuevo anuncio! Escribe tu mensaje aquí.",
+      text: "Â¡Nuevo anuncio! Escribe tu mensaje aquÃ­.",
       bgColor: "#000000",
       textColor: "#ffffff",
       linkUrl: "",
@@ -399,7 +399,7 @@ export default function HomeConfig() {
     updateBackgroundImage(pastedBgUrl);
   };
 
-  /* ── Save ── */
+  /* â”€â”€ Save â”€â”€ */
   const handleSave = async () => {
     if (dirty.size === 0) return;
     try {
@@ -417,7 +417,7 @@ export default function HomeConfig() {
     }
   };
 
-  /* ── Filtered images ── */
+  /* â”€â”€ Filtered images â”€â”€ */
   const filtered = search ? allImages.filter(u => u.toLowerCase().includes(search.toLowerCase())) : allImages;
   if (loadingSettings) {
     return <div className={`${theme} hc-style-1`}>
@@ -430,7 +430,7 @@ export default function HomeConfig() {
   return <div className={`${theme} hc-style-5`}>
       <div className="hc-style-6">
 
-        {/* ── Header ── */}
+        {/* â”€â”€ Header â”€â”€ */}
         <div className="hc-style-7">
           <div className="hc-style-8">
             <div className="hc-style-9">
@@ -443,7 +443,7 @@ export default function HomeConfig() {
           </p>
         </div>
 
-        {/* ── Tabs ── */}
+        {/* â”€â”€ Tabs â”€â”€ */}
         <div className="hc-style-12">
           {TABS.map(t => <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
           display: "flex",
@@ -465,9 +465,9 @@ export default function HomeConfig() {
             </button>)}
         </div>
 
-        {/* ══════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
              TAB: HERO
-         ══════════════════════════════ */}
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeTab === "hero" && <div>
             {/* Textos del hero */}
             <div className="hc-style-14">
@@ -607,23 +607,23 @@ export default function HomeConfig() {
                 cursor: loadingImgs ? "not-allowed" : "pointer",
                 opacity: loadingImgs ? 0.7 : 1
               }}>
-                        {loadingImgs ? "Cargando..." : "Cargar más imágenes"}
+                        {loadingImgs ? "Cargando..." : "Cargar mÃ¡s imÃ¡genes"}
                       </button>
                     </div>}
                 </div>}
             </div>
           </div>}
 
-        {/* ══════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
              TAB: CATEGORIAS
-         ══════════════════════════════ */}
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeTab === "categories" && <div>
-            {/* Categorías seleccionadas (estilo tarjetas arrastrables) */}
+            {/* CategorÃ­as seleccionadas (estilo tarjetas arrastrables) */}
             <div className="hc-style-14">
               <div className="hc-style-20">
                 <div>
-                  <h3 className="hc-style-21">Categorías seleccionadas</h3>
-                  <p className="hc-style-22">Máximo 5 recomendadas. Haz click en la tarjeta para elegir miniatura, arrastra para reordenar.</p>
+                  <h3 className="hc-style-21">CategorÃ­as seleccionadas</h3>
+                  <p className="hc-style-22">MÃ¡ximo 5 recomendadas. Haz click en la tarjeta para elegir miniatura, arrastra para reordenar.</p>
                 </div>
                 <span style={{
               fontSize: 12,
@@ -639,8 +639,8 @@ export default function HomeConfig() {
 
               {featuredCategories.length === 0 ? <div className="hc-style-23">
                   <Grid size={32} className="hc-style-24" />
-                  <p>Ninguna categoría seleccionada.</p>
-                  <p className="hc-style-25">Selecciona categorías desde la lista de abajo.</p>
+                  <p>Ninguna categorÃ­a seleccionada.</p>
+                  <p className="hc-style-25">Selecciona categorÃ­as desde la lista de abajo.</p>
                 </div> : <div className="hc-style-26">
                   {featuredCategories.map((cat, i) => <div key={cat.id} draggable onDragStart={e => {
               e.dataTransfer.effectAllowed = 'move';
@@ -698,16 +698,16 @@ export default function HomeConfig() {
                 </div>}
             </div>
 
-            {/* Categorías Disponibles */}
+            {/* CategorÃ­as Disponibles */}
             <div className="hc-style-30">
               <div className="hc-style-20">
                 <div>
-                  <h3 className="hc-style-21">Categorías Disponibles</h3>
-                  <p className="hc-style-22">Haz click en una categoría para agregarla o quitarla de las destacadas.</p>
+                  <h3 className="hc-style-21">CategorÃ­as Disponibles</h3>
+                  <p className="hc-style-22">Haz click en una categorÃ­a para agregarla o quitarla de las destacadas.</p>
                 </div>
               </div>
 
-              {loadingCats ? <div className="hc-style-50">Cargando categorías...</div> : <div className="hc-style-51">
+              {loadingCats ? <div className="hc-style-50">Cargando categorÃ­as...</div> : <div className="hc-style-51">
                   {allCategories.map(cat => {
               const isSelected = featuredCategories.some(c => c.id === cat.id);
               return <div key={cat.id} onClick={() => toggleFeaturedCategory(cat)} style={{
@@ -762,7 +762,7 @@ export default function HomeConfig() {
                 icon: <LinkIcon size={14} />
               }, {
                 id: "gallery",
-                label: "Galería de Variantes",
+                label: "GalerÃ­a de Variantes",
                 icon: <Image size={14} />
               }].map(tab => <button key={tab.id} onClick={() => setModalTab(tab.id)} style={{
                 flex: 1,
@@ -832,7 +832,7 @@ export default function HomeConfig() {
                         </div>
 
                         {pastedUrl && <div className="hc-style-73">
-                            <p className="hc-style-74">Previsualización:</p>
+                            <p className="hc-style-74">PrevisualizaciÃ³n:</p>
                             <div className="hc-style-75">
                               <img src={pastedUrl} alt="Preview" onError={e => {
                       e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_white.jfif";
@@ -845,7 +845,7 @@ export default function HomeConfig() {
                     {modalTab === "gallery" && <>
                         <input type="text" placeholder="Buscar imagen..." value={search} onChange={e => setSearch(e.target.value)} className="hc-style-76" />
 
-                        {loadingImgs && page === 1 ? <div className="hc-style-77">Cargando imágenes...</div> : <div className="hc-style-78">
+                        {loadingImgs && page === 1 ? <div className="hc-style-77">Cargando imÃ¡genes...</div> : <div className="hc-style-78">
                             {filtered.map(url => <div key={url} onClick={() => updateCategoryImage(selectingImageForCat, url)} onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-primary)"} onMouseLeave={e => e.currentTarget.style.borderColor = "transparent"} className="hc-style-79">
                                 <img src={getImageUrl(url)} alt="" className="hc-style-40" />
                               </div>)}
@@ -862,7 +862,7 @@ export default function HomeConfig() {
                     color: "var(--text-main)",
                     cursor: loadingImgs ? "not-allowed" : "pointer"
                   }}>
-                              {loadingImgs ? "Cargando..." : "Cargar más imágenes"}
+                              {loadingImgs ? "Cargando..." : "Cargar mÃ¡s imÃ¡genes"}
                             </button>
                           </div>}
                       </>}
@@ -872,45 +872,45 @@ export default function HomeConfig() {
               </div>}
           </div>}
 
-        {/* ══════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
              TAB: CARRUSEL
-         ══════════════════════════════ */}
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeTab === "carousel" && <div className="hc-style-14">
-            <h3 className="hc-style-15">Configuración del Carrusel</h3>
+            <h3 className="hc-style-15">ConfiguraciÃ³n del Carrusel</h3>
             <div className="hc-style-16">
               <label className="hc-style-17">
-                <span className="hc-style-18">Título del Carrusel</span>
-                <input type="text" value={settings.home_carousel_title || ""} placeholder="Ej: LO MÁS VENDIDO" onChange={e => setSetting("home_carousel_title", e.target.value)} onFocus={e => e.target.style.borderColor = "var(--color-primary)"} onBlur={e => e.target.style.borderColor = "var(--border-color)"} className="hc-style-19" />
+                <span className="hc-style-18">TÃ­tulo del Carrusel</span>
+                <input type="text" value={settings.home_carousel_title || ""} placeholder="Ej: LO MÃS VENDIDO" onChange={e => setSetting("home_carousel_title", e.target.value)} onFocus={e => e.target.style.borderColor = "var(--color-primary)"} onBlur={e => e.target.style.borderColor = "var(--border-color)"} className="hc-style-19" />
               </label>
               
               <label className="hc-style-17">
                 <span className="hc-style-18">Tipo de lista a mostrar</span>
                 <CustomSelect value={settings.home_carousel_type || "newest"} onChange={e => setSetting("home_carousel_type", e.target.value)}>
-                  <option value="newest">Lo más nuevo (Lanzamientos)</option>
-                  <option value="trending">Lo más visto / destacado (Best Sellers)</option>
+                  <option value="newest">Lo mÃ¡s nuevo (Lanzamientos)</option>
+                  <option value="trending">Lo mÃ¡s visto / destacado (Best Sellers)</option>
                   <option value="random">Aleatorio</option>
                 </CustomSelect>
               </label>
             </div>
           </div>}
 
-        {/* ══════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
              TAB: BENEFICIOS
-         ══════════════════════════════ */}
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeTab === "value_props" && <div className="hc-style-14">
             <div className="hc-style-82">
               <div>
                 <h3 className="hc-style-21">Barra de Beneficios</h3>
-                <p className="hc-style-22">Máximo 4 iconos que se mostrarán bajo el hero principal.</p>
+                <p className="hc-style-22">MÃ¡ximo 4 iconos que se mostrarÃ¡n bajo el hero principal.</p>
               </div>
               <button onClick={addValueProp} className="hc-style-83">
-                + Añadir Beneficio
+                + AÃ±adir Beneficio
               </button>
             </div>
             
             <div className="hc-style-84">
               <span className="hc-style-85">Imagen de Fondo (Opcional)</span>
-              <p className="hc-style-86">Se mostrará con un degradado y efecto fijo (parallax) detrás de los beneficios.</p>
+              <p className="hc-style-86">Se mostrarÃ¡ con un degradado y efecto fijo (parallax) detrÃ¡s de los beneficios.</p>
               
               <div onClick={() => {
             setSelectingBackground(true);
@@ -948,7 +948,7 @@ export default function HomeConfig() {
               {valueProps.map((prop, idx) => <div key={idx} className="hc-style-93">
                   
                   <div className="hc-style-94">
-                    <span className="hc-style-95">Ícono (Lucide)</span>
+                    <span className="hc-style-95">Ãcono (Lucide)</span>
                     <button onClick={() => setEditingIconIndex(idx)} className="hc-style-96">
                       {(() => {
                   const IconCmp = Icons[prop.icon];
@@ -961,13 +961,13 @@ export default function HomeConfig() {
                   </div>
 
                   <div className="hc-style-98">
-                    <span className="hc-style-95">Título</span>
-                    <input type="text" value={prop.title || ""} onChange={e => updateValueProp(idx, 'title', e.target.value)} placeholder="Ej: Envíos Nacionales" className="hc-style-99" />
+                    <span className="hc-style-95">TÃ­tulo</span>
+                    <input type="text" value={prop.title || ""} onChange={e => updateValueProp(idx, 'title', e.target.value)} placeholder="Ej: EnvÃ­os Nacionales" className="hc-style-99" />
                   </div>
 
                   <div className="hc-style-100">
-                    <span className="hc-style-95">Descripción</span>
-                    <input type="text" value={prop.desc || ""} onChange={e => updateValueProp(idx, 'desc', e.target.value)} placeholder="Breve descripción del beneficio..." className="hc-style-99" />
+                    <span className="hc-style-95">DescripciÃ³n</span>
+                    <input type="text" value={prop.desc || ""} onChange={e => updateValueProp(idx, 'desc', e.target.value)} placeholder="Breve descripciÃ³n del beneficio..." className="hc-style-99" />
                   </div>
 
                   <button onClick={() => removeValueProp(idx)} title="Eliminar" style={{
@@ -991,16 +991,16 @@ export default function HomeConfig() {
             </div>
           </div>}
 
-        {/* ══════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
              TAB: TOP BARS
-         ══════════════════════════════ */}
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeTab === "topbars" && <div>
             {/* Header + Add button */}
             <div className="hc-style-101">
               <div>
                 <h3 className="hc-style-102">Cintillos de Anuncios</h3>
                 <p className="hc-style-103">
-                  Agrega hasta 6 barras. Cada una puede ir en una posición distinta dentro de la página Home.
+                  Agrega hasta 6 barras. Cada una puede ir en una posiciÃ³n distinta dentro de la pÃ¡gina Home.
                 </p>
               </div>
               <button onClick={addTopBar} className="hc-style-104">
@@ -1079,9 +1079,9 @@ export default function HomeConfig() {
                               <option value="none">Ninguno</option>
                               <option value="border-glow">Bordes Iluminados (Fijo)</option>
                               <option value="gradient-flow">Fondo Flotante (Gradiente)</option>
-                              <option value="rainbow-text">Texto Arcoíris (Fluido)</option>
+                              <option value="rainbow-text">Texto ArcoÃ­ris (Fluido)</option>
                               <option value="cyberpunk">Cyberpunk</option>
-                              <option value="text-breathe">Respiración de Texto</option>
+                              <option value="text-breathe">RespiraciÃ³n de Texto</option>
                               <option value="retro-wave">Onda Retro (Synthwave)</option>
                               <option value="spotlight">Foco de Luz (Spotlight)</option>
                               <option value="pulse">Latido (Pulse)</option>
@@ -1090,12 +1090,12 @@ export default function HomeConfig() {
                               <option value="marquee">Deslizante (Marquee)</option>
                               <option value="shimmer">Brillo (Shimmer)</option>
                               <option value="bounce">Rebote (Bounce)</option>
-                              <option value="neon">Neón (Neon)</option>
-                              <option value="typewriter">Máquina de escribir</option>
+                              <option value="neon">NeÃ³n (Neon)</option>
+                              <option value="typewriter">MÃ¡quina de escribir</option>
                               <option value="glitch">Glitch / Error</option>
-                              <option value="color-cycle">Ciclo Arcoíris</option>
-                              <option value="scanline">Escáner Láser</option>
-                              <option value="shake">Vibración (Shake)</option>
+                              <option value="color-cycle">Ciclo ArcoÃ­ris</option>
+                              <option value="scanline">EscÃ¡ner LÃ¡ser</option>
+                              <option value="shake">VibraciÃ³n (Shake)</option>
                             </CustomSelect>
                           </label>
 
@@ -1107,7 +1107,7 @@ export default function HomeConfig() {
                             
                             <label className="hc-style-139">
                               <input type="checkbox" checked={!!bar.isCloseable} onChange={e => updateTopBar(bar.id, "isCloseable", e.target.checked)} className="hc-style-140" />
-                              <span className="hc-style-85">Botón (X)</span>
+                              <span className="hc-style-85">BotÃ³n (X)</span>
                             </label>
                           </div>
                         </div>
@@ -1128,7 +1128,7 @@ export default function HomeConfig() {
                           <label className="hc-style-120">
                             Texto del anuncio
                           </label>
-                          <input type="text" value={bar.text} onChange={e => updateTopBar(bar.id, "text", e.target.value)} placeholder="Ej: Envío gratis en pedidos mayores a Bs 300" onFocus={e => e.target.style.borderColor = "var(--color-primary)"} onBlur={e => e.target.style.borderColor = "var(--border-color)"} className="hc-style-121" />
+                          <input type="text" value={bar.text} onChange={e => updateTopBar(bar.id, "text", e.target.value)} placeholder="Ej: EnvÃ­o gratis en pedidos mayores a Bs 300" onFocus={e => e.target.style.borderColor = "var(--color-primary)"} onBlur={e => e.target.style.borderColor = "var(--border-color)"} className="hc-style-121" />
                         </div>
                         <div className="hc-style-122">
                           <label className="hc-style-120">
@@ -1140,7 +1140,7 @@ export default function HomeConfig() {
                           <label className="hc-style-120">
                             Texto del enlace (opcional)
                           </label>
-                          <input type="text" value={bar.linkText} onChange={e => updateTopBar(bar.id, "linkText", e.target.value)} placeholder="Ver tienda →" onFocus={e => e.target.style.borderColor = "var(--color-primary)"} onBlur={e => e.target.style.borderColor = "var(--border-color)"} className="hc-style-121" />
+                          <input type="text" value={bar.linkText} onChange={e => updateTopBar(bar.id, "linkText", e.target.value)} placeholder="Ver tienda â†’" onFocus={e => e.target.style.borderColor = "var(--color-primary)"} onBlur={e => e.target.style.borderColor = "var(--border-color)"} className="hc-style-121" />
                         </div>
                       </div>
                       
@@ -1148,7 +1148,7 @@ export default function HomeConfig() {
                       <div className="hc-style-118">
                         <div className="hc-style-124">
                           <label className="hc-style-120">
-                            Ícono Inicio (Izquierda)
+                            Ãcono Inicio (Izquierda)
                           </label>
                           <button onClick={() => setEditingTopBarIcon({
                     id: bar.id,
@@ -1159,15 +1159,15 @@ export default function HomeConfig() {
                       return IconCmp ? <IconCmp size={16} /> : <Icons.Plus size={16} />;
                     })()}
                             <span className="hc-style-97">
-                              {bar.icon || "Agregar ícono..."}
+                              {bar.icon || "Agregar Ã­cono..."}
                             </span>
                           </button>
-                          {bar.icon && <button onClick={() => updateTopBar(bar.id, "icon", "")} className="hc-style-126">Quitar ícono</button>}
+                          {bar.icon && <button onClick={() => updateTopBar(bar.id, "icon", "")} className="hc-style-126">Quitar Ã­cono</button>}
                         </div>
 
                         <div className="hc-style-124">
                           <label className="hc-style-120">
-                            Ícono Final (Derecha)
+                            Ãcono Final (Derecha)
                           </label>
                           <button onClick={() => setEditingTopBarIcon({
                     id: bar.id,
@@ -1178,10 +1178,10 @@ export default function HomeConfig() {
                       return IconRightCmp ? <IconRightCmp size={16} /> : <Icons.Plus size={16} />;
                     })()}
                             <span className="hc-style-97">
-                              {bar.iconRight || "Agregar ícono..."}
+                              {bar.iconRight || "Agregar Ã­cono..."}
                             </span>
                           </button>
-                          {bar.iconRight && <button onClick={() => updateTopBar(bar.id, "iconRight", "")} className="hc-style-126">Quitar ícono</button>}
+                          {bar.iconRight && <button onClick={() => updateTopBar(bar.id, "iconRight", "")} className="hc-style-126">Quitar Ã­cono</button>}
                         </div>
                         
                         <div className="hc-style-127" />
@@ -1239,9 +1239,9 @@ export default function HomeConfig() {
                         {/* Row 2: Typography */}
                         <div className="hc-style-135">
                           <label className="hc-style-136">
-                            <span className="hc-style-95">Tamaño Letra</span>
+                            <span className="hc-style-95">TamaÃ±o Letra</span>
                             <CustomSelect value={bar.textSize || "13px"} onChange={e => updateTopBar(bar.id, "textSize", e.target.value)} className="hc-style-115">
-                              <option value="12px">Pequeña</option>
+                              <option value="12px">PequeÃ±a</option>
                               <option value="13px">Normal</option>
                               <option value="14px">Mediana</option>
                               <option value="16px">Grande</option>
@@ -1259,9 +1259,9 @@ export default function HomeConfig() {
                           </label>
 
                           <label className="hc-style-136">
-                            <span className="hc-style-95">Tamaño Ícono</span>
+                            <span className="hc-style-95">TamaÃ±o Ãcono</span>
                             <CustomSelect value={bar.iconSize || 16} onChange={e => updateTopBar(bar.id, "iconSize", e.target.value)} className="hc-style-115">
-                              <option value="14">Pequeño</option>
+                              <option value="14">PequeÃ±o</option>
                               <option value="16">Normal</option>
                               <option value="18">Mediano</option>
                               <option value="20">Grande</option>
@@ -1286,9 +1286,9 @@ export default function HomeConfig() {
               </div>}
           </div>}
 
-        {/* ══════════════════════════════
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
              TAB: SECCIONES
-         ══════════════════════════════ */}
+         â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeTab === "sections" && <div className="hc-style-141">
             {SECTION_KEYS.map((s, idx) => {
           const active = settings[s.key] === "true" || settings[s.key] === true;
@@ -1341,7 +1341,7 @@ export default function HomeConfig() {
 
       </div>
 
-      {/* ── Floating Save Bar ── */}
+      {/* â”€â”€ Floating Save Bar â”€â”€ */}
       {dirty.size > 0 && <div className="hc-style-147">
           <div className="hc-style-148">
             <span className="hc-style-85">
@@ -1397,7 +1397,7 @@ export default function HomeConfig() {
             icon: <LinkIcon size={14} />
           }, {
             id: "gallery",
-            label: "Galería de Fondos",
+            label: "GalerÃ­a de Fondos",
             icon: <Image size={14} />
           }].map(tab => <button key={tab.id} onClick={() => setBgModalTab(tab.id)} style={{
             flex: 1,
@@ -1426,7 +1426,7 @@ export default function HomeConfig() {
                   <div className="hc-style-63">
                     <Upload size={40} className="hc-style-64" />
                     <h4 className="hc-style-65">Sube una imagen desde tu equipo</h4>
-                    <p className="hc-style-66">Se guardará en /system/funds/</p>
+                    <p className="hc-style-66">Se guardarÃ¡ en /system/funds/</p>
                     
                     <input type="file" accept="image/*" ref={bgFileInputRef} onChange={handleBgFileUpload} className="hc-style-67" />
                     <button onClick={() => bgFileInputRef.current?.click()} disabled={uploadingImage} style={{
@@ -1467,7 +1467,7 @@ export default function HomeConfig() {
                   </div>
 
                   {pastedBgUrl && <div className="hc-style-152">
-                      <p className="hc-style-74">Previsualización:</p>
+                      <p className="hc-style-74">PrevisualizaciÃ³n:</p>
                       <div className="hc-style-153">
                         <img src={pastedBgUrl} alt="Preview" onError={e => {
                   e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_white.jfif";
@@ -1478,7 +1478,7 @@ export default function HomeConfig() {
 
               {/* TAB: GALLERY */}
               {bgModalTab === "gallery" && <>
-                  {loadingBgs ? <div className="hc-style-77">Cargando fondos...</div> : allBackgrounds.length === 0 ? <div className="hc-style-77">No hay fondos en la galería.</div> : <div className="hc-style-154">
+                  {loadingBgs ? <div className="hc-style-77">Cargando fondos...</div> : allBackgrounds.length === 0 ? <div className="hc-style-77">No hay fondos en la galerÃ­a.</div> : <div className="hc-style-154">
                       {allBackgrounds.map(url => <div key={url} onClick={() => updateBackgroundImage(url)} onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-primary)"} onMouseLeave={e => e.currentTarget.style.borderColor = "transparent"} className="hc-style-155">
                           <img src={getImageUrl(url)} alt="" className="hc-style-40" />
                         </div>)}

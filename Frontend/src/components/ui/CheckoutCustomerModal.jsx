@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { User, Phone, MapPin, Map, CheckCircle, X, Navigation, Crosshair, Map as MapIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { updateCustomerProfile } from "../../api/shop/auth";
@@ -121,8 +121,8 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
       }
     }
 
-    if (name === "customer_code" && value.trim().length < 5) error = "Cédula de identidad es requerida";
-    if (name === "phoneNumber" && value.trim().length < 7) error = "Teléfono es requerido";
+    if (name === "customer_code" && value.trim().length < 5) error = "CÃ©dula de identidad es requerida";
+    if (name === "phoneNumber" && value.trim().length < 7) error = "TelÃ©fono es requerido";
     
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
@@ -144,7 +144,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
-      toast.loading("Obteniendo tu ubicación...", { id: 'geo' });
+      toast.loading("Obteniendo tu ubicaciÃ³n...", { id: 'geo' });
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
@@ -153,15 +153,15 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
           setMarkerPos({ lat, lng });
           setForm(prev => ({ ...prev, latitude: lat, longitude: lng }));
           setIsMapOpen(true);
-          toast.success("Ubicación obtenida", { id: 'geo' });
+          toast.success("UbicaciÃ³n obtenida", { id: 'geo' });
           reverseGeocode(lat, lng);
         },
         () => {
-          toast.error("No se pudo obtener tu ubicación", { id: 'geo' });
+          toast.error("No se pudo obtener tu ubicaciÃ³n", { id: 'geo' });
         }
       );
     } else {
-      toast.error("Geolocalización no soportada por el navegador");
+      toast.error("GeolocalizaciÃ³n no soportada por el navegador");
     }
   };
 
@@ -187,7 +187,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
           if (types.includes("sublocality") || types.includes("neighborhood")) zone = component.long_name;
         });
 
-        // Si no detectó calle, usamos parte de la dirección formateada
+        // Si no detectÃ³ calle, usamos parte de la direcciÃ³n formateada
         if (!street) {
             street = results[0].formatted_address.split(",")[0];
         }
@@ -200,7 +200,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
           street: street || prev.street,
           zone: zone || prev.zone,
         }));
-        toast.success("Dirección autocompletada");
+        toast.success("DirecciÃ³n autocompletada");
       }
     });
   };
@@ -212,8 +212,8 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
       setErrors({
         first_name: !form.first_name ? "El nombre es requerido" : "",
         last_name_paternal: !form.last_name_paternal ? "El apellido paterno es obligatorio" : "",
-        customer_code: !form.customer_code ? "Cédula de identidad es requerida" : "",
-        phoneNumber: !form.phoneNumber ? "Teléfono es requerido" : ""
+        customer_code: !form.customer_code ? "CÃ©dula de identidad es requerida" : "",
+        phoneNumber: !form.phoneNumber ? "TelÃ©fono es requerido" : ""
       });
       return;
     }
@@ -328,7 +328,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                     <input
                       name="customer_code"
                       type="text"
-                      placeholder="Cédula de Identidad (CI) *"
+                      placeholder="CÃ©dula de Identidad (CI) *"
                       value={form.customer_code || ''}
                       onChange={handleChange}
                       disabled={!canChangeCustomerCode}
@@ -342,7 +342,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                     </span>
                   ) : (
                     <span style={{ color: mutedColor, fontSize: '11px', marginTop: '6px', display: 'block' }}>
-                      Nota: Al guardar, no podrás modificar tu CI por 2 meses.
+                      Nota: Al guardar, no podrÃ¡s modificar tu CI por 2 meses.
                     </span>
                   )}
                 </div>
@@ -360,10 +360,10 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
             <div style={{ borderTop: `1px solid ${borderColor}`, paddingTop: '20px' }}>
               <div style={{ marginBottom: '12px' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: '600', color: textColor, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <MapIcon size={16} /> Ubicación de Envío (Opcional)
+                  <MapIcon size={16} /> UbicaciÃ³n de EnvÃ­o (Opcional)
                 </h3>
                 <p style={{ fontSize: '13px', color: mutedColor, margin: '4px 0 0 0' }}>
-                  Necesitamos que nos confirme su ubicación para lograr entregas a domicilio en un futuro.
+                  Necesitamos que nos confirme su ubicaciÃ³n para lograr entregas a domicilio en un futuro.
                 </p>
               </div>
 
@@ -382,7 +382,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                       <MapIcon size={16} /> Abrir mapa
                     </button>
                     <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: mutedColor }}>
-                      (Opcional) Toca para ubicar tu dirección de entrega
+                      (Opcional) Toca para ubicar tu direcciÃ³n de entrega
                     </p>
                   </div>
                 ) : (
@@ -398,7 +398,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                         boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                       }}
                     >
-                      <Crosshair size={14} /> Usar mi ubicación actual
+                      <Crosshair size={14} /> Usar mi ubicaciÃ³n actual
                     </button>
                     <GoogleMapWrapper 
                       mapContainerStyle={{ width: '100%', height: '200px' }} 
@@ -412,7 +412,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                     {!markerPos && (
                       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.1)' }}>
                         <span style={{ background: modalBg, color: textColor, padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
-                          Toca el mapa para fijar tu ubicación
+                          Toca el mapa para fijar tu ubicaciÃ³n
                         </span>
                       </div>
                     )}
@@ -447,7 +447,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
               cursor: (loading || geocoding) ? 'not-allowed' : 'pointer', opacity: (loading || geocoding) ? 0.7 : 1,
             }}
           >
-            {loading ? "Guardando..." : geocoding ? "Procesando dirección..." : "Guardar y Continuar"}
+            {loading ? "Guardando..." : geocoding ? "Procesando direcciÃ³n..." : "Guardar y Continuar"}
           </button>
         </div>
       </div>
@@ -457,9 +457,9 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
           <div style={{ background: modalBg, padding: "24px", borderRadius: "12px", maxWidth: "400px", width: "90%", border: `1px solid ${borderColor}` }}>
             <h3 style={{ marginTop: 0, color: textColor, fontSize: '18px' }}>Confirmar Cambio de Carnet</h3>
             <p style={{ color: mutedColor, fontSize: "14px", lineHeight: "1.5" }}>
-              Estás a punto de cambiar tu Cédula de Identidad a <strong>{form.customer_code}</strong>.
+              EstÃ¡s a punto de cambiar tu CÃ©dula de Identidad a <strong>{form.customer_code}</strong>.
               <br /><br />
-              Atención: Si procedes, <strong>no podrás modificarlo de nuevo durante los próximos 2 meses</strong>. Piensa bien tu decisión, ¿estás seguro de que la información es correcta?
+              AtenciÃ³n: Si procedes, <strong>no podrÃ¡s modificarlo de nuevo durante los prÃ³ximos 2 meses</strong>. Piensa bien tu decisiÃ³n, Â¿estÃ¡s seguro de que la informaciÃ³n es correcta?
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
               <button 
@@ -476,7 +476,7 @@ export default function CheckoutCustomerModal({ isOpen, onClose, onSuccess, them
                 onClick={executeSubmit} 
                 disabled={loading}
               >
-                {loading ? "Guardando..." : "Sí, estoy seguro"}
+                {loading ? "Guardando..." : "SÃ­, estoy seguro"}
               </button>
             </div>
           </div>

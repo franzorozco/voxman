@@ -1,4 +1,4 @@
-import api from "../client";
+﻿import api from "../client";
 
 /**
  * Obtiene todas las URLs de imagenes de variantes (paginadas)

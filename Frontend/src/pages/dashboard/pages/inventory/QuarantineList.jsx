@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { getQuarantineItems } from "../../../../api/admin/quarantine";
@@ -46,7 +46,7 @@ const QuarantineList = () => {
 
   const getReasonBadge = (reason) => {
     if (reason === 'damaged') {
-      return <span className="status-badge" style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={14} /> Dañado</span>;
+      return <span className="status-badge" style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={14} /> DaÃ±ado</span>;
     }
     if (reason === 'wrong') {
       return <span className="status-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><PackageX size={14} /> Equivocado</span>;
@@ -76,7 +76,7 @@ const QuarantineList = () => {
             Mermas y Cuarentena
           </h1>
           <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Resolución de productos dañados o equivocados en recepciones.
+            ResoluciÃ³n de productos daÃ±ados o equivocados en recepciones.
           </div>
         </div>
       </div>
@@ -114,14 +114,14 @@ const QuarantineList = () => {
           <div className="loading-state">Cargando...</div>
         ) : items.length === 0 ? (
           <div className="empty-state">
-            {statusFilter === 'pending' ? 'No hay mermas pendientes. ¡Excelente!' : 'No hay historial de mermas resueltas.'}
+            {statusFilter === 'pending' ? 'No hay mermas pendientes. Â¡Excelente!' : 'No hay historial de mermas resueltas.'}
           </div>
         ) : (
           <table className="inventory-table">
             <thead>
               <tr>
                 <th style={{ whiteSpace: "nowrap" }}>Producto</th>
-                <th style={{ whiteSpace: "nowrap" }}>Recepción</th>
+                <th style={{ whiteSpace: "nowrap" }}>RecepciÃ³n</th>
                 <th style={{ whiteSpace: "nowrap" }}>Motivo</th>
                 <th style={{ textAlign: "center", whiteSpace: "nowrap" }}>Pendiente</th>
                 <th style={{ whiteSpace: "nowrap" }}>Estado</th>

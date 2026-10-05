@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { 
   FolderTree, 
   Tags, 
@@ -83,7 +83,7 @@ export default function Settings() {
   const user = useAuthStore((state) => state.user);
 
   const allTabs = [
-    { id: "categories", label: "Categorías", icon: <FolderTree />, permission: "view_settings_categories" },
+    { id: "categories", label: "CategorÃ­as", icon: <FolderTree />, permission: "view_settings_categories" },
     { id: "productTypes", label: "Tipos de Producto", icon: <Tags />, permission: "view_settings_product_types" },
     { id: "attributes", label: "Atributos y Valores", icon: <Palette />, permission: "view_settings_attributes" },
     { id: "sizes", label: "Tallas", icon: <Ruler />, permission: "view_settings_sizes" },
@@ -99,14 +99,14 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState(allowedTabs.length > 0 ? allowedTabs[0].id : "");
 
   if (allowedTabs.length === 0) {
-    return <div className="settings-page"><div className="settings-header"><h1>Acceso Denegado</h1><p>No tienes permiso para ver esta sección.</p></div></div>;
+    return <div className="settings-page"><div className="settings-header"><h1>Acceso Denegado</h1><p>No tienes permiso para ver esta secciÃ³n.</p></div></div>;
   }
 
   return (
     <div className="settings-page">
       <div className="settings-header">
-        <h1>Configuración de Catálogo</h1>
-        <p>Gestiona los metadatos globales para la creación de productos.</p>
+        <h1>ConfiguraciÃ³n de CatÃ¡logo</h1>
+        <p>Gestiona los metadatos globales para la creaciÃ³n de productos.</p>
       </div>
 
       <div className="settings-tabs">
@@ -139,7 +139,7 @@ export default function Settings() {
 // TABS COMPONENTS
 // ==========================================
 
-// 1. CATEGORÍAS
+// 1. CATEGORÃAS
 function TabCategories() {
   const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -155,7 +155,7 @@ function TabCategories() {
       const { data } = await api.getCategories();
       setCategories(data?.data ?? data ?? []);
     } catch (err) {
-      console.error("Error cargando categorías", err);
+      console.error("Error cargando categorÃ­as", err);
     } finally {
       setLoading(false);
     }
@@ -185,10 +185,10 @@ function TabCategories() {
   return (
     <div>
       <div className="settings-section-header">
-        <h2>Categorías</h2>
+        <h2>CategorÃ­as</h2>
         <CanAccess permission="edit_settings_categories">
           <button className="btn-add" onClick={() => { setFormData({ id: null, name: "", parent_id: "" }); setIsModalOpen(true); }}>
-            <Plus size={18} /> Nueva Categoría
+            <Plus size={18} /> Nueva CategorÃ­a
           </button>
         </CanAccess>
       </div>
@@ -197,7 +197,7 @@ function TabCategories() {
           <thead>
             <tr>
               <th>Nombre</th>
-              <th>Categoría Padre</th>
+              <th>CategorÃ­a Padre</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -248,7 +248,7 @@ function TabCategories() {
 
                 {categories.length === 0 && (
                   <tr>
-                    <td colSpan="3">No hay categorías registradas.</td>
+                    <td colSpan="3">No hay categorÃ­as registradas.</td>
                   </tr>
                 )}
               </>
@@ -260,16 +260,16 @@ function TabCategories() {
       {isModalOpen && (
         <div className="settings-modal-overlay">
           <div className="settings-modal">
-            <h3>{formData.id ? "Editar Categoría" : "Nueva Categoría"}</h3>
+            <h3>{formData.id ? "Editar CategorÃ­a" : "Nueva CategorÃ­a"}</h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label>Nombre</label>
                 <input required type="text" className="form-control" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="form-group">
-                <label>Categoría Padre (Opcional)</label>
+                <label>CategorÃ­a Padre (Opcional)</label>
                 <CustomSelect  value={formData.parent_id} onChange={e => setFormData({ ...formData, parent_id: e.target.value })}>
-                  <option value="">Ninguno (Categoría Principal)</option>
+                  <option value="">Ninguno (CategorÃ­a Principal)</option>
                   {categories.filter(c => c.id !== formData.id).map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -293,9 +293,9 @@ function TabCategories() {
         isOpen={confirmModal.isOpen}
         onClose={() => setConfirmModal({ isOpen: false, id: null })}
         onConfirm={() => handleDelete(confirmModal.id)}
-        title="Eliminar Categoría"
-        message="¿Seguro que deseas eliminar esta categoría?"
-        confirmText="Sí, eliminar"
+        title="Eliminar CategorÃ­a"
+        message="Â¿Seguro que deseas eliminar esta categorÃ­a?"
+        confirmText="SÃ­, eliminar"
         type="danger"
       />
     </div>
@@ -453,8 +453,8 @@ function TabProductTypes() {
         onClose={() => setConfirmModal({ isOpen: false, id: null })}
         onConfirm={() => handleDelete(confirmModal.id)}
         title="Eliminar Tipo"
-        message="¿Seguro que deseas eliminar este tipo?"
-        confirmText="Sí, eliminar"
+        message="Â¿Seguro que deseas eliminar este tipo?"
+        confirmText="SÃ­, eliminar"
         type="danger"
       />
     </div>
@@ -669,9 +669,9 @@ function TabAttributes() {
                   background: attrForm.is_fixed ? '#3b82f6' : 'transparent',
                   borderColor: attrForm.is_fixed ? '#3b82f6' : 'rgba(255,255,255,0.3)'
                 }}>
-                  {attrForm.is_fixed && <span style={{color: 'white', fontSize: 14}}>✓</span>}
+                  {attrForm.is_fixed && <span style={{color: 'white', fontSize: 14}}>âœ“</span>}
                 </div>
-                <label style={{ margin: 0, fontSize: 14, cursor: 'pointer', userSelect: 'none' }}>¿Es un Eje Fijo? (No se puede borrar de productos)</label>
+                <label style={{ margin: 0, fontSize: 14, cursor: 'pointer', userSelect: 'none' }}>Â¿Es un Eje Fijo? (No se puede borrar de productos)</label>
               </div>
               <div className="modal-actions">
                   <button type="button" className="btn-cancel" onClick={() => setIsAttrModalOpen(false)}>Cancelar</button>
@@ -694,7 +694,7 @@ function TabAttributes() {
             <h3>{valueForm.id ? "Editar Valor" : "Nuevo Valor"}</h3>
             <form onSubmit={handleSaveValue}>
               <div className="form-group">
-                <label>Valor (Ej: Rojo, Algodón)</label>
+                <label>Valor (Ej: Rojo, AlgodÃ³n)</label>
                 <input required type="text" className="form-control" value={valueForm.value} onChange={e => setValueForm({ ...valueForm, value: e.target.value })} />
               </div>
               <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setValueForm({ ...valueForm, isColor: !valueForm.isColor, hex_code: !valueForm.isColor ? "#000000" : "" })}>
@@ -704,14 +704,14 @@ function TabAttributes() {
                   background: valueForm.isColor ? '#3b82f6' : 'transparent',
                   borderColor: valueForm.isColor ? '#3b82f6' : 'rgba(255,255,255,0.3)'
                 }}>
-                  {valueForm.isColor && <span style={{color: 'white', fontSize: 14}}>✓</span>}
+                  {valueForm.isColor && <span style={{color: 'white', fontSize: 14}}>âœ“</span>}
                 </div>
-                <label style={{ margin: 0, fontSize: 14, cursor: 'pointer', userSelect: 'none' }}>¿Es un color?</label>
+                <label style={{ margin: 0, fontSize: 14, cursor: 'pointer', userSelect: 'none' }}>Â¿Es un color?</label>
               </div>
 
               {valueForm.isColor && (
                 <div className="form-group">
-                  <label>Código Hexadecimal</label>
+                  <label>CÃ³digo Hexadecimal</label>
                   <div style={{display: 'flex', gap: 10, alignItems: 'center'}}>
                     <input type="color" value={valueForm.hex_code || "#000000"} onChange={e => setValueForm({ ...valueForm, hex_code: e.target.value })} style={{width: 50, height: 40, background: 'transparent', border: 'none', cursor: 'pointer'}} />
                     <input type="text" placeholder="#FFFFFF" className="form-control" value={valueForm.hex_code} onChange={e => setValueForm({ ...valueForm, hex_code: e.target.value })} />
@@ -742,10 +742,10 @@ function TabAttributes() {
         title={confirmModal.type === "attr" ? "Eliminar Atributo" : "Eliminar Valor"}
         message={
           confirmModal.type === "attr" 
-          ? "¿Eliminar atributo y todos sus valores?" 
-          : "¿Eliminar este valor?"
+          ? "Â¿Eliminar atributo y todos sus valores?" 
+          : "Â¿Eliminar este valor?"
         }
-        confirmText="Sí, eliminar"
+        confirmText="SÃ­, eliminar"
         type="danger"
       />
     </div>
@@ -804,7 +804,7 @@ function TabSizes() {
       </div>
       <div className="settings-table-wrapper">
         <table className="settings-table">
-          <thead><tr><th>Talla</th><th>Descripción</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Talla</th><th>DescripciÃ³n</th><th>Acciones</th></tr></thead>
           <tbody>
             {loading ? (
               <LoadingRow colSpan={3} />
@@ -841,7 +841,7 @@ function TabSizes() {
                 <input required type="text" className="form-control" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="form-group">
-                <label>Descripción (Opcional)</label>
+                <label>DescripciÃ³n (Opcional)</label>
                 <input type="text" className="form-control" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
               </div>
               <div className="modal-actions">
@@ -965,8 +965,8 @@ function TabFits() {
         onClose={() => setConfirmModal({ isOpen: false, id: null })}
         onConfirm={() => handleDelete(confirmModal.id)}
         title="Eliminar Fit"
-        message="¿Seguro que deseas eliminar este fit?"
-        confirmText="Sí, eliminar"
+        message="Â¿Seguro que deseas eliminar este fit?"
+        confirmText="SÃ­, eliminar"
         type="danger"
       />
     </div>
@@ -1077,8 +1077,8 @@ function TabMeasurements() {
         onClose={() => setConfirmModal({ isOpen: false, id: null })}
         onConfirm={() => handleDelete(confirmModal.id)}
         title="Eliminar Medida"
-        message="¿Seguro que deseas eliminar esta medida?"
-        confirmText="Sí, eliminar"
+        message="Â¿Seguro que deseas eliminar esta medida?"
+        confirmText="SÃ­, eliminar"
         type="danger"
       />
     </div>
@@ -1135,7 +1135,7 @@ function TabBrands() {
       </div>
       <div className="settings-table-wrapper">
         <table className="settings-table">
-          <thead><tr><th>Logo</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Logo</th><th>Nombre</th><th>DescripciÃ³n</th><th>Acciones</th></tr></thead>
           <tbody>
             {loading ? (
               <LoadingRow colSpan={4} />
@@ -1175,7 +1175,7 @@ function TabBrands() {
                 <input required type="text" className="form-control" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="form-group">
-                <label>Descripción (Opcional)</label>
+                <label>DescripciÃ³n (Opcional)</label>
                 <textarea className="form-control" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
               </div>
               <div className="form-group">
@@ -1207,8 +1207,8 @@ function TabBrands() {
         onClose={() => setConfirmModal({ isOpen: false, id: null })}
         onConfirm={() => handleDelete(confirmModal.id)}
         title="Eliminar Marca"
-        message="¿Seguro que deseas eliminar esta marca?"
-        confirmText="Sí, eliminar"
+        message="Â¿Seguro que deseas eliminar esta marca?"
+        confirmText="SÃ­, eliminar"
         type="danger"
       />
     </div>
