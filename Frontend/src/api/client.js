@@ -48,20 +48,28 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // 1. Limpiar estado de autenticación (Zustand)
-      // Importamos dinámicamente para evitar ciclos o usamos el local storage directo
-      // Pero mejor cargar el store
-      import("../store/authStore").then((module) => {
-        const logout = module.useAuthStore.getState().logout;
-        if (logout) logout();
-        
-        // 2. Solo redirigir si no estamos ya en /login y NO estamos en la tienda pública
+    if (error.response) {
+      const status = error.response.status;
+      
+      if (status === 401) {
+        // 1. Limpiar estado de autenticación (Zustand)
+        import("../store/authStore").then((module) => {
+          const logout = module.useAuthStore.getState().logout;
+          if (logout) logout();
+          
+          // 2. Solo redirigir si no estamos ya en /login y NO estamos en la tienda pública
+          const currentPath = window.location.pathname;
+          if (currentPath !== "/login" && !currentPath.startsWith("/shop")) {
+            window.location.href = "/login";
+          }
+        });
+      } else if (status === 500 || status === 501 || status === 503) {
+        // Redirigir a la página de error correspondiente
         const currentPath = window.location.pathname;
-        if (currentPath !== "/login" && !currentPath.startsWith("/shop")) {
-          window.location.href = "/login";
+        if (!currentPath.startsWith("/error/")) {
+          window.location.href = `/error/${status}`;
         }
-      });
+      }
     }
     return Promise.reject(error);
   }

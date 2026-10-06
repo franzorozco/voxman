@@ -81,6 +81,9 @@ import ShopProductDetail from "../pages/shop/Product/ProductDetail";
 import ShopCartView from "../pages/shop/Cart/CartView";
 import BundleDetail from "../pages/shop/Bundle/BundleDetail";
 
+/* ERRORS */
+import { NotFound, ServerError, NotImplemented, Maintenance } from "../pages/errors/ErrorPages";
+
 import { useThemeStore } from "../store/themeStore";
 
 const ThemeLayout = ({ theme, children }) => (
@@ -211,8 +214,13 @@ const AnimatedRoutes = () => {
           <Route path="/profile" element={<Profile />} />
         </Route>
 
-        {/* ================= FALLBACK ================= */}
-        <Route path="*" element={<ThemeLayout theme="home-theme"><Home /></ThemeLayout>} />
+        {/* ================= ERRORS ================= */}
+        <Route path="/error/500" element={<ServerError />} />
+        <Route path="/error/501" element={<NotImplemented />} />
+        <Route path="/error/503" element={<Maintenance />} />
+
+        {/* ================= FALLBACK (404) ================= */}
+        <Route path="*" element={<NotFound />} />
 
       </Routes>
     
