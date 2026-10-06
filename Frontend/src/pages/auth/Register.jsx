@@ -172,7 +172,11 @@ export default function Register() {
           }, 1200);
         }
       } catch (error) {
-        toast.error(error.response?.data?.message || "Error al completar registro con Google");
+        if (!error.response || error.code === "ERR_NETWORK") {
+          toast.error("No se pudo conectar con el servidor de autenticación. Revisa tu conexión.", { id: 'network-error-toast' });
+        } else {
+          toast.error(error.response?.data?.message || "Error al completar registro con Google");
+        }
       } finally {
         setLoading(false);
       }
@@ -195,7 +199,11 @@ export default function Register() {
         }, 1200);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error en registro");
+      if (!error.response || error.code === "ERR_NETWORK") {
+        toast.error("No se pudo conectar con el servidor de autenticación. Revisa tu conexión.", { id: 'network-error-toast' });
+      } else {
+        toast.error(error.response?.data?.message || "Error en registro");
+      }
     } finally {
       setLoading(false);
     }

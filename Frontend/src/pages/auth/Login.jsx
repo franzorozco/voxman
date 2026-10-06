@@ -86,7 +86,9 @@ export default function Login() {
       setTimeout(() => navigate("/"), 1200);
 
     } catch (error) {
-      if (error.response?.status === 429) {
+      if (!error.response || error.code === "ERR_NETWORK") {
+        toast.error("No se pudo conectar con el servidor de autenticación. Revisa tu conexión.", { id: 'network-error-toast' });
+      } else if (error.response?.status === 429) {
         toast.error(error.response?.data?.message || "Demasiados intentos. Espera unos minutos.");
       } else {
         toast.error(error.response?.data?.message || "Error al iniciar sesión");

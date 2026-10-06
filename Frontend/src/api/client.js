@@ -70,6 +70,18 @@ api.interceptors.response.use(
           window.location.href = `/error/${status}`;
         }
       }
+    } else if (error.code === "ERR_NETWORK" || error.message === "Network Error") {
+      // Importar toast de forma dinámica para no romper inicializaciones
+      import("react-hot-toast").then((module) => {
+        const toast = module.default || module.toast;
+        const currentPath = window.location.pathname;
+        // Evitamos mostrar el toast si ya estamos en una página de error total (5xx)
+        if (!currentPath.startsWith("/error/")) {
+          toast.error("Error de red: No se pudo contactar con el servidor. Revisa tu conexión.", {
+             id: 'network-error-toast', // evita toasts duplicados si fallan múltiples peticiones
+          });
+        }
+      });
     }
     return Promise.reject(error);
   }
