@@ -127,28 +127,28 @@ const Home = () => {
       
       
       {showCollage && (
-        collageLoading ? (
-          <div className="shop-home-loading"><div className="shop-home-loader" /></div>
-        ) : collageError || settingsError ? (
+        settingsError || collageError ? (
           <ShopErrorState 
             title="Catálogo no disponible" 
             message="No pudimos cargar los productos destacados. Por favor, intenta de nuevo en unos minutos." 
             onRetry={fetchSettings}
           />
+        ) : collageLoading ? (
+          <div className="shop-home-loading"><div className="shop-home-loader" /></div>
         ) : (
           <ShopCollageGrid items={images} />
         )
       )}
       {showCategories && !settingsError && <ShopFeaturedCategories categories={settings.shop_home_featured_categories} />}
       {showNewArrivals && (
-        carouselLoading ? (
-          <div className="shop-home-loading"><div className="shop-home-loader" /></div>
-        ) : carouselError || settingsError ? (
+        settingsError || carouselError ? (
           <ShopErrorState 
             title="Novedades no disponibles" 
             message="No pudimos cargar las últimas novedades. Por favor, intenta de nuevo en unos minutos."
             onRetry={fetchSettings}
           />
+        ) : carouselLoading ? (
+          <div className="shop-home-loading"><div className="shop-home-loader" /></div>
         ) : (
           <NewArrivalsCarousel 
             products={carouselProducts} 
