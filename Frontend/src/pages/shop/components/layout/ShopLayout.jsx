@@ -86,7 +86,7 @@ const ShopNavbar = () => {
   // Como shopTheme es siempre claro, usamos el logo oscuro por defecto (para contraste en fondo blanco)
   const logoUrl = settings.store_logo_light 
     ? getImageUrl(settings.store_logo_light) 
-    : getImageUrl('/system/logos/logo_black_sinfondo.png');
+    : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/lodo_default_for_white.png';
 
   return (
     <header className="shop-nav-header">

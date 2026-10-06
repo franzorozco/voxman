@@ -8,19 +8,17 @@ import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
 import { getImageUrl } from '../../../utils/imageUtils';
 import { URL_BASE_VIDEOS } from "../../../config/api";
 
-import dueno1 from "../../../assets/global/Franz.jpg";
-import dueno2 from "../../../assets/global/Rous.jpg";
-
 import "./Nosotros.css";
  
 export default function Nosotros() {
   const { settings } = useShopSettingsStore();
+  const [mediaError, setMediaError] = React.useState(false);
   
   // En la pagina de Nosotros usamos fondo oscuro (Navbar oscuro), 
   // por lo que necesitamos el logo claro/blanco.
   const heroLogo = settings.store_logo_dark 
     ? getImageUrl(settings.store_logo_dark) 
-    : getImageUrl('/system/logos/logo_white_sinfondo.png');
+    : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/lodo_default_for_black.png';
   
   // Intersection Observer para las animaciones al hacer scroll
   useEffect(() => {
@@ -71,12 +69,18 @@ export default function Nosotros() {
       {/* HERO SECTION */}
       {String(settings.about_section_hero_show) !== "0" && (
         <section className="vox-nosotros-hero">
-          {settings.about_hero_video && (
+          {settings.about_hero_video && !mediaError && (
             <video 
               src={`${URL_BASE_VIDEOS}${settings.about_hero_video}`} 
               autoPlay muted loop playsInline
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
+              onError={() => setMediaError(true)}
             />
+          )}
+          {mediaError && (
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', color: '#fff', zIndex: 1 }}>
+              <p>Error de carga. Intentar más tarde.</p>
+            </div>
           )}
           <div className="vox-hero-overlay" style={{ 
             background: settings.about_hero_overlay_color 
@@ -137,13 +141,12 @@ export default function Nosotros() {
 
             <div className="vox-founders-grid">
               {(getArraySetting("about_founders_list", [
-                { name: "Franz Orozco", role: "Desarrollo y Visión Estratégica", text: "La lógica, el código...", image: "/system/global/Franz.jpg" },
-                { name: "Rous Vidal", role: "Estética, Arte y Dirección Visual", text: "El alma creativa...", image: "/system/global/Rous.jpg" }
+                { name: "Usuario no encontrado", role: "", text: "Información no disponible por el momento.", image: "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/Imagen_usuario_no_encontrado_black.jfif" }
               ])).map((f, i) => (
                 <div key={i} className={`vox-founder-card vox-reveal ${i % 2 !== 0 ? 'delay-1' : ''}`}>
                   <div className="vox-founder-image-box">
                     <img 
-                      src={f.image ? getImageUrl(f.image) : (i === 0 ? dueno1 : dueno2)} 
+                      src={f.image ? (f.image.startsWith('http') ? f.image : getImageUrl(f.image)) : "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/Imagen_usuario_no_encontrado_black.jfif"} 
                       alt={f.name} 
                       className="vox-founder-img" 
                       loading="lazy" 

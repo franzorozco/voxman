@@ -7,6 +7,8 @@ import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import "./Dashboard.css";
 import { API_BASE_URL } from "../../config/api";
 import CanAccess from "../../components/ui/CanAccess";
+import api from "../../api/client";
+import { AlertCircle } from "lucide-react";
 
 import GlobalScannerModal from "../../components/ui/GlobalScannerModal";
 import ModalProtection from "./components/ModalProtection";
@@ -58,10 +60,29 @@ const DashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(
     window.innerWidth <= 1024
   );
+  
+  const [connectionError, setConnectionError] = useState(false);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
 
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        await api.get("/v1/profile");
+        setConnectionError(false);
+      } catch (err) {
+        if (!err.response || err.code === "ERR_NETWORK") {
+          setConnectionError(true);
+        }
+      } finally {
+        setIsCheckingConnection(false);
+      }
+    };
+    checkConnection();
+  }, []);
 
   useEffect(() => {
     if (window.innerWidth <= 1024) {
@@ -86,6 +107,47 @@ const DashboardLayout = () => {
       {!collapsed && <span>{label}</span>}
     </NavLink>
   );
+
+  if (isCheckingConnection) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-main, #09090b)', color: 'var(--text-main, #fff)', textAlign: 'center' }}>
+        <p>Conectando con el servidor...</p>
+      </div>
+    );
+  }
+
+  if (connectionError) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-main, #09090b)', color: 'var(--text-main, #fff)', textAlign: 'center', padding: '20px' }}>
+        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+          <AlertCircle size={40} style={{ color: '#ef4444' }} strokeWidth={1.5} />
+        </div>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: '500', marginBottom: '12px', letterSpacing: '-0.02em' }}>Sin conexión al servidor</h1>
+        <p style={{ fontSize: '1rem', color: 'var(--text-muted, #a1a1aa)', maxWidth: '420px', margin: '0 auto 32px auto', lineHeight: '1.6' }}>
+          No pudimos conectar con la base de datos de administración. Por favor, verifica tu conexión a internet o intenta volver más tarde.
+        </p>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{ 
+            padding: '12px 28px', 
+            background: 'var(--text-main, #fff)', 
+            color: 'var(--bg-main, #09090b)', 
+            border: 'none', 
+            borderRadius: '30px', 
+            cursor: 'pointer', 
+            fontSize: '0.95rem', 
+            fontWeight: '600', 
+            transition: 'opacity 0.2s', 
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }}
+          onMouseOver={(e) => e.target.style.opacity = '0.8'}
+          onMouseOut={(e) => e.target.style.opacity = '1'}
+        >
+          Reintentar conexión
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>

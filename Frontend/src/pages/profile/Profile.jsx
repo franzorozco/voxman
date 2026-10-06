@@ -101,6 +101,7 @@ export default function Profile() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [showConfirmCodeModal, setShowConfirmCodeModal] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
 
   // User Profile Data
   const [userData, setUserData] = useState(null);
@@ -153,6 +154,7 @@ export default function Profile() {
   const loadProfile = async () => {
     try {
       setLoading(true);
+      setConnectionError(false);
       const res = await getProfile();
       if (res?.user) {
         setUserData(res.user);
@@ -198,6 +200,13 @@ export default function Profile() {
         toast.error("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
         logout();
         navigate("/login");
+        return;
+      }
+      
+      // Catch network errors (no connection)
+      if (!err.response || err.code === "ERR_NETWORK") {
+        setConnectionError(true);
+        setLoading(false);
         return;
       }
       
@@ -495,6 +504,43 @@ export default function Profile() {
   const userInitials = (userData?.full_name?.trim())
     ? userData.full_name.trim().split(/\s+/).map(n => n[0]).filter(Boolean).join("").slice(0, 2).toUpperCase()
     : (userData?.username || userData?.email || "U").slice(0, 2).toUpperCase();
+
+  if (connectionError) {
+    return (
+      <div className="profile-page-wrapper">
+        <Navbar isDarkThemeOverride={profileIsDark} />
+        <div style={{ width: '100%', minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-main, #09090b)', color: 'var(--text-main, #fff)', textAlign: 'center', padding: '20px' }}>
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+            <AlertCircle size={40} style={{ color: '#ef4444' }} strokeWidth={1.5} />
+          </div>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: '500', marginBottom: '12px', letterSpacing: '-0.02em' }}>Sin conexión al servidor</h1>
+          <p style={{ fontSize: '1rem', color: 'var(--text-muted, #a1a1aa)', maxWidth: '420px', margin: '0 auto 32px auto', lineHeight: '1.6' }}>
+            No pudimos obtener los datos de tu perfil. Por favor, verifica tu conexión a internet o intenta volver más tarde.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{ 
+              padding: '12px 28px', 
+              background: 'var(--text-main, #fff)', 
+              color: 'var(--bg-main, #09090b)', 
+              border: 'none', 
+              borderRadius: '30px', 
+              cursor: 'pointer', 
+              fontSize: '0.95rem', 
+              fontWeight: '600', 
+              transition: 'opacity 0.2s', 
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            onMouseOver={(e) => e.target.style.opacity = '0.8'}
+            onMouseOut={(e) => e.target.style.opacity = '1'}
+          >
+            Reintentar conexión
+          </button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (loading && !userData) {
     return (

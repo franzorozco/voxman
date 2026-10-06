@@ -24,6 +24,7 @@ const alignMap = {
 
 export default function EntregasHero() {
   const { settings } = useShopSettingsStore();
+  const [mediaError, setMediaError] = React.useState(false);
 
   const iconName = settings.shipping_hero_icon;
   const IconCmp = iconName ? Icons[iconName] : null;
@@ -51,7 +52,7 @@ export default function EntregasHero() {
         color: textColor
       }}
     >
-      {settings.shipping_hero_video && (
+      {settings.shipping_hero_video && !mediaError && (
         <video 
           className="vox-hero-video-bg"
           src={settings.shipping_hero_video.startsWith('http') ? settings.shipping_hero_video : `${URL_BASE_VIDEOS}/${settings.shipping_hero_video}`}
@@ -59,7 +60,13 @@ export default function EntregasHero() {
           loop 
           muted 
           playsInline
+          onError={() => setMediaError(true)}
         />
+      )}
+      {mediaError && (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', color: '#fff', zIndex: 1 }}>
+          <p>Error de carga. Intentar más tarde.</p>
+        </div>
       )}
       <div className="vox-hero-overlay" style={{ background: overlayColor }}></div>
       <div className="vox-hero-content vox-reveal" style={{ textAlign: textAlign, width: '100%', maxWidth: 1200, padding: '0 20px', color: textColor }}>

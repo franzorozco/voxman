@@ -71,8 +71,8 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
   // Ajustamos la lógica para mostrar el logo que contraste correctamente con el fondo
   const logoUrl = isDarkContext 
-    ? (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : getImageUrl('/system/logos/logo_white_sinfondo.png')) 
-    : (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : getImageUrl('/system/logos/logo_black_sinfondo.png'));
+    ? (settings.store_logo_dark ? getImageUrl(settings.store_logo_dark) : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/lodo_default_for_black.png') 
+    : (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/lodo_default_for_white.png');
 
   return (
     <header className="nav-header">
