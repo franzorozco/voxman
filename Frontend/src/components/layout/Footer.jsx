@@ -3,6 +3,7 @@ import "./Footer.css";
 import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import { Phone, Mail } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   const { settings, fetchSettings } = useShopSettingsStore();
@@ -10,6 +11,11 @@ export default function Footer() {
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
+
+  const facebookUrl = settings?.facebook_url || "https://www.facebook.com/share/1P3bhWMDvk/";
+  const instagramUrl = settings?.instagram_url || "https://www.instagram.com/voxmanlapaz?stkn=MXdldjE3ZjdhcjJxMg==";
+  const tiktokUrl = settings?.tiktok_url || "https://www.tiktok.com/@voxmanlapaz?_r=1&_t=ZS-9AKdTjFMY4q";
+  const phoneStr = settings?.store_phone || "+591 57003312";
 
   return (
     <footer className="footer">
@@ -27,18 +33,18 @@ export default function Footer() {
         {/* LINKS */}
         <div className="footer-column">
           <h3>Enlaces</h3>
-          <a href="/">Inicio</a>
-          <a href="/shop/catalog">Tienda</a>
-          <a href="/nosotros">Nosotros</a>
+          <Link to="/">Inicio</Link>
+          <Link to="/shop/catalog">Tienda</Link>
+          <Link to="/nosotros">Nosotros</Link>
         </div>
 
         {/* HELP */}
         <div className="footer-column">
           <h3>Ayuda</h3>
-          <a href="#">Contacto</a>
-          <a href="#">Envíos</a>
-          <a href="#">Devoluciones</a>
-          <a href="#">Guía de tallas</a>
+          <Link to="/contacto">Contacto</Link>
+          <Link to="/entregas">Envíos</Link>
+          <Link to="/devoluciones">Devoluciones</Link>
+          <Link to="#">Guía de tallas</Link>
         </div>
 
         {/* CONTACT */}
@@ -50,25 +56,19 @@ export default function Footer() {
           </p>
           <p className="contact-item">
             <Phone size={16} style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }} />
-            {settings?.store_phone || "+591 70000000"}
+            {phoneStr}
           </p>
 
           <div className="socials">
-            {settings?.instagram_url && (
-              <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaInstagram size={18} /> Instagram
-              </a>
-            )}
-            {settings?.tiktok_url && (
-              <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaTiktok size={18} /> TikTok
-              </a>
-            )}
-            {settings?.facebook_url && (
-              <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaFacebook size={18} /> Facebook
-              </a>
-            )}
+            <a href={instagramUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FaInstagram size={18} /> Instagram
+            </a>
+            <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FaTiktok size={18} /> TikTok
+            </a>
+            <a href={facebookUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FaFacebook size={18} /> Facebook
+            </a>
           </div>
         </div>
 

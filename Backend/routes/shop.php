@@ -32,7 +32,13 @@ Route::prefix('v1/shop')->group(function () {
         Route::get('/products/{slug}', [ShopProductController::class, 'show']);
         Route::get('/categories', [ShopCategoryController::class, 'index']);
         Route::get('/categories/featured', [ShopCategoryController::class, 'featured']);
-        Route::get('/shorts', [ShopShortController::class, 'index']);
+    });
+
+    // ── Devoluciones (Públicas y Privadas) ──────────────────────────────────
+    Route::prefix('returns')->middleware(['throttle:30,1,shop_returns_'])->group(function () {
+        Route::post('/lookup', [\App\Http\Controllers\Api\shop\ShopReturnController::class, 'lookup']);
+        Route::post('/request', [\App\Http\Controllers\Api\shop\ShopReturnController::class, 'requestReturn']);
+        Route::get('/guest-status', [\App\Http\Controllers\Api\shop\ShopReturnController::class, 'guestStatus']);
     });
 
     // Autenticación de clientes

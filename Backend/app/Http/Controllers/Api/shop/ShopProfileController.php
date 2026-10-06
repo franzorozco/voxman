@@ -312,10 +312,14 @@ class ShopProfileController extends Controller
 
         // 🔒 El customer_id siempre viene del usuario autenticado — nunca del request
         $query = \App\Models\Sales\Sale::with([
-            'sale_details.product_variant.product',
+            'sale_details.product_variant.product.product_images',
+            'sale_details.product_variant.product.attribute_value_images',
+            'sale_details.product_variant.variant_images',
+            'sale_details.product_variant.variant_attribute_values.attribute_value',
             'sale_details.product_variant.size',
             'sale_details.product_variant.fit',
             'sale_details.sale_applied_discount',
+            'sale_details.return_request',
             'shipments.delivery_schedule',
             'shipments.address',
             'payments',

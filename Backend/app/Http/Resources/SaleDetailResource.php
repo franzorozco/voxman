@@ -44,6 +44,9 @@ class SaleDetailResource extends JsonResource
                     'amount' => (float) $this->sale_applied_discount->discount_amount,
                 ];
             }),
+            
+            // Return request
+            'return_request' => $this->whenLoaded('return_request'),
         ];
     }
 }

@@ -1,0 +1,203 @@
+.contacto-page {
+  width: 100%;
+  padding-top: 100px;
+  padding-bottom: 60px;
+  background: var(--bg-main, #0d0d0d);
+  color: var(--text-main, #fff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.contacto-header {
+  text-align: center;
+  max-width: 600px;
+  margin-bottom: 40px;
+  padding: 0 20px;
+}
+
+.contacto-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: var(--color-primary, #c9a227);
+}
+
+.contacto-header p {
+  color: var(--text-muted, #a0a0a0);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.contacto-options {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 40px;
+  width: 100%;
+  max-width: 900px;
+  padding: 0 20px;
+}
+
+.contacto-card {
+  flex: 1;
+  min-width: 300px;
+  background: var(--bg-card, rgba(15,15,15,0.65));
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.contacto-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-primary, #c9a227);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.contacto-card.active {
+  border-color: var(--color-primary, #c9a227);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.contacto-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary, #c9a227);
+  margin-bottom: 10px;
+}
+
+.contacto-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.contacto-card p {
+  color: var(--text-muted, #a0a0a0);
+  font-size: 0.95rem;
+  margin-bottom: 15px;
+}
+
+.contacto-btn {
+  padding: 10px 24px;
+  border-radius: 30px;
+  border: 1px solid var(--color-primary, #c9a227);
+  color: var(--color-primary, #c9a227);
+  background: transparent;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.contacto-card:hover .contacto-btn,
+.contacto-card.active .contacto-btn {
+  background: var(--color-primary, #c9a227);
+  color: #000;
+}
+
+/* FORM SECTION */
+.contacto-form-container {
+  width: 100%;
+  max-width: 600px;
+  background: var(--bg-card, rgba(15,15,15,0.65));
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 12px;
+  padding: 40px;
+  animation: slideUp 0.4s ease forwards;
+  margin-bottom: 40px;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.contacto-form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.contacto-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #a0a0a0);
+}
+
+.contacto-form-group input,
+.contacto-form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-input, rgba(20,20,20,0.6));
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 8px;
+  color: var(--text-main, #fff);
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+.contacto-form-group input:focus,
+.contacto-form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #c9a227);
+}
+
+.contacto-form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.contacto-submit {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--color-primary, #c9a227);
+  color: #000;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.contacto-submit:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.contacto-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .contacto-options {
+    flex-direction: column;
+  }
+  .contacto-form-container {
+    padding: 24px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}

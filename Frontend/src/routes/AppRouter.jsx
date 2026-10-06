@@ -8,6 +8,8 @@ import Nosotros from "../pages/home/nosotros/Nosotros";
 import Entregas from "../pages/home/entregas/Entregas";
 import Tracking from "../pages/shop/Tracking/Tracking";
 import Profile from "../pages/profile/Profile";
+import Contacto from "../pages/home/contacto/Contacto";
+import Devoluciones from "../pages/home/devoluciones/Devoluciones";
 
 /* AUTH */
 import Login from "../pages/auth/Login";
@@ -117,6 +119,8 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<Home />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/entregas" element={<Entregas />} />
+          <Route path="/contacto" element={<Contacto />} />
+          <Route path="/devoluciones" element={<Devoluciones />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
