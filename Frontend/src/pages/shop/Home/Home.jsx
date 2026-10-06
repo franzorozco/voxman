@@ -6,6 +6,7 @@ import { formatCollageItems } from '../utils/collageHelpers';
 import ShopCollageGrid from '../components/ShopCollageGrid';
 import NewArrivalsCarousel from '../components/NewArrivalsCarousel';
 import ShopFeaturedCategories from '../components/ShopFeaturedCategories';
+import ShopErrorState from '../components/ShopErrorState';
 import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
 import './Home.css';
 
@@ -14,19 +15,27 @@ const Home = () => {
   const [carouselProducts, setCarouselProducts] = useState([]);
   const [collageLoading, setCollageLoading] = useState(true);
   const [carouselLoading, setCarouselLoading] = useState(true);
+  const [collageError, setCollageError] = useState(false);
+  const [carouselError, setCarouselError] = useState(false);
+  
   const hasFetched = React.useRef(false);
-  const { settings, fetched, fetchSettings } = useShopSettingsStore();
+  const { settings, fetched, fetchSettings, error: settingsError, loading: settingsLoading } = useShopSettingsStore();
 
   useEffect(() => {
-    if (!fetched) {
+    if (!fetched && !settingsError && !settingsLoading) {
       fetchSettings();
-    } else if (!hasFetched.current) {
+    } else if (fetched && !hasFetched.current) {
       hasFetched.current = true;
       fetchData();
     }
-  }, [fetched, fetchSettings]);
+  }, [fetched, settingsError, settingsLoading, fetchSettings]);
 
   const fetchData = () => {
+    setCollageError(false);
+    setCarouselError(false);
+    setCollageLoading(true);
+    setCarouselLoading(true);
+
     const sortMap = {
       'newest': 'newest',
       'price_asc': 'price_asc',
@@ -64,6 +73,7 @@ const Home = () => {
       setCollageLoading(false);
     }).catch(err => {
       console.error('Error fetching collage items:', err);
+      setCollageError(true);
       setCollageLoading(false);
     });
 
@@ -91,6 +101,7 @@ const Home = () => {
       setCarouselLoading(false);
     }).catch(err => {
       console.error('Error fetching new arrivals:', err);
+      setCarouselError(true);
       setCarouselLoading(false);
     });
   };
@@ -118,14 +129,26 @@ const Home = () => {
       {showCollage && (
         collageLoading ? (
           <div className="shop-home-loading"><div className="shop-home-loader" /></div>
+        ) : collageError || settingsError ? (
+          <ShopErrorState 
+            title="Catálogo no disponible" 
+            message="No pudimos cargar los productos destacados. Por favor, intenta de nuevo en unos minutos." 
+            onRetry={fetchSettings}
+          />
         ) : (
           <ShopCollageGrid items={images} />
         )
       )}
-      {showCategories && <ShopFeaturedCategories categories={settings.shop_home_featured_categories} />}
+      {showCategories && !settingsError && <ShopFeaturedCategories categories={settings.shop_home_featured_categories} />}
       {showNewArrivals && (
         carouselLoading ? (
           <div className="shop-home-loading"><div className="shop-home-loader" /></div>
+        ) : carouselError || settingsError ? (
+          <ShopErrorState 
+            title="Novedades no disponibles" 
+            message="No pudimos cargar las últimas novedades. Por favor, intenta de nuevo en unos minutos."
+            onRetry={fetchSettings}
+          />
         ) : (
           <NewArrivalsCarousel 
             products={carouselProducts} 

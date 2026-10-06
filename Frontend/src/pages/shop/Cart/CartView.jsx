@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, Loader2 } from 'lucide-react';
@@ -13,10 +13,11 @@ import CheckoutCustomerModal from '../../../components/ui/CheckoutCustomerModal'
 import CheckoutDeliveryModal from '../../../components/ui/CheckoutDeliveryModal';
 import CheckoutUserModal from '../../../components/ui/CheckoutUserModal';
 import CheckoutConflictModal from '../../../components/ui/CheckoutConflictModal';
+import ShopErrorState from '../components/ShopErrorState';
 import './CartView.css';
 
 const CartView = () => {
-  const { items, total, fetchCart, updateQuantity, removeFromCart, isLoading, appliedGlobalDiscount } = useShopCartStore();
+  const { items, total, fetchCart, updateQuantity, removeFromCart, isLoading, isError, appliedGlobalDiscount } = useShopCartStore();
   const globalUser = useAuthStore((state) => state.user);
   const { isDark } = useThemeStore();
   const [removingId, setRemovingId] = useState(null);
@@ -266,7 +267,7 @@ const CartView = () => {
               Artículos en tu cesta
             </h2>
 
-            {items.length === 0 ? (
+              {isError ? (<div style={{ padding: '40px 0' }}><ShopErrorState title="Carrito no disponible" message="No pudimos cargar tu cesta." onRetry={fetchCart} /></div>) : items.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-lg cart-empty-text mb-4">Tu cesta está vacía</p>
                 <Link to="/shop" className="text-indigo-600 hover:text-indigo-500 font-medium cart-empty-link">

@@ -10,10 +10,11 @@ const useShopCartStore = create(
       total: 0,
       appliedGlobalDiscount: null,
       isLoading: false,
+      isError: false,
 
       // Initialize the cart from the backend using the stored token
       fetchCart: async () => {
-        set({ isLoading: true });
+        set({ isLoading: true, isError: false });
         try {
           const response = await getCart();
           set({ 
@@ -23,6 +24,7 @@ const useShopCartStore = create(
           });
         } catch (error) {
           console.error('Failed to fetch cart:', error);
+          set({ isError: true });
         } finally {
           set({ isLoading: false });
         }

@@ -1,4 +1,4 @@
-import { getImageUrl } from '../../../utils/imageUtils';
+﻿import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
@@ -13,6 +13,7 @@ import { Virtuoso, VirtuosoGrid } from 'react-virtuoso';
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
 import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
+import ShopErrorState from '../components/ShopErrorState';
 import './Catalog.css';
 
 const Catalog = () => {
@@ -46,6 +47,7 @@ const Catalog = () => {
   }, [selectedCategory, setSearchParams]);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [viewMode, setViewMode] = useState(null);
   const [imageMode, setImageMode] = useState(null);
   const [expandedProductId, setExpandedProductId] = useState(null);
@@ -134,7 +136,10 @@ const Catalog = () => {
     if (!hasMore && currentPage > 1) return;
 
     const fetchCatalogItems = async () => {
-      if (currentPage === 1) setIsLoading(true);
+      if (currentPage === 1) {
+        setIsLoading(true);
+        setIsError(false);
+      }
       
       try {
         const perPage = parseInt(cfg('catalog_products_per_page', '12'), 10);
@@ -166,6 +171,7 @@ const Catalog = () => {
         }
       } catch (error) {
         console.error('Error loading catalog items', error);
+        setIsError(true);
       } finally {
         if (currentPage === 1) setIsLoading(false);
       }
@@ -1380,7 +1386,7 @@ const Catalog = () => {
 
           {/* ── ÁREA DE PRODUCTOS ── */}
           <div>
-            {isLoading ? (
+            {isError ? (<div style={{ paddingTop: '40px' }}><ShopErrorState title="Catálogo no disponible" message="No pudimos cargar los productos." onRetry={() => window.location.reload()} /></div>) : isLoading && products.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', paddingTop: '40px' }}>Cargando catálogo...</p>
             ) : (
               <>
@@ -1400,5 +1406,6 @@ const Catalog = () => {
 };
 
 export default Catalog;
+
 
 
