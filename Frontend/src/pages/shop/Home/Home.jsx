@@ -111,6 +111,8 @@ const Home = () => {
   const showCollage = settings.shop_home_show_collage === undefined || String(settings.shop_home_show_collage) !== "0";
   const showNewArrivals = settings.shop_home_show_new_arrivals === undefined || String(settings.shop_home_show_new_arrivals) !== "0";
 
+  const hasGlobalError = settingsError || collageError || carouselError;
+
   return (
     <div className="shop-home">
       {showHero && (
@@ -124,42 +126,38 @@ const Home = () => {
         </div>
       )}
 
-      
-      
-      {showCollage && (
-        settingsError || collageError ? (
-          <ShopErrorState 
-            title="Catálogo no disponible" 
-            message="No pudimos cargar los productos destacados. Por favor, intenta de nuevo en unos minutos." 
-            onRetry={fetchSettings}
-          />
-        ) : collageLoading ? (
-          <div className="shop-home-loading"><div className="shop-home-loader" /></div>
-        ) : (
-          <ShopCollageGrid items={images} />
-        )
-      )}
-      {showCategories && !settingsError && <ShopFeaturedCategories categories={settings.shop_home_featured_categories} />}
-      {showNewArrivals && (
-        settingsError || carouselError ? (
-          <ShopErrorState 
-            title="Novedades no disponibles" 
-            message="No pudimos cargar las últimas novedades. Por favor, intenta de nuevo en unos minutos."
-            onRetry={fetchSettings}
-          />
-        ) : carouselLoading ? (
-          <div className="shop-home-loading"><div className="shop-home-loader" /></div>
-        ) : (
-          <NewArrivalsCarousel 
-            products={carouselProducts} 
-            title={settings.shop_home_new_arrivals_title}
-            subtitle={settings.shop_home_new_arrivals_subtitle}
-            cardBg={settings.shop_home_new_arrivals_card_bg}
-            textColor={settings.shop_home_new_arrivals_text_color}
-            cardRadius={settings.shop_home_new_arrivals_card_radius}
-            cardShadow={settings.shop_home_new_arrivals_card_shadow}
-          />
-        )
+      {hasGlobalError ? (
+        <ShopErrorState 
+          title="Tienda no disponible" 
+          message="No pudimos cargar los productos en este momento. Por favor, intenta de nuevo en unos minutos." 
+          onRetry={fetchSettings}
+        />
+      ) : (
+        <>
+          {showCollage && (
+            collageLoading ? (
+              <div className="shop-home-loading"><div className="shop-home-loader" /></div>
+            ) : (
+              <ShopCollageGrid items={images} />
+            )
+          )}
+          {showCategories && <ShopFeaturedCategories categories={settings.shop_home_featured_categories} />}
+          {showNewArrivals && (
+            carouselLoading ? (
+              <div className="shop-home-loading"><div className="shop-home-loader" /></div>
+            ) : (
+              <NewArrivalsCarousel 
+                products={carouselProducts} 
+                title={settings.shop_home_new_arrivals_title}
+                subtitle={settings.shop_home_new_arrivals_subtitle}
+                cardBg={settings.shop_home_new_arrivals_card_bg}
+                textColor={settings.shop_home_new_arrivals_text_color}
+                cardRadius={settings.shop_home_new_arrivals_card_radius}
+                cardShadow={settings.shop_home_new_arrivals_card_shadow}
+              />
+            )
+          )}
+        </>
       )}
     </div>
   );

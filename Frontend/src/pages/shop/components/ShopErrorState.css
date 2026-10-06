@@ -9,12 +9,8 @@
 
 .shop-error-content {
   text-align: center;
-  max-width: 400px;
-  background-color: var(--surface-light);
-  padding: 3rem 2rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  max-width: 500px;
+  padding: 3rem 1rem;
   animation: errorFadeIn 0.5s ease-out;
 }
 
