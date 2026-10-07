@@ -1,7 +1,7 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://leone-duo-prot-kids.trycloudflare.com";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://networking-suggesting-highlight-pumps.trycloudflare.com";
 
 // LOCAL: http://localhost:8000
-// TUNNEL: https://leone-duo-prot-kids.trycloudflare.com
+// TUNNEL: https://networking-suggesting-highlight-pumps.trycloudflare.com
 
 export const API_URL =
   `${API_BASE_URL}/api`;
