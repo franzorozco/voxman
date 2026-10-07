@@ -1,0 +1,137 @@
+/* GUIA TALLAS PAGE STYLES */
+.guia-tallas-page {
+  background-color: #ffffff;
+  min-height: 100vh;
+  color: #111;
+}
+
+/* CONTENT SECTION */
+.guia-content-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 100px 20px 80px;
+}
+
+/* HEADER */
+.guia-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 60px;
+}
+
+.main-title {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.main-subtitle {
+  font-size: 1.1rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: #555;
+}
+
+/* COMO MEDIR SECTION */
+.como-medir-section {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.medicion-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+  align-items: center;
+}
+
+.medicion-card {
+  background: transparent;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.medicion-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  color: #000;
+  letter-spacing: 1.5px;
+}
+
+.medicion-img-container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 25px;
+}
+
+.medicion-img-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* LABELS POSITIONING */
+.medida-label {
+  position: absolute;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000;
+  background: rgba(255,255,255,0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+/* TOPS MANGA LARGA */
+.label-largo-top { top: 40%; left: 10%; transform: translateX(-50%); }
+.label-ancho-top { top: 45%; left: 50%; transform: translate(-50%, -50%); }
+.label-manga-top { top: 35%; right: -5%; }
+
+/* TOPS MANGA CORTA */
+.label-hombro-short { top: 20%; left: 50%; transform: translate(-50%, -50%); }
+.label-ancho-short { top: 45%; left: 50%; transform: translate(-50%, -50%); }
+.label-largo-short { top: 50%; left: 10%; transform: translateX(-50%); }
+.label-manga-short { top: 30%; right: 5%; }
+
+/* BOTTOMS */
+.label-cintura-bot { top: 8%; left: 50%; transform: translateX(-50%); }
+.label-tiro-bot { top: 25%; right: 15%; }
+.label-largo-bot { top: 50%; left: 10%; }
+
+/* HATS */
+.label-circ-hat { top: 55%; left: 15%; }
+.label-alto-hat { top: 40%; right: 5%; }
+
+/* WATCHES */
+.label-diametro-watch { top: 15%; left: 50%; transform: translateX(-50%); }
+.label-largo-watch { top: 70%; left: 30%; transform: translateX(-50%); }
+
+.medicion-desc {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+  margin-top: 15px;
+}
+
+/* ANIMACIONES */
+.vox-reveal, .vox-reveal-left, .vox-reveal-right {
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+
+.vox-reveal { transform: translateY(30px); }
+.vox-reveal-left { transform: translateX(-30px); }
+.vox-reveal-right { transform: translateX(30px); }
+
+.vox-reveal.active, .vox-reveal-left.active, .vox-reveal-right.active {
+  opacity: 1;
+  transform: translate(0, 0);
+}

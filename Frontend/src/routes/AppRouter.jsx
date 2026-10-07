@@ -10,6 +10,7 @@ import Tracking from "../pages/shop/Tracking/Tracking";
 import Profile from "../pages/profile/Profile";
 import Contacto from "../pages/home/contacto/Contacto";
 import Devoluciones from "../pages/home/devoluciones/Devoluciones";
+import GuiaTallas from "../pages/home/guiatallas/GuiaTallas";
 
 /* AUTH */
 import Login from "../pages/auth/Login";
@@ -204,12 +205,13 @@ const AnimatedRoutes = () => {
 
         {/* ================= SHOP (ONLINE STORE) ================= */}
         <Route element={<ThemeLayout theme={shopThemeClass} />}>
-          <Route path="/shop" element={<ShopLayout />}>
-            <Route index element={<ShopHome />} />
-            <Route path="catalog" element={<ShopCatalog />} />
-            <Route path="product/:id" element={<ShopProductDetail />} />
-            <Route path="bundle/:id" element={<BundleDetail />} />
-            <Route path="cart" element={<ShopCartView />} />
+          <Route element={<ShopLayout />}>
+            <Route path="/shop" index element={<ShopHome />} />
+            <Route path="/shop/catalog" element={<ShopCatalog />} />
+            <Route path="/shop/product/:id" element={<ShopProductDetail />} />
+            <Route path="/shop/bundle/:id" element={<BundleDetail />} />
+            <Route path="/shop/cart" element={<ShopCartView />} />
+            <Route path="/guia-tallas" element={<GuiaTallas />} />
           </Route>
         </Route>
 

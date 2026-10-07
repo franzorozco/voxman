@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Bloquear páginas privadas y de administración
+Disallow: /dashboard/
+Disallow: /pos/
+Disallow: /profile/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password/
+Disallow: /auth/
+
+# Indicar la ruta de tu Sitemap para Google
+Sitemap: https://voxman.shop/sitemap.xml

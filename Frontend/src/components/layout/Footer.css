@@ -70,6 +70,8 @@
   cursor: pointer;
   font-weight: bold;
   transition: 0.3s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .newsletter button:hover {

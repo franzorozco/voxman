@@ -37,6 +37,10 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialAuthController;
 
+use App\Http\Controllers\Api\V1\Public\NewsletterController;
+
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:10,60,newsletter_sub_');
+
 // 🔒 Límites por IP en todos los endpoints de autenticación (anti fuerza bruta / spam / abuso de correo).
 // El 3er parámetro (prefijo) es obligatorio: sin él Laravel comparte UN solo contador por IP entre
 // todas las rutas con `throttle:N,M`, y el límite de una ruta se consume con las peticiones de otra.
