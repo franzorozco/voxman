@@ -1,7 +1,7 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://leone-duo-prot-kids.trycloudflare.com";
 
 // LOCAL: http://localhost:8000
-// NGROK: https://e7a4-190-129-166-191.ngrok-free.app (O EL QUE SALGA)
+// TUNNEL: https://leone-duo-prot-kids.trycloudflare.com
 
 export const API_URL =
   `${API_BASE_URL}/api`;

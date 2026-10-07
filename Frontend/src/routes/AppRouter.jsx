@@ -68,6 +68,7 @@ import SystemSettings from "../pages/dashboard/pages/SystemSettings/SystemSettin
 import HomeConfig from "../pages/dashboard/pages/HomeConfig/HomeConfig";
 import EntregasConfig from "../pages/dashboard/pages/EntregasConfig/EntregasConfig";
 import NosotrosConfig from "../pages/dashboard/pages/NosotrosConfig/NosotrosConfig";
+import GuiaTallasConfig from "../pages/dashboard/pages/GuiaTallasConfig/GuiaTallasConfig";
 import ShopCatalogConfig from "../pages/dashboard/pages/ShopCatalogConfig/ShopCatalogConfig";
 import Finance from "../pages/dashboard/pages/Finance/Finance.jsx";
 import Carts from "../pages/dashboard/pages/Carts/Carts.jsx";
@@ -187,6 +188,7 @@ const AnimatedRoutes = () => {
             <Route path="entregas-config" element={<ProtectedRoute permissions={["manage_settings"]}><EntregasConfig /></ProtectedRoute>} />
             <Route path="nosotros-config" element={<ProtectedRoute permissions={["manage_settings"]}><NosotrosConfig /></ProtectedRoute>} />
             <Route path="ShopCatalog-config" element={<ProtectedRoute permissions={["manage_settings"]}><ShopCatalogConfig /></ProtectedRoute>} />
+            <Route path="config-guia-tallas" element={<ProtectedRoute permissions={["manage_settings"]}><GuiaTallasConfig /></ProtectedRoute>} />
 
           </Route>
         </Route>

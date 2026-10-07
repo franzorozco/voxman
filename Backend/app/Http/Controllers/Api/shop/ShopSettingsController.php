@@ -26,13 +26,13 @@ class ShopSettingsController extends Controller
             'home_hero_title', 'home_hero_subtitle', 'home_hero_images',
             'home_show_carousel', 'home_carousel_title', 'home_carousel_type',
             'home_show_value_props', 'home_value_props', 'home_value_props_bg',
-            'home_show_top_bars', 'home_top_bars',
+            'home_show_top_bars', 'home_top_bars', 'size_page_title', 'size_page_subtitle', 'size_page_garments',
         ];
 
         // Keys de shop_home_ y catalog_ se administran explícitamente en DB,
         // así que sí las incluimos — pero solo con prefijos conocidos y controlados.
         // OPTIMIZATION: Settings cambian raramente. Cacheamos en RAM por 10 minutos (600s)
-        // para evitar m�ltiples consultas a la DB por cada visitante de la p�gina principal.
+        // para evitar multiples consultas a la DB por cada visitante de la pagina principal.
         $settings = \Illuminate\Support\Facades\Cache::remember('public_shop_settings', 600, function() use ($allowedKeys) {
             return \App\Models\System\SystemSetting::where(function ($q) use ($allowedKeys) {
                 $q->whereIn('key', $allowedKeys)
@@ -55,5 +55,3 @@ class ShopSettingsController extends Controller
         return response()->json($settings);
     }
 }
-
-

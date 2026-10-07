@@ -43,7 +43,8 @@ import {
   AlertTriangle,
   DollarSign,
   Film,
-  Settings2
+  Settings2,
+  Ruler
 } from "lucide-react";
 
 const DashboardLayout = () => {
@@ -345,6 +346,9 @@ const DashboardLayout = () => {
                 </CanAccess>
                 <CanAccess permission="manage_settings">
                   <NavItem to="/dashboard/nosotros-config" icon={Users} label="Config. Nosotros" />
+                </CanAccess>
+                <CanAccess permission="manage_settings">
+                  <NavItem to="/dashboard/config-guia-tallas" icon={Ruler} label="Config. Guía Tallas" />
                 </CanAccess>
                 <CanAccess permission="view_promotions">
                   <NavItem to="/dashboard/shop-config" icon={Film} label="Config. Shop" />

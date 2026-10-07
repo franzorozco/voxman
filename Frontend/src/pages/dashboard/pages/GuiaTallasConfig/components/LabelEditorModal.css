@@ -1,0 +1,286 @@
+.lem-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lem-modal {
+  background: var(--bg-primary, #fff);
+  width: 90vw;
+  height: 85vh;
+  max-width: 1200px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.lem-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color, #eaeaea);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary, #fafafa);
+}
+
+.lem-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary, #111);
+}
+
+.lem-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #666);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.lem-close:hover {
+  background: var(--bg-hover, #eee);
+  color: var(--color-danger, #ef4444);
+}
+
+.lem-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.lem-sidebar {
+  width: 320px;
+  border-right: 1px solid var(--border-color, #eaeaea);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary, #fff);
+}
+
+.lem-sidebar-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color, #eaeaea);
+}
+
+.lem-sidebar-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary, #444);
+}
+
+.lem-add-btn {
+  background: var(--color-primary, #111);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lem-add-btn:hover {
+  background: var(--color-primary-hover, #333);
+}
+
+.lem-labels-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lem-empty-state {
+  font-size: 0.85rem;
+  color: var(--text-muted, #888);
+  text-align: center;
+  margin-top: 20px;
+}
+
+.lem-label-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-secondary, #fafafa);
+  border: 1px solid var(--border-color, #eaeaea);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.lem-label-drag-handle {
+  color: var(--text-muted, #999);
+  display: flex;
+  align-items: center;
+}
+
+.lem-label-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lem-label-inputs input {
+  width: 100%;
+  border: 1px solid var(--border-color, #ddd);
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #111);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  outline: none;
+}
+.lem-label-inputs input:focus {
+  border-color: var(--color-primary, #111);
+}
+
+.lem-label-coords-info {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted, #777);
+}
+
+.lem-label-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #999);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.lem-label-delete:hover {
+  color: var(--color-danger, #ef4444);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.lem-sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color, #eaeaea);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lem-help-text {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #555);
+}
+
+.lem-save-btn {
+  background: var(--color-primary, #111);
+  color: #fff;
+  border: none;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lem-save-btn:hover {
+  opacity: 0.9;
+}
+
+/* Canvas */
+.lem-canvas-container {
+  flex: 1;
+  background: var(--bg-tertiary, #f0f0f0);
+  padding: 40px;
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.lem-canvas-wrapper {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.lem-canvas {
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+}
+
+.lem-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none; /* Prevents native image drag */
+}
+
+/* Override existing public css just for inside modal if needed */
+.lem-canvas .medida-label {
+  position: absolute !important;
+  pointer-events: auto !important; /* Allow drag */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lem-modal {
+    width: 95vw;
+    height: 95vh;
+  }
+  
+  .lem-body {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  .lem-sidebar {
+    width: 100%;
+    border-right: none;
+    border-top: 1px solid var(--border-color, #eaeaea);
+    flex: none;
+    order: 2; /* Sidebar at the bottom */
+  }
+
+  .lem-labels-list {
+    max-height: none; /* Let the whole body scroll */
+  }
+  
+  .lem-canvas-container {
+    padding: 20px;
+    flex: none; /* Don't shrink to 0 */
+    min-height: 350px;
+    order: 1; /* Canvas at the top */
+  }
+  
+  .lem-canvas-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+}

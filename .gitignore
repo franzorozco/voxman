@@ -15,3 +15,4 @@ frontend/build
 .DS_Store
 
 ngrok.exe
+cloudflared.exe
