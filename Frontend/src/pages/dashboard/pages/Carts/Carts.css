@@ -1,4 +1,4 @@
-.products-container {
+﻿.products-container {
     padding: 20px;
 }
 
@@ -711,7 +711,7 @@
     width: 100% !important;
     max-width: 100% !important;
     height: 100vh;
-    max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0;
     padding: 16px;
   }
@@ -721,7 +721,7 @@
     width: 100% !important;
     max-width: 100% !important;
     height: 100vh;
-    max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0;
   }
 
@@ -900,4 +900,5 @@
 
 
 .carts-table:focus-within { overflow: visible !important; }
+
 

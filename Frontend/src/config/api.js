@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://networking-suggesting-highlight-pumps.trycloudflare.com";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // LOCAL: http://localhost:8000
 // TUNNEL: https://networking-suggesting-highlight-pumps.trycloudflare.com

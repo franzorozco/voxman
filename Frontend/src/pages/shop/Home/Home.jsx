@@ -64,7 +64,10 @@ const Home = () => {
 
     Promise.all([
       getProducts(collageParams),
-      getActiveShorts()
+      getActiveShorts().catch(err => {
+        console.warn('Could not fetch shorts, continuing without them:', err);
+        return { data: [] };
+      })
     ]).then(([productsRes, shortsRes]) => {
       const products = productsRes.data?.data || productsRes.data || [];
       const shorts = shortsRes.data || [];

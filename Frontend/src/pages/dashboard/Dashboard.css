@@ -1,4 +1,4 @@
-html, body {
+﻿html, body {
   height: 100%;
   margin: 0;
 }
@@ -208,6 +208,9 @@ html, body {
 
   .dashboard {
     position: relative;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
   /* SIDEBAR MOBILE */
@@ -244,6 +247,8 @@ html, body {
   .main {
     width: 100%;
     margin-left: 0;
+    height: auto;
+    overflow-y: visible;
   }
 
   /* BOTN HAMBURGUESA */
@@ -273,6 +278,9 @@ html, body {
 
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 990;
   height: 70px;
   min-height: 70px;
   flex-shrink: 0;
@@ -586,3 +594,4 @@ html, body {
 .selector-modal-overlay {
   z-index: 10000 !important;
 }
+

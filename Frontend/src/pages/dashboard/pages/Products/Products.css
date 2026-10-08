@@ -1,4 +1,4 @@
-/* =========================
+﻿/* =========================
     PRODUCTS CONTAINER
 ========================= */
 
@@ -163,8 +163,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
+  right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -1460,9 +1459,8 @@
   ========================= */
 
   .modal {
-    width: 100%;
-    height: 100vh;
-    max-height: 100vh;
+    right: 0; bottom: 0;
+    max-height: 100dvh;
     border-radius: 0;
   }
 
@@ -1653,8 +1651,7 @@
   ========================= */
 
   .modal {
-    width: 100%;
-    height: 100vh;
+    right: 0; bottom: 0;
     border-radius: 0;
   }
 
@@ -4158,4 +4155,5 @@ select option:focus {
 
 
 .products-table:focus-within { overflow: visible !important; }
+
 

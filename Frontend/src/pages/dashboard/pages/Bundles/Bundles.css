@@ -1,4 +1,4 @@
-/* =========================
+﻿/* =========================
     BUNDLES CONTAINER
 ========================= */
 
@@ -103,7 +103,7 @@
 }
 
 /* =========================
-   BOTONES ACCIÓN
+   BOTONES ACCIÃ“N
 ========================= */
 
 .btn-edit {
@@ -858,7 +858,7 @@
     width: 100% !important;
     max-width: 100% !important;
     height: 100vh;
-    max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0 !important;
     border: none;
   }
@@ -1687,3 +1687,4 @@
 .bundles-table:focus-within {
   overflow: visible !important;
 }
+

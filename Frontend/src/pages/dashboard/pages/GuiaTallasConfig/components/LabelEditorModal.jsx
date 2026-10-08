@@ -8,20 +8,33 @@ const DraggableLabel = ({ label, index, containerRef, updatePosition }) => {
   const [isDragging, setIsDragging] = useState(false);
   const labelRef = useRef(null);
 
-  const handleMouseDown = (e) => {
-    // Only drag with left click
-    if (e.button !== 0) return;
+  const handleStart = (e) => {
+    // Only drag with left click for mouse
+    if (e.type === 'mousedown' && e.button !== 0) return;
     setIsDragging(true);
-    e.preventDefault();
+    // Don't call e.preventDefault() for touch events here, 
+    // it can interfere with scrolling or be ignored due to passive listeners.
+    if (e.type === 'mousedown') {
+      e.preventDefault();
+    }
   };
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMove = (e) => {
       if (!isDragging || !containerRef.current) return;
+      
+      // Prevent scrolling while dragging the label
+      if (e.type === 'touchmove') {
+        e.preventDefault();
+      }
+      
+      const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+      const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+      
       const rect = containerRef.current.getBoundingClientRect();
       
-      let newLeft = ((e.clientX - rect.left) / rect.width) * 100;
-      let newTop = ((e.clientY - rect.top) / rect.height) * 100;
+      let newLeft = ((clientX - rect.left) / rect.width) * 100;
+      let newTop = ((clientY - rect.top) / rect.height) * 100;
       
       // Clamp between 0 and 100
       newLeft = Math.max(0, Math.min(100, newLeft));
@@ -30,25 +43,31 @@ const DraggableLabel = ({ label, index, containerRef, updatePosition }) => {
       updatePosition(index, newTop, newLeft);
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       if (isDragging) setIsDragging(false);
     };
 
     if (isDragging) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("mousemove", handleMove);
+      window.addEventListener("mouseup", handleEnd);
+      // Add touch events. { passive: false } is crucial to allow e.preventDefault() inside handleMove
+      window.addEventListener("touchmove", handleMove, { passive: false });
+      window.addEventListener("touchend", handleEnd);
     }
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleEnd);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", handleEnd);
     };
   }, [isDragging, containerRef, index, updatePosition]);
 
   return (
     <span
       ref={labelRef}
-      onMouseDown={handleMouseDown}
+      onMouseDown={handleStart}
+      onTouchStart={handleStart}
       className={`medida-label ${label.className || ''}`}
       style={{
         position: 'absolute',

@@ -1,4 +1,4 @@
-.branches-container {
+﻿.branches-container {
   padding: 24px;
   background: var(--bg-main);
   min-height: 100vh;
@@ -299,7 +299,7 @@
 }
 
 /* =========================
-   BOTONES ACCIÓN TABLA
+   BOTONES ACCIÃ“N TABLA
 ========================= */
 
 .btn-edit {
@@ -639,3 +639,4 @@
     justify-content: flex-start;
   }
 }
+
