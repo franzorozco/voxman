@@ -1,4 +1,4 @@
-﻿import { getImageUrl } from '../../../utils/imageUtils';
+import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
@@ -13,6 +13,7 @@ import { Virtuoso, VirtuosoGrid } from 'react-virtuoso';
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
 import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
+import { useShopCatalogStore } from '../../../store/shop/useShopCatalogStore';
 import ShopErrorState from '../components/ShopErrorState';
 import './Catalog.css';
 
@@ -33,10 +34,12 @@ const Catalog = () => {
   // Helper para leer un setting con fallback
   const cfg = (key, fallback) => shopSettings?.[key] ?? fallback;
 
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory || null);
+  const { catalogState, setCatalogState, scrollPosition, setScrollPosition } = useShopCatalogStore();
+
+  const [products, setProducts] = useState(catalogState?.products || []);
+  const [categories, setCategories] = useState(catalogState?.categories || []);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(catalogState?.categoriesLoaded || false);
+  const [selectedCategory, setSelectedCategory] = useState(catalogState?.selectedCategory ?? (initialCategory || null));
 
   useEffect(() => {
     if (selectedCategory) {
@@ -48,8 +51,8 @@ const Catalog = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  const [viewMode, setViewMode] = useState(null);
-  const [imageMode, setImageMode] = useState(null);
+  const [viewMode, setViewMode] = useState(catalogState?.viewMode ?? null);
+  const [imageMode, setImageMode] = useState(catalogState?.imageMode ?? null);
   const [expandedProductId, setExpandedProductId] = useState(null);
   const expandRef = useRef(null);
 
@@ -69,18 +72,26 @@ const Catalog = () => {
   const [selectedQuickColor, setSelectedQuickColor] = useState({});
 
   // Nuevos estados para filtros y paginación
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(catalogState?.searchQuery ?? '');
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300); // 300ms debounce
-  const [minPrice, setMinPrice] = useState('');
+  const [minPrice, setMinPrice] = useState(catalogState?.minPrice ?? '');
   const [debouncedMinPrice] = useDebounce(minPrice, 300);
-  const [maxPrice, setMaxPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState(catalogState?.maxPrice ?? '');
   const [debouncedMaxPrice] = useDebounce(maxPrice, 300);
-  const [sortBy, setSortBy] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(12);
-  const [hideOutOfStock, setHideOutOfStock] = useState(false);
+  const [sortBy, setSortBy] = useState(catalogState?.sortBy ?? null);
+  const [currentPage, setCurrentPage] = useState(catalogState?.currentPage ?? 1);
+  const [hasMore, setHasMore] = useState(catalogState?.hasMore ?? true);
+  const [visibleCount, setVisibleCount] = useState(catalogState?.visibleCount ?? 12);
+  const [hideOutOfStock, setHideOutOfStock] = useState(catalogState?.hideOutOfStock ?? false);
 
+  // Sync state to cache
+  useEffect(() => {
+    setCatalogState({
+      products, categories, categoriesLoaded, selectedCategory,
+      viewMode, imageMode, searchQuery, minPrice, maxPrice,
+      sortBy, currentPage, hasMore, visibleCount, hideOutOfStock
+    });
+  }, [products, categories, categoriesLoaded, selectedCategory, viewMode, imageMode, searchQuery, minPrice, maxPrice, sortBy, currentPage, hasMore, visibleCount, hideOutOfStock, setCatalogState]);
 
   const categoriesFetchedRef = useRef(false);
 
@@ -104,7 +115,7 @@ const Catalog = () => {
 
 
   useEffect(() => {
-    if (categoriesFetchedRef.current) return;
+    if (categoriesFetchedRef.current || catalogState?.categories?.length > 0) return;
     categoriesFetchedRef.current = true;
     
     const fetchCategories = async () => {
@@ -123,17 +134,39 @@ const Catalog = () => {
   // Removido fetchWishlist para no sobrecargar
 
   // Reiniciar la página y limpiar productos cuando cambian los filtros
+  const prevResetFilters = useRef(JSON.stringify({ selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock }));
+  
   useEffect(() => {
+    const filtersStr = JSON.stringify({ selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock });
+    if (prevResetFilters.current === filtersStr) return; // Solo reiniciar si cambiaron los filtros reales
+    prevResetFilters.current = filtersStr;
+
     setCurrentPage(1);
     setProducts([]);
     setHasMore(true);
     setVisibleCount(parseInt(cfg('catalog_products_per_page', '12'), 10));
   }, [selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock, shopSettings]);
 
+  const prevFetchParams = useRef(null);
+  const isInitialFetch = useRef(true);
+
   // Obtener productos desde el backend (paginación server-side)
   useEffect(() => {
     if (!categoriesLoaded) return;
     if (!hasMore && currentPage > 1) return;
+
+    const paramsStr = JSON.stringify({ selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock, currentPage });
+    
+    if (isInitialFetch.current) {
+      isInitialFetch.current = false;
+      if (catalogState?.products?.length > 0) {
+        prevFetchParams.current = paramsStr;
+        return; // Saltar fetch inicial si hay cache
+      }
+    }
+
+    if (prevFetchParams.current === paramsStr) return; // Evitar peticiones duplicadas idénticas
+    prevFetchParams.current = paramsStr;
 
     const fetchCatalogItems = async () => {
       if (currentPage === 1) {
@@ -178,7 +211,30 @@ const Catalog = () => {
     };
 
     fetchCatalogItems();
-  }, [categoriesLoaded, currentPage, selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, categories, shopSettings]);
+  }, [categoriesLoaded, currentPage, selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock, categories, shopSettings, hasMore, catalogState]);
+
+  // Handle scroll position persistence
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPosition(window.scrollY);
+    };
+    // Debounce to avoid too many state updates
+    let scrollTimeout;
+    const onScroll = () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(handleScroll, 100);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [setScrollPosition]);
+
+  useEffect(() => {
+    if (products.length > 0 && scrollPosition > 0 && isInitialFetch.current === false) {
+      setTimeout(() => {
+        window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+      }, 100);
+    }
+  }, [products.length, scrollPosition]);
 
   useEffect(() => {
     if (expandedProductId && expandRef.current) {
@@ -438,7 +494,7 @@ const Catalog = () => {
 
   const getAvailableColors = (product) => {
     const variants = getVariantsForProduct(product);
-    return variants.filter(v => v.color).map(v => ({ name: v.color, image: v.image }));
+    return variants.filter(v => v.color).map(v => ({ name: v.color, image: v.image, in_stock: v.in_stock }));
   };
 
   const handleQuickAddClick = (e, productId) => {
@@ -808,30 +864,8 @@ const Catalog = () => {
 
     // Modo Prendas
     return (
-      <VirtuosoGrid
-        useWindowScroll
-        data={displayItems}
-        endReached={() => {
-          if (hasMore && !isLoading) setCurrentPage(p => p + 1);
-        }}
-        components={{
-          List: React.forwardRef(({ style, children, ...props }, ref) => (
-            <div
-              ref={ref}
-              {...props}
-              style={style}
-              className="catalog-grid-animate catalog-products-grid"
-            >
-              {children}
-            </div>
-          )),
-          Item: ({ children, ...props }) => (
-            <div {...props}>
-              {children}
-            </div>
-          )
-        }}
-        itemContent={(index, item) => {
+      <div className="catalog-grid-animate catalog-products-grid">
+        {displayItems.map((item, index) => {
           const isVividMode = (imageMode || 'presentacion') === 'vivido';
           const imageUrl = isVividMode ? item.image2 : item.image;
           const linkUrl = item.is_bundle 
@@ -839,11 +873,12 @@ const Catalog = () => {
             : `/shop/product/${item.slug}${item.color ? `?color=${encodeURIComponent(item.color)}` : ''}`;
           return (
             <div 
+              key={item.id || index}
               className="group relative block"
               style={{ position: 'relative' }}
             >
               <div
-                onClick={() => navigate(linkUrl)}
+                onClick={() => navigate(linkUrl, { state: { product: item } })}
                 className="group-hover:opacity-90 transition-opacity"
                 style={{ cursor: 'pointer', backgroundColor: cfg('catalog_card_bg', '#f5f5f5'), aspectRatio: cfg('catalog_card_aspect_ratio', '1 / 1'), borderRadius: `${cfg('catalog_card_border_radius', '8')}px`, overflow: 'hidden', position: 'relative' }}
               >
@@ -976,7 +1011,7 @@ const Catalog = () => {
                 <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0, flex: 1 }}>
                     <h3
-                      onClick={() => navigate(linkUrl)}
+                      onClick={() => navigate(linkUrl, { state: { product: item } })}
                       style={{ fontSize: `${cfg('catalog_card_name_size', '13')}px`, fontWeight: parseInt(cfg('catalog_card_name_weight', '400')), color: cfg('catalog_card_name_color', 'var(--text-main)'), lineHeight: '1.4', margin: 0, cursor: 'pointer', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: cfg('catalog_card_name_lines', '2') === 'none' ? 'unset' : cfg('catalog_card_name_lines', '2'), WebkitBoxOrient: 'vertical' }}
                     >
                       {item.name}
@@ -1049,8 +1084,8 @@ const Catalog = () => {
                 </div>
               </div>
           );
-        }}
-      />
+        })}
+      </div>
     );
   };
 
@@ -1391,6 +1426,30 @@ const Catalog = () => {
             ) : (
               <>
                 {renderProductGrid()}
+                
+                {cfg('catalog_show_load_more', '1') !== '0' && (hasMore || visibleCount < processedItems.length) && !isLoading && (
+                  <div style={{ textAlign: 'center', marginTop: '40px' }}>
+                    <button 
+                      onClick={() => setVisibleCount(p => p + parseInt(cfg('catalog_load_more_count', '12'), 10))}
+                      style={{ 
+                        padding: '12px 32px', 
+                        fontSize: '14px', 
+                        fontWeight: '600',
+                        borderRadius: '8px', 
+                        cursor: 'pointer',
+                        backgroundColor: 'var(--text-main)',
+                        color: 'var(--bg-main, #fff)',
+                        border: 'none',
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseOver={(e) => e.target.style.opacity = '0.9'}
+                      onMouseOut={(e) => e.target.style.opacity = '1'}
+                    >
+                      {cfg('catalog_load_more_text', 'Cargar Más')}
+                    </button>
+                  </div>
+                )}
+
                 {isLoading && (
                   <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                     Cargando más productos...

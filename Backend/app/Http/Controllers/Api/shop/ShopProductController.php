@@ -19,15 +19,25 @@ class ShopProductController extends Controller
             'product_variants.variant_images',
             'product_variants.variant_attribute_values.attribute_value.attribute',
             'product_variants.size',
+            'product_variants.inventories',
             'brand',
-            'category'
+            'category',
+            'bundle_items.product.inventories',
+            'bundle_items.product.product_variants.inventories',
+            'bundle_items.variant.inventories'
         ])
         ->withSum('inventories', 'stock')
         ->where('is_active', true);
 
         if ($request->boolean('hide_out_of_stock')) {
-            $query->whereHas('inventories', function($q) {
-                $q->where('stock', '>', 0);
+            $query->where(function($q) {
+                $q->whereHas('inventories', function($sub) {
+                    $sub->where('stock', '>', 0);
+                })
+                ->orWhereHas('product_variants.inventories', function($sub) {
+                    $sub->where('stock', '>', 0);
+                })
+                ->orWhere('is_bundle', true); // Se evalúa en memoria en toPublic o por el frontend
             });
         }
 
@@ -221,18 +231,84 @@ class ShopProductController extends Controller
     {
         $product->makeHidden(self::HIDDEN_PRODUCT);
 
-        if (isset($product->inventories_sum_stock)) {
-            $product->stock = (int) $product->inventories_sum_stock;
-            $product->in_stock = $product->stock > 0;
-        } elseif ($product->relationLoaded('product_variants')) {
-            $stock = 0;
-            foreach ($product->product_variants as $variant) {
-                if ($variant->relationLoaded('inventories')) {
-                    $stock += $variant->inventories->sum('stock');
+        if ($product->is_bundle && $product->relationLoaded('bundle_items')) {
+            $bundleStock = PHP_INT_MAX;
+            $bundleInStock = true;
+
+            foreach ($product->bundle_items as $bundleItem) {
+                $itemStock = 0;
+                $hasStock = false;
+
+                if ($bundleItem->variant_id) {
+                    // El bundle requiere una variante específica
+                    if ($bundleItem->relationLoaded('variant') && $bundleItem->variant) {
+                        $v = $bundleItem->variant;
+                        if ($v->relationLoaded('inventories')) {
+                            $itemStock = $v->inventories->sum('stock');
+                            if ($itemStock > 0) $hasStock = true;
+                        }
+                    } elseif ($bundleItem->relationLoaded('product') && $bundleItem->product) {
+                        $p = $bundleItem->product;
+                        if ($p->relationLoaded('product_variants')) {
+                            $v = $p->product_variants->firstWhere('id', $bundleItem->variant_id);
+                            if ($v && $v->relationLoaded('inventories')) {
+                                $itemStock = $v->inventories->sum('stock');
+                                if ($itemStock > 0) $hasStock = true;
+                            }
+                        }
+                    }
+                } else {
+                    // El bundle requiere cualquier variante del producto
+                    if (!$bundleItem->relationLoaded('product') || !$bundleItem->product) {
+                        continue;
+                    }
+                    
+                    $p = $bundleItem->product;
+                    
+                    // Revisar inventario base del producto
+                    if ($p->relationLoaded('inventories')) {
+                        $itemStock = $p->inventories->sum('stock');
+                        if ($itemStock > 0) $hasStock = true;
+                    }
+
+                    // Si no tiene stock base, revisar sus variantes
+                    if (!$hasStock && $p->relationLoaded('product_variants')) {
+                        $variantStock = 0;
+                        foreach ($p->product_variants as $v) {
+                            if ($v->relationLoaded('inventories')) {
+                                $variantStock += $v->inventories->sum('stock');
+                            }
+                        }
+                        if ($variantStock > 0) {
+                            $hasStock = true;
+                            $itemStock = $variantStock;
+                        }
+                    }
+                }
+
+                if (!$hasStock) {
+                    $bundleInStock = false;
+                    $bundleStock = 0;
+                    break;
+                } else {
+                    $bundleStock = min($bundleStock, $itemStock);
                 }
             }
-            $product->stock = $stock;
-            $product->in_stock = $stock > 0;
+
+            $product->stock = $bundleStock === PHP_INT_MAX ? 1 : $bundleStock;
+            $product->in_stock = $bundleInStock;
+        } else {
+            $baseStock = isset($product->inventories_sum_stock) ? (int) $product->inventories_sum_stock : 0;
+            $variantStock = 0;
+            if ($product->relationLoaded('product_variants')) {
+                foreach ($product->product_variants as $variant) {
+                    if ($variant->relationLoaded('inventories')) {
+                        $variantStock += $variant->inventories->sum('stock');
+                    }
+                }
+            }
+            $product->stock = $baseStock + $variantStock;
+            $product->in_stock = $product->stock > 0;
         }
 
         if ($product->relationLoaded('product_variants')) {

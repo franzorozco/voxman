@@ -1,7 +1,7 @@
 import { getImageUrl } from '../../../utils/imageUtils';
 import { sanitizeHtml } from '../../../utils/sanitizeHtml';
 import React, { useEffect, useState } from 'react';
-import { useParams, useLocation, Link } from 'react-router-dom';
+import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { getProduct, getProducts } from '../../../api/shop/products';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
@@ -202,7 +202,8 @@ const FullscreenLightbox = ({ images, initialIndex, onClose }) => {
 const ProductDetail = () => {
   const { id } = useParams();
   const location = useLocation();
-  const [product, setProduct] = useState(null);
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(location.state?.product || null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -383,8 +384,83 @@ const ProductDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="product-detail-loading">
-        <div className="loader-spinner"></div>
+      <div className="product-detail-page" style={{ paddingBottom: '80px' }}>
+        {/* Skeleton Breadcrumbs */}
+        <div className="flex items-center justify-between w-full mb-6 px-4 md:px-8 mt-4 animate-pulse">
+          <div className="h-5 bg-gray-200 rounded w-20"></div>
+          <div className="h-4 bg-gray-100 rounded w-48"></div>
+        </div>
+
+        <div className="product-detail-grid">
+          {/* Left Column: Gallery Skeleton */}
+          <div className="product-gallery-container flex md:grid gap-4 overflow-hidden px-4 md:px-0" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+            {product?.main_image ? (
+              <img src={getImageUrl(product.main_image)} alt={product.name} className="w-[85vw] md:w-full aspect-square object-cover shrink-0 md:rounded-xl shadow-sm" />
+            ) : (
+              <div className="w-[85vw] md:w-full aspect-square bg-gray-200 shrink-0 md:rounded-xl animate-pulse"></div>
+            )}
+            <div className="hidden md:block w-full aspect-square bg-gray-100 rounded-xl animate-pulse"></div>
+          </div>
+
+          {/* Right Column: Info Skeleton */}
+          <div className="product-info-container flex flex-col pt-4 md:pt-0">
+            {/* Title & Price */}
+            <div className="mb-8 px-4 md:px-0">
+              {product?.name ? (
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">{product.name}</h1>
+              ) : (
+                <div className="h-8 bg-gray-200 rounded w-3/4 mb-4 animate-pulse"></div>
+              )}
+              
+              {product?.final_price ? (
+                <div className="flex gap-2 items-center">
+                  <span className="text-xl font-bold text-gray-900">Bs. {Number(product.final_price).toFixed(2)}</span>
+                  {product.price > product.final_price && (
+                    <span className="text-gray-400 line-through text-sm">Bs. {Number(product.price).toFixed(2)}</span>
+                  )}
+                </div>
+              ) : (
+                <div className="h-6 bg-gray-100 rounded w-1/4 animate-pulse"></div>
+              )}
+            </div>
+
+            {/* Colors */}
+            <div className="mb-8 px-4 md:px-0 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-20 mb-4"></div>
+              <div className="flex gap-3">
+                <div className="w-14 h-14 bg-gray-200 rounded-md"></div>
+                <div className="w-14 h-14 bg-gray-100 rounded-md"></div>
+                <div className="w-14 h-14 bg-gray-50 rounded-md"></div>
+              </div>
+            </div>
+
+            {/* Sizes */}
+            <div className="mb-8 px-4 md:px-0 animate-pulse">
+              <div className="flex justify-between mb-4">
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-gray-100 rounded w-24"></div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <div className="w-[70px] h-12 bg-gray-200 rounded"></div>
+                <div className="w-[70px] h-12 bg-gray-100 rounded"></div>
+                <div className="w-[70px] h-12 bg-gray-50 rounded"></div>
+                <div className="w-[70px] h-12 bg-gray-50 rounded"></div>
+              </div>
+            </div>
+
+            {/* Add to Cart Button */}
+            <div className="w-full px-4 md:px-0 mb-10 animate-pulse">
+              <div className="w-full h-14 bg-gray-800 rounded-lg"></div>
+            </div>
+
+            {/* Accordions */}
+            <div className="flex flex-col gap-4 px-4 md:px-0 mt-4 animate-pulse">
+              <div className="w-full h-[50px] bg-gray-100 rounded border border-gray-100"></div>
+              <div className="w-full h-[50px] bg-gray-50 rounded border border-gray-100"></div>
+              <div className="w-full h-[50px] bg-gray-50 rounded border border-gray-100"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -540,15 +616,21 @@ const ProductDetail = () => {
         />
       )}
       
-      {/* Breadcrumbs */}
-      <nav className="product-breadcrumb">
-        <Link to="/shop">Inicio</Link>
-        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
-        <Link to={`/shop/catalog?category=${product.category?.id || ''}`}>
-          {product.category?.name || 'Catálogo'}
-        </Link>
-        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
-        <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{product.name}</span>
+      {/* Back Button & Breadcrumbs */}
+      <nav className="product-breadcrumb flex items-center justify-between w-full">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-gray-800 hover:text-gray-900 transition-colors font-bold mr-4 shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          VOLVER
+        </button>
+        <div className="flex items-center gap-1 opacity-70 flex-wrap flex-1 justify-end text-right">
+          <Link to="/shop">Inicio</Link>
+          <span style={{ margin: '0 2px' }}>›</span>
+          <Link to={`/shop/catalog?category=${product.category?.id || ''}`}>
+            {product.category?.name || 'Catálogo'}
+          </Link>
+          <span style={{ margin: '0 2px' }}>›</span>
+          <span className="truncate max-w-[100px] sm:max-w-[200px]" style={{ color: 'var(--text-main)', fontWeight: 500 }}>{product.name}</span>
+        </div>
       </nav>
 
       <div className="product-detail-grid">
@@ -558,7 +640,7 @@ const ProductDetail = () => {
           {/* Imágenes normales */}
           {displayImages.length > 0 ? (
             displayImages.map((img, idx) => (
-              <div key={`${img}-${idx}`} className="product-gallery-item">
+              <div key={`${img}-${idx}`} className="product-gallery-item relative">
                 <ZoomableImage 
                   src={getImageUrl(img)} 
                   alt={`${product.name} - Imagen ${idx + 1}`} 
@@ -569,6 +651,16 @@ const ProductDetail = () => {
                     setLightboxOpen(true);
                   }}
                 />
+                {/* Indicador de Deslizar (Solo en la primera foto si hay más de 1) */}
+                {idx === 0 && displayImages.length > 1 && (
+                  <div className="lg:hidden absolute top-1/2 right-3 transform -translate-y-1/2 text-white drop-shadow-md animate-pulse pointer-events-none z-10 opacity-75">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  </div>
+                )}
+                {/* Indicador de Zoom (En todas las fotos) */}
+                <div className="lg:hidden absolute top-4 right-4 bg-white/70 text-gray-800 w-7 h-7 flex items-center justify-center rounded-full shadow-sm pointer-events-none z-10">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+                </div>
               </div>
             ))
           ) : (
@@ -776,6 +868,9 @@ const ProductDetail = () => {
                             ))}
                           </tbody>
                         </table>
+                      </div>
+                      <div className="mt-3 text-right">
+                        <Link to="/guia-tallas" className="text-[11px] uppercase tracking-wider text-gray-500 underline hover:text-gray-800 transition-colors font-medium">Ver guía de medidas</Link>
                       </div>
                     </div>
                   )}

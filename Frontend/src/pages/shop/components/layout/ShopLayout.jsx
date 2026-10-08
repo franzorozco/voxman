@@ -98,6 +98,11 @@ const ShopNavbar = () => {
           </Link>
         </div>
 
+        {/* OVERLAY MÓVIL */}
+        {menuOpen && (
+          <div className="shop-nav-mobile-overlay" onClick={() => setMenuOpen(false)} />
+        )}
+
         {/* MENU ÚNICO */}
         <nav className={`shop-nav-menu ${menuOpen ? "active" : ""}`}>
           <NavLink to="/shop" end onClick={closeMenu}>Tienda</NavLink>

@@ -71,16 +71,16 @@
 
 .product-gallery-item {
   width: 100%;
-  height: max-content;
+  aspect-ratio: 1 / 1;
   background-color: #f5f5f5;
   overflow: hidden;
   position: relative;
 }
 .product-gallery-img {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   transition: transform 0.5s ease;
   animation: fadeIn 0.5s ease-out;
@@ -101,11 +101,11 @@
   .product-gallery-item {
     flex: 0 0 100%;
     scroll-snap-align: center;
-    height: auto;
-    min-height: 280px;
+    aspect-ratio: 1 / 1;
+    min-height: auto;
   }
   .product-gallery-img {
-    min-height: 280px;
+    height: 100%;
     object-fit: cover;
   }
 }
@@ -230,7 +230,7 @@
   margin-bottom: 28px;
 }
 .color-btn {
-  width: 48px; height: 64px;
+  width: 56px; height: 56px;
   border-radius: 4px;
   overflow: hidden;
   border: 2px solid transparent;

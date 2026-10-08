@@ -288,7 +288,6 @@
     background-image: url("https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/funds/fondo_grafito.png");
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
   }
 
   .hero::after {
@@ -419,7 +418,6 @@
     background-image: url("https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/funds/fondo_grafito.png");
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
   }
 
   .hero-split {

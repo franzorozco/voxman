@@ -108,13 +108,13 @@ export default function EntregasHero() {
 function getScrollPosition(pos = 'bottom_center') {
   const base = { top: 'auto', bottom: 'auto', left: 'auto', right: 'auto', transform: '' };
   switch (pos) {
-    case 'bottom_left': return { ...base, bottom: '40px', left: '40px' };
-    case 'bottom_right': return { ...base, bottom: '40px', right: '40px' };
+    case 'bottom_left': return { ...base, bottom: '80px', left: '40px' };
+    case 'bottom_right': return { ...base, bottom: '80px', right: '40px' };
     case 'center_left': return { ...base, top: '50%', left: '40px', transform: 'translateY(-50%)' };
     case 'center_right': return { ...base, top: '50%', right: '40px', transform: 'translateY(-50%)' };
     case 'top_center': return { ...base, top: '40px', left: '50%', transform: 'translateX(-50%)' };
     case 'bottom_center':
-    default: return { ...base, bottom: '40px', left: '50%', transform: 'translateX(-50%)' };
+    default: return { ...base, bottom: '80px', left: '50%', transform: 'translateX(-50%)' };
   }
 }
 

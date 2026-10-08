@@ -86,6 +86,11 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
           </Link>
         </div>
 
+        {/* OVERLAY MÓVIL */}
+        {menuOpen && (
+          <div className="nav-mobile-overlay" onClick={() => setMenuOpen(false)} />
+        )}
+
         {/* MENU ÚNICO */}
         <nav className={`nav-menu ${menuOpen ? "active" : ""}`}>
 

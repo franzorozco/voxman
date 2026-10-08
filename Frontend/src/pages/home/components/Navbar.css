@@ -256,8 +256,17 @@
     display: none;
   }
 
+  .nav-mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 70px 0 0 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 900;
+  }
+
   .nav-menu {
     position: fixed;
+    z-index: 901;
 
     top: 70px;
     right: -100%;

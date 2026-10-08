@@ -111,7 +111,7 @@ export default function Footer() {
         </div>
 
         {/* NEWSLETTER */}
-        <div className="footer-column">
+        <div className="footer-column" id="newsletter">
           <h3>Newsletter</h3>
           <p>Recibe ofertas y nuevos lanzamientos</p>
           <form className="newsletter" onSubmit={handleSubscribe}>

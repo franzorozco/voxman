@@ -17,7 +17,8 @@
 .vox-entregas-hero {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: calc(100svh - 70px);
+  min-height: 400px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,6 +184,10 @@
   padding: 30px 25px;
   border-radius: 4px;
   transition: transform 0.4s ease, border-color 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .vox-delivery-card:hover {
@@ -223,6 +228,7 @@
   margin: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
 }
 

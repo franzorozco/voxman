@@ -1,7 +1,7 @@
 import { getImageUrl } from '../../../utils/imageUtils';
 import { sanitizeHtml } from '../../../utils/sanitizeHtml';
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { getProduct } from '../../../api/shop/products';
 import useShopCartStore from '../../../store/shop/useShopCartStore';
 import useShopWishlistStore from '../../../store/shop/useShopWishlistStore';
@@ -689,7 +689,8 @@ const FixedBundleItem = ({ prod, variant, added, onAdd }) => {
 const BundleDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [bundle, setBundle] = useState(null);
+  const location = useLocation();
+  const [bundle, setBundle] = useState(location.state?.product || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -827,8 +828,64 @@ const BundleDetail = () => {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid #f3f3f3', borderTop: '3px solid #111', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div className="product-detail-page animate-pulse" style={{ paddingBottom: '80px' }}>
+        {/* Skeleton Breadcrumbs */}
+        <div className="flex items-center justify-between w-full mb-6 px-4 md:px-8 mt-4">
+          <div className="h-5 bg-gray-200 rounded w-20"></div>
+          <div className="h-4 bg-gray-100 rounded w-48"></div>
+        </div>
+
+        <div className="product-detail-grid">
+          {/* Left Column: Gallery Skeleton */}
+          <div className="product-gallery-container flex md:grid gap-4 overflow-hidden px-4 md:px-0" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+            {bundle?.main_image ? (
+              <img src={getImageUrl(bundle.main_image)} alt={bundle.name} className="w-[85vw] md:w-full aspect-square object-cover shrink-0 md:rounded-xl shadow-sm" />
+            ) : (
+              <div className="w-[85vw] md:w-full aspect-square bg-gray-200 shrink-0 md:rounded-xl animate-pulse"></div>
+            )}
+            <div className="hidden md:block w-full aspect-square bg-gray-100 rounded-xl animate-pulse"></div>
+          </div>
+
+          {/* Right Column: Info Skeleton */}
+          <div className="product-info-container flex flex-col pt-4 md:pt-0">
+            {/* Title & Price */}
+            <div className="mb-8 px-4 md:px-0">
+              {bundle?.name ? (
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">{bundle.name} (Conjunto)</h1>
+              ) : (
+                <div className="h-8 bg-gray-200 rounded w-3/4 mb-4 animate-pulse"></div>
+              )}
+              
+              {bundle?.final_price ? (
+                <div className="flex gap-2 items-center">
+                  <span className="text-xl font-bold text-gray-900">Bs. {Number(bundle.final_price).toFixed(2)}</span>
+                  {bundle.price > bundle.final_price && (
+                    <span className="text-gray-400 line-through text-sm">Bs. {Number(bundle.price).toFixed(2)}</span>
+                  )}
+                </div>
+              ) : (
+                <div className="h-6 bg-gray-100 rounded w-1/4 animate-pulse"></div>
+              )}
+            </div>
+
+            {/* Bundle Items Skeleton */}
+            <div className="mb-8 px-4 md:px-0 animate-pulse">
+              <div className="w-full h-24 bg-gray-100 rounded-lg mb-3"></div>
+              <div className="w-full h-24 bg-gray-50 rounded-lg"></div>
+            </div>
+
+            {/* Add to Cart Button */}
+            <div className="w-full px-4 md:px-0 mb-10">
+              <div className="w-full h-14 bg-gray-800 rounded-lg"></div>
+            </div>
+
+            {/* Accordions */}
+            <div className="flex flex-col gap-4 px-4 md:px-0 mt-4">
+              <div className="w-full h-[50px] bg-gray-100 rounded border border-gray-100"></div>
+              <div className="w-full h-[50px] bg-gray-50 rounded border border-gray-100"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -905,15 +962,21 @@ const BundleDetail = () => {
         />
       )}
       
-      {/* Breadcrumbs */}
-      <nav className="product-breadcrumb">
-        <Link to="/shop">Inicio</Link>
-        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
-        <Link to={`/shop/catalog?category=${bundle.category?.id || ''}`}>
-          {bundle.category?.name || 'Catálogo'}
-        </Link>
-        <span style={{ margin: '0 4px', color: 'var(--border-color)' }}>›</span>
-        <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{bundle.name} (Conjunto)</span>
+      {/* Back Button & Breadcrumbs */}
+      <nav className="product-breadcrumb flex items-center justify-between w-full">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-gray-800 hover:text-gray-900 transition-colors font-bold mr-4 shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          VOLVER
+        </button>
+        <div className="flex items-center gap-1 opacity-70 flex-wrap flex-1 justify-end text-right">
+          <Link to="/shop">Inicio</Link>
+          <span style={{ margin: '0 2px' }}>›</span>
+          <Link to={`/shop/catalog?category=${bundle.category?.id || ''}`}>
+            {bundle.category?.name || 'Catálogo'}
+          </Link>
+          <span style={{ margin: '0 2px' }}>›</span>
+          <span className="truncate max-w-[100px] sm:max-w-[200px]" style={{ color: 'var(--text-main)', fontWeight: 500 }}>{bundle.name} (Conjunto)</span>
+        </div>
       </nav>
 
       <div className="product-detail-grid">
