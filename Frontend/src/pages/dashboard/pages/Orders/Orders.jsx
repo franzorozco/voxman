@@ -670,7 +670,8 @@ export default function Orders() {
                       
                       <div className="bubble-right">
                         <div className="bubble-total">
-                          Bs. {Number(totalAmount).toFixed(2)}
+                          <span className="total-label">Total</span>
+                          <span className="total-amount">Bs. {Number(totalAmount).toFixed(2)}</span>
                         </div>
                         <div className="bubble-actions">
                           {phoneToDisplay !== "N/A" && (

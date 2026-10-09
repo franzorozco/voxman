@@ -4,7 +4,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
 import { getCategories } from '../../../api/shop/categories';
 import { API_BASE_URL } from '../../../config/api';
-import { X, ShoppingBag } from 'lucide-react';
+import { X, ShoppingBag, SlidersHorizontal, Bell } from 'lucide-react';
 import CustomSelect from '../../../components/ui/CustomSelect';
 
 import { useDebounce } from 'use-debounce';
@@ -20,12 +20,26 @@ import './Catalog.css';
 const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  const scrollToNewsletter = (e) => {
+    e.stopPropagation();
+    const newsletterEl = document.getElementById('newsletter');
+    if (newsletterEl) {
+      newsletterEl.scrollIntoView({ behavior: 'smooth' });
+      const input = newsletterEl.querySelector('input');
+      if (input) {
+        setTimeout(() => input.focus(), 800);
+      }
+    } else {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+  };
+
   const addToCart = useShopCartStore(state => state.addItem);
   const [addedAnimationItems, setAddedAnimationItems] = useState({});
-  // 🔒 Solo aceptar UUIDs válidos desde la URL (evita enviar basura al backend)
-  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const rawCategory = searchParams.get('category');
-  const initialCategory = rawCategory && UUID_RE.test(rawCategory) ? rawCategory : null;
+  // Allow any non-empty string, as IDs can be UUIDs, integers, or slugs
+  const initialCategory = rawCategory && rawCategory.trim() !== '' ? rawCategory : null;
 
   // ── Settings del Dashboard ──
   const { settings: shopSettings, fetchSettings: fetchShopSettings } = useShopSettingsStore();
@@ -509,6 +523,21 @@ const Catalog = () => {
 
   // Renderizar grid
   const renderProductGrid = () => {
+    if (displayItems.length === 0) {
+      return (
+        <div style={{ padding: '80px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-main)' }}>No se encontraron productos</h3>
+          <p style={{ fontSize: '14px' }}>No hay artículos que coincidan con la categoría o filtros seleccionados.</p>
+          <button 
+            onClick={() => { setSelectedCategory(null); setMinPrice(''); setMaxPrice(''); setSortBy('recomendados'); setHideOutOfStock(false); setSearchQuery(''); }}
+            style={{ marginTop: '20px', padding: '10px 24px', background: 'var(--text-main)', color: 'var(--bg-main, #fff)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            Limpiar Filtros
+          </button>
+        </div>
+      );
+    }
+
     if ((viewMode || 'prendas') === 'producto') {
       // Agrupar en filas según columnas configuradas
       const colCount = parseInt(cfg('catalog_grid_cols_desktop', '3'), 10);
@@ -727,11 +756,10 @@ const Catalog = () => {
                         (item.stock <= 0 || item.in_stock === false) ? (
                           <button
                             className="catalog-card-add-btn"
-                            onClick={(e) => { e.stopPropagation(); alert("Funcionalidad 'Avísame' en desarrollo."); }}
+                            onClick={scrollToNewsletter}
                             title="Avísame cuando haya stock"
-                            style={{ width: 'auto', padding: '0 10px', borderRadius: '16px', fontSize: '11px', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }}
                           >
-                            Avísame
+                            <Bell size={18} />
                           </button>
                         ) : (
                           <button
@@ -1060,11 +1088,10 @@ const Catalog = () => {
                     (item.stock <= 0 || item.in_stock === false) ? (
                       <button
                         className="catalog-card-add-btn"
-                        onClick={(e) => { e.stopPropagation(); alert("Funcionalidad 'Avísame' en desarrollo."); }}
+                        onClick={scrollToNewsletter}
                         title="Avísame cuando haya stock"
-                        style={{ width: 'auto', padding: '0 10px', borderRadius: '16px', fontSize: '11px', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }}
                       >
-                        Avísame
+                        <Bell size={18} />
                       </button>
                     ) : (
                       <button
@@ -1218,6 +1245,7 @@ const Catalog = () => {
             className="catalog-btn-filters"
             onClick={() => setIsMobileFiltersOpen(true)}
           >
+            <SlidersHorizontal size={18} />
             Filtros
           </button>
 

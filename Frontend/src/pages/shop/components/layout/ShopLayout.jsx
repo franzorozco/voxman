@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../../store/authStore";
 import useShopCartStore from "../../../../store/shop/useShopCartStore";
 import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
@@ -8,6 +8,8 @@ import { useThemeStore } from "../../../../store/themeStore";
 import { API_BASE_URL } from "../../../../config/api";
 import Footer from "../../../../components/layout/Footer";
 import CheckoutLoginModal from "../../../../components/ui/CheckoutLoginModal";
+import ConfirmModal from "../../../../components/ui/ConfirmModal";
+import { User, Package, LogOut } from 'lucide-react';
 import './ShopLayout.css';
 
 const ShopNavbar = () => {
@@ -19,6 +21,9 @@ const ShopNavbar = () => {
 
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  
+  const navigate = useNavigate();
   const [bounce, setBounce] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('login');
@@ -63,10 +68,15 @@ const ShopNavbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const executeLogout = () => {
     logout();
     setOpen(false);
     setMenuOpen(false);
+    setIsLogoutModalOpen(false);
   };
 
   const closeMenu = () => {
@@ -105,20 +115,42 @@ const ShopNavbar = () => {
 
         {/* MENU ÚNICO */}
         <nav className={`shop-nav-menu ${menuOpen ? "active" : ""}`}>
+          {user && (
+            <div className="shop-nav-mobile-user">
+              <div className="shop-nav-mobile-user-card">
+                <div className="shop-nav-avatar-wrapper">
+                  {user.photo ? (
+                    <img src={user.photo} className="shop-nav-avatar" alt="Avatar" />
+                  ) : (
+                    <div className="shop-nav-avatar-fallback">{getInitials(user.name || user.email || user.username)}</div>
+                  )}
+                </div>
+                <div className="shop-nav-mobile-user-info">
+                  <span className="shop-nav-mobile-username">{user.name || user.username || user.email}</span>
+                  <Link to="/profile" state={{ theme: 'light' }} onClick={closeMenu} className="shop-nav-mobile-view-profile">
+                    Gestionar cuenta
+                  </Link>
+                </div>
+              </div>
+              <div className="shop-nav-mobile-user-links">
+                <Link to="/shop/orders" onClick={closeMenu}>
+                  Mis pedidos
+                </Link>
+                <button onClick={handleLogoutClick} className="shop-nav-mobile-logout">
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          )}
+
           <NavLink to="/shop" end onClick={closeMenu}>Tienda</NavLink>
           <NavLink to="/shop/catalog" onClick={closeMenu}>Catálogo</NavLink>
           {/* <NavLink to="/shop/collections" onClick={closeMenu}>Colecciones</NavLink> */}
 
-          {!user ? (
+          {!user && (
             <div className="shop-nav-mobile-auth">
               <button className="shop-nav-btn shop-nav-btn-outline" onClick={() => { closeMenu(); setModalMode('login'); setIsLoginModalOpen(true); }}>Iniciar sesión</button>
               <button className="shop-nav-btn shop-nav-btn-solid" onClick={() => { closeMenu(); setModalMode('register'); setIsLoginModalOpen(true); }}>Registrarse</button>
-            </div>
-          ) : (
-            <div className="shop-nav-mobile-user">
-              <Link to="/profile" state={{ theme: 'light' }} onClick={closeMenu}>Ver perfil</Link>
-              <Link to="/shop/orders" onClick={closeMenu}>Mis pedidos</Link>
-              <button onClick={handleLogout}>Cerrar sesión</button>
             </div>
           )}
         </nav>
@@ -152,7 +184,7 @@ const ShopNavbar = () => {
                 <div className="shop-nav-dropdown">
                   <Link to="/profile" state={{ theme: 'light' }}>Ver perfil</Link>
                   <div className="shop-divider" />
-                  <button onClick={handleLogout}>Cerrar sesión</button>
+                  <button onClick={handleLogoutClick}>Cerrar sesión</button>
                 </div>
               )}
             </div>
@@ -173,6 +205,17 @@ const ShopNavbar = () => {
         initialMode={modalMode}
         initialData={modalInitialData}
         theme="light" // El shop es siempre claro
+      />
+
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={executeLogout}
+        title="Cerrar sesión"
+        message="¿Estás seguro de que deseas cerrar sesión?"
+        confirmText="Sí, salir"
+        cancelText="Cancelar"
+        type="warning"
       />
     </header>
   );

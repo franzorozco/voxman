@@ -1,12 +1,15 @@
 import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { User } from 'lucide-react';
 import { useAuthStore } from "../../../store/authStore";
 import { useThemeStore } from "../../../store/themeStore";
 import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
+import ConfirmModal from "../../../components/ui/ConfirmModal";
 import "./Navbar.css";
 
 export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
+  const navigate = useNavigate();
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -17,6 +20,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const isOwner = user?.roles?.includes("Owner");
   
@@ -59,10 +63,15 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
   }, []);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const executeLogout = () => {
     logout();
     setOpen(false);
     setMenuOpen(false);
+    setIsLogoutModalOpen(false);
   };
 
   const closeMenu = () => {
@@ -75,7 +84,8 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
     : (settings.store_logo_light ? getImageUrl(settings.store_logo_light) : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/lodo_default_for_white.png');
 
   return (
-    <header className="nav-header">
+    <>
+      <header className="nav-header">
 
       <div className="nav-container">
 
@@ -105,7 +115,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
             Nosotros
           </NavLink>
 
-          {!user ? (
+          {!user && (
             <div className="nav-mobile-auth">
 
               <Link
@@ -125,30 +135,6 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
               </Link>
 
             </div>
-          ) : (
-            <div className="nav-mobile-user">
-
-              <Link to="/profile" state={{ theme: isDarkContext ? 'dark' : 'light' }} onClick={closeMenu}>
-                Ver perfil
-              </Link>
-
-              {hasDashboardAccess && (
-                <Link to="/dashboard" onClick={closeMenu}>
-                  Administración
-                </Link>
-              )}
-              
-              {hasPosAccess && (
-                <Link to="/pos" onClick={closeMenu}>
-                  Punto de venta
-                </Link>
-              )}
-
-              <button onClick={handleLogout}>
-                Cerrar sesión
-              </button>
-
-            </div>
           )}
 
         </nav>
@@ -157,23 +143,30 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
         <div className="nav-actions">
 
           {!user ? (
-            <div className="nav-desktop-auth">
+            <>
+              <div className="nav-desktop-auth">
 
-              <Link
-                to="/login"
-                className="nav-btn nav-btn-outline"
-              >
-                Iniciar sesión
-              </Link>
+                <Link
+                  to="/login"
+                  className="nav-btn nav-btn-outline"
+                >
+                  Iniciar sesión
+                </Link>
 
-              <Link
-                to="/register"
-                className="nav-btn nav-btn-solid"
-              >
-                Registrarse
-              </Link>
+                <Link
+                  to="/register"
+                  className="nav-btn nav-btn-solid"
+                >
+                  Registrarse
+                </Link>
 
-            </div>
+              </div>
+              <div className="nav-mobile-auth-icon">
+                <Link to="/login" style={{ display: 'flex', alignItems: 'center' }}>
+                  <User size={24} color={isDarkContext ? "#fff" : "#000"} strokeWidth={1.5} />
+                </Link>
+              </div>
+            </>
           ) : (
             <div className="nav-user" ref={menuRef}>
 
@@ -208,7 +201,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
                   <div className="divider" />
 
-                  <button onClick={handleLogout}>
+                  <button onClick={handleLogoutClick}>
                     Cerrar sesión
                   </button>
 
@@ -233,5 +226,16 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
       </div>
 
     </header>
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={executeLogout}
+        title="Cerrar sesión"
+        message="¿Estás seguro de que deseas cerrar sesión?"
+        confirmText="Sí, salir"
+        cancelText="Cancelar"
+        type="warning"
+      />
+    </>
   );
 }

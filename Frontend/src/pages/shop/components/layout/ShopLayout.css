@@ -301,8 +301,7 @@
     right: 0;
   }
 
-  .shop-nav-mobile-auth,
-  .shop-nav-mobile-user {
+  .shop-nav-mobile-auth {
     width: 100%;
     margin-top: 20px;
     padding-top: 20px;
@@ -312,13 +311,93 @@
     gap: 15px;
   }
 
-  .shop-nav-mobile-user button {
-    background: none;
+  .shop-nav-mobile-user {
+    width: 100%;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .shop-nav-mobile-user-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0;
+    background: transparent;
     border: none;
-    color: var(--text-main);
+  }
+
+  .shop-nav-avatar-wrapper {
+    position: relative;
+  }
+
+  .shop-nav-avatar,
+  .shop-nav-avatar-fallback {
+    width: 38px;
+    height: 38px;
     font-size: 13px;
+    box-shadow: none;
+  }
+
+  .shop-nav-mobile-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .shop-nav-mobile-username {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+
+  .shop-nav-mobile-view-profile {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    font-weight: 400 !important;
+    text-transform: uppercase !important;
+    padding: 0 !important;
+    letter-spacing: 0.05em !important;
+    text-decoration: none !important;
+  }
+
+  .shop-nav-mobile-user-links {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 4px;
+  }
+
+  .shop-nav-mobile-user-links a,
+  .shop-nav-mobile-user-links button {
+    display: block;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: var(--text-main) !important;
+    padding: 0 !important;
+    border-radius: 0;
+    background: transparent;
+    border: none;
     text-align: left;
     cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+
+  .shop-nav-mobile-user-links a:active,
+  .shop-nav-mobile-user-links button:active {
+    background: transparent;
+    color: var(--color-primary) !important;
+  }
+
+  .shop-nav-mobile-logout {
+    color: var(--text-muted) !important;
   }
 
   .shop-nav-user {

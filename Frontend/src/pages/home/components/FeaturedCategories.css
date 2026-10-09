@@ -20,12 +20,13 @@
 
 .fc-title {
   font-family: "Bodoni Moda", serif;
-  font-size: 32px;
+  font-size: clamp(24px, 5vw, 32px);
   font-weight: 400;
-  letter-spacing: 8px;
+  letter-spacing: clamp(4px, 1.5vw, 8px);
   margin: 0;
   text-transform: uppercase;
   color: #fff;
+  white-space: nowrap;
 }
 
 .fc-link-all {

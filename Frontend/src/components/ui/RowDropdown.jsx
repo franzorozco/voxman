@@ -136,6 +136,7 @@ export default function RowDropdown({ rowId, activeId, setActiveId, children }) 
             />
             <div
               ref={menuRef}
+              onClick={() => setActiveId(null)}
               style={{
                 position: "fixed",
                 top: "-9999px",

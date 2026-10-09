@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { resetPassword } from "../../api/admin/auth";
+import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
+import { getImageUrl } from "../../utils/imageUtils";
 import toast from "react-hot-toast";
 import "./Auth.css"; 
 
@@ -9,6 +11,11 @@ import fondo from "../../assets/global/fondos/premium_fashion_bg.png";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const { settings, fetchSettings } = useShopSettingsStore();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
   const { token } = useParams();
   const [searchParams] = useSearchParams();
   const emailParam = searchParams.get("email") || "";
@@ -68,36 +75,48 @@ export default function ResetPassword() {
     }
   };
 
+  const logoUrl = settings?.store_logo_dark 
+    ? getImageUrl(settings.store_logo_dark) 
+    : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/lodo_default_for_black.png';
+
   return (
-    <div className="register-page" style={{ backgroundImage: `url(${fondo})` }}>
-      <div className="overlay"></div>
+    <div className="auth-page-wrapper">
+      <div className="auth-split-container">
+        
+        {/* Left Side: Image */}
+        <div className="auth-image-side" style={{ backgroundImage: `url(${fondo})` }}></div>
 
-      <div className="register-card">
-        <h2>VOXMAN</h2>
-        <p className="subtitle">Nueva contraseña</p>
-
-        {success ? (
-          <div className="success-message" style={{ textAlign: 'center' }}>
-            <CheckCircle size={48} color="#33d9b2" style={{ margin: '0 auto 16px' }} />
-            <span style={{ display: 'block', marginBottom: '8px' }}>¡Contraseña actualizada!</span>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Serás redirigido al inicio de sesión.</p>
+        {/* Right Side: Form */}
+        <div className="auth-form-side">
+          <div className="auth-logo-container">
+            <img src={logoUrl} alt="VOXMAN Logo" />
           </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
-              Crea una nueva contraseña para tu cuenta <strong>{form.email}</strong>.
-            </p>
+          <p className="auth-subtitle">Nueva contraseña</p>
 
-            <div className="password-group">
-              <div className="input-group" style={{ marginBottom: 16 }}>
+          {success ? (
+            <div className="success-message" style={{ textAlign: 'center' }}>
+              <CheckCircle size={48} color="#33d9b2" style={{ margin: '0 auto 16px' }} />
+              <span style={{ display: 'block', marginBottom: '8px' }}>¡Contraseña actualizada!</span>
+              <p style={{ color: '#aaa', fontSize: '14px' }}>Serás redirigido al inicio de sesión.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <p style={{ color: '#aaa', fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>
+                Crea una nueva contraseña para tu cuenta <strong>{form.email}</strong>.
+              </p>
+
+              <div className="floating-input-group" style={{ marginBottom: errors.password ? '30px' : '20px' }}>
                 <Lock size={18} className="input-icon" />
                 <input
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Nueva contraseña"
+                  placeholder=" "
                   value={form.password}
                   onChange={handleChange}
+                  className="floating-input"
+                  style={{ borderColor: errors.password ? '#ef4444' : undefined }}
                 />
+                <label className="floating-label">Nueva contraseña</label>
                 <button
                   type="button"
                   className="toggle-password-btn"
@@ -106,37 +125,46 @@ export default function ResetPassword() {
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
+                {errors.password && (
+                  <div style={{ position: 'absolute', bottom: '-22px', left: 0, display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px' }}>
+                    <AlertCircle size={14} style={{ flexShrink: 0 }}/>
+                    <span>{errors.password}</span>
+                  </div>
+                )}
               </div>
-              {errors.password && (
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '12px', marginTop: '-8px', marginBottom: '12px', paddingLeft: '4px' }}>
-                  <AlertCircle size={14} style={{ flexShrink: 0 }}/>
-                  <span>{errors.password}</span>
-                </div>
-              )}
 
-              <div className="input-group" style={{ marginBottom: 16 }}>
+              <div className="floating-input-group" style={{ marginBottom: errors.password_confirmation ? '30px' : '24px' }}>
                 <Lock size={18} className="input-icon" />
                 <input
                   name="password_confirmation"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Confirmar contraseña"
+                  placeholder=" "
                   value={form.password_confirmation}
                   onChange={handleChange}
+                  className="floating-input"
+                  style={{ borderColor: errors.password_confirmation ? '#ef4444' : undefined }}
                 />
+                <label className="floating-label">Confirmar contraseña</label>
+                {errors.password_confirmation && (
+                  <div style={{ position: 'absolute', bottom: '-22px', left: 0, display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px' }}>
+                    <AlertCircle size={14} style={{ flexShrink: 0 }}/>
+                    <span>{errors.password_confirmation}</span>
+                  </div>
+                )}
               </div>
-              {errors.password_confirmation && (
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '12px', marginTop: '-8px', marginBottom: '12px', paddingLeft: '4px' }}>
-                  <AlertCircle size={14} style={{ flexShrink: 0 }}/>
-                  <span>{errors.password_confirmation}</span>
-                </div>
-              )}
-            </div>
 
-            <button type="submit" className={`auth-btn-primary ${loading ? "loading" : ""}`}>
-              {loading ? "Actualizando..." : "Restablecer contraseña"}
-            </button>
-          </form>
-        )}
+              <button type="submit" className="auth-btn-primary" disabled={loading}>
+                {loading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <div style={{ width: '20px', height: '20px', border: '2px solid rgba(0,0,0,0.2)', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  </div>
+                ) : (
+                  "Restablecer contraseña"
+                )}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

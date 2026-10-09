@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   TrendingUp, ShoppingBag, Users, Package, AlertTriangle,
@@ -20,6 +20,7 @@ import { getPurchaseStats } from "../../../../api/admin/purchases";
 import { getDeliverySchedules } from "../../../../api/admin/orderNetwork";
 import { getReturns } from "../../../../api/admin/returns";
 import { useAuthStore } from "../../../../store/authStore";
+import CustomSelect from "../../../../components/ui/CustomSelect";
 
 import "./Home.css";
 
@@ -260,7 +261,7 @@ export default function Home() {
   })();
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Buenos dÃ­as" : hour < 18 ? "Buenas tardes" : "Buenas noches";
+  const greeting = hour < 12 ? "Buenos días" : hour < 18 ? "Buenas tardes" : "Buenas noches";
 
   const getDeliveryTypeLabel = (type) => {
     if (type === 'home_delivery') return { label: "A Domicilio", cls: "type-home" };
@@ -274,22 +275,22 @@ export default function Home() {
 
       <div className="hd-top">
         <div className="hd-greeting">
-          <h1 className="hd-greeting-title">{greeting}, {userName} ðŸ‘‹</h1>
+          <h1 className="hd-greeting-title">{greeting}, {userName}</h1>
           <p className="hd-greeting-sub">
             {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
         </div>
         <div className="hd-actions-group">
-          <div className="hd-date-filter">
+          <div className="hd-date-filter" style={{ minWidth: "160px" }}>
             <Calendar size={16} className="hd-filter-icon" />
-            <select value={dateRange} onChange={e => setDateRange(e.target.value)} className="hd-filter-select">
+            <CustomSelect value={dateRange} onChange={e => setDateRange(e.target.value)}>
               <option value="today">Hoy</option>
-              <option value="7d">Ãšltimos 7 dÃ­as</option>
-              <option value="30d">Ãšltimos 30 dÃ­as</option>
+              <option value="7d">Últimos 7 días</option>
+              <option value="30d">Últimos 30 días</option>
               <option value="month">Este Mes</option>
-              <option value="year">Este AÃ±o</option>
+              <option value="year">Este Año</option>
               <option value="all">Todo el Historial</option>
-            </select>
+            </CustomSelect>
           </div>
           <button className="hd-refresh-btn" onClick={handleRefresh} title="Actualizar datos">
             <RefreshCw size={16} />

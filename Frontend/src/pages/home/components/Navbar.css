@@ -184,6 +184,7 @@
   flex-direction: column;
 
   box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  z-index: 2000;
 }
 
 .nav-dropdown a,
@@ -217,6 +218,10 @@
 /* MOBILE AUTH */
 .nav-mobile-auth,
 .nav-mobile-user {
+  display: none;
+}
+
+.nav-mobile-auth-icon {
   display: none;
 }
 
@@ -254,6 +259,12 @@
 
   .nav-desktop-auth {
     display: none;
+  }
+
+  .nav-mobile-auth-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .nav-mobile-overlay {
@@ -313,10 +324,6 @@
 
     text-align: left;
     cursor: pointer;
-  }
-
-  .nav-user {
-    display: none;
   }
 
 }

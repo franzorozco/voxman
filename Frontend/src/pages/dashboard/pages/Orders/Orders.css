@@ -1,4 +1,4 @@
-﻿.orders-container {
+.orders-container {
   padding: 24px;
   background-color: var(--bg-main);
   min-height: 100vh;
@@ -457,6 +457,24 @@
 }
 
 .bubble-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: var(--text-main);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.total-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.total-amount {
   font-size: 20px;
   font-weight: 800;
   color: var(--color-primary);
@@ -504,17 +522,38 @@
     border-radius: 8px;
   }
   .bubble-right {
-    flex-direction: row-reverse !important;
-    justify-content: space-between !important;
-    align-items: center !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
     border-top: 1px dashed var(--border-color);
-    padding-top: 12px;
-    margin-top: 4px;
+    padding-top: 16px;
+    margin-top: 8px;
     width: 100%;
+    gap: 16px;
   }
   .bubble-total {
-    align-self: center !important;
-    font-size: 18px;
+    align-items: flex-start !important;
+    width: 100%;
+  }
+  .total-amount {
+    font-size: 18px !important;
+  }
+  .bubble-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .bubble-actions > *:last-child {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .bubble-actions > *:not(:last-child) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
   }
 }
 

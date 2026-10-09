@@ -34,16 +34,16 @@ export default function FeaturedCategories() {
       </section>
     );
   }
-  
+
   if (categories.length === 0) return null;
 
   return (
     <section className="fc-section">
       <div className="fc-container">
-        
+
         <div className="fc-header">
-          <h2 className="fc-title">C A T E G O R Í A S</h2>
-          <Link to="/catalog" className="fc-link-all">
+          <h2 className="fc-title">CATEGORÍAS</h2>
+          <Link to="/shop/catalog" className="fc-link-all">
             VER CATÁLOGO COMPLETO <ArrowRight size={16} />
           </Link>
         </div>
@@ -52,10 +52,10 @@ export default function FeaturedCategories() {
           {categories.map(cat => (
             <Link to={`/shop/catalog?category=${cat.id}`} key={cat.id} className="fc-card">
               <div className="fc-image-wrapper">
-                <img 
-                  src={cat.image ? getImageUrl(cat.image) : FALLBACK_IMAGE} 
-                  alt={cat.name} 
-                  loading="lazy" 
+                <img
+                  src={cat.image ? getImageUrl(cat.image) : FALLBACK_IMAGE}
+                  alt={cat.name}
+                  loading="lazy"
                   onError={(e) => { e.target.src = FALLBACK_IMAGE; e.target.onerror = null; }}
                 />
                 <div className="fc-overlay"></div>

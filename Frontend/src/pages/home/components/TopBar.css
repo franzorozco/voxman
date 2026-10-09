@@ -98,11 +98,13 @@
   display: flex;
   align-items: center;
   justify-content: center !important;
-  gap: 14px;
+  gap: 10px;
   flex-wrap: wrap;
-  max-width: 1200px;
   width: 100%;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
+  text-align: center;
+  padding: 0 24px; /* Balance visual centering when close button is present */
 }
 
 .topbar__text {

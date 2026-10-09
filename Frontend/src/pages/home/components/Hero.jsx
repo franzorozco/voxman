@@ -109,9 +109,9 @@ export default function Hero({ title, subtitle }) {
             onMouseEnter={() => handleMouseEnter(i)}
             onMouseLeave={handleMouseLeave}
           >
-            <img 
-              src={img} 
-              alt="Hero" 
+            <img
+              src={img}
+              alt="Hero"
               fetchPriority={i === 0 ? "high" : "auto"}
               loading={i === 0 ? "eager" : "lazy"}
               onError={(e) => { e.target.src = "https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/image_not_found_black.jfif"; }}
@@ -120,10 +120,10 @@ export default function Hero({ title, subtitle }) {
         ))}
       </div>
 
-      <div 
+      <div
         className="hero-content"
-        style={{ 
-          transform: hoveredIdx !== null ? `translateX(${contentShift}) scale(0.9)` : 'translateX(0) scale(1)' 
+        style={{
+          transform: hoveredIdx !== null ? `translateX(${contentShift}) scale(0.9)` : 'translateX(0) scale(1)'
         }}
         onMouseEnter={() => {
           if (enterTimeoutRef.current) clearTimeout(enterTimeoutRef.current);
@@ -135,7 +135,7 @@ export default function Hero({ title, subtitle }) {
         <p>{subtitle}</p>
 
         <div className="hero-buttons">
-          <Link to="/shop/catalog" className="btn primary">
+          <Link to="/shop" className="btn primary">
             Explorar tienda
           </Link>
           <Link to="/register" className="btn secondary">

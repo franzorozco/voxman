@@ -1,0 +1,208 @@
+.checkout-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.checkout-modal-container {
+  display: flex;
+  background: var(--bg-card, #fff);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 900px;
+  min-height: 550px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  position: relative;
+  animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.checkout-modal-image {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: none;
+}
+
+.checkout-modal-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+}
+
+@media (min-width: 768px) {
+  .checkout-modal-image {
+    display: block;
+  }
+}
+
+.checkout-modal-content {
+  flex: 1;
+  padding: 40px 32px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 450px;
+  margin: 0 auto;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.checkout-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+.checkout-modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.1);
+  border-radius: 10px;
+}
+
+/* Floating labels */
+.floating-input-group {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.floating-input-group .input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+  transition: color 0.3s ease;
+  z-index: 1;
+}
+
+.floating-input {
+  width: 100%;
+  padding: 22px 16px 10px 44px;
+  background: rgba(0,0,0,0.02);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  color: #111827;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-input:focus {
+  border-color: var(--color-primary, #c9a227);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.1);
+}
+
+.floating-label {
+  position: absolute;
+  left: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 15px;
+  pointer-events: none;
+  transition: all 0.2s ease-out;
+}
+
+.floating-input:focus ~ .floating-label,
+.floating-input:not(:placeholder-shown) ~ .floating-label {
+  top: 14px;
+  font-size: 11px;
+  color: var(--color-primary, #c9a227);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.floating-input-group:focus-within .input-icon {
+  color: var(--color-primary, #c9a227);
+}
+
+/* Password Toggle */
+.toggle-password-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.toggle-password-btn:hover {
+  color: #4b5563;
+}
+
+/* Button hover */
+.checkout-modal-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.checkout-modal-btn-primary {
+  background: var(--color-primary, #111);
+  color: var(--color-primary-text, #fff);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.checkout-modal-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.checkout-modal-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.checkout-modal-btn-google {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.checkout-modal-btn-google:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Dark mode overrides if needed */
+.dark-theme .checkout-modal-container { background: #111827; }
+.dark-theme .floating-input { background: rgba(255,255,255,0.03); border-color: #374151; color: #f3f4f6; }
+.dark-theme .floating-input:focus { background: #111827; border-color: var(--color-primary); }
+.dark-theme .checkout-modal-btn-google { border-color: #374151; color: #f3f4f6; }
+.dark-theme .checkout-modal-btn-google:hover { background: #1f2937; border-color: #4b5563; }
+.dark-theme .checkout-modal-content::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.1); }
+
+@media (max-width: 600px) {
+  .checkout-modal-content {
+    padding: 24px 20px;
+  }
+  .checkout-modal-overlay {
+    padding: 16px;
+  }
+  .checkout-modal-container {
+    min-height: auto;
+  }
+}

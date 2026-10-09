@@ -5,8 +5,19 @@ import { getGoogleAuthUrl } from "../../api/admin/auth";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
 import { Link } from "react-router-dom";
+import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
+import { getImageUrl } from "../../utils/imageUtils";
+import fondo from "../../assets/global/fondos/premium_fashion_bg.png";
+import "./CheckoutLoginModal.css";
 
 export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect, theme = 'light', initialMode = 'login', initialData = null }) {
+  const { settings, fetchSettings } = useShopSettingsStore();
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchSettings();
+    }
+  }, [isOpen, fetchSettings]);
   const [mode, setMode] = useState(initialMode); // 'login' | 'register' | 'google_register'
   
   const [form, setForm] = useState({ 
@@ -323,50 +334,26 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
   const inputBg = isDark ? "#1f2937" : "#f9fafb";
 
   const renderInput = (name, placeholder, type = "text", Icon, maxLength = undefined) => (
-    <div>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        backgroundColor: inputBg,
-        border: `1px solid ${errors[name] ? '#ef4444' : borderColor}`,
-        borderRadius: '8px',
-        padding: '0 12px',
-        transition: 'border-color 0.2s'
-      }}>
-        <Icon size={18} color={mutedColor} />
+    <div style={{ marginBottom: errors[name] ? '20px' : '0' }}>
+      <div className="floating-input-group" style={{ marginBottom: 0 }}>
+        <Icon size={18} className="input-icon" />
         <input
           name={name}
-          type={type}
-          placeholder={placeholder}
+          type={name === "password" ? (showPassword ? "text" : "password") : type}
+          placeholder=" "
           maxLength={maxLength}
           value={form[name]}
           onChange={handleChange}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
-            padding: '12px',
-            color: textColor,
-            fontSize: '15px',
-            outline: 'none'
-          }}
+          className="floating-input"
+          style={{ borderColor: errors[name] ? '#ef4444' : undefined }}
         />
+        <label className="floating-label">{placeholder}</label>
         {name === "password" && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             tabIndex="-1"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: mutedColor,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '4px'
-            }}
+            className="toggle-password-btn"
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
@@ -377,7 +364,8 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginTop: '8px',
+          marginTop: '4px',
+          marginBottom: '10px',
           padding: '0 4px'
         }}>
           <div style={{
@@ -411,7 +399,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         </div>
       )}
       {errors[name] && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px', marginTop: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
           <AlertCircle size={14} style={{ flexShrink: 0 }} />
           <span>{errors[name]}</span>
         </div>
@@ -419,30 +407,20 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     </div>
   );
 
+  const logoDark = settings?.store_logo_dark || settings?.store_logo_light;
+  const logoLight = settings?.store_logo_light || settings?.store_logo_dark;
+
+  const logoUrl = isDark 
+    ? (logoDark ? getImageUrl(logoDark) : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/lodo_default_for_black.png')
+    : (logoLight ? getImageUrl(logoLight) : 'https://pub-17cc16459862449d8dcc55ee775a8a3f.r2.dev/system/not-found/lodo_default_for_white.png');
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: overlayBg,
-      backdropFilter: 'blur(4px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 10000,
-      padding: '20px'
-    }}>
-      <div style={{
-        backgroundColor: modalBg,
-        borderRadius: '16px',
-        width: '100%',
-        maxWidth: '420px',
-        boxShadow: isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-        overflow: 'hidden',
-        position: 'relative',
-        animation: 'modalSlideUp 0.3s ease-out',
-        border: `1px solid ${borderColor}`,
-        padding: '32px 24px'
-      }}>
+    <div className={`checkout-modal-overlay ${isDark ? 'dark-theme' : ''}`} onClick={onClose}>
+      <div className="checkout-modal-container" onClick={(e) => e.stopPropagation()}>
+        
+        <div className="checkout-modal-image" style={{ backgroundImage: `url(${fondo})` }}></div>
+        
+        <div className="checkout-modal-content">
         
         <button 
           onClick={onClose}
@@ -467,16 +445,12 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
           <X size={20} />
         </button>
 
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h2 style={{ 
-            margin: '0 0 4px 0', 
-            fontSize: '24px', 
-            fontWeight: '700', 
-            letterSpacing: '0.05em',
-            color: textColor 
-          }}>
-            VOXMAN
-          </h2>
+        {/* LOGO */}
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <img src={logoUrl} alt="Logo" style={{ display: 'block', margin: '0 auto', height: '40px', objectFit: 'contain' }} />
+        </div>
+
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <p style={{ margin: 0, color: mutedColor, fontSize: '14px' }}>
             {mode === 'login' ? "Iniciar sesión para continuar" : "Únete al estilo para continuar"}
           </p>
@@ -497,43 +471,35 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         ) : (
           <form onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              backgroundColor: mode === 'google_register' && "email" === "email" ? (isDark ? "#374151" : "#e5e7eb") : inputBg,
-              border: `1px solid ${errors["email"] ? '#ef4444' : borderColor}`,
-              borderRadius: '8px',
-              padding: '0 12px',
-              transition: 'border-color 0.2s',
-              opacity: mode === 'google_register' && "email" === "email" ? 0.7 : 1
-            }}>
-              <Mail size={18} color={mutedColor} />
-              <input
-                name="email"
-                type="email"
-                maxLength={150}
-                placeholder="Correo electrónico"
-                value={form.email}
-                onChange={handleChange}
-                disabled={mode === 'google_register'}
-                style={{
-                  flex: 1,
-                  background: 'transparent',
-                  border: 'none',
-                  padding: '12px',
-                  color: textColor,
-                  fontSize: '15px',
-                  outline: 'none',
-                  cursor: mode === 'google_register' ? 'not-allowed' : 'text'
-                }}
-              />
-            </div>
-            {errors["email"] && mode !== 'google_register' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px', marginTop: '-10px' }}>
-                <AlertCircle size={14} style={{ flexShrink: 0 }} />
-                <span>{errors["email"]}</span>
+            <div style={{ marginBottom: errors["email"] && mode !== 'google_register' ? '20px' : '0' }}>
+              <div className="floating-input-group" style={{ 
+                opacity: mode === 'google_register' ? 0.7 : 1,
+                marginBottom: 0
+              }}>
+                <Mail size={18} className="input-icon" />
+                <input
+                  name="email"
+                  type="email"
+                  maxLength={150}
+                  placeholder=" "
+                  value={form.email}
+                  onChange={handleChange}
+                  disabled={mode === 'google_register'}
+                  className="floating-input"
+                  style={{ 
+                    borderColor: errors["email"] ? '#ef4444' : undefined,
+                    cursor: mode === 'google_register' ? 'not-allowed' : 'text'
+                  }}
+                />
+                <label className="floating-label">Correo electrónico</label>
               </div>
-            )}
+              {errors["email"] && mode !== 'google_register' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+                  <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                  <span>{errors["email"]}</span>
+                </div>
+              )}
+            </div>
 
             {(mode === 'register' || mode === 'google_register') && renderInput("username", "Nombre de usuario", "text", User, 50)}
             
@@ -554,7 +520,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
             )}
 
             {mode === 'login' && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 0' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', margin: '4px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <input 
                     type="checkbox" 
@@ -563,7 +529,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                     onChange={(e) => setRemember(e.target.checked)}
                     style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: textColor }}
                   />
-                  <label htmlFor="remember" style={{ fontSize: '13px', color: textColor, cursor: 'pointer' }}>
+                  <label htmlFor="remember" style={{ fontSize: '13px', color: textColor, cursor: 'pointer', marginBottom: 0 }}>
                     Recordarme
                   </label>
                 </div>
@@ -591,21 +557,13 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
             <button 
               type="submit" 
               disabled={loading || ((mode === 'register' || mode === 'google_register') && !acceptedTerms)}
-              style={{
-                width: '100%',
-                background: textColor,
-                color: modalBg,
-                border: 'none',
-                padding: '14px',
-                borderRadius: '8px',
-                fontSize: '15px',
-                fontWeight: '600',
-                cursor: (loading || ((mode === 'register' || mode === 'google_register') && !acceptedTerms)) ? 'not-allowed' : 'pointer',
-                opacity: (loading || ((mode === 'register' || mode === 'google_register') && !acceptedTerms)) ? 0.7 : 1,
-                marginTop: '8px'
-              }}
+              className="checkout-modal-btn checkout-modal-btn-primary"
             >
-              {loading ? (mode === 'google_register' ? 'Completando...' : (mode === 'login' ? 'Iniciando...' : 'Creando...')) : (mode === 'google_register' ? 'Completar Registro' : (mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'))}
+              {loading ? (
+                <div style={{ width: '20px', height: '20px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              ) : (
+                (mode === 'google_register' ? 'Completar Registro' : (mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'))
+              )}
             </button>
 
             {mode !== 'google_register' && (
@@ -620,23 +578,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                   type="button" 
                   onClick={handleGoogleLogin} 
                   disabled={loading}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: `1px solid ${borderColor}`,
-                    background: 'transparent',
-                    color: textColor,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '14px',
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'}
-                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                  className="checkout-modal-btn checkout-modal-btn-google"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -678,9 +620,11 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
         )}
       </div>
 
+      </div>
+      
       {/* TERMS MODAL */}
       {showTermsModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ maxWidth: '500px', width: '90%', backgroundColor: modalBg, borderRadius: '16px', padding: '24px', border: `1px solid ${borderColor}`, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '20px', color: textColor }}>Términos y Condiciones</h3>
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px', color: mutedColor, fontSize: '14px', lineHeight: '1.6' }}>

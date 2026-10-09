@@ -981,28 +981,32 @@ const BundleDetail = () => {
 
       <div className="product-detail-grid">
         {/* Left Column: Gallery */}
-        <div className="product-gallery-container editorial-grid">
-          {galleryImages.map((img, idx) => {
-            // Pattern repeats every 7 items (excluding the cover at idx 0)
-            let posClass = `pos-${idx === 0 ? 0 : ((idx - 1) % 7) + 1}`;
-            return (
-              <div 
-                key={`gallery-${idx}`} 
-                className={`product-gallery-item editorial-item ${posClass}`}
-              >
-                <ZoomableImage 
-                  src={getImageUrl(img)} 
-                  alt={`${bundle.name} - Imagen ${idx + 1}`} 
-                  loading={idx === 0 ? "eager" : "lazy"}
-                  disableTouchZoom={true}
-                  onClick={() => {
-                    setLightboxIndex(idx);
-                    setLightboxOpen(true);
-                  }}
-                />
+        <div className="product-gallery-container">
+          {galleryImages.map((img, idx) => (
+            <div key={`gallery-${idx}`} className="product-gallery-item relative">
+              <ZoomableImage 
+                src={getImageUrl(img)} 
+                alt={`${bundle.name} - Imagen ${idx + 1}`} 
+                className="product-gallery-img"
+                loading={idx === 0 ? "eager" : "lazy"}
+                disableTouchZoom={true}
+                onClick={() => {
+                  setLightboxIndex(idx);
+                  setLightboxOpen(true);
+                }}
+              />
+              {/* Indicador de Deslizar (Solo en la primera foto si hay más de 1) */}
+              {idx === 0 && galleryImages.length > 1 && (
+                <div className="lg:hidden absolute top-1/2 right-3 transform -translate-y-1/2 text-white drop-shadow-md animate-pulse pointer-events-none z-10 opacity-75">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </div>
+              )}
+              {/* Indicador de Zoom (En todas las fotos) */}
+              <div className="lg:hidden absolute top-4 right-4 bg-white/70 text-gray-800 w-7 h-7 flex items-center justify-center rounded-full shadow-sm pointer-events-none z-10">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
 
         {/* Right Column: Info */}
