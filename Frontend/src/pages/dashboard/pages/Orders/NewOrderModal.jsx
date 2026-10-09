@@ -7,11 +7,16 @@ import { getCustomers } from "../../../../api/admin/customers";
 import { toast } from "react-hot-toast";
 import { MarkerF } from '@react-google-maps/api';
 import GoogleMapWrapper from '../../../../components/ui/GoogleMapWrapper';
-import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X, XCircle, MapPin, Map, User, UserCheck, CheckCircle2 } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, ArrowRight, Camera, X, XCircle, MapPin, Map, User, UserCheck, CheckCircle2, Copy, Calendar, Clock } from "lucide-react";
 import useScanner from "../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../store/scanner/useScannerStore";
 import { useShopSettingsStore } from "../../../../store/shop/useShopSettingsStore";
 import "../Carts/Carts.css";
+
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { es } from "date-fns/locale/es";
+registerLocale("es", es);
 
 import CustomSelect from '../../../../components/ui/CustomSelect';
 import CanAccess from '../../../../components/ui/CanAccess';
@@ -21,7 +26,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
 
   const [step, setStep] = useState(1); // 1: Products, 2: Delivery Details
   const [loading, setLoading] = useState(false);
-  
+
   // Step 1 State
   const [searchProduct, setSearchProduct] = useState("");
   const [products, setProducts] = useState([]);
@@ -29,7 +34,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
   const [cartItems, setCartItems] = useState([]); // { variant, quantity, price }
   const [branches, setBranches] = useState([]);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  
+
   const getDefaultDate = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -64,31 +69,31 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
     recipient_phone: "",
     destination_city: ""
   });
-  
+
   const [meetingPointType, setMeetingPointType] = useState("predefined");
   const [predefinedMeetingPoints, setPredefinedMeetingPoints] = useState([]);
   const [deliveryDrivers, setDeliveryDrivers] = useState([]);
   const [mapCenter, setMapCenter] = useState({ lat: -16.4897, lng: -68.1193 }); // La Paz default
-  
+
   // Customer Search State
   const [customerSearchType, setCustomerSearchType] = useState("guest"); // "guest" | "registered"
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
   const [customersList, setCustomersList] = useState([]);
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  
+
   // Driver Search State
   const [driverSearchQuery, setDriverSearchQuery] = useState("");
   const [isDriverDropdownOpen, setIsDriverDropdownOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
-  
+
   // Loading States
   const [isSearchingProduct, setIsSearchingProduct] = useState(false);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);
   const [isSearchingDriver, setIsSearchingDriver] = useState(false);
   const [historicalDestinations, setHistoricalDestinations] = useState([]);
   const [isDestinationsDropdownOpen, setIsDestinationsDropdownOpen] = useState(false);
-  
+
 
 
   // Public Link to show at the end
@@ -103,31 +108,31 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         toast.error("Error al cargar sucursales");
       }
     };
-    
+
     const fetchZones = async () => {
       try {
         const data = await getDeliveryZones();
         const zones = data.data || data;
         setPredefinedMeetingPoints(zones);
-        
+
         if (editData && editData.meeting_point) {
-           const zone = zones.find(z => z.name === editData.meeting_point);
-           if (zone) {
-             setDeliveryData(prev => ({
-               ...prev,
-               city: prev.city || zone.city,
-               original_delivery_zone_id: prev.original_delivery_zone_id || zone.id,
-               latitude: prev.latitude || zone.latitude,
-               longitude: prev.longitude || zone.longitude,
-               shipping_cost: prev.shipping_cost || Number(zone.base_cost)
-             }));
-           }
+          const zone = zones.find(z => z.name === editData.meeting_point);
+          if (zone) {
+            setDeliveryData(prev => ({
+              ...prev,
+              city: prev.city || zone.city,
+              original_delivery_zone_id: prev.original_delivery_zone_id || zone.id,
+              latitude: prev.latitude || zone.latitude,
+              longitude: prev.longitude || zone.longitude,
+              shipping_cost: prev.shipping_cost || Number(zone.base_cost)
+            }));
+          }
         }
       } catch (error) {
         console.error("Error al cargar zonas de entrega");
       }
     };
-    
+
     fetchBranches();
     fetchZones();
     fetchSettings(true);
@@ -143,12 +148,12 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
           const allReservations = sale.stock_reservations || sale.stockReservations || [];
           const variantReservations = allReservations.filter(res => res.variant_id === detail.variant_id && res.status !== 'released');
           const reservation = variantReservations[0];
-          
+
           let autoBranchId = "";
           if (reservation && (reservation.branch_id || reservation.branch?.id)) {
             autoBranchId = reservation.branch_id || reservation.branch?.id;
           } else if (detail.product_variant?.inventories?.length > 0) {
-            const sortedInvs = [...detail.product_variant.inventories].sort((a, b) => 
+            const sortedInvs = [...detail.product_variant.inventories].sort((a, b) =>
               parseInt(b.stock || b.quantity || 0, 10) - parseInt(a.stock || a.quantity || 0, 10)
             );
             autoBranchId = sortedInvs[0].branch_id || sortedInvs[0].branch?.id || "";
@@ -179,67 +184,67 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         });
         setCartItems(items);
       }
-      
-        let p_code = "+591";
-        let p_num = sale?.guest?.whatsapp_phone || "";
-        if (p_num.startsWith("+") && p_num.includes(" ")) {
-          const parts = p_num.split(" ");
-          p_code = parts[0];
-          p_num = parts.slice(1).join(" ");
-        }
 
-        let initialMeetingPointType = 'predefined';
-        const dType = editData.shipment?.delivery_type;
-        if (dType === 'home_delivery') initialMeetingPointType = 'delivery';
-        else if (dType === 'external') initialMeetingPointType = 'external';
-        else if (dType === 'pickup') initialMeetingPointType = 'pickup';
-        else if (!editData.meeting_point && !editData.latitude && !editData.longitude) initialMeetingPointType = 'predefined';
-        else if (editData.latitude && editData.longitude && dType !== 'home_delivery') initialMeetingPointType = 'manual';
-        
-        setMeetingPointType(initialMeetingPointType);
+      let p_code = "+591";
+      let p_num = sale?.guest?.whatsapp_phone || "";
+      if (p_num.startsWith("+") && p_num.includes(" ")) {
+        const parts = p_num.split(" ");
+        p_code = parts[0];
+        p_num = parts.slice(1).join(" ");
+      }
 
-        setDeliveryData({
-          meeting_point: editData.meeting_point || "",
-          latitude: editData.latitude || null,
-          longitude: editData.longitude || null,
-          shipping_cost: editData.shipment?.shipping_cost || 0,
-          scheduled_date: editData.scheduled_date || "",
-          time_window: editData.time_window || "",
-          guest_name: sale?.guest?.name || "",
-          guest_country_code: p_code,
-          guest_phone: p_num,
-          customer_id: sale?.customer_id || "",
-          driver_id: editData.driver_id || "",
-          delivery_type: dType || "scheduled_point",
-          address_id: editData.shipment?.address_id || "",
-          pickup_branch_id: editData.shipment?.pickup_branch_id || "",
-          recipient_name: editData.shipment?.recipient_name || "",
-          recipient_ci: editData.shipment?.recipient_ci || "",
-          recipient_phone: editData.shipment?.recipient_phone || "",
-          destination_city: editData.shipment?.destination_city || ""
-        });
-        
-        if (editData.driver_id && editData.driver) {
-          const d = editData.driver;
-          const name = d.user?.profile ? `${d.user.profile.first_name} ${d.user.profile.last_name_paternal || ''}` : (d.user?.username || d.employee_code || "Repartidor");
-          setSelectedDriver({ id: d.id, name: name.trim() });
-          setDriverSearchQuery(name.trim());
-        }
-      
+      let initialMeetingPointType = 'predefined';
+      const dType = editData.shipment?.delivery_type;
+      if (dType === 'home_delivery') initialMeetingPointType = 'delivery';
+      else if (dType === 'external') initialMeetingPointType = 'external';
+      else if (dType === 'pickup') initialMeetingPointType = 'pickup';
+      else if (!editData.meeting_point && !editData.latitude && !editData.longitude) initialMeetingPointType = 'predefined';
+      else if (editData.latitude && editData.longitude && dType !== 'home_delivery') initialMeetingPointType = 'manual';
+
+      setMeetingPointType(initialMeetingPointType);
+
+      setDeliveryData({
+        meeting_point: editData.meeting_point || "",
+        latitude: editData.latitude || null,
+        longitude: editData.longitude || null,
+        shipping_cost: editData.shipment?.shipping_cost || 0,
+        scheduled_date: editData.scheduled_date || "",
+        time_window: editData.time_window || "",
+        guest_name: sale?.guest?.name || "",
+        guest_country_code: p_code,
+        guest_phone: p_num,
+        customer_id: sale?.customer_id || "",
+        driver_id: editData.driver_id || "",
+        delivery_type: dType || "scheduled_point",
+        address_id: editData.shipment?.address_id || "",
+        pickup_branch_id: editData.shipment?.pickup_branch_id || "",
+        recipient_name: editData.shipment?.recipient_name || "",
+        recipient_ci: editData.shipment?.recipient_ci || "",
+        recipient_phone: editData.shipment?.recipient_phone || "",
+        destination_city: editData.shipment?.destination_city || ""
+      });
+
+      if (editData.driver_id && editData.driver) {
+        const d = editData.driver;
+        const name = d.user?.profile ? `${d.user.profile.first_name} ${d.user.profile.last_name_paternal || ''}` : (d.user?.username || d.employee_code || "Repartidor");
+        setSelectedDriver({ id: d.id, name: name.trim() });
+        setDriverSearchQuery(name.trim());
+      }
+
       if (sale?.customer_id) {
         setCustomerSearchType("registered");
         if (sale.customer) {
           const c = sale.customer;
           const name = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}` :
-                      (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` : 
-                      (c.user?.username || c.customer_code));
+            (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` :
+              (c.user?.username || c.customer_code));
           setSelectedCustomer({ id: c.id, name: name.trim(), addresses: c.addresses || [] });
           setCustomerSearchQuery(name.trim());
         }
       } else {
         setCustomerSearchType("guest");
       }
-      
+
       if (editData.latitude && editData.longitude) {
         setMapCenter({ lat: Number(editData.latitude), lng: Number(editData.longitude) });
       }
@@ -264,7 +269,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         setIsSearchingProduct(false);
       }
     };
-    
+
     const timeoutId = setTimeout(() => {
       fetchProducts();
     }, 300);
@@ -289,7 +294,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         setIsSearchingCustomer(false);
       }
     };
-    
+
     if (customerSearchType === 'registered' && !selectedCustomer) {
       const timeoutId = setTimeout(() => {
         fetchCustomers();
@@ -320,7 +325,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         setIsSearchingDriver(false);
       }
     };
-    
+
     if (!selectedDriver) {
       const timeoutId = setTimeout(() => {
         fetchDrivers();
@@ -338,7 +343,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       } else if (customerSearchType === 'guest' && deliveryData.guest_phone) {
         params.guest_phone = deliveryData.guest_phone;
       }
-      
+
       if (params.customer_id || (params.guest_phone && params.guest_phone.length > 5)) {
         getHistoricalDestinations(params).then(res => {
           setHistoricalDestinations(res.data || res || []);
@@ -354,41 +359,41 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
   const processScannedCode = async (scannedText) => {
     const code = scannedText.includes('/p/') ? scannedText.split('/p/').pop().trim() : scannedText.trim();
     if (!code) return;
-    
+
     // First, check if it's already in the local items list to increment
     const existingItem = cartItems.find(item => item.variant?.sku === code || item.variant?.barcode === code);
     if (existingItem) {
-       updateQuantity(existingItem.variant.id, 1);
-       toast.success(`Se sumó 1 unidad de ${existingItem.variant.sku}`);
-       return;
+      updateQuantity(existingItem.variant.id, 1);
+      toast.success(`Se sumó 1 unidad de ${existingItem.variant.sku}`);
+      return;
     }
 
     // Second, check loaded products dropdown
     for (const p of products) {
-        const v = (p.product_variants || p.variants || []).find(v => v.sku === code || v.barcode === code);
-        if (v) {
-            addItem(v, p);
-            return;
-        }
+      const v = (p.product_variants || p.variants || []).find(v => v.sku === code || v.barcode === code);
+      if (v) {
+        addItem(v, p);
+        return;
+      }
     }
-    
+
     // If not found locally, fetch from backend
     try {
-        const response = await getProducts({ search: code, per_page: 5 });
-        const fetchedProducts = response.data?.data || response.data || [];
-        
-        for (const p of fetchedProducts) {
-            const v = (p.product_variants || p.variants || []).find(v => v.sku === code || v.barcode === code);
-            if (v) {
-                addItem(v, p);
-                return;
-            }
+      const response = await getProducts({ search: code, per_page: 5 });
+      const fetchedProducts = response.data?.data || response.data || [];
+
+      for (const p of fetchedProducts) {
+        const v = (p.product_variants || p.variants || []).find(v => v.sku === code || v.barcode === code);
+        if (v) {
+          addItem(v, p);
+          return;
         }
-        
-        toast.error("Producto escaneado no encontrado.", { icon: '🔍' });
+      }
+
+      toast.error("Producto escaneado no encontrado.", { icon: '🔍' });
     } catch (error) {
-        console.error("Error scanning product:", error);
-        toast.error("Error al buscar producto escaneado.");
+      console.error("Error scanning product:", error);
+      toast.error("Error al buscar producto escaneado.");
     }
   };
 
@@ -397,7 +402,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
 
   const addItem = (variant, product) => {
     const totalStock = parseInt(variant.inventories?.reduce((sum, inv) => sum + parseInt(inv.stock || inv.quantity || 0, 10), 0) || 0, 10);
-    
+
     if (totalStock <= 0) {
       toast.error("Este producto no tiene stock disponible en ninguna sucursal.");
       return;
@@ -408,10 +413,10 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       const existingItemIndex = prev.findIndex(item => {
         if (item.variant.id !== variant.id) return false;
         const currentQty = parseInt(item.quantity, 10);
-        const branchInventory = item.branch_id 
+        const branchInventory = item.branch_id
           ? item.variant.inventories?.find(inv => inv.branch_id === item.branch_id || inv.branch?.id === item.branch_id)
           : null;
-        const currentMaxStock = branchInventory 
+        const currentMaxStock = branchInventory
           ? parseInt(branchInventory.stock || branchInventory.quantity || 0, 10)
           : totalStock;
         return currentQty + 1 <= currentMaxStock;
@@ -423,11 +428,11 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         newItems[existingItemIndex] = { ...item, quantity: parseInt(item.quantity, 10) + 1 };
         return newItems;
       }
-      
+
       const availableBranches = variant.inventories?.filter(inv => parseInt(inv.stock || inv.quantity || 0, 10) >= 1) || [];
       let autoBranchId = null;
       if (availableBranches.length > 0) {
-        const sortedBranches = [...availableBranches].sort((a, b) => 
+        const sortedBranches = [...availableBranches].sort((a, b) =>
           parseInt(b.stock || b.quantity || 0, 10) - parseInt(a.stock || a.quantity || 0, 10)
         );
         autoBranchId = sortedBranches[0].branch_id || sortedBranches[0].branch?.id || null;
@@ -444,16 +449,16 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
     setCartItems(prev => {
       const index = prev.findIndex(item => item._id === itemId);
       if (index === -1) return prev;
-      
+
       const item = prev[index];
       const newQuantity = parseInt(item.quantity, 10) + parseInt(delta, 10);
-      
+
       if (newQuantity > 0) {
         if (delta > 0) {
           const totalRequestedOtherRows = prev
             .filter(i => i.variant.id === item.variant.id && i._id !== itemId)
             .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
-            
+
           if (newQuantity + totalRequestedOtherRows > parseInt(item.maxStock, 10)) {
             toast.error(`Has alcanzado el stock total disponible (${item.maxStock}) para este producto.`);
             return prev;
@@ -462,18 +467,18 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
           if (item.branch_id) {
             const branchInventory = item.variant.inventories?.find(inv => inv.branch_id === item.branch_id || inv.branch?.id === item.branch_id);
             const branchStock = parseInt(branchInventory?.stock || branchInventory?.quantity || 0, 10);
-            
+
             const branchUsedByOthers = prev
               .filter(i => i.variant.id === item.variant.id && i._id !== itemId && i.branch_id == item.branch_id)
               .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
-              
+
             if (newQuantity + branchUsedByOthers > branchStock) {
-               toast.error(`Stock insuficiente en esta sucursal. Usa el botón "Extraer de otra" para dividir.`);
-               return prev;
+              toast.error(`Stock insuficiente en esta sucursal. Usa el botón "Extraer de otra" para dividir.`);
+              return prev;
             }
           }
         }
-        
+
         const newItems = [...prev];
         newItems[index] = { ...item, quantity: newQuantity };
         return newItems;
@@ -488,7 +493,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       setDeliveryData(prev => ({ ...prev, pickup_branch_id: branchId }));
       toast.success("Sucursal de recojo sincronizada para todos los productos.");
     } else {
-      setCartItems(prev => prev.map(item => 
+      setCartItems(prev => prev.map(item =>
         item._id === itemId ? { ...item, branch_id: branchId } : item
       ));
     }
@@ -503,7 +508,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       const totalRequested = prev
         .filter(i => i.variant.id === item.variant.id)
         .reduce((sum, i) => sum + parseInt(i.quantity, 10), 0);
-        
+
       if (totalRequested >= parseInt(item.maxStock, 10)) {
         toast.error(`Has alcanzado el stock total disponible (${item.maxStock}). No puedes agregar más.`);
         return prev;
@@ -524,20 +529,41 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
   const shippingAmount = Number(deliveryData.shipping_cost || 0);
   const totalAmount = subtotalAmount + shippingAmount;
 
+  const scrollToDeliveryDetails = () => {
+    if (window.innerWidth <= 768) {
+      setTimeout(() => {
+        const modalBody = document.querySelector('.new-order-modal-body');
+        const container = document.getElementById('delivery-details-container');
+        if (modalBody && container) {
+          modalBody.scrollTo({
+            top: container.offsetTop - 20,
+            behavior: 'smooth'
+          });
+        }
+      }, 50);
+    }
+  };
+
   const handleNextStep = () => {
     if (cartItems.length === 0) {
       toast.error("Agrega al menos un producto");
       return;
     }
-    
+
     // Validate that every item has a branch selected
     const missingBranch = cartItems.find(item => !item.branch_id);
     if (missingBranch) {
       toast.error(`Selecciona la sucursal de origen para: ${missingBranch.product.name}`);
       return;
     }
-    
+
     setStep(2);
+    setTimeout(() => {
+      const modalContent = document.querySelector('.new-order-modal-content');
+      const modalBody = document.querySelector('.new-order-modal-body');
+      if (modalContent) modalContent.scrollTop = 0;
+      if (modalBody) modalBody.scrollTop = 0;
+    }, 10);
   };
 
   const handleSubmit = async (e, isDraft = false) => {
@@ -561,19 +587,19 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
           driver_id: deliveryData.driver_id,
           customer_id: deliveryData.customer_id,
           guest_name: deliveryData.guest_name,
-          guest_phone: (deliveryData.guest_country_code && deliveryData.guest_phone) 
-                        ? `${deliveryData.guest_country_code.trim()} ${deliveryData.guest_phone.trim()}` 
-                        : deliveryData.guest_phone,
+          guest_phone: (deliveryData.guest_country_code && deliveryData.guest_phone)
+            ? `${deliveryData.guest_country_code.trim()} ${deliveryData.guest_phone.trim()}`
+            : deliveryData.guest_phone,
           recipient_name: deliveryData.recipient_name,
           recipient_ci: deliveryData.recipient_ci,
           recipient_phone: deliveryData.recipient_phone,
           destination_city: deliveryData.destination_city
         };
-        
+
         if (mode === 'complete') {
           updatePayload.status = 'assigned';
         }
-        
+
         await updateOrder(editData.id, updatePayload);
         toast.success("Entrega actualizada correctamente");
         onSuccess();
@@ -589,7 +615,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
           quantity: item.quantity
         }))
       };
-      
+
       const cartRes = await createCart(cartPayload);
       const cartId = cartRes.data?.cart?.id || cartRes.cart?.id;
 
@@ -621,21 +647,21 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         recipient_phone: deliveryData.recipient_phone,
         destination_city: deliveryData.destination_city
       };
-      
+
       if (deliveryData.driver_id) orderPayload.driver_id = deliveryData.driver_id;
       if (deliveryData.guest_name) orderPayload.guest_name = deliveryData.guest_name;
       if (deliveryData.guest_phone) {
-        orderPayload.guest_phone = (deliveryData.guest_country_code) 
-            ? `${deliveryData.guest_country_code.trim()} ${deliveryData.guest_phone.trim()}`
-            : deliveryData.guest_phone;
+        orderPayload.guest_phone = (deliveryData.guest_country_code)
+          ? `${deliveryData.guest_country_code.trim()} ${deliveryData.guest_phone.trim()}`
+          : deliveryData.guest_phone;
       }
       if (deliveryData.customer_id) orderPayload.customer_id = deliveryData.customer_id;
-      
+
       const orderRes = await convertToOrder({ ...orderPayload, save_as_draft: isDraft });
       const scheduleId = orderRes.data.schedule_id;
-      
+
       toast.success(isDraft ? "Borrador guardado correctamente" : "Entrega agendada correctamente");
-      
+
       // Generate Public URL
       const publicUrl = `${window.location.origin}/tracking/${scheduleId}`;
       setGeneratedLink(publicUrl);
@@ -675,18 +701,18 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
         <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', padding: '30px' }}>
           <h2 style={{ color: 'var(--color-success)', marginBottom: '16px' }}>¡Entrega Agendada!</h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Comparte este enlace con el cliente para que pueda hacer seguimiento de su pedido.</p>
-          
-          <input 
-            type="text" 
-            readOnly 
-            value={generatedLink} 
+
+          <input
+            type="text"
+            readOnly
+            value={generatedLink}
             style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--color-primary)', textAlign: 'center', marginBottom: '16px', fontWeight: 'bold' }}
           />
-          
+
           <button className="action-btn primary" style={{ width: '100%', marginBottom: '12px', padding: '12px' }} onClick={copyLink}>
             Copiar Enlace
           </button>
-          
+
           <button className="btn-cancel" style={{ width: '100%', padding: '12px' }} onClick={() => { onClose(); onSuccess(); }}>
             Finalizar
           </button>
@@ -700,13 +726,13 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
       <div className="modal-content new-order-modal-content">
         <div className="modal-header">
           <h2>
-            {mode === 'complete' ? 'Completar Entrega' : mode === 'edit' ? 'Editar Entrega' : 'Nueva Entrega (Redes Sociales)'}
+            {mode === 'complete' ? 'Completar Entrega' : mode === 'edit' ? 'Editar Entrega' : 'Nueva Entrega'}
           </h2>
           <button className="close-btn" onClick={onClose}><X size={24} /></button>
         </div>
 
         <div className="new-order-modal-body">
-          
+
           {/* LEFT SIDE: Products or Form depending on Step */}
           <div className="new-order-left-panel">
             {step === 1 ? (
@@ -733,7 +759,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                     >
                       <Camera size={18} />
                     </button>
-                    
+
                     {isProductDropdownOpen && searchProduct && (
                       <div className="dropdown-menu cart-form-dropdown-menu">
                         {isSearchingProduct ? (
@@ -751,11 +777,11 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                               {(product.product_variants || product.variants || []).map(variant => {
                                 const totalStock = variant.inventories?.reduce((sum, inv) => sum + parseInt(inv.stock || inv.quantity || 0, 10), 0) || 0;
                                 return (
-                                  <div 
-                                    key={variant.id} 
+                                  <div
+                                    key={variant.id}
                                     className="dropdown-item variant-item cart-form-variant-item"
                                     onMouseDown={(e) => {
-                                      e.preventDefault(); 
+                                      e.preventDefault();
                                       handleAddVariant(product, variant);
                                     }}
                                   >
@@ -797,20 +823,21 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                 {step === 2 ? (
                   <>
                     <div className="delivery-sections">
-                      
+
                       {/* CARD 1: Lugar de Entrega */}
                       <div className="delivery-card">
                         <div className="form-group">
-                          <label className="delivery-label">Lugar de Entrega *</label>
+                          <label className="delivery-label">Lugar de Entrega</label>
                           <div className="delivery-type-tabs">
                             {settings.delivery_pickup !== 'false' && (
-                              <button 
-                                type="button" 
+                              <button
+                                type="button"
                                 onClick={() => {
                                   setMeetingPointType('pickup');
                                   const targetBranch = cartItems.length > 0 ? (cartItems[0].branch_id || branches[0]?.id || "") : (branches[0]?.id || "");
-                                  setDeliveryData({...deliveryData, meeting_point: "Recojo en sucursal", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'pickup', address_id: "", pickup_branch_id: targetBranch});
+                                  setDeliveryData({ ...deliveryData, meeting_point: "Recojo en sucursal", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'pickup', address_id: "", pickup_branch_id: targetBranch });
                                   setCartItems(prev => prev.map(item => ({ ...item, branch_id: targetBranch })));
+                                  scrollToDeliveryDetails();
                                 }}
                                 className={`tab-btn ${meetingPointType === 'pickup' ? 'active' : ''}`}
                               >
@@ -821,11 +848,12 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                             )}
                             {settings.delivery_scheduled_point !== 'false' && (
                               <>
-                                <button 
-                                  type="button" 
+                                <button
+                                  type="button"
                                   onClick={() => {
                                     setMeetingPointType('predefined');
-                                    setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
+                                    setDeliveryData({ ...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: "" });
+                                    scrollToDeliveryDetails();
                                   }}
                                   className={`tab-btn ${meetingPointType === 'predefined' ? 'active' : ''}`}
                                 >
@@ -833,11 +861,12 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                   <span>Punto Fijo</span>
                                   {meetingPointType === 'predefined' && <CheckCircle2 size={14} />}
                                 </button>
-                                <button 
-                                  type="button" 
+                                <button
+                                  type="button"
                                   onClick={() => {
                                     setMeetingPointType('manual');
-                                    setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: ""});
+                                    setDeliveryData({ ...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'scheduled_point', address_id: "" });
+                                    scrollToDeliveryDetails();
                                   }}
                                   className={`tab-btn ${meetingPointType === 'manual' ? 'active' : ''}`}
                                 >
@@ -848,11 +877,12 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                               </>
                             )}
                             {settings.delivery_home !== 'false' && (
-                              <button 
-                                type="button" 
+                              <button
+                                type="button"
                                 onClick={() => {
                                   setMeetingPointType('delivery');
-                                  setDeliveryData({...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'home_delivery', address_id: ""});
+                                  setDeliveryData({ ...deliveryData, meeting_point: "", latitude: null, longitude: null, shipping_cost: 0, delivery_type: 'home_delivery', address_id: "" });
+                                  scrollToDeliveryDetails();
                                 }}
                                 className={`tab-btn ${meetingPointType === 'delivery' ? 'active' : ''}`}
                               >
@@ -862,8 +892,8 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                               </button>
                             )}
                             {settings.delivery_national !== 'false' && (
-                              <button 
-                                type="button" 
+                              <button
+                                type="button"
                                 onClick={() => {
                                   setMeetingPointType('external');
                                   let recName = "";
@@ -877,8 +907,8 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                     const c = customersList.find(x => x.id === selectedCustomer.id);
                                     if (c) {
                                       recName = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}`.trim() :
-                                                  (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}`.trim() : 
-                                                  (c.user?.username || c.customer_code));
+                                        (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}`.trim() :
+                                          (c.user?.username || c.customer_code));
                                       recPhone = c.pos_profile?.whatsapp_phone || c.user?.profile?.phone || "";
                                       recCi = c.customer_code || "";
                                     } else {
@@ -886,17 +916,18 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                     }
                                   }
                                   setDeliveryData({
-                                    ...deliveryData, 
-                                    meeting_point: "", 
-                                    latitude: null, 
-                                    longitude: null, 
-                                    shipping_cost: 0, 
-                                    delivery_type: 'external', 
+                                    ...deliveryData,
+                                    meeting_point: "",
+                                    latitude: null,
+                                    longitude: null,
+                                    shipping_cost: 0,
+                                    delivery_type: 'external',
                                     address_id: "",
                                     recipient_name: recName,
                                     recipient_phone: recPhone,
                                     recipient_ci: recCi
                                   });
+                                  scrollToDeliveryDetails();
                                 }}
                                 className={`tab-btn ${meetingPointType === 'external' ? 'active' : ''}`}
                               >
@@ -907,186 +938,188 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                             )}
                           </div>
                         </div>
-                        
-                        {meetingPointType === 'pickup' ? (
-                          <div className="form-group">
-                            <label>Selecciona la Sucursal de Recojo *</label>
-                            <CustomSelect 
-                              required
-                              value={deliveryData.pickup_branch_id}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setDeliveryData({
-                                  ...deliveryData, 
-                                  pickup_branch_id: val
-                                });
-                                setCartItems(prev => prev.map(item => ({ ...item, branch_id: val })));
-                                toast.success("Stock reasignado a esta sucursal.");
-                              }}
-                            >
-                              <option value="">-- Selecciona una sucursal --</option>
-                              {branches.map(branch => (
-                                <option key={branch.id} value={branch.id}>
-                                  {branch.name}
-                                </option>
-                              ))}
-                            </CustomSelect>
-                          </div>
-                        ) : meetingPointType === 'predefined' ? (
-                          <CustomSelect 
-                            required
-                            value={deliveryData.meeting_point}
-                            onChange={(e) => {
-                              const selectedName = e.target.value;
-                              const zone = predefinedMeetingPoints.find(z => z.name === selectedName);
-                              setDeliveryData({
-                                ...deliveryData, 
-                                meeting_point: selectedName,
-                                city: zone?.city || "",
-                                original_delivery_zone_id: zone?.id || "",
-                                latitude: zone?.latitude || null,
-                                longitude: zone?.longitude || null,
-                                shipping_cost: zone ? Number(zone.base_cost) : 0
-                              });
-                            }}
-                          >
-                            <option value="">-- Selecciona un punto de encuentro --</option>
-                            {predefinedMeetingPoints.map(point => (
-                              <option key={point.id} value={point.name}>
-                                {point.name} {point.city ? `(${point.city})` : ''} - Bs. {Number(point.base_cost).toFixed(2)}
-                              </option>
-                            ))}
-                          </CustomSelect>
-                        ) : meetingPointType === 'delivery' && selectedCustomer?.addresses?.length > 0 ? (
-                          <div className="address-select-container">
-                            <CustomSelect
-                              value={deliveryData.address_id}
-                              onChange={(e) => {
-                                const addressId = e.target.value;
-                                const address = selectedCustomer.addresses.find(a => a.id === addressId);
-                                if (address) {
-                                  setDeliveryData({
-                                    ...deliveryData,
-                                    address_id: address.id,
-                                    meeting_point: `${address.street}, ${address.zone}`,
-                                    latitude: address.latitude || null,
-                                    longitude: address.longitude || null
-                                  });
-                                  if (address.latitude && address.longitude) {
-                                    setMapCenter({ lat: Number(address.latitude), lng: Number(address.longitude) });
-                                  }
-                                } else {
-                                  setDeliveryData({
-                                    ...deliveryData,
-                                    address_id: "",
-                                    meeting_point: "",
-                                    latitude: null,
-                                    longitude: null
-                                  });
-                                }
-                              }}
-                            >
-                              <option value="">-- Selecciona una dirección guardada --</option>
-                              {selectedCustomer.addresses.map(a => (
-                                <option key={a.id} value={a.id}>
-                                  {a.street}, {a.zone} {a.reference ? `(${a.reference})` : ''}
-                                </option>
-                              ))}
-                            </CustomSelect>
+
+                        <div id="delivery-details-container" style={{ width: '100%' }}>
+                          {meetingPointType === 'pickup' ? (
                             <div className="form-group">
-                              <label>Costo de Envío (Bs) *</label>
-                              <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({...deliveryData, shipping_cost: e.target.value})} />
-                            </div>
-                          </div>
-                        ) : meetingPointType === 'external' ? (
-                          <div className="form-group" style={{ margin: 0, padding: '10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '8px', fontSize: '13px' }}>
-                            <MapPin size={16} style={{ display: 'inline', marginRight: '6px' }} />
-                            Para envíos a Nivel Nacional, por favor llena los detalles de destino y la persona que recibe en la sección inferior.
-                          </div>
-                        ) : (
-                          <div className="manual-location-container">
-                            <div className="form-group">
-                              <label>Pegar Link de Google Maps o Coordenadas (Opcional)</label>
-                              <input 
-                                type="text" 
-                                className="form-control"
-                                placeholder="Pega el enlace largo de Google Maps o coordenadas (ej: -17.38, -66.15)"
-                                onChange={(e) => {
-                                  const url = e.target.value;
-                                  if (!url) return;
-                                  
-                                  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-                                  const dMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-                                  const simpleMatch = url.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
-                                  
-                                  let lat = null, lng = null;
-                                  
-                                  if (atMatch) { lat = parseFloat(atMatch[1]); lng = parseFloat(atMatch[2]); }
-                                  else if (dMatch) { lat = parseFloat(dMatch[1]); lng = parseFloat(dMatch[2]); }
-                                  else if (simpleMatch) { lat = parseFloat(simpleMatch[1]); lng = parseFloat(simpleMatch[2]); }
-                                  
-                                  if (lat !== null && lng !== null) {
-                                    setMapCenter({ lat, lng });
-                                    setDeliveryData(prev => ({ ...prev, latitude: lat, longitude: lng }));
-                                    toast.success("Ubicación detectada correctamente");
-                                    e.target.value = '';
-                                  } else if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
-                                    toast.error("Por favor abre el link corto en tu navegador y pega el enlace completo que aparece en la barra de direcciones.");
-                                  }
-                                }}
-                              />
-                              <label>Especifica la Dirección o Lugar *</label>
-                              <input 
-                                type="text" 
+                              <label>Selecciona la Sucursal de Recojo</label>
+                              <CustomSelect
                                 required
-                                className="form-control"
-                                placeholder="Ej: Av. Las Américas, Edificio Los Pinos Piso 4..."
-                                value={deliveryData.meeting_point}
-                                onChange={(e) => setDeliveryData({...deliveryData, meeting_point: e.target.value})}
-                              />
-                            </div>
-                            
-                            <div className="map-container">
-                              <GoogleMapWrapper
-                                mapContainerStyle={{ width: '100%', height: '300px' }}
-                                center={deliveryData.latitude && deliveryData.longitude ? { lat: Number(deliveryData.latitude), lng: Number(deliveryData.longitude) } : mapCenter}
-                                zoom={13}
-                                onClick={(e) => {
+                                value={deliveryData.pickup_branch_id}
+                                onChange={(e) => {
+                                  const val = e.target.value;
                                   setDeliveryData({
                                     ...deliveryData,
-                                    latitude: e.latLng.lat(),
-                                    longitude: e.latLng.lng()
+                                    pickup_branch_id: val
                                   });
+                                  setCartItems(prev => prev.map(item => ({ ...item, branch_id: val })));
+                                  toast.success("Stock reasignado a esta sucursal.");
                                 }}
-                                loadingElement={<div style={{ padding: '2rem', textAlign: 'center' }}>Cargando mapa...</div>}
                               >
-                                {deliveryData.latitude && deliveryData.longitude && (
-                                  <MarkerF position={{ lat: Number(deliveryData.latitude), lng: Number(deliveryData.longitude) }} />
-                                )}
-                              </GoogleMapWrapper>
+                                <option value="">-- Selecciona una sucursal --</option>
+                                {branches.map(branch => (
+                                  <option key={branch.id} value={branch.id}>
+                                    {branch.name}
+                                  </option>
+                                ))}
+                              </CustomSelect>
                             </div>
-                            <small>
-                              * Haz clic en el mapa para marcar el punto exacto de entrega. 
-                              {deliveryData.latitude && ` (Lat: ${Number(deliveryData.latitude).toFixed(5)}, Lng: ${Number(deliveryData.longitude).toFixed(5)})`}
-                            </small>
-                            <div className="form-group">
-                              <label>Costo de Envío (Bs) *</label>
-                              <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({...deliveryData, shipping_cost: e.target.value})} />
+                          ) : meetingPointType === 'predefined' ? (
+                            <CustomSelect
+                              required
+                              value={deliveryData.meeting_point}
+                              onChange={(e) => {
+                                const selectedName = e.target.value;
+                                const zone = predefinedMeetingPoints.find(z => z.name === selectedName);
+                                setDeliveryData({
+                                  ...deliveryData,
+                                  meeting_point: selectedName,
+                                  city: zone?.city || "",
+                                  original_delivery_zone_id: zone?.id || "",
+                                  latitude: zone?.latitude || null,
+                                  longitude: zone?.longitude || null,
+                                  shipping_cost: zone ? Number(zone.base_cost) : 0
+                                });
+                              }}
+                            >
+                              <option value="">-- Selecciona un punto de encuentro --</option>
+                              {predefinedMeetingPoints.map(point => (
+                                <option key={point.id} value={point.name}>
+                                  {point.name} {point.city ? `(${point.city})` : ''} - Bs. {Number(point.base_cost).toFixed(2)}
+                                </option>
+                              ))}
+                            </CustomSelect>
+                          ) : meetingPointType === 'delivery' && selectedCustomer?.addresses?.length > 0 ? (
+                            <div className="address-select-container">
+                              <CustomSelect
+                                value={deliveryData.address_id}
+                                onChange={(e) => {
+                                  const addressId = e.target.value;
+                                  const address = selectedCustomer.addresses.find(a => a.id === addressId);
+                                  if (address) {
+                                    setDeliveryData({
+                                      ...deliveryData,
+                                      address_id: address.id,
+                                      meeting_point: `${address.street}, ${address.zone}`,
+                                      latitude: address.latitude || null,
+                                      longitude: address.longitude || null
+                                    });
+                                    if (address.latitude && address.longitude) {
+                                      setMapCenter({ lat: Number(address.latitude), lng: Number(address.longitude) });
+                                    }
+                                  } else {
+                                    setDeliveryData({
+                                      ...deliveryData,
+                                      address_id: "",
+                                      meeting_point: "",
+                                      latitude: null,
+                                      longitude: null
+                                    });
+                                  }
+                                }}
+                              >
+                                <option value="">-- Selecciona una dirección guardada --</option>
+                                {selectedCustomer.addresses.map(a => (
+                                  <option key={a.id} value={a.id}>
+                                    {a.street}, {a.zone} {a.reference ? `(${a.reference})` : ''}
+                                  </option>
+                                ))}
+                              </CustomSelect>
+                              <div className="form-group">
+                                <label>Costo de Envío (Bs)</label>
+                                <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({ ...deliveryData, shipping_cost: e.target.value })} />
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          ) : meetingPointType === 'external' ? (
+                            <div style={{ margin: '-10px 0 5px 0', padding: '8px 10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '6px', fontSize: '11.5px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px' }}>
+                              <MapPin size={15} style={{ flexShrink: 0 }} />
+                              <span style={{ lineHeight: '1.3' }}>Para envíos a Nivel Nacional, por favor llena los detalles de destino abajo.</span>
+                            </div>
+                          ) : (
+                            <div className="manual-location-container">
+                              <div className="form-group">
+                                <label>Pegar Link de Google Maps o Coordenadas (Opcional)</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  placeholder="Pega el enlace largo de Google Maps o coordenadas (ej: -17.38, -66.15)"
+                                  onChange={(e) => {
+                                    const url = e.target.value;
+                                    if (!url) return;
+
+                                    const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                                    const dMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+                                    const simpleMatch = url.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+
+                                    let lat = null, lng = null;
+
+                                    if (atMatch) { lat = parseFloat(atMatch[1]); lng = parseFloat(atMatch[2]); }
+                                    else if (dMatch) { lat = parseFloat(dMatch[1]); lng = parseFloat(dMatch[2]); }
+                                    else if (simpleMatch) { lat = parseFloat(simpleMatch[1]); lng = parseFloat(simpleMatch[2]); }
+
+                                    if (lat !== null && lng !== null) {
+                                      setMapCenter({ lat, lng });
+                                      setDeliveryData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+                                      toast.success("Ubicación detectada correctamente");
+                                      e.target.value = '';
+                                    } else if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
+                                      toast.error("Por favor abre el link corto en tu navegador y pega el enlace completo que aparece en la barra de direcciones.");
+                                    }
+                                  }}
+                                />
+                                <label>Especifica la Dirección o Lugar</label>
+                                <input
+                                  type="text"
+                                  required
+                                  className="form-control"
+                                  placeholder="Ej: Av. Las Américas, Edificio Los Pinos Piso 4..."
+                                  value={deliveryData.meeting_point}
+                                  onChange={(e) => setDeliveryData({ ...deliveryData, meeting_point: e.target.value })}
+                                />
+                              </div>
+
+                              <div className="map-container">
+                                <GoogleMapWrapper
+                                  mapContainerStyle={{ width: '100%', height: '300px' }}
+                                  center={deliveryData.latitude && deliveryData.longitude ? { lat: Number(deliveryData.latitude), lng: Number(deliveryData.longitude) } : mapCenter}
+                                  zoom={13}
+                                  onClick={(e) => {
+                                    setDeliveryData({
+                                      ...deliveryData,
+                                      latitude: e.latLng.lat(),
+                                      longitude: e.latLng.lng()
+                                    });
+                                  }}
+                                  loadingElement={<div style={{ padding: '2rem', textAlign: 'center' }}>Cargando mapa...</div>}
+                                >
+                                  {deliveryData.latitude && deliveryData.longitude && (
+                                    <MarkerF position={{ lat: Number(deliveryData.latitude), lng: Number(deliveryData.longitude) }} />
+                                  )}
+                                </GoogleMapWrapper>
+                              </div>
+                              <small>
+                                Haz clic en el mapa para marcar el punto exacto de entrega.
+                                {deliveryData.latitude && ` (Lat: ${Number(deliveryData.latitude).toFixed(5)}, Lng: ${Number(deliveryData.longitude).toFixed(5)})`}
+                              </small>
+                              <div className="form-group">
+                                <label>Costo de Envío (Bs)</label>
+                                <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.shipping_cost} onChange={(e) => setDeliveryData({ ...deliveryData, shipping_cost: e.target.value })} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* CARD 2: Datos del Cliente */}
                       <div className="delivery-card">
                         <div className="form-group">
-                          <label className="delivery-label">Datos del Cliente *</label>
+                          <label className="delivery-label">Datos del Cliente</label>
                           <div className="delivery-type-tabs">
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               onClick={() => {
                                 setCustomerSearchType('guest');
-                                setDeliveryData({...deliveryData, customer_id: ""});
+                                setDeliveryData({ ...deliveryData, customer_id: "" });
                                 setSelectedCustomer(null);
                               }}
                               className={`tab-btn ${customerSearchType === 'guest' ? 'active' : ''}`}
@@ -1095,11 +1128,11 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                               <span>Invitado / Nuevo</span>
                               {customerSearchType === 'guest' && <CheckCircle2 size={14} />}
                             </button>
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               onClick={() => {
                                 setCustomerSearchType('registered');
-                                setDeliveryData({...deliveryData, guest_name: "", guest_phone: ""});
+                                setDeliveryData({ ...deliveryData, guest_name: "", guest_phone: "" });
                               }}
                               className={`tab-btn ${customerSearchType === 'registered' ? 'active' : ''}`}
                             >
@@ -1112,59 +1145,59 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                           {customerSearchType === 'guest' ? (
                             <div className="guest-fields">
                               <div className="form-group">
-                                <label>Nombre Completo *</label>
-                                <input type="text" required={customerSearchType === 'guest'} className="form-control" value={deliveryData.guest_name} onChange={(e) => setDeliveryData({...deliveryData, guest_name: e.target.value})} />
+                                <label>Nombre Completo</label>
+                                <input type="text" required={customerSearchType === 'guest'} className="form-control" value={deliveryData.guest_name} onChange={(e) => setDeliveryData({ ...deliveryData, guest_name: e.target.value })} />
                               </div>
                               <div className="form-group">
-                                <label>Teléfono (WhatsApp) *</label>
+                                <label>Teléfono (WhatsApp)</label>
                                 <div className="phone-fields">
-                                  <input 
-                                    type="text" 
-                                    required={customerSearchType === 'guest'} 
-                                    className="form-control" 
+                                  <input
+                                    type="text"
+                                    required={customerSearchType === 'guest'}
+                                    className="form-control"
                                     placeholder="+591"
-                                    value={deliveryData.guest_country_code} 
-                                    onChange={(e) => setDeliveryData({...deliveryData, guest_country_code: e.target.value})} 
+                                    value={deliveryData.guest_country_code}
+                                    onChange={(e) => setDeliveryData({ ...deliveryData, guest_country_code: e.target.value })}
                                   />
-                                  <input 
-                                    type="text" 
-                                    required={customerSearchType === 'guest'} 
-                                    className="form-control" 
+                                  <input
+                                    type="text"
+                                    required={customerSearchType === 'guest'}
+                                    className="form-control"
                                     placeholder="Ej: 63194677"
-                                    value={deliveryData.guest_phone} 
-                                    onChange={(e) => setDeliveryData({...deliveryData, guest_phone: e.target.value})} 
+                                    value={deliveryData.guest_phone}
+                                    onChange={(e) => setDeliveryData({ ...deliveryData, guest_phone: e.target.value })}
                                   />
                                 </div>
                               </div>
                             </div>
                           ) : (
                             <div className="form-group">
-                              <label>Buscar Cliente Registrado *</label>
+                              <label>Buscar Cliente Registrado</label>
                               {selectedCustomer ? (
                                 <div className="selected-item">
                                   <span style={{ fontWeight: 600 }}>{selectedCustomer.name}</span>
-                                  <button 
-                                    type="button" 
-                                    onClick={() => { 
-                                      setSelectedCustomer(null); 
-                                      setDeliveryData({...deliveryData, customer_id: ""}); 
-                                      setCustomerSearchQuery(""); 
-                                    }} 
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedCustomer(null);
+                                      setDeliveryData({ ...deliveryData, customer_id: "" });
+                                      setCustomerSearchQuery("");
+                                    }}
                                   >
                                     <X size={16} />
                                   </button>
                                 </div>
                               ) : (
                                 <>
-                                  <input 
-                                    type="text" 
-                                    className="form-control" 
-                                    placeholder="Buscar por nombre, teléfono o código..." 
-                                    value={customerSearchQuery} 
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Buscar por nombre, teléfono o código..."
+                                    value={customerSearchQuery}
                                     onChange={(e) => {
                                       setCustomerSearchQuery(e.target.value);
                                       setIsCustomerDropdownOpen(true);
-                                    }} 
+                                    }}
                                     onFocus={() => setIsCustomerDropdownOpen(true)}
                                   />
                                   {isCustomerDropdownOpen && customerSearchQuery.trim() && (
@@ -1176,23 +1209,26 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                       ) : (
                                         customersList.map(c => {
                                           const name = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}` :
-                                                      (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` : 
-                                                      (c.user?.username || c.customer_code));
+                                            (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}` :
+                                              (c.user?.username || c.customer_code));
                                           const phone = c.pos_profile?.phone || c.user?.profile?.phone || "Sin Teléfono";
-                                          
+
                                           return (
-                                            <div 
-                                              key={c.id} 
-                                              className="dropdown-item" 
+                                            <div
+                                              key={c.id}
+                                              className="dropdown-item"
+                                              style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', padding: '10px 12px', lineHeight: '1.4' }}
                                               onMouseDown={(e) => {
                                                 e.preventDefault();
                                                 setSelectedCustomer({ id: c.id, name: name.trim(), addresses: c.addresses || [] });
-                                                setDeliveryData({...deliveryData, customer_id: c.id});
+                                                setDeliveryData({ ...deliveryData, customer_id: c.id });
                                                 setIsCustomerDropdownOpen(false);
                                               }}
                                             >
-                                              <div style={{ fontWeight: 600 }}>{name.trim()}</div>
-                                              <div style={{ fontSize: '12px' }}>Tel: {phone} | Cód: {c.customer_code}</div>
+                                              <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>{name.trim()}</div>
+                                              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                                {c.user?.email ? `${c.user.email} | ` : ''}Tel: {phone} | Cód: {c.customer_code}
+                                              </div>
                                             </div>
                                           );
                                         })
@@ -1213,17 +1249,20 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                           <h4 style={{ margin: 0, marginBottom: '15px' }}>Destino y Persona que Recibe</h4>
                           <div className="external-location-container" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div className="form-group" style={{ margin: 0 }}>
-                              <label>Ciudad / Departamento de Destino *</label>
-                              <input 
+                              <label style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}>
+                                <MapPin size={14} /> Ciudad / Departamento de Destino
+                              </label>
+                              <input
                                 type="text"
                                 className="form-control"
+                                style={{ padding: '12px', borderRadius: '8px' }}
                                 placeholder="Ej: Santa Cruz, Cochabamba, Sucre..."
                                 required
                                 value={deliveryData.meeting_point}
                                 onFocus={() => setIsDestinationsDropdownOpen(true)}
                                 onBlur={() => setIsDestinationsDropdownOpen(false)}
                                 onChange={e => {
-                                  setDeliveryData({...deliveryData, meeting_point: e.target.value, destination_city: e.target.value});
+                                  setDeliveryData({ ...deliveryData, meeting_point: e.target.value, destination_city: e.target.value });
                                   setIsDestinationsDropdownOpen(true);
                                 }}
                               />
@@ -1237,7 +1276,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                         type="button"
                                         onMouseDown={(e) => {
                                           e.preventDefault(); // Prevent onBlur from firing before click
-                                          setDeliveryData({...deliveryData, meeting_point: dest, destination_city: dest});
+                                          setDeliveryData({ ...deliveryData, meeting_point: dest, destination_city: dest });
                                           setIsDestinationsDropdownOpen(false);
                                         }}
                                         style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '16px', background: 'var(--color-primary-alpha)', border: '1px solid rgba(139, 92, 246, 0.3)', cursor: 'pointer', color: 'var(--color-primary)', fontWeight: '500' }}
@@ -1250,13 +1289,13 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                 </div>
                               )}
                             </div>
-                            
-                            <div style={{ padding: '15px', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                                <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-main)' }}>Datos de Quien Recibe el Paquete</h4>
-                                <button 
+
+                            <div style={{ padding: '20px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+                                <h4 style={{ margin: 0, fontSize: '15px', color: 'var(--text-main)', fontWeight: '600' }}>Datos de Quien Recibe</h4>
+                                <button
                                   type="button"
-                                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px', background: 'var(--color-primary-alpha)', color: 'var(--color-primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                  style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '20px', background: 'var(--color-primary)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '500', boxShadow: '0 2px 4px rgba(139, 92, 246, 0.3)' }}
                                   onClick={() => {
                                     let recName = "";
                                     let recPhone = "";
@@ -1269,8 +1308,8 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                       const c = customersList.find(x => x.id === selectedCustomer.id);
                                       if (c) {
                                         recName = c.pos_profile ? `${c.pos_profile.first_name} ${c.pos_profile.last_name_paternal || ''}`.trim() :
-                                                    (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}`.trim() : 
-                                                    (c.user?.username || c.customer_code));
+                                          (c.user?.profile ? `${c.user.profile.first_name} ${c.user.profile.last_name_paternal || ''}`.trim() :
+                                            (c.user?.username || c.customer_code));
                                         recPhone = c.pos_profile?.whatsapp_phone || c.user?.profile?.phone || "";
                                         recCi = c.customer_code || "";
                                       } else {
@@ -1281,46 +1320,46 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                     toast.success("Datos copiados del comprador");
                                   }}
                                 >
-                                  <UserCheck size={14} /> Usar datos del comprador
+                                  <Copy size={14} /> Copiar
                                 </button>
                               </div>
 
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                 <div className="form-group" style={{ margin: 0 }}>
-                                  <label>Nombre Completo *</label>
-                                  <input type="text" className="form-control" required value={deliveryData.recipient_name} onChange={e => setDeliveryData({...deliveryData, recipient_name: e.target.value})} placeholder="Nombre de quien recoge" />
+                                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Nombre Completo</label>
+                                  <input type="text" className="form-control" style={{ padding: '12px', borderRadius: '8px' }} required value={deliveryData.recipient_name} onChange={e => setDeliveryData({ ...deliveryData, recipient_name: e.target.value })} placeholder="Nombre de quien recoge" />
                                 </div>
                                 <div className="form-group" style={{ margin: 0 }}>
-                                  <label>Carnet de Identidad (CI) *</label>
-                                  <input type="text" className="form-control" required value={deliveryData.recipient_ci} onChange={e => setDeliveryData({...deliveryData, recipient_ci: e.target.value})} placeholder="Nro de CI" />
+                                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Carnet de Identidad (CI)</label>
+                                  <input type="text" className="form-control" style={{ padding: '12px', borderRadius: '8px' }} required value={deliveryData.recipient_ci} onChange={e => setDeliveryData({ ...deliveryData, recipient_ci: e.target.value })} placeholder="Nro de CI" />
                                 </div>
-                                <div className="form-group" style={{ margin: 0, gridColumn: '1 / -1' }}>
-                                  <label>Teléfono de Contacto *</label>
-                                  <div className="phone-fields">
-                                    <input type="text" className="form-control" placeholder="+591" 
-                                      value={(deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ')[0] : '+591'} 
+                                <div className="form-group" style={{ margin: 0 }}>
+                                  <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Teléfono de Contacto</label>
+                                  <div className="phone-fields" style={{ display: 'flex', gap: '10px' }}>
+                                    <input type="text" className="form-control" style={{ width: '80px', padding: '12px', borderRadius: '8px', textAlign: 'center' }} placeholder="+591"
+                                      value={(deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ')[0] : '+591'}
                                       onChange={e => {
                                         const code = e.target.value;
                                         const num = (deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ').slice(1).join(' ') : (deliveryData.recipient_phone || '');
-                                        setDeliveryData({...deliveryData, recipient_phone: `${code} ${num}`.trim()});
-                                      }} 
+                                        setDeliveryData({ ...deliveryData, recipient_phone: `${code} ${num}`.trim() });
+                                      }}
                                     />
-                                    <input type="text" className="form-control" required placeholder="Número de celular" 
-                                      value={(deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ').slice(1).join(' ') : (deliveryData.recipient_phone || '')} 
+                                    <input type="text" className="form-control" style={{ flex: 1, padding: '12px', borderRadius: '8px' }} required placeholder="Número de celular"
+                                      value={(deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ').slice(1).join(' ') : (deliveryData.recipient_phone || '')}
                                       onChange={e => {
                                         const num = e.target.value;
                                         const code = (deliveryData.recipient_phone || '').includes(' ') ? (deliveryData.recipient_phone || '').split(' ')[0] : '+591';
-                                        setDeliveryData({...deliveryData, recipient_phone: `${code} ${num}`.trim()});
-                                      }} 
+                                        setDeliveryData({ ...deliveryData, recipient_phone: `${code} ${num}`.trim() });
+                                      }}
                                     />
                                   </div>
                                 </div>
                               </div>
                             </div>
-                            
+
                             <div className="form-group" style={{ margin: 0, marginTop: '5px' }}>
-                              <label>Costo de Envío a Agencia (Bs) *</label>
-                              <input type="number" min="0" step="0.5" className="form-control" required value={deliveryData.agency_dispatch_cost || ''} onChange={(e) => setDeliveryData({...deliveryData, agency_dispatch_cost: e.target.value})} />
+                              <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Costo de Envío a Agencia (Bs)</label>
+                              <input type="number" min="0" step="0.5" className="form-control" style={{ padding: '12px', borderRadius: '8px' }} required value={deliveryData.agency_dispatch_cost || ''} onChange={(e) => setDeliveryData({ ...deliveryData, agency_dispatch_cost: e.target.value })} />
                             </div>
                           </div>
                         </div>
@@ -1329,34 +1368,34 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                       {/* CARD 3: Información de entrega */}
                       <div className="delivery-card">
                         <h4 style={{ margin: 0 }}>Información de entrega</h4>
-                        
+
                         <div className="form-group">
                           <label>Encargado de la Entrega (Opcional)</label>
                           {selectedDriver ? (
                             <div className="selected-item">
                               <span style={{ fontWeight: 600 }}>{selectedDriver.name}</span>
-                              <button 
-                                type="button" 
-                                onClick={() => { 
-                                  setSelectedDriver(null); 
-                                  setDeliveryData({...deliveryData, driver_id: ""}); 
-                                  setDriverSearchQuery(""); 
-                                }} 
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedDriver(null);
+                                  setDeliveryData({ ...deliveryData, driver_id: "" });
+                                  setDriverSearchQuery("");
+                                }}
                               >
                                 <X size={16} />
                               </button>
                             </div>
                           ) : (
                             <>
-                              <input 
-                                type="text" 
-                                className="form-control" 
-                                placeholder="Buscar repartidor por nombre, teléfono o código..." 
-                                value={driverSearchQuery} 
+                              <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Buscar repartidor por nombre, teléfono o código..."
+                                value={driverSearchQuery}
                                 onChange={(e) => {
                                   setDriverSearchQuery(e.target.value);
                                   setIsDriverDropdownOpen(true);
-                                }} 
+                                }}
                                 onFocus={() => setIsDriverDropdownOpen(true)}
                               />
                               {isDriverDropdownOpen && (
@@ -1369,18 +1408,21 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                                     deliveryDrivers.map(employee => {
                                       const name = `${employee.user?.profile?.first_name || ''} ${employee.user?.profile?.last_name_paternal || ''}`.trim();
                                       return (
-                                        <div 
-                                          key={employee.id} 
-                                          className="dropdown-item" 
+                                        <div
+                                          key={employee.id}
+                                          className="dropdown-item"
+                                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', padding: '10px 12px', lineHeight: '1.4' }}
                                           onMouseDown={(e) => {
                                             e.preventDefault();
                                             setSelectedDriver({ id: employee.id, name });
-                                            setDeliveryData({...deliveryData, driver_id: employee.id});
+                                            setDeliveryData({ ...deliveryData, driver_id: employee.id });
                                             setIsDriverDropdownOpen(false);
                                           }}
                                         >
-                                          <div style={{ fontWeight: 600 }}>{name || `Empleado ${employee.employee_code}`}</div>
-                                          <div style={{ fontSize: '12px' }}>Tel: {employee.phone} | Cód: {employee.employee_code}</div>
+                                          <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>{name || `Empleado ${employee.employee_code}`}</div>
+                                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                            {employee.user?.email ? `${employee.user.email} | ` : ''}Tel: {employee.phone || employee.user?.profile?.phone || 'Sin Teléfono'} | Cód: {employee.employee_code}
+                                          </div>
                                         </div>
                                       );
                                     })
@@ -1391,14 +1433,47 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                           )}
                         </div>
 
-                        <div className="date-time-fields">
-                          <div className="form-group">
-                            <label>Fecha de Programación *</label>
-                            <input type="date" required className="form-control" value={deliveryData.scheduled_date} onChange={(e) => setDeliveryData({...deliveryData, scheduled_date: e.target.value})} />
+                        <div className="date-time-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                          <div className="form-group" style={{ margin: 0 }}>
+                            <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Fecha de Programación</label>
+                            <div style={{ position: 'relative' }}>
+                              <Calendar size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 2 }} />
+                              <DatePicker 
+                                selected={deliveryData.scheduled_date ? new Date(deliveryData.scheduled_date + 'T00:00:00') : null}
+                                onChange={(date) => {
+                                   const formatted = date ? date.toISOString().split('T')[0] : '';
+                                   setDeliveryData({...deliveryData, scheduled_date: formatted});
+                                }}
+                                dateFormat="dd/MM/yyyy"
+                                className="form-control"
+                                placeholderText="Selecciona una fecha"
+                                required
+                                locale="es"
+                                wrapperClassName="date-picker-wrapper"
+                              />
+                            </div>
                           </div>
-                          <div className="form-group">
-                            <label>Hora (Estimada) *</label>
-                            <input type="time" required className="form-control" value={deliveryData.time_window} onChange={(e) => setDeliveryData({...deliveryData, time_window: e.target.value})} />
+                          <div className="form-group" style={{ margin: 0 }}>
+                            <label style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Hora (Estimada)</label>
+                            <div style={{ position: 'relative' }}>
+                              <Clock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 2 }} />
+                              <DatePicker 
+                                selected={deliveryData.time_window ? new Date(`1970-01-01T${deliveryData.time_window}:00`) : null}
+                                onChange={(date) => {
+                                   const formatted = date ? `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}` : '';
+                                   setDeliveryData({...deliveryData, time_window: formatted});
+                                }}
+                                showTimeSelect
+                                showTimeSelectOnly
+                                timeIntervals={15}
+                                timeCaption="Hora"
+                                dateFormat="HH:mm"
+                                className="form-control"
+                                placeholderText="Ej: 14:30"
+                                required
+                                wrapperClassName="date-picker-wrapper"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1414,7 +1489,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
             <h3>
               <ShoppingCart size={20} /> Resumen
             </h3>
-            
+
             <div className="cart-items-list">
               {cartItems.length === 0 ? (
                 <div className="empty-cart-message">
@@ -1443,7 +1518,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
 
                   return (
                     <div key={item._id} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '12px' }}>
-                      
+
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontWeight: 500, fontSize: '14px' }}>{item.product.name}</span>
@@ -1459,7 +1534,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Extraer stock de:</label>
-                        <CustomSelect 
+                        <CustomSelect
                           style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '6px', border: (!item.branch_id || isStockInsufficient) ? '1px solid var(--color-danger)' : '1px solid var(--border-color)' }}
                           value={item.branch_id || ''}
                           onChange={(e) => updateItemBranch(item._id, e.target.value)}
@@ -1472,10 +1547,10 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                           ))}
                         </CustomSelect>
                         {isStockInsufficient && (
-                           <span style={{ fontSize: '11px', color: 'var(--color-danger)', marginTop: '2px', fontWeight: 500 }}>Stock insuficiente para el pedido</span>
+                          <span style={{ fontSize: '11px', color: 'var(--color-danger)', marginTop: '2px', fontWeight: 500 }}>Stock insuficiente para el pedido</span>
                         )}
                         {!isStockInsufficient && !item.branch_id && (
-                           <span style={{ fontSize: '11px', color: 'var(--color-warning)', marginTop: '2px', fontWeight: 500 }}>Debe seleccionar una sucursal</span>
+                          <span style={{ fontSize: '11px', color: 'var(--color-warning)', marginTop: '2px', fontWeight: 500 }}>Debe seleccionar una sucursal</span>
                         )}
                       </div>
 
@@ -1485,10 +1560,10 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                           <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
                           <button onClick={() => updateQuantity(item._id, 1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '4px' }}><Plus size={14} /></button>
                         </div>
-                        
+
                         {canDuplicate && (
-                          <button 
-                            onClick={() => duplicateItem(item)} 
+                          <button
+                            onClick={() => duplicateItem(item)}
                             style={{ background: 'transparent', border: '1px dashed var(--color-primary)', color: 'var(--color-primary)', fontSize: '11px', fontWeight: 600, padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
                           >
                             + Extraer de otra
@@ -1503,7 +1578,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
             </div>
 
             <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-muted)' }}>
                   <span>Subtotal:</span>
@@ -1518,11 +1593,11 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                   <span style={{ color: 'var(--color-primary)' }}>Bs. {totalAmount.toFixed(2)}</span>
                 </div>
               </div>
-              
+
               {step === 1 ? (() => {
                 const isValidToContinue = cartItems.length > 0 && cartItems.every(item => {
                   if (!item.branch_id) return false;
-                  
+
                   const usedByOtherRowsInBranch = (branchId) => {
                     return cartItems
                       .filter(i => i.variant.id === item.variant.id && i._id !== item._id && i.branch_id == branchId)
@@ -1541,18 +1616,18 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
 
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <button 
-                      style={{ 
-                        boxSizing: 'border-box', 
-                        width: '100%', 
-                        padding: '14px', 
-                        borderRadius: '10px', 
-                        fontSize: '15px', 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        gap: '8px', 
-                        opacity: !isValidToContinue ? 0.5 : 1, 
+                    <button
+                      style={{
+                        boxSizing: 'border-box',
+                        width: '100%',
+                        padding: '14px',
+                        borderRadius: '10px',
+                        fontSize: '15px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '8px',
+                        opacity: !isValidToContinue ? 0.5 : 1,
                         cursor: !isValidToContinue ? 'not-allowed' : 'pointer',
                         background: 'var(--color-primary)',
                         color: 'var(--color-primary-text)',
@@ -1569,9 +1644,9 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                     </button>
                     {editData && (
                       <CanAccess permission="cancel_orders">
-                        <button 
+                        <button
                           type="button"
-                          className="btn-cancelar" 
+                          className="btn-cancelar"
                           style={{ width: '100%', padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontWeight: 500, transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                           onClick={() => setShowCancelModal(true)}
                           disabled={loading}
@@ -1585,22 +1660,22 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
               })() : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <CanAccess permission={editData ? 'edit_orders' : 'create_orders'}>
-                    <button 
+                    <button
                       type="submit"
                       form="delivery-form"
-                      style={{ 
-                        boxSizing: 'border-box', 
-                        width: '100%', 
-                        padding: '14px', 
-                        borderRadius: '10px', 
-                        fontSize: '15px', 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        gap: '8px', 
-                        cursor: loading ? 'not-allowed' : 'pointer', 
-                        opacity: loading ? 0.7 : 1, 
-                        fontWeight: 600, 
+                      style={{
+                        boxSizing: 'border-box',
+                        width: '100%',
+                        padding: '14px',
+                        borderRadius: '10px',
+                        fontSize: '15px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        opacity: loading ? 0.7 : 1,
+                        fontWeight: 600,
                         boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
                         background: 'var(--color-success)',
                         color: 'white',
@@ -1614,22 +1689,30 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                       {loading ? "Procesando..." : (mode === 'complete' ? "Completar" : mode === 'edit' ? "Guardar Cambios" : "Crear Entrega")}
                     </button>
                   </CanAccess>
-                  
+
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button 
+                    <button
                       type="button"
-                      className="btn-cancel" 
+                      className="btn-cancel"
                       style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                      onClick={() => setStep(1)}
+                      onClick={() => {
+                        setStep(1);
+                        setTimeout(() => {
+                          const modalContent = document.querySelector('.new-order-modal-content');
+                          const modalBody = document.querySelector('.new-order-modal-body');
+                          if (modalContent) modalContent.scrollTop = 0;
+                          if (modalBody) modalBody.scrollTop = 0;
+                        }, 10);
+                      }}
                       disabled={loading}
                     >
                       Volver
                     </button>
                     {!editData && (
                       <CanAccess permission="create_orders">
-                        <button 
+                        <button
                           type="button"
-                          className="btn-cancel" 
+                          className="btn-cancel"
                           style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px dashed var(--border-color)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
                           onClick={() => handleSubmit(null, true)}
                           disabled={loading}
@@ -1640,9 +1723,9 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
                     )}
                     {editData && (
                       <CanAccess permission="cancel_orders">
-                        <button 
+                        <button
                           type="button"
-                          className="btn-cancelar" 
+                          className="btn-cancelar"
                           style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontWeight: 500, transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                           onClick={() => setShowCancelModal(true)}
                           disabled={loading}
@@ -1668,10 +1751,10 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
             </div>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', color: 'var(--text-main)' }}>Cancelar Entrega</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '24px', lineHeight: '1.5' }}>
-              ¿Estás seguro de que deseas cancelar esta entrega? <br/><strong>Esta acción no se puede deshacer.</strong>
+              ¿Estás seguro de que deseas cancelar esta entrega? <br /><strong>Esta acción no se puede deshacer.</strong>
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowCancelModal(false)}
                 style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
@@ -1679,7 +1762,7 @@ export default function NewOrderModal({ editData, mode = "create", onClose, onSu
               >
                 Cerrar
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={handleCancelDelivery}
                 style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 600 }}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getCarts } from "../../../../api/admin/carts";
 import { getDeliverySchedules, getDeliveryDrivers } from "../../../../api/admin/orderNetwork";
-import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle, Store } from "lucide-react";
+import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle, Store, Mail, Hash } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { FRONTEND_URL } from "../../../../config/api";
 
@@ -554,11 +554,67 @@ export default function Orders() {
                     <div key={schedule.id} className={`bubble-row bubble-status-${schedule.status} ${isCompleted ? 'is-completed' : ''}`}>
                       <div className="bubble-left">
                         <span className="bubble-time">{schedule.time_window || "N/A"}</span>
-                        <span className="bubble-ref">Ref: {schedule.shipment?.delivery_code || schedule.id.slice(0,8)}</span>
+                        <span className="bubble-ref" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Hash size={14} /> {schedule.shipment?.delivery_code || schedule.id.slice(0,8)}
+                        </span>
                       </div>
                       
                       <div className="bubble-main">
-                        <div className="bubble-main-header">
+                        <div className="bubble-main-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
+                                {schedule.shipment?.delivery_type === 'home_delivery' && (
+                                  <span style={{ 
+                                    background: 'rgba(59, 130, 246, 0.1)', 
+                                    color: '#3b82f6', 
+                                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                                    padding: '4px 10px', 
+                                    borderRadius: '8px',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}>
+                                    <Truck size={14} /> A Domicilio
+                                  </span>
+                                )}
+                                {schedule.shipment?.delivery_type === 'external' && (
+                                  <span style={{ 
+                                    background: 'rgba(14, 165, 233, 0.1)', 
+                                    color: '#0ea5e9', 
+                                    border: '1px solid rgba(14, 165, 233, 0.2)',
+                                    padding: '4px 10px', 
+                                    borderRadius: '8px',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}>
+                                    <MapPin size={14} /> Nacional
+                                  </span>
+                                )}
+                                {schedule.shipment?.delivery_type === 'pickup' && (
+                                  <span style={{ 
+                                    background: 'rgba(139, 92, 246, 0.1)', 
+                                    color: '#8b5cf6', 
+                                    border: '1px solid rgba(139, 92, 246, 0.2)',
+                                    padding: '4px 10px', 
+                                    borderRadius: '8px',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}>
+                                    <Store size={14} /> Recojo
+                                  </span>
+                                )}
+                              <span className={`status-badge status-${schedule.status}`}>
+                                {getStatusLabel(schedule.status)}
+                              </span>
+                            </div>
+                            
                             <div className="bubble-customer" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', flexWrap: 'wrap' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <User size={16} style={{ color: 'var(--text-muted)' }} />
@@ -575,72 +631,21 @@ export default function Orders() {
                                 <>
                                   <span className="separator-pipe" style={{ color: 'var(--border-color)', margin: '0 4px' }}>|</span>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{schedule.shipment.sale.customer.user.email}</span>
+                                    <Mail size={16} style={{ color: 'var(--text-muted)' }} />
+                                    <span style={{ fontWeight: 600 }}>{schedule.shipment.sale.customer.user.email}</span>
                                   </div>
                                 </>
                               )}
                               
                               {schedule.shipment?.sale?.customer?.customer_code && (
-                                <span style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '2px 8px', borderRadius: '12px', color: 'var(--text-muted)', fontWeight: 600, marginLeft: '4px' }}>
-                                  Cód: {schedule.shipment.sale.customer.customer_code}
-                                </span>
+                                <>
+                                  <span className="separator-pipe" style={{ color: 'var(--border-color)', margin: '0 4px' }}>|</span>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Hash size={16} style={{ color: 'var(--text-muted)' }} />
+                                    <span style={{ fontWeight: 600 }}>Cód: {schedule.shipment.sale.customer.customer_code}</span>
+                                  </div>
+                                </>
                               )}
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                {schedule.shipment?.delivery_type === 'home_delivery' && (
-                                  <span style={{ 
-                                    background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)', 
-                                    color: 'white', 
-                                    padding: '4px 12px', 
-                                    borderRadius: '20px',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    textTransform: 'uppercase',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    boxShadow: '0 4px 10px rgba(255, 107, 107, 0.3)'
-                                  }}>
-                                    <Truck size={14} /> A Domicilio
-                                  </span>
-                                )}
-                                {schedule.shipment?.delivery_type === 'external' && (
-                                  <span style={{ 
-                                    background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)', 
-                                    color: 'white', 
-                                    padding: '4px 12px', 
-                                    borderRadius: '20px',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    textTransform: 'uppercase',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    boxShadow: '0 4px 10px rgba(14, 165, 233, 0.3)'
-                                  }}>
-                                    <MapPin size={14} /> Nacional
-                                  </span>
-                                )}
-                                {schedule.shipment?.delivery_type === 'pickup' && (
-                                  <span style={{ 
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', 
-                                    color: 'white', 
-                                    padding: '4px 12px', 
-                                    borderRadius: '20px',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    textTransform: 'uppercase',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    boxShadow: '0 4px 10px rgba(139, 92, 246, 0.3)'
-                                  }}>
-                                    <Store size={14} /> Recojo
-                                  </span>
-                                )}
-                              <span className={`status-badge status-${schedule.status}`}>
-                                {getStatusLabel(schedule.status)}
-                              </span>
                             </div>
                         </div>
                         
@@ -680,15 +685,15 @@ export default function Orders() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="action-btn"
-                              style={{ padding: '8px 12px', background: '#25D366', color: 'white', border: 'none', borderRadius: '8px' }}
+                              style={{ padding: '10px 16px', background: 'rgba(37, 211, 102, 0.1)', color: '#25D366', border: '1px solid rgba(37, 211, 102, 0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
                               title="Enviar mensaje por WhatsApp"
                             >
-                              <MessageCircle size={16} />
+                              <MessageCircle size={18} />
                             </a>
                           )}
                           <button 
                             className="action-btn" 
-                            style={{ padding: '8px', background: 'var(--bg-input)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
+                            style={{ padding: '10px 16px', background: 'rgba(100, 116, 139, 0.08)', color: 'var(--text-main)', border: '1px solid rgba(100, 116, 139, 0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
                             onClick={() => {
                               const trackingUrl = `${FRONTEND_URL}/tracking/${schedule.id}`;
                               navigator.clipboard.writeText(trackingUrl);
@@ -696,11 +701,23 @@ export default function Orders() {
                             }}
                             title="Copiar enlace de seguimiento"
                           >
-                            <LinkIcon size={16} />
+                            <LinkIcon size={18} />
                           </button>
                             <button 
-                              className="action-btn primary"
-                              style={{ padding: '8px 16px', borderRadius: '8px', background: schedule.status === 'pending' ? 'var(--color-primary)' : '', color: schedule.status === 'pending' ? '#fff' : '' }}
+                              className="action-btn"
+                              style={{ 
+                                padding: '10px 16px', 
+                                borderRadius: '10px', 
+                                background: schedule.status === 'pending' ? 'var(--color-primary)' : 'transparent', 
+                                color: schedule.status === 'pending' ? 'var(--color-primary-text)' : 'var(--color-primary)',
+                                border: `1px solid var(--color-primary)`,
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                flex: 1,
+                                transition: 'all 0.2s'
+                              }}
                               onClick={() => setStatusModalSchedule(schedule)}
                             >
                               Ver Detalles

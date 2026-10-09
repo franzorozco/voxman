@@ -126,12 +126,15 @@ class OrderNetworkController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($qBuilder) use ($search) {
-                $qBuilder->whereHas('user.profile', function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name_paternal', 'like', "%{$search}%")
-                      ->orWhere('last_name_maternal', 'like', "%{$search}%");
-                })->orWhere('employee_code', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                $qBuilder->whereHas('user', function ($qUser) use ($search) {
+                    $qUser->where('email', 'ILIKE', "%{$search}%")
+                          ->orWhereHas('profile', function ($q) use ($search) {
+                              $q->where('first_name', 'ILIKE', "%{$search}%")
+                                ->orWhere('last_name_paternal', 'ILIKE', "%{$search}%")
+                                ->orWhere('last_name_maternal', 'ILIKE', "%{$search}%");
+                          });
+                })->orWhere('employee_code', 'ILIKE', "%{$search}%")
+                  ->orWhere('phone', 'ILIKE', "%{$search}%");
             });
         }
         
