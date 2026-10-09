@@ -13,6 +13,6 @@ frontend/build
 
 # OS
 .DS_Store
-
+.agents
 ngrok.exe
 cloudflared.exe
