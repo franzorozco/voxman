@@ -564,13 +564,14 @@ export default function Orders() {
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
                                 {schedule.shipment?.delivery_type === 'home_delivery' && (
                                   <span style={{ 
-                                    background: 'rgba(59, 130, 246, 0.1)', 
+                                    background: 'transparent', 
                                     color: '#3b82f6', 
-                                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                                    padding: '4px 10px', 
-                                    borderRadius: '8px',
+                                    border: 'none',
+                                    padding: '4px 0', 
                                     fontSize: '12px',
-                                    fontWeight: '600',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px'
@@ -580,13 +581,14 @@ export default function Orders() {
                                 )}
                                 {schedule.shipment?.delivery_type === 'external' && (
                                   <span style={{ 
-                                    background: 'rgba(14, 165, 233, 0.1)', 
+                                    background: 'transparent', 
                                     color: '#0ea5e9', 
-                                    border: '1px solid rgba(14, 165, 233, 0.2)',
-                                    padding: '4px 10px', 
-                                    borderRadius: '8px',
+                                    border: 'none',
+                                    padding: '4px 0', 
                                     fontSize: '12px',
-                                    fontWeight: '600',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px'
@@ -596,13 +598,14 @@ export default function Orders() {
                                 )}
                                 {schedule.shipment?.delivery_type === 'pickup' && (
                                   <span style={{ 
-                                    background: 'rgba(139, 92, 246, 0.1)', 
+                                    background: 'transparent', 
                                     color: '#8b5cf6', 
-                                    border: '1px solid rgba(139, 92, 246, 0.2)',
-                                    padding: '4px 10px', 
-                                    borderRadius: '8px',
+                                    border: 'none',
+                                    padding: '4px 0', 
                                     fontSize: '12px',
-                                    fontWeight: '600',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px'
