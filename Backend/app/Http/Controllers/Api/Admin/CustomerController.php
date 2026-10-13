@@ -9,9 +9,12 @@ use App\Models\Core\User;
 use App\Models\Core\UserProfile;
 use App\Models\Auth\Role;
 use App\Models\Actors\CustomerTimeline;
+use App\Mail\WelcomeCustomer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CustomerController extends Controller
@@ -143,16 +146,21 @@ class CustomerController extends Controller
             $emailToSave = $request->email;
             
             if (!empty($emailToSave)) {
+                // Generar contraseña temporal segura (no se acepta del frontend)
+                $temporaryPassword = Str::upper(Str::random(3)) . rand(100, 999) . Str::random(3);
+
                 // Crear Usuario Web Completo
                 $user = User::create([
                     'email' => $emailToSave,
-                    'password' => Hash::make($request->password ?? Str::random(10)),
+                    'password' => Hash::make($temporaryPassword),
                     'is_active' => $isActive
                 ]);
 
+                $firstName = $request->first_name;
+
                 UserProfile::create([
                     'user_id' => $user->id,
-                    'first_name' => $request->first_name,
+                    'first_name' => $firstName,
                     'last_name_paternal' => $request->last_name_paternal,
                     'last_name_maternal' => $request->last_name_maternal,
                     'phone' => $request->phone,
@@ -168,6 +176,20 @@ class CustomerController extends Controller
                 $customerRoles = Role::where('is_customer', true)->get();
                 if ($customerRoles->isNotEmpty()) {
                     $user->assignRole($customerRoles);
+                }
+
+                // Enviar correo de bienvenida con contraseña temporal
+                try {
+                    $loginUrl = rtrim(env('FRONTEND_URL', env('APP_URL', '')), '/') . '/login';
+                    Mail::to($emailToSave)->send(new WelcomeCustomer(
+                        $firstName,
+                        $emailToSave,
+                        $temporaryPassword,
+                        $loginUrl
+                    ));
+                } catch (\Exception $mailException) {
+                    Log::warning('WelcomeCustomer email failed: ' . $mailException->getMessage());
+                    // No abortamos la transacción — el cliente ya fue creado
                 }
             } else {
                 // Crear Solo Cliente POS
@@ -244,16 +266,20 @@ class CustomerController extends Controller
                         ]);
                     }
                 } else {
-                    // Convert POS customer to Web Customer
+                    // Convert POS customer to Web Customer — generar contraseña temporal
+                    $temporaryPassword = Str::upper(Str::random(3)) . rand(100, 999) . Str::random(3);
+
                     $newUser = User::create([
                         'email' => $request->email,
-                        'password' => Hash::make($request->password ?? Str::random(10)),
+                        'password' => Hash::make($temporaryPassword),
                         'is_active' => $customer->is_active
                     ]);
 
+                    $firstName = $request->first_name;
+
                     UserProfile::create([
                         'user_id' => $newUser->id,
-                        'first_name' => $request->first_name,
+                        'first_name' => $firstName,
                         'last_name_paternal' => $request->last_name_paternal,
                         'last_name_maternal' => $request->last_name_maternal,
                         'phone' => $request->phone,
@@ -265,6 +291,19 @@ class CustomerController extends Controller
                     $customerRoles = Role::where('is_customer', true)->get();
                     if ($customerRoles->isNotEmpty()) {
                         $newUser->assignRole($customerRoles);
+                    }
+
+                    // Enviar correo de bienvenida con contraseña temporal
+                    try {
+                        $loginUrl = rtrim(env('FRONTEND_URL', env('APP_URL', '')), '/') . '/login';
+                        Mail::to($request->email)->send(new WelcomeCustomer(
+                            $firstName,
+                            $request->email,
+                            $temporaryPassword,
+                            $loginUrl
+                        ));
+                    } catch (\Exception $mailException) {
+                        Log::warning('WelcomeCustomer email (update/convert) failed: ' . $mailException->getMessage());
                     }
 
                     // Remove old pos profile

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, User, Hash, Phone, Mail, Globe, AlertCircle, CheckCircle, Shield, KeyRound, Info } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createCustomer, updateCustomer } from "../../../../api/admin/customers";
 import Spinner from "../../components/Spinner/Spinner";
 
 export default function CustomerModal({ customer, onClose, onSuccess }) {
   const isEditing = !!customer;
+  const isAlreadyWebCustomer = isEditing && !!customer?.user && !customer?.user?.email?.includes('@guest');
   const [loading, setLoading] = useState(false);
   const [createWebAccount, setCreateWebAccount] = useState(false);
   
@@ -16,7 +17,6 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
     last_name_maternal: "",
     email: "",
     phone: "",
-    password: "",
     is_active: true
   });
 
@@ -36,7 +36,6 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
         last_name_maternal: profile.last_name_maternal || "",
         email: userEmail.includes('@guest') ? "" : userEmail,
         phone: profile.phone || "",
-        password: "", // Keep empty on edit unless changing
         is_active: customer.is_active !== undefined ? customer.is_active : true
       });
 
@@ -49,20 +48,25 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
     setLoading(true);
     
     try {
-      // Si la cuenta web no está habilitada, limpiamos los campos de email y password
-      // para que el backend no los procese y genere los ficticios automáticamente.
       const payload = { ...formData };
       if (!createWebAccount) {
         payload.email = "";
-        payload.password = "";
       }
 
       if (isEditing) {
         await updateCustomer(customer.id, payload);
-        toast.success("Cliente actualizado exitosamente");
+        toast.success(
+          createWebAccount && !isAlreadyWebCustomer
+            ? "Cliente actualizado y credenciales enviadas al correo"
+            : "Cliente actualizado exitosamente"
+        );
       } else {
         await createCustomer(payload);
-        toast.success("Cliente creado exitosamente");
+        toast.success(
+          createWebAccount
+            ? "Cliente creado y credenciales enviadas al correo"
+            : "Cliente creado exitosamente"
+        );
       }
       onSuccess();
     } catch (error) {
@@ -72,162 +76,279 @@ export default function CustomerModal({ customer, onClose, onSuccess }) {
     }
   };
 
+  const phoneCode = (formData.phone || '').includes(' ') 
+    ? (formData.phone || '').split(' ')[0] 
+    : '+591';
+  const phoneNumber = (formData.phone || '').includes(' ') 
+    ? (formData.phone || '').split(' ').slice(1).join(' ') 
+    : (formData.phone || '');
+
   return (
-    <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999 }}>
-      <div className="modal-content fade-in" style={{ background: 'var(--bg-main)', borderRadius: '16px', overflow: 'hidden', maxWidth: '500px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+    <div className="cm-overlay" onClick={onClose}>
+      <div className="cm-container fade-in" onClick={(e) => e.stopPropagation()}>
         
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
-            {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
-          </h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}>
-            <X size={20} />
+        {/* ── HEADER ── */}
+        <div className="cm-header">
+          <div className="cm-header-icon-wrap">
+            {isEditing ? <User size={18} /> : <User size={18} />}
+          </div>
+          <div className="cm-header-text">
+            <h2 className="cm-title">{isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}</h2>
+            <p className="cm-subtitle">
+              {isEditing 
+                ? 'Modifica la información del cliente' 
+                : 'Completa los datos para registrar un nuevo cliente'}
+            </p>
+          </div>
+          <button className="cm-close-btn" onClick={onClose} title="Cerrar" type="button">
+            <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+        {/* ── FORM ── */}
+        <form onSubmit={handleSubmit} className="cm-form">
+          <div className="cm-body">
 
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Cliente (Manual) *</label>
-              <input 
-                type="text" 
-                style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                value={formData.customer_code}
-                onChange={(e) => setFormData({...formData, customer_code: e.target.value.toUpperCase()})}
-                placeholder="Ej. CUST-001"
-                required
-              />
-            </div>
-            
-            <div className="modal-form-grid">
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Nombres *</label>
-                <input 
-                  type="text" 
-                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                  value={formData.first_name}
-                  onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                  required
-                />
+            {/* ─ SECCIÓN: Identificación ─ */}
+            <div className="cm-section">
+              <div className="cm-section-label">
+                <Hash size={13} />
+                <span>Identificación</span>
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Apellido Paterno</label>
-                <input 
-                  type="text" 
-                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                  value={formData.last_name_paternal}
-                  onChange={(e) => setFormData({...formData, last_name_paternal: e.target.value})}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Apellido Materno</label>
-                <input 
-                  type="text" 
-                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                  value={formData.last_name_maternal}
-                  onChange={(e) => setFormData({...formData, last_name_maternal: e.target.value})}
-                />
-              </div>
-            </div>
 
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>Teléfono</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input 
-                  type="text" 
-                  style={{ width: '80px', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                  value={(formData.phone || '').includes(' ') ? (formData.phone || '').split(' ')[0] : '+591'}
-                  onChange={(e) => {
-                     const num = (formData.phone || '').includes(' ') ? (formData.phone || '').split(' ').slice(1).join(' ') : (formData.phone || '');
-                     setFormData({...formData, phone: `${e.target.value} ${num}`.trim()});
-                  }}
-                  placeholder="+591"
-                />
-                <input 
-                  type="text" 
-                  style={{ flex: 1, padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                  value={(formData.phone || '').includes(' ') ? (formData.phone || '').split(' ').slice(1).join(' ') : (formData.phone || '')}
-                  onChange={(e) => {
-                     const code = (formData.phone || '').includes(' ') ? (formData.phone || '').split(' ')[0] : '+591';
-                     setFormData({...formData, phone: `${code} ${e.target.value}`.trim()});
-                  }}
-                  placeholder="Número de teléfono"
-                />
-              </div>
-            </div>
-
-            <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid var(--border-color)', marginTop: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: createWebAccount ? '16px' : '0' }}>
-                <input 
-                  type="checkbox" 
-                  id="create_web_account"
-                  checked={createWebAccount}
-                  onChange={(e) => setCreateWebAccount(e.target.checked)}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
-                />
-                <label htmlFor="create_web_account" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}>
-                  Habilitar cuenta web (Correo y Contraseña)
+              <div className="cm-field">
+                <label className="cm-label" htmlFor="cm-code">
+                  Código de Cliente <span className="cm-required">*</span>
                 </label>
+                <div className="cm-input-wrapper">
+                  <Hash size={15} className="cm-input-icon" />
+                  <input
+                    id="cm-code"
+                    type="text"
+                    className="cm-input cm-input--icon"
+                    value={formData.customer_code}
+                    onChange={(e) => setFormData({...formData, customer_code: e.target.value.toUpperCase()})}
+                    placeholder="Ej. CUST-001"
+                    required
+                    autoComplete="off"
+                  />
+                </div>
+                <span className="cm-hint">Se generará un código único si se deja vacío.</span>
+              </div>
+            </div>
+
+            {/* ─ SECCIÓN: Datos Personales ─ */}
+            <div className="cm-section">
+              <div className="cm-section-label">
+                <User size={13} />
+                <span>Datos Personales</span>
+              </div>
+
+              <div className="cm-field">
+                <label className="cm-label" htmlFor="cm-fname">
+                  Nombres <span className="cm-required">*</span>
+                </label>
+                <div className="cm-input-wrapper">
+                  <User size={15} className="cm-input-icon" />
+                  <input
+                    id="cm-fname"
+                    type="text"
+                    className="cm-input cm-input--icon"
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                    placeholder="Ingresa nombres"
+                    required
+                    autoComplete="given-name"
+                  />
+                </div>
+              </div>
+
+              <div className="cm-grid-2">
+                <div className="cm-field">
+                  <label className="cm-label" htmlFor="cm-lname-p">Apellido Paterno</label>
+                  <input
+                    id="cm-lname-p"
+                    type="text"
+                    className="cm-input"
+                    value={formData.last_name_paternal}
+                    onChange={(e) => setFormData({...formData, last_name_paternal: e.target.value})}
+                    placeholder="Apellido paterno"
+                    autoComplete="family-name"
+                  />
+                </div>
+                <div className="cm-field">
+                  <label className="cm-label" htmlFor="cm-lname-m">Apellido Materno</label>
+                  <input
+                    id="cm-lname-m"
+                    type="text"
+                    className="cm-input"
+                    value={formData.last_name_maternal}
+                    onChange={(e) => setFormData({...formData, last_name_maternal: e.target.value})}
+                    placeholder="Apellido materno"
+                    autoComplete="additional-name"
+                  />
+                </div>
+              </div>
+
+              <div className="cm-field">
+                <label className="cm-label" htmlFor="cm-phone-num">Teléfono</label>
+                <div className="cm-phone-row">
+                  <div className="cm-phone-code-wrapper">
+                    <Phone size={13} className="cm-phone-icon" />
+                    <input
+                      type="text"
+                      className="cm-input cm-phone-code"
+                      value={phoneCode}
+                      onChange={(e) => setFormData({...formData, phone: `${e.target.value} ${phoneNumber}`.trim()})}
+                      placeholder="+591"
+                      maxLength={5}
+                    />
+                  </div>
+                  <input
+                    id="cm-phone-num"
+                    type="tel"
+                    className="cm-input cm-phone-number"
+                    value={phoneNumber}
+                    onChange={(e) => setFormData({...formData, phone: `${phoneCode} ${e.target.value}`.trim()})}
+                    placeholder="Número de teléfono"
+                    autoComplete="tel-national"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ─ SECCIÓN: Cuenta Web ─ */}
+            <div className="cm-section">
+              <div className="cm-section-label">
+                <Globe size={13} />
+                <span>Cuenta Web</span>
+              </div>
+
+              {/* Toggle Switch para cuenta web */}
+              <div className="cm-toggle-card" onClick={() => setCreateWebAccount(v => !v)}>
+                <div className="cm-toggle-info">
+                  <div className="cm-toggle-icon-wrap">
+                    <Globe size={16} />
+                  </div>
+                  <div>
+                    <div className="cm-toggle-title">Habilitar cuenta web</div>
+                    <div className="cm-toggle-desc">Permite al cliente iniciar sesión con correo y contraseña</div>
+                  </div>
+                </div>
+                <div className={`cm-toggle-switch ${createWebAccount ? 'active' : ''}`}>
+                  <div className="cm-toggle-knob" />
+                </div>
               </div>
 
               {createWebAccount && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                      Correo Electrónico *
+                <div className="cm-web-fields fade-in">
+                  <div className="cm-field">
+                    <label className="cm-label" htmlFor="cm-email">
+                      Correo Electrónico <span className="cm-required">*</span>
                     </label>
-                    <input 
-                      type="email" 
-                      style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      required={createWebAccount}
-                    />
+                    <div className="cm-input-wrapper">
+                      <Mail size={15} className="cm-input-icon" />
+                      <input
+                        id="cm-email"
+                        type="email"
+                        className="cm-input cm-input--icon"
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        placeholder="correo@ejemplo.com"
+                        required={createWebAccount}
+                        autoComplete="email"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                      Contraseña {isEditing ? '(Opcional, dejar vacío para no cambiar)' : '*'}
-                    </label>
-                    <input 
-                      type="password" 
-                      style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-main)', fontSize: '14px' }}
-                      value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      placeholder={isEditing ? "********" : "Ingresar contraseña"}
-                      required={createWebAccount && !isEditing}
-                    />
-                  </div>
+                  {/* Información sobre la contraseña temporal y correo */}
+                  {!isAlreadyWebCustomer ? (
+                    <div className="cm-info-box">
+                      <div className="cm-info-icon-wrap">
+                        <KeyRound size={16} />
+                      </div>
+                      <div className="cm-info-content">
+                        <div className="cm-info-title">Contraseña automática y bienvenida</div>
+                        <div className="cm-info-desc">
+                          El sistema generará una contraseña temporal segura y le enviará un correo de bienvenida automático desde <strong>soporte@voxman.shop</strong> con sus credenciales de acceso.
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="cm-info-box info-blue">
+                      <div className="cm-info-icon-wrap">
+                        <Info size={16} />
+                      </div>
+                      <div className="cm-info-content">
+                        <div className="cm-info-title">Cuenta web activa</div>
+                        <div className="cm-info-desc">
+                          Este cliente ya cuenta con acceso web con este correo. Si necesita una nueva contraseña, puede utilizar la opción de recuperación desde la tienda.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
-              <input 
-                type="checkbox" 
-                id="is_active_checkbox"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' }}
-              />
-              <label htmlFor="is_active_checkbox" style={{ fontSize: '14px', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 500 }}>
-                Cliente Activo (Permite iniciar sesión y comprar)
-              </label>
+            {/* ─ SECCIÓN: Estado ─ */}
+            <div className="cm-section">
+              <div className="cm-section-label">
+                <Shield size={13} />
+                <span>Estado del Cliente</span>
+              </div>
+
+              <div 
+                className={`cm-status-toggle ${formData.is_active ? 'status-active' : 'status-inactive'}`}
+                onClick={() => setFormData({...formData, is_active: !formData.is_active})}
+              >
+                <div className="cm-status-left">
+                  {formData.is_active 
+                    ? <CheckCircle size={18} className="cm-status-icon" />
+                    : <AlertCircle size={18} className="cm-status-icon" />
+                  }
+                  <div>
+                    <div className="cm-status-title">
+                      {formData.is_active ? 'Cliente Activo' : 'Cliente Inactivo'}
+                    </div>
+                    <div className="cm-status-desc">
+                      {formData.is_active 
+                        ? 'Puede iniciar sesión y realizar compras'
+                        : 'El cliente está suspendido temporalmente'}
+                    </div>
+                  </div>
+                </div>
+                <div className={`cm-toggle-switch ${formData.is_active ? 'active' : ''}`}>
+                  <div className="cm-toggle-knob" />
+                </div>
+              </div>
             </div>
 
           </div>
-          
-          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--bg-card)' }}>
-            <button type="button" className="btn-secondary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)' }} onClick={onClose} disabled={loading}>
+
+          {/* ── FOOTER ── */}
+          <div className="cm-footer">
+            <button 
+              type="button" 
+              className="cm-btn-cancel" 
+              onClick={onClose} 
+              disabled={loading}
+            >
               Cancelar
             </button>
-            <button type="submit" className="btn-primary" style={{ padding: '10px 20px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '160px' }} disabled={loading}>
-              {loading ? <Spinner size={20} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} /> : "Guardar Cliente"}
+            <button 
+              type="submit" 
+              className="cm-btn-submit" 
+              disabled={loading}
+            >
+              {loading 
+                ? <Spinner size={18} color="#ffffff" trackColor="rgba(255,255,255,0.3)" borderWidth={2} />
+                : (isEditing ? 'Guardar Cambios' : 'Crear Cliente')
+              }
             </button>
           </div>
-
         </form>
+
       </div>
     </div>
   );

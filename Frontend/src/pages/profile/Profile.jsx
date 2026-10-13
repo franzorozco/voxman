@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { 
   User, 
@@ -17,6 +17,8 @@ import {
   EyeOff, 
   ShieldCheck, 
   ChevronRight, 
+  ChevronDown,
+  ShoppingBag,
   AlertCircle, 
   Sparkles, 
   ExternalLink,
@@ -97,6 +99,23 @@ export default function Profile() {
   }, [location.state, setProfileTheme]);
 
   const [activeTab, setActiveTab] = useState("profile"); // profile, addresses, security, orders, wishlist, loyalty, preferences
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const selectorRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutsideSelector = (e) => {
+      if (selectorRef.current && !selectorRef.current.contains(e.target)) {
+        setIsSelectorOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutsideSelector);
+    document.addEventListener("touchstart", handleClickOutsideSelector);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideSelector);
+      document.removeEventListener("touchstart", handleClickOutsideSelector);
+    };
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -563,6 +582,34 @@ export default function Profile() {
     );
   }
 
+  const tabGroups = [
+    {
+      name: "Mi Cuenta",
+      items: [
+        { id: "profile", label: "Datos Personales", icon: User, desc: "Información y contacto" },
+        { id: "addresses", label: "Direcciones de Envío", icon: MapPin, desc: "Direcciones para entregas", badge: addresses.length },
+        { id: "security", label: "Seguridad & Acceso", icon: Lock, desc: "Contraseña y credenciales" },
+      ]
+    },
+    {
+      name: "Actividad & Compras",
+      items: [
+        { id: "orders", label: "Mis Pedidos", icon: Package, desc: "Historial de compras y pedidos" },
+        { id: "wishlist", label: "Lista de Deseos", icon: Heart, desc: "Prendas guardadas" },
+        { id: "loyalty", label: "Puntos & Club VIP", icon: Award, desc: "Puntos y recompensas", tag: "NUEVO" },
+      ]
+    },
+    {
+      name: "Ajustes",
+      items: [
+        { id: "preferences", label: "Preferencias", icon: Settings, desc: "Opciones de cuenta" },
+      ]
+    }
+  ];
+
+  const currentTabItem = tabGroups.flatMap(g => g.items).find(i => i.id === activeTab) || tabGroups[0].items[0];
+  const CurrentTabIcon = currentTabItem.icon;
+
   return (
     <div className="profile-page-wrapper">
       <Navbar isDarkThemeOverride={profileIsDark} />
@@ -583,11 +630,8 @@ export default function Profile() {
             </div>
 
             <div className="profile-user-meta">
-              <h1>
+              <h1 className="profile-user-name">
                 {userData?.full_name?.trim() || userData?.username || "Usuario"}
-                <span className="profile-tag-badge tag-vip">
-                  <Sparkles size={12} /> Cliente VOX
-                </span>
               </h1>
               <p>{userData?.email || "cargando..."}</p>
 
@@ -604,114 +648,185 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {/* Quick Stats - Rediseñados con iconos y tarjetas modernas */}
           <div className="profile-stats-grid">
             <div className="profile-stat-box">
-              <span className="profile-stat-value">
-                Bs. {Number(customerInfo?.total_purchases || 0).toFixed(2)}
-              </span>
-              <span className="profile-stat-label">Compras Totales</span>
+              <div className="profile-stat-icon-wrapper purchases">
+                <ShoppingBag size={18} />
+              </div>
+              <div className="profile-stat-content">
+                <span className="profile-stat-value">
+                  Bs. {Number(customerInfo?.total_purchases || 0).toFixed(2)}
+                </span>
+                <span className="profile-stat-label">Compras Totales</span>
+              </div>
             </div>
 
             <div className="profile-stat-box">
-              <span className="profile-stat-value">{addresses.length}</span>
-              <span className="profile-stat-label">Direcciones</span>
+              <div className="profile-stat-icon-wrapper addresses">
+                <MapPin size={18} />
+              </div>
+              <div className="profile-stat-content">
+                <span className="profile-stat-value">{addresses.length}</span>
+                <span className="profile-stat-label">Direcciones</span>
+              </div>
             </div>
 
             <div className="profile-stat-box">
-              <span className="profile-stat-value" style={{ color: customerInfo?.is_active !== false ? "var(--color-success)" : "var(--text-muted)" }}>
-                {customerInfo?.is_active !== false ? "Activo" : "Inactivo"}
-              </span>
-              <span className="profile-stat-label">Estado</span>
+              <div className="profile-stat-icon-wrapper status">
+                <ShieldCheck size={18} />
+              </div>
+              <div className="profile-stat-content">
+                <div className="profile-stat-value">
+                  <span className={`profile-status-pill ${customerInfo?.is_active !== false ? "active" : "inactive"}`}>
+                    <span className="profile-status-dot" />
+                    {customerInfo?.is_active !== false ? "Activo" : "Inactivo"}
+                  </span>
+                </div>
+                <span className="profile-stat-label">Estado</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* =========================================
-            BODY LAYOUT: SIDEBAR + SECCIONES
+            BODY LAYOUT: SELECTOR MÓVIL + SIDEBAR DESKTOP + SECCIONES
             ========================================= */}
         <div className="profile-body-layout">
-          {/* SIDEBAR NAVEGACION */}
+          {/* SELECTOR CUSTOMIZADO PARA PANTALLAS MÓVILES */}
+          <div className="profile-mobile-tab-selector" ref={selectorRef}>
+            <div className="profile-selector-meta-header">
+              <span className="profile-selector-meta-title">Sección seleccionada</span>
+            </div>
+
+            <button
+              type="button"
+              className={`profile-selector-trigger ${isSelectorOpen ? 'open' : ''}`}
+              onClick={() => setIsSelectorOpen(!isSelectorOpen)}
+              aria-haspopup="listbox"
+              aria-expanded={isSelectorOpen}
+            >
+              <div className="profile-selector-trigger-left">
+                <span className="profile-selector-trigger-icon">
+                  <CurrentTabIcon size={18} />
+                </span>
+                <div className="profile-selector-trigger-text">
+                  <span className="profile-selector-trigger-label">{currentTabItem.label}</span>
+                  <span className="profile-selector-trigger-desc">{currentTabItem.desc}</span>
+                </div>
+              </div>
+
+              <div className="profile-selector-trigger-right">
+                {currentTabItem.badge !== undefined && currentTabItem.badge > 0 && (
+                  <span className="profile-nav-badge-count">{currentTabItem.badge}</span>
+                )}
+                {currentTabItem.tag && (
+                  <span className="profile-nav-badge-new">{currentTabItem.tag}</span>
+                )}
+                <ChevronDown size={18} className={`profile-selector-trigger-arrow ${isSelectorOpen ? 'rotated' : ''}`} />
+              </div>
+            </button>
+
+            {isSelectorOpen && (
+              <div className="profile-selector-menu" role="listbox">
+                {tabGroups.map((group) => (
+                  <div key={group.name} className="profile-selector-group">
+                    <div className="profile-selector-group-label">{group.name}</div>
+                    <div className="profile-selector-group-list">
+                      {group.items.map((item) => {
+                        const ItemIcon = item.icon;
+                        const isSelected = activeTab === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`profile-selector-item ${isSelected ? 'selected' : ''}`}
+                            onClick={() => {
+                              setActiveTab(item.id);
+                              setIsSelectorOpen(false);
+                            }}
+                            role="option"
+                            aria-selected={isSelected}
+                          >
+                            <span className="profile-selector-item-icon">
+                              <ItemIcon size={18} />
+                            </span>
+                            <div className="profile-selector-item-info">
+                              <span className="profile-selector-item-title">{item.label}</span>
+                              <span className="profile-selector-item-desc">{item.desc}</span>
+                            </div>
+                            <div className="profile-selector-item-meta">
+                              {item.badge !== undefined && item.badge > 0 && (
+                                <span className="profile-nav-badge-count">{item.badge}</span>
+                              )}
+                              {item.tag && (
+                                <span className="profile-nav-badge-new">{item.tag}</span>
+                              )}
+                              {isSelected && <Check size={16} className="profile-selector-check-icon" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                <div className="profile-selector-divider" />
+                <button
+                  type="button"
+                  className="profile-selector-item profile-selector-logout"
+                  onClick={() => {
+                    setIsSelectorOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  <span className="profile-selector-item-icon logout">
+                    <LogOut size={18} />
+                  </span>
+                  <div className="profile-selector-item-info">
+                    <span className="profile-selector-item-title">Cerrar Sesión</span>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* SIDEBAR NAVEGACION (DESKTOP) */}
           <aside className="profile-sidebar">
-            <div className="profile-nav-group-title">Mi Cuenta</div>
+            {tabGroups.map((group) => (
+              <React.Fragment key={group.name}>
+                <div className="profile-nav-group-title">{group.name}</div>
+                {group.items.map((item) => {
+                  const ItemIcon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`profile-nav-btn ${isActive ? "active" : ""}`}
+                      onClick={() => setActiveTab(item.id)}
+                    >
+                      <span className="profile-nav-btn-left">
+                        <ItemIcon size={18} /> {item.label}
+                      </span>
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="profile-nav-badge-count">{item.badge}</span>
+                      )}
+                      {item.tag && (
+                        <span className="profile-nav-badge-new">{item.tag}</span>
+                      )}
+                      {!item.tag && item.badge === undefined && (
+                        <ChevronRight size={16} />
+                      )}
+                    </button>
+                  );
+                })}
+                <div className="profile-sidebar-divider" />
+              </React.Fragment>
+            ))}
 
             <button
-              className={`profile-nav-btn ${activeTab === "profile" ? "active" : ""}`}
-              onClick={() => setActiveTab("profile")}
-            >
-              <span className="profile-nav-btn-left">
-                <User size={18} /> Datos Personales
-              </span>
-              <ChevronRight size={16} />
-            </button>
-
-            <button
-              className={`profile-nav-btn ${activeTab === "addresses" ? "active" : ""}`}
-              onClick={() => setActiveTab("addresses")}
-            >
-              <span className="profile-nav-btn-left">
-                <MapPin size={18} /> Direcciones de Envío
-              </span>
-              <span className="profile-nav-badge-new">{addresses.length}</span>
-            </button>
-
-            <button
-              className={`profile-nav-btn ${activeTab === "security" ? "active" : ""}`}
-              onClick={() => setActiveTab("security")}
-            >
-              <span className="profile-nav-btn-left">
-                <Lock size={18} /> Seguridad & Acceso
-              </span>
-              <ChevronRight size={16} />
-            </button>
-
-            <div className="profile-sidebar-divider" />
-            <div className="profile-nav-group-title">Actividad & Compras</div>
-
-            <button
-              className={`profile-nav-btn ${activeTab === "orders" ? "active" : ""}`}
-              onClick={() => setActiveTab("orders")}
-            >
-              <span className="profile-nav-btn-left">
-                <Package size={18} /> Mis Pedidos
-              </span>
-              <ChevronRight size={16} />
-            </button>
-
-            <button
-              className={`profile-nav-btn ${activeTab === "wishlist" ? "active" : ""}`}
-              onClick={() => setActiveTab("wishlist")}
-            >
-              <span className="profile-nav-btn-left">
-                <Heart size={18} /> Lista de Deseos
-              </span>
-              <ChevronRight size={16} />
-            </button>
-
-            <button
-              className={`profile-nav-btn ${activeTab === "loyalty" ? "active" : ""}`}
-              onClick={() => setActiveTab("loyalty")}
-            >
-              <span className="profile-nav-btn-left">
-                <Award size={18} /> Puntos & Club VIP
-              </span>
-              <span className="profile-nav-badge-new">NUEVO</span>
-            </button>
-
-            <div className="profile-sidebar-divider" />
-            <div className="profile-nav-group-title">Ajustes</div>
-
-            <button
-              className={`profile-nav-btn ${activeTab === "preferences" ? "active" : ""}`}
-              onClick={() => setActiveTab("preferences")}
-            >
-              <span className="profile-nav-btn-left">
-                <Settings size={18} /> Preferencias
-              </span>
-              <ChevronRight size={16} />
-            </button>
-
-            <button
+              type="button"
               className="profile-nav-btn profile-logout-btn"
               onClick={handleLogout}
             >

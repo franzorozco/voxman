@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getCarts } from "../../../../api/admin/carts";
 import { getDeliverySchedules, getDeliveryDrivers } from "../../../../api/admin/orderNetwork";
-import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle, Store, Mail, Hash } from "lucide-react";
+import { ShoppingCart, Truck, Calendar, MapPin, Search, Eye, Filter, Download, User, Phone, RefreshCw, Link as LinkIcon, CheckCircle, Plus, MessageCircle, Store, Mail, Hash, Package, Clock, CheckCircle2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { FRONTEND_URL } from "../../../../config/api";
 
@@ -377,22 +377,39 @@ export default function Orders() {
         </div>
       </div>
 
-      <div className="orders-kpi-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-        <div className="orders-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.3s ease' }}>
-          <span className="orders-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total de Envíos</span>
-          <span className="orders-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>{schedules.length || 0}</span>
+      <div className="orders-kpi-container">
+        <div className="orders-kpi-card kpi-total">
+          <div className="orders-kpi-icon-wrapper">
+            <Package size={22} />
+          </div>
+          <div className="orders-kpi-content">
+            <span className="orders-kpi-label">Total de Envíos</span>
+            <span className="orders-kpi-value">{schedules.length || 0}</span>
+          </div>
         </div>
-        <div className="orders-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.4s ease' }}>
-          <span className="orders-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pendientes / Agendados</span>
-          <span className="orders-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>
-            {schedules.filter(s => ['pending', 'assigned'].includes(s.status)).length || 0}
-          </span>
+
+        <div className="orders-kpi-card kpi-pending">
+          <div className="orders-kpi-icon-wrapper">
+            <Clock size={22} />
+          </div>
+          <div className="orders-kpi-content">
+            <span className="orders-kpi-label">Pendientes / Agendados</span>
+            <span className="orders-kpi-value">
+              {schedules.filter(s => ['pending', 'assigned'].includes(s.status)).length || 0}
+            </span>
+          </div>
         </div>
-        <div className="orders-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.5s ease' }}>
-          <span className="orders-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Completados</span>
-          <span className="orders-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>
-            {schedules.filter(s => s.status === 'completed').length || 0}
-          </span>
+
+        <div className="orders-kpi-card kpi-completed">
+          <div className="orders-kpi-icon-wrapper">
+            <CheckCircle2 size={22} />
+          </div>
+          <div className="orders-kpi-content">
+            <span className="orders-kpi-label">Completados</span>
+            <span className="orders-kpi-value">
+              {schedules.filter(s => s.status === 'completed').length || 0}
+            </span>
+          </div>
         </div>
       </div>
 

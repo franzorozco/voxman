@@ -1,7 +1,9 @@
 .new-arrivals-section {
-  padding: 40px 20px;
+  padding: 40px 24px;
   background-color: var(--bg-main);
   border-bottom: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
 }
 
 .new-arrivals-header {
@@ -9,36 +11,144 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  gap: 16px;
+}
+
+.new-arrivals-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .new-arrivals-title {
   font-size: 1.25rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 2px;
   color: var(--text-main);
+  margin: 0;
+  text-transform: uppercase;
 }
 
+.new-arrivals-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* BOTÓN "VER TODO" REFINADO Y ERGONÓMICO */
 .new-arrivals-link {
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-main);
   text-decoration: none;
-  letter-spacing: 1px;
-  transition: color 0.3s ease;
+  letter-spacing: 1.2px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  min-height: 42px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .new-arrivals-link:hover {
-  color: var(--text-main);
+  background: var(--text-main);
+  color: var(--bg-main);
+  border-color: var(--text-main);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.new-arrivals-link:hover .new-arrivals-link-icon {
+  transform: translateX(4px);
+}
+
+.new-arrivals-link-icon {
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+/* CONTENEDOR DEL CARRUSEL Y FLECHAS FLOTANTES GLASSMORPHISM */
+.new-arrivals-carousel-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.carousel-arrow-btn {
+  position: absolute;
+  top: 42%;
+  transform: translateY(-50%) scale(1);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-main, #111827);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shop-theme-dark .carousel-arrow-btn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--text-main, #f8fafc);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+.carousel-arrow-btn:hover:not(:disabled) {
+  transform: translateY(-50%) scale(1.08);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.shop-theme-dark .carousel-arrow-btn:hover:not(:disabled) {
+  background: rgba(30, 41, 59, 0.98);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.carousel-arrow-btn:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.carousel-arrow-prev {
+  left: 8px;
+}
+
+.carousel-arrow-next {
+  right: 8px;
+}
+
+.carousel-arrow-btn.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.85);
+}
+
+/* TRACK DEL CARRUSEL */
 .new-arrivals-carousel {
   display: flex;
   gap: 16px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
-  padding-bottom: 16px; /* Space for scrollbar if any */
+  padding-bottom: 12px;
 }
 
 .new-arrivals-carousel::-webkit-scrollbar {
@@ -52,6 +162,7 @@
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  transition: transform 0.3s ease;
 }
 
 .carousel-item-img-wrapper {
@@ -89,4 +200,49 @@
 .carousel-item-price {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+/* RESPONSIVE DESIGN - MOBILE FIRST (PANTALLAS PEQUEÑAS) */
+@media (max-width: 640px) {
+  .new-arrivals-section {
+    padding: 28px 16px;
+  }
+
+  .new-arrivals-header {
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+
+  .new-arrivals-title {
+    font-size: 1.125rem;
+    letter-spacing: 1.5px;
+  }
+
+  .new-arrivals-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .new-arrivals-link {
+    font-size: 0.75rem;
+    padding: 6px 14px;
+    letter-spacing: 1px;
+    min-height: 40px;
+  }
+
+  .carousel-item {
+    flex: 0 0 260px;
+  }
+
+  .carousel-arrow-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .carousel-arrow-prev {
+    left: 4px;
+  }
+
+  .carousel-arrow-next {
+    right: 4px;
+  }
 }

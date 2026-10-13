@@ -1,8 +1,30 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, ShoppingBag, Gift, Ticket, Award, CreditCard, ChevronDown, ChevronUp, Clock, Store, User as UserIcon, Tag, Plus, Minus, History } from "lucide-react";
+import { X, MapPin, ShoppingBag, Gift, Ticket, Award, CreditCard, ChevronDown, ChevronUp, Clock, Store, User as UserIcon, Tag, Plus, Minus, History, Mail, Phone, Calendar, Hash, Globe } from "lucide-react";
 import { getCustomerById, updateCustomerTags, adjustCustomerPoints, getCustomerTimeline } from "../../../../api/admin/customers";
 import { toast } from "react-hot-toast";
 import Spinner from "../../components/Spinner/Spinner";
+
+const getSaleStatusBadge = (status) => {
+  const s = String(status || '').toLowerCase();
+  switch (s) {
+    case 'paid':
+    case 'pagado':
+    case 'completed':
+    case 'completado':
+      return { text: 'Completado', class: 'sale-status-completed' };
+    case 'cancelled':
+    case 'cancelado':
+      return { text: 'Cancelado', class: 'sale-status-cancelled' };
+    case 'pending':
+    case 'pendiente':
+      return { text: 'Pendiente', class: 'sale-status-pending' };
+    case 'refunded':
+    case 'reembolsado':
+      return { text: 'Reembolsado', class: 'sale-status-refunded' };
+    default:
+      return { text: (status || 'Desconocido').toUpperCase(), class: 'sale-status-neutral' };
+  }
+};
 
 export default function CustomerDetails({ customerId, onClose }) {
   const [customer, setCustomer] = useState(null);
@@ -112,11 +134,19 @@ export default function CustomerDetails({ customerId, onClose }) {
   const totalCompras = validSales.length;
 
   return (
-    <div className="modal-overlay fade-in" style={{ display: 'flex', justifyContent: 'flex-end', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, backdropFilter: 'blur(5px)' }}>
-      <div style={{ background: 'var(--bg-main)', width: '100%', maxWidth: '1000px', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '-10px 0 30px rgba(0,0,0,0.5)', animation: 'slideInRight 0.3s ease', overflow: 'hidden' }}>
+    <div 
+      className="modal-overlay fade-in customer-details-overlay" 
+      onClick={onClose}
+      style={{ display: 'flex', justifyContent: 'flex-end', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
+    >
+      <div 
+        className="customer-modal-drawer" 
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: 'var(--bg-main)', width: '100%', maxWidth: '1000px', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '-10px 0 30px rgba(0,0,0,0.5)', animation: 'slideInRight 0.3s ease' }}
+      >
         
         {/* Premium Header */}
-        <div className="customer-modal-container" style={{ position: 'relative', overflow: 'hidden', padding: '30px 40px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'var(--bg-card)' }}>
+        <div className="customer-modal-container customer-modal-header" style={{ position: 'relative', overflow: 'hidden', padding: '30px 40px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'var(--bg-card)' }}>
           {/* Decorative shapes */}
           <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', borderRadius: '50%', background: 'var(--bg-overlay)', zIndex: 0 }}></div>
           
@@ -125,61 +155,77 @@ export default function CustomerDetails({ customerId, onClose }) {
               <div style={{ width: '60px', height: '60px', minWidth: '60px', borderRadius: '50%', background: 'var(--color-primary)', color: 'var(--color-primary-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold' }}>
                 {profile.first_name ? profile.first_name.charAt(0).toUpperCase() : 'C'}
               </div>
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                  <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, letterSpacing: '-0.5px' }}>
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, letterSpacing: '-0.5px' }}>
                     {fullName}
                   </h2>
-                  <span style={{ fontWeight: 600, letterSpacing: '1px', background: 'var(--bg-overlay)', color: 'var(--text-main)', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', border: '1px solid var(--border-color)' }}>
-                    {customer.customer_code}
+                </div>
+                
+                <div className="customer-modal-badges">
+                  <span className="customer-badge-code">
+                    <Hash size={13} />
+                    <span>{customer.customer_code}</span>
                   </span>
-                  <span style={{ fontWeight: 600, letterSpacing: '0.5px', background: isWebCustomer ? 'rgba(59, 130, 246, 0.1)' : 'rgba(139, 92, 246, 0.1)', color: isWebCustomer ? '#3b82f6' : '#8b5cf6', border: `1px solid ${isWebCustomer ? 'rgba(59, 130, 246, 0.2)' : 'rgba(139, 92, 246, 0.2)'}`, padding: '6px 12px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isWebCustomer ? '#3b82f6' : '#8b5cf6' }}></span>
-                    {isWebCustomer ? 'Cliente Web' : 'Cliente Caja (POS)'}
+                  <span className={`customer-badge-type ${isWebCustomer ? 'type-web' : 'type-pos'}`}>
+                    {isWebCustomer ? <Globe size={13} /> : <Store size={13} />}
+                    <span>{isWebCustomer ? 'Cliente Web' : 'Cliente Caja (POS)'}</span>
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: '20px', color: 'var(--text-muted)', fontSize: '14px', marginTop: '12px', flexWrap: 'wrap' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><UserIcon size={14}/> {customer.user?.email || 'Sin correo registrado'}</span>
-                  {profile.phone && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📞 {profile.phone}</span>}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14}/> Miembro desde {new Date(customer.created_at).toLocaleDateString()}</span>
+
+                <div className="customer-modal-meta">
+                  <span className="customer-meta-item">
+                    <Mail size={14} />
+                    <span>{customer.user?.email || 'Sin correo registrado'}</span>
+                  </span>
+                  {profile.phone && (
+                    <span className="customer-meta-item">
+                      <Phone size={14} />
+                      <span>{profile.phone}</span>
+                    </span>
+                  )}
+                  <span className="customer-meta-item">
+                    <Calendar size={14} />
+                    <span>Miembro desde {new Date(customer.created_at).toLocaleDateString()}</span>
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-          <button onClick={onClose} style={{ position: 'absolute', right: '20px', top: '20px', zIndex: 2, background: 'var(--bg-overlay)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', padding: '10px', borderRadius: '50%', display: 'flex', transition: 'all 0.2s' }}>
+          <button className="customer-modal-close-btn" onClick={onClose} title="Cerrar">
             <X size={20} />
           </button>
         </div>
 
         {/* Dynamic Stats Row */}
-        <div className="customer-modal-grid-3 customer-modal-container" style={{ padding: '30px 40px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '20px', transition: 'transform 0.2s' }}>
-            <div style={{ background: 'var(--bg-overlay)', padding: '14px', borderRadius: '14px', color: 'var(--color-primary)' }}>
-              <ShoppingBag size={26} />
+        <div className="customer-details-kpi-container customer-modal-container">
+          <div className="customer-details-kpi-card kpi-gastado">
+            <div className="customer-details-kpi-icon-wrapper">
+              <CreditCard size={20} />
             </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Total Compras</p>
-              <h3 style={{ margin: '4px 0 0 0', fontSize: '26px', fontWeight: 800, color: 'var(--text-main)' }}>{totalCompras}</h3>
-            </div>
-          </div>
-          
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '20px', transition: 'transform 0.2s' }}>
-            <div style={{ background: 'var(--bg-overlay)', padding: '14px', borderRadius: '14px', color: 'var(--color-success)' }}>
-              <CreditCard size={26} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Total Gastado</p>
-              <h3 style={{ margin: '4px 0 0 0', fontSize: '26px', fontWeight: 800, color: 'var(--text-main)' }}>${totalGastado.toFixed(2)}</h3>
+            <div className="customer-details-kpi-content">
+              <span className="customer-details-kpi-label">Total Gastado</span>
+              <span className="customer-details-kpi-value">Bs. {totalGastado.toFixed(2)}</span>
             </div>
           </div>
 
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '20px', transition: 'transform 0.2s' }}>
-            <div style={{ background: 'var(--bg-overlay)', padding: '14px', borderRadius: '14px', color: 'var(--color-warning)' }}>
-              <Award size={26} />
+          <div className="customer-details-kpi-card kpi-compras">
+            <div className="customer-details-kpi-icon-wrapper">
+              <ShoppingBag size={20} />
             </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Puntos VIP</p>
-              <h3 style={{ margin: '4px 0 0 0', fontSize: '26px', fontWeight: 800, color: 'var(--text-main)' }}>{customer.points}</h3>
+            <div className="customer-details-kpi-content">
+              <span className="customer-details-kpi-label">Total Compras</span>
+              <span className="customer-details-kpi-value">{totalCompras}</span>
+            </div>
+          </div>
+          
+          <div className="customer-details-kpi-card kpi-puntos">
+            <div className="customer-details-kpi-icon-wrapper">
+              <Award size={20} />
+            </div>
+            <div className="customer-details-kpi-content">
+              <span className="customer-details-kpi-label">Puntos VIP</span>
+              <span className="customer-details-kpi-value">{customer.points}</span>
             </div>
           </div>
         </div>
@@ -220,7 +266,7 @@ export default function CustomerDetails({ customerId, onClose }) {
         </div>
 
         {/* Content Area */}
-        <div className="customer-modal-container" style={{ flex: 1, overflowY: 'auto', padding: '30px 40px', background: 'var(--bg-main)' }}>
+        <div className="customer-modal-container customer-modal-body" style={{ flex: 1, padding: '30px 40px', background: 'var(--bg-main)' }}>
           
           {/* OVERVIEW TAB */}
           {activeTab === 'overview' && (
@@ -229,7 +275,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                   <UserIcon size={20} color="var(--color-primary)"/> Perfil del Cliente
                </h3>
                <div className="customer-modal-grid-2">
-                  <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                  <div className="customer-crm-card">
                      <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Información Personal</h4>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
@@ -258,7 +304,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                         )}
                      </div>
                   </div>
-                  <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                  <div className="customer-crm-card">
                      <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>Estadísticas de Cuenta</h4>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
@@ -328,20 +374,22 @@ export default function CustomerDetails({ customerId, onClose }) {
               
               <div className="customer-modal-grid-2">
                 {/* Puntos */}
-                <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ margin: '0 0 16px 0', color: 'var(--color-warning)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="customer-crm-card">
+                  <h4 style={{ margin: '0 0 16px 0', color: 'var(--color-warning)', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
                     <Award size={18} /> Ajuste Manual de Puntos
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Los puntos actuales son <strong>{customer.points}</strong>. Usa esta herramienta para sumar o restar puntos en casos especiales.</p>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                      Los puntos actuales son <strong style={{ color: 'var(--text-main)' }}>{customer.points}</strong>. Usa esta herramienta para sumar o restar puntos en casos especiales.
+                    </p>
                     
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ width: '100%' }}>
                       <input 
                         type="number" 
                         value={pointsAdjust.amount || ''}
                         onChange={(e) => setPointsAdjust({...pointsAdjust, amount: e.target.value})}
                         placeholder="Ej. 50 (sumar) o -20 (restar)"
-                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                        style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', boxSizing: 'border-box' }}
                       />
                     </div>
                     <input 
@@ -349,14 +397,14 @@ export default function CustomerDetails({ customerId, onClose }) {
                       value={pointsAdjust.reason}
                       onChange={(e) => setPointsAdjust({...pointsAdjust, reason: e.target.value})}
                       placeholder="Motivo del ajuste (obligatorio)"
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                      style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', boxSizing: 'border-box' }}
                     />
                     
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-                      <button onClick={() => handleAdjustPoints('add')} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'var(--color-success)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '4px', width: '100%' }}>
+                      <button onClick={() => handleAdjustPoints('add')} style={{ padding: '10px', borderRadius: '8px', background: 'var(--color-success)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
                         <Plus size={16}/> Sumar
                       </button>
-                      <button onClick={() => handleAdjustPoints('sub')} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'var(--color-danger)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                      <button onClick={() => handleAdjustPoints('sub')} style={{ padding: '10px', borderRadius: '8px', background: 'var(--color-danger)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
                         <Minus size={16}/> Restar
                       </button>
                     </div>
@@ -364,22 +412,22 @@ export default function CustomerDetails({ customerId, onClose }) {
                 </div>
 
                 {/* Etiquetas */}
-                <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ margin: '0 0 16px 0', color: 'var(--color-primary)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="customer-crm-card">
+                  <h4 style={{ margin: '0 0 16px 0', color: 'var(--color-primary)', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
                     <Tag size={18} /> Etiquetas (Tags)
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="customer-crm-tag-form">
                       <input 
                         type="text" 
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
                         placeholder="Ej: Mayorista, VIP..."
-                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                        className="customer-crm-tag-input"
                       />
-                      <button onClick={handleAddTag} style={{ padding: '10px 16px', borderRadius: '8px', background: 'var(--color-primary)', color: 'var(--color-primary-text)', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                      <button onClick={handleAddTag} className="customer-crm-tag-btn">
                         Agregar
                       </button>
                     </div>
@@ -422,32 +470,42 @@ export default function CustomerDetails({ customerId, onClose }) {
                         {/* Sale Header (Clickable) */}
                         <div 
                           onClick={() => toggleSale(sale.id)}
-                          style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: isExpanded ? 'var(--bg-overlay)' : 'transparent', flexWrap: 'wrap', gap: '16px' }}
+                          className={`customer-sale-card-header ${isExpanded ? 'is-expanded' : ''}`}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                            <div style={{ background: 'var(--bg-overlay)', padding: '12px', borderRadius: '10px', color: 'var(--text-main)' }}>
-                              <ShoppingBag size={20} />
+                          <div className="customer-sale-header-left">
+                            <div className="customer-sale-code-row">
+                              <span className="customer-sale-mini-icon">
+                                <ShoppingBag size={14} />
+                              </span>
+                              <span className="customer-sale-code-title">
+                                Factura {sale.invoice_number ? `#${sale.invoice_number}` : `#${sale.id.split('-')[0]}`}
+                              </span>
                             </div>
-                            <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                                <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '16px' }}>Factura {sale.invoice_number || `#${sale.id.split('-')[0]}`}</span>
-                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: sale.status === 'paid' ? 'var(--bg-overlay)' : 'var(--bg-overlay)', color: sale.status === 'paid' ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                                  {sale.status.toUpperCase()}
-                                </span>
-                              </div>
-                              <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                                <span><Clock size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: '-2px' }}/> {new Date(sale.created_at).toLocaleString()}</span>
-                                <span><Store size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: '-2px' }}/> {sale.branch?.name || 'Tienda Principal'}</span>
-                              </div>
+                            <div className="customer-sale-meta-row">
+                              {(() => {
+                                const badge = getSaleStatusBadge(sale.status);
+                                return (
+                                  <span className={`customer-sale-status-badge ${badge.class}`}>
+                                    {badge.text}
+                                  </span>
+                                );
+                              })()}
+                              <span className="customer-sale-meta-item">
+                                <Clock size={12} /> {new Date(sale.created_at).toLocaleString()}
+                              </span>
+                              <span className="customer-sale-meta-item">
+                                <Store size={12} /> {sale.branch?.name || 'Tienda Principal'}
+                              </span>
                             </div>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Total Pagado</div>
-                              <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '18px' }}>${Number(sale.total).toFixed(2)}</div>
+
+                          <div className="customer-sale-header-right">
+                            <div className="customer-sale-amount-block">
+                              <span className="customer-sale-amount-label">Total Pagado</span>
+                              <span className="customer-sale-amount-val">Bs. {Number(sale.total).toFixed(2)}</span>
                             </div>
-                            <div style={{ color: 'var(--text-muted)' }}>
-                              {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                            <div className="customer-sale-chevron">
+                              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                             </div>
                           </div>
                         </div>
@@ -469,12 +527,12 @@ export default function CustomerDetails({ customerId, onClose }) {
                                           {detail.product_variant?.sku && <span style={{ color: 'var(--text-muted)', fontSize: '12px', marginLeft: '8px' }}>({detail.product_variant.sku})</span>}
                                         </div>
                                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                                          {detail.quantity}x a ${Number(detail.unit_price).toFixed(2)}
-                                          {Number(detail.discount) > 0 && <span style={{ color: 'var(--color-danger)', marginLeft: '8px' }}>(-${Number(detail.discount).toFixed(2)} dto)</span>}
+                                          {detail.quantity}x a Bs. {Number(detail.unit_price).toFixed(2)}
+                                          {Number(detail.discount) > 0 && <span style={{ color: 'var(--color-danger)', marginLeft: '8px' }}>(-Bs. {Number(detail.discount).toFixed(2)} dto)</span>}
                                         </div>
                                       </div>
                                       <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>
-                                        ${Number(detail.final_price).toFixed(2)}
+                                        Bs. {Number(detail.final_price).toFixed(2)}
                                       </div>
                                     </div>
                                   ))}
@@ -487,15 +545,15 @@ export default function CustomerDetails({ customerId, onClose }) {
                                 <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>
                                     <span>Subtotal</span>
-                                    <span>${Number(sale.subtotal).toFixed(2)}</span>
+                                    <span>Bs. {Number(sale.subtotal).toFixed(2)}</span>
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '14px', color: 'var(--color-danger)' }}>
                                     <span>Descuentos</span>
-                                    <span>-${Number(sale.discount_total).toFixed(2)}</span>
+                                    <span>-Bs. {Number(sale.discount_total).toFixed(2)}</span>
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '16px', borderTop: '1px solid var(--border-color)', fontWeight: 800, fontSize: '16px', color: 'var(--text-main)' }}>
                                     <span>Total</span>
-                                    <span>${Number(sale.total).toFixed(2)}</span>
+                                    <span>Bs. {Number(sale.total).toFixed(2)}</span>
                                   </div>
                                 </div>
 
@@ -506,7 +564,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                                       <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
                                         <CreditCard size={14}/> {payment.payment_method?.name || 'Desconocido'}
                                       </span>
-                                      <span style={{ fontWeight: 600 }}>${Number(payment.amount).toFixed(2)}</span>
+                                      <span style={{ fontWeight: 600 }}>Bs. {Number(payment.amount).toFixed(2)}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -561,7 +619,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                         <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '40px' }}>
                           <div>
                             <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Saldo Disponible</div>
-                            <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--color-success)' }}>${Number(gc.current_balance).toFixed(2)}</div>
+                            <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--color-success)' }}>Bs. {Number(gc.current_balance).toFixed(2)}</div>
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Estado</div>
@@ -593,7 +651,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                                   </div>
                                 </div>
                                 <div style={{ fontWeight: 700, fontSize: '16px', color: tx.type === 'issue' ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                                  {tx.type === 'issue' ? '+' : '-'}${Number(tx.amount).toFixed(2)}
+                                  {tx.type === 'issue' ? '+Bs. ' : '-Bs. '}{Number(tx.amount).toFixed(2)}
                                 </div>
                               </div>
                             ))}
@@ -632,7 +690,7 @@ export default function CustomerDetails({ customerId, onClose }) {
                         </div>
                         <div>
                           <div style={{ fontWeight: 800, fontSize: '24px', color: 'var(--color-primary)', marginBottom: '4px' }}>
-                            {disc.type === 'percentage' ? `${disc.value}% OFF` : `$${disc.value} OFF`}
+                            {disc.type === 'percentage' ? `${disc.value}% OFF` : `Bs. ${disc.value} OFF`}
                           </div>
                           <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>{disc.name}</div>
                           <div style={{ fontSize: '12px', display: 'inline-block', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: '4px', border: '1px dotted var(--color-primary)' }}>
@@ -682,6 +740,13 @@ export default function CustomerDetails({ customerId, onClose }) {
               )}
             </div>
           )}
+
+          {/* Modal Footer Actions */}
+          <div className="customer-modal-footer">
+            <button type="button" onClick={onClose} className="customer-modal-footer-btn">
+              <X size={16} /> Cerrar Ficha
+            </button>
+          </div>
 
         </div>
       </div>

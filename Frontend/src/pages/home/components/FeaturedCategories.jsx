@@ -49,23 +49,27 @@ export default function FeaturedCategories() {
         </div>
 
         <div className="fc-grid">
-          {categories.map(cat => (
-            <Link to={`/shop/catalog?category=${cat.id}`} key={cat.id} className="fc-card">
-              <div className="fc-image-wrapper">
-                <img
-                  src={cat.image ? getImageUrl(cat.image) : FALLBACK_IMAGE}
-                  alt={cat.name}
-                  loading="lazy"
-                  onError={(e) => { e.target.src = FALLBACK_IMAGE; e.target.onerror = null; }}
-                />
-                <div className="fc-overlay"></div>
-              </div>
-              <div className="fc-card-content">
-                <h3>{cat.name}</h3>
-                <span className="fc-btn">Explorar</span>
-              </div>
-            </Link>
-          ))}
+          {categories.map(cat => {
+            const categoryId = cat?.id || (typeof cat === 'string' ? cat : '');
+            if (!categoryId) return null;
+            return (
+              <Link to={`/shop/catalog?category=${categoryId}`} key={categoryId} className="fc-card">
+                <div className="fc-image-wrapper">
+                  <img
+                    src={cat.image ? getImageUrl(cat.image) : FALLBACK_IMAGE}
+                    alt={cat.name}
+                    loading="lazy"
+                    onError={(e) => { e.target.src = FALLBACK_IMAGE; e.target.onerror = null; }}
+                  />
+                  <div className="fc-overlay"></div>
+                </div>
+                <div className="fc-card-content">
+                  <h3>{cat.name}</h3>
+                  <span className="fc-btn">Explorar</span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
 
       </div>

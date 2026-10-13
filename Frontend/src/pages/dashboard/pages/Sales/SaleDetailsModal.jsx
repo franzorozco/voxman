@@ -9,6 +9,31 @@ import SaleReturnModal from "./SaleReturnModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 import { API_BASE_URL } from "../../../../config/api";
 
+const getSaleStatusBadge = (status) => {
+  const map = {
+    completed: { label: 'Completado', className: 'status-success' },
+    cancelled: { label: 'Cancelado', className: 'status-danger' },
+    pending: { label: 'Pendiente', className: 'status-warning' },
+    paid: { label: 'Pagado', className: 'status-success' },
+    partially_paid: { label: 'Pago Parcial', className: 'status-warning' },
+    refunded: { label: 'Reembolsado', className: 'status-info' }
+  };
+  return map[status] || { label: status, className: 'status-warning' };
+};
+
+const getDeliveryStatusBadge = (status) => {
+  const map = {
+    at_the_meeting_point: { label: 'En el punto', className: 'status-warning' },
+    on_the_way: { label: 'En camino', className: 'status-info' },
+    completed: { label: 'Completado', className: 'status-success' },
+    delivered: { label: 'Entregado', className: 'status-success' },
+    cancelled: { label: 'Cancelado', className: 'status-danger' },
+    pending: { label: 'Pendiente', className: 'status-warning' },
+    assigned: { label: 'Asignado', className: 'status-info' }
+  };
+  return map[status] || { label: status, className: 'status-warning' };
+};
+
 export default function SaleDetailsModal({ saleId, onClose }) {
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -83,37 +108,55 @@ export default function SaleDetailsModal({ saleId, onClose }) {
     <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999 }}>
       <div className="modal-content fade-in" style={{ background: 'var(--bg-card)', borderRadius: '12px', overflow: 'hidden', width: '95%', maxWidth: '1000px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
         
-                        {/* Header */}
-        <div className="modal-header" style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <FileText size={20} className="text-primary" style={{ flexShrink: 0 }}/>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
-                Detalle de Venta
-              </h2>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500, background: 'var(--bg-main)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                {sale.invoice_number || sale.id.split('-')[0]}
-              </span>
-              <span className={`status-badge ${sale.status === 'completed' ? 'status-success' : sale.status === 'cancelled' ? 'status-danger' : 'status-warning'}`} style={{ padding: '4px 8px' }}>
-                {sale.status}
-              </span>
-              {sale.shipments?.[0]?.delivery_schedule && (
-                <span className={`status-badge ${sale.shipments[0].delivery_schedule.status === 'completed' ? 'status-success' : 'status-warning'}`} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 8px' }}>
-                  Entrega: {sale.shipments[0].delivery_schedule.status === 'at_the_meeting_point' ? 'En el punto' : sale.shipments[0].delivery_schedule.status === 'on_the_way' ? 'En camino' : sale.shipments[0].delivery_schedule.status === 'completed' ? 'Completado' : sale.shipments[0].delivery_schedule.status === 'cancelled' ? 'Cancelado' : sale.shipments[0].delivery_schedule.status === 'pending' ? 'Pendiente' : sale.shipments[0].delivery_schedule.status === 'assigned' ? 'Asignado' : sale.shipments[0].delivery_schedule.status}
-                </span>
-              )}
+        {/* Header */}
+        <div className="sale-modal-header">
+          <div className="sale-modal-header-top">
+            <div className="sale-modal-title-wrap">
+              <FileText size={20} className="text-primary" style={{ flexShrink: 0 }} />
+              <h2 className="sale-modal-title">Detalle de Venta</h2>
             </div>
-            {sale.shipments?.[0]?.delivery_code && (
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Código de Entrega: {sale.shipments[0].delivery_code}</span>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'var(--bg-main)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px',
+                borderRadius: '6px',
+                flexShrink: 0
+              }}
+              title="Cerrar"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="sale-modal-badges">
+            <span className="sale-modal-code-badge">
+              #{sale.invoice_number || sale.id.split('-')[0]}
+            </span>
+            <span className={`status-badge ${getSaleStatusBadge(sale.status).className}`}>
+              {getSaleStatusBadge(sale.status).label}
+            </span>
+            {sale.shipments?.[0]?.delivery_schedule && (
+              <span className={`status-badge ${getDeliveryStatusBadge(sale.shipments[0].delivery_schedule.status).className}`}>
+                Entrega: {getDeliveryStatusBadge(sale.shipments[0].delivery_schedule.status).label}
+              </span>
+            )}
+            {sale.shipments?.[0]?.delivery_code && sale.shipments[0].delivery_code !== 'N/A' && sale.shipments[0].delivery_code !== sale.invoice_number && (
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                Envío: {sale.shipments[0].delivery_code}
+              </span>
             )}
           </div>
-          <button onClick={onClose} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px', borderRadius: '6px', flexShrink: 0 }}>
-            <X size={18} />
-          </button>
         </div>
 
         {/* Body */}
-        <div style={{ overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="sale-details-body" style={{ overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
             {/* Cliente Info */}
@@ -125,20 +168,31 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 <div>
                   {sale.customer.user?.profile ? (
                     <>
-                      <div style={{ fontWeight: 600 }}>{sale.customer.user.profile.first_name} {sale.customer.user.profile.last_name_paternal} <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 500, marginLeft: '8px' }}>â€¢ Cliente Web</span></div>
+                      <div style={{ fontWeight: 600 }}>{sale.customer.user.profile.first_name} {sale.customer.user.profile.last_name_paternal} <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 500, marginLeft: '8px' }}>• Cliente Web</span></div>
                       <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Email: {sale.customer.user.email}</div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>TelÃ©fono: {sale.customer.user.profile.phone || 'N/A'}</div>
+                      {sale.customer.user.profile.phone && sale.customer.user.profile.phone !== 'N/A' && (
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Teléfono: {sale.customer.user.profile.phone}</div>
+                      )}
                     </>
                   ) : (sale.customer.pos_profile || sale.customer.posProfile) ? (
                     <>
-                      <div style={{ fontWeight: 600 }}>{(sale.customer.pos_profile || sale.customer.posProfile).first_name} {(sale.customer.pos_profile || sale.customer.posProfile).last_name_paternal} <span style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: 500, marginLeft: '8px' }}>â€¢ Cliente Caja (POS)</span></div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>TelÃ©fono: {(sale.customer.pos_profile || sale.customer.posProfile).phone || 'N/A'}</div>
+                      <div style={{ fontWeight: 600 }}>{(sale.customer.pos_profile || sale.customer.posProfile).first_name} {(sale.customer.pos_profile || sale.customer.posProfile).last_name_paternal} <span style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: 500, marginLeft: '8px' }}>• Cliente Caja (POS)</span></div>
+                      {(sale.customer.pos_profile || sale.customer.posProfile).phone && (sale.customer.pos_profile || sale.customer.posProfile).phone !== 'N/A' && (
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Teléfono: {(sale.customer.pos_profile || sale.customer.posProfile).phone}</div>
+                      )}
                     </>
                   ) : (
                     <div style={{ color: 'var(--text-muted)' }}>Cliente sin perfil</div>
                   )}
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>DNI/NIT: {sale.customer.tax_id || 'N/A'}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>CÃ³digo: {sale.customer.customer_code}</div>
+                  
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    {sale.customer.tax_id && sale.customer.tax_id !== 'N/A' && (
+                      <span>DNI/NIT: {sale.customer.tax_id}</span>
+                    )}
+                    {sale.customer.customer_code && (
+                      <span>Código: {sale.customer.customer_code}</span>
+                    )}
+                  </div>
                   
                   <CanAccess permission="view_loyalty_points">
                     <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
@@ -159,10 +213,12 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                   <div style={{ fontWeight: 600 }}>
                     {sale.guest.name}
                     <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 600, background: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px' }}>
-                      â€¢ Entrega Agendada
+                      • Entrega Agendada
                     </span>
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>TelÃ©fono: {sale.guest.whatsapp_phone || 'N/A'}</div>
+                  {sale.guest.whatsapp_phone && sale.guest.whatsapp_phone !== 'N/A' && (
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Teléfono: {sale.guest.whatsapp_phone}</div>
+                  )}
                   {sale.guest.email && <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Email: {sale.guest.email}</div>}
                   {sale.guest.social_media_platform && (
                     <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Contacto por: {sale.guest.social_media_platform}</div>
@@ -232,7 +288,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                     <th style={{textAlign: 'right'}}>P. Unitario</th>
                     <th style={{textAlign: 'right'}}>Descuento</th>
                     <th style={{textAlign: 'right'}}>Subtotal</th>
-                    <th style={{textAlign: 'center'}}>DevoluciÃ³n</th>
+                    <th style={{textAlign: 'center'}}>Devolución</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -285,10 +341,9 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                                   Color/Fit: {variant.fit.name}
                                 </span>
                               )}
-                              
-                              {detail.bundle_group_id && (
+                                             {detail.bundle_group_id && (
                                 <span style={{ color: '#d97706', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>
-                                  <Sparkles size={10} /> Ãtem de Conjunto
+                                  <Sparkles size={10} /> Ítem de Conjunto
                                 </span>
                               )}
 
@@ -299,12 +354,12 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                               )}
                               {detail.return_request && detail.return_request.status === 'pending' && (
                                 <span style={{ fontSize: '10px', color: '#b45309', fontWeight: 600, background: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>
-                                  DevoluciÃ³n Solicitada
+                                  Devolución Solicitada
                                 </span>
                               )}
                               {detail.return_request && detail.return_request.status === 'rejected' && (
                                 <span style={{ fontSize: '10px', color: '#b91c1c', fontWeight: 600, background: '#fee2e2', padding: '2px 6px', borderRadius: '4px' }}>
-                                  DevoluciÃ³n Rechazada
+                                  Devolución Rechazada
                                 </span>
                               )}
                               {((detail.return_request && detail.return_request.status === 'approved') || (detail.deleted_at && !detail.return_request)) && (
@@ -380,7 +435,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                               Giftcard {transaction.giftcard?.code || ''}
                             </div>
                             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                              Tarjeta de Regalo ({transaction.type === 'issue' ? 'EmisiÃ³n' : transaction.type === 'reload' ? 'Recarga' : transaction.type})
+                              Tarjeta de Regalo ({transaction.type === 'issue' ? 'Emisión' : transaction.type === 'reload' ? 'Recarga' : transaction.type})
                             </div>
                           </div>
                         </div>
@@ -407,7 +462,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
               <table className="products-table" style={{ marginTop: '10px' }}>
                 <thead>
                   <tr>
-                    <th>MÃ©todo</th>
+                    <th>Método</th>
                     <th style={{textAlign: 'center'}}>Referencia</th>
                     <th style={{textAlign: 'center'}}>Estado</th>
                     <th style={{textAlign: 'right'}}>Monto</th>
@@ -438,7 +493,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-            {/* EnvÃ­os */}
+            {/* Envíos */}
             {sale.shipments && sale.shipments.length > 0 && (
               <div className="sale-detail-section" style={{ marginBottom: 0 }}>
                 <div className="sale-detail-title">
@@ -447,10 +502,21 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                   {sale.shipments.map((shipment) => (
                     <div key={shipment.id} style={{ padding: '12px', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <div style={{ fontWeight: 500 }}>CÃ³digo de Entrega: {shipment.delivery_code || 'N/A'} <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '8px' }}>(Tracking: {shipment.tracking_code || 'N/A'})</span></div>
-                        <span className={`status-badge ${shipment.status === 'delivered' ? 'status-success' : 'status-warning'}`}>
-                          {shipment.status}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ fontWeight: 500, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          {shipment.delivery_code && shipment.delivery_code !== 'N/A' ? (
+                            <span>Código de Entrega: <strong>{shipment.delivery_code}</strong></span>
+                          ) : (
+                            <span>Entrega #{shipment.id?.slice(0, 8) || ''}</span>
+                          )}
+                          {shipment.tracking_code && shipment.tracking_code !== 'N/A' && (
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                              (Tracking: {shipment.tracking_code})
+                            </span>
+                          )}
+                        </div>
+                        <span className={`status-badge ${shipment.status === 'delivered' ? 'status-success' : shipment.status === 'cancelled' ? 'status-danger' : 'status-warning'}`}>
+                          {shipment.status === 'delivered' ? 'Entregado' : shipment.status === 'cancelled' ? 'Cancelado' : shipment.status === 'pending' ? 'Pendiente' : shipment.status}
                         </span>
                       </div>
                       {shipment.address && (
@@ -483,7 +549,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                   <textarea 
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="AÃ±ade notas internas visibles solo para el personal..."
+                    placeholder="Añade notas internas visibles solo para el personal..."
                     style={{ width: '100%', padding: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', minHeight: '80px', color: 'var(--text-main)', resize: 'vertical', outline: 'none' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
@@ -519,14 +585,14 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                 
                 {sale.shipments?.[0]?.agency_dispatch_cost > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Costo de EnvÃ­o a Agencia:</span>
+                    <span style={{ color: 'var(--text-muted)' }}>Costo de Envío a Agencia:</span>
                     <span>Bs. {parseFloat(sale.shipments[0].agency_dispatch_cost).toFixed(2)}</span>
                   </div>
                 )}
                 
                 {sale.shipments?.[0] && sale.shipments[0].shipping_payment_type !== 'collect' && Number(sale.shipments[0].shipping_cost) > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Costo de EnvÃ­o:</span>
+                    <span style={{ color: 'var(--text-muted)' }}>Costo de Envío:</span>
                     <span>Bs. {parseFloat(sale.shipments[0].shipping_cost).toFixed(2)}</span>
                   </div>
                 )}
@@ -538,7 +604,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
                       <span style={{ color: 'var(--status-danger)' }}>- Bs. {parseFloat(sale.dynamic_global_discount || sale.discount_total).toFixed(2)}</span>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'right' }}>
                           {sale?.sale_applied_discounts?.find(d => d.sale_detail_id == null)?.discount?.code && (
-                              <div style={{ marginBottom: '2px', fontWeight: 600 }}>CupÃ³n aplicado: {sale.sale_applied_discounts.find(d => d.sale_detail_id == null).discount.code}</div>
+                              <div style={{ marginBottom: '2px', fontWeight: 600 }}>Cupón aplicado: {sale.sale_applied_discounts.find(d => d.sale_detail_id == null).discount.code}</div>
                           )}
                           {sale?.giftcard_transactions?.map(tx => (
                               <div key={tx.id} style={{ marginBottom: '2px', fontWeight: 600 }}>Giftcard usada: {tx.giftcard?.code} (-Bs. {Number(tx.amount).toFixed(2)})</div>
@@ -576,26 +642,34 @@ export default function SaleDetailsModal({ saleId, onClose }) {
             )}
           </CanAccess>
 
-          <div style={{ display: 'flex', gap: '12px', width: '100%', flexWrap: 'wrap' }}>
-            <CanAccess permission="manage_sales">
-              {sale.status !== 'cancelled' && sale.status !== 'refunded' && sale.status !== 'paid' && sale.status !== 'completed' && (
-                <button 
-                  style={{ background: 'transparent', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid var(--color-danger)', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, flex: 1, minWidth: '120px', fontSize: '14px', boxSizing: 'border-box' }}
-                  onClick={() => handleStatusChange('cancelled')}
-                  disabled={actionLoading}
-                >
-                  <X size={16} /> Cancelar
-                </button>
-              )}
-            </CanAccess>
+          <CanAccess permission="manage_sales">
+            {sale.status !== 'cancelled' && sale.status !== 'refunded' && sale.status !== 'paid' && sale.status !== 'completed' && (
+              <button 
+                style={{ background: 'transparent', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: '1px solid var(--color-danger)', height: '44px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, width: '100%', fontSize: '14px', boxSizing: 'border-box' }}
+                onClick={() => handleStatusChange('cancelled')}
+                disabled={actionLoading}
+              >
+                <X size={16} /> Cancelar Venta
+              </button>
+            )}
+          </CanAccess>
 
+          <div style={{ display: 'flex', gap: '10px', width: '100%', flexWrap: 'nowrap' }}>
             <CanAccess permission="print_sale_receipt">
-              <button style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: 1, minWidth: '160px', height: '44px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px', boxSizing: 'border-box' }} onClick={() => setShowReceipt(true)}>
-                <Printer size={18} /> Imprimir Ticket
+              <button 
+                style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: 1, minWidth: 0, height: '44px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px', boxSizing: 'border-box' }} 
+                onClick={() => setShowReceipt(true)}
+              >
+                <Printer size={18} style={{ flexShrink: 0 }} /> 
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Imprimir Ticket</span>
               </button>
             </CanAccess>
             
-            <button onClick={onClose} disabled={actionLoading} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontWeight: 600, cursor: 'pointer', height: '44px', borderRadius: '8px', flex: 1, minWidth: '120px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', boxSizing: 'border-box' }}>
+            <button 
+              onClick={onClose} 
+              disabled={actionLoading} 
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontWeight: 600, cursor: 'pointer', height: '44px', borderRadius: '8px', flex: 1, minWidth: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', boxSizing: 'border-box' }}
+            >
               Cerrar
             </button>
           </div>

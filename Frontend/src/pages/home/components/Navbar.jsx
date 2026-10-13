@@ -1,7 +1,7 @@
 import { getImageUrl } from '../../../utils/imageUtils';
 import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { User } from 'lucide-react';
+import { User, LayoutDashboard, Store, LogOut, ChevronRight } from 'lucide-react';
 import { useAuthStore } from "../../../store/authStore";
 import { useThemeStore } from "../../../store/themeStore";
 import { useShopSettingsStore } from "../../../store/shop/useShopSettingsStore";
@@ -48,7 +48,6 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
   }, [fetchSettings]);
 
   useEffect(() => {
-
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpen(false);
@@ -56,11 +55,12 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
-
   }, []);
 
   const handleLogoutClick = () => {
@@ -170,39 +170,108 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
           ) : (
             <div className="nav-user" ref={menuRef}>
 
-              <div onClick={() => setOpen(!open)}>
+              <button 
+                type="button"
+                className="nav-avatar-btn"
+                onClick={() => setOpen(!open)}
+                aria-label="Menú de usuario"
+                aria-expanded={open}
+              >
                 {user.photo ? (
-                  <img src={user.photo} className="nav-avatar" />
+                  <img src={user.photo} className="nav-avatar" alt="Avatar" />
                 ) : (
                   <div className="nav-avatar-fallback">
-                    {getInitials(user.username)}
+                    {getInitials(user.name || user.username)}
                   </div>
                 )}
-              </div>
+              </button>
 
               {open && (
-                <div className="nav-dropdown">
+                <div className="nav-dropdown" role="menu">
+                  {/* CABECERA CON DATOS DEL USUARIO */}
+                  <div className="nav-dropdown-header">
+                    <div className="nav-dropdown-avatar-sm">
+                      {user.photo ? (
+                        <img src={user.photo} alt="Avatar" />
+                      ) : (
+                        <span>{getInitials(user.name || user.username)}</span>
+                      )}
+                    </div>
+                    <div className="nav-dropdown-user-details">
+                      <span className="nav-dropdown-name">
+                        {user.name || user.username || "Mi Cuenta"}
+                      </span>
+                      <span className="nav-dropdown-email">
+                        {user.email || "Usuario autenticado"}
+                      </span>
+                    </div>
+                  </div>
 
-                  <Link to="/profile" state={{ theme: isDarkContext ? 'dark' : 'light' }}>
-                    Ver perfil
-                  </Link>
+                  <div className="nav-dropdown-divider" />
 
-                  {hasDashboardAccess && (
-                    <Link to="/dashboard">
-                      Administración
+                  {/* ELEMENTOS DEL MENÚ */}
+                  <div className="nav-dropdown-menu">
+                    <Link 
+                      to="/profile" 
+                      state={{ theme: isDarkContext ? 'dark' : 'light' }}
+                      className="nav-dropdown-item"
+                      onClick={() => setOpen(false)}
+                      role="menuitem"
+                    >
+                      <span className="nav-dropdown-icon">
+                        <User size={16} />
+                      </span>
+                      <span className="nav-dropdown-text">Ver perfil</span>
+                      <ChevronRight size={14} className="nav-dropdown-arrow" />
                     </Link>
-                  )}
-                  
-                  {hasPosAccess && (
-                    <Link to="/pos">
-                      Punto de venta
-                    </Link>
-                  )}
 
-                  <div className="divider" />
+                    {hasDashboardAccess && (
+                      <Link 
+                        to="/dashboard"
+                        className="nav-dropdown-item"
+                        onClick={() => setOpen(false)}
+                        role="menuitem"
+                      >
+                        <span className="nav-dropdown-icon">
+                          <LayoutDashboard size={16} />
+                        </span>
+                        <span className="nav-dropdown-text">Administración</span>
+                        <ChevronRight size={14} className="nav-dropdown-arrow" />
+                      </Link>
+                    )}
+                    
+                    {hasPosAccess && (
+                      <Link 
+                        to="/pos"
+                        className="nav-dropdown-item"
+                        onClick={() => setOpen(false)}
+                        role="menuitem"
+                      >
+                        <span className="nav-dropdown-icon">
+                          <Store size={16} />
+                        </span>
+                        <span className="nav-dropdown-text">Punto de venta</span>
+                        <ChevronRight size={14} className="nav-dropdown-arrow" />
+                      </Link>
+                    )}
+                  </div>
 
-                  <button onClick={handleLogoutClick}>
-                    Cerrar sesión
+                  <div className="nav-dropdown-divider" />
+
+                  {/* CERRAR SESIÓN */}
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      handleLogoutClick();
+                    }}
+                    className="nav-dropdown-item nav-dropdown-item-logout"
+                    role="menuitem"
+                  >
+                    <span className="nav-dropdown-icon nav-dropdown-icon-danger">
+                      <LogOut size={16} />
+                    </span>
+                    <span className="nav-dropdown-text">Cerrar sesión</span>
                   </button>
 
                 </div>

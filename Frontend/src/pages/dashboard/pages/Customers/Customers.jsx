@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload, RefreshCw, Users } from "lucide-react";
+import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload, RefreshCw, Users, UserCheck, UserPlus, Award, Phone } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getCustomers, deleteCustomer, getCustomerKpis } from "../../../../api/admin/customers";
@@ -130,22 +130,45 @@ export default function Customers() {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Total de Clientes</span>
-          <span style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{kpis.totalCustomers}</span>
+      <div className="customers-kpi-container">
+        <div className="customers-kpi-card kpi-total">
+          <div className="customers-kpi-icon-wrapper">
+            <Users size={22} />
+          </div>
+          <div className="customers-kpi-content">
+            <span className="customers-kpi-label">Total de Clientes</span>
+            <span className="customers-kpi-value">{kpis.totalCustomers}</span>
+          </div>
         </div>
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Clientes Activos</span>
-          <span style={{ fontSize: '28px', fontWeight: 700, color: 'var(--color-primary)' }}>{kpis.activeCustomers}</span>
+
+        <div className="customers-kpi-card kpi-active">
+          <div className="customers-kpi-icon-wrapper">
+            <UserCheck size={22} />
+          </div>
+          <div className="customers-kpi-content">
+            <span className="customers-kpi-label">Clientes Activos</span>
+            <span className="customers-kpi-value">{kpis.activeCustomers}</span>
+          </div>
         </div>
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Nuevos (Este Mes)</span>
-          <span style={{ fontSize: '28px', fontWeight: 700, color: '#10b981' }}>+{kpis.newThisMonth}</span>
+
+        <div className="customers-kpi-card kpi-new">
+          <div className="customers-kpi-icon-wrapper">
+            <UserPlus size={22} />
+          </div>
+          <div className="customers-kpi-content">
+            <span className="customers-kpi-label">Nuevos (Este Mes)</span>
+            <span className="customers-kpi-value">+{kpis.newThisMonth}</span>
+          </div>
         </div>
-        <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Puntos Distribuidos</span>
-          <span style={{ fontSize: '28px', fontWeight: 700, color: '#f59e0b' }}>{kpis.totalPoints}</span>
+
+        <div className="customers-kpi-card kpi-points">
+          <div className="customers-kpi-icon-wrapper">
+            <Award size={22} />
+          </div>
+          <div className="customers-kpi-content">
+            <span className="customers-kpi-label">Puntos Distribuidos</span>
+            <span className="customers-kpi-value">{kpis.totalPoints}</span>
+          </div>
         </div>
       </div>
 
@@ -170,9 +193,9 @@ export default function Customers() {
         </div>
 
         {showFilters && (
-          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+          <div className="filters-panel">
+            <div className="filter-group">
+              <label>Estado</label>
               <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
@@ -184,8 +207,8 @@ export default function Customers() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Tipo de Cliente</label>
+            <div className="filter-group">
+              <label>Tipo de Cliente</label>
               <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.type}
@@ -197,8 +220,8 @@ export default function Customers() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Etiqueta (Tag)</label>
+            <div className="filter-group">
+              <label>Etiqueta (Tag)</label>
               <input 
                 type="text"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
@@ -208,8 +231,8 @@ export default function Customers() {
               />
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Puntos Mínimos</label>
+            <div className="filter-group">
+              <label>Puntos Mínimos</label>
               <input 
                 type="number"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
@@ -219,8 +242,8 @@ export default function Customers() {
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ordenar Por</label>
+            <div className="filter-group filter-full-width">
+              <label>Ordenar Por</label>
               <CustomSelect 
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sortBy}
@@ -232,8 +255,8 @@ export default function Customers() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Registrado Desde</label>
+            <div className="filter-group">
+              <label>Registrado Desde</label>
               <input 
                 type="date"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
@@ -242,8 +265,8 @@ export default function Customers() {
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Registrado Hasta</label>
+            <div className="filter-group">
+              <label>Registrado Hasta</label>
               <input 
                 type="date"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
@@ -329,7 +352,12 @@ export default function Customers() {
                     <td data-label="Contacto">
                       <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', color: 'var(--text-muted)', gap: '2px' }}>
                         <span style={{ color: 'var(--text-main)' }}>{c.user?.email || 'Sin Correo'}</span>
-                        {profile.phone && <span>📞 {profile.phone}</span>}
+                        {profile.phone && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <Phone size={12} />
+                            <span>{profile.phone}</span>
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td data-label="Puntos">

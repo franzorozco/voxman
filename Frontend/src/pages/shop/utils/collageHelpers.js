@@ -4,7 +4,7 @@ export const formatCollageItems = (products, shorts) => {
   // 1. Procesar Productos
   products.forEach((product) => {
     const categoryId = product.category_id || (product.category ? product.category.id : '');
-    const catalogUrl = `/shop/catalog?category=${categoryId}`;
+    const catalogUrl = categoryId ? `/shop/catalog?category=${categoryId}` : '/shop/catalog';
 
     // Imágenes por color (attribute_value_images) — las principales
     const colorImages = (product.attribute_value_images || [])
@@ -121,9 +121,10 @@ export const formatCollageItems = (products, shorts) => {
     let targetUrl = '/shop';
     if (s.product) {
       const catId = s.product.category_id || (s.product.category ? s.product.category.id : '');
-      targetUrl = `/shop/catalog?category=${catId}`;
+      targetUrl = catId ? `/shop/catalog?category=${catId}` : '/shop/catalog';
     } else if (s.category) {
-      targetUrl = `/shop/catalog?category=${s.category.id}`;
+      const catId = s.category.id || (typeof s.category === 'string' ? s.category : '');
+      targetUrl = catId ? `/shop/catalog?category=${catId}` : '/shop/catalog';
     }
 
     return {

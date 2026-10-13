@@ -37,9 +37,9 @@ const Catalog = () => {
 
   const addToCart = useShopCartStore(state => state.addItem);
   const [addedAnimationItems, setAddedAnimationItems] = useState({});
-  const rawCategory = searchParams.get('category');
-  // Allow any non-empty string, as IDs can be UUIDs, integers, or slugs
-  const initialCategory = rawCategory && rawCategory.trim() !== '' ? rawCategory : null;
+  // Leer categoría desde URL (?category=... o ?category_id=...)
+  const urlCategoryParam = searchParams.get('category') || searchParams.get('category_id');
+  const initialCategory = urlCategoryParam && urlCategoryParam.trim() !== '' ? urlCategoryParam.trim() : null;
 
   // ── Settings del Dashboard ──
   const { settings: shopSettings, fetchSettings: fetchShopSettings } = useShopSettingsStore();
@@ -50,18 +50,53 @@ const Catalog = () => {
 
   const { catalogState, setCatalogState, scrollPosition, setScrollPosition } = useShopCatalogStore();
 
-  const [products, setProducts] = useState(catalogState?.products || []);
-  const [categories, setCategories] = useState(catalogState?.categories || []);
-  const [categoriesLoaded, setCategoriesLoaded] = useState(catalogState?.categoriesLoaded || false);
-  const [selectedCategory, setSelectedCategory] = useState(catalogState?.selectedCategory ?? (initialCategory || null));
+  // Comprobar si la caché coincide exactamente con la categoría solicitada
+  const isCacheCategoryMatch = Boolean(
+    catalogState &&
+    (
+      (initialCategory === null && !catalogState.selectedCategory) ||
+      (initialCategory !== null && String(catalogState.selectedCategory) === String(initialCategory))
+    )
+  );
 
+  const [categories, setCategories] = useState(catalogState?.categories || []);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(Boolean(catalogState?.categories?.length > 0));
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [products, setProducts] = useState(isCacheCategoryMatch ? (catalogState?.products || []) : []);
+
+  // 1. Sincronizar hacia selectedCategory cuando la URL cambie (ej: links de categorías, botones externos o navegación)
   useEffect(() => {
-    if (selectedCategory) {
-      setSearchParams({ category: selectedCategory }, { replace: true });
-    } else {
-      setSearchParams({}, { replace: true });
+    const raw = searchParams.get('category') || searchParams.get('category_id');
+    const newCategory = raw && raw.trim() !== '' ? raw.trim() : null;
+    if (newCategory !== selectedCategory) {
+      setSelectedCategory(newCategory);
+      setExpandedProductId(null);
     }
-  }, [selectedCategory, setSearchParams]);
+  }, [searchParams, selectedCategory]);
+
+  // 2. Sincronizar hacia la URL cuando el usuario interactúe con los filtros
+  useEffect(() => {
+    const currentUrlCat = searchParams.get('category') || searchParams.get('category_id') || null;
+    if (selectedCategory) {
+      if (currentUrlCat !== selectedCategory) {
+        setSearchParams(prev => {
+          const next = new URLSearchParams(prev);
+          next.set('category', selectedCategory);
+          next.delete('category_id');
+          return next;
+        }, { replace: true });
+      }
+    } else {
+      if (currentUrlCat !== null) {
+        setSearchParams(prev => {
+          const next = new URLSearchParams(prev);
+          next.delete('category');
+          next.delete('category_id');
+          return next;
+        }, { replace: true });
+      }
+    }
+  }, [selectedCategory, searchParams, setSearchParams]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -129,7 +164,7 @@ const Catalog = () => {
 
 
   useEffect(() => {
-    if (categoriesFetchedRef.current || catalogState?.categories?.length > 0) return;
+    if (categoriesFetchedRef.current) return;
     categoriesFetchedRef.current = true;
     
     const fetchCategories = async () => {
@@ -145,10 +180,26 @@ const Catalog = () => {
     fetchCategories();
   }, []);
 
-  // Removido fetchWishlist para no sobrecargar
+  // Helper para verificar si una categoría está seleccionada (por ID o por nombre)
+  const isCategorySelected = (catId) => {
+    if (!selectedCategory) return false;
+    if (selectedCategory === catId) return true;
+    const matched = categories.find(c => c.name && c.name.toLowerCase() === selectedCategory.toLowerCase());
+    return matched?.id === catId;
+  };
+
+  const selectedCategoryName = React.useMemo(() => {
+    if (!selectedCategory) return null;
+    const cat = categories.find(c => c.id === selectedCategory || (c.name && c.name.toLowerCase() === selectedCategory.toLowerCase()));
+    return cat?.name || 'Categoría';
+  }, [categories, selectedCategory]);
 
   // Reiniciar la página y limpiar productos cuando cambian los filtros
-  const prevResetFilters = useRef(JSON.stringify({ selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock }));
+  const prevResetFilters = useRef(
+    isCacheCategoryMatch
+      ? JSON.stringify({ selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock })
+      : null
+  );
   
   useEffect(() => {
     const filtersStr = JSON.stringify({ selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock });
@@ -166,16 +217,15 @@ const Catalog = () => {
 
   // Obtener productos desde el backend (paginación server-side)
   useEffect(() => {
-    if (!categoriesLoaded) return;
     if (!hasMore && currentPage > 1) return;
 
     const paramsStr = JSON.stringify({ selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock, currentPage });
     
     if (isInitialFetch.current) {
       isInitialFetch.current = false;
-      if (catalogState?.products?.length > 0) {
+      if (isCacheCategoryMatch && catalogState?.products?.length > 0) {
         prevFetchParams.current = paramsStr;
-        return; // Saltar fetch inicial si hay cache
+        return; // Saltar fetch inicial solo si la caché coincide con la categoría actual
       }
     }
 
@@ -193,8 +243,13 @@ const Catalog = () => {
         const params = { page: currentPage, per_page: perPage };
 
         if (selectedCategory) {
-          const children = categories.filter(c => c.parent_id === selectedCategory);
-          const ids = [selectedCategory, ...children.map(c => c.id)];
+          const matchedCategory = categories.find(c => 
+            c.id === selectedCategory || 
+            (c.name && c.name.toLowerCase() === selectedCategory.toLowerCase())
+          );
+          const catId = matchedCategory ? matchedCategory.id : selectedCategory;
+          const children = categories.filter(c => c.parent_id === catId);
+          const ids = [catId, ...children.map(c => c.id)];
           params.category_id = ids.join(',');
         }
         if (debouncedSearchQuery) params.search = debouncedSearchQuery;
@@ -225,7 +280,7 @@ const Catalog = () => {
     };
 
     fetchCatalogItems();
-  }, [categoriesLoaded, currentPage, selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock, categories, shopSettings, hasMore, catalogState]);
+  }, [categoriesLoaded, currentPage, selectedCategory, debouncedSearchQuery, debouncedMinPrice, debouncedMaxPrice, sortBy, hideOutOfStock, categories, shopSettings, hasMore]);
 
   // Handle scroll position persistence
   useEffect(() => {
@@ -1165,14 +1220,14 @@ const Catalog = () => {
                 return (
                   <React.Fragment key={parent.id}>
                     <li>
-                      <button className="catalog-filter-link" style={{ fontWeight: selectedCategory === parent.id ? 700 : 500, color: 'var(--text-main)' }}
+                      <button className="catalog-filter-link" style={{ fontWeight: isCategorySelected(parent.id) ? 700 : 500, color: 'var(--text-main)' }}
                         onClick={() => { setSelectedCategory(parent.id); setIsMobileFiltersOpen(false); }}>
                         {parent.name}
                       </button>
                     </li>
                     {children.map(child => (
                       <li key={child.id} style={{ paddingLeft: '14px' }}>
-                        <button className="catalog-filter-link" style={{ fontWeight: selectedCategory === child.id ? 600 : 400, color: selectedCategory === child.id ? 'var(--text-main)' : 'var(--text-muted)' }}
+                        <button className="catalog-filter-link" style={{ fontWeight: isCategorySelected(child.id) ? 600 : 400, color: isCategorySelected(child.id) ? 'var(--text-main)' : 'var(--text-muted)' }}
                           onClick={() => { setSelectedCategory(child.id); setIsMobileFiltersOpen(false); }}>
                           {child.name}
                         </button>
@@ -1232,7 +1287,7 @@ const Catalog = () => {
             <>
               <span className="catalog-breadcrumb-sep">›</span>
               <span style={{ color: 'var(--text-muted)' }}>
-                {categories.find(c => c.id === selectedCategory)?.name || 'Categoría'}
+                {selectedCategoryName}
               </span>
             </>
           )}
@@ -1349,7 +1404,7 @@ const Catalog = () => {
                 <>
                   <span style={{ margin: '0 8px' }}>&gt;</span>
                   <span style={{ color: 'var(--text-muted)' }}>
-                    {categories.find(c => c.id === selectedCategory)?.name || 'Categoría'}
+                    {selectedCategoryName}
                   </span>
                 </>
               )}
@@ -1375,7 +1430,7 @@ const Catalog = () => {
                       <li>
                         <button type="button" className="catalog-filter-link"
                           onClick={() => { setSelectedCategory(parent.id); setExpandedProductId(null); }}
-                          style={{ fontWeight: selectedCategory === parent.id ? 700 : 500, color: 'var(--text-main)' }}>
+                          style={{ fontWeight: isCategorySelected(parent.id) ? 700 : 500, color: 'var(--text-main)' }}>
                           {parent.name}
                         </button>
                       </li>
@@ -1383,7 +1438,7 @@ const Catalog = () => {
                         <li key={child.id} style={{ paddingLeft: '12px' }}>
                           <button type="button" className="catalog-filter-link"
                             onClick={() => { setSelectedCategory(child.id); setExpandedProductId(null); }}
-                            style={{ fontWeight: selectedCategory === child.id ? 600 : 400, color: selectedCategory === child.id ? 'var(--text-main)' : 'var(--text-muted)' }}>
+                            style={{ fontWeight: isCategorySelected(child.id) ? 600 : 400, color: isCategorySelected(child.id) ? 'var(--text-main)' : 'var(--text-muted)' }}>
                             {child.name}
                           </button>
                         </li>

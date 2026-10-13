@@ -971,7 +971,7 @@ const BundleDetail = () => {
         <div className="flex items-center gap-1 opacity-70 flex-wrap flex-1 justify-end text-right">
           <Link to="/shop">Inicio</Link>
           <span style={{ margin: '0 2px' }}>›</span>
-          <Link to={`/shop/catalog?category=${bundle.category?.id || ''}`}>
+          <Link to={bundle.category?.id ? `/shop/catalog?category=${bundle.category.id}` : '/shop/catalog'}>
             {bundle.category?.name || 'Catálogo'}
           </Link>
           <span style={{ margin: '0 2px' }}>›</span>

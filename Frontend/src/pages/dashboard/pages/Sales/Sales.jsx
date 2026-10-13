@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Eye, Filter, CheckCircle, XCircle, ShoppingBag, Clock, RotateCcw, MoreVertical, RefreshCw } from "lucide-react";
+import { Search, Eye, Filter, CheckCircle, XCircle, ShoppingBag, Clock, RotateCcw, MoreVertical, RefreshCw, TrendingUp, CreditCard } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getSales } from "../../../../api/admin/sales";
@@ -129,18 +129,39 @@ export default function Sales() {
       </div>
 
       <CanAccess permission="view_sale_profits">
-        <div className="sales-kpi-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-          <div className="sales-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.3s ease' }}>
-            <span className="sales-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ingresos Totales</span>
-            <span className="sales-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>Bs. {parseFloat(summary.total_revenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+        <div className="sales-kpi-container">
+          <div className="sales-kpi-card kpi-revenue">
+            <div className="sales-kpi-icon-wrapper">
+              <TrendingUp size={22} />
+            </div>
+            <div className="sales-kpi-content">
+              <span className="sales-kpi-label">Ingresos Totales</span>
+              <span className="sales-kpi-value">
+                Bs. {parseFloat(summary.total_revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
           </div>
-          <div className="sales-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.4s ease' }}>
-            <span className="sales-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ventas Realizadas</span>
-            <span className="sales-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>{summary.total_sales || 0}</span>
+
+          <div className="sales-kpi-card kpi-sales">
+            <div className="sales-kpi-icon-wrapper">
+              <ShoppingBag size={22} />
+            </div>
+            <div className="sales-kpi-content">
+              <span className="sales-kpi-label">Ventas Realizadas</span>
+              <span className="sales-kpi-value">{summary.total_sales || 0}</span>
+            </div>
           </div>
-          <div className="sales-kpi-card" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px', animation: 'fadeInUp 0.5s ease' }}>
-            <span className="sales-kpi-label" style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ticket Promedio</span>
-            <span className="sales-kpi-value" style={{ color: 'var(--text-main)', fontSize: '28px', fontWeight: 800 }}>Bs. {parseFloat(summary.average_ticket || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+
+          <div className="sales-kpi-card kpi-ticket">
+            <div className="sales-kpi-icon-wrapper">
+              <CreditCard size={22} />
+            </div>
+            <div className="sales-kpi-content">
+              <span className="sales-kpi-label">Ticket Promedio</span>
+              <span className="sales-kpi-value">
+                Bs. {parseFloat(summary.average_ticket || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
           </div>
         </div>
       </CanAccess>

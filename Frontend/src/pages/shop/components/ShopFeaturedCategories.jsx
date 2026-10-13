@@ -29,8 +29,11 @@ export default function ShopFeaturedCategories({ categories }) {
       </div>
 
       <div className="shop-fc-grid">
-        {parsedCats.map(cat => (
-          <Link to={`/shop/catalog?category=${cat.id}`} key={cat.id} className="shop-fc-card">
+        {parsedCats.map(cat => {
+          const categoryId = cat?.id || (typeof cat === 'string' ? cat : '');
+          if (!categoryId) return null;
+          return (
+            <Link to={`/shop/catalog?category=${categoryId}`} key={categoryId} className="shop-fc-card">
             <img 
               src={cat.image ? getImageUrl(cat.image) : FALLBACK_IMAGE} 
               alt={cat.name} 
@@ -42,8 +45,9 @@ export default function ShopFeaturedCategories({ categories }) {
               <span className="shop-fc-name">{cat.name}</span>
               <span className="shop-fc-btn">EXPLORAR <ArrowRight size={14} /></span>
             </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
