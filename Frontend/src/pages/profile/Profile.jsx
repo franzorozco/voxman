@@ -28,12 +28,20 @@ import {
   X,
   Loader2,
   Truck,
-  Clock
+  Clock,
+  RotateCw,
+  ShoppingCart,
+  MessageCircle,
+  Bell,
+  Send,
+  Hourglass,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
 import { useThemeStore } from "../../store/themeStore";
 import useShopWishlistStore from "../../store/shop/useShopWishlistStore";
+import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import Navbar from "../home/components/Navbar";
 import Footer from "../../components/layout/Footer";
 import { 
@@ -43,12 +51,93 @@ import {
   addAddress, 
   updateAddress, 
   deleteAddress,
-  getMyOrders 
+  getMyOrders,
+  getMyCarts,
+  deleteMyCart,
+  remindMyCart
 } from "../../api/profile/profileApi";
-import { getImageUrl } from "../../utils/imageUtils";
+import { getImageUrl, getVariantImageUrl } from "../../utils/imageUtils";
 import AddressMapPicker from "../../components/ui/AddressMapPicker";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 import { verifyRegisterCode, resendRegisterCode } from "../../api/admin/auth";
 import "./Profile.css";
+
+const CartCountdown = ({ expiresAt, status }) => {
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    if (!expiresAt) {
+      setIsExpired(status === "abandoned" || status === "expired");
+      return;
+    }
+
+    const calculateTime = () => {
+      const now = Date.now();
+      const exp = new Date(expiresAt).getTime();
+      const diff = exp - now;
+
+      if (diff <= 0 || status === "abandoned" || status === "expired") {
+        setTimeLeft(0);
+        setIsExpired(true);
+      } else {
+        setTimeLeft(diff);
+        setIsExpired(false);
+      }
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [expiresAt, status]);
+
+  if (status === "ordered" || status === "converted") {
+    return null;
+  }
+
+  if (isExpired || (expiresAt && timeLeft !== null && timeLeft <= 0)) {
+    return (
+      <div className="profile-cart-countdown-bar expired">
+        <div className="countdown-bar-left">
+          <AlertCircle size={13} />
+          <span>Reserva expirada</span>
+        </div>
+        <span className="countdown-bar-hint">
+          Reactivar por WhatsApp o con el botón Recordar
+        </span>
+      </div>
+    );
+  }
+
+  if (timeLeft === null || !expiresAt) {
+    return null;
+  }
+
+  const totalSeconds = Math.floor(timeLeft / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const isUrgent = timeLeft < 3600 * 1000;
+  const pad = (n) => String(n).padStart(2, "0");
+
+  const formattedTime = days > 0 
+    ? `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s` 
+    : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
+  return (
+    <div className={`profile-cart-countdown-bar ${isUrgent ? "urgent" : "active"}`}>
+      <div className="countdown-bar-left">
+        <Clock size={13} />
+        <span>{isUrgent ? "Tiempo de reserva restante:" : "Tiempo de reserva:"}</span>
+      </div>
+      <div className="countdown-bar-right">
+        <span className="countdown-timer-val">{formattedTime}</span>
+      </div>
+    </div>
+  );
+};
+
 
 const MissingDataPointer = ({ message }) => (
   <div style={{
@@ -180,7 +269,20 @@ export default function Profile() {
   // Orders State
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const [orderFilter, setOrderFilter] = useState("all"); // all, pending, in_transit, completed
+  const [orderFilter, setOrderFilter] = useState("all"); // all, pending, in_transit, completed, carts
+
+  // Carts State
+  const [carts, setCarts] = useState([]);
+  const [cartsLoading, setCartsLoading] = useState(false);
+  const [expandedCartId, setExpandedCartId] = useState(null);
+  const [remindingCartId, setRemindingCartId] = useState(null);
+
+  // Shop Settings Store (WhatsApp phone, store info)
+  const { settings: shopSettings, fetchSettings: fetchShopSettings } = useShopSettingsStore();
+
+  useEffect(() => {
+    fetchShopSettings();
+  }, [fetchShopSettings]);
 
   // Wishlist Store
   const { items: wishlistItems, loading: wishlistLoading, fetchWishlist, toggleWishlist } = useShopWishlistStore();
@@ -395,8 +497,15 @@ export default function Profile() {
 
     // Check if customer code was modified
     const originalCode = userData?.customers?.[0]?.customer_code || "";
-    if (profileForm.customer_code?.trim() !== originalCode && !showConfirmCodeModal) {
-      setShowConfirmCodeModal(true);
+    if (profileForm.customer_code?.trim() !== originalCode) {
+      openConfirmModal({
+        title: "Confirmar Cambio de Carnet",
+        message: `Estás a punto de cambiar tu Número de Carnet a ${profileForm.customer_code}. Recuerda que no podrás modificarlo nuevamente en los próximos 2 meses. ¿Deseas guardar los cambios?`,
+        confirmText: "Sí, guardar",
+        cancelText: "Cancelar",
+        type: "warning",
+        onConfirm: () => executeProfileSubmit()
+      });
       return;
     }
 
@@ -526,22 +635,66 @@ export default function Profile() {
     setShowAddressModal(true);
   };
 
-  const handleDeleteAddress = async (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta dirección?")) return;
-    try {
-      await deleteAddress(id);
-      toast.success("Dirección eliminada.");
-      setAddresses(prev => prev.filter(a => a.id !== id));
-    } catch (err) {
-      console.error("Error deleting address:", err);
-      toast.error("Error al eliminar la dirección.");
-    }
+  // Generic Confirm Modal State
+  const [confirmModalConfig, setConfirmModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "Confirmar",
+    cancelText: "Cancelar",
+    type: "warning",
+    onConfirm: () => {}
+  });
+
+  const openConfirmModal = ({ title, message, confirmText = "Confirmar", cancelText = "Cancelar", type = "warning", onConfirm }) => {
+    setConfirmModalConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      cancelText,
+      type,
+      onConfirm
+    });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModalConfig(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const handleDeleteAddress = (id) => {
+    openConfirmModal({
+      title: "Eliminar dirección",
+      message: "¿Estás seguro de que deseas eliminar esta dirección de envío?",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      type: "danger",
+      onConfirm: async () => {
+        try {
+          await deleteAddress(id);
+          toast.success("Dirección eliminada.");
+          setAddresses(prev => prev.filter(a => a.id !== id));
+        } catch (err) {
+          console.error("Error deleting address:", err);
+          toast.error("Error al eliminar la dirección.");
+        }
+      }
+    });
   };
 
   const handleLogout = () => {
-    logout();
-    toast.success("Sesión cerrada.");
-    navigate("/");
+    openConfirmModal({
+      title: "Cerrar sesión",
+      message: "¿Estás seguro de que deseas cerrar sesión?",
+      confirmText: "Sí, salir",
+      cancelText: "Cancelar",
+      type: "warning",
+      onConfirm: () => {
+        logout();
+        toast.success("Sesión cerrada.");
+        navigate("/");
+      }
+    });
   };
 
   // Load orders when tab is activated or filter changes
@@ -549,7 +702,7 @@ export default function Profile() {
     try {
       setOrdersLoading(true);
       const params = {};
-      if (filter && filter !== "all") {
+      if (filter && filter !== "all" && filter !== "carts") {
         params.status = filter;
       }
       const data = await getMyOrders(params);
@@ -562,19 +715,166 @@ export default function Profile() {
     }
   }, []);
 
+  // Load registered carts from /carts
+  const loadCarts = useCallback(async () => {
+    try {
+      setCartsLoading(true);
+      const data = await getMyCarts();
+      setCarts(Array.isArray(data) ? data : (data?.carts || []));
+    } catch (err) {
+      console.error("Error loading carts:", err);
+      toast.error("Error al cargar tus carritos.");
+    } finally {
+      setCartsLoading(false);
+    }
+  }, []);
+
+  const handleDeleteCart = (cartId) => {
+    openConfirmModal({
+      title: "Eliminar carrito",
+      message: "¿Estás seguro de que deseas eliminar este carrito registrado? Esta acción no se puede deshacer.",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      type: "danger",
+      onConfirm: async () => {
+        try {
+          await deleteMyCart(cartId);
+          toast.success("Carrito eliminado correctamente.");
+          setCarts(prev => prev.filter(c => c.id !== cartId));
+        } catch (err) {
+          console.error("Error deleting cart:", err);
+          toast.error(err.response?.data?.message || "No se pudo eliminar el carrito.");
+        }
+      }
+    });
+  };
+
+  // Generate customized WhatsApp URL based on cart expiration status
+  const generateCartWhatsAppUrl = (cart) => {
+    const rawPhone = shopSettings?.store_phone || "+59157003312";
+    const phone = rawPhone.replace(/[^0-9]/g, "");
+    const refCode = cart.reference_number || (cart.id ? `#${cart.id.slice(0, 8).toUpperCase()}` : "N/A");
+    const isExpired = cart.status === "abandoned" || cart.status === "expired" || (cart.expires_at && new Date(cart.expires_at).getTime() < Date.now());
+    const customerName = userData?.full_name || [userData?.profile?.first_name, userData?.profile?.last_name_paternal].filter(Boolean).join(" ") || userData?.username || "Cliente VOXMAN";
+    const total = Number(cart.total_amount_calculated ?? cart.total_amount ?? 0).toFixed(2);
+
+    const message = isExpired
+      ? `Hola VOXMAN, soy ${customerName}. Tengo mi carrito pendiente ${refCode} (Total: Bs. ${total}) que ha expirado y no pude atender a tiempo. Quiero reactivar mi pedido, todos mis datos registrados son correctos.`
+      : `Hola VOXMAN, soy ${customerName}. Tengo mi carrito pendiente ${refCode} (Total: Bs. ${total}) y deseo coordinar la entrega y detalles para concretar mi compra. Todos mis datos registrados son correctos.`;
+
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  };
+
+  // Handle sending reminder or reactivation request to owners (max 1 per 24 hours)
+  const handleRemindCart = (cart) => {
+    const isExpired = cart.status === "abandoned" || cart.status === "expired" || (cart.expires_at && new Date(cart.expires_at).getTime() < Date.now());
+    const refCode = cart.reference_number || (cart.id ? `#${cart.id.slice(0, 8).toUpperCase()}` : "N/A");
+
+    openConfirmModal({
+      title: isExpired ? "Solicitar Reactivación de Carrito" : "Recordatorio de Entrega",
+      message: isExpired
+        ? `¿Deseas enviar una notificación por correo a los encargados de los productos para reactivar tu carrito ${refCode}? Solo puedes enviar 1 solicitud al día.`
+        : `¿Deseas enviar un recordatorio por correo a los encargados para agendar la entrega de tu pedido ${refCode}? Solo puedes enviar 1 recordatorio al día.`,
+      confirmText: isExpired ? "Solicitar Reactivación" : "Enviar Recordatorio",
+      cancelText: "Cancelar",
+      type: "info",
+      onConfirm: async () => {
+        try {
+          setRemindingCartId(cart.id);
+          const res = await remindMyCart(cart.id);
+          toast.success(res?.message || "Notificación enviada con éxito.");
+          setCarts(prev => prev.map(c => c.id === cart.id ? {
+            ...c,
+            can_remind: false,
+            last_reminder_sent_at: res?.last_reminder_sent_at || new Date().toISOString(),
+            next_reminder_at: res?.next_reminder_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+          } : c));
+        } catch (err) {
+          console.error("Error sending cart reminder:", err);
+          toast.error(err.response?.data?.message || "No se pudo enviar el recordatorio.");
+        } finally {
+          setRemindingCartId(null);
+        }
+      }
+    });
+  };
+
+  // Helper for cart status badge
+  const getCartStatusInfo = (status, expiresAt) => {
+    if (expiresAt && new Date(expiresAt).getTime() < Date.now() && status === 'active') {
+      return { label: 'Expirado', key: 'expired' };
+    }
+    switch (status) {
+      case 'active':
+        return { label: 'Activo', key: 'active' };
+      case 'proforma':
+        return { label: 'Proforma', key: 'proforma' };
+      case 'ordered':
+      case 'converted':
+        return { label: 'Comprado', key: 'converted' };
+      case 'abandoned':
+      case 'expired':
+        return { label: 'Expirado', key: 'expired' };
+      default:
+        return { label: status || 'Registrado', key: 'default' };
+    }
+  };
+
+  // Helper for cart item image using the official Voxman variant image hierarchy
+  const getCartItemImage = (item) => {
+    return getVariantImageUrl(item?.product_variant || item?.variant);
+  };
+
+  // Helper for formatted destination details (minimalist & clean, eliminates "null", "undefined")
+  const getCartDeliveryText = (deliveryDetails) => {
+    if (!deliveryDetails) return null;
+    if (typeof deliveryDetails === "string") {
+      const trimmed = deliveryDetails.trim();
+      if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined" || trimmed === "{}") return null;
+      return trimmed;
+    }
+    if (typeof deliveryDetails === "object") {
+      const parts = [
+        deliveryDetails.department,
+        deliveryDetails.state,
+        deliveryDetails.city,
+        deliveryDetails.zone,
+        deliveryDetails.street,
+        deliveryDetails.address,
+        deliveryDetails.reference,
+        deliveryDetails.notes
+      ].filter(p => {
+        if (!p) return false;
+        const str = String(p).trim();
+        return str.length > 0 && str.toLowerCase() !== "null" && str.toLowerCase() !== "undefined";
+      });
+      return parts.length > 0 ? parts.join(" • ") : null;
+    }
+    return null;
+  };
+
   // Fetch data when switching tabs
   useEffect(() => {
     if (activeTab === "orders") {
-      loadOrders(orderFilter);
+      loadCarts(); // preload carts count
+      if (orderFilter === "carts") {
+        loadCarts();
+      } else {
+        loadOrders(orderFilter);
+      }
     } else if (activeTab === "wishlist") {
       fetchWishlist();
     }
   }, [activeTab]);
 
-  // Refetch orders when filter changes
+  // Refetch orders or carts when filter changes
   useEffect(() => {
     if (activeTab === "orders") {
-      loadOrders(orderFilter);
+      if (orderFilter === "carts") {
+        loadCarts();
+      } else {
+        loadOrders(orderFilter);
+      }
     }
   }, [orderFilter]);
 
@@ -716,7 +1016,7 @@ export default function Profile() {
   const CurrentTabIcon = currentTabItem.icon;
 
   return (
-    <div className="profile-page-wrapper">
+    <div className={`profile-page-wrapper ${profileIsDark ? "profile-dark-mode" : "profile-light-mode"}`}>
       <Navbar isDarkThemeOverride={profileIsDark} />
 
       <main className="profile-main-container">
@@ -724,130 +1024,80 @@ export default function Profile() {
             BANNER DE VERIFICACIÓN DE CORREO DIFERIDA (OPCIÓN B)
             ========================================= */}
         {userData && !userData.is_email_verified && !userData.email_verified_at && (
-          <div
-            style={{
-              marginBottom: "20px",
-              padding: "18px 22px",
-              borderRadius: "14px",
-              background: profileIsDark
-                ? "linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(217, 119, 6, 0.08))"
-                : "linear-gradient(135deg, #fffbeb, #fef3c7)",
-              border: profileIsDark ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid #fcd34d",
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "16px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", flex: "1 1 320px" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  background: "rgba(245, 158, 11, 0.2)",
-                  color: "#d97706",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Mail size={20} />
+          <div className="profile-email-verify-card">
+            <div className="profile-email-verify-content">
+              <div className="profile-email-verify-icon">
+                <Mail size={22} />
               </div>
-              <div>
-                <h3
-                  style={{
-                    margin: "0 0 4px 0",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    color: profileIsDark ? "#fde68a" : "#92400e",
-                  }}
-                >
-                  Confirma tu correo electrónico
-                </h3>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "13px",
-                    lineHeight: 1.45,
-                    color: profileIsDark ? "#fcd34d" : "#b45309",
-                  }}
-                >
-                  Enviamos un código de 6 dígitos a <strong>{userData.email}</strong>. Confirma tu correo dentro de las primeras 24 horas para mantener tu cuenta activa de forma permanente.
+              <div className="profile-email-verify-text">
+                <div className="profile-email-verify-title-row">
+                  <h3 className="profile-email-verify-title">
+                    Confirma tu correo electrónico
+                  </h3>
+                  <span className="profile-email-verify-badge">
+                    <Clock size={11} /> Acción requerida
+                  </span>
+                </div>
+                <p className="profile-email-verify-desc">
+                  Hemos enviado un código de 6 dígitos a <strong className="profile-email-target">{userData.email}</strong>. Ingrésalo para verificar tu cuenta y mantenerla activa.
                 </p>
               </div>
             </div>
 
-            <form
-              onSubmit={handleVerifyEmailCode}
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="Código (6 dígitos)"
-                value={verifyCodeInput}
-                onChange={(e) => setVerifyCodeInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                style={{
-                  width: "155px",
-                  padding: "9px 12px",
-                  borderRadius: "8px",
-                  border: profileIsDark ? "1px solid rgba(245, 158, 11, 0.4)" : "1px solid #f59e0b",
-                  background: profileIsDark ? "rgba(17, 24, 39, 0.8)" : "#ffffff",
-                  color: profileIsDark ? "#ffffff" : "#111827",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  letterSpacing: "3px",
-                  textAlign: "center",
-                  outline: "none",
-                }}
-              />
+            <form onSubmit={handleVerifyEmailCode} className="profile-email-verify-form">
+              <div className="profile-email-verify-input-wrapper">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="Código de 6 dígitos"
+                  value={verifyCodeInput}
+                  onChange={(e) => setVerifyCodeInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className="profile-email-verify-input"
+                  aria-label="Código de verificación"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={verifyingEmail || verifyCodeInput.length !== 6}
-                style={{
-                  padding: "9px 16px",
-                  borderRadius: "8px",
-                  border: "none",
-                  background: "#d97706",
-                  color: "#ffffff",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  cursor: verifyingEmail || verifyCodeInput.length !== 6 ? "not-allowed" : "pointer",
-                  opacity: verifyingEmail || verifyCodeInput.length !== 6 ? 0.65 : 1,
-                }}
+                className="profile-email-verify-btn-confirm"
               >
-                {verifyingEmail ? "Verificando..." : "Confirmar código"}
+                {verifyingEmail ? (
+                  <>
+                    <Loader2 size={15} className="profile-email-spin" />
+                    <span>Verificando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={15} />
+                    <span>Confirmar código</span>
+                  </>
+                )}
               </button>
+
               <button
                 type="button"
                 onClick={handleResendEmailCode}
                 disabled={resendingEmail || resendCooldown > 0}
-                style={{
-                  padding: "9px 12px",
-                  borderRadius: "8px",
-                  border: profileIsDark ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid #d97706",
-                  background: "transparent",
-                  color: profileIsDark ? "#fde68a" : "#92400e",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  cursor: resendingEmail || resendCooldown > 0 ? "not-allowed" : "pointer",
-                  opacity: resendingEmail || resendCooldown > 0 ? 0.6 : 1,
-                }}
+                className="profile-email-verify-btn-resend"
               >
-                {resendingEmail
-                  ? "Enviando..."
-                  : resendCooldown > 0
-                  ? `Reenviar (${resendCooldown}s)`
-                  : "Reenviar código"}
+                {resendingEmail ? (
+                  <>
+                    <Loader2 size={13} className="profile-email-spin" />
+                    <span>Enviando...</span>
+                  </>
+                ) : resendCooldown > 0 ? (
+                  <>
+                    <Clock size={13} />
+                    <span>Reenviar ({resendCooldown}s)</span>
+                  </>
+                ) : (
+                  <>
+                    <RotateCw size={13} />
+                    <span>Reenviar código</span>
+                  </>
+                )}
               </button>
             </form>
           </div>
@@ -1684,71 +1934,449 @@ export default function Profile() {
                     { key: "all", label: "Todos" },
                     { key: "pending", label: "Pendientes" },
                     { key: "in_transit", label: "En Camino" },
-                    { key: "completed", label: "Entregados" }
+                    { key: "completed", label: "Entregados" },
+                    { key: "carts", label: "Carritos", icon: ShoppingCart }
                   ].map(f => (
                     <button
                       key={f.key}
                       className={`profile-tab-pill ${orderFilter === f.key ? "active" : ""}`}
                       onClick={() => setOrderFilter(f.key)}
                     >
+                      {f.icon && <f.icon size={13} style={{ marginRight: "5px", verticalAlign: "middle" }} />}
                       {f.label}
+                      {f.key === "carts" && carts.length > 0 && (
+                        <span className="profile-pill-badge">{carts.length}</span>
+                      )}
                     </button>
                   ))}
                 </div>
 
-                {ordersLoading ? (
-                  <div className="profile-empty-state" style={{ padding: "40px 0" }}>
-                    <Loader2 size={32} style={{ animation: "profileSpin 0.8s linear infinite" }} />
-                    <p>Cargando pedidos...</p>
-                  </div>
-                ) : orders.length === 0 ? (
-                  <div className="profile-empty-state" style={{ padding: "32px 0" }}>
-                    <Package size={48} />
-                    <h3>No tienes pedidos registrados</h3>
-                    <p>Cuando realices tu primera compra, aparecerá aquí.</p>
-                    <Link to="/shop/catalog" className="profile-btn-primary" style={{ display: "inline-flex", marginTop: "8px" }}>
-                      Explorar Catálogo
-                    </Link>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {orders.map((order) => {
-                      const mainShipment = order.shipments?.[0];
-                      const schedule = mainShipment?.delivery_schedule;
-                      const statusInfo = getDeliveryStatusInfo(schedule, mainShipment);
-                      const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric" }) : "";
-                      const trackingId = schedule?.id || mainShipment?.id;
+                {orderFilter === "carts" ? (
+                  cartsLoading ? (
+                    <div className="profile-empty-state" style={{ padding: "40px 0" }}>
+                      <Loader2 size={32} style={{ animation: "profileSpin 0.8s linear infinite" }} />
+                      <p>Cargando carritos...</p>
+                    </div>
+                  ) : carts.length === 0 ? (
+                    <div className="profile-empty-state" style={{ padding: "32px 0" }}>
+                      <ShoppingCart size={48} />
+                      <h3>No tienes carritos registrados</h3>
+                      <p>Los productos que agregues a tu carrito aparecerán registrados aquí.</p>
+                      <Link to="/shop/catalog" className="profile-btn-primary" style={{ display: "inline-flex", marginTop: "8px" }}>
+                        Explorar Catálogo
+                      </Link>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {carts.map((cart) => {
+                        const statusInfo = getCartStatusInfo(cart.status, cart.expires_at);
+                        const cartDate = cart.created_at
+                          ? new Date(cart.created_at).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                          : "";
+                        const itemsCount = cart.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
+                        const grandTotal = Number(cart.total_amount_calculated ?? cart.total_amount ?? 0);
+                        const globalDiscount = Number(cart.global_discount_calculated ?? cart.total_discount ?? 0);
+                        const isExpanded = expandedCartId === cart.id;
+                        const deliveryText = getCartDeliveryText(cart.delivery_details);
+                        const isExpired = cart.status === "abandoned" || cart.status === "expired" || (cart.expires_at && new Date(cart.expires_at).getTime() < Date.now());
+                        const waUrl = generateCartWhatsAppUrl(cart);
+                        const canRemind = cart.can_remind !== false;
 
-                      const grandTotal = order.financials?.grand_total || 0;
-                      const totalPaid = order.financials?.total_paid || 0;
-                      const displayTotal = order.status === 'paid' ? grandTotal : order.financials?.balance_due || 0;
+                        return (
+                          <div key={cart.id} className="profile-cart-card">
+                            <div className="profile-cart-header">
+                              <div className="profile-cart-header-left">
+                                <div className="profile-cart-ref-badge">
+                                  <ShoppingCart size={15} />
+                                  <span>Carrito #{cart.reference_number || cart.id.slice(0, 8).toUpperCase()}</span>
+                                </div>
+                                <span className="profile-cart-meta-date">
+                                  <Clock size={12} /> {cartDate}
+                                </span>
+                                {cart.source && (
+                                  <span className="profile-cart-source-tag">
+                                    {cart.source.toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
 
-                      return (
-                        <div key={order.id} className="profile-order-card">
-                          <div className="order-meta-group">
-                            <h4>Pedido {order.invoice_number ? `#${order.invoice_number}` : `#${order.id.slice(0, 8).toUpperCase()}`}</h4>
-                            <p>Realizado el {orderDate} • {order.financials?.items_count || 0} artículo{order.financials?.items_count !== 1 ? "s" : ""}</p>
-                          </div>
-                          <span className={`order-status-badge ${statusInfo.cssClass}`} style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color, borderColor: statusInfo.color }}>
-                            {statusInfo.label}
-                          </span>
-                          <div>
-                            <span style={{ fontWeight: 700, fontSize: "15px" }}>Bs. {Number(displayTotal).toFixed(2)}</span>
-                            {Number(order.financials?.global_discount || 0) > 0 && (
-                              <div style={{ fontSize: "11px", color: "var(--color-danger, #ef4444)" }}>
-                                Desc: -Bs. {Number(order.financials.global_discount).toFixed(2)}
+                              <div className="profile-cart-header-right">
+                                <span className={`profile-cart-status-badge ${statusInfo.key}`}>
+                                  {statusInfo.label}
+                                </span>
+                                <div className="profile-cart-total-badge">
+                                  <span className="profile-cart-total-val">Bs. {grandTotal.toFixed(2)}</span>
+                                  {globalDiscount > 0 && (
+                                    <span className="profile-cart-discount-val">
+                                      -Bs. {globalDiscount.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Live Countdown & Expiration Banner */}
+                            <CartCountdown expiresAt={cart.expires_at} status={cart.status} />
+
+                            {/* Stock warning banner if any item in cart has stock issues */}
+                            {cart.has_stock_issues && (
+                              <div className="profile-cart-alert-bar stock-warning">
+                                <AlertTriangle size={13} />
+                                <span>Atención: Uno o más artículos de este carrito están agotados o con existencias limitadas en tienda.</span>
+                              </div>
+                            )}
+
+                            {/* Quick Thumbnails Row */}
+                            <div className="profile-cart-preview-row">
+                              <div className="profile-cart-thumbnails">
+                                {cart.items?.slice(0, 5).map((item, idx) => {
+                                  const imgUrl = getCartItemImage(item);
+                                  const prodName = item.product_variant?.product?.name || "Prenda";
+                                  const itemHasIssue = item.has_stock === false || item.stock_status === 'out_of_stock' || item.stock_status === 'insufficient';
+
+                                  return (
+                                    <div key={item.id || idx} className={`profile-cart-thumb ${itemHasIssue ? "has-stock-issue" : ""}`} title={prodName}>
+                                      {imgUrl ? (
+                                        <img 
+                                          src={imgUrl} 
+                                          alt={prodName}
+                                          onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                            if (e.currentTarget.nextSibling) {
+                                              e.currentTarget.nextSibling.style.display = 'flex';
+                                            }
+                                          }}
+                                        />
+                                      ) : null}
+                                      <div className="profile-cart-thumb-placeholder" style={{ display: imgUrl ? 'none' : 'flex' }}>
+                                        <ShoppingBag size={15} />
+                                      </div>
+                                      {item.quantity > 1 && (
+                                        <span className="profile-cart-thumb-qty">x{item.quantity}</span>
+                                      )}
+                                      {itemHasIssue && (
+                                        <span className="profile-cart-thumb-issue-dot" title="Stock limitado o agotado" />
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                                {cart.items?.length > 5 && (
+                                  <div className="profile-cart-thumb-more">
+                                    +{cart.items.length - 5}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="profile-cart-actions">
+                                <a
+                                  href={waUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="profile-cart-wa-btn"
+                                  title="Contactar y coordinar o reactivar por WhatsApp"
+                                >
+                                  <MessageCircle size={14} />
+                                  <span>WhatsApp</span>
+                                </a>
+
+                                <button
+                                  type="button"
+                                  className={`profile-cart-remind-btn ${isExpired ? "expired-mode" : ""}`}
+                                  onClick={() => handleRemindCart(cart)}
+                                  disabled={!canRemind || remindingCartId === cart.id}
+                                  title={!canRemind ? "Solo puedes enviar 1 recordatorio cada 24 horas" : isExpired ? "Solicitar reactivación a encargados" : "Recordar agendar entrega"}
+                                >
+                                  {remindingCartId === cart.id ? (
+                                    <Loader2 size={14} style={{ animation: "profileSpin 0.8s linear infinite" }} />
+                                  ) : (
+                                    <Bell size={14} />
+                                  )}
+                                  <span>
+                                    {!canRemind ? "Enviado hoy" : isExpired ? "Reactivar" : "Recordar"}
+                                  </span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="profile-cart-toggle-btn"
+                                  onClick={() => setExpandedCartId(isExpanded ? null : cart.id)}
+                                >
+                                  <span>{isExpanded ? "Ocultar" : `Ver (${itemsCount})`}</span>
+                                  <ChevronDown
+                                    size={15}
+                                    style={{
+                                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                                      transition: "transform 0.2s ease"
+                                    }}
+                                  />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="profile-cart-delete-btn"
+                                  onClick={() => handleDeleteCart(cart.id)}
+                                  title="Eliminar carrito"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Collapsible Items Breakdown */}
+                            {isExpanded && (
+                              <div className="profile-cart-expanded-body">
+                                {cart.global_discount_expired && (
+                                  <div className="profile-cart-alert-bar discount-expired">
+                                    <AlertCircle size={13} />
+                                    <span>{cart.global_discount_error || "El cupón de descuento global aplicado ha expirado o ya no está disponible."}</span>
+                                  </div>
+                                )}
+
+                                <div className="profile-cart-items-list">
+                                  {cart.items?.map((item) => {
+                                    const imgUrl = getCartItemImage(item);
+                                    const productName = item.product_variant?.product?.name || "Producto";
+                                    const sizeName = item.product_variant?.size?.name;
+                                    const fitName = item.product_variant?.fit?.name;
+                                    const colorAttr = item.product_variant?.variant_attribute_values
+                                      ?.map(v => v.attribute_value?.name || v.attribute_value?.value)
+                                      .filter(Boolean)
+                                      .join(", ");
+                                    const unitPrice = Number(item.calculated_unit_price ?? item.dynamic_unit_price ?? item.product_variant?.price ?? 0);
+                                    const originalPrice = Number(item.original_unit_price ?? item.regular_price ?? item.product_variant?.price ?? unitPrice);
+                                    const subtotal = Number(item.calculated_subtotal ?? item.dynamic_subtotal ?? (unitPrice * item.quantity));
+                                    const hasActiveDiscount = Boolean(item.has_active_discount || (item.appliedDiscount && !item.discount_is_expired && originalPrice > unitPrice));
+                                    const discountExpired = Boolean(item.discount_is_expired);
+                                    const stockStatus = item.stock_status || "in_stock";
+                                    const availableStock = Number(item.available_stock ?? item.product_variant?.inventories?.reduce((s, inv) => s + (inv.stock || 0), 0) ?? 0);
+
+                                    return (
+                                      <div key={item.id} className="profile-cart-item-row">
+                                        <div className="profile-cart-item-img-wrap">
+                                          {imgUrl ? (
+                                            <img 
+                                              src={imgUrl} 
+                                              alt={productName}
+                                              onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                                if (e.currentTarget.nextSibling) {
+                                                  e.currentTarget.nextSibling.style.display = 'flex';
+                                                }
+                                              }}
+                                            />
+                                          ) : null}
+                                          <div className="profile-cart-thumb-placeholder" style={{ display: imgUrl ? 'none' : 'flex' }}>
+                                            <ShoppingBag size={18} />
+                                          </div>
+                                        </div>
+
+                                        <div className="profile-cart-item-info">
+                                          <div className="profile-cart-item-title-row">
+                                            <h5 className="profile-cart-item-title">{productName}</h5>
+                                            <div className="profile-cart-item-subtotal-box">
+                                              {hasActiveDiscount && originalPrice * item.quantity > subtotal && (
+                                                <span className="profile-cart-item-orig-subtotal">
+                                                  Bs. {(originalPrice * item.quantity).toFixed(2)}
+                                                </span>
+                                              )}
+                                              <span className="profile-cart-item-subtotal">Bs. {subtotal.toFixed(2)}</span>
+                                            </div>
+                                          </div>
+
+                                          <div className="profile-cart-item-meta">
+                                            {sizeName && <span className="profile-cart-pill">Talla: {sizeName}</span>}
+                                            {fitName && <span className="profile-cart-pill">Corte: {fitName}</span>}
+                                            {colorAttr && <span className="profile-cart-pill">Color: {colorAttr}</span>}
+                                            {item.product_variant?.sku && (
+                                              <span className="profile-cart-pill-sku">SKU: {item.product_variant.sku}</span>
+                                            )}
+                                            {/* Stock Status Badge */}
+                                            {stockStatus === "out_of_stock" || stockStatus === "unavailable" ? (
+                                              <span className="profile-cart-stock-badge out-of-stock" title="No hay stock disponible en el inventario">
+                                                Agotado
+                                              </span>
+                                            ) : stockStatus === "insufficient" ? (
+                                              <span className="profile-cart-stock-badge insufficient" title={`Solo quedan ${availableStock} unidades disponibles`}>
+                                                Solo quedan {availableStock} disp.
+                                              </span>
+                                            ) : (
+                                              <span className="profile-cart-stock-badge in-stock">
+                                                En stock ({availableStock})
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          <div className="profile-cart-item-pricing">
+                                            <span>Cant: <strong>{item.quantity}</strong></span>
+                                            <span>•</span>
+                                            <span className="profile-cart-price-block">
+                                              Precio unitario:{" "}
+                                              {hasActiveDiscount && originalPrice > unitPrice ? (
+                                                <>
+                                                  <span className="profile-cart-item-old-price">
+                                                    Bs. {originalPrice.toFixed(2)}
+                                                  </span>
+                                                  <strong className="profile-cart-item-current-price">
+                                                    Bs. {unitPrice.toFixed(2)}
+                                                  </strong>
+                                                </>
+                                              ) : (
+                                                <strong>Bs. {unitPrice.toFixed(2)}</strong>
+                                              )}
+                                            </span>
+                                            {hasActiveDiscount && (
+                                              <span className="profile-cart-item-discount-tag">
+                                                {item.discount_label || item.discount_name || item.appliedDiscount?.name || "Descuento aplicado"}
+                                              </span>
+                                            )}
+                                            {discountExpired && (
+                                              <span className="profile-cart-item-discount-expired-tag" title={item.discount_expired_reason || "El descuento ha expirado o ya no aplica"}>
+                                                Descuento expirado
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Delivery details note only if present */}
+                                {deliveryText && (
+                                  <div className="profile-cart-delivery-note">
+                                    <MapPin size={13} />
+                                    <span>
+                                      <strong>Destino:</strong> {deliveryText}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Cart Footer Actions */}
+                                <div className="profile-cart-footer">
+                                  <div className="profile-cart-footer-left">
+                                    {cart.status === "active" && !isExpired && (
+                                      <Link to="/shop/cart" className="profile-cart-checkout-btn">
+                                        <ShoppingCart size={15} />
+                                        Ir al Carrito
+                                      </Link>
+                                    )}
+
+                                    <a
+                                      href={waUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="profile-cart-wa-btn"
+                                      title="Enviar mensaje por WhatsApp"
+                                    >
+                                      <MessageCircle size={14} />
+                                      <span>WhatsApp</span>
+                                    </a>
+
+                                    <button
+                                      type="button"
+                                      className={`profile-cart-remind-btn ${isExpired ? "expired-mode" : ""}`}
+                                      onClick={() => handleRemindCart(cart)}
+                                      disabled={!canRemind || remindingCartId === cart.id}
+                                      title={!canRemind ? "Solo puedes enviar 1 recordatorio cada 24 horas" : isExpired ? "Solicitar reactivación a los encargados" : "Recordar agendar entrega"}
+                                    >
+                                      {remindingCartId === cart.id ? (
+                                        <Loader2 size={14} style={{ animation: "profileSpin 0.8s linear infinite" }} />
+                                      ) : (
+                                        <Bell size={14} />
+                                      )}
+                                      <span>
+                                        {!canRemind 
+                                          ? "Recordatorio enviado hoy" 
+                                          : isExpired 
+                                            ? "Solicitar Reactivación" 
+                                            : "Recordar Entrega"}
+                                      </span>
+                                    </button>
+                                  </div>
+                                  <div className="profile-cart-footer-totals">
+                                    <div className="profile-cart-summary-line">
+                                      <span>Subtotal:</span>
+                                      <span>Bs. {Number(cart.subtotal_calculated ?? grandTotal).toFixed(2)}</span>
+                                    </div>
+                                    {globalDiscount > 0 && !cart.global_discount_expired && (
+                                      <div className="profile-cart-summary-line discount">
+                                        <span>Descuento global:</span>
+                                        <span>-Bs. {globalDiscount.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {cart.global_discount_expired && (
+                                      <div className="profile-cart-summary-line discount-expired-notice">
+                                        <span>Descuento global:</span>
+                                        <span>Expirado</span>
+                                      </div>
+                                    )}
+                                    <div className="profile-cart-summary-line total">
+                                      <span>Total:</span>
+                                      <span>Bs. {grandTotal.toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
-                          {trackingId && (
-                            <Link to={`/tracking/${trackingId}`} className="profile-btn-outline" style={{ fontSize: "12px", padding: "6px 14px" }}>
-                              Ver Seguimiento
-                            </Link>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )
+                ) : (
+                  ordersLoading ? (
+                    <div className="profile-empty-state" style={{ padding: "40px 0" }}>
+                      <Loader2 size={32} style={{ animation: "profileSpin 0.8s linear infinite" }} />
+                      <p>Cargando pedidos...</p>
+                    </div>
+                  ) : orders.length === 0 ? (
+                    <div className="profile-empty-state" style={{ padding: "32px 0" }}>
+                      <Package size={48} />
+                      <h3>No tienes pedidos registrados</h3>
+                      <p>Cuando realices tu primera compra, aparecerá aquí.</p>
+                      <Link to="/shop/catalog" className="profile-btn-primary" style={{ display: "inline-flex", marginTop: "8px" }}>
+                        Explorar Catálogo
+                      </Link>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {orders.map((order) => {
+                        const mainShipment = order.shipments?.[0];
+                        const schedule = mainShipment?.delivery_schedule;
+                        const statusInfo = getDeliveryStatusInfo(schedule, mainShipment);
+                        const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric" }) : "";
+                        const trackingId = schedule?.id || mainShipment?.id;
+
+                        const grandTotal = order.financials?.grand_total || 0;
+                        const totalPaid = order.financials?.total_paid || 0;
+                        const displayTotal = order.status === 'paid' ? grandTotal : order.financials?.balance_due || 0;
+
+                        return (
+                          <div key={order.id} className="profile-order-card">
+                            <div className="order-meta-group">
+                              <h4>Pedido {order.invoice_number ? `#${order.invoice_number}` : `#${order.id.slice(0, 8).toUpperCase()}`}</h4>
+                              <p>Realizado el {orderDate} • {order.financials?.items_count || 0} artículo{order.financials?.items_count !== 1 ? "s" : ""}</p>
+                            </div>
+                            <span className={`order-status-badge ${statusInfo.cssClass}`} style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color, borderColor: statusInfo.color }}>
+                              {statusInfo.label}
+                            </span>
+                            <div>
+                              <span style={{ fontWeight: 700, fontSize: "15px" }}>Bs. {Number(displayTotal).toFixed(2)}</span>
+                              {Number(order.financials?.global_discount || 0) > 0 && (
+                                <div style={{ fontSize: "11px", color: "var(--color-danger, #ef4444)" }}>
+                                  Desc: -Bs. {Number(order.financials.global_discount).toFixed(2)}
+                                </div>
+                              )}
+                            </div>
+                            {trackingId && (
+                              <Link to={`/tracking/${trackingId}`} className="profile-btn-outline" style={{ fontSize: "12px", padding: "6px 14px" }}>
+                                Ver Seguimiento
+                              </Link>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )
                 )}
               </div>
             )}
@@ -2026,38 +2654,18 @@ export default function Profile() {
         </div>
       </main>
 
-      {/* MODAL DE CONFIRMACIÓN DE CARNET */}
-      {showConfirmCodeModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 10000 }}>
-          <div style={{ background: "var(--bg-card, #fff)", padding: "24px", borderRadius: "12px", maxWidth: "400px", width: "90%", border: "1px solid var(--border-color)" }}>
-            <h3 style={{ marginTop: 0, color: "var(--text-color, #000)" }}>Confirmar Cambio de Carnet</h3>
-            <p style={{ color: "var(--text-muted, #666)", fontSize: "14px", lineHeight: "1.5" }}>
-              Estás a punto de cambiar tu Número de Carnet a <strong>{profileForm.customer_code}</strong>.
-              <br /><br />
-              Atención: Si procedes, <strong>no podrás modificarlo de nuevo durante los próximos 2 meses</strong>. Piensa bien tu decisión, ¿estás seguro de que la información es correcta?
-            </p>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
-              <button 
-                className="profile-btn-outline" 
-                onClick={() => setShowConfirmCodeModal(false)}
-                disabled={savingProfile}
-              >
-                Cancelar
-              </button>
-              <button 
-                className="profile-btn-primary" 
-                onClick={() => {
-                  // Bypass the check by passing true, or just call executeProfileSubmit directly
-                  executeProfileSubmit();
-                }} 
-                disabled={savingProfile}
-              >
-                {savingProfile ? "Guardando..." : "Sí, estoy seguro"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* MODAL DE CONFIRMACIÓN ELEGANTE (CERRAR SESIÓN, ELIMINAR CARRITO, ELIMINAR DIRECCIÓN, CAMBIO DE CARNET) */}
+      <ConfirmModal
+        isOpen={confirmModalConfig.isOpen}
+        onClose={closeConfirmModal}
+        onConfirm={confirmModalConfig.onConfirm}
+        title={confirmModalConfig.title}
+        message={confirmModalConfig.message}
+        confirmText={confirmModalConfig.confirmText}
+        cancelText={confirmModalConfig.cancelText}
+        type={confirmModalConfig.type}
+        theme={profileIsDark ? "dark" : "light"}
+      />
 
       <Footer />
     </div>

@@ -46,10 +46,14 @@ class Cart extends BaseCart
             if ($item->override_price !== null) {
                 $price = (float) $item->override_price;
             } elseif ($item->appliedDiscount) {
-                if ($item->appliedDiscount->type === 'percentage') {
-                    $price = $price - ($price * $item->appliedDiscount->value / 100);
-                } else {
-                    $price = max(0, $price - $item->appliedDiscount->value);
+                $d = $item->appliedDiscount;
+                $isValid = $d->active && (!$d->end_date || !$d->end_date->isPast()) && (!$d->start_date || !$d->start_date->isFuture());
+                if ($isValid) {
+                    if ($d->type === 'percentage') {
+                        $price = $price - ($price * $d->value / 100);
+                    } else {
+                        $price = max(0, $price - $d->value);
+                    }
                 }
             }
 			return $price * $item->quantity;
@@ -61,11 +65,23 @@ class Cart extends BaseCart
         if (!$this->discount) {
             return 0;
         }
+
+        $d = $this->discount;
+        $isValid = $d->active && (!$d->end_date || !$d->end_date->isPast()) && (!$d->start_date || !$d->start_date->isFuture());
+        if (!$isValid) {
+            return 0;
+        }
         
         $eligibleSubtotal = $this->items->sum(function ($item) {
-            // Exclude bundles and native discounts
-            if ($item->bundle_group_id || $item->applied_discount_id) {
+            // Exclude bundles and native active discounts
+            if ($item->bundle_group_id) {
                 return 0;
+            }
+            if ($item->appliedDiscount) {
+                $ad = $item->appliedDiscount;
+                if ($ad->active && (!$ad->end_date || !$ad->end_date->isPast()) && (!$ad->start_date || !$ad->start_date->isFuture())) {
+                    return 0;
+                }
             }
             $price = $item->product_variant->price ?? 0;
             return $price * $item->quantity;

@@ -48,10 +48,14 @@ class CartItem extends BaseCartItem
 			return (float) $this->override_price;
 		}
 		if ($this->appliedDiscount) {
-			if ($this->appliedDiscount->type === 'percentage') {
-				return $price - ($price * $this->appliedDiscount->value / 100);
-			} else {
-				return max(0, $price - $this->appliedDiscount->value);
+			$d = $this->appliedDiscount;
+			$isValid = $d->active && (!$d->end_date || !$d->end_date->isPast()) && (!$d->start_date || !$d->start_date->isFuture());
+			if ($isValid) {
+				if ($d->type === 'percentage') {
+					return $price - ($price * $d->value / 100);
+				} else {
+					return max(0, $price - $d->value);
+				}
 			}
 		}
 		return $price;

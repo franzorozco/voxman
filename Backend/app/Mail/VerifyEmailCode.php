@@ -37,7 +37,7 @@ class VerifyEmailCode extends Mailable
         $fromAddress = config('mail.from.address') ?: env('MAIL_FROM_ADDRESS', 'soporte@voxman.shop');
 
         return new Envelope(
-            from: new Address($fromAddress, 'Soporte ' . $storeName),
+            from: new Address($fromAddress, '' . $storeName),
             subject: 'Verifica tu correo electrónico — ' . $storeName,
         );
     }

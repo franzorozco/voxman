@@ -11,6 +11,7 @@ export default function ConfirmModal({
   confirmText = "Confirmar",
   cancelText = "Cancelar",
   type = "danger", // 'danger' | 'warning' | 'success' | 'info'
+  theme, // 'light' | 'dark' | undefined
 }) {
   
   // Close on Escape key
@@ -44,13 +45,16 @@ export default function ConfirmModal({
       break;
   }
 
+  const themeBackdropClass = theme ? `confirm-theme-${theme}` : "";
+  const themeCardClass = theme ? `confirm-card-${theme}` : "";
+
   return (
     <div 
-      className="confirm-modal-backdrop"
+      className={`confirm-modal-backdrop ${themeBackdropClass}`}
       onClick={onClose} // close if clicking outside
     >
       <div 
-        className="confirm-modal-card"
+        className={`confirm-modal-card ${themeCardClass}`}
         onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside modal
         role="dialog"
         aria-modal="true"

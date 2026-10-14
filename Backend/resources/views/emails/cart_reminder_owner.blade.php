@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>{{ $isExpired ? 'Solicitud de Reactivación' : 'Recordatorio de Entrega' }} — VOXMAN</title>
+    <style>
+        @media only screen and (max-width: 600px) {
+            .email-wrapper { width: 100% !important; }
+            .email-body { padding: 32px 20px !important; }
+            .btn-td { padding: 0 4px !important; }
+            .btn-reset {
+                display: block !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                text-align: center !important;
+            }
+            .signature-table { width: 100% !important; }
+            .col-box { display: block !important; width: 100% !important; margin-bottom: 16px !important; }
+            .col-spacer { display: none !important; }
+        }
+    </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f5; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-text-size-adjust:none;">
+
+    <!-- Wrapper -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f5; margin:0; padding:0;">
+        <tr>
+            <td align="center" style="padding: 40px 16px;">
+
+                <!-- Card -->
+                <table class="email-wrapper" width="560" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08);">
+
+                    <!-- Header con logo -->
+                    <tr>
+                        <td align="center" style="background-color:#18181b; padding: 36px 40px 28px 40px;">
+                            <a href="{{ $appUrl }}" style="display:inline-block; text-decoration:none;">
+                                <img src="{{ $logoHeaderUrl }}" alt="VOXMAN" width="160" style="display:block; width:160px; height:auto; border:0;" />
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Línea de acento -->
+                    <tr>
+                        @if($isExpired)
+                        <td style="height:3px; background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);"></td>
+                        @else
+                        <td style="height:3px; background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);"></td>
+                        @endif
+                    </tr>
+
+                    <!-- Cuerpo del correo -->
+                    <tr>
+                        <td class="email-body" style="padding: 48px 48px 40px 48px;">
+
+                            <!-- Etiqueta -->
+                            <p style="margin:0 0 8px 0; font-size:12px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:{{ $isExpired ? '#ef4444' : '#10b981' }};">
+                                {{ $isExpired ? 'Solicitud de Reactivación' : 'Recordatorio de Entrega' }}
+                            </p>
+
+                            <!-- Título -->
+                            <h1 style="margin:0 0 28px 0; font-size:26px; font-weight:700; color:#18181b; line-height:1.25;">
+                                @if($isExpired)
+                                    Un cliente solicita reactivar su carrito
+                                @else
+                                    Un cliente quiere coordinar su entrega
+                                @endif
+                            </h1>
+
+                            <!-- Mensaje principal -->
+                            <p style="margin:0 0 16px 0; font-size:15px; line-height:1.7; color:#52525b;">
+                                Hola <strong>{{ $ownerName }}</strong>,
+                            </p>
+                            <p style="margin:0 0 24px 0; font-size:15px; line-height:1.7; color:#52525b;">
+                                @if($isExpired)
+                                    El siguiente cliente tiene un carrito que <strong>ya ha expirado</strong> y está solicitando que sea reactivado para poder completar su compra.
+                                @else
+                                    El siguiente cliente tiene un carrito <strong>activo</strong> y solicita que lo contactes para coordinar la entrega de su pedido.
+                                @endif
+                            </p>
+
+                            <!-- Datos del Cliente y Logística -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;">
+                                <tr>
+                                    <!-- Columna 1: Cliente -->
+                                    <td width="48%" valign="top" class="col-box">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fafafa; border-radius:8px; border-top: 3px solid #3b82f6; height:100%;">
+                                            <tr>
+                                                <td style="padding: 16px;">
+                                                    <p style="margin:0 0 8px 0; font-size:12px; color:#71717a; text-transform:uppercase; font-weight:700;">Datos del Cliente</p>
+                                                    <p style="margin:0 0 6px 0; font-size:14px; color:#18181b;"><strong>Nombre:</strong> {{ $customerFullName }}</p>
+                                                    <p style="margin:0 0 6px 0; font-size:14px; color:#18181b;"><strong>Código:</strong> {{ $customerCode }}</p>
+                                                    <p style="margin:0 0 6px 0; font-size:14px; color:#18181b;"><strong>Tipo:</strong> {{ $customerType }}</p>
+                                                    <p style="margin:0; font-size:14px; color:#18181b;"><strong>Email:</strong> {{ $customerEmail ?? 'No registrado' }}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td width="4%" class="col-spacer"></td>
+                                    <!-- Columna 2: Logística -->
+                                    <td width="48%" valign="top" class="col-box">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fafafa; border-radius:8px; border-top: 3px solid {{ $isExpired ? '#ef4444' : '#10b981' }}; height:100%;">
+                                            <tr>
+                                                <td style="padding: 16px;">
+                                                    <p style="margin:0 0 8px 0; font-size:12px; color:#71717a; text-transform:uppercase; font-weight:700;">Carrito</p>
+                                                    <p style="margin:0 0 6px 0; font-size:14px; color:#18181b;"><strong>Ref.:</strong> {{ $referenceNumber }}</p>
+                                                    <p style="margin:0 0 6px 0; font-size:14px; color:{{ $isExpired ? '#ef4444' : '#10b981' }}; font-weight:700;">Estado: {{ $isExpired ? 'EXPIRADO' : 'ACTIVO' }}</p>
+                                                    <p style="margin:0; font-size:14px; color:#18181b; line-height: 1.4;"><strong>Entrega:</strong><br>{{ $deliveryDetails }}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            @if(!empty($otherOwnersText))
+                            <div style="margin-bottom:16px; background-color:#fffbeb; border-left: 3px solid #f59e0b; padding:12px; border-radius:4px;">
+                                <p style="margin:0; font-size:13px; color:#b45309; font-weight:600;">
+                                    {{ $otherOwnersText }}
+                                </p>
+                            </div>
+                            @endif
+
+                            @if(!empty($hasStockIssues))
+                            <div style="margin-bottom:20px; background-color:#fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding:14px 16px; border-radius:6px;">
+                                <p style="margin:0 0 4px 0; font-size:13px; color:#991b1b; font-weight:700;">
+                                    ⚠️ Advertencia de Inventario
+                                </p>
+                                <p style="margin:0; font-size:13px; color:#b91c1c; line-height:1.5;">
+                                    Uno o más artículos de este carrito presentan stock insuficiente o se encuentran agotados en el inventario actual. Por favor verifica las existencias antes de coordinar o confirmar la reactivación.
+                                </p>
+                            </div>
+                            @endif
+
+                            <p style="margin:0 0 16px 0; font-size:15px; line-height:1.7; color:#52525b; font-weight:600;">
+                                Tus productos en este carrito ({{ $ownerName }}):
+                            </p>
+
+                            <!-- Tabla de productos -->
+                            <div style="overflow-x: auto; width: 100%; max-width: 100%; -webkit-overflow-scrolling: touch;">
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px; border-collapse: collapse; min-width: 400px;">
+                                    <thead>
+                                        <tr>
+                                            <th align="left" style="padding-bottom:10px; border-bottom:1px solid #e4e4e7; font-size:12px; color:#a1a1aa; text-transform:uppercase;">Producto</th>
+                                            <th align="center" style="padding-bottom:10px; border-bottom:1px solid #e4e4e7; font-size:12px; color:#a1a1aa; text-transform:uppercase;">Cant.</th>
+                                            <th align="right" style="padding-bottom:10px; border-bottom:1px solid #e4e4e7; font-size:12px; color:#a1a1aa; text-transform:uppercase;">P. Unit</th>
+                                            <th align="right" style="padding-bottom:10px; border-bottom:1px solid #e4e4e7; font-size:12px; color:#a1a1aa; text-transform:uppercase;">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($items as $item)
+                                        <tr>
+                                            <td align="left" style="padding:12px 10px 12px 0; border-bottom:1px solid #f4f4f5; font-size:13px; color:#18181b; line-height:1.4; vertical-align:top;">
+                                                <strong>{{ $item['name'] }}</strong>
+                                                @if(!empty($item['sku']))
+                                                    <div style="font-size:11px; color:#71717a; font-family:monospace; margin-top:2px;">SKU: {{ $item['sku'] }}</div>
+                                                @endif
+                                                <div style="margin-top:5px;">
+                                                    @if(($item['stock_status'] ?? '') === 'out_of_stock' || ($item['stock_status'] ?? '') === 'unavailable')
+                                                        <span style="display:inline-block; font-size:10.5px; padding:2px 8px; border-radius:4px; background-color:#fee2e2; color:#b91c1c; font-weight:700;">✕ AGOTADO (0 disp.)</span>
+                                                    @elseif(($item['stock_status'] ?? '') === 'insufficient')
+                                                        <span style="display:inline-block; font-size:10.5px; padding:2px 8px; border-radius:4px; background-color:#fef3c7; color:#b45309; font-weight:700;">⚠ Stock insuficiente ({{ $item['available_stock'] ?? 0 }} disp. / {{ $item['quantity'] }} sol.)</span>
+                                                    @else
+                                                        <span style="display:inline-block; font-size:10.5px; padding:2px 8px; border-radius:4px; background-color:#dcfce7; color:#15803d; font-weight:600;">✓ En stock ({{ $item['available_stock'] ?? 0 }} disp.)</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td align="center" style="padding:12px 10px; border-bottom:1px solid #f4f4f5; font-size:14px; color:#52525b; vertical-align:top;">
+                                                {{ $item['quantity'] }}
+                                            </td>
+                                            <td align="right" style="padding:12px 10px; border-bottom:1px solid #f4f4f5; font-size:13px; color:#52525b; vertical-align:top;">
+                                                @if(!empty($item['has_discount']))
+                                                    <span style="text-decoration: line-through; color: #a1a1aa; font-size: 11px;">Bs. {{ number_format($item['original_price'] ?? 0, 2) }}</span><br />
+                                                    <span style="font-weight:700; color:#18181b;">Bs. {{ number_format($item['unit_price'] ?? 0, 2) }}</span>
+                                                    @if(!empty($item['discount_label']))
+                                                        <br /><span style="font-size:10.5px; color:#16a34a; font-weight:600;">{{ $item['discount_label'] }}</span>
+                                                    @endif
+                                                @elseif(!empty($item['discount_expired']))
+                                                    <span style="text-decoration: line-through; color: #ef4444; font-size: 10px; font-weight:600;">Desc. Expirado</span><br />
+                                                    <span style="font-weight:700; color:#18181b;">Bs. {{ number_format($item['unit_price'] ?? 0, 2) }}</span>
+                                                @else
+                                                    <span style="font-weight:600; color:#18181b;">Bs. {{ number_format($item['unit_price'] ?? 0, 2) }}</span>
+                                                @endif
+                                            </td>
+                                            <td align="right" style="padding:12px 0 12px 10px; border-bottom:1px solid #f4f4f5; font-size:13px; color:#18181b; font-weight:700; vertical-align:top;">
+                                                Bs. {{ number_format($item['line_subtotal'] ?? 0, 2) }}
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" align="right" style="padding:16px 0 8px 0; font-size:13px; color:#52525b;">Subtotal:</td>
+                                            <td align="right" style="padding:16px 0 8px 0; font-size:14px; color:#18181b; font-weight:600;">Bs. {{ number_format($subtotal, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" align="right" style="padding:16px 0 0 0; border-top:2px solid #e4e4e7; font-size:14px; color:#18181b; font-weight:700;">Total estimado:</td>
+                                            <td align="right" style="padding:16px 0 0 0; border-top:2px solid #e4e4e7; font-size:15px; color:#18181b; font-weight:700;">Bs. {{ number_format($totalAmount, 2) }}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Acción principal -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px 0;">
+                                <tr>
+                                    <td align="center" class="btn-td" style="padding: 0;">
+                                        <a href="{{ $cartLink }}" class="btn-reset" target="_blank" rel="noopener" style="display:inline-block; background-color:#18181b; color:#ffffff; font-size:14px; font-weight:600; letter-spacing:0.5px; text-decoration:none; padding:14px 40px; border-radius:8px; border:none; box-sizing:border-box; width:100%; text-align:center;">
+                                            Ver carrito en el panel
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- WhatsApp -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 36px 0;">
+                                <tr>
+                                    <td align="center" class="btn-td" style="padding: 0;">
+                                        <a href="{{ $whatsappLink }}" class="btn-reset" target="_blank" rel="noopener" style="display:inline-block; background-color:#25D366; color:#ffffff; font-size:14px; font-weight:600; letter-spacing:0.5px; text-decoration:none; padding:14px 40px; border-radius:8px; border:none; box-sizing:border-box; width:100%; text-align:center;">
+                                            Contactar por WhatsApp
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+
+                    <!-- Divider -->
+                    <tr>
+                        <td style="height:1px; background-color:#e4e4e7; margin: 0 48px;"></td>
+                    </tr>
+
+                    <!-- Firma VOXMAN -->
+                    <tr>
+                        <td style="padding: 32px 48px 36px 48px;">
+                            <table class="signature-table" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td valign="middle" style="padding-right: 20px;">
+                                        <img src="{{ $logoSignatureUrl }}" alt="VOXMAN" width="80" style="display:block; width:80px; height:auto; border:0;" />
+                                    </td>
+                                    <td valign="middle" style="width:1px; background-color:#e4e4e7; padding:0; margin:0;">
+                                        <div style="width:1px; height:60px; background-color:#e4e4e7;"></div>
+                                    </td>
+                                    <td valign="middle" style="padding-left: 20px;">
+                                        <p style="margin:0 0 2px 0; font-size:13px; font-weight:700; color:#18181b; letter-spacing:0.3px;">
+                                            V Ø X &nbsp; M A N
+                                        </p>
+                                        <p style="margin:0 0 6px 0; font-size:11px; color:#a1a1aa; letter-spacing:0.5px; text-transform:uppercase;">
+                                            Sistema Administrativo
+                                        </p>
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            @if($appUrl)
+                                            <tr>
+                                                <td style="padding-bottom:3px;">
+                                                    <a href="{{ $appUrl }}" style="font-size:12px; color:#52525b; text-decoration:none;">🌐 {{ str_replace(['http://', 'https://'], '', $appUrl) }}</a>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @if($storePhone)
+                                            <tr>
+                                                <td style="padding-bottom:3px;">
+                                                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $storePhone) }}" style="font-size:12px; color:#52525b; text-decoration:none;">📱 {{ $storePhone }}</a>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @if($storeAddress)
+                                            <tr>
+                                                <td>
+                                                    <p style="margin:0; font-size:12px; color:#a1a1aa;">📍 {{ $storeAddress }}</p>
+                                                </td>
+                                            </tr>
+                                            @endif
+                                        </table>
+                                        <table cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
+                                            <tr>
+                                                @if($tiktokUrl)
+                                                <td style="padding-right:10px;">
+                                                    <a href="{{ $tiktokUrl }}" style="font-size:11px; color:#52525b; text-decoration:none; font-weight:600;">TikTok</a>
+                                                </td>
+                                                @endif
+                                                @if($facebookUrl)
+                                                    @if($tiktokUrl)
+                                                    <td style="padding-right:10px; color:#d4d4d8;">|</td>
+                                                    @endif
+                                                <td style="padding-right:10px;">
+                                                    <a href="{{ $facebookUrl }}" style="font-size:11px; color:#52525b; text-decoration:none; font-weight:600;">Facebook</a>
+                                                </td>
+                                                @endif
+                                                @if($instagramUrl)
+                                                    @if($tiktokUrl || $facebookUrl)
+                                                    <td style="padding-right:10px; color:#d4d4d8;">|</td>
+                                                    @endif
+                                                <td>
+                                                    <a href="{{ $instagramUrl }}" style="font-size:11px; color:#52525b; text-decoration:none; font-weight:600;">Instagram</a>
+                                                </td>
+                                                @endif
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="background-color:#fafafa; border-top:1px solid #e4e4e7; padding: 20px 40px; border-radius: 0 0 12px 12px;">
+                            <p style="margin:0; font-size:11px; color:#a1a1aa; text-align:center; letter-spacing:0.3px;">
+                                © {{ date('Y') }} {{ $storeName }}. Todos los derechos reservados.
+                                <br />
+                                <span style="font-size:10px;">Este es un correo automático, por favor no respondas directamente a este mensaje.</span>
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

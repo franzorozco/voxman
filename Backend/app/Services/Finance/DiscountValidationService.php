@@ -439,4 +439,88 @@ class DiscountValidationService
         return $applicableDiscounts;
     }
 
+    /**
+     * Valida en tiempo real si un descuento aplicado a un item/variable sigue siendo válido.
+     * 
+     * @param string $discountId
+     * @param \App\Models\Catalog\ProductVariant|null $variant
+     * @param string|null $customerId
+     * @return array
+     */
+    public function validateItemDiscount($discountId, $variant = null, $customerId = null): array
+    {
+        if (!$discountId) {
+            return ['valid' => false, 'message' => 'Descuento no especificado.'];
+        }
+
+        $discount = Discount::find($discountId);
+        if (!$discount) {
+            return ['valid' => false, 'message' => 'El descuento ha sido eliminado del sistema.'];
+        }
+
+        if (!$discount->active) {
+            return ['valid' => false, 'message' => 'El descuento ya no se encuentra activo.'];
+        }
+
+        if ($discount->end_date && $discount->end_date->isPast()) {
+            return ['valid' => false, 'message' => 'El descuento ha expirado.'];
+        }
+
+        if ($discount->start_date && $discount->start_date->isFuture()) {
+            return ['valid' => false, 'message' => 'El descuento aún no se encuentra vigente.'];
+        }
+
+        // Límites de uso
+        if ($discount->usage_limit && $discount->used_count >= $discount->usage_limit) {
+            return ['valid' => false, 'message' => 'El descuento ha alcanzado su límite de usos global.'];
+        }
+
+        if ($discount->usage_limit_per_customer && $customerId) {
+            $userUsageCount = \App\Models\Sales\Sale::where('discount_id', $discount->id)
+                ->where('customer_id', $customerId)
+                ->whereNotIn('status', ['cancelled'])
+                ->count();
+            if ($userUsageCount >= $discount->usage_limit_per_customer) {
+                return ['valid' => false, 'message' => 'Límite de usos por cliente alcanzado.'];
+            }
+        }
+
+        // Restricciones de items (si el descuento está restringido a ciertas categorías, marcas, productos o variantes)
+        if ($variant) {
+            $discountCategories = $discount->categories()->pluck('categories.id')->toArray();
+            $discountBrands = $discount->brands()->pluck('brands.id')->toArray();
+            $discountProducts = $discount->products()->pluck('products.id')->toArray();
+            $discountVariants = $discount->variants()->pluck('product_variants.id')->toArray();
+
+            $hasItemRestrictions = !empty($discountCategories) || !empty($discountBrands) || !empty($discountProducts) || !empty($discountVariants);
+
+            if ($hasItemRestrictions) {
+                $product = $variant->product ?? null;
+                $matches = false;
+                if (in_array($variant->id, $discountVariants)) {
+                    $matches = true;
+                } elseif ($product && in_array($product->id, $discountProducts)) {
+                    $matches = true;
+                } elseif ($product && in_array($product->brand_id, $discountBrands)) {
+                    $matches = true;
+                } elseif ($product && in_array($product->category_id, $discountCategories)) {
+                    $matches = true;
+                }
+
+                if (!$matches) {
+                    return ['valid' => false, 'message' => 'El producto ya no califica para este descuento.'];
+                }
+            }
+        }
+
+        return [
+            'valid' => true,
+            'discount' => $discount,
+            'id' => $discount->id,
+            'name' => $discount->name,
+            'type' => $discount->type,
+            'value' => (float) $discount->value,
+            'code' => $discount->code,
+        ];
+    }
 }

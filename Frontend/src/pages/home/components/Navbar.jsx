@@ -16,7 +16,8 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
   const { isDark: globalIsDark } = useThemeStore();
   const { settings, fetchSettings } = useShopSettingsStore();
 
-  const isDarkContext = isDarkThemeOverride !== undefined ? isDarkThemeOverride : globalIsDark;
+  // Si está dentro de Profile, usa isDarkThemeOverride. En Home/Páginas públicas, siempre es oscuro (true).
+  const isDarkContext = isDarkThemeOverride !== undefined ? isDarkThemeOverride : true;
 
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

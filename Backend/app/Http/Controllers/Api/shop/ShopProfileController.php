@@ -352,6 +352,293 @@ class ShopProfileController extends Controller
         return response()->json($formattedSales);
     }
 
+    /**
+     * Obtener carritos del cliente autenticado (IDOR protegido)
+     */
+    public function myCarts(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autorizado'], 401);
+        }
+
+        // 🔒 Extraer únicamente IDs de cliente vinculados al usuario autenticado
+        $customerIds = $user->customers()->pluck('id')->toArray();
+
+        if (empty($customerIds)) {
+            return response()->json([]);
+        }
+
+        // Expirar automáticamente carritos vencidos
+        \App\Models\Sales\Cart::whereIn('customer_id', $customerIds)
+            ->where('status', 'active')
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<', now())
+            ->update(['status' => 'abandoned']);
+
+        $query = \App\Models\Sales\Cart::with([
+            'discount',
+            'items.appliedDiscount',
+            'items.product_variant.inventories',
+            'items.product_variant.product.category',
+            'items.product_variant.product.brand',
+            'items.product_variant.product.product_images',
+            'items.product_variant.product.attribute_value_images',
+            'items.product_variant.variant_images',
+            'items.product_variant.variant_attribute_values.attribute_value.attribute',
+            'items.product_variant.size',
+            'items.product_variant.fit',
+        ])
+        ->whereIn('customer_id', $customerIds)
+        ->orderBy('created_at', 'desc');
+
+        if ($request->filled('status')) {
+            $allowedStatuses = ['active', 'proforma', 'converted', 'ordered', 'abandoned'];
+            if (in_array($request->status, $allowedStatuses, true)) {
+                $query->where('status', $request->status);
+            }
+        }
+
+        $carts = $query->get();
+        $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+
+        $carts->transform(function ($cart) use ($discountService) {
+            $hasStockIssues = false;
+            $subtotalCalculated = 0;
+
+            foreach ($cart->items as $item) {
+                $variant = $item->product_variant ?? $item->variant;
+
+                // 1. Stock validation in real time
+                if (!$variant || !$variant->is_active || $variant->trashed()) {
+                    $stockStatus = 'unavailable';
+                    $stockLabel = 'No disponible';
+                    $availableStock = 0;
+                    $hasStock = false;
+                    $hasStockIssues = true;
+                } else {
+                    $availableStock = (int) $variant->inventories->sum('stock');
+                    if ($availableStock <= 0) {
+                        $stockStatus = 'out_of_stock';
+                        $stockLabel = 'Agotado';
+                        $hasStock = false;
+                        $hasStockIssues = true;
+                    } elseif ($availableStock < $item->quantity) {
+                        $stockStatus = 'insufficient';
+                        $stockLabel = "Solo quedan {$availableStock} disponibles";
+                        $hasStock = false;
+                        $hasStockIssues = true;
+                    } else {
+                        $stockStatus = 'in_stock';
+                        $stockLabel = 'En stock';
+                        $hasStock = true;
+                    }
+                }
+
+                // 2. Price and discount validation in real time
+                $basePrice = (float) ($variant->price ?? $item->original_price ?? 0);
+                $originalUnitPrice = (float) ($item->original_price ?: $basePrice);
+
+                $hasActiveDiscount = false;
+                $discountIsExpired = false;
+                $discountExpiredReason = null;
+                $discountLabel = null;
+                $discountName = null;
+                $discountAmountPerUnit = 0;
+                $calculatedUnitPrice = $basePrice;
+
+                if (!empty($item->applied_discount_id)) {
+                    $discountResult = $discountService->validateItemDiscount($item->applied_discount_id, $variant, $cart->customer_id);
+
+                    if ($discountResult['valid']) {
+                        $discountObj = $discountResult['discount'];
+                        if ($discountObj->type === 'percentage') {
+                            $discountAmountPerUnit = round($basePrice * ($discountObj->value / 100), 2);
+                            $calculatedUnitPrice = max(0, $basePrice - $discountAmountPerUnit);
+                        } else {
+                            $discountAmountPerUnit = min($basePrice, (float) $discountObj->value);
+                            $calculatedUnitPrice = max(0, $basePrice - $discountAmountPerUnit);
+                        }
+
+                        $hasActiveDiscount = true;
+                        $discountIsExpired = false;
+                        $discountLabel = $item->discount_label ?: ($discountObj->type === 'percentage' ? "-{$discountObj->value}%" : "-Bs. " . number_format($discountObj->value, 2));
+                        $discountName = $discountObj->name;
+                    } else {
+                        $hasActiveDiscount = false;
+                        $discountIsExpired = true;
+                        $discountExpiredReason = $discountResult['message'] ?? 'Descuento expirado o ya no disponible';
+                        $calculatedUnitPrice = $basePrice;
+                    }
+                } elseif ($item->override_price !== null) {
+                    $calculatedUnitPrice = (float) $item->override_price;
+                }
+
+                $calculatedSubtotal = round($calculatedUnitPrice * $item->quantity, 2);
+                $subtotalCalculated += $calculatedSubtotal;
+
+                // Set dynamic attributes on item for frontend consumption
+                $item->stock_status = $stockStatus;
+                $item->stock_label = $stockLabel;
+                $item->available_stock = $availableStock;
+                $item->has_stock = $hasStock;
+                $item->regular_price = $basePrice;
+                $item->original_unit_price = $originalUnitPrice;
+                $item->calculated_unit_price = $calculatedUnitPrice;
+                $item->calculated_subtotal = $calculatedSubtotal;
+                $item->has_active_discount = $hasActiveDiscount;
+                $item->discount_is_expired = $discountIsExpired;
+                $item->discount_expired_reason = $discountExpiredReason;
+                $item->discount_label = $discountLabel;
+                $item->discount_name = $discountName;
+                $item->discount_amount_per_unit = $discountAmountPerUnit;
+            }
+
+            // 3. Global cart discount validation in real time
+            $globalDiscountCalculated = 0;
+            $globalDiscountValid = false;
+            $globalDiscountExpired = false;
+            $globalDiscountError = null;
+
+            if ($cart->discount_id && $cart->discount) {
+                $itemsForValidation = $cart->items->map(function ($it) {
+                    return [
+                        'variant_id' => $it->variant_id,
+                        'line_subtotal' => $it->calculated_subtotal,
+                        'quantity' => $it->quantity,
+                        'applied_discount_id' => $it->has_active_discount ? $it->applied_discount_id : null,
+                        'bundle_group_id' => $it->bundle_group_id,
+                    ];
+                })->toArray();
+
+                $globalResult = $discountService->validateCode(
+                    $cart->discount->code,
+                    $subtotalCalculated,
+                    $itemsForValidation,
+                    $cart->customer_id
+                );
+
+                if ($globalResult['valid']) {
+                    $globalDiscountCalculated = (float) $globalResult['discount_amount'];
+                    $globalDiscountValid = true;
+                } else {
+                    $globalDiscountExpired = true;
+                    $globalDiscountError = $globalResult['message'] ?? 'El cupón ha expirado o ya no aplica.';
+                }
+            }
+
+            $cart->has_stock_issues = $hasStockIssues;
+            $cart->subtotal_calculated = round($subtotalCalculated, 2);
+            $cart->global_discount_calculated = round($globalDiscountCalculated, 2);
+            $cart->global_discount_valid = $globalDiscountValid;
+            $cart->global_discount_expired = $globalDiscountExpired;
+            $cart->global_discount_error = $globalDiscountError;
+            $cart->total_amount_calculated = max(0, round($subtotalCalculated - $globalDiscountCalculated, 2));
+
+            $lastReminder = $cart->delivery_details['last_reminder_sent_at'] ?? null;
+            $canRemind = true;
+            $nextReminderAt = null;
+            if ($lastReminder) {
+                $lastTime = \Carbon\Carbon::parse($lastReminder);
+                if ($lastTime->diffInHours(now()) < 24) {
+                    $canRemind = false;
+                    $nextReminderAt = $lastTime->copy()->addHours(24)->toISOString();
+                }
+            }
+            $cart->can_remind = $canRemind;
+            $cart->next_reminder_at = $nextReminderAt;
+            $cart->last_reminder_sent_at = $lastReminder;
+
+            return $cart;
+        });
+
+        return response()->json($carts);
+    }
+
+    /**
+     * Enviar recordatorio/reactivación a los owners de los productos del carrito (1 vez cada 24 horas)
+     */
+    public function remindCartOwners(Request $request, $id)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autorizado'], 401);
+        }
+
+        $customerIds = $user->customers()->pluck('id')->toArray();
+
+        $cart = \App\Models\Sales\Cart::where('id', $id)
+            ->whereIn('customer_id', $customerIds)
+            ->first();
+
+        if (!$cart) {
+            return response()->json(['message' => 'Carrito no encontrado'], 404);
+        }
+
+        $deliveryDetails = $cart->delivery_details ?? [];
+        $lastReminder = $deliveryDetails['last_reminder_sent_at'] ?? null;
+
+        if ($lastReminder) {
+            $lastTime = \Carbon\Carbon::parse($lastReminder);
+            $hoursPassed = $lastTime->diffInHours(now());
+            if ($hoursPassed < 24) {
+                $remainingHours = 24 - $hoursPassed;
+                return response()->json([
+                    'message' => "Ya enviaste un recordatorio hoy. Podrás enviar otro en aproximadamente {$remainingHours} horas.",
+                    'can_remind' => false,
+                    'next_reminder_at' => $lastTime->copy()->addHours(24)->toISOString(),
+                    'last_reminder_sent_at' => $lastReminder,
+                ], 429);
+            }
+        }
+
+        // Marcar envío de recordatorio en delivery_details
+        $deliveryDetails['last_reminder_sent_at'] = now()->toISOString();
+        $cart->delivery_details = $deliveryDetails;
+        $cart->save();
+
+        // Despachar Job asíncrono
+        \App\Jobs\SendCartReminderOwnerEmails::dispatch($cart->id);
+
+        $isExpired = ($cart->status === 'abandoned') || ($cart->expires_at && $cart->expires_at->isPast());
+        $successMessage = $isExpired 
+            ? 'Petición de reactivación enviada con éxito a los encargados de los productos.' 
+            : 'Recordatorio para agendar entrega enviado con éxito a los encargados.';
+
+        return response()->json([
+            'message' => $successMessage,
+            'can_remind' => false,
+            'last_reminder_sent_at' => $deliveryDetails['last_reminder_sent_at'],
+            'next_reminder_at' => now()->addHours(24)->toISOString()
+        ]);
+    }
+
+    /**
+     * Eliminar un carrito propio
+     */
+    public function deleteMyCart(Request $request, $id)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autorizado'], 401);
+        }
+
+        $customerIds = $user->customers()->pluck('id')->toArray();
+
+        $cart = \App\Models\Sales\Cart::where('id', $id)
+            ->whereIn('customer_id', $customerIds)
+            ->first();
+
+        if (!$cart) {
+            return response()->json(['message' => 'Carrito no encontrado'], 404);
+        }
+
+        $cart->items()->delete();
+        $cart->delete();
+
+        return response()->json(['message' => 'Carrito eliminado exitosamente']);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

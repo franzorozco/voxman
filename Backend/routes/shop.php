@@ -80,6 +80,9 @@ Route::prefix('v1/shop')->group(function () {
         Route::get('/wishlist', [\App\Http\Controllers\Api\shop\ShopWishlistController::class, 'index']);
         Route::post('/wishlist/toggle', [\App\Http\Controllers\Api\shop\ShopWishlistController::class, 'toggle']);
         Route::get('/my-orders', [ShopProfileController::class, 'myOrders']);
+        Route::get('/my-carts', [ShopProfileController::class, 'myCarts']);
+        Route::post('/my-carts/{id}/remind', [ShopProfileController::class, 'remindCartOwners']);
+        Route::delete('/my-carts/{id}', [ShopProfileController::class, 'deleteMyCart']);
     });
 });
 

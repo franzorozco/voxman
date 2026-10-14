@@ -59,3 +59,28 @@ export const getMyOrders = async (params = {}) => {
   const res = await api.get('/v1/shop/my-orders', { params });
   return res.data;
 };
+
+/**
+ * Obtener carritos registrados del cliente autenticado
+ */
+export const getMyCarts = async (params = {}) => {
+  const res = await api.get('/v1/shop/my-carts', { params });
+  return res.data;
+};
+
+/**
+ * Eliminar un carrito propio
+ */
+export const deleteMyCart = async (id) => {
+  const res = await api.delete(`/v1/shop/my-carts/${id}`);
+  return res.data;
+};
+
+/**
+ * Enviar recordatorio o solicitud de reactivación a los dueños de los productos
+ */
+export const remindMyCart = async (id) => {
+  const res = await api.post(`/v1/shop/my-carts/${id}/remind`);
+  return res.data;
+};
+
