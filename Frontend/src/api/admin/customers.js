@@ -23,6 +23,14 @@ export const getDeletedCustomers = (params) =>
 export const restoreCustomer = (id) => 
     api.post(`${BASE_URL}/${id}/restore`);
 
+export const checkCustomerEmail = (email, customerId = null) =>
+    api.get(`${BASE_URL}/check-email`, {
+        params: {
+            email,
+            ...(customerId ? { customer_id: customerId } : {})
+        }
+    });
+
 export const searchUnlinkedUsers = (query) => 
     api.get(`${BASE_URL}/search-unlinked-users`, { params: { q: query } });
 

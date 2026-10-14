@@ -47,6 +47,7 @@ import {
 } from "../../api/profile/profileApi";
 import { getImageUrl } from "../../utils/imageUtils";
 import AddressMapPicker from "../../components/ui/AddressMapPicker";
+import { verifyRegisterCode, resendRegisterCode } from "../../api/admin/auth";
 import "./Profile.css";
 
 const MissingDataPointer = ({ message }) => (
@@ -121,6 +122,21 @@ export default function Profile() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [showConfirmCodeModal, setShowConfirmCodeModal] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+
+  // Deferred Email Verification State
+  const [verifyCodeInput, setVerifyCodeInput] = useState("");
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const autoVerifyTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   // User Profile Data
   const [userData, setUserData] = useState(null);
@@ -271,6 +287,95 @@ export default function Profile() {
   useEffect(() => {
     loadProfile();
   }, []);
+
+  // Verification handlers (deferred email verification)
+  const handleVerifyEmailCode = useCallback(async (e, explicitCode = null, explicitEmail = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const codeToVerify = (explicitCode ?? verifyCodeInput ?? "").replace(/\D/g, "").trim();
+    const emailToVerify = (explicitEmail ?? userData?.email ?? authUser?.email ?? "").trim().toLowerCase();
+
+    if (!emailToVerify) {
+      toast.error("No se encontró el correo de la cuenta para verificar.");
+      return;
+    }
+    if (codeToVerify.length !== 6) {
+      toast.error("Ingresa el código de 6 dígitos enviado a tu correo.");
+      return;
+    }
+
+    try {
+      setVerifyingEmail(true);
+      const res = await verifyRegisterCode({
+        email: emailToVerify,
+        code: codeToVerify,
+      });
+      const verifiedUser = res.data?.user;
+      const newToken = res.data?.token || token || localStorage.getItem("token");
+
+      toast.success(res.data?.message || "¡Correo electrónico verificado exitosamente!");
+      setVerifyCodeInput("");
+
+      setUserData((prev) =>
+        prev
+          ? {
+              ...prev,
+              email_verified_at: verifiedUser?.email_verified_at || new Date().toISOString(),
+              is_email_verified: true,
+            }
+          : verifiedUser
+      );
+
+      if (verifiedUser && newToken) {
+        localStorage.setItem("token", newToken);
+        localStorage.setItem("shop_auth_token", newToken);
+        localStorage.setItem("shop_user", JSON.stringify(verifiedUser));
+        login({ user: { ...(userData || {}), ...verifiedUser, is_email_verified: true }, token: newToken });
+      }
+
+      // Clean query params if present
+      if (location.search.includes("verify_code")) {
+        navigate("/profile", { replace: true });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Código de verificación inválido o expirado.");
+    } finally {
+      setVerifyingEmail(false);
+    }
+  }, [verifyCodeInput, userData, authUser, token, login, location.search, navigate]);
+
+  const handleResendEmailCode = async () => {
+    if (resendCooldown > 0 || resendingEmail) return;
+    const emailToResend = (userData?.email || authUser?.email || "").trim().toLowerCase();
+    if (!emailToResend) return;
+
+    try {
+      setResendingEmail(true);
+      const res = await resendRegisterCode({ email: emailToResend });
+      toast.success(res.data?.message || "Se ha enviado un nuevo código de 6 dígitos a tu correo.");
+      setResendCooldown(res.data?.cooldown_seconds || 60);
+    } catch (error) {
+      if (error.response?.data?.cooldown_seconds) {
+        setResendCooldown(error.response.data.cooldown_seconds);
+      }
+      toast.error(error.response?.data?.message || "No se pudo reenviar el código de verificación.");
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
+  // Auto-verify if user clicked the link in the verification email (?verify_code=XXXXXX&email=...)
+  useEffect(() => {
+    if (autoVerifyTriggeredRef.current) return;
+    const params = new URLSearchParams(location.search);
+    const urlCode = (params.get("verify_code") || "").replace(/\D/g, "").trim();
+    const urlEmail = (params.get("email") || userData?.email || authUser?.email || "").trim().toLowerCase();
+
+    if (urlCode.length === 6 && urlEmail) {
+      autoVerifyTriggeredRef.current = true;
+      setVerifyCodeInput(urlCode);
+      handleVerifyEmailCode(null, urlCode, urlEmail);
+    }
+  }, [location.search, userData, authUser, handleVerifyEmailCode]);
 
   // Frontend auth validation: redirect if logged out from elsewhere (e.g. Navbar)
   useEffect(() => {
@@ -616,6 +721,139 @@ export default function Profile() {
 
       <main className="profile-main-container">
         {/* =========================================
+            BANNER DE VERIFICACIÓN DE CORREO DIFERIDA (OPCIÓN B)
+            ========================================= */}
+        {userData && !userData.is_email_verified && !userData.email_verified_at && (
+          <div
+            style={{
+              marginBottom: "20px",
+              padding: "18px 22px",
+              borderRadius: "14px",
+              background: profileIsDark
+                ? "linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(217, 119, 6, 0.08))"
+                : "linear-gradient(135deg, #fffbeb, #fef3c7)",
+              border: profileIsDark ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid #fcd34d",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", flex: "1 1 320px" }}>
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "10px",
+                  background: "rgba(245, 158, 11, 0.2)",
+                  color: "#d97706",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Mail size={20} />
+              </div>
+              <div>
+                <h3
+                  style={{
+                    margin: "0 0 4px 0",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    color: profileIsDark ? "#fde68a" : "#92400e",
+                  }}
+                >
+                  Confirma tu correo electrónico
+                </h3>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "13px",
+                    lineHeight: 1.45,
+                    color: profileIsDark ? "#fcd34d" : "#b45309",
+                  }}
+                >
+                  Enviamos un código de 6 dígitos a <strong>{userData.email}</strong>. Confirma tu correo dentro de las primeras 24 horas para mantener tu cuenta activa de forma permanente.
+                </p>
+              </div>
+            </div>
+
+            <form
+              onSubmit={handleVerifyEmailCode}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="Código (6 dígitos)"
+                value={verifyCodeInput}
+                onChange={(e) => setVerifyCodeInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                style={{
+                  width: "155px",
+                  padding: "9px 12px",
+                  borderRadius: "8px",
+                  border: profileIsDark ? "1px solid rgba(245, 158, 11, 0.4)" : "1px solid #f59e0b",
+                  background: profileIsDark ? "rgba(17, 24, 39, 0.8)" : "#ffffff",
+                  color: profileIsDark ? "#ffffff" : "#111827",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  letterSpacing: "3px",
+                  textAlign: "center",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={verifyingEmail || verifyCodeInput.length !== 6}
+                style={{
+                  padding: "9px 16px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "#d97706",
+                  color: "#ffffff",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  cursor: verifyingEmail || verifyCodeInput.length !== 6 ? "not-allowed" : "pointer",
+                  opacity: verifyingEmail || verifyCodeInput.length !== 6 ? 0.65 : 1,
+                }}
+              >
+                {verifyingEmail ? "Verificando..." : "Confirmar código"}
+              </button>
+              <button
+                type="button"
+                onClick={handleResendEmailCode}
+                disabled={resendingEmail || resendCooldown > 0}
+                style={{
+                  padding: "9px 12px",
+                  borderRadius: "8px",
+                  border: profileIsDark ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid #d97706",
+                  background: "transparent",
+                  color: profileIsDark ? "#fde68a" : "#92400e",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: resendingEmail || resendCooldown > 0 ? "not-allowed" : "pointer",
+                  opacity: resendingEmail || resendCooldown > 0 ? 0.6 : 1,
+                }}
+              >
+                {resendingEmail
+                  ? "Enviando..."
+                  : resendCooldown > 0
+                  ? `Reenviar (${resendCooldown}s)`
+                  : "Reenviar código"}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* =========================================
             HERO CARD CON DATOS DEL USUARIO
             ========================================= */}
         <div className="profile-hero-card">
@@ -642,6 +880,38 @@ export default function Profile() {
                 {customerInfo?.points !== undefined && (
                   <span className="profile-tag-badge tag-vip">
                     {customerInfo.points} PTS
+                  </span>
+                )}
+                {userData && (
+                  <span
+                    className="profile-tag-badge"
+                    style={{
+                      background:
+                        userData.is_email_verified || userData.email_verified_at
+                          ? "rgba(16, 185, 129, 0.15)"
+                          : "rgba(245, 158, 11, 0.18)",
+                      color:
+                        userData.is_email_verified || userData.email_verified_at
+                          ? "#10b981"
+                          : "#f59e0b",
+                      border:
+                        userData.is_email_verified || userData.email_verified_at
+                          ? "1px solid rgba(16, 185, 129, 0.3)"
+                          : "1px solid rgba(245, 158, 11, 0.35)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    {userData.is_email_verified || userData.email_verified_at ? (
+                      <>
+                        <ShieldCheck size={12} /> CORREO VERIFICADO
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle size={12} /> PENDIENTE DE VERIFICAR
+                      </>
+                    )}
                   </span>
                 )}
               </div>

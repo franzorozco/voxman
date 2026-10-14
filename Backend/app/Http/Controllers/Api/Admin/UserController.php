@@ -202,7 +202,8 @@ class UserController extends Controller
                 'email' => $request->email,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
-                'is_active' => true
+                'is_active' => true,
+                'email_verified_at' => now(),
             ]);
 
             UserProfile::create([

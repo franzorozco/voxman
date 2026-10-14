@@ -68,6 +68,8 @@ class SocialAuthController extends Controller
         }
 
         try {
+            User::ensureEmailVerificationSchema();
+
             $googleUser = Socialite::driver('google')->stateless()->user();
 
             $email = Str::lower(trim((string) $googleUser->getEmail()));
@@ -80,7 +82,21 @@ class SocialAuthController extends Controller
                 return $this->failRedirect('email_not_verified');
             }
 
-            $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+            $user = User::withTrashed()
+                ->with(['customer' => fn($q) => $q->withTrashed()])
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->first();
+
+            $deletedAt = $user ? ($user->deleted_at ?? $user->customer?->deleted_at) : null;
+
+            if ($user && $deletedAt !== null) {
+                $daysDeleted = (int) floor(\Carbon\Carbon::parse($deletedAt)->diffInDays(now()));
+                if ($daysDeleted < 60) {
+                    return $this->failRedirect('account_deleted_under_60');
+                }
+                // Si tiene >= 60 días de eliminado, pasa al flujo de registro para restaurar/recrear su perfil
+                $user = null;
+            }
 
             if ($user) {
                 if ($user->is_active === false) {
@@ -93,17 +109,23 @@ class SocialAuthController extends Controller
                 }
 
                 if (!$user->google_id) {
-                    // 🔒 Primera vinculación con una cuenta que ya existía con contraseña.
-                    // No hay verificación de correo en el registro normal, así que alguien pudo haber
-                    // registrado este correo antes ("pre-hijacking") y conocer la contraseña.
-                    // Al vincular se cierran todas las sesiones y se invalida esa contraseña
-                    // (el dueño real puede usar Google o "Olvidé mi contraseña").
+                    $wasUnverified = ($user->email_verified_at === null);
                     $user->tokens()->delete();
-                    $user->update([
-                        'google_id' => $googleUser->getId(),
+
+                    $updatePayload = [
+                        'google_id' => (string) $googleUser->getId(),
                         'avatar' => $googleUser->getAvatar(),
-                        'password' => Hash::make(Str::random(40)),
-                    ]);
+                        'email_verified_at' => $user->email_verified_at ?? now(),
+                    ];
+
+                    // Si la cuenta previa nunca había verificado su correo, rotamos la contraseña por seguridad
+                    if ($wasUnverified) {
+                        $updatePayload['password'] = Hash::make(Str::random(40));
+                    }
+
+                    $user->update($updatePayload);
+                } elseif ($user->email_verified_at === null) {
+                    $user->email_verified_at = now();
                 }
 
                 $user->last_login = now();
@@ -117,7 +139,7 @@ class SocialAuthController extends Controller
                     'origin' => $origin,
                 ]);
             } else {
-                // El usuario no existe. Guardamos sus datos temporalmente en Caché.
+                // El usuario no existe (o fue eliminado hace >= 60 días). Guardamos sus datos temporalmente en Caché.
                 $regToken = Str::random(40);
 
                 Cache::put('google_reg_' . $regToken, [
@@ -163,16 +185,12 @@ class SocialAuthController extends Controller
      */
     public function completeRegistration(Request $request)
     {
+        User::ensureEmailVerificationSchema();
+
         $request->validate([
             'google_reg_token' => 'required|string|size:40',
-            'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z0-9_]+$/',
-                function ($attribute, $value, $fail) {
-                    if (User::withTrashed()->whereRaw('LOWER(username) = ?', [Str::lower($value)])->exists()) {
-                        $fail('Este nombre de usuario no está disponible.');
-                    }
-                },
-            ],
-            'first_name' => 'required|string|max:100',
+            'username' => ['nullable', 'string', 'max:50'],
+            'first_name' => 'required|string|min:2|max:100',
             'last_name_paternal' => 'nullable|string|max:100',
             'last_name_maternal' => 'nullable|string|max:100',
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]*$/'],
@@ -185,33 +203,116 @@ class SocialAuthController extends Controller
             return response()->json(['message' => 'El token de registro es inválido o ha expirado. Inténtalo de nuevo.'], 400);
         }
 
-        // El correo pudo haberse registrado mientras tanto (el token vale 30 min)
-        if (User::withTrashed()->whereRaw('LOWER(email) = ?', [Str::lower($cachedData['email'])])->exists()) {
-            Cache::forget($cacheKey);
-            return response()->json(['message' => 'No se pudo completar el registro. Inicia sesión con Google.'], 409);
+        $email = Str::lower(trim((string) $cachedData['email']));
+
+        $existingUser = User::withTrashed()
+            ->with(['customer' => fn($q) => $q->withTrashed()])
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->first();
+
+        if ($existingUser) {
+            $deletedAt = $existingUser->deleted_at ?? $existingUser->customer?->deleted_at;
+            if ($deletedAt === null) {
+                // Si la cuenta ya estaba verificada, no se puede volver a registrar
+                if ($existingUser->email_verified_at !== null || $existingUser->google_id !== null) {
+                    Cache::forget($cacheKey);
+                    return response()->json([
+                        'message' => 'Advertencia: Este correo electrónico ya está registrado y activo. Inicia sesión con Google.'
+                    ], 409);
+                }
+            } else {
+                $daysDeleted = (int) floor(\Carbon\Carbon::parse($deletedAt)->diffInDays(now()));
+                if ($daysDeleted < 60) {
+                    $daysRemaining = max(1, 60 - $daysDeleted);
+                    return response()->json([
+                        'message' => "Advertencia: Este correo pertenece a una cuenta eliminada hace {$daysDeleted} día(s). Deben pasar más de 60 días para poder volver a crearla (faltan {$daysRemaining} día(s))."
+                    ], 422);
+                }
+            }
         }
 
         try {
-            $user = DB::transaction(function () use ($cachedData, $request) {
-                $user = User::create([
-                    'email' => $cachedData['email'],
-                    'username' => $request->username,
-                    'password' => Hash::make(Str::random(24)),
-                    'google_id' => $cachedData['google_id'],
-                    'avatar' => $cachedData['avatar'],
-                    'is_active' => true,
-                    'last_login' => now(),
-                ]);
+            $user = DB::transaction(function () use ($cachedData, $request, $email, $existingUser) {
+                $rawUser = trim((string) ($request->username ?? ''));
+                if ($rawUser !== '' && str_contains($rawUser, '@')) {
+                    $rawUser = trim(Str::before($rawUser, '@'));
+                }
+                if ($rawUser === '') {
+                    $rawUser = trim(Str::before($email, '@'));
+                }
+                $baseUsername = Str::limit($rawUser !== '' ? $rawUser : 'user_' . Str::lower(Str::random(6)), 50, '');
 
-                $user->assignRole('Usuario');
+                $username = $baseUsername;
+                $counter = 1;
+                while (
+                    User::withTrashed()
+                        ->whereRaw('LOWER(username) = ?', [Str::lower($username)])
+                        ->when($existingUser, fn($q) => $q->where('id', '!=', $existingUser->id))
+                        ->exists()
+                ) {
+                    $suffix = '_' . $counter;
+                    $username = Str::limit($baseUsername, 50 - strlen($suffix), '') . $suffix;
+                    $counter++;
+                }
 
-                UserProfile::create([
-                    'user_id' => $user->id,
-                    'first_name' => $request->first_name,
-                    'last_name_paternal' => $request->last_name_paternal,
-                    'last_name_maternal' => $request->last_name_maternal,
-                    'phone' => $request->phone,
-                ]);
+                if ($existingUser) {
+                    if ($existingUser->trashed()) {
+                        $existingUser->restore();
+                    }
+                    $existingUser->update([
+                        'email' => $email,
+                        'username' => $username,
+                        'password' => Hash::make(Str::random(24)),
+                        'google_id' => $cachedData['google_id'],
+                        'avatar' => $cachedData['avatar'],
+                        'is_active' => true,
+                        'email_verified_at' => now(),
+                        'last_login' => now(),
+                    ]);
+                    $user = $existingUser;
+
+                    $existingProfile = UserProfile::withTrashed()->where('user_id', $user->id)->first();
+                    if ($existingProfile) {
+                        if ($existingProfile->trashed()) {
+                            $existingProfile->restore();
+                        }
+                        $existingProfile->update([
+                            'first_name' => trim((string) $request->first_name),
+                            'last_name_paternal' => $request->filled('last_name_paternal') ? trim((string) $request->last_name_paternal) : null,
+                            'last_name_maternal' => $request->filled('last_name_maternal') ? trim((string) $request->last_name_maternal) : null,
+                            'phone' => $request->filled('phone') ? trim((string) $request->phone) : null,
+                        ]);
+                    } else {
+                        UserProfile::create([
+                            'user_id' => $user->id,
+                            'first_name' => trim((string) $request->first_name),
+                            'last_name_paternal' => $request->filled('last_name_paternal') ? trim((string) $request->last_name_paternal) : null,
+                            'last_name_maternal' => $request->filled('last_name_maternal') ? trim((string) $request->last_name_maternal) : null,
+                            'phone' => $request->filled('phone') ? trim((string) $request->phone) : null,
+                        ]);
+                    }
+                } else {
+                    $user = User::create([
+                        'email' => $email,
+                        'username' => $username,
+                        'password' => Hash::make(Str::random(24)),
+                        'google_id' => $cachedData['google_id'],
+                        'avatar' => $cachedData['avatar'],
+                        'is_active' => true,
+                        'email_verified_at' => now(),
+                        'last_login' => now(),
+                    ]);
+
+                    UserProfile::create([
+                        'user_id' => $user->id,
+                        'first_name' => trim((string) $request->first_name),
+                        'last_name_paternal' => $request->filled('last_name_paternal') ? trim((string) $request->last_name_paternal) : null,
+                        'last_name_maternal' => $request->filled('last_name_maternal') ? trim((string) $request->last_name_maternal) : null,
+                        'phone' => $request->filled('phone') ? trim((string) $request->phone) : null,
+                    ]);
+                }
+
+                $user->syncRoles(['Usuario']);
 
                 return $user;
             });

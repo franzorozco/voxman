@@ -13,6 +13,8 @@ class LoginController extends Controller
 {
     public function __invoke(Request $request)
     {
+        User::ensureEmailVerificationSchema();
+
         // 🔒 Límites de tamaño: evitan payloads gigantes (el hash solo usa los primeros 72 bytes)
         $request->validate([
             'email' => 'required|string|email|max:150',
@@ -61,6 +63,19 @@ class LoginController extends Controller
 
         RateLimiter::clear($throttleKey);
 
+        // Si aún no ha verificado su correo y no tiene un código activo en caché, le enviamos uno en segundo plano
+        // para que pueda verificarlo desde su Perfil (/profile) sin bloquear su inicio de sesión.
+        if ($user->email_verified_at === null && $user->google_id === null) {
+            $cacheKey = 'email_verify_code_' . Str::lower(trim($user->email));
+            if (!\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                try {
+                    RegisterController::dispatchVerificationCode($user, true);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Login background verification code error: ' . $e->getMessage());
+                }
+            }
+        }
+
         $user->last_login = now();
         $user->save();
 
@@ -74,6 +89,8 @@ class LoginController extends Controller
                 'id' => $user->id,
                 'email' => $user->email,
                 'username' => $user->username,
+                'email_verified_at' => $user->email_verified_at,
+                'is_email_verified' => $user->email_verified_at !== null || !empty($user->google_id),
                 'full_name' => optional($user->profile)->first_name . ' ' . optional($user->profile)->last_name_paternal,
                 'photo' => optional($user->profile)->photo ?? null,
 

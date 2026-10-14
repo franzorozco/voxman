@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, X, User, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
-import { loginShopUser, registerShopUser } from "../../api/shop/auth";
-import { getGoogleAuthUrl } from "../../api/admin/auth";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, X, User, Shield, ShieldCheck, ShieldAlert, KeyRound, RefreshCw } from "lucide-react";
+import { loginShopUser, registerShopUser, verifyShopUserCode, resendShopUserCode } from "../../api/shop/auth";
+import { getGoogleAuthUrl, checkRegisterEmail } from "../../api/admin/auth";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
 import { Link } from "react-router-dom";
@@ -9,6 +9,11 @@ import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import { getImageUrl } from "../../utils/imageUtils";
 import fondo from "../../assets/global/fondos/premium_fashion_bg.png";
 import "./CheckoutLoginModal.css";
+
+const extractUsernameFromEmail = (email) => {
+  if (!email) return "";
+  return email.trim().split("@")[0].trim();
+};
 
 export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect, theme = 'light', initialMode = 'login', initialData = null }) {
   const { settings, fetchSettings } = useShopSettingsStore();
@@ -18,7 +23,7 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       fetchSettings();
     }
   }, [isOpen, fetchSettings]);
-  const [mode, setMode] = useState(initialMode); // 'login' | 'register' | 'google_register'
+  const [mode, setMode] = useState(initialMode); // 'login' | 'register' | 'google_register' | 'verify_code'
   
   const [form, setForm] = useState({ 
     username: "", 
@@ -31,6 +36,12 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     phone: ""
   });
   const [errors, setErrors] = useState({});
+  const [emailStatus, setEmailStatus] = useState({
+    checking: false,
+    status: "idle",
+    message: "",
+    daysRemaining: null,
+  });
   const [googleRegToken, setGoogleRegToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -40,23 +51,38 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
   const [remember, setRemember] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [resendingCode, setResendingCode] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [previousMode, setPreviousMode] = useState("register");
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
   // Reset state when opening/closing or switching modes
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
       setErrors({});
+      setEmailStatus({ checking: false, status: "idle", message: "", daysRemaining: null });
       setAcceptedTerms(false);
       setSuccess(false);
       setShowPassword(false);
       setPasswordStrength("");
+      setVerificationCode("");
       
       if (initialMode === 'google_register' && initialData) {
         setGoogleRegToken(initialData.googleRegToken);
         
-        let defaultUsername = "";
-        if (initialData.email) {
-          defaultUsername = initialData.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '');
-        }
+        const defaultUsername = extractUsernameFromEmail(initialData.email || "");
 
         let firstName = "";
         let lastName = "";
@@ -102,6 +128,59 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!isOpen || mode !== 'register') {
+      setEmailStatus({ checking: false, status: "idle", message: "", daysRemaining: null });
+      return;
+    }
+
+    const emailTrimmed = (form.email || "").trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailTrimmed || !emailRegex.test(emailTrimmed)) {
+      setEmailStatus({ checking: false, status: "idle", message: "", daysRemaining: null });
+      return;
+    }
+
+    let cancelled = false;
+    setEmailStatus((prev) => ({ ...prev, checking: true }));
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkRegisterEmail(emailTrimmed);
+        if (cancelled) return;
+        const data = res?.data || {};
+        setEmailStatus({
+          checking: false,
+          status: data.status || "available",
+          message: data.message || "",
+          daysRemaining: data.days_remaining ?? null,
+        });
+
+        if (data.status === "active_exists" || data.status === "deleted_under_60") {
+          setErrors((prev) => ({
+            ...prev,
+            email: data.message || "Este correo no está disponible.",
+          }));
+        } else {
+          setErrors((prev) => ({
+            ...prev,
+            email: prev.email && !prev.email.includes("Correo inválido") ? "" : prev.email,
+          }));
+        }
+      } catch {
+        if (!cancelled) {
+          setEmailStatus({ checking: false, status: "idle", message: "", daysRemaining: null });
+        }
+      }
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [form.email, isOpen, mode]);
+
   if (!isOpen) return null;
 
   // VALIDACIÓN
@@ -111,15 +190,6 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     if (name === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(value)) error = "Correo inválido";
-    }
-
-    if (name === "username") {
-      if (value.length < 3) error = "Mínimo 3 caracteres";
-      else if (/\s/.test(value)) error = "Sin espacios";
-      else {
-        const userRegex = /^[a-zA-Z0-9_]+$/;
-        if (!userRegex.test(value)) error = "Solo letras, números y guiones bajos";
-      }
     }
 
     if (name === "password") {
@@ -142,7 +212,6 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
           setPasswordStrength("Media");
         }
       } else {
-        // En login solo validamos longitud mínima por seguridad básica
         if (value.length < 8) {
           error = "Mínimo 8 caracteres";
         }
@@ -170,17 +239,12 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     setForm(prev => {
       const newForm = { ...prev, [name]: value };
       if (name === "email" && mode === 'register') {
-        const prefix = value.split("@")[0].replace(/[^a-zA-Z0-9_]/g, '');
-        newForm.username = prefix;
+        newForm.username = extractUsernameFromEmail(value);
       }
       return newForm;
     });
     
     validate(name, value);
-    if (name === "email" && mode === 'register') {
-      const prefix = value.split("@")[0].replace(/[^a-zA-Z0-9_]/g, '');
-      validate("username", prefix);
-    }
   };
 
   const handleGoogleLogin = async () => {
@@ -193,6 +257,66 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
     } catch (err) {
       toast.error("Error al conectar con Google");
       setLoading(false);
+    }
+  };
+
+  const handleVerifyCodeSubmit = async (e) => {
+    e.preventDefault();
+    const cleanCode = (verificationCode || "").replace(/\D/g, "").trim();
+    if (cleanCode.length !== 6) {
+      toast.error("Ingresa el código de 6 dígitos enviado a tu correo");
+      return;
+    }
+
+    try {
+      setVerifyingCode(true);
+      const res = await verifyShopUserCode({
+        email: verificationEmail,
+        code: cleanCode,
+      });
+
+      const token = res.data?.token;
+      const user = res.data?.user;
+
+      if (!token) throw new Error("No llegó token del backend");
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("shop_auth_token", token);
+      localStorage.setItem("shop_user", JSON.stringify(user));
+
+      useAuthStore.getState().login({ user, token });
+
+      setSuccessMessage("¡Correo verificado y cuenta lista!");
+      setSuccess(true);
+
+      setTimeout(() => {
+        onClose();
+        if (onSuccessRedirect) {
+          onSuccessRedirect(user);
+        }
+      }, 1300);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Código de verificación inválido o expirado");
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendCooldown > 0 || resendingCode) return;
+
+    try {
+      setResendingCode(true);
+      const res = await resendShopUserCode({ email: verificationEmail });
+      toast.success(res.data?.message || "Se envió un nuevo código a tu correo");
+      setResendCooldown(res.data?.cooldown_seconds || 60);
+    } catch (error) {
+      if (error.response?.data?.cooldown_seconds) {
+        setResendCooldown(error.response.data.cooldown_seconds);
+      }
+      toast.error(error.response?.data?.message || "No se pudo reenviar el código");
+    } finally {
+      setResendingCode(false);
     }
   };
 
@@ -210,7 +334,6 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       localStorage.setItem("shop_auth_token", token);
       localStorage.setItem("shop_user", JSON.stringify(user));
       
-      // Update global session
       useAuthStore.getState().login({ user, token });
 
       setSuccessMessage("¡Bienvenido de vuelta!");
@@ -224,7 +347,6 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       }, 1200);
 
     } catch (error) {
-      console.log(error.response?.data || error.message);
       toast.error(error.response?.data?.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
@@ -239,19 +361,21 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       return;
     }
 
+    const autoUsername = extractUsernameFromEmail(form.email);
+
     if (mode === 'google_register') {
       if (Object.values(errors).some((err) => err)) {
         toast.error("Corrige los errores antes de continuar");
         return;
       }
-      if (!form.username || !form.first_name) {
-        toast.error("El nombre de usuario y nombre son obligatorios");
+      if (!form.first_name) {
+        toast.error("El nombre es obligatorio");
         return;
       }
       try {
         setLoading(true);
         const { completeGoogleRegistration } = await import("../../api/admin/auth");
-        const res = await completeGoogleRegistration({ ...form, google_reg_token: googleRegToken });
+        const res = await completeGoogleRegistration({ ...form, username: autoUsername, google_reg_token: googleRegToken });
         
         const token = res.data?.token;
         const user = res.data?.user;
@@ -278,14 +402,20 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       return;
     }
 
-    if (Object.values(errors).some((err) => err) || !form.username || !form.email || !form.password || !form.password_confirmation) {
+    if (emailStatus.status === "active_exists" || emailStatus.status === "deleted_under_60") {
+      toast.error(emailStatus.message || "Este correo no está disponible.");
+      return;
+    }
+
+    if (Object.values(errors).some((err) => err) || !autoUsername || !form.email || !form.password || !form.password_confirmation) {
       toast.error("Corrige los errores antes de continuar");
       return;
     }
 
     try {
       setLoading(true);
-      const res = await registerShopUser(form);
+      const res = await registerShopUser({ ...form, username: autoUsername });
+
       const token = res.data?.token;
       const user = res.data?.user;
 
@@ -295,13 +425,11 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
       localStorage.setItem("shop_auth_token", token);
       localStorage.setItem("shop_user", JSON.stringify(user));
       
-      // Update global session
       useAuthStore.getState().login({ user, token });
 
       if (res && res.data) {
         setSuccessMessage("¡Cuenta creada con éxito!");
         setSuccess(true);
-        // Automatically login
         setTimeout(() => {
           onClose();
           if (onSuccessRedirect) {
@@ -452,7 +580,11 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
 
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <p style={{ margin: 0, color: mutedColor, fontSize: '14px' }}>
-            {mode === 'login' ? "Iniciar sesión para continuar" : "Únete al estilo para continuar"}
+            {mode === 'verify_code'
+              ? "Verifica tu correo electrónico"
+              : mode === 'login'
+              ? "Iniciar sesión para continuar"
+              : "Únete al estilo para continuar"}
           </p>
         </div>
 
@@ -468,6 +600,97 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
             <CheckCircle size={56} style={{ marginBottom: '16px' }} />
             <span style={{ fontSize: '18px', fontWeight: '500' }}>{successMessage}</span>
           </div>
+        ) : mode === 'verify_code' ? (
+          <form onSubmit={handleVerifyCodeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{
+              padding: '12px 14px',
+              borderRadius: '10px',
+              background: isDark ? 'rgba(99, 102, 241, 0.14)' : '#eef2ff',
+              border: '1px solid rgba(99, 102, 241, 0.35)',
+              color: textColor,
+              fontSize: '13px',
+              lineHeight: '1.5',
+              textAlign: 'center'
+            }}>
+              Enviamos un código de 6 dígitos a:<br />
+              <strong>{verificationEmail}</strong>
+            </div>
+
+            <div className="floating-input-group" style={{ marginBottom: 0 }}>
+              <KeyRound size={18} className="input-icon" />
+              <input
+                name="verification_code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder=" "
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                className="floating-input"
+                style={{
+                  letterSpacing: '8px',
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  textAlign: 'center'
+                }}
+              />
+              <label className="floating-label">Código de 6 dígitos</label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={verifyingCode || verificationCode.length !== 6}
+              className="checkout-modal-btn checkout-modal-btn-primary"
+            >
+              {verifyingCode ? "Verificando..." : "Verificar y continuar"}
+            </button>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={resendCooldown > 0 || resendingCode}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: resendCooldown > 0 ? mutedColor : textColor,
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: 0
+                }}
+              >
+                <RefreshCw size={14} />
+                {resendingCode
+                  ? "Reenviando..."
+                  : resendCooldown > 0
+                  ? `Reenviar en ${resendCooldown}s`
+                  : "Reenviar código"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(previousMode || "register");
+                  setVerificationCode("");
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: mutedColor,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                Volver
+              </button>
+            </div>
+          </form>
         ) : (
           <form onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
@@ -499,9 +722,19 @@ export default function CheckoutLoginModal({ isOpen, onClose, onSuccessRedirect,
                   <span>{errors["email"]}</span>
                 </div>
               )}
+              {!errors["email"] && mode === 'register' && (emailStatus.status === "deleted_over_60" || emailStatus.status === "unverified_exists") && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f59e0b', fontSize: '12px', marginTop: '4px' }}>
+                  <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                  <span>{emailStatus.message}</span>
+                </div>
+              )}
+              {!errors["email"] && mode === 'register' && emailStatus.status === "available" && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981', fontSize: '12px', marginTop: '4px' }}>
+                  <CheckCircle size={14} style={{ flexShrink: 0 }} />
+                  <span>{emailStatus.message || "Correo disponible."}</span>
+                </div>
+              )}
             </div>
-
-            {(mode === 'register' || mode === 'google_register') && renderInput("username", "Nombre de usuario", "text", User, 50)}
             
             {mode === 'google_register' ? (
               <>

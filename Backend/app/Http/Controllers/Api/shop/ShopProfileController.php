@@ -15,6 +15,8 @@ class ShopProfileController extends Controller
             'id' => $user->id,
             'email' => $user->email,
             'username' => $user->username,
+            'email_verified_at' => $user->email_verified_at,
+            'is_email_verified' => $user->email_verified_at !== null || !empty($user->google_id),
             'full_name' => optional($user->profile)->first_name . ' ' . optional($user->profile)->last_name_paternal,
             'photo' => optional($user->profile)->photo ?? null,
             'employee' => $user->employee ? [

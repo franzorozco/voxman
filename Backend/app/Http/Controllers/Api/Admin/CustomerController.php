@@ -123,59 +123,365 @@ class CustomerController extends Controller
         return response()->json($customerArray);
     }
 
+    /**
+     * Extrae el username desde el correo sin el dominio (@gmail.com, @hotmail.com, etc.)
+     */
+    private function extractUsernameFromEmail(string $email, ?string $ignoreUserId = null): string
+    {
+        $localPart = trim(Str::before(trim($email), '@'));
+        if ($localPart === '') {
+            $localPart = 'user_' . Str::lower(Str::random(6));
+        }
+        $baseUsername = Str::limit($localPart, 50, '');
+
+        // Si existe un usuario eliminado hace >= 60 días con ese mismo username, liberar su username
+        $oldTrashedUsers = User::onlyTrashed()
+            ->whereRaw('LOWER(username) = ?', [Str::lower($baseUsername)])
+            ->when($ignoreUserId, fn($q) => $q->where('id', '!=', $ignoreUserId))
+            ->get();
+
+        foreach ($oldTrashedUsers as $trashedUser) {
+            if ($trashedUser->deleted_at && \Carbon\Carbon::parse($trashedUser->deleted_at)->diffInDays(now()) >= 60) {
+                DB::table('users')
+                    ->where('id', $trashedUser->id)
+                    ->update(['username' => 'del_' . Str::lower(Str::random(6)) . '_' . Str::limit($baseUsername, 30, '')]);
+            }
+        }
+
+        // Verificar si otro usuario distinto ya usa este username
+        $username = $baseUsername;
+        $counter = 1;
+        while (
+            User::withTrashed()
+                ->whereRaw('LOWER(username) = ?', [Str::lower($username)])
+                ->when($ignoreUserId, fn($q) => $q->where('id', '!=', $ignoreUserId))
+                ->exists()
+        ) {
+            $suffix = '_' . $counter;
+            $username = Str::limit($baseUsername, 50 - strlen($suffix), '') . $suffix;
+            $counter++;
+        }
+
+        return $username;
+    }
+
+    /**
+     * Normaliza el teléfono: si solo viene el código de país (ej. "+591") sin número, devuelve null.
+     */
+    private function normalizePhone(?string $rawPhone): ?string
+    {
+        if ($rawPhone === null) {
+            return null;
+        }
+        $trimmed = trim($rawPhone);
+        if ($trimmed === '' || preg_match('/^\+\d{1,4}$/', $trimmed)) {
+            return null;
+        }
+        return $trimmed;
+    }
+
+    /**
+     * Valida en tiempo real si un correo puede usarse para cuenta web.
+     * - Si existe y está activo: no permitido.
+     * - Si existe, está eliminado y lleva < 60 días: no permitido.
+     * - Si existe, está eliminado y lleva >= 60 días: permitido (se puede volver a crear).
+     */
+    public function checkEmail(Request $request)
+    {
+        $rawEmail = trim((string) $request->query('email', ''));
+        $customerId = $request->query('customer_id');
+
+        if ($rawEmail === '' || !filter_var($rawEmail, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'valid_format' => false,
+                'available' => false,
+                'status' => 'invalid_format',
+                'username_preview' => $rawEmail !== '' ? Str::before($rawEmail, '@') : '',
+                'message' => 'Ingresa un correo electrónico con formato válido (ej. usuario@dominio.com).'
+            ]);
+        }
+
+        $email = Str::lower($rawEmail);
+        $usernamePreview = Str::before($email, '@');
+
+        $existingUser = User::withTrashed()
+            ->with([
+                'profile' => fn($q) => $q->withTrashed(),
+                'customer' => fn($q) => $q->withTrashed()
+            ])
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->first();
+
+        if (!$existingUser) {
+            return response()->json([
+                'valid_format' => true,
+                'available' => true,
+                'status' => 'available',
+                'username_preview' => $usernamePreview,
+                'message' => "Correo disponible. Se registrará el usuario \"{$usernamePreview}\" (sin dominio)."
+            ]);
+        }
+
+        // Si estamos editando al mismo cliente propietario de este correo
+        if ($customerId && $existingUser->customer && (string) $existingUser->customer->id === (string) $customerId) {
+            return response()->json([
+                'valid_format' => true,
+                'available' => true,
+                'status' => 'own_email',
+                'username_preview' => $usernamePreview,
+                'message' => 'Este es el correo actual vinculado al cliente.'
+            ]);
+        }
+
+        $deletedAt = $existingUser->deleted_at ?? $existingUser->customer?->deleted_at;
+
+        if ($deletedAt === null) {
+            if ($existingUser->email_verified_at === null && $existingUser->google_id === null) {
+                return response()->json([
+                    'valid_format' => true,
+                    'available' => true,
+                    'status' => 'deleted_over_60',
+                    'username_preview' => $usernamePreview,
+                    'message' => "Aviso: Este correo tenía un registro pendiente sin verificar. Al guardar se activará y vinculará al cliente con el usuario \"{$usernamePreview}\"."
+                ]);
+            }
+
+            return response()->json([
+                'valid_format' => true,
+                'available' => false,
+                'status' => 'active_exists',
+                'username_preview' => $usernamePreview,
+                'message' => 'Advertencia: Este correo electrónico ya existe y pertenece a una cuenta activa. No podemos sobrescribir una cuenta activa.'
+            ]);
+        }
+
+        $deletedDate = \Carbon\Carbon::parse($deletedAt);
+        $daysDeleted = (int) floor($deletedDate->diffInDays(now()));
+
+        if ($daysDeleted < 60) {
+            $daysRemaining = max(1, 60 - $daysDeleted);
+            return response()->json([
+                'valid_format' => true,
+                'available' => false,
+                'status' => 'deleted_under_60',
+                'days_deleted' => $daysDeleted,
+                'days_remaining' => $daysRemaining,
+                'deleted_at' => $deletedDate->toIso8601String(),
+                'username_preview' => $usernamePreview,
+                'message' => "Advertencia: Este correo pertenece a una cuenta eliminada hace {$daysDeleted} día(s). No se puede volver a crear hasta que pasen 60 días desde su eliminación (faltan {$daysRemaining} día(s)), o puedes restaurarla desde la Papelera."
+            ]);
+        }
+
+        return response()->json([
+            'valid_format' => true,
+            'available' => true,
+            'status' => 'deleted_over_60',
+            'days_deleted' => $daysDeleted,
+            'deleted_at' => $deletedDate->toIso8601String(),
+            'username_preview' => $usernamePreview,
+            'message' => "Aviso: Este correo pertenecía a una cuenta eliminada hace {$daysDeleted} días (más de 60 días). Está permitido crear la nueva cuenta con este correo."
+        ]);
+    }
+
     public function store(Request $request)
     {
+        User::ensureEmailVerificationSchema();
+
         $request->validate([
-            'first_name' => 'required|string|max:100',
+            'first_name' => 'required|string|min:2|max:100',
             'last_name_paternal' => 'nullable|string|max:100',
             'last_name_maternal' => 'nullable|string|max:100',
-            'customer_code' => 'required|string|max:20|unique:customers,customer_code',
-            'email' => 'nullable|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
+            'customer_code' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:150',
+            'phone' => 'nullable|string|max:30',
             'is_active' => 'nullable|boolean'
+        ], [
+            'first_name.required' => 'El campo Nombres es obligatorio.',
+            'first_name.min' => 'El nombre debe tener al menos 2 caracteres.',
+            'email.email' => 'El formato del correo electrónico no es válido.',
         ]);
 
         try {
             DB::beginTransaction();
 
             $isActive = $request->has('is_active') ? $request->boolean('is_active') : true;
-            
-            // Tomar código manual
-            $customerCode = strtoupper(trim($request->customer_code));
+            $firstName = trim((string) $request->first_name);
+            $lastNamePaternal = $request->filled('last_name_paternal') ? trim((string) $request->last_name_paternal) : null;
+            $lastNameMaternal = $request->filled('last_name_maternal') ? trim((string) $request->last_name_maternal) : null;
+            $phone = $this->normalizePhone($request->phone);
 
-            $emailToSave = $request->email;
-            
+            // Código de cliente (manual o autogenerado si viene vacío)
+            $customerCode = $request->filled('customer_code')
+                ? strtoupper(trim((string) $request->customer_code))
+                : '';
+
+            if ($customerCode === '') {
+                do {
+                    $customerCode = (string) rand(1000000000, 9999999999);
+                } while (Customer::withTrashed()->where('customer_code', $customerCode)->exists());
+            }
+
+            $emailToSave = $request->filled('email') ? Str::lower(trim((string) $request->email)) : null;
+
             if (!empty($emailToSave)) {
-                // Generar contraseña temporal segura (no se acepta del frontend)
+                // Validar existencia de correo (activo vs eliminado < 60 días vs eliminado >= 60 días)
+                $existingUser = User::withTrashed()
+                    ->with([
+                        'profile' => fn($q) => $q->withTrashed(),
+                        'customer' => fn($q) => $q->withTrashed()
+                    ])
+                    ->whereRaw('LOWER(email) = ?', [$emailToSave])
+                    ->first();
+
+                $reusingDeletedUser = false;
+
+                if ($existingUser) {
+                    $deletedAt = $existingUser->deleted_at ?? $existingUser->customer?->deleted_at;
+
+                    if ($deletedAt === null) {
+                        if ($existingUser->email_verified_at === null && $existingUser->google_id === null) {
+                            $reusingDeletedUser = true;
+                        } else {
+                            DB::rollBack();
+                            return response()->json([
+                                'field' => 'email',
+                                'code' => 'EMAIL_ACTIVE_EXISTS',
+                                'message' => "Advertencia: El correo '{$emailToSave}' ya está registrado y activo. No podemos sobrescribir una cuenta activa."
+                            ], 422);
+                        }
+                    } else {
+                        $daysDeleted = (int) floor(\Carbon\Carbon::parse($deletedAt)->diffInDays(now()));
+                        if ($daysDeleted < 60) {
+                            $daysRemaining = max(1, 60 - $daysDeleted);
+                            DB::rollBack();
+                            return response()->json([
+                                'field' => 'email',
+                                'code' => 'EMAIL_DELETED_UNDER_60_DAYS',
+                                'days_deleted' => $daysDeleted,
+                                'days_remaining' => $daysRemaining,
+                                'message' => "Advertencia: El correo '{$emailToSave}' pertenece a una cuenta eliminada hace {$daysDeleted} día(s). Solo se puede volver a crear si han pasado más de 60 días (faltan {$daysRemaining} día(s))."
+                            ], 422);
+                        }
+
+                        $reusingDeletedUser = true;
+                    }
+                }
+
+                // Validar unicidad de customer_code (ignorando el customer del usuario eliminado >= 60 días si aplica)
+                $ignoreCustomerId = ($reusingDeletedUser && $existingUser?->customer) ? $existingUser->customer->id : null;
+                $codeConflict = Customer::withTrashed()
+                    ->where('customer_code', $customerCode)
+                    ->when($ignoreCustomerId, fn($q) => $q->where('id', '!=', $ignoreCustomerId))
+                    ->exists();
+
+                if ($codeConflict) {
+                    DB::rollBack();
+                    return response()->json([
+                        'field' => 'customer_code',
+                        'message' => "El código de cliente '{$customerCode}' ya está registrado."
+                    ], 422);
+                }
+
+                // Username igual a lo registrado en el correo sin @gmail.com / @hotmail.com ni ningún dominio
+                $username = $this->extractUsernameFromEmail($emailToSave, $existingUser?->id);
+
+                // Generar contraseña temporal segura
                 $temporaryPassword = Str::upper(Str::random(3)) . rand(100, 999) . Str::random(3);
 
-                // Crear Usuario Web Completo
-                $user = User::create([
-                    'email' => $emailToSave,
-                    'password' => Hash::make($temporaryPassword),
-                    'is_active' => $isActive
-                ]);
+                if ($reusingDeletedUser && $existingUser) {
+                    if ($existingUser->trashed()) {
+                        $existingUser->restore();
+                    }
 
-                $firstName = $request->first_name;
+                    $existingUser->update([
+                        'email' => $emailToSave,
+                        'username' => $username,
+                        'password' => Hash::make($temporaryPassword),
+                        'is_active' => $isActive,
+                        'email_verified_at' => now(),
+                        'google_id' => null,
+                        'avatar' => null,
+                    ]);
 
-                UserProfile::create([
-                    'user_id' => $user->id,
-                    'first_name' => $firstName,
-                    'last_name_paternal' => $request->last_name_paternal,
-                    'last_name_maternal' => $request->last_name_maternal,
-                    'phone' => $request->phone,
-                ]);
+                    $user = $existingUser;
 
-                $customer = Customer::create([
-                    'user_id' => $user->id,
-                    'customer_code' => $customerCode,
-                    'is_active' => $isActive
-                ]);
+                    $existingProfile = UserProfile::withTrashed()->where('user_id', $user->id)->first();
+                    if ($existingProfile) {
+                        if ($existingProfile->trashed()) {
+                            $existingProfile->restore();
+                        }
+                        $existingProfile->update([
+                            'first_name' => $firstName,
+                            'last_name_paternal' => $lastNamePaternal,
+                            'last_name_maternal' => $lastNameMaternal,
+                            'phone' => $phone,
+                        ]);
+                    } else {
+                        UserProfile::create([
+                            'user_id' => $user->id,
+                            'first_name' => $firstName,
+                            'last_name_paternal' => $lastNamePaternal,
+                            'last_name_maternal' => $lastNameMaternal,
+                            'phone' => $phone,
+                        ]);
+                    }
+
+                    $existingCustomer = Customer::withTrashed()->where('user_id', $user->id)->first();
+                    if ($existingCustomer) {
+                        if ($existingCustomer->trashed()) {
+                            $existingCustomer->restore();
+                        }
+                        $existingCustomer->update([
+                            'customer_code' => $customerCode,
+                            'is_active' => $isActive,
+                            'points' => 0,
+                            'total_purchases' => 0,
+                            'tags' => [],
+                        ]);
+                        $customer = $existingCustomer;
+                    } else {
+                        $customer = Customer::create([
+                            'user_id' => $user->id,
+                            'customer_code' => $customerCode,
+                            'is_active' => $isActive,
+                            'points' => 0,
+                            'total_purchases' => 0,
+                        ]);
+                    }
+
+                    if ($customer->posProfile) {
+                        $customer->posProfile->delete();
+                    }
+                } else {
+                    // Crear Usuario Web Completo con username sin @dominio
+                    $user = User::create([
+                        'email' => $emailToSave,
+                        'username' => $username,
+                        'password' => Hash::make($temporaryPassword),
+                        'is_active' => $isActive,
+                        'email_verified_at' => now(),
+                    ]);
+
+                    // Registrar Nombres, Apellido Paterno, Apellido Materno y Teléfono en user_profiles
+                    UserProfile::create([
+                        'user_id' => $user->id,
+                        'first_name' => $firstName,
+                        'last_name_paternal' => $lastNamePaternal,
+                        'last_name_maternal' => $lastNameMaternal,
+                        'phone' => $phone,
+                    ]);
+
+                    $customer = Customer::create([
+                        'user_id' => $user->id,
+                        'customer_code' => $customerCode,
+                        'is_active' => $isActive
+                    ]);
+                }
 
                 // Assign customer roles automatically
                 $customerRoles = Role::where('is_customer', true)->get();
                 if ($customerRoles->isNotEmpty()) {
-                    $user->assignRole($customerRoles);
+                    $user->syncRoles($customerRoles);
                 }
 
                 // Enviar correo de bienvenida con contraseña temporal
@@ -189,10 +495,18 @@ class CustomerController extends Controller
                     ));
                 } catch (\Exception $mailException) {
                     Log::warning('WelcomeCustomer email failed: ' . $mailException->getMessage());
-                    // No abortamos la transacción — el cliente ya fue creado
                 }
             } else {
-                // Crear Solo Cliente POS
+                // Validar unicidad de customer_code para Cliente POS
+                if (Customer::withTrashed()->where('customer_code', $customerCode)->exists()) {
+                    DB::rollBack();
+                    return response()->json([
+                        'field' => 'customer_code',
+                        'message' => "El código de cliente '{$customerCode}' ya está registrado."
+                    ], 422);
+                }
+
+                // Crear Solo Cliente POS (cuando "Habilitar cuenta web" no está activo)
                 $customer = Customer::create([
                     'user_id' => null,
                     'customer_code' => $customerCode,
@@ -201,10 +515,10 @@ class CustomerController extends Controller
                 
                 PosCustomerProfile::create([
                     'customer_id' => $customer->id,
-                    'first_name' => $request->first_name,
-                    'last_name_paternal' => $request->last_name_paternal,
-                    'last_name_maternal' => $request->last_name_maternal,
-                    'phone' => $request->phone,
+                    'first_name' => $firstName,
+                    'last_name_paternal' => $lastNamePaternal,
+                    'last_name_maternal' => $lastNameMaternal,
+                    'phone' => $phone,
                 ]);
             }
 
@@ -213,7 +527,7 @@ class CustomerController extends Controller
             return response()->json(Customer::with(['user.profile', 'posProfile'])->find($customer->id), 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error creating customer', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al crear el cliente: ' . $e->getMessage(), 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -221,20 +535,26 @@ class CustomerController extends Controller
     {
         $customer = Customer::findOrFail($id);
         $user = $customer->user;
-        $profile = $user ? $user->profile : null;
 
         $request->validate([
-            'first_name' => 'required|string|max:100',
+            'first_name' => 'required|string|min:2|max:100',
+            'last_name_paternal' => 'nullable|string|max:100',
+            'last_name_maternal' => 'nullable|string|max:100',
             'customer_code' => 'required|string|max:20|unique:customers,customer_code,' . $customer->id,
-            'email' => 'nullable|email|unique:users,email,' . ($user ? $user->id : 'NULL'),
+            'email' => 'nullable|email|max:150',
+            'phone' => 'nullable|string|max:30',
             'is_active' => 'nullable|boolean'
         ]);
 
         try {
             DB::beginTransaction();
 
-            $updateData = [];
-            
+            $firstName = trim((string) $request->first_name);
+            $lastNamePaternal = $request->filled('last_name_paternal') ? trim((string) $request->last_name_paternal) : null;
+            $lastNameMaternal = $request->filled('last_name_maternal') ? trim((string) $request->last_name_maternal) : null;
+            $phone = $this->normalizePhone($request->phone);
+            $emailToSave = $request->filled('email') ? Str::lower(trim((string) $request->email)) : null;
+
             if ($request->has('is_active')) {
                 $customer->update([
                     'is_active' => $request->boolean('is_active'),
@@ -247,42 +567,99 @@ class CustomerController extends Controller
             }
 
             // Flujo de Migración POS a WEB o Actualización Normal
-            if (!empty($request->email)) {
+            if (!empty($emailToSave)) {
+                // Verificar si el email pertenece a otro usuario distinto
+                $existingOtherUser = User::withTrashed()
+                    ->with(['customer' => fn($q) => $q->withTrashed()])
+                    ->whereRaw('LOWER(email) = ?', [$emailToSave])
+                    ->when($user, fn($q) => $q->where('id', '!=', $user->id))
+                    ->first();
+
+                if ($existingOtherUser) {
+                    $deletedAt = $existingOtherUser->deleted_at ?? $existingOtherUser->customer?->deleted_at;
+                    if ($deletedAt === null) {
+                        DB::rollBack();
+                        return response()->json([
+                            'field' => 'email',
+                            'code' => 'EMAIL_ACTIVE_EXISTS',
+                            'message' => "Advertencia: El correo '{$emailToSave}' ya está registrado en otra cuenta activa."
+                        ], 422);
+                    }
+
+                    $daysDeleted = (int) floor(\Carbon\Carbon::parse($deletedAt)->diffInDays(now()));
+                    if ($daysDeleted < 60) {
+                        $daysRemaining = max(1, 60 - $daysDeleted);
+                        DB::rollBack();
+                        return response()->json([
+                            'field' => 'email',
+                            'code' => 'EMAIL_DELETED_UNDER_60_DAYS',
+                            'days_deleted' => $daysDeleted,
+                            'days_remaining' => $daysRemaining,
+                            'message' => "Advertencia: El correo '{$emailToSave}' pertenece a una cuenta eliminada hace {$daysDeleted} día(s). Deben pasar 60 días para poder utilizarlo (faltan {$daysRemaining} día(s))."
+                        ], 422);
+                    }
+
+                    // Liberar el email y username del usuario eliminado hace >= 60 días para no violar constraint único
+                    DB::table('users')
+                        ->where('id', $existingOtherUser->id)
+                        ->update([
+                            'email' => 'deleted_' . time() . '_' . $existingOtherUser->id . '@deleted.local',
+                            'username' => null
+                        ]);
+                }
+
                 if ($user) {
-                    // Update existing web user
-                    $updateData['email'] = $request->email;
-                    $user->update($updateData);
+                    $username = $this->extractUsernameFromEmail($emailToSave, $user->id);
+
+                    $user->update([
+                        'email' => $emailToSave,
+                        'username' => $username,
+                        'is_active' => $customer->is_active
+                    ]);
 
                     if ($request->has('password') && !empty($request->password)) {
                         $user->update(['password' => Hash::make($request->password)]);
                     }
 
-                    if ($profile) {
-                        $profile->update([
-                            'first_name' => $request->first_name,
-                            'last_name_paternal' => $request->last_name_paternal,
-                            'last_name_maternal' => $request->last_name_maternal,
-                            'phone' => $request->phone,
+                    $existingProfile = UserProfile::withTrashed()->where('user_id', $user->id)->first();
+                    if ($existingProfile) {
+                        if ($existingProfile->trashed()) {
+                            $existingProfile->restore();
+                        }
+                        $existingProfile->update([
+                            'first_name' => $firstName,
+                            'last_name_paternal' => $lastNamePaternal,
+                            'last_name_maternal' => $lastNameMaternal,
+                            'phone' => $phone,
+                        ]);
+                    } else {
+                        UserProfile::create([
+                            'user_id' => $user->id,
+                            'first_name' => $firstName,
+                            'last_name_paternal' => $lastNamePaternal,
+                            'last_name_maternal' => $lastNameMaternal,
+                            'phone' => $phone,
                         ]);
                     }
                 } else {
-                    // Convert POS customer to Web Customer — generar contraseña temporal
+                    // Convert POS customer to Web Customer — generar contraseña temporal y username sin dominio
                     $temporaryPassword = Str::upper(Str::random(3)) . rand(100, 999) . Str::random(3);
+                    $username = $this->extractUsernameFromEmail($emailToSave);
 
                     $newUser = User::create([
-                        'email' => $request->email,
+                        'email' => $emailToSave,
+                        'username' => $username,
                         'password' => Hash::make($temporaryPassword),
-                        'is_active' => $customer->is_active
+                        'is_active' => $customer->is_active,
+                        'email_verified_at' => now(),
                     ]);
-
-                    $firstName = $request->first_name;
 
                     UserProfile::create([
                         'user_id' => $newUser->id,
                         'first_name' => $firstName,
-                        'last_name_paternal' => $request->last_name_paternal,
-                        'last_name_maternal' => $request->last_name_maternal,
-                        'phone' => $request->phone,
+                        'last_name_paternal' => $lastNamePaternal,
+                        'last_name_maternal' => $lastNameMaternal,
+                        'phone' => $phone,
                     ]);
 
                     $customer->update(['user_id' => $newUser->id]);
@@ -290,15 +667,15 @@ class CustomerController extends Controller
                     // Assign roles
                     $customerRoles = Role::where('is_customer', true)->get();
                     if ($customerRoles->isNotEmpty()) {
-                        $newUser->assignRole($customerRoles);
+                        $newUser->syncRoles($customerRoles);
                     }
 
                     // Enviar correo de bienvenida con contraseña temporal
                     try {
                         $loginUrl = rtrim(env('FRONTEND_URL', env('APP_URL', '')), '/') . '/login';
-                        Mail::to($request->email)->send(new WelcomeCustomer(
+                        Mail::to($emailToSave)->send(new WelcomeCustomer(
                             $firstName,
-                            $request->email,
+                            $emailToSave,
                             $temporaryPassword,
                             $loginUrl
                         ));
@@ -315,10 +692,18 @@ class CustomerController extends Controller
                 // Update only POS profile
                 if ($customer->posProfile) {
                     $customer->posProfile->update([
-                        'first_name' => $request->first_name,
-                        'last_name_paternal' => $request->last_name_paternal,
-                        'last_name_maternal' => $request->last_name_maternal,
-                        'phone' => $request->phone,
+                        'first_name' => $firstName,
+                        'last_name_paternal' => $lastNamePaternal,
+                        'last_name_maternal' => $lastNameMaternal,
+                        'phone' => $phone,
+                    ]);
+                } else if (!$user) {
+                    PosCustomerProfile::create([
+                        'customer_id' => $customer->id,
+                        'first_name' => $firstName,
+                        'last_name_paternal' => $lastNamePaternal,
+                        'last_name_maternal' => $lastNameMaternal,
+                        'phone' => $phone,
                     ]);
                 }
             }
@@ -328,7 +713,7 @@ class CustomerController extends Controller
             return response()->json(Customer::with(['user.profile', 'posProfile'])->find($customer->id));
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error updating customer', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Error al actualizar el cliente: ' . $e->getMessage(), 'error' => $e->getMessage()], 500);
         }
     }
 

@@ -58,6 +58,7 @@ class User extends Authenticatable
 	protected $primaryKey = 'id';
 	protected $casts = [
 		'last_login' => 'datetime',
+		'email_verified_at' => 'datetime',
 		'is_active' => 'bool'
 	];
 

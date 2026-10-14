@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { loginUser, getGoogleAuthUrl } from "../../api/admin/auth";
 import { useAuthStore } from "../../store/authStore";
 import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import { getImageUrl } from "../../utils/imageUtils";
 import toast from "react-hot-toast";
-import "./Auth.css"; 
+import "./Auth.css";
 
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
 import fondo from "../../assets/global/fondos/premium_fashion_bg.png";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuthStore();
   const { settings, fetchSettings } = useShopSettingsStore();
 
@@ -29,6 +30,22 @@ export default function Login() {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const oauthError = params.get("error");
+    if (oauthError) {
+      if (oauthError === "account_deleted_under_60") {
+        toast.error("Advertencia: Esta cuenta fue eliminada recientemente. Deben pasar 60 días desde su eliminación para volver a crearla.", { id: "oauth-error" });
+      } else if (oauthError === "account_disabled") {
+        toast.error("Tu cuenta está desactivada. Contacta a soporte.", { id: "oauth-error" });
+      } else if (oauthError === "email_not_verified") {
+        toast.error("Tu cuenta de Google no tiene un correo verificado.", { id: "oauth-error" });
+      } else {
+        toast.error("No se pudo iniciar sesión con Google. Inténtalo de nuevo.", { id: "oauth-error" });
+      }
+    }
+  }, [location.search]);
 
   // VALIDACIÓN
   const validate = (name, value) => {
@@ -149,6 +166,7 @@ export default function Login() {
                   autoComplete="username"
                   maxLength={150}
                   placeholder=" "
+                  value={form.email}
                   onChange={handleChange}
                   className="floating-input"
                   style={{ borderColor: errors.email ? '#ef4444' : undefined }}
@@ -171,6 +189,7 @@ export default function Login() {
                   autoComplete="current-password"
                   maxLength={255}
                   placeholder=" "
+                  value={form.password}
                   onChange={handleChange}
                   className="floating-input"
                   style={{ borderColor: errors.password ? '#ef4444' : undefined }}

@@ -2,6 +2,8 @@ import api from "../client";
 
 export const loginShopUser = (data) => api.post("/login", data);
 export const registerShopUser = (data) => api.post("/register", data);
+export const verifyShopUserCode = (data) => api.post("/register/verify-code", data);
+export const resendShopUserCode = (data) => api.post("/register/resend-code", data);
 export const getShopProfile = () => api.get("/v1/shop/profile");
 export const updateCustomerProfile = (data) => api.post("/v1/shop/customer-profile", data);
 export const addDeliveryAddress = (data) => api.post("/v1/shop/delivery-options/add-address", data);

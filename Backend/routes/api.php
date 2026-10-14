@@ -44,7 +44,10 @@ Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
 // 🔒 Límites por IP en todos los endpoints de autenticación (anti fuerza bruta / spam / abuso de correo).
 // El 3er parámetro (prefijo) es obligatorio: sin él Laravel comparte UN solo contador por IP entre
 // todas las rutas con `throttle:N,M`, y el límite de una ruta se consume con las peticiones de otra.
+Route::get('/register/check-email', [RegisterController::class, 'checkEmail'])->middleware('throttle:30,1,auth_check_email_');
 Route::post('/register', RegisterController::class)->middleware('throttle:10,60,auth_register_');
+Route::post('/register/verify-code', [RegisterController::class, 'verifyCode'])->middleware('throttle:15,15,auth_verify_code_');
+Route::post('/register/resend-code', [RegisterController::class, 'resendCode'])->middleware('throttle:5,15,auth_resend_code_');
 Route::post('/login', LoginController::class)->middleware('throttle:20,1,auth_login_');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,15,auth_forgot_');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:10,15,auth_reset_');
@@ -291,6 +294,7 @@ Route::middleware([
         Route::get('/', [CustomerController::class, 'index'])->middleware('permission:view_customers');
         Route::get('/kpis', [CustomerController::class, 'kpis'])->middleware('permission:view_customers');
         Route::get('/deleted', [CustomerController::class, 'getDeleted'])->middleware('permission:view_customers');
+        Route::get('/check-email', [CustomerController::class, 'checkEmail'])->middleware('permission:view_customers|create_customers|edit_customers');
         Route::post('/{id}/restore', [CustomerController::class, 'restore'])->middleware('permission:restore_customers');
         Route::get('/search-unlinked-users', [CustomerController::class, 'searchUnlinkedUsers'])->middleware('permission:view_customers');
         Route::get('/search-pos-customers', [CustomerController::class, 'searchPosCustomers'])->middleware('permission:view_customers');
