@@ -431,6 +431,53 @@ class ShopProfileController extends Controller
             $cart->next_reminder_at = $nextReminderAt;
             $cart->last_reminder_sent_at = $lastReminder;
 
+            // Resolver imagen directa y alias variant en cada item del carrito
+            if ($cart->relationLoaded('items') && $cart->items) {
+                foreach ($cart->items as $item) {
+                    $variant = $item->product_variant;
+                    $resolvedImage = null;
+                    if ($variant) {
+                        // 1. Imagen unitaria de la variante
+                        if ($variant->relationLoaded('variant_images') && $variant->variant_images && $variant->variant_images->isNotEmpty()) {
+                            $vImg = $variant->variant_images->first();
+                            $resolvedImage = $vImg->url ?? $vImg->image_path ?? null;
+                        }
+
+                        // 2. Imagen por color / atributo
+                        if (!$resolvedImage && $variant->relationLoaded('variant_attribute_values') && $variant->variant_attribute_values && $variant->relationLoaded('product') && $variant->product && $variant->product->relationLoaded('attribute_value_images') && $variant->product->attribute_value_images) {
+                            foreach ($variant->variant_attribute_values as $vav) {
+                                $attrImgs = $variant->product->attribute_value_images->where('attribute_value_id', $vav->attribute_value_id);
+                                if ($attrImgs->isNotEmpty()) {
+                                    $attrImg = $attrImgs->firstWhere('is_main', true) ?? $attrImgs->first();
+                                    if ($attrImg) {
+                                        $resolvedImage = $attrImg->url ?? $attrImg->image_path ?? null;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. Fallback a imagen del producto (priorizando is_main)
+                        if (!$resolvedImage && $variant->relationLoaded('product') && $variant->product && $variant->product->relationLoaded('product_images') && $variant->product->product_images && $variant->product->product_images->isNotEmpty()) {
+                            $pImg = $variant->product->product_images->firstWhere('is_main', true) ?? $variant->product->product_images->first();
+                            if ($pImg) {
+                                $resolvedImage = $pImg->url ?? $pImg->image_path ?? null;
+                            }
+                        }
+
+                        // 4. Fallback a cualquier imagen de atributo del producto
+                        if (!$resolvedImage && $variant->relationLoaded('product') && $variant->product && $variant->product->relationLoaded('attribute_value_images') && $variant->product->attribute_value_images && $variant->product->attribute_value_images->isNotEmpty()) {
+                            $anyAttrImg = $variant->product->attribute_value_images->firstWhere('is_main', true) ?? $variant->product->attribute_value_images->first();
+                            if ($anyAttrImg) {
+                                $resolvedImage = $anyAttrImg->url ?? $anyAttrImg->image_path ?? null;
+                            }
+                        }
+                    }
+                    $item->image = $resolvedImage;
+                    $item->variant = $variant;
+                }
+            }
+
             return $cart;
         });
 
@@ -532,5 +579,32 @@ class ShopProfileController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully']);
+    }
+
+    /**
+     * Revocar todas las sesiones activas del usuario excepto la actual
+     */
+    public function revokeOtherSessions(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autorizado'], 401);
+        }
+
+        $currentToken = $user->currentAccessToken();
+        if (!$currentToken) {
+            return response()->json(['message' => 'No se pudo identificar la sesión actual.'], 400);
+        }
+
+        $deletedCount = $user->tokens()->where('id', '!=', $currentToken->id)->delete();
+
+        $message = $deletedCount > 0
+            ? "Se han cerrado {$deletedCount} otra(s) sesión(es) activa(s) correctamente."
+            : "No se encontraron otras sesiones activas; tu dispositivo actual es el único conectado.";
+
+        return response()->json([
+            'message' => $message,
+            'revoked_count' => $deletedCount
+        ]);
     }
 }

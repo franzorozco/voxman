@@ -41,6 +41,7 @@ import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
 import { useThemeStore } from "../../store/themeStore";
 import useShopWishlistStore from "../../store/shop/useShopWishlistStore";
+import useShopCartStore from "../../store/shop/useShopCartStore";
 import { useShopSettingsStore } from "../../store/shop/useShopSettingsStore";
 import Navbar from "../home/components/Navbar";
 import Footer from "../../components/layout/Footer";
@@ -54,7 +55,8 @@ import {
   getMyOrders,
   getMyCarts,
   deleteMyCart,
-  remindMyCart
+  remindMyCart,
+  revokeOtherSessions
 } from "../../api/profile/profileApi";
 import { getImageUrl, getVariantImageUrl } from "../../utils/imageUtils";
 import AddressMapPicker from "../../components/ui/AddressMapPicker";
@@ -204,6 +206,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [revokingSessions, setRevokingSessions] = useState(false);
   const [showConfirmCodeModal, setShowConfirmCodeModal] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
 
@@ -265,6 +268,7 @@ export default function Profile() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orderFilter, setOrderFilter] = useState("all"); // all, pending, in_transit, completed, carts
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   // Carts State
   const [carts, setCarts] = useState([]);
@@ -279,8 +283,40 @@ export default function Profile() {
     fetchShopSettings();
   }, [fetchShopSettings]);
 
-  // Wishlist Store
+  // Wishlist Store & Cart Store
   const { items: wishlistItems, loading: wishlistLoading, fetchWishlist, toggleWishlist } = useShopWishlistStore();
+  const { addToCart } = useShopCartStore();
+  const [addingToCartItemId, setAddingToCartItemId] = useState(null);
+
+  const handleAddWishlistItemToCart = async (item) => {
+    // If bundle or no variant specified, take them to the product/bundle page to pick choices
+    if (item.is_bundle || !item.variant_id) {
+      const basePath = item.is_bundle
+        ? `/shop/bundle/${item.product_id}`
+        : `/shop/product/${item.product_id}`;
+      const params = new URLSearchParams();
+      if (item.variant?.color) params.set("color", item.variant.color);
+      const productLink = params.toString() ? `${basePath}?${params}` : basePath;
+      
+      toast("Selecciona tu talla y color para agregar a tu carrito.", { icon: "🛍️" });
+      navigate(productLink);
+      return;
+    }
+
+    try {
+      setAddingToCartItemId(item.id);
+      await addToCart(item.product_id, item.variant_id, 1, item.variant?.color || null);
+      toast.success(`¡${item.product_name || "Prenda"} añadida al carrito!`, {
+        icon: "🛒"
+      });
+    } catch (err) {
+      console.error("Error adding wishlist item to cart:", err);
+      const errMsg = err.response?.data?.message || "No se pudo añadir al carrito. Revisa la disponibilidad.";
+      toast.error(errMsg);
+    } finally {
+      setAddingToCartItemId(null);
+    }
+  };
 
   // Fetch Profile data on mount
   const loadProfile = async () => {
@@ -568,6 +604,29 @@ export default function Profile() {
     }
   };
 
+  // Handle Revoking Other Active Sessions
+  const handleRevokeOtherSessions = () => {
+    openConfirmModal({
+      title: "Cerrar otras sesiones",
+      message: "¿Estás seguro de que deseas cerrar todas las demás sesiones activas en otros dispositivos o navegadores? Tu sesión actual en este navegador permanecerá abierta.",
+      confirmText: "Cerrar otras sesiones",
+      cancelText: "Cancelar",
+      type: "warning",
+      onConfirm: async () => {
+        try {
+          setRevokingSessions(true);
+          const res = await revokeOtherSessions();
+          toast.success(res?.message || "Otras sesiones cerradas exitosamente.");
+        } catch (err) {
+          console.error("Error revoking other sessions:", err);
+          toast.error(err.response?.data?.message || "No se pudieron cerrar las otras sesiones.");
+        } finally {
+          setRevokingSessions(false);
+        }
+      }
+    });
+  };
+
   // Handle Address Save (Add / Update)
   const handleAddressSubmit = async (e) => {
     e.preventDefault();
@@ -823,7 +882,16 @@ export default function Profile() {
 
   // Helper for cart item image using the official Voxman variant image hierarchy
   const getCartItemImage = (item) => {
-    return getVariantImageUrl(item?.product_variant || item?.variant);
+    if (!item) return null;
+    const variant = item.product_variant || item.variant;
+    if (variant) {
+      const img = getVariantImageUrl(variant);
+      if (img) return img;
+    }
+    if (item.image) {
+      return getImageUrl(item.image);
+    }
+    return null;
   };
 
   // Helper for formatted destination details (minimalist & clean, eliminates "null", "undefined")
@@ -852,6 +920,67 @@ export default function Profile() {
       return parts.length > 0 ? parts.join(" • ") : null;
     }
     return null;
+  };
+
+  // Helper for order item image using variant or primary image
+  const getOrderItemImage = (item) => {
+    if (!item) return null;
+    const variant = item.product_variant || item.variant;
+    if (variant) {
+      const img = getVariantImageUrl(variant);
+      if (img) return img;
+    }
+    if (item.image) {
+      return getImageUrl(item.image);
+    }
+    return null;
+  };
+
+  // Helper for order delivery address text
+  const getOrderDeliveryText = (order) => {
+    const mainShipment = order.shipments?.[0];
+    if (!mainShipment) return null;
+    if (mainShipment.delivery_type === "pickup") {
+      return "Retiro en tienda / sucursal";
+    }
+    const addr = mainShipment.address;
+    if (!addr) return null;
+    if (typeof addr === "string") {
+      const trimmed = addr.trim();
+      if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined") return null;
+      return trimmed;
+    }
+    if (typeof addr === "object") {
+      const parts = [
+        addr.department || addr.state,
+        addr.city,
+        addr.zone,
+        addr.street,
+        addr.reference ? `Ref: ${addr.reference}` : null
+      ].filter(p => {
+        if (!p) return false;
+        const str = String(p).trim();
+        return str.length > 0 && str.toLowerCase() !== "null" && str.toLowerCase() !== "undefined";
+      });
+      return parts.length > 0 ? parts.join(" • ") : null;
+    }
+    return null;
+  };
+
+  // Helper for order WhatsApp contact link
+  const generateOrderWhatsAppUrl = (order) => {
+    const rawPhone = shopSettings?.store_phone || "+59157003312";
+    const phone = rawPhone.replace(/[^0-9]/g, "");
+    const orderRef = order.invoice_number ? `#${order.invoice_number}` : (order.id ? `#${order.id.slice(0, 8).toUpperCase()}` : "N/A");
+    const customerName = userData?.full_name || [userData?.profile?.first_name, userData?.profile?.last_name_paternal].filter(Boolean).join(" ") || userData?.username || "Cliente VOXMAN";
+    const grandTotal = Number(order.financials?.grand_total ?? order.total ?? order.dynamic_total ?? 0).toFixed(2);
+    const mainShipment = order.shipments?.[0];
+    const schedule = mainShipment?.delivery_schedule;
+    const statusInfo = getDeliveryStatusInfo(schedule, mainShipment);
+
+    const message = `Hola VOXMAN, soy ${customerName}. Tengo una consulta sobre mi pedido ${orderRef} (Total: Bs. ${grandTotal}, Estado: ${statusInfo.label}).`;
+
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   };
 
   // Fetch data when switching tabs
@@ -1002,7 +1131,7 @@ export default function Profile() {
       items: [
         { id: "orders", label: "Mis Pedidos", icon: Package, desc: "Historial de compras y pedidos" },
         { id: "wishlist", label: "Lista de Deseos", icon: Heart, desc: "Prendas guardadas" },
-        { id: "loyalty", label: "Puntos & Club VIP", icon: Award, desc: "Puntos y recompensas", tag: "NUEVO" },
+        { id: "loyalty", label: "Puntos & Club VIP", icon: Award, desc: "Puntos y recompensas", tag: "PRÓXIMAMENTE" },
       ]
     },
     {
@@ -1908,8 +2037,28 @@ export default function Profile() {
                         <h4 style={{ margin: "0 0 4px 0", fontSize: "13px", fontWeight: 600 }}>Sesiones Activas</h4>
                         <p style={{ margin: 0, fontSize: "12px", color: "var(--text-muted)" }}>Navegador actual (Windows Chrome) - Conectado ahora</p>
                       </div>
-                      <button className="profile-btn-outline" style={{ fontSize: "11px", padding: "6px 12px" }}>
-                        Cerrar otras
+                      <button
+                        type="button"
+                        className="profile-btn-outline"
+                        style={{
+                          fontSize: "11px",
+                          padding: "6px 12px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px"
+                        }}
+                        onClick={handleRevokeOtherSessions}
+                        disabled={revokingSessions}
+                        title="Cerrar sesiones en otros dispositivos manteniendo la actual"
+                      >
+                        {revokingSessions ? (
+                          <>
+                            <Loader2 size={12} style={{ animation: "profileSpin 0.8s linear infinite" }} />
+                            <span>Cerrando...</span>
+                          </>
+                        ) : (
+                          "Cerrar otras"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -2390,39 +2539,308 @@ export default function Profile() {
                       </Link>
                     </div>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                       {orders.map((order) => {
                         const mainShipment = order.shipments?.[0];
                         const schedule = mainShipment?.delivery_schedule;
                         const statusInfo = getDeliveryStatusInfo(schedule, mainShipment);
-                        const orderDate = order.created_at ? new Date(order.created_at).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric" }) : "";
+                        const orderDate = order.created_at
+                          ? new Date(order.created_at).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                          : "";
                         const trackingId = schedule?.id || mainShipment?.id;
 
-                        const grandTotal = order.financials?.grand_total || 0;
-                        const totalPaid = order.financials?.total_paid || 0;
-                        const displayTotal = order.status === 'paid' ? grandTotal : order.financials?.balance_due || 0;
+                        const grandTotal = Number(order.financials?.grand_total ?? order.total ?? order.dynamic_total ?? 0);
+                        const totalPaid = Number(order.financials?.total_paid ?? 0);
+                        const balanceDue = Number(order.financials?.balance_due ?? 0);
+                        const globalDiscount = Number(order.financials?.global_discount ?? order.dynamic_global_discount ?? 0);
+                        const isPaid = order.status === 'paid' || order.financials?.is_fully_paid === true || (grandTotal > 0 && totalPaid >= grandTotal);
+
+                        const orderItems = order.items || order.sale_details || [];
+                        const itemsCount = order.financials?.items_count ?? orderItems.reduce((acc, it) => acc + (it.quantity || 1), 0);
+                        const isExpanded = expandedOrderId === order.id;
+                        const deliveryText = getOrderDeliveryText(order);
+                        const waUrl = generateOrderWhatsAppUrl(order);
 
                         return (
-                          <div key={order.id} className="profile-order-card">
-                            <div className="order-meta-group">
-                              <h4>Pedido {order.invoice_number ? `#${order.invoice_number}` : `#${order.id.slice(0, 8).toUpperCase()}`}</h4>
-                              <p>Realizado el {orderDate} • {order.financials?.items_count || 0} artículo{order.financials?.items_count !== 1 ? "s" : ""}</p>
-                            </div>
-                            <span className={`order-status-badge ${statusInfo.cssClass}`} style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color, borderColor: statusInfo.color }}>
-                              {statusInfo.label}
-                            </span>
-                            <div>
-                              <span style={{ fontWeight: 700, fontSize: "15px" }}>Bs. {Number(displayTotal).toFixed(2)}</span>
-                              {Number(order.financials?.global_discount || 0) > 0 && (
-                                <div style={{ fontSize: "11px", color: "var(--color-danger, #ef4444)" }}>
-                                  Desc: -Bs. {Number(order.financials.global_discount).toFixed(2)}
+                          <div key={order.id} className="profile-cart-card">
+                            <div className="profile-cart-header">
+                              <div className="profile-cart-header-left">
+                                <div className="profile-cart-ref-badge">
+                                  <Package size={15} />
+                                  <span>Pedido {order.invoice_number ? `#${order.invoice_number}` : `#${order.id.slice(0, 8).toUpperCase()}`}</span>
                                 </div>
-                              )}
+                                <span className="profile-cart-meta-date">
+                                  <Clock size={12} /> {orderDate}
+                                </span>
+                                {order.source && (
+                                  <span className="profile-cart-source-tag">
+                                    {order.source.toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="profile-cart-header-right">
+                                <span
+                                  className="profile-cart-status-badge"
+                                  style={{
+                                    backgroundColor: `${statusInfo.color}15`,
+                                    color: statusInfo.color,
+                                    border: `1px solid ${statusInfo.color}40`
+                                  }}
+                                >
+                                  {statusInfo.label}
+                                </span>
+                                <div className="profile-cart-total-badge">
+                                  <span className="profile-cart-total-val">Bs. {grandTotal.toFixed(2)}</span>
+                                  {globalDiscount > 0 && (
+                                    <span className="profile-cart-discount-val">
+                                      -Bs. {globalDiscount.toFixed(2)}
+                                    </span>
+                                  )}
+                                  {isPaid ? (
+                                    <span className="profile-order-header-paid-tag">✓ Pagado</span>
+                                  ) : balanceDue > 0 ? (
+                                    <span className="profile-order-header-pending-tag">Saldo: Bs. {balanceDue.toFixed(2)}</span>
+                                  ) : null}
+                                </div>
+                              </div>
                             </div>
-                            {trackingId && (
-                              <Link to={`/tracking/${trackingId}`} className="profile-btn-outline" style={{ fontSize: "12px", padding: "6px 14px" }}>
-                                Ver Seguimiento
-                              </Link>
+
+                            {/* Quick Thumbnails & Actions Row */}
+                            <div className="profile-cart-preview-row">
+                              <div className="profile-cart-thumbnails">
+                                {orderItems.slice(0, 5).map((item, idx) => {
+                                  const imgUrl = getOrderItemImage(item);
+                                  const prodName = item.product_name || item.product_variant?.product?.name || "Prenda";
+
+                                  return (
+                                    <div key={item.id || idx} className="profile-cart-thumb" title={prodName}>
+                                      {imgUrl ? (
+                                        <img 
+                                          src={imgUrl} 
+                                          alt={prodName}
+                                          onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                            if (e.currentTarget.nextSibling) {
+                                              e.currentTarget.nextSibling.style.display = 'flex';
+                                            }
+                                          }}
+                                        />
+                                      ) : null}
+                                      <div className="profile-cart-thumb-placeholder" style={{ display: imgUrl ? 'none' : 'flex' }}>
+                                        <ShoppingBag size={15} />
+                                      </div>
+                                      {(item.quantity || 1) > 1 && (
+                                        <span className="profile-cart-thumb-qty">x{item.quantity}</span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                                {orderItems.length > 5 && (
+                                  <div className="profile-cart-thumb-more">
+                                    +{orderItems.length - 5}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="profile-cart-actions">
+                                <a
+                                  href={waUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="profile-cart-wa-btn"
+                                  title="Consultar sobre este pedido por WhatsApp"
+                                >
+                                  <MessageCircle size={14} />
+                                  <span>WhatsApp</span>
+                                </a>
+
+                                {trackingId && (
+                                  <Link
+                                    to={`/tracking/${trackingId}`}
+                                    className="profile-order-track-btn"
+                                    title="Ver seguimiento de entrega"
+                                  >
+                                    <Truck size={14} />
+                                    <span>Seguimiento</span>
+                                  </Link>
+                                )}
+
+                                <button
+                                  type="button"
+                                  className="profile-cart-toggle-btn"
+                                  onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                                >
+                                  <span>{isExpanded ? "Ocultar" : `Ver (${itemsCount})`}</span>
+                                  <ChevronDown
+                                    size={15}
+                                    style={{
+                                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                                      transition: "transform 0.2s ease"
+                                    }}
+                                  />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Collapsible Items Breakdown */}
+                            {isExpanded && (
+                              <div className="profile-cart-expanded-body">
+                                <div className="profile-cart-items-list">
+                                  {orderItems.map((item, idx) => {
+                                    const imgUrl = getOrderItemImage(item);
+                                    const productName = item.product_name || item.product_variant?.product?.name || "Producto";
+                                    const sizeName = item.size || item.product_variant?.size?.name;
+                                    const fitName = item.fit || item.product_variant?.fit?.name;
+                                    const colorAttr = item.product_variant?.variant_attribute_values
+                                      ?.map(v => v.attribute_value?.name || v.attribute_value?.value)
+                                      .filter(Boolean)
+                                      .join(", ") || item.color;
+                                    const sku = item.sku || item.product_variant?.sku;
+                                    const unitPrice = Number(item.unit_price ?? item.dynamic_unit_price ?? item.final_price ?? 0);
+                                    const originalPrice = Number(item.original_price ?? unitPrice);
+                                    const subtotal = Number(item.final_price ?? item.dynamic_subtotal ?? (unitPrice * (item.quantity || 1)));
+                                    const hasDiscount = originalPrice > unitPrice;
+
+                                    return (
+                                      <div key={item.id || idx} className="profile-cart-item-row">
+                                        <div className="profile-cart-item-img-wrap">
+                                          {imgUrl ? (
+                                            <img 
+                                              src={imgUrl} 
+                                              alt={productName}
+                                              onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                                if (e.currentTarget.nextSibling) {
+                                                  e.currentTarget.nextSibling.style.display = 'flex';
+                                                }
+                                              }}
+                                            />
+                                          ) : null}
+                                          <div className="profile-cart-thumb-placeholder" style={{ display: imgUrl ? 'none' : 'flex' }}>
+                                            <ShoppingBag size={18} />
+                                          </div>
+                                        </div>
+
+                                        <div className="profile-cart-item-info">
+                                          <div className="profile-cart-item-title-row">
+                                            <h5 className="profile-cart-item-title">{productName}</h5>
+                                            <div className="profile-cart-item-subtotal-box">
+                                              {hasDiscount && originalPrice * (item.quantity || 1) > subtotal && (
+                                                <span className="profile-cart-item-orig-subtotal">
+                                                  Bs. {(originalPrice * (item.quantity || 1)).toFixed(2)}
+                                                </span>
+                                              )}
+                                              <span className="profile-cart-item-subtotal">Bs. {subtotal.toFixed(2)}</span>
+                                            </div>
+                                          </div>
+
+                                          <div className="profile-cart-item-meta">
+                                            {sizeName && <span className="profile-cart-pill">Talla: {sizeName}</span>}
+                                            {fitName && <span className="profile-cart-pill">Corte: {fitName}</span>}
+                                            {colorAttr && <span className="profile-cart-pill">Color: {colorAttr}</span>}
+                                            {sku && <span className="profile-cart-pill-sku">SKU: {sku}</span>}
+                                          </div>
+
+                                          <div className="profile-cart-item-pricing">
+                                            <span>Cant: <strong>{item.quantity || 1}</strong></span>
+                                            <span>•</span>
+                                            <span className="profile-cart-price-block">
+                                              Precio unitario:{" "}
+                                              {hasDiscount ? (
+                                                <>
+                                                  <span className="profile-cart-item-old-price">
+                                                    Bs. {originalPrice.toFixed(2)}
+                                                  </span>
+                                                  <strong className="profile-cart-item-current-price">
+                                                    Bs. {unitPrice.toFixed(2)}
+                                                  </strong>
+                                                </>
+                                              ) : (
+                                                <strong>Bs. {unitPrice.toFixed(2)}</strong>
+                                              )}
+                                            </span>
+                                            {hasDiscount && (
+                                              <span className="profile-cart-item-discount-tag">
+                                                Descuento aplicado
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Delivery details note */}
+                                {deliveryText && (
+                                  <div className="profile-cart-delivery-note">
+                                    <MapPin size={13} />
+                                    <span>
+                                      <strong>Destino de entrega:</strong> {deliveryText}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Order Footer Totals */}
+                                <div className="profile-cart-footer">
+                                  <div className="profile-cart-footer-left">
+                                    {trackingId && (
+                                      <Link to={`/tracking/${trackingId}`} className="profile-cart-checkout-btn">
+                                        <Truck size={15} />
+                                        Ver Seguimiento
+                                      </Link>
+                                    )}
+                                    <a
+                                      href={waUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="profile-cart-wa-btn"
+                                      title="Consultar por WhatsApp"
+                                    >
+                                      <MessageCircle size={14} />
+                                      <span>WhatsApp</span>
+                                    </a>
+                                  </div>
+                                  <div className="profile-cart-footer-totals">
+                                    <div className="profile-cart-summary-line">
+                                      <span>Subtotal artículos:</span>
+                                      <span>Bs. {Number(order.financials?.subtotal ?? (grandTotal - (order.financials?.shipping_total || 0))).toFixed(2)}</span>
+                                    </div>
+                                    {globalDiscount > 0 && (
+                                      <div className="profile-cart-summary-line discount">
+                                        <span>Descuento global:</span>
+                                        <span>-Bs. {globalDiscount.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {Number(order.financials?.shipping_total || 0) > 0 && (
+                                      <div className="profile-cart-summary-line">
+                                        <span>Costo de envío:</span>
+                                        <span>Bs. {Number(order.financials.shipping_total).toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    <div className="profile-cart-summary-line total">
+                                      <span>Total Pedido:</span>
+                                      <span>Bs. {grandTotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="profile-order-payment-status-row">
+                                      {isPaid ? (
+                                        <span className="profile-order-paid-badge">
+                                          <Check size={12} /> Pagado en su totalidad
+                                        </span>
+                                      ) : balanceDue > 0 ? (
+                                        <span className="profile-order-pending-badge">
+                                          <Clock size={12} /> Saldo pendiente: Bs. {balanceDue.toFixed(2)}
+                                        </span>
+                                      ) : (
+                                        <span className="profile-order-pending-badge">
+                                          <Clock size={12} /> Pendiente de confirmación
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             )}
                           </div>
                         );
@@ -2540,6 +2958,27 @@ export default function Profile() {
                               )}
                             </div>
 
+                            {/* Direct Add to Cart Action */}
+                            <button
+                              type="button"
+                              className="profile-wishlist-add-btn"
+                              onClick={() => handleAddWishlistItemToCart(item)}
+                              disabled={addingToCartItemId === item.id}
+                              title="Añadir a mi carrito de compras"
+                            >
+                              {addingToCartItemId === item.id ? (
+                                <>
+                                  <Loader2 size={13} style={{ animation: "profileSpin 0.8s linear infinite" }} />
+                                  <span>Añadiendo...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <ShoppingCart size={13} />
+                                  <span>Añadir al Carrito</span>
+                                </>
+                              )}
+                            </button>
+
                             {/* Date + Remove */}
                             <div className="profile-wishlist-footer">
                               <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
@@ -2570,6 +3009,22 @@ export default function Profile() {
                   <div className="profile-card-title-group">
                     <h2><Award size={22} /> Membresía VOXman Club</h2>
                     <p>Gana puntos con cada compra y accede a drops exclusivos.</p>
+                  </div>
+                </div>
+
+                {/* Letrero Grande "Próximamente" */}
+                <div className="profile-coming-soon-banner">
+                  <div className="profile-coming-soon-badge">
+                    <Sparkles size={13} />
+                    <span>CLUB DE BENEFICIOS</span>
+                  </div>
+                  <h1 className="profile-coming-soon-title">PRÓXIMAMENTE</h1>
+                  <p className="profile-coming-soon-desc">
+                    Estamos preparando el nuevo sistema de <strong>Puntos & Club VIP de VOXMAN</strong>. Muy pronto podrás acumular puntos en todas tus compras y desbloquear descuentos y accesos prioritarios.
+                  </p>
+                  <div className="profile-coming-soon-pill">
+                    <Clock size={13} />
+                    <span>Disponible en las próximas actualizaciones</span>
                   </div>
                 </div>
 

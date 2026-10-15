@@ -71,6 +71,7 @@ Route::prefix('v1/shop')->group(function () {
         Route::get('/profile', [ShopProfileController::class, 'profile']);
         Route::post('/customer-profile', [ShopProfileController::class, 'updateCustomerProfile']);
         Route::put('/profile/password', [ShopProfileController::class, 'changePassword']);
+        Route::post('/profile/revoke-other-sessions', [ShopProfileController::class, 'revokeOtherSessions']);
         Route::post('/delivery-options/add-address', [ShopProfileController::class, 'addShippingAddress']);
         Route::put('/delivery-options/addresses/{id}', [ShopProfileController::class, 'updateAddress']);
         Route::delete('/delivery-options/addresses/{id}', [ShopProfileController::class, 'deleteAddress']);

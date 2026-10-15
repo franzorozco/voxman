@@ -84,3 +84,11 @@ export const remindMyCart = async (id) => {
   return res.data;
 };
 
+/**
+ * Cerrar todas las otras sesiones excepto la actual
+ */
+export const revokeOtherSessions = async () => {
+  const res = await api.post('/v1/shop/profile/revoke-other-sessions');
+  return res.data;
+};
+

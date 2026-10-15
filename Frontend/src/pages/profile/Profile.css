@@ -1808,6 +1808,54 @@
   background: rgba(239,68,68,0.08);
 }
 
+.profile-wishlist-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 12px;
+  min-height: 38px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--text-main, #18181b);
+  color: var(--bg-main, #ffffff) !important;
+  border: 1px solid var(--text-main, #18181b);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.profile-wishlist-add-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.profile-wishlist-add-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.profile-wishlist-add-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-dark-mode .profile-wishlist-add-btn {
+  background: #ffffff;
+  color: #09090b !important;
+  border-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.08);
+}
+
+.profile-dark-mode .profile-wishlist-add-btn:hover:not(:disabled) {
+  background: #f4f4f5;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.16);
+}
+
 /* =========================================
    REGISTERED CARTS (TAB "CARRITOS" EN MIS PEDIDOS)
    ========================================= */
@@ -2909,6 +2957,221 @@
     margin: 8px 12px 0;
     padding: 6px 12px;
     font-size: 11.5px;
+  }
+}
+
+/* ========================================================
+   ORDERS STYLING (MATCHING CARTS ARCHITECTURE & LOGIC)
+   ======================================================== */
+
+.profile-order-header-paid-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #10b981;
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+.profile-order-header-pending-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #f59e0b;
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+.profile-order-track-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card, #ffffff);
+  color: var(--text-main, #18181b);
+  border: 1px solid var(--border-color, #e4e4e7);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.profile-order-track-btn:hover {
+  background: var(--bg-hover, #f4f4f5);
+  border-color: var(--color-primary, #18181b);
+  transform: translateY(-1px);
+}
+
+.profile-dark-mode .profile-order-track-btn {
+  background: #27272a;
+  color: #f4f4f5;
+  border-color: #3f3f46;
+}
+
+.profile-dark-mode .profile-order-track-btn:hover {
+  background: #3f3f46;
+  border-color: #71717a;
+}
+
+.profile-order-payment-status-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.profile-order-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+
+.profile-dark-mode .profile-order-paid-badge {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+.profile-order-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #d97706;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+
+.profile-dark-mode .profile-order-pending-badge {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+@media (max-width: 640px) {
+  .profile-order-track-btn {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+    padding: 9px 8px;
+    min-height: 42px;
+    font-size: 12px;
+  }
+}
+
+/* =========================================
+   COMING SOON BANNER (CLUB VIP / PUNTOS)
+   ========================================= */
+.profile-coming-soon-banner {
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.08) 0%, rgba(0, 0, 0, 0.02) 100%);
+  border: 1px dashed rgba(201, 162, 39, 0.35);
+  border-radius: 18px;
+  padding: 36px 24px;
+  margin-bottom: 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.profile-dark-mode .profile-coming-soon-banner {
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.12) 0%, rgba(10, 10, 10, 0.6) 100%);
+  border-color: rgba(201, 162, 39, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.profile-coming-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #c9a227;
+  background: rgba(201, 162, 39, 0.12);
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.profile-coming-soon-title {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--text-main, #18181b);
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.profile-dark-mode .profile-coming-soon-title {
+  color: #ffffff;
+  text-shadow: 0 0 24px rgba(201, 162, 39, 0.25);
+}
+
+.profile-coming-soon-desc {
+  font-size: 14px;
+  color: var(--text-muted, #71717a);
+  max-width: 520px;
+  line-height: 1.6;
+  margin: 12px auto 16px auto;
+}
+
+.profile-coming-soon-desc strong {
+  color: var(--text-main, #18181b);
+}
+
+.profile-dark-mode .profile-coming-soon-desc strong {
+  color: #ffffff;
+}
+
+.profile-coming-soon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #71717a);
+  background: var(--bg-input, #f4f4f5);
+  border: 1px solid var(--border-color, #e4e4e7);
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.profile-dark-mode .profile-coming-soon-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #a1a1aa;
+}
+
+@media (max-width: 640px) {
+  .profile-coming-soon-banner {
+    padding: 28px 16px;
+    margin-bottom: 20px;
+  }
+
+  .profile-coming-soon-title {
+    font-size: 26px;
+    letter-spacing: 2.5px;
+  }
+
+  .profile-coming-soon-desc {
+    font-size: 13px;
   }
 }
 
