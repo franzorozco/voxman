@@ -41,68 +41,81 @@ class Cart extends BaseCart
 
 	public function getDynamicSubtotalAttribute()
 	{
-		return $this->items->sum(function ($item) {
-			$price = $item->product_variant->price ?? 0;
-            if ($item->override_price !== null) {
-                $price = (float) $item->override_price;
-            } elseif ($item->appliedDiscount) {
-                $d = $item->appliedDiscount;
-                $isValid = $d->active && (!$d->end_date || !$d->end_date->isPast()) && (!$d->start_date || !$d->start_date->isFuture());
-                if ($isValid) {
-                    if ($d->type === 'percentage') {
-                        $price = $price - ($price * $d->value / 100);
-                    } else {
-                        $price = max(0, $price - $d->value);
-                    }
-                }
-            }
-			return $price * $item->quantity;
-		});
+		if (isset($this->attributes['subtotal_calculated'])) {
+			return (float) $this->attributes['subtotal_calculated'];
+		}
+
+		return round((float) $this->items->sum(function ($item) {
+			return $item->dynamic_subtotal;
+		}), 2);
 	}
 
     public function getDynamicGlobalDiscountAttribute()
     {
-        if (!$this->discount) {
-            return 0;
+        if (isset($this->attributes['global_discount_calculated'])) {
+            return (float) $this->attributes['global_discount_calculated'];
         }
 
-        $d = $this->discount;
-        $isValid = $d->active && (!$d->end_date || !$d->end_date->isPast()) && (!$d->start_date || !$d->start_date->isFuture());
-        if (!$isValid) {
-            return 0;
+        if (!$this->discount_id && (float) ($this->total_discount ?? 0) <= 0) {
+            return 0.0;
         }
-        
-        $eligibleSubtotal = $this->items->sum(function ($item) {
-            // Exclude bundles and native active discounts
-            if ($item->bundle_group_id) {
-                return 0;
-            }
-            if ($item->appliedDiscount) {
-                $ad = $item->appliedDiscount;
-                if ($ad->active && (!$ad->end_date || !$ad->end_date->isPast()) && (!$ad->start_date || !$ad->start_date->isFuture())) {
-                    return 0;
+
+        $subtotal = $this->dynamic_subtotal;
+        if ($subtotal <= 0) {
+            return 0.0;
+        }
+
+        if ($this->discount_id && $this->discount) {
+            $discountService = app(\App\Services\Finance\DiscountValidationService::class);
+            $itemsForValidation = $this->items->map(function ($it) use ($discountService) {
+                $variant = $it->relationLoaded('variant')
+                    ? $it->variant
+                    : ($it->relationLoaded('product_variant') ? $it->product_variant : ($it->variant ?? $it->product_variant));
+                $hasActiveItemDiscount = false;
+                if (!empty($it->applied_discount_id)) {
+                    $res = $discountService->validateItemDiscount($it->applied_discount_id, $variant, $this->customer_id);
+                    $hasActiveItemDiscount = !empty($res['valid']);
                 }
+                return [
+                    'variant_id' => $it->variant_id,
+                    'variant' => $variant,
+                    'line_subtotal' => $it->dynamic_subtotal,
+                    'quantity' => (int) $it->quantity,
+                    'applied_discount_id' => $hasActiveItemDiscount ? $it->applied_discount_id : null,
+                    'discount_label' => $hasActiveItemDiscount ? $it->discount_label : null,
+                    'bundle_group_id' => $it->bundle_group_id,
+                ];
+            })->toArray();
+
+            $codeOrId = $this->discount->code ?: $this->discount->id;
+            $result = $discountService->validateCode(
+                $codeOrId,
+                $subtotal,
+                $itemsForValidation,
+                $this->customer_id,
+                null,
+                $this->id
+            );
+
+            if (!empty($result['valid'])) {
+                return round((float) $result['discount_amount'], 2);
             }
-            $price = $item->product_variant->price ?? 0;
-            return $price * $item->quantity;
-        });
-        
-        if ($eligibleSubtotal <= 0) {
-            return 0;
+
+            return 0.0;
         }
 
-        if ($this->discount->type === 'percentage') {
-            return round($eligibleSubtotal * $this->discount->value / 100, 2);
-        } else {
-            return min($eligibleSubtotal, $this->discount->value);
-        }
+        return min($subtotal, round((float) ($this->total_discount ?? 0), 2));
     }
 
 	public function getTotalAmountAttribute()
 	{
+		if (isset($this->attributes['total_amount_calculated'])) {
+			return (float) $this->attributes['total_amount_calculated'];
+		}
+
 		$subtotal = $this->dynamic_subtotal;
 		$discount = $this->dynamic_global_discount;
-		return max(0, $subtotal - $discount);
+		return max(0, round($subtotal - $discount, 2));
 	}
 }
 

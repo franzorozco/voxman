@@ -403,137 +403,18 @@ class ShopProfileController extends Controller
         $discountService = app(\App\Services\Finance\DiscountValidationService::class);
 
         $carts->transform(function ($cart) use ($discountService) {
-            $hasStockIssues = false;
-            $subtotalCalculated = 0;
+            $discountService->calculateAndValidateCart($cart);
 
-            foreach ($cart->items as $item) {
-                $variant = $item->product_variant ?? $item->variant;
+            $isOrderedOrInactive = in_array($cart->status, ['ordered', 'converted', 'completed', 'cancelled', 'disabled', 'inactive'], true);
 
-                // 1. Stock validation in real time
-                if (!$variant || !$variant->is_active || $variant->trashed()) {
-                    $stockStatus = 'unavailable';
-                    $stockLabel = 'No disponible';
-                    $availableStock = 0;
-                    $hasStock = false;
-                    $hasStockIssues = true;
-                } else {
-                    $availableStock = (int) $variant->inventories->sum('stock');
-                    if ($availableStock <= 0) {
-                        $stockStatus = 'out_of_stock';
-                        $stockLabel = 'Agotado';
-                        $hasStock = false;
-                        $hasStockIssues = true;
-                    } elseif ($availableStock < $item->quantity) {
-                        $stockStatus = 'insufficient';
-                        $stockLabel = "Solo quedan {$availableStock} disponibles";
-                        $hasStock = false;
-                        $hasStockIssues = true;
-                    } else {
-                        $stockStatus = 'in_stock';
-                        $stockLabel = 'En stock';
-                        $hasStock = true;
-                    }
-                }
-
-                // 2. Price and discount validation in real time
-                $basePrice = (float) ($variant->price ?? $item->original_price ?? 0);
-                $originalUnitPrice = (float) ($item->original_price ?: $basePrice);
-
-                $hasActiveDiscount = false;
-                $discountIsExpired = false;
-                $discountExpiredReason = null;
-                $discountLabel = null;
-                $discountName = null;
-                $discountAmountPerUnit = 0;
-                $calculatedUnitPrice = $basePrice;
-
-                if (!empty($item->applied_discount_id)) {
-                    $discountResult = $discountService->validateItemDiscount($item->applied_discount_id, $variant, $cart->customer_id);
-
-                    if ($discountResult['valid']) {
-                        $discountObj = $discountResult['discount'];
-                        if ($discountObj->type === 'percentage') {
-                            $discountAmountPerUnit = round($basePrice * ($discountObj->value / 100), 2);
-                            $calculatedUnitPrice = max(0, $basePrice - $discountAmountPerUnit);
-                        } else {
-                            $discountAmountPerUnit = min($basePrice, (float) $discountObj->value);
-                            $calculatedUnitPrice = max(0, $basePrice - $discountAmountPerUnit);
-                        }
-
-                        $hasActiveDiscount = true;
-                        $discountIsExpired = false;
-                        $discountLabel = $item->discount_label ?: ($discountObj->type === 'percentage' ? "-{$discountObj->value}%" : "-Bs. " . number_format($discountObj->value, 2));
-                        $discountName = $discountObj->name;
-                    } else {
-                        $hasActiveDiscount = false;
-                        $discountIsExpired = true;
-                        $discountExpiredReason = $discountResult['message'] ?? 'Descuento expirado o ya no disponible';
-                        $calculatedUnitPrice = $basePrice;
-                    }
-                } elseif ($item->override_price !== null) {
-                    $calculatedUnitPrice = (float) $item->override_price;
-                }
-
-                $calculatedSubtotal = round($calculatedUnitPrice * $item->quantity, 2);
-                $subtotalCalculated += $calculatedSubtotal;
-
-                // Set dynamic attributes on item for frontend consumption
-                $item->stock_status = $stockStatus;
-                $item->stock_label = $stockLabel;
-                $item->available_stock = $availableStock;
-                $item->has_stock = $hasStock;
-                $item->regular_price = $basePrice;
-                $item->original_unit_price = $originalUnitPrice;
-                $item->calculated_unit_price = $calculatedUnitPrice;
-                $item->calculated_subtotal = $calculatedSubtotal;
-                $item->has_active_discount = $hasActiveDiscount;
-                $item->discount_is_expired = $discountIsExpired;
-                $item->discount_expired_reason = $discountExpiredReason;
-                $item->discount_label = $discountLabel;
-                $item->discount_name = $discountName;
-                $item->discount_amount_per_unit = $discountAmountPerUnit;
+            if ($isOrderedOrInactive) {
+                $cart->has_stock_issues = false;
+                $cart->can_remind = false;
+                $cart->is_actionable = false;
+                $cart->next_reminder_at = null;
+                $cart->last_reminder_sent_at = $cart->delivery_details['last_reminder_sent_at'] ?? null;
+                return $cart;
             }
-
-            // 3. Global cart discount validation in real time
-            $globalDiscountCalculated = 0;
-            $globalDiscountValid = false;
-            $globalDiscountExpired = false;
-            $globalDiscountError = null;
-
-            if ($cart->discount_id && $cart->discount) {
-                $itemsForValidation = $cart->items->map(function ($it) {
-                    return [
-                        'variant_id' => $it->variant_id,
-                        'line_subtotal' => $it->calculated_subtotal,
-                        'quantity' => $it->quantity,
-                        'applied_discount_id' => $it->has_active_discount ? $it->applied_discount_id : null,
-                        'bundle_group_id' => $it->bundle_group_id,
-                    ];
-                })->toArray();
-
-                $globalResult = $discountService->validateCode(
-                    $cart->discount->code,
-                    $subtotalCalculated,
-                    $itemsForValidation,
-                    $cart->customer_id
-                );
-
-                if ($globalResult['valid']) {
-                    $globalDiscountCalculated = (float) $globalResult['discount_amount'];
-                    $globalDiscountValid = true;
-                } else {
-                    $globalDiscountExpired = true;
-                    $globalDiscountError = $globalResult['message'] ?? 'El cupón ha expirado o ya no aplica.';
-                }
-            }
-
-            $cart->has_stock_issues = $hasStockIssues;
-            $cart->subtotal_calculated = round($subtotalCalculated, 2);
-            $cart->global_discount_calculated = round($globalDiscountCalculated, 2);
-            $cart->global_discount_valid = $globalDiscountValid;
-            $cart->global_discount_expired = $globalDiscountExpired;
-            $cart->global_discount_error = $globalDiscountError;
-            $cart->total_amount_calculated = max(0, round($subtotalCalculated - $globalDiscountCalculated, 2));
 
             $lastReminder = $cart->delivery_details['last_reminder_sent_at'] ?? null;
             $canRemind = true;
@@ -546,6 +427,7 @@ class ShopProfileController extends Controller
                 }
             }
             $cart->can_remind = $canRemind;
+            $cart->is_actionable = true;
             $cart->next_reminder_at = $nextReminderAt;
             $cart->last_reminder_sent_at = $lastReminder;
 
@@ -573,6 +455,13 @@ class ShopProfileController extends Controller
 
         if (!$cart) {
             return response()->json(['message' => 'Carrito no encontrado'], 404);
+        }
+
+        if (in_array($cart->status, ['ordered', 'converted', 'completed', 'cancelled', 'disabled', 'inactive'], true)) {
+            return response()->json([
+                'message' => 'Este carrito ya fue convertido a entrega o desactivado y no admite recordatorios ni reactivación.',
+                'can_remind' => false,
+            ], 422);
         }
 
         $deliveryDetails = $cart->delivery_details ?? [];

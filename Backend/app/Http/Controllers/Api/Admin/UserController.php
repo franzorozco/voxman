@@ -19,6 +19,9 @@ class UserController extends Controller
 {
     public function index()
     {
+        User::ensureEmailVerificationSchema();
+        User::purgeExpiredUnverifiedUsers(24);
+
         return User::with(['profile', 'roles', 'owner', 'customer', 'employee'])
             ->whereNull('deleted_at')
             ->get();
@@ -26,6 +29,9 @@ class UserController extends Controller
 
     public function show($id)
     {
+        User::ensureEmailVerificationSchema();
+        User::purgeExpiredUnverifiedUsers(24);
+
         return User::with(['profile', 'roles', 'owner', 'customer', 'employee'])
              ->findOrFail($id);
     }

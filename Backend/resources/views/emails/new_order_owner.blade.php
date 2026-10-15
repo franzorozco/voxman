@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="es">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -128,19 +128,27 @@
                                     <tbody>
                                         @foreach($items as $item)
                                         <tr>
-                                            <td align="left" style="padding:12px 10px 12px 0; border-bottom:1px solid #f4f4f5; font-size:13px; color:#18181b; line-height:1.4;">
-                                                {{ $item['name'] }}
+                                            <td align="left" style="padding:12px 10px 12px 0; border-bottom:1px solid #f4f4f5; font-size:13px; color:#18181b; line-height:1.4; vertical-align:top;">
+                                                <strong>{{ $item['name'] }}</strong>
+                                                @if(!empty($item['sku']))
+                                                    <div style="font-size:11px; color:#71717a; font-family:monospace; margin-top:2px;">SKU: {{ $item['sku'] }}</div>
+                                                @endif
                                                 @if(!empty($item['has_individual_discount']))
-                                                    <br><span style="font-size:11px; color:#ef4444; font-weight:600; padding-top:4px; display:inline-block;">Dcto. Propio: {{ $item['discount_label'] }}</span>
+                                                    <div style="margin-top:4px;"><span style="font-size:11px; color:#16a34a; font-weight:600;">Dcto. Propio: {{ $item['discount_label'] }}</span></div>
                                                 @endif
                                             </td>
-                                            <td align="center" style="padding:12px 10px; border-bottom:1px solid #f4f4f5; font-size:14px; color:#52525b;">
+                                            <td align="center" style="padding:12px 10px; border-bottom:1px solid #f4f4f5; font-size:14px; color:#52525b; vertical-align:top;">
                                                 {{ $item['quantity'] }}
                                             </td>
-                                            <td align="right" style="padding:12px 10px; border-bottom:1px solid #f4f4f5; font-size:13px; color:#52525b;">
-                                                Bs. {{ number_format($item['unit_price'] ?? 0, 2) }}
+                                            <td align="right" style="padding:12px 10px; border-bottom:1px solid #f4f4f5; font-size:13px; color:#52525b; vertical-align:top;">
+                                                @if(!empty($item['has_individual_discount']) && ($item['original_price'] ?? 0) > ($item['unit_price'] ?? 0))
+                                                    <span style="text-decoration: line-through; color: #a1a1aa; font-size: 11px;">Bs. {{ number_format($item['original_price'] ?? 0, 2) }}</span><br />
+                                                    <span style="font-weight:700; color:#18181b;">Bs. {{ number_format($item['unit_price'] ?? 0, 2) }}</span>
+                                                @else
+                                                    <span style="font-weight:600; color:#18181b;">Bs. {{ number_format($item['unit_price'] ?? 0, 2) }}</span>
+                                                @endif
                                             </td>
-                                            <td align="right" style="padding:12px 0 12px 10px; border-bottom:1px solid #f4f4f5; font-size:13px; color:#52525b; font-weight:600;">
+                                            <td align="right" style="padding:12px 0 12px 10px; border-bottom:1px solid #f4f4f5; font-size:13px; color:#18181b; font-weight:700; vertical-align:top;">
                                                 Bs. {{ number_format($item['line_subtotal'] ?? 0, 2) }}
                                             </td>
                                         </tr>
@@ -151,12 +159,12 @@
                                             <td colspan="3" align="right" style="padding:16px 0 8px 0; font-size:13px; color:#52525b;">Subtotal:</td>
                                             <td align="right" style="padding:16px 0 8px 0; font-size:14px; color:#18181b; font-weight:600;">Bs. {{ number_format($subtotal, 2) }}</td>
                                         </tr>
-                                        @if($discount > 0)
+                                        @if(($discount ?? 0) > 0)
                                         <tr>
-                                            <td colspan="3" align="right" style="padding:8px 0; font-size:13px; color:#ef4444; font-weight:600;">
-                                                Descuento Global Prorrateado (@if($discountCode !== 'Ninguno') Cupón: {{ $discountCode }} @else Promoción @endif):
+                                            <td colspan="3" align="right" style="padding:4px 0 12px 0; font-size:13px; color:#16a34a; font-weight:600;">
+                                                {{ !empty($otherOwnersText) ? 'Descuento global prorrateado' : 'Descuento global' }}@if(!empty($discountCode) && $discountCode !== 'Ninguno') ({{ $discountCode }})@endif:
                                             </td>
-                                            <td align="right" style="padding:8px 0; font-size:14px; color:#ef4444; font-weight:600;">-Bs. {{ number_format($discount, 2) }}</td>
+                                            <td align="right" style="padding:4px 0 12px 0; font-size:14px; color:#16a34a; font-weight:700;">-Bs. {{ number_format($discount, 2) }}</td>
                                         </tr>
                                         @endif
                                         <tr>

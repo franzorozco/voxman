@@ -28,15 +28,22 @@ class SendNewOrderOwnerEmails implements ShouldQueue
     public function handle()
     {
         $cart = Cart::with([
-            'items.variant.product.owner.user', 
+            'items.variant.product.owner.user',
+            'items.variant.product.category',
+            'items.variant.product.brand',
+            'items.variant.inventories',
             'items.variant.size',
             'items.variant.fit',
             'items.variant.variant_attribute_values.attribute_value.attribute',
+            'items.appliedDiscount',
+            'discount',
             'guest', 
             'customer.user.profile'
         ])->find($this->cartId);
 
         if (!$cart) return;
+
+        $discountService = app(\App\Services\Finance\DiscountValidationService::class);
 
         // Determinar datos del cliente
         $customerCode = 'N/A';
@@ -64,17 +71,8 @@ class SendNewOrderOwnerEmails implements ShouldQueue
             $customerEmail = $cart->customer->user->email ?? 'No registrado';
         }
 
-        // Detalles de entrega
-        $deliveryDetails = 'No especificado';
-        if (!empty($cart->delivery_details) && is_array($cart->delivery_details)) {
-            $dd = $cart->delivery_details;
-            $typeText = $dd['text'] ?? ($dd['type'] === 'pickup' ? 'Recojo en sucursal' : 'Envío a domicilio');
-            $address = $dd['address'] ?? '';
-            $deliveryDetails = trim($typeText . ($address ? " - " . $address : ""));
-        }
-
-        // Descuento
-        $discountCode = $cart->discount->code ?? 'Ninguno';
+        // Detalles de entrega limpios
+        $deliveryDetails = $discountService->formatCleanDeliveryDetails($cart->delivery_details);
 
         // Número de referencia
         $referenceNumber = $cart->reference_number ?? substr($cart->id, 0, 8);
@@ -86,28 +84,17 @@ class SendNewOrderOwnerEmails implements ShouldQueue
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
         $cartLink = $frontendUrl . "/dashboard/carts?open_cart=" . $cart->id;
 
-        // --- CALCULAR DESCUENTOS PRORRATEADOS USANDO EL SERVICIO ---
-        $discountService = app(\App\Services\Finance\DiscountValidationService::class);
-        $totalDiscount = $cart->total_discount ?? $cart->dynamic_global_discount;
-        $cartSubtotal = $cart->dynamic_subtotal;
-
-        $itemsForProration = [];
-        foreach ($cart->items as $item) {
-            $itemsForProration[] = [
-                'bundle_group_id' => $item->bundle_group_id,
-                'applied_discount_id' => $item->applied_discount_id,
-                'discount_label' => $item->discount_label,
-                'line_subtotal' => $item->dynamic_subtotal
-            ];
-        }
-
-        $proratedDiscounts = $discountService->prorateDiscountToItems($itemsForProration, $totalDiscount, $cartSubtotal);
+        // --- CALCULAR PRECIOS Y DESCUENTOS USANDO EL SERVICIO CENTRALIZADO ---
+        $cartCalculation = $discountService->calculateAndValidateCart($cart);
+        $discountCode = $cartCalculation['discount_code'] ?? ($cart->discount->code ?? 'Ninguno');
 
         // Agrupar items por owner
         $ownersData = [];
 
-        foreach ($cart->items as $index => $item) {
-            $owner = $item->variant->product->owner ?? null;
+        foreach ($cartCalculation['items'] as $vItem) {
+            $item = $vItem['item'];
+            $variant = $vItem['variant'];
+            $owner = $variant->product->owner ?? null;
             if (!$owner || !$owner->user) continue;
 
             $ownerId = $owner->id;
@@ -117,28 +104,30 @@ class SendNewOrderOwnerEmails implements ShouldQueue
                     'email' => $owner->notification_email ?? $owner->user->email,
                     'name' => $owner->user->name ?? $owner->user->username,
                     'items' => [],
-                    'subtotal' => 0,
-                    'discount' => 0,
-                    'totalAmount' => 0
+                    'subtotal' => 0.0,
+                    'discount' => 0.0,
+                    'totalAmount' => 0.0
                 ];
             }
 
-            $lineSubtotal = $item->dynamic_subtotal;
-            $lineDiscount = $proratedDiscounts[$index] ?? 0;
-            $hasIndividualDiscount = !empty($item->applied_discount_id) || !empty($item->discount_label);
+            $lineSubtotal = (float) $vItem['calculated_subtotal'];
+            $lineDiscount = (float) $vItem['prorated_global_discount'];
+            $netLineTotal = (float) $vItem['net_line_total'];
 
             $ownersData[$ownerId]['items'][] = [
-                'name' => $item->variant->product->name . ' (' . ($item->variant->name ?? 'Default') . ')',
+                'name' => $variant->product->name . ' (' . ($variant->name ?? 'Default') . ')',
+                'sku' => $variant->sku ?? '',
                 'quantity' => $item->quantity,
-                'unit_price' => $item->dynamic_unit_price,
+                'unit_price' => $vItem['calculated_unit_price'],
+                'original_price' => $vItem['original_unit_price'],
                 'line_subtotal' => $lineSubtotal,
-                'has_individual_discount' => $hasIndividualDiscount,
-                'discount_label' => $item->discount_label ?? ''
+                'has_individual_discount' => $vItem['has_active_discount'],
+                'discount_label' => $vItem['discount_label'] ?? ''
             ];
             
-            $ownersData[$ownerId]['subtotal'] += $lineSubtotal;
-            $ownersData[$ownerId]['discount'] += $lineDiscount;
-            $ownersData[$ownerId]['totalAmount'] += ($lineSubtotal - $lineDiscount);
+            $ownersData[$ownerId]['subtotal'] = round($ownersData[$ownerId]['subtotal'] + $lineSubtotal, 2);
+            $ownersData[$ownerId]['discount'] = round($ownersData[$ownerId]['discount'] + $lineDiscount, 2);
+            $ownersData[$ownerId]['totalAmount'] = round($ownersData[$ownerId]['totalAmount'] + $netLineTotal, 2);
         }
 
         // Obtener todos los nombres de owners

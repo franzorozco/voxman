@@ -44,6 +44,10 @@ class SendCartReminderOwnerEmails implements ShouldQueue
 
         if (!$cart) return;
 
+        if (in_array($cart->status, ['ordered', 'converted', 'completed', 'cancelled', 'disabled', 'inactive'], true)) {
+            return;
+        }
+
         $discountService = app(\App\Services\Finance\DiscountValidationService::class);
 
         // Determinar si está expirado o abandonado
@@ -74,14 +78,8 @@ class SendCartReminderOwnerEmails implements ShouldQueue
             $customerEmail = $cart->customer->user->email ?? 'No registrado';
         }
 
-        // Detalles de entrega
-        $deliveryDetails = 'No especificado';
-        if (!empty($cart->delivery_details) && is_array($cart->delivery_details)) {
-            $dd = $cart->delivery_details;
-            $typeText = $dd['text'] ?? ($dd['type'] === 'pickup' ? 'Recojo en sucursal' : 'Envío a domicilio');
-            $address = $dd['address'] ?? '';
-            $deliveryDetails = trim($typeText . ($address ? " - " . $address : ""));
-        }
+        // Detalles de entrega limpios (sin "null" ni "undefined")
+        $deliveryDetails = $discountService->formatCleanDeliveryDetails($cart->delivery_details);
 
         // Número de referencia
         $referenceNumber = $cart->reference_number ?? substr($cart->id, 0, 8);
@@ -93,11 +91,18 @@ class SendCartReminderOwnerEmails implements ShouldQueue
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
         $cartLink = $frontendUrl . "/dashboard/carts?open_cart=" . $cart->id;
 
+        // Validar y calcular stock, precios, descuentos individuales, descuento global y prorrateo en tiempo real
+        $cartCalculation = $discountService->calculateAndValidateCart($cart);
+        $discountCode = $cartCalculation['discount_code'] ?? 'Ninguno';
+        $globalDiscountExpired = $cartCalculation['global_discount_expired'] ?? false;
+        $globalDiscountError = $cartCalculation['global_discount_error'] ?? null;
+
         // Agrupar items por owner
         $ownersData = [];
 
-        foreach ($cart->items as $item) {
-            $variant = $item->variant;
+        foreach ($cartCalculation['items'] as $vItem) {
+            $item = $vItem['item'];
+            $variant = $vItem['variant'];
             $owner = $variant->product->owner ?? null;
             if (!$owner || !$owner->user) continue;
 
@@ -108,80 +113,41 @@ class SendCartReminderOwnerEmails implements ShouldQueue
                     'email' => $owner->notification_email ?? $owner->user->email,
                     'name' => $owner->user->name ?? $owner->user->username,
                     'items' => [],
-                    'subtotal' => 0,
-                    'totalAmount' => 0,
+                    'subtotal' => 0.0,
+                    'discount' => 0.0,
+                    'totalAmount' => 0.0,
                     'hasStockIssues' => false,
                 ];
             }
 
-            // Validación de stock en tiempo real
-            $availableStock = $variant ? (int) $variant->inventories->sum('stock') : 0;
-            if (!$variant || !$variant->is_active || $variant->trashed()) {
-                $stockStatus = 'unavailable';
-                $hasStock = false;
-            } elseif ($availableStock <= 0) {
-                $stockStatus = 'out_of_stock';
-                $hasStock = false;
-            } elseif ($availableStock < $item->quantity) {
-                $stockStatus = 'insufficient';
-                $hasStock = false;
-            } else {
-                $stockStatus = 'in_stock';
-                $hasStock = true;
-            }
-
-            if (!$hasStock) {
+            if (!$vItem['has_stock']) {
                 $ownersData[$ownerId]['hasStockIssues'] = true;
             }
 
-            // Validación de precios y descuentos en tiempo real
-            $basePrice = (float) ($variant->price ?? $item->original_price ?? 0);
-            $originalUnitPrice = (float) ($item->original_price ?: $basePrice);
-            $hasDiscount = false;
-            $discountExpired = false;
-            $discountLabel = null;
-            $calculatedUnitPrice = $basePrice;
-
-            if (!empty($item->applied_discount_id)) {
-                $discountResult = $discountService->validateItemDiscount($item->applied_discount_id, $variant, $cart->customer_id);
-                if ($discountResult['valid']) {
-                    $discountObj = $discountResult['discount'];
-                    if ($discountObj->type === 'percentage') {
-                        $discVal = round($basePrice * ($discountObj->value / 100), 2);
-                        $calculatedUnitPrice = max(0, $basePrice - $discVal);
-                    } else {
-                        $discVal = min($basePrice, (float) $discountObj->value);
-                        $calculatedUnitPrice = max(0, $basePrice - $discVal);
-                    }
-                    $hasDiscount = true;
-                    $discountLabel = $item->discount_label ?: ($discountObj->type === 'percentage' ? "-{$discountObj->value}%" : "-Bs. " . number_format($discountObj->value, 2));
-                } else {
-                    $discountExpired = true;
-                    $calculatedUnitPrice = $basePrice;
-                }
-            } elseif ($item->override_price !== null) {
-                $calculatedUnitPrice = (float) $item->override_price;
-            }
-
-            $lineSubtotal = round($calculatedUnitPrice * $item->quantity, 2);
+            $lineSubtotal = (float) $vItem['calculated_subtotal'];
+            $lineGlobalDiscount = (float) $vItem['prorated_global_discount'];
+            $netLineTotal = (float) $vItem['net_line_total'];
 
             $ownersData[$ownerId]['items'][] = [
                 'name' => $variant->product->name . ' (' . ($variant->name ?? 'Default') . ')',
                 'sku' => $variant->sku ?? '',
                 'quantity' => $item->quantity,
-                'unit_price' => $calculatedUnitPrice,
-                'original_price' => $originalUnitPrice,
-                'has_discount' => $hasDiscount,
-                'discount_expired' => $discountExpired,
-                'discount_label' => $discountLabel,
+                'unit_price' => $vItem['calculated_unit_price'],
+                'original_price' => $vItem['original_unit_price'],
+                'has_discount' => $vItem['has_active_discount'],
+                'discount_expired' => $vItem['discount_is_expired'],
+                'discount_label' => $vItem['discount_label'],
                 'line_subtotal' => $lineSubtotal,
-                'available_stock' => $availableStock,
-                'stock_status' => $stockStatus,
-                'has_stock' => $hasStock,
+                'prorated_global_discount' => $lineGlobalDiscount,
+                'net_line_total' => $netLineTotal,
+                'available_stock' => $vItem['available_stock'],
+                'stock_status' => $vItem['stock_status'],
+                'has_stock' => $vItem['has_stock'],
             ];
             
-            $ownersData[$ownerId]['subtotal'] += $lineSubtotal;
-            $ownersData[$ownerId]['totalAmount'] += $lineSubtotal;
+            $ownersData[$ownerId]['subtotal'] = round($ownersData[$ownerId]['subtotal'] + $lineSubtotal, 2);
+            $ownersData[$ownerId]['discount'] = round($ownersData[$ownerId]['discount'] + $lineGlobalDiscount, 2);
+            $ownersData[$ownerId]['totalAmount'] = round($ownersData[$ownerId]['totalAmount'] + $netLineTotal, 2);
         }
 
         // Obtener todos los nombres de owners
@@ -210,7 +176,11 @@ class SendCartReminderOwnerEmails implements ShouldQueue
                             $data['totalAmount'],
                             $otherOwnersText,
                             $isExpired,
-                            $data['hasStockIssues'] ?? false
+                            $data['hasStockIssues'] ?? false,
+                            $data['discount'] ?? 0,
+                            $discountCode,
+                            $globalDiscountExpired,
+                            $globalDiscountError
                         )
                     );
                 } catch (\Exception $e) {

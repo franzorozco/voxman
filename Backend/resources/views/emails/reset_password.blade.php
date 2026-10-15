@@ -92,7 +92,7 @@
                                 <tr>
                                     <td style="padding: 16px 20px;">
                                         <p style="margin:0; font-size:13px; color:#71717a; line-height:1.6;">
-                                            ⏱&nbsp; Este enlace expirará en <strong style="color:#18181b;">60 minutos</strong>.
+                                            Este enlace expirará en <strong style="color:#18181b;">60 minutos</strong>.
                                         </p>
                                     </td>
                                 </tr>

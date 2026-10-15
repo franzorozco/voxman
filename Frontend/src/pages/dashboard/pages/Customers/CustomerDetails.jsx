@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { X, MapPin, ShoppingBag, Gift, Ticket, Award, CreditCard, ChevronDown, ChevronUp, Clock, Store, User as UserIcon, Tag, Plus, Minus, History, Mail, Phone, Calendar, Hash, Globe } from "lucide-react";
+import { X, MapPin, ShoppingBag, Gift, Ticket, Award, CreditCard, ChevronDown, ChevronUp, Clock, Store, User as UserIcon, Tag, Plus, Minus, History, Mail, Phone, Calendar, Hash, Globe, ShieldCheck, Send, Check } from "lucide-react";
 import { getCustomerById, updateCustomerTags, adjustCustomerPoints, getCustomerTimeline } from "../../../../api/admin/customers";
+import { verifyRegisterCode, resendRegisterCode } from "../../../../api/admin/auth";
 import { toast } from "react-hot-toast";
 import Spinner from "../../components/Spinner/Spinner";
 
@@ -26,7 +27,7 @@ const getSaleStatusBadge = (status) => {
   }
 };
 
-export default function CustomerDetails({ customerId, onClose }) {
+export default function CustomerDetails({ customerId, onClose, onCustomerUpdated }) {
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -36,6 +37,68 @@ export default function CustomerDetails({ customerId, onClose }) {
   // States for management
   const [newTag, setNewTag] = useState('');
   const [pointsAdjust, setPointsAdjust] = useState({ amount: 0, reason: '' });
+
+  // Email verification states
+  const [verifyCodeInput, setVerifyCodeInput] = useState('');
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  const handleSendVerificationEmail = async () => {
+    if (!customer?.user?.email || resendingEmail || resendCooldown > 0) return;
+    try {
+      setResendingEmail(true);
+      const res = await resendRegisterCode({ email: customer.user.email });
+      toast.success(res.data?.message || `Código de verificación enviado a ${customer.user.email}`);
+      setResendCooldown(res.data?.cooldown_seconds || 60);
+    } catch (error) {
+      if (error.response?.data?.cooldown_seconds) {
+        setResendCooldown(error.response.data.cooldown_seconds);
+      }
+      toast.error(error.response?.data?.message || "No se pudo enviar el correo de verificación");
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
+  const handleVerifyCustomerCode = async (e) => {
+    if (e) e.preventDefault();
+    const cleanCode = (verifyCodeInput || "").replace(/\D/g, "").trim();
+    if (cleanCode.length !== 6) {
+      toast.error("Ingresa el código de 6 dígitos enviado al correo del cliente");
+      return;
+    }
+    try {
+      setVerifyingEmail(true);
+      const res = await verifyRegisterCode({
+        email: customer.user.email,
+        code: cleanCode,
+      });
+      const verifiedAt = res.data?.user?.email_verified_at || new Date().toISOString();
+      setCustomer((prev) => ({
+        ...prev,
+        user: {
+          ...prev.user,
+          email_verified_at: verifiedAt,
+        },
+      }));
+      setVerifyCodeInput("");
+      toast.success(res.data?.message || "Correo del cliente verificado correctamente");
+      if (onCustomerUpdated) onCustomerUpdated();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Código inválido o expirado");
+    } finally {
+      setVerifyingEmail(false);
+    }
+  };
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -171,6 +234,47 @@ export default function CustomerDetails({ customerId, onClose }) {
                     {isWebCustomer ? <Globe size={13} /> : <Store size={13} />}
                     <span>{isWebCustomer ? 'Cliente Web' : 'Cliente Caja (POS)'}</span>
                   </span>
+                  {isWebCustomer && customer.user?.email && !customer.user.email.includes('@guest') && (
+                    customer.user?.email_verified_at ? (
+                      <span
+                        title={`Correo verificado el ${new Date(customer.user.email_verified_at).toLocaleString()}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          background: 'rgba(16, 185, 129, 0.14)',
+                          color: '#10b981',
+                          border: '1px solid rgba(16, 185, 129, 0.3)'
+                        }}
+                      >
+                        <ShieldCheck size={13} />
+                        <span>Correo Verificado</span>
+                      </span>
+                    ) : (
+                      <span
+                        title="Pendiente de confirmar correo dentro de las primeras 24 horas"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          background: 'rgba(245, 158, 11, 0.15)',
+                          color: '#f59e0b',
+                          border: '1px solid rgba(245, 158, 11, 0.35)'
+                        }}
+                      >
+                        <Clock size={13} />
+                        <span>Pendiente de verificar (24h)</span>
+                      </span>
+                    )
+                  )}
                 </div>
 
                 <div className="customer-modal-meta">
@@ -284,7 +388,20 @@ export default function CustomerDetails({ customerId, onClose }) {
                         </div>
                         <div>
                            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Correo Electrónico</label>
-                           <div style={{ fontSize: '16px', color: 'var(--text-main)' }}>{customer.user?.email || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No registrado (POS)</span>}</div>
+                           <div style={{ fontSize: '16px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                             <span>{customer.user?.email || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No registrado (POS)</span>}</span>
+                             {isWebCustomer && customer.user?.email && !customer.user.email.includes('@guest') && (
+                               customer.user?.email_verified_at ? (
+                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: 'rgba(16, 185, 129, 0.14)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                   <ShieldCheck size={12} /> Verificado
+                                 </span>
+                               ) : (
+                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.35)' }}>
+                                   <Clock size={12} /> Pendiente (24h)
+                                 </span>
+                               )
+                             )}
+                           </div>
                         </div>
                         <div>
                            <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Teléfono</label>
@@ -319,6 +436,103 @@ export default function CustomerDetails({ customerId, onClose }) {
                              </span>
                            </div>
                         </div>
+                        {isWebCustomer && customer.user?.email && !customer.user.email.includes('@guest') && (
+                          <div>
+                             <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Verificación de Correo</label>
+                             <div style={{ marginTop: '6px', fontSize: '13px', color: 'var(--text-main)' }}>
+                               {customer.user?.email_verified_at ? (
+                                 <span style={{ color: '#10b981', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                   <ShieldCheck size={15} />
+                                   Verificado el {new Date(customer.user.email_verified_at).toLocaleString()}
+                                 </span>
+                               ) : (
+                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                   <span style={{ color: '#f59e0b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                     <Clock size={15} />
+                                     Pendiente de confirmación (se depura a las 24h si no verifica)
+                                   </span>
+
+                                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                     <button
+                                       type="button"
+                                       onClick={handleSendVerificationEmail}
+                                       disabled={resendingEmail || resendCooldown > 0}
+                                       style={{
+                                         display: 'inline-flex',
+                                         alignItems: 'center',
+                                         gap: '6px',
+                                         padding: '7px 12px',
+                                         borderRadius: '8px',
+                                         border: '1px solid rgba(245, 158, 11, 0.45)',
+                                         background: 'rgba(245, 158, 11, 0.12)',
+                                         color: '#d97706',
+                                         fontSize: '12px',
+                                         fontWeight: 700,
+                                         cursor: resendingEmail || resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                                         opacity: resendingEmail || resendCooldown > 0 ? 0.65 : 1,
+                                       }}
+                                     >
+                                       <Send size={13} />
+                                       {resendingEmail
+                                         ? 'Enviando correo...'
+                                         : resendCooldown > 0
+                                         ? `Reenviar en ${resendCooldown}s`
+                                         : 'Enviar correo con código'}
+                                     </button>
+                                   </div>
+
+                                   <form
+                                     onSubmit={handleVerifyCustomerCode}
+                                     style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}
+                                   >
+                                     <input
+                                       type="text"
+                                       inputMode="numeric"
+                                       maxLength={6}
+                                       placeholder="Código (6 dígitos)"
+                                       value={verifyCodeInput}
+                                       onChange={(e) => setVerifyCodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                       style={{
+                                         width: '145px',
+                                         padding: '7px 10px',
+                                         borderRadius: '8px',
+                                         border: '1px solid var(--border-color)',
+                                         background: 'var(--bg-input)',
+                                         color: 'var(--text-main)',
+                                         fontSize: '13px',
+                                         fontWeight: 700,
+                                         letterSpacing: '2px',
+                                         textAlign: 'center',
+                                         outline: 'none',
+                                       }}
+                                     />
+                                     <button
+                                       type="submit"
+                                       disabled={verifyingEmail || verifyCodeInput.length !== 6}
+                                       style={{
+                                         display: 'inline-flex',
+                                         alignItems: 'center',
+                                         gap: '5px',
+                                         padding: '7px 12px',
+                                         borderRadius: '8px',
+                                         border: 'none',
+                                         background: '#10b981',
+                                         color: '#ffffff',
+                                         fontSize: '12px',
+                                         fontWeight: 700,
+                                         cursor: verifyingEmail || verifyCodeInput.length !== 6 ? 'not-allowed' : 'pointer',
+                                         opacity: verifyingEmail || verifyCodeInput.length !== 6 ? 0.6 : 1,
+                                       }}
+                                     >
+                                       <Check size={13} />
+                                       {verifyingEmail ? 'Verificando...' : 'Confirmar código'}
+                                     </button>
+                                   </form>
+                                 </div>
+                               )}
+                             </div>
+                          </div>
+                        )}
                      </div>
                   </div>
                </div>

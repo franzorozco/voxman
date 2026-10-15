@@ -134,6 +134,17 @@
                             </div>
                             @endif
 
+                            @if(!empty($globalDiscountExpired))
+                            <div style="margin-bottom:20px; background-color:#fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #f97316; padding:12px 16px; border-radius:6px;">
+                                <p style="margin:0 0 2px 0; font-size:13px; color:#9a3412; font-weight:700;">
+                                    Descuento Global Expirado
+                                </p>
+                                <p style="margin:0; font-size:12.5px; color:#c2410c; line-height:1.5;">
+                                    {{ $globalDiscountError ?: 'El cupón o descuento global asociado a este carrito ha expirado o ya no cumple las condiciones vigentes.' }}
+                                </p>
+                            </div>
+                            @endif
+
                             <p style="margin:0 0 16px 0; font-size:15px; line-height:1.7; color:#52525b; font-weight:600;">
                                 Tus productos en este carrito ({{ $ownerName }}):
                             </p>
@@ -195,6 +206,21 @@
                                             <td colspan="3" align="right" style="padding:16px 0 8px 0; font-size:13px; color:#52525b;">Subtotal:</td>
                                             <td align="right" style="padding:16px 0 8px 0; font-size:14px; color:#18181b; font-weight:600;">Bs. {{ number_format($subtotal, 2) }}</td>
                                         </tr>
+                                        @if(($discount ?? 0) > 0)
+                                        <tr>
+                                            <td colspan="3" align="right" style="padding:4px 0 12px 0; font-size:13px; color:#16a34a; font-weight:600;">
+                                                {{ !empty($otherOwnersText) ? 'Descuento global prorrateado' : 'Descuento global' }}@if(!empty($discountCode) && $discountCode !== 'Ninguno') ({{ $discountCode }})@endif:
+                                            </td>
+                                            <td align="right" style="padding:4px 0 12px 0; font-size:14px; color:#16a34a; font-weight:700;">-Bs. {{ number_format($discount, 2) }}</td>
+                                        </tr>
+                                        @elseif(!empty($globalDiscountExpired))
+                                        <tr>
+                                            <td colspan="3" align="right" style="padding:4px 0 12px 0; font-size:12px; color:#ef4444; font-weight:600;">
+                                                Descuento global @if(!empty($discountCode) && $discountCode !== 'Ninguno')({{ $discountCode }})@endif:
+                                            </td>
+                                            <td align="right" style="padding:4px 0 12px 0; font-size:12px; color:#ef4444; font-weight:700;">Expirado</td>
+                                        </tr>
+                                        @endif
                                         <tr>
                                             <td colspan="3" align="right" style="padding:16px 0 0 0; border-top:2px solid #e4e4e7; font-size:14px; color:#18181b; font-weight:700;">Total estimado:</td>
                                             <td align="right" style="padding:16px 0 0 0; border-top:2px solid #e4e4e7; font-size:15px; color:#18181b; font-weight:700;">Bs. {{ number_format($totalAmount, 2) }}</td>

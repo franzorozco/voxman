@@ -99,9 +99,10 @@ class CartController extends Controller
         $averageValue = $totalCarts > 0 ? round($allCarts->sum('total_amount') / $totalCarts, 2) : 0;
 
         $carts = $query->paginate($request->get('per_page', 15));
+        $discountService = app(\App\Services\Finance\DiscountValidationService::class);
 
-        $carts->getCollection()->transform(function ($cart) {
-            $cart->total_amount_calculated = $cart->total_amount;
+        $carts->getCollection()->transform(function ($cart) use ($discountService) {
+            $discountService->calculateAndValidateCart($cart);
             return $cart;
         });
 
@@ -141,7 +142,7 @@ class CartController extends Controller
             }
         }
         
-        $cart->total_amount_calculated = $cart->total_amount;
+        app(\App\Services\Finance\DiscountValidationService::class)->calculateAndValidateCart($cart);
         
         return response()->json($cart);
     }
@@ -292,7 +293,8 @@ class CartController extends Controller
                 $subtotal,
                 $cartItemsData,
                 $request->customer_id,
-                null
+                null,
+                $cart->id
             );
             if (!$result['valid']) {
                 // Reset discount if no longer valid (e.g. expired after proforma was created)

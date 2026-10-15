@@ -94,29 +94,27 @@
 .confirm-modal-btn-confirm.warning {
   background: #f59e0b;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
 }
 
 .confirm-modal-btn-confirm.warning:hover {
   background: #d97706;
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
 }
 
 .confirm-modal-btn-confirm.danger {
   background: #ef4444;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
 }
 
 .confirm-modal-btn-confirm.danger:hover {
   background: #dc2626;
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
 }
 
 .confirm-modal-btn-confirm.success {
   background: #10b981;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
 }
 
 .confirm-modal-btn-confirm.success:hover {
@@ -124,263 +122,282 @@
 }
 
 .confirm-modal-btn-confirm.info {
-  background: #3b82f6;
+  background: #09090b;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  border: 1px solid #09090b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .confirm-modal-btn-confirm.info:hover {
-  background: #2563eb;
+  background: #27272a;
+  border-color: #27272a;
 }
 
 
 /* ========================================================
-   1. MODO CLARO (LIGHT THEME)
+   1. MODO CLARO (LIGHT THEME - BLANCO MONOCROMÁTICO)
    ======================================================== */
 
 .confirm-modal-backdrop.confirm-theme-light,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-backdrop:not(.confirm-theme-dark),
 .profile-light-mode .confirm-modal-backdrop:not(.confirm-theme-dark),
-.admin-theme:not(.admin-theme-dark) .confirm-modal-backdrop:not(.confirm-theme-dark),
-.shop-theme:not(.shop-theme-dark) .confirm-modal-backdrop:not(.confirm-theme-dark) {
-  background: rgba(15, 23, 42, 0.45);
+.profile-theme:not(.profile-theme-dark) .confirm-modal-backdrop:not(.confirm-theme-dark),
+.admin-theme:not(.admin-theme-dark) .confirm-modal-backdrop:not(.confirm-theme-dark):not(.confirm-theme-light),
+.shop-theme:not(.shop-theme-dark) .confirm-modal-backdrop:not(.confirm-theme-dark):not(.confirm-theme-light) {
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .confirm-modal-card.confirm-card-light,
 .confirm-theme-light .confirm-modal-card,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark),
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark),
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark),
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) {
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark),
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light),
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 /* Light Title & Message */
 .confirm-card-light .confirm-modal-title,
 .confirm-theme-light .confirm-modal-title,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-title,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-title,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-title,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-title {
-  color: #0f172a;
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-title,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-title,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-title {
+  color: #09090b;
 }
 
 .confirm-card-light .confirm-modal-message,
 .confirm-theme-light .confirm-modal-message,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-message,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-message,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-message,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-message {
-  color: #64748b;
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-message,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-message,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-message {
+  color: #52525b;
 }
 
 /* Light Icon Wrappers */
 .confirm-card-light .confirm-modal-icon-wrapper.warning,
 .confirm-theme-light .confirm-modal-icon-wrapper.warning,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.warning,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.warning,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.warning,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.warning {
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.warning,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-icon-wrapper.warning,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-icon-wrapper.warning {
   background: #fef3c7;
   border: 1px solid #fde68a;
   color: #d97706;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
 }
 
 .confirm-card-light .confirm-modal-icon-wrapper.danger,
 .confirm-theme-light .confirm-modal-icon-wrapper.danger,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.danger,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.danger,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.danger,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.danger {
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.danger,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-icon-wrapper.danger,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-icon-wrapper.danger {
   background: #fee2e2;
   border: 1px solid #fecaca;
   color: #dc2626;
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
 }
 
 .confirm-card-light .confirm-modal-icon-wrapper.success,
 .confirm-theme-light .confirm-modal-icon-wrapper.success,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.success,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.success,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.success,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.success {
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.success,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-icon-wrapper.success,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-icon-wrapper.success {
   background: #d1fae5;
   border: 1px solid #a7f3d0;
   color: #059669;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
 }
 
 .confirm-card-light .confirm-modal-icon-wrapper.info,
 .confirm-theme-light .confirm-modal-icon-wrapper.info,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.info,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.info,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.info,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.info {
-  background: #dbeafe;
-  border: 1px solid #bfdbfe;
-  color: #2563eb;
-  box-shadow: 0 0 16px rgba(37, 99, 235, 0.15);
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-icon-wrapper.info,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-icon-wrapper.info,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-icon-wrapper.info {
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
+  box-shadow: none;
 }
 
-/* Light Footer & Cancel Button */
+/* Light Footer & Buttons */
 .confirm-card-light .confirm-modal-footer,
 .confirm-theme-light .confirm-modal-footer,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-footer,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-footer,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-footer,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-footer {
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-footer,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-footer,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-footer {
+  background: #fafafa;
+  border-top: 1px solid #e4e4e7;
 }
 
 .confirm-card-light .confirm-modal-btn-cancel,
 .confirm-theme-light .confirm-modal-btn-cancel,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel {
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-btn-cancel,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-btn-cancel {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  border: 1px solid #e4e4e7;
+  color: #09090b;
 }
 
 .confirm-card-light .confirm-modal-btn-cancel:hover,
 .confirm-theme-light .confirm-modal-btn-cancel:hover,
-.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel:hover,
 .profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel:hover,
-.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel:hover,
-.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: #0f172a;
+.profile-theme:not(.profile-theme-dark) .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-cancel:hover,
+.admin-theme:not(.admin-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-btn-cancel:hover,
+.shop-theme:not(.shop-theme-dark) .confirm-modal-card:not(.confirm-card-dark):not(.confirm-card-light) .confirm-modal-btn-cancel:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+  color: #09090b;
+}
+
+.confirm-card-light .confirm-modal-btn-confirm.info,
+.confirm-theme-light .confirm-modal-btn-confirm.info,
+.profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-confirm.info {
+  background: #09090b;
+  color: #ffffff;
+  border: 1px solid #09090b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+}
+
+.confirm-card-light .confirm-modal-btn-confirm.info:hover,
+.confirm-theme-light .confirm-modal-btn-confirm.info:hover,
+.profile-light-mode .confirm-modal-card:not(.confirm-card-dark) .confirm-modal-btn-confirm.info:hover {
+  background: #27272a;
+  border-color: #27272a;
 }
 
 
 /* ========================================================
-   2. MODO OSCURO (DARK THEME)
-   Defined AFTER light theme with matching/higher specificity
-   so it strictly takes precedence whenever dark mode is active.
+   2. MODO OSCURO (DARK THEME - NEGRO MONOCROMÁTICO)
    ======================================================== */
 
-.confirm-modal-backdrop,
 .confirm-modal-backdrop.confirm-theme-dark,
-.profile-theme-dark .confirm-modal-backdrop,
-.profile-dark-mode .confirm-modal-backdrop,
-.admin-theme-dark .confirm-modal-backdrop {
-  background: rgba(0, 0, 0, 0.75);
+.profile-dark-mode .confirm-modal-backdrop:not(.confirm-theme-light),
+.profile-theme-dark .confirm-modal-backdrop:not(.confirm-theme-light),
+.admin-theme-dark .confirm-modal-backdrop:not(.confirm-theme-light) {
+  background: rgba(0, 0, 0, 0.78);
 }
 
-.confirm-modal-card,
 .confirm-modal-card.confirm-card-dark,
 .confirm-theme-dark .confirm-modal-card,
-.profile-theme-dark .confirm-modal-card,
-.profile-dark-mode .confirm-modal-card,
-.admin-theme-dark .confirm-modal-card {
-  background: #000000;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08);
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light),
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light),
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) {
+  background: #09090b;
+  border: 1px solid #27272a;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.confirm-modal-title,
 .confirm-card-dark .confirm-modal-title,
 .confirm-theme-dark .confirm-modal-title,
-.profile-theme-dark .confirm-modal-card .confirm-modal-title,
-.profile-dark-mode .confirm-modal-card .confirm-modal-title,
-.admin-theme-dark .confirm-modal-card .confirm-modal-title {
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-title,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-title,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-title {
   color: #ffffff;
 }
 
-.confirm-modal-message,
 .confirm-card-dark .confirm-modal-message,
 .confirm-theme-dark .confirm-modal-message,
-.profile-theme-dark .confirm-modal-card .confirm-modal-message,
-.profile-dark-mode .confirm-modal-card .confirm-modal-message,
-.admin-theme-dark .confirm-modal-card .confirm-modal-message {
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-message,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-message,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-message {
   color: #a1a1aa;
 }
 
-.confirm-modal-footer,
 .confirm-card-dark .confirm-modal-footer,
 .confirm-theme-dark .confirm-modal-footer,
-.profile-theme-dark .confirm-modal-card .confirm-modal-footer,
-.profile-dark-mode .confirm-modal-card .confirm-modal-footer,
-.admin-theme-dark .confirm-modal-card .confirm-modal-footer {
-  background: #09090b;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-footer,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-footer,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-footer {
+  background: #000000;
+  border-top: 1px solid #18181b;
 }
 
-.confirm-modal-btn-cancel,
 .confirm-card-dark .confirm-modal-btn-cancel,
 .confirm-theme-dark .confirm-modal-btn-cancel,
-.profile-theme-dark .confirm-modal-card .confirm-modal-btn-cancel,
-.profile-dark-mode .confirm-modal-card .confirm-modal-btn-cancel,
-.admin-theme-dark .confirm-modal-card .confirm-modal-btn-cancel {
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-cancel,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-cancel,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-cancel {
   background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid #27272a;
   color: #e4e4e7;
 }
 
-.confirm-modal-btn-cancel:hover,
 .confirm-card-dark .confirm-modal-btn-cancel:hover,
 .confirm-theme-dark .confirm-modal-btn-cancel:hover,
-.profile-theme-dark .confirm-modal-card .confirm-modal-btn-cancel:hover,
-.profile-dark-mode .confirm-modal-card .confirm-modal-btn-cancel:hover,
-.admin-theme-dark .confirm-modal-card .confirm-modal-btn-cancel:hover {
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-cancel:hover,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-cancel:hover,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-cancel:hover {
   background: #27272a;
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: #3f3f46;
   color: #ffffff;
 }
 
 /* Dark Icon Wrappers */
-.confirm-modal-icon-wrapper.warning,
 .confirm-card-dark .confirm-modal-icon-wrapper.warning,
 .confirm-theme-dark .confirm-modal-icon-wrapper.warning,
-.profile-theme-dark .confirm-modal-card .confirm-modal-icon-wrapper.warning,
-.profile-dark-mode .confirm-modal-card .confirm-modal-icon-wrapper.warning,
-.admin-theme-dark .confirm-modal-card .confirm-modal-icon-wrapper.warning {
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.35);
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.warning,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.warning,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.warning {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.3);
   color: #f59e0b;
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
 }
 
-.confirm-modal-icon-wrapper.danger,
 .confirm-card-dark .confirm-modal-icon-wrapper.danger,
 .confirm-theme-dark .confirm-modal-icon-wrapper.danger,
-.profile-theme-dark .confirm-modal-card .confirm-modal-icon-wrapper.danger,
-.profile-dark-mode .confirm-modal-card .confirm-modal-icon-wrapper.danger,
-.admin-theme-dark .confirm-modal-card .confirm-modal-icon-wrapper.danger {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.35);
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.danger,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.danger,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.danger {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.3);
   color: #ef4444;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
 }
 
-.confirm-modal-icon-wrapper.success,
 .confirm-card-dark .confirm-modal-icon-wrapper.success,
 .confirm-theme-dark .confirm-modal-icon-wrapper.success,
-.profile-theme-dark .confirm-modal-card .confirm-modal-icon-wrapper.success,
-.profile-dark-mode .confirm-modal-card .confirm-modal-icon-wrapper.success,
-.admin-theme-dark .confirm-modal-card .confirm-modal-icon-wrapper.success {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.success,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.success,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.success {
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   color: #10b981;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
 }
 
-.confirm-modal-icon-wrapper.info,
 .confirm-card-dark .confirm-modal-icon-wrapper.info,
 .confirm-theme-dark .confirm-modal-icon-wrapper.info,
-.profile-theme-dark .confirm-modal-card .confirm-modal-icon-wrapper.info,
-.profile-dark-mode .confirm-modal-card .confirm-modal-icon-wrapper.info,
-.admin-theme-dark .confirm-modal-card .confirm-modal-icon-wrapper.info {
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  color: #3b82f6;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.info,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.info,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-icon-wrapper.info {
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.confirm-card-dark .confirm-modal-btn-confirm.info,
+.confirm-theme-dark .confirm-modal-btn-confirm.info,
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-confirm.info,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-confirm.info,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-confirm.info {
+  background: #ffffff;
+  color: #09090b;
+  border: 1px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.1);
+}
+
+.confirm-card-dark .confirm-modal-btn-confirm.info:hover,
+.confirm-theme-dark .confirm-modal-btn-confirm.info:hover,
+.profile-dark-mode .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-confirm.info:hover,
+.profile-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-confirm.info:hover,
+.admin-theme-dark .confirm-modal-card:not(.confirm-card-light) .confirm-modal-btn-confirm.info:hover {
+  background: #e4e4e7;
+  border-color: #e4e4e7;
 }
 
 /* Animations */

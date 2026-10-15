@@ -30,6 +30,10 @@ class CartReminderToOwner extends Mailable
     public $deliveryDetails;
     public $items;
     public $subtotal;
+    public $discount;
+    public $discountCode;
+    public $globalDiscountExpired;
+    public $globalDiscountError;
     public $totalAmount;
     public $otherOwnersText;
     public $isExpired;      // true = reactivar, false = agendar entrega
@@ -50,23 +54,31 @@ class CartReminderToOwner extends Mailable
         $totalAmount,
         $otherOwnersText = '',
         $isExpired = false,
-        $hasStockIssues = false
+        $hasStockIssues = false,
+        $discount = 0,
+        $discountCode = 'Ninguno',
+        $globalDiscountExpired = false,
+        $globalDiscountError = null
     ) {
-        $this->ownerName         = $ownerName;
-        $this->customerFullName  = $customerFullName;
-        $this->customerCode      = $customerCode;
-        $this->customerEmail     = $customerEmail;
-        $this->customerType      = $customerType;
-        $this->cartLink          = $cartLink;
-        $this->referenceNumber   = $referenceNumber;
-        $this->whatsappLink      = $whatsappLink;
-        $this->deliveryDetails   = $deliveryDetails;
-        $this->items             = $items;
-        $this->subtotal          = $subtotal;
-        $this->totalAmount       = $totalAmount;
-        $this->otherOwnersText   = $otherOwnersText;
-        $this->isExpired         = $isExpired;
-        $this->hasStockIssues    = $hasStockIssues;
+        $this->ownerName             = $ownerName;
+        $this->customerFullName      = $customerFullName;
+        $this->customerCode          = $customerCode;
+        $this->customerEmail         = $customerEmail;
+        $this->customerType          = $customerType;
+        $this->cartLink              = $cartLink;
+        $this->referenceNumber       = $referenceNumber;
+        $this->whatsappLink          = $whatsappLink;
+        $this->deliveryDetails       = $deliveryDetails;
+        $this->items                 = $items;
+        $this->subtotal              = $subtotal;
+        $this->totalAmount           = $totalAmount;
+        $this->otherOwnersText       = $otherOwnersText;
+        $this->isExpired             = $isExpired;
+        $this->hasStockIssues        = $hasStockIssues;
+        $this->discount              = $discount;
+        $this->discountCode          = $discountCode;
+        $this->globalDiscountExpired = $globalDiscountExpired;
+        $this->globalDiscountError   = $globalDiscountError;
     }
 
     public function envelope(): Envelope
@@ -110,16 +122,20 @@ class CartReminderToOwner extends Mailable
         return new Content(
             view: 'emails.cart_reminder_owner',
             with: [
-                'appUrl'           => $appUrl,
-                'logoHeaderUrl'    => $logoHeaderUrl,
-                'logoSignatureUrl' => $logoSignatureUrl,
-                'storeName'        => $storeName,
-                'storePhone'       => $storePhone,
-                'instagramUrl'     => $instagramUrl,
-                'tiktokUrl'        => $tiktokUrl,
-                'facebookUrl'      => $facebookUrl,
-                'storeAddress'     => $storeAddress,
-                'hasStockIssues'   => $this->hasStockIssues,
+                'appUrl'                => $appUrl,
+                'logoHeaderUrl'         => $logoHeaderUrl,
+                'logoSignatureUrl'      => $logoSignatureUrl,
+                'storeName'             => $storeName,
+                'storePhone'            => $storePhone,
+                'instagramUrl'          => $instagramUrl,
+                'tiktokUrl'             => $tiktokUrl,
+                'facebookUrl'           => $facebookUrl,
+                'storeAddress'          => $storeAddress,
+                'hasStockIssues'        => $this->hasStockIssues,
+                'discount'              => $this->discount,
+                'discountCode'          => $this->discountCode,
+                'globalDiscountExpired' => $this->globalDiscountExpired,
+                'globalDiscountError'   => $this->globalDiscountError,
             ],
         );
     }

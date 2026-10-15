@@ -43,26 +43,44 @@ class CartItem extends BaseCartItem
 
 	public function getDynamicUnitPriceAttribute()
 	{
-		$price = $this->variant->price ?? 0;
+		if (isset($this->attributes['calculated_unit_price'])) {
+			return (float) $this->attributes['calculated_unit_price'];
+		}
+
+		$variant = $this->relationLoaded('variant')
+			? $this->variant
+			: ($this->relationLoaded('product_variant') ? $this->product_variant : ($this->variant ?? $this->product_variant));
+
+		$price = (float) ($variant->price ?? $this->original_price ?? 0);
+
 		if ($this->override_price !== null) {
 			return (float) $this->override_price;
 		}
-		if ($this->appliedDiscount) {
-			$d = $this->appliedDiscount;
-			$isValid = $d->active && (!$d->end_date || !$d->end_date->isPast()) && (!$d->start_date || !$d->start_date->isFuture());
-			if ($isValid) {
+
+		if (!empty($this->applied_discount_id)) {
+			$customerId = ($this->relationLoaded('cart') && $this->cart) ? $this->cart->customer_id : null;
+			$discountService = app(\App\Services\Finance\DiscountValidationService::class);
+			$res = $discountService->validateItemDiscount($this->applied_discount_id, $variant, $customerId);
+			if ($res['valid']) {
+				$d = $res['discount'];
 				if ($d->type === 'percentage') {
-					return $price - ($price * $d->value / 100);
+					$discVal = round($price * ($d->value / 100), 2);
+					return max(0, round($price - $discVal, 2));
 				} else {
-					return max(0, $price - $d->value);
+					$discVal = min($price, (float) $d->value);
+					return max(0, round($price - $discVal, 2));
 				}
 			}
 		}
+
 		return $price;
 	}
 
 	public function getDynamicSubtotalAttribute()
 	{
-		return $this->dynamic_unit_price * $this->quantity;
+		if (isset($this->attributes['calculated_subtotal'])) {
+			return (float) $this->attributes['calculated_subtotal'];
+		}
+		return round($this->dynamic_unit_price * (int) $this->quantity, 2);
 	}
 }

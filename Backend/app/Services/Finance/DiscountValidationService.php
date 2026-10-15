@@ -57,7 +57,7 @@ class DiscountValidationService
      * @param string|null $branchId
      * @return array
      */
-    public function validateCode($code, $subtotal, $items, $customerId = null, $branchId = null)
+    public function validateCode($code, $subtotal, $items, $customerId = null, $branchId = null, $excludeCartId = null)
     {
         if (!$code) {
             return ['valid' => false, 'message' => 'Código no proporcionado.'];
@@ -69,7 +69,7 @@ class DiscountValidationService
         }
 
         // 2. Otherwise, treat as Discount
-        return $this->validateDiscount($code, $subtotal, $items, $customerId, $branchId);
+        return $this->validateDiscount($code, $subtotal, $items, $customerId, $branchId, $excludeCartId);
     }
 
     protected function validateGiftcard($code, $subtotal)
@@ -92,23 +92,23 @@ class DiscountValidationService
             return ['valid' => false, 'message' => 'La Giftcard no tiene saldo disponible.'];
         }
 
-        $applicableAmount = min($subtotal, $giftcard->current_balance);
-        $newTotal = max(0, $subtotal - $applicableAmount);
+        $applicableAmount = round(min((float) $subtotal, (float) $giftcard->current_balance), 2);
+        $newTotal = max(0, round((float) $subtotal - $applicableAmount, 2));
 
         return [
             'valid' => true,
             'type' => 'giftcard',
             'id' => $giftcard->id,
             'code' => $giftcard->code,
-            'original_total' => $subtotal,
+            'original_total' => round((float) $subtotal, 2),
             'discount_amount' => $applicableAmount,
             'new_total' => $newTotal,
             'message' => 'Giftcard aplicada correctamente.',
-            'remaining_balance' => $giftcard->current_balance - $applicableAmount
+            'remaining_balance' => round((float) $giftcard->current_balance - $applicableAmount, 2)
         ];
     }
 
-    protected function validateDiscount($code, $subtotal, $items, $customerId, $branchId)
+    protected function validateDiscount($code, $subtotal, $items, $customerId, $branchId, $excludeCartId = null)
     {
         $discount = Discount::where(function($q) use ($code) {
                 $q->where('code', $code);
@@ -135,6 +135,9 @@ class DiscountValidationService
         // Check usage limit
         if ($discount->usage_limit) {
             $pendingCartUses = \App\Models\Sales\Cart::where('discount_id', $discount->id)
+                ->when($excludeCartId, function ($q) use ($excludeCartId) {
+                    $q->where('id', '!=', $excludeCartId);
+                })
                 ->whereIn('status', ['active', 'ordered'])
                 ->where(function($q) {
                     $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
@@ -158,6 +161,9 @@ class DiscountValidationService
                 ->count();
                 
             $pendingUserCartUses = \App\Models\Sales\Cart::where('discount_id', $discount->id)
+                ->when($excludeCartId, function ($q) use ($excludeCartId) {
+                    $q->where('id', '!=', $excludeCartId);
+                })
                 ->where('customer_id', $customerId)
                 ->where('status', 'active')
                 ->where(function($q) {
@@ -199,10 +205,14 @@ class DiscountValidationService
 
         foreach ($items as $item) {
             // Support arrays or objects
-            $variantId = is_array($item) ? $item['variant_id'] : $item->variant_id;
-            $lineSubtotal = is_array($item) ? $item['line_subtotal'] : $item->subtotal; // In Cart it's line_subtotal, in SaleDetail it's subtotal
+            $variantId = is_array($item) ? ($item['variant_id'] ?? null) : ($item->variant_id ?? null);
+            $lineSubtotal = is_array($item) ? ($item['line_subtotal'] ?? 0) : ($item->line_subtotal ?? $item->subtotal ?? 0);
             
-            $variant = \App\Models\Catalog\ProductVariant::with('product')->find($variantId);
+            $variant = (is_array($item) && !empty($item['variant']))
+                ? $item['variant']
+                : ((!is_array($item) && !empty($item->variant))
+                    ? $item->variant
+                    : ($variantId ? \App\Models\Catalog\ProductVariant::with('product')->find($variantId) : null));
             if (!$variant) continue;
 
             $isBundleItem = is_array($item) ? !empty($item['bundle_group_id']) : !empty($item->bundle_group_id);
@@ -223,14 +233,15 @@ class DiscountValidationService
             
             if ($hasItemRestrictions) {
                 $itemValid = false;
+                $product = $variant->product ?? null;
                 
                 if (in_array($variant->id, $discountVariants)) {
                     $itemValid = true;
                 } elseif (in_array($variant->product_id, $discountProducts)) {
                     $itemValid = true;
-                } elseif (in_array($variant->product->brand_id, $discountBrands)) {
+                } elseif ($product && in_array($product->brand_id, $discountBrands)) {
                     $itemValid = true;
-                } elseif (in_array($variant->product->category_id, $discountCategories)) {
+                } elseif ($product && in_array($product->category_id, $discountCategories)) {
                     $itemValid = true;
                 }
             }
@@ -253,9 +264,13 @@ class DiscountValidationService
         if ($discount->min_quantity) {
             $validItemsQty = 0;
             foreach ($items as $item) {
-                $variantId = is_array($item) ? $item['variant_id'] : $item->variant_id;
+                $variantId = is_array($item) ? ($item['variant_id'] ?? null) : ($item->variant_id ?? null);
                 $qty = is_array($item) ? ($item['quantity'] ?? 1) : ($item->quantity ?? 1);
-                $variant = \App\Models\Catalog\ProductVariant::with('product')->find($variantId);
+                $variant = (is_array($item) && !empty($item['variant']))
+                    ? $item['variant']
+                    : ((!is_array($item) && !empty($item->variant))
+                        ? $item->variant
+                        : ($variantId ? \App\Models\Catalog\ProductVariant::with('product')->find($variantId) : null));
                 if (!$variant) continue;
 
                 $isBundleItem = is_array($item) ? !empty($item['bundle_group_id']) : !empty($item->bundle_group_id);
@@ -269,10 +284,11 @@ class DiscountValidationService
                 $itemValid = true;
                 if ($hasItemRestrictions) {
                     $itemValid = false;
+                    $product = $variant->product ?? null;
                     if (in_array($variant->id, $discountVariants)) $itemValid = true;
                     elseif (in_array($variant->product_id, $discountProducts)) $itemValid = true;
-                    elseif (in_array($variant->product->brand_id, $discountBrands)) $itemValid = true;
-                    elseif (in_array($variant->product->category_id, $discountCategories)) $itemValid = true;
+                    elseif ($product && in_array($product->brand_id, $discountBrands)) $itemValid = true;
+                    elseif ($product && in_array($product->category_id, $discountCategories)) $itemValid = true;
                 }
                 if ($itemValid) $validItemsQty += $qty;
             }
@@ -284,49 +300,66 @@ class DiscountValidationService
         // Calculate discount amount based on VALID items
         $discountAmount = 0;
         if ($discount->type === 'percentage') {
-            $discountAmount = $validItemsSubtotal * ($discount->value / 100);
+            $discountAmount = round($validItemsSubtotal * ($discount->value / 100), 2);
         } else {
             // Fixed discount is applied entirely as long as it does not exceed the valid subtotal
-            $discountAmount = $discount->value;
+            $discountAmount = (float) $discount->value;
         }
 
         if ($discount->max_discount_amount) {
-            $discountAmount = min($discountAmount, $discount->max_discount_amount);
+            $discountAmount = min($discountAmount, (float) $discount->max_discount_amount);
         }
 
-        $discountAmount = min($discountAmount, $validItemsSubtotal); // Can't discount more than what the valid items cost
+        $discountAmount = round(min($discountAmount, $validItemsSubtotal), 2); // Can't discount more than what the valid items cost
         
-        $newTotal = max(0, $subtotal - $discountAmount);
+        $newTotal = max(0, round($subtotal - $discountAmount, 2));
 
         return [
             'valid' => true,
             'message' => 'Descuento aplicado exitosamente.',
             'type' => 'discount',
+            'discount' => $discount,
             'id' => $discount->id,
+            'name' => $discount->name,
             'code' => $discount->code ?: $discount->id,
             'discount_amount' => $discountAmount,
-            'original_total' => $subtotal,
+            'original_total' => round((float) $subtotal, 2),
             'new_total' => $newTotal
         ];
     }
 
     /**
      * Prorates a total discount amount across a list of items by weight (line_subtotal / total).
-     * Returns an array of [ variant_id => prorated_discount ] pairs.
-     * The last item absorbs any rounding difference.
+     * Returns an array of [ index => prorated_discount ] pairs.
+     * The last eligible item absorbs any rounding difference.
      *
-     * @param array $items  Each item must have 'variant_id' and 'line_subtotal'
+     * @param array $items  Each item must have 'line_subtotal' (and optionally 'variant_id' / 'variant')
      * @param float $totalDiscount
      * @param float $subtotal
-     * @return array [ variant_id => float ]
+     * @param \App\Models\Discount\Discount|null $discount
+     * @return array [ index => float ]
      */
-    public function prorateDiscountToItems(array $items, float $totalDiscount, float $subtotal): array
+    public function prorateDiscountToItems(array $items, float $totalDiscount, float $subtotal, $discount = null): array
     {
-        if ($totalDiscount <= 0 || $subtotal <= 0) {
+        if ($totalDiscount <= 0 || $subtotal <= 0 || empty($items)) {
             return array_fill(0, count($items), 0);
         }
 
         $result = array_fill(0, count($items), 0);
+
+        $discountCategories = [];
+        $discountBrands = [];
+        $discountProducts = [];
+        $discountVariants = [];
+        $hasItemRestrictions = false;
+
+        if ($discount instanceof Discount) {
+            $discountCategories = $discount->categories()->pluck('categories.id')->toArray();
+            $discountBrands = $discount->brands()->pluck('brands.id')->toArray();
+            $discountProducts = $discount->products()->pluck('products.id')->toArray();
+            $discountVariants = $discount->variants()->pluck('product_variants.id')->toArray();
+            $hasItemRestrictions = !empty($discountCategories) || !empty($discountBrands) || !empty($discountProducts) || !empty($discountVariants);
+        }
 
         // Find eligible items and their subtotal sum
         $eligibleIndexes = [];
@@ -341,7 +374,27 @@ class DiscountValidationService
                 : (!empty($item->applied_discount_id) || !empty($item->discount_label));
             if ($hasNativeDiscount) continue;
 
+            if ($hasItemRestrictions) {
+                $variantId = is_array($item) ? ($item['variant_id'] ?? null) : ($item->variant_id ?? null);
+                $variant = (is_array($item) && !empty($item['variant']))
+                    ? $item['variant']
+                    : ((!is_array($item) && !empty($item->variant))
+                        ? $item->variant
+                        : ($variantId ? \App\Models\Catalog\ProductVariant::with('product')->find($variantId) : null));
+                if (!$variant) continue;
+
+                $product = $variant->product ?? null;
+                $matches = false;
+                if (in_array($variant->id, $discountVariants)) $matches = true;
+                elseif (in_array($variant->product_id, $discountProducts)) $matches = true;
+                elseif ($product && in_array($product->brand_id, $discountBrands)) $matches = true;
+                elseif ($product && in_array($product->category_id, $discountCategories)) $matches = true;
+
+                if (!$matches) continue;
+            }
+
             $lineSubtotal = is_array($item) ? ($item['line_subtotal'] ?? 0) : ($item->line_subtotal ?? $item->subtotal ?? 0);
+            if ($lineSubtotal <= 0) continue;
             
             $eligibleIndexes[] = $i;
             $eligibleSubtotal += $lineSubtotal;
@@ -351,7 +404,7 @@ class DiscountValidationService
             return $result;
         }
 
-        $remaining = $totalDiscount;
+        $remaining = round($totalDiscount, 2);
         $count = count($eligibleIndexes);
 
         foreach ($eligibleIndexes as $idx => $i) {
@@ -359,11 +412,11 @@ class DiscountValidationService
             $lineSubtotal = is_array($item) ? ($item['line_subtotal'] ?? 0) : ($item->line_subtotal ?? $item->subtotal ?? 0);
 
             if ($idx === $count - 1) {
-                $itemDiscount = $remaining;
+                $itemDiscount = round($remaining, 2);
             } else {
                 $weight = $eligibleSubtotal > 0 ? $lineSubtotal / $eligibleSubtotal : 0;
                 $itemDiscount = round($totalDiscount * $weight, 2);
-                $remaining -= $itemDiscount;
+                $remaining = round($remaining - $itemDiscount, 2);
             }
 
             $result[$i] = max(0, $itemDiscount);
@@ -522,5 +575,277 @@ class DiscountValidationService
             'value' => (float) $discount->value,
             'code' => $discount->code,
         ];
+    }
+
+    /**
+     * Calcula y valida en tiempo real todos los items, stock, descuentos individuales,
+     * descuento global del carrito y prorrateo por item.
+     * Unifica la lógica entre el Perfil (/profile), Correos a Owners y Panel Administrativo.
+     *
+     * @param \App\Models\Sales\Cart $cart
+     * @return array
+     */
+    public function calculateAndValidateCart(\App\Models\Sales\Cart $cart): array
+    {
+        $hasStockIssues = false;
+        $subtotalCalculated = 0.0;
+        $itemsForValidation = [];
+        $validatedItems = [];
+
+        foreach ($cart->items as $index => $item) {
+            $variant = null;
+            if ($item->relationLoaded('variant')) {
+                $variant = $item->variant;
+            } elseif ($item->relationLoaded('product_variant')) {
+                $variant = $item->product_variant;
+            } else {
+                $variant = $item->variant ?? $item->product_variant;
+            }
+
+            // 1. Validación de stock en tiempo real
+            if (!$variant || !$variant->is_active || (method_exists($variant, 'trashed') && $variant->trashed())) {
+                $stockStatus = 'unavailable';
+                $stockLabel = 'No disponible';
+                $availableStock = 0;
+                $hasStock = false;
+                $hasStockIssues = true;
+            } else {
+                $availableStock = $variant->relationLoaded('inventories')
+                    ? (int) $variant->inventories->sum('stock')
+                    : (int) $variant->inventories()->sum('stock');
+
+                if ($availableStock <= 0) {
+                    $stockStatus = 'out_of_stock';
+                    $stockLabel = 'Agotado';
+                    $hasStock = false;
+                    $hasStockIssues = true;
+                } elseif ($availableStock < $item->quantity) {
+                    $stockStatus = 'insufficient';
+                    $stockLabel = "Solo quedan {$availableStock} disponibles";
+                    $hasStock = false;
+                    $hasStockIssues = true;
+                } else {
+                    $stockStatus = 'in_stock';
+                    $stockLabel = 'En stock';
+                    $hasStock = true;
+                }
+            }
+
+            // 2. Validación de precios y descuentos individuales en tiempo real
+            $basePrice = (float) ($variant->price ?? $item->original_price ?? 0);
+            $originalUnitPrice = (float) ($item->original_price ?: $basePrice);
+
+            $hasActiveDiscount = false;
+            $discountIsExpired = false;
+            $discountExpiredReason = null;
+            $discountLabel = null;
+            $discountName = null;
+            $discountAmountPerUnit = 0.0;
+            $calculatedUnitPrice = $basePrice;
+
+            if (!empty($item->applied_discount_id)) {
+                $discountResult = $this->validateItemDiscount($item->applied_discount_id, $variant, $cart->customer_id);
+
+                if ($discountResult['valid']) {
+                    $discountObj = $discountResult['discount'];
+                    if ($discountObj->type === 'percentage') {
+                        $discountAmountPerUnit = round($basePrice * ($discountObj->value / 100), 2);
+                        $calculatedUnitPrice = max(0, round($basePrice - $discountAmountPerUnit, 2));
+                    } else {
+                        $discountAmountPerUnit = min($basePrice, (float) $discountObj->value);
+                        $calculatedUnitPrice = max(0, round($basePrice - $discountAmountPerUnit, 2));
+                    }
+
+                    $hasActiveDiscount = true;
+                    $discountIsExpired = false;
+                    $discountLabel = $item->discount_label ?: ($discountObj->type === 'percentage'
+                        ? "-{$discountObj->value}%"
+                        : "-Bs. " . number_format($discountObj->value, 2));
+                    $discountName = $discountObj->name;
+                } else {
+                    $hasActiveDiscount = false;
+                    $discountIsExpired = true;
+                    $discountExpiredReason = $discountResult['message'] ?? 'Descuento expirado o ya no disponible';
+                    $calculatedUnitPrice = $basePrice;
+                }
+            } elseif ($item->override_price !== null) {
+                $calculatedUnitPrice = (float) $item->override_price;
+                if ($originalUnitPrice > $calculatedUnitPrice && !empty($item->discount_label)) {
+                    $hasActiveDiscount = true;
+                    $discountLabel = $item->discount_label;
+                    $discountAmountPerUnit = round($originalUnitPrice - $calculatedUnitPrice, 2);
+                }
+            }
+
+            $calculatedSubtotal = round($calculatedUnitPrice * (int) $item->quantity, 2);
+            $subtotalCalculated = round($subtotalCalculated + $calculatedSubtotal, 2);
+
+            // Asignar propiedades dinámicas al modelo CartItem
+            $item->stock_status = $stockStatus;
+            $item->stock_label = $stockLabel;
+            $item->available_stock = $availableStock;
+            $item->has_stock = $hasStock;
+            $item->regular_price = $basePrice;
+            $item->original_unit_price = $originalUnitPrice;
+            $item->calculated_unit_price = $calculatedUnitPrice;
+            $item->calculated_subtotal = $calculatedSubtotal;
+            $item->has_active_discount = $hasActiveDiscount;
+            $item->discount_is_expired = $discountIsExpired;
+            $item->discount_expired_reason = $discountExpiredReason;
+            $item->discount_label = $discountLabel;
+            $item->discount_name = $discountName;
+            $item->discount_amount_per_unit = $discountAmountPerUnit;
+
+            $itemsForValidation[$index] = [
+                'variant_id' => $item->variant_id,
+                'variant' => $variant,
+                'line_subtotal' => $calculatedSubtotal,
+                'quantity' => (int) $item->quantity,
+                'applied_discount_id' => $hasActiveDiscount ? $item->applied_discount_id : null,
+                'discount_label' => $hasActiveDiscount ? $discountLabel : null,
+                'bundle_group_id' => $item->bundle_group_id,
+            ];
+
+            $validatedItems[$index] = [
+                'item' => $item,
+                'variant' => $variant,
+                'stock_status' => $stockStatus,
+                'stock_label' => $stockLabel,
+                'available_stock' => $availableStock,
+                'has_stock' => $hasStock,
+                'regular_price' => $basePrice,
+                'original_unit_price' => $originalUnitPrice,
+                'calculated_unit_price' => $calculatedUnitPrice,
+                'calculated_subtotal' => $calculatedSubtotal,
+                'has_active_discount' => $hasActiveDiscount,
+                'discount_is_expired' => $discountIsExpired,
+                'discount_expired_reason' => $discountExpiredReason,
+                'discount_label' => $discountLabel,
+                'discount_name' => $discountName,
+                'discount_amount_per_unit' => $discountAmountPerUnit,
+                'prorated_global_discount' => 0.0,
+                'net_line_total' => $calculatedSubtotal,
+            ];
+        }
+
+        // 3. Validación en tiempo real del descuento global del carrito
+        $globalDiscountCalculated = 0.0;
+        $globalDiscountValid = false;
+        $globalDiscountExpired = false;
+        $globalDiscountError = null;
+        $discountCode = null;
+        $discountName = null;
+        $cartDiscountObj = null;
+
+        if ($cart->discount_id) {
+            $cartDiscountObj = $cart->relationLoaded('discount')
+                ? $cart->discount
+                : Discount::find($cart->discount_id);
+        }
+
+        if ($cart->discount_id && $cartDiscountObj) {
+            $codeOrId = $cartDiscountObj->code ?: $cartDiscountObj->id;
+            $discountCode = $cartDiscountObj->code ?: ($cartDiscountObj->name ?: 'PROMO');
+            $discountName = $cartDiscountObj->name;
+
+            $globalResult = $this->validateCode(
+                $codeOrId,
+                $subtotalCalculated,
+                $itemsForValidation,
+                $cart->customer_id,
+                null,
+                $cart->id
+            );
+
+            if ($globalResult['valid']) {
+                $globalDiscountCalculated = round((float) $globalResult['discount_amount'], 2);
+                $globalDiscountValid = true;
+            } else {
+                $globalDiscountExpired = true;
+                $globalDiscountError = $globalResult['message'] ?? 'El cupón ha expirado o ya no aplica.';
+            }
+        } elseif (!$cart->discount_id && (float) ($cart->total_discount ?? 0) > 0) {
+            $globalDiscountCalculated = min($subtotalCalculated, round((float) $cart->total_discount, 2));
+            $globalDiscountValid = $globalDiscountCalculated > 0;
+            $discountCode = 'DESCUENTO';
+        }
+
+        // 4. Prorrateo del descuento global entre los items elegibles
+        $proratedDiscounts = $this->prorateDiscountToItems(
+            $itemsForValidation,
+            $globalDiscountCalculated,
+            $subtotalCalculated,
+            $globalDiscountValid ? $cartDiscountObj : null
+        );
+
+        foreach ($validatedItems as $index => &$vItem) {
+            $lineDiscount = round((float) ($proratedDiscounts[$index] ?? 0), 2);
+            $netLineTotal = max(0, round($vItem['calculated_subtotal'] - $lineDiscount, 2));
+            $vItem['prorated_global_discount'] = $lineDiscount;
+            $vItem['net_line_total'] = $netLineTotal;
+
+            $vItem['item']->prorated_global_discount = $lineDiscount;
+            $vItem['item']->net_line_total = $netLineTotal;
+        }
+        unset($vItem);
+
+        $totalAmountCalculated = max(0, round($subtotalCalculated - $globalDiscountCalculated, 2));
+
+        // Asignar propiedades calculadas al modelo Cart
+        $cart->has_stock_issues = $hasStockIssues;
+        $cart->subtotal_calculated = $subtotalCalculated;
+        $cart->global_discount_calculated = $globalDiscountCalculated;
+        $cart->global_discount_valid = $globalDiscountValid;
+        $cart->global_discount_expired = $globalDiscountExpired;
+        $cart->global_discount_error = $globalDiscountError;
+        $cart->total_amount_calculated = $totalAmountCalculated;
+
+        return [
+            'has_stock_issues' => $hasStockIssues,
+            'subtotal_calculated' => $subtotalCalculated,
+            'global_discount_calculated' => $globalDiscountCalculated,
+            'global_discount_valid' => $globalDiscountValid,
+            'global_discount_expired' => $globalDiscountExpired,
+            'global_discount_error' => $globalDiscountError,
+            'discount_code' => $discountCode,
+            'discount_name' => $discountName,
+            'total_amount_calculated' => $totalAmountCalculated,
+            'items' => $validatedItems,
+            'prorated_discounts' => $proratedDiscounts,
+        ];
+    }
+
+    /**
+     * Limpia y formatea los detalles de entrega eliminando valores "null" o "undefined".
+     *
+     * @param mixed $deliveryDetails
+     * @return string
+     */
+    public function formatCleanDeliveryDetails($deliveryDetails): string
+    {
+        if (empty($deliveryDetails) || !is_array($deliveryDetails)) {
+            return 'No especificado';
+        }
+
+        $dd = $deliveryDetails;
+        $typeText = $dd['text'] ?? (($dd['type'] ?? '') === 'pickup' ? 'Recojo en sucursal' : 'Envío a domicilio');
+        $address = $dd['address'] ?? '';
+
+        $cleanPart = function ($str) {
+            if (!$str) return '';
+            $cleaned = preg_replace('/\b(null|undefined)\b/i', '', (string) $str);
+            $cleaned = preg_replace('/\s*-\s*-\s*/', ' - ', $cleaned);
+            $cleaned = preg_replace('/\s+/', ' ', $cleaned);
+            return trim($cleaned, " \t\n\r\0\x0B-•,");
+        };
+
+        $cleanType = $cleanPart($typeText);
+        $cleanAddr = $cleanPart($address);
+
+        if (!$cleanType && !$cleanAddr) {
+            return 'No especificado';
+        }
+
+        return trim($cleanType . ($cleanAddr ? ' - ' . $cleanAddr : ''));
     }
 }

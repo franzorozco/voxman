@@ -86,7 +86,7 @@ export default function Navbar({ logo: _propLogo, isDarkThemeOverride }) {
 
   return (
     <>
-      <header className="nav-header">
+      <header className={`nav-header ${isDarkContext ? "nav-dark-mode" : "nav-light-mode"}`}>
 
       <div className="nav-container">
 

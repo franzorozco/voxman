@@ -269,6 +269,7 @@ const handleOverwrite = async (data) => {
         users={users}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onReload={loadUsers}
         search={search}
         setSearch={setSearch}
         filters={filters}

@@ -21,6 +21,9 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
+        User::ensureEmailVerificationSchema();
+        User::purgeExpiredUnverifiedUsers(24);
+
         $query = Customer::with(['user.profile', 'posProfile', 'addresses']);
         $status = $request->query('status');
         if (empty($status)) {
@@ -99,6 +102,9 @@ class CustomerController extends Controller
 
     public function show($id)
     {
+        User::ensureEmailVerificationSchema();
+        User::purgeExpiredUnverifiedUsers(24);
+
         $customer = Customer::with([
             'user.profile',
             'posProfile',

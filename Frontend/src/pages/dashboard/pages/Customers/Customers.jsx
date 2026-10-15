@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload, RefreshCw, Users, UserCheck, UserPlus, Award, Phone } from "lucide-react";
+import { Plus, Search, MoreVertical, Edit, Trash2, Eye, ArchiveRestore, Filter, Link2, Upload, RefreshCw, Users, UserCheck, UserPlus, Award, Phone, ShieldCheck, Clock } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getCustomers, deleteCustomer, getCustomerKpis } from "../../../../api/admin/customers";
@@ -350,8 +350,51 @@ export default function Customers() {
                       </div>
                     </td>
                     <td data-label="Contacto">
-                      <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', color: 'var(--text-muted)', gap: '2px' }}>
-                        <span style={{ color: 'var(--text-main)' }}>{c.user?.email || 'Sin Correo'}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', color: 'var(--text-muted)', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ color: 'var(--text-main)' }}>{c.user?.email || 'Sin Correo'}</span>
+                          {isWebCustomer && c.user?.email && !c.user.email.includes('@guest') && (
+                            c.user?.email_verified_at ? (
+                              <span
+                                title={`Correo verificado el ${new Date(c.user.email_verified_at).toLocaleString()}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  padding: '2px 6px',
+                                  borderRadius: '6px',
+                                  fontSize: '10px',
+                                  fontWeight: 700,
+                                  background: 'rgba(16, 185, 129, 0.14)',
+                                  color: '#10b981',
+                                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                                }}
+                              >
+                                <ShieldCheck size={11} />
+                                Verificado
+                              </span>
+                            ) : (
+                              <span
+                                title="Cuenta pendiente de confirmar correo (plazo de 24h)"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  padding: '2px 6px',
+                                  borderRadius: '6px',
+                                  fontSize: '10px',
+                                  fontWeight: 700,
+                                  background: 'rgba(245, 158, 11, 0.15)',
+                                  color: '#f59e0b',
+                                  border: '1px solid rgba(245, 158, 11, 0.35)'
+                                }}
+                              >
+                                <Clock size={11} />
+                                Pendiente (24h)
+                              </span>
+                            )
+                          )}
+                        </div>
                         {profile.phone && (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                             <Phone size={12} />
@@ -437,6 +480,7 @@ export default function Customers() {
         <CustomerDetails 
           customerId={detailsCustomer.id}
           onClose={() => setIsDetailsOpen(false)}
+          onCustomerUpdated={() => fetchCustomers(filters)}
         />
       )}
 

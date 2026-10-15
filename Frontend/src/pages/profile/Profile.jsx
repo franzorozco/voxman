@@ -91,19 +91,18 @@ const CartCountdown = ({ expiresAt, status }) => {
     return () => clearInterval(interval);
   }, [expiresAt, status]);
 
-  if (status === "ordered" || status === "converted") {
+  if (["ordered", "converted", "completed", "cancelled", "disabled", "inactive"].includes(status)) {
     return null;
   }
 
   if (isExpired || (expiresAt && timeLeft !== null && timeLeft <= 0)) {
     return (
       <div className="profile-cart-countdown-bar expired">
-        <div className="countdown-bar-left">
-          <AlertCircle size={13} />
-          <span>Reserva expirada</span>
-        </div>
+        <span className="countdown-status-dot expired" />
+        <span className="countdown-bar-label">Reserva expirada</span>
+        <span className="countdown-bar-sep">·</span>
         <span className="countdown-bar-hint">
-          Reactivar por WhatsApp o con el botón Recordar
+          Reactivar por WhatsApp o botón Reactivar
         </span>
       </div>
     );
@@ -127,13 +126,9 @@ const CartCountdown = ({ expiresAt, status }) => {
 
   return (
     <div className={`profile-cart-countdown-bar ${isUrgent ? "urgent" : "active"}`}>
-      <div className="countdown-bar-left">
-        <Clock size={13} />
-        <span>{isUrgent ? "Tiempo de reserva restante:" : "Tiempo de reserva:"}</span>
-      </div>
-      <div className="countdown-bar-right">
-        <span className="countdown-timer-val">{formattedTime}</span>
-      </div>
+      <span className={`countdown-status-dot ${isUrgent ? "urgent" : "active"}`} />
+      <span className="countdown-bar-label">{isUrgent ? "Expira en:" : "Reserva activa:"}</span>
+      <span className="countdown-timer-val">{formattedTime}</span>
     </div>
   );
 };
@@ -767,6 +762,12 @@ export default function Profile() {
 
   // Handle sending reminder or reactivation request to owners (max 1 per 24 hours)
   const handleRemindCart = (cart) => {
+    const isConvertedOrDisabled = ["ordered", "converted", "completed", "cancelled", "disabled", "inactive"].includes(cart.status) || cart.is_actionable === false;
+    if (isConvertedOrDisabled) {
+      toast.error("Este carrito ya fue convertido a entrega o desactivado.");
+      return;
+    }
+
     const isExpired = cart.status === "abandoned" || cart.status === "expired" || (cart.expires_at && new Date(cart.expires_at).getTime() < Date.now());
     const refCode = cart.reference_number || (cart.id ? `#${cart.id.slice(0, 8).toUpperCase()}` : "N/A");
 
@@ -1978,9 +1979,10 @@ export default function Profile() {
                         const globalDiscount = Number(cart.global_discount_calculated ?? cart.total_discount ?? 0);
                         const isExpanded = expandedCartId === cart.id;
                         const deliveryText = getCartDeliveryText(cart.delivery_details);
-                        const isExpired = cart.status === "abandoned" || cart.status === "expired" || (cart.expires_at && new Date(cart.expires_at).getTime() < Date.now());
-                        const waUrl = generateCartWhatsAppUrl(cart);
-                        const canRemind = cart.can_remind !== false;
+                        const isConvertedOrDisabled = ["ordered", "converted", "completed", "cancelled", "disabled", "inactive"].includes(cart.status) || cart.is_actionable === false;
+                        const isExpired = !isConvertedOrDisabled && (cart.status === "abandoned" || cart.status === "expired" || (cart.expires_at && new Date(cart.expires_at).getTime() < Date.now()));
+                        const waUrl = isConvertedOrDisabled ? "#" : generateCartWhatsAppUrl(cart);
+                        const canRemind = !isConvertedOrDisabled && cart.can_remind !== false;
 
                         return (
                           <div key={cart.id} className="profile-cart-card">
@@ -2019,7 +2021,7 @@ export default function Profile() {
                             <CartCountdown expiresAt={cart.expires_at} status={cart.status} />
 
                             {/* Stock warning banner if any item in cart has stock issues */}
-                            {cart.has_stock_issues && (
+                            {!isConvertedOrDisabled && cart.has_stock_issues && (
                               <div className="profile-cart-alert-bar stock-warning">
                                 <AlertTriangle size={13} />
                                 <span>Atención: Uno o más artículos de este carrito están agotados o con existencias limitadas en tienda.</span>
@@ -2032,7 +2034,7 @@ export default function Profile() {
                                 {cart.items?.slice(0, 5).map((item, idx) => {
                                   const imgUrl = getCartItemImage(item);
                                   const prodName = item.product_variant?.product?.name || "Prenda";
-                                  const itemHasIssue = item.has_stock === false || item.stock_status === 'out_of_stock' || item.stock_status === 'insufficient';
+                                  const itemHasIssue = !isConvertedOrDisabled && (item.has_stock === false || item.stock_status === 'out_of_stock' || item.stock_status === 'insufficient');
 
                                   return (
                                     <div key={item.id || idx} className={`profile-cart-thumb ${itemHasIssue ? "has-stock-issue" : ""}`} title={prodName}>
@@ -2068,23 +2070,43 @@ export default function Profile() {
                               </div>
 
                               <div className="profile-cart-actions">
-                                <a
-                                  href={waUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="profile-cart-wa-btn"
-                                  title="Contactar y coordinar o reactivar por WhatsApp"
-                                >
-                                  <MessageCircle size={14} />
-                                  <span>WhatsApp</span>
-                                </a>
+                                {isConvertedOrDisabled ? (
+                                  <button
+                                    type="button"
+                                    className="profile-cart-wa-btn disabled"
+                                    disabled
+                                    title="Este carrito ya fue convertido a entrega o desactivado"
+                                  >
+                                    <MessageCircle size={14} />
+                                    <span>WhatsApp</span>
+                                  </button>
+                                ) : (
+                                  <a
+                                    href={waUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="profile-cart-wa-btn"
+                                    title="Contactar y coordinar o reactivar por WhatsApp"
+                                  >
+                                    <MessageCircle size={14} />
+                                    <span>WhatsApp</span>
+                                  </a>
+                                )}
 
                                 <button
                                   type="button"
                                   className={`profile-cart-remind-btn ${isExpired ? "expired-mode" : ""}`}
                                   onClick={() => handleRemindCart(cart)}
-                                  disabled={!canRemind || remindingCartId === cart.id}
-                                  title={!canRemind ? "Solo puedes enviar 1 recordatorio cada 24 horas" : isExpired ? "Solicitar reactivación a encargados" : "Recordar agendar entrega"}
+                                  disabled={isConvertedOrDisabled || !canRemind || remindingCartId === cart.id}
+                                  title={
+                                    isConvertedOrDisabled
+                                      ? "Este carrito ya fue convertido a entrega o desactivado"
+                                      : !canRemind
+                                        ? "Solo puedes enviar 1 recordatorio cada 24 horas"
+                                        : isExpired
+                                          ? "Solicitar reactivación a encargados"
+                                          : "Recordar agendar entrega"
+                                  }
                                 >
                                   {remindingCartId === cart.id ? (
                                     <Loader2 size={14} style={{ animation: "profileSpin 0.8s linear infinite" }} />
@@ -2092,7 +2114,13 @@ export default function Profile() {
                                     <Bell size={14} />
                                   )}
                                   <span>
-                                    {!canRemind ? "Enviado hoy" : isExpired ? "Reactivar" : "Recordar"}
+                                    {isConvertedOrDisabled
+                                      ? "Recordar"
+                                      : !canRemind
+                                        ? "Enviado hoy"
+                                        : isExpired
+                                          ? "Reactivar"
+                                          : "Recordar"}
                                   </span>
                                 </button>
 
@@ -2124,7 +2152,7 @@ export default function Profile() {
                             {/* Collapsible Items Breakdown */}
                             {isExpanded && (
                               <div className="profile-cart-expanded-body">
-                                {cart.global_discount_expired && (
+                                {!isConvertedOrDisabled && cart.global_discount_expired && (
                                   <div className="profile-cart-alert-bar discount-expired">
                                     <AlertCircle size={13} />
                                     <span>{cart.global_discount_error || "El cupón de descuento global aplicado ha expirado o ya no está disponible."}</span>
@@ -2145,7 +2173,7 @@ export default function Profile() {
                                     const originalPrice = Number(item.original_unit_price ?? item.regular_price ?? item.product_variant?.price ?? unitPrice);
                                     const subtotal = Number(item.calculated_subtotal ?? item.dynamic_subtotal ?? (unitPrice * item.quantity));
                                     const hasActiveDiscount = Boolean(item.has_active_discount || (item.appliedDiscount && !item.discount_is_expired && originalPrice > unitPrice));
-                                    const discountExpired = Boolean(item.discount_is_expired);
+                                    const discountExpired = !isConvertedOrDisabled && Boolean(item.discount_is_expired);
                                     const stockStatus = item.stock_status || "in_stock";
                                     const availableStock = Number(item.available_stock ?? item.product_variant?.inventories?.reduce((s, inv) => s + (inv.stock || 0), 0) ?? 0);
 
@@ -2189,19 +2217,21 @@ export default function Profile() {
                                             {item.product_variant?.sku && (
                                               <span className="profile-cart-pill-sku">SKU: {item.product_variant.sku}</span>
                                             )}
-                                            {/* Stock Status Badge */}
-                                            {stockStatus === "out_of_stock" || stockStatus === "unavailable" ? (
-                                              <span className="profile-cart-stock-badge out-of-stock" title="No hay stock disponible en el inventario">
-                                                Agotado
-                                              </span>
-                                            ) : stockStatus === "insufficient" ? (
-                                              <span className="profile-cart-stock-badge insufficient" title={`Solo quedan ${availableStock} unidades disponibles`}>
-                                                Solo quedan {availableStock} disp.
-                                              </span>
-                                            ) : (
-                                              <span className="profile-cart-stock-badge in-stock">
-                                                En stock ({availableStock})
-                                              </span>
+                                            {/* Stock Status Badge (only on non-converted carts) */}
+                                            {!isConvertedOrDisabled && (
+                                              stockStatus === "out_of_stock" || stockStatus === "unavailable" ? (
+                                                <span className="profile-cart-stock-badge out-of-stock" title="No hay stock disponible en el inventario">
+                                                  Agotado
+                                                </span>
+                                              ) : stockStatus === "insufficient" ? (
+                                                <span className="profile-cart-stock-badge insufficient" title={`Solo quedan ${availableStock} unidades disponibles`}>
+                                                  Solo quedan {availableStock} disp.
+                                                </span>
+                                              ) : (
+                                                <span className="profile-cart-stock-badge in-stock">
+                                                  En stock ({availableStock})
+                                                </span>
+                                              )
                                             )}
                                           </div>
 
@@ -2253,30 +2283,50 @@ export default function Profile() {
                                 {/* Cart Footer Actions */}
                                 <div className="profile-cart-footer">
                                   <div className="profile-cart-footer-left">
-                                    {cart.status === "active" && !isExpired && (
+                                    {cart.status === "active" && !isExpired && !isConvertedOrDisabled && (
                                       <Link to="/shop/cart" className="profile-cart-checkout-btn">
                                         <ShoppingCart size={15} />
                                         Ir al Carrito
                                       </Link>
                                     )}
 
-                                    <a
-                                      href={waUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="profile-cart-wa-btn"
-                                      title="Enviar mensaje por WhatsApp"
-                                    >
-                                      <MessageCircle size={14} />
-                                      <span>WhatsApp</span>
-                                    </a>
+                                    {isConvertedOrDisabled ? (
+                                      <button
+                                        type="button"
+                                        className="profile-cart-wa-btn disabled"
+                                        disabled
+                                        title="Este carrito ya fue convertido a entrega o desactivado"
+                                      >
+                                        <MessageCircle size={14} />
+                                        <span>WhatsApp</span>
+                                      </button>
+                                    ) : (
+                                      <a
+                                        href={waUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="profile-cart-wa-btn"
+                                        title="Enviar mensaje por WhatsApp"
+                                      >
+                                        <MessageCircle size={14} />
+                                        <span>WhatsApp</span>
+                                      </a>
+                                    )}
 
                                     <button
                                       type="button"
                                       className={`profile-cart-remind-btn ${isExpired ? "expired-mode" : ""}`}
                                       onClick={() => handleRemindCart(cart)}
-                                      disabled={!canRemind || remindingCartId === cart.id}
-                                      title={!canRemind ? "Solo puedes enviar 1 recordatorio cada 24 horas" : isExpired ? "Solicitar reactivación a los encargados" : "Recordar agendar entrega"}
+                                      disabled={isConvertedOrDisabled || !canRemind || remindingCartId === cart.id}
+                                      title={
+                                        isConvertedOrDisabled
+                                          ? "Este carrito ya fue convertido a entrega o desactivado"
+                                          : !canRemind
+                                            ? "Solo puedes enviar 1 recordatorio cada 24 horas"
+                                            : isExpired
+                                              ? "Solicitar reactivación a los encargados"
+                                              : "Recordar agendar entrega"
+                                      }
                                     >
                                       {remindingCartId === cart.id ? (
                                         <Loader2 size={14} style={{ animation: "profileSpin 0.8s linear infinite" }} />
@@ -2284,11 +2334,13 @@ export default function Profile() {
                                         <Bell size={14} />
                                       )}
                                       <span>
-                                        {!canRemind 
-                                          ? "Recordatorio enviado hoy" 
-                                          : isExpired 
-                                            ? "Solicitar Reactivación" 
-                                            : "Recordar Entrega"}
+                                        {isConvertedOrDisabled
+                                          ? "Recordar Entrega"
+                                          : !canRemind 
+                                            ? "Recordatorio enviado hoy" 
+                                            : isExpired 
+                                              ? "Solicitar Reactivación" 
+                                              : "Recordar Entrega"}
                                       </span>
                                     </button>
                                   </div>

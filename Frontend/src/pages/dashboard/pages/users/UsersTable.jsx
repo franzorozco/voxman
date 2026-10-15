@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Filter, Search, MoreVertical, Eye, Edit, FileText, Trash2 } from "lucide-react";
+import { Filter, Search, MoreVertical, Eye, Edit, FileText, Trash2, ShieldCheck, Clock } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import UserViewModal from "./UserViewModal";
@@ -9,6 +9,7 @@ export default function UsersTable({
   users,
   onEdit,
   onDelete,
+  onReload,
   search,
   setSearch,
   filters,
@@ -308,7 +309,7 @@ export default function UsersTable({
                 {items.map((u) => (
                   <tr key={u.id}>
 <td style={{ position: 'relative' }}>
-  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <RowDropdown rowId={u.id} activeId={activeDropdown} setActiveId={setActiveDropdown}>
         <CanAccess permission="view_users">
           <button 
@@ -348,6 +349,47 @@ export default function UsersTable({
         </CanAccess>
       </RowDropdown>
     <span>{u.email}</span>
+    {u.email && !u.email.includes('@guest') && (
+      u.email_verified_at ? (
+        <span
+          title={`Correo verificado el ${new Date(u.email_verified_at).toLocaleString()}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '3px',
+            padding: '2px 6px',
+            borderRadius: '6px',
+            fontSize: '10px',
+            fontWeight: 700,
+            background: 'rgba(16, 185, 129, 0.14)',
+            color: '#10b981',
+            border: '1px solid rgba(16, 185, 129, 0.3)'
+          }}
+        >
+          <ShieldCheck size={11} />
+          Verificado
+        </span>
+      ) : (
+        <span
+          title="Cuenta pendiente de confirmar correo (plazo de 24h)"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '3px',
+            padding: '2px 6px',
+            borderRadius: '6px',
+            fontSize: '10px',
+            fontWeight: 700,
+            background: 'rgba(245, 158, 11, 0.15)',
+            color: '#f59e0b',
+            border: '1px solid rgba(245, 158, 11, 0.35)'
+          }}
+        >
+          <Clock size={11} />
+          Pendiente (24h)
+        </span>
+      )
+    )}
   </div>
 </td>
                     <td>{u.username}</td>
@@ -440,6 +482,10 @@ export default function UsersTable({
         <UserViewModal
           user={viewUser}
           onClose={() => setViewUser(null)}
+          onUserUpdated={(updatedUser) => {
+            setViewUser(updatedUser);
+            if (onReload) onReload();
+          }}
         />
       )}
 
