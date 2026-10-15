@@ -16,17 +16,26 @@ export default function GuestLookup({ onSaleFound }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.whatsapp_phone || !formData.invoice_number) {
-      toast.error('Por favor completa ambos campos.');
+    const cleanPhone = formData.whatsapp_phone.replace(/[^0-9]/g, '');
+    if (!cleanPhone || cleanPhone.length < 7) {
+      toast.error('Por favor ingresa un número de WhatsApp válido (mínimo 7 dígitos).');
+      return;
+    }
+
+    if (!formData.invoice_number.trim()) {
+      toast.error('Por favor ingresa el código de venta o entrega.');
       return;
     }
 
     try {
       setLoading(true);
-      const { data } = await lookupGuestSale(formData);
+      const { data } = await lookupGuestSale({
+        whatsapp_phone: cleanPhone,
+        invoice_number: formData.invoice_number.trim()
+      });
       toast.success(data.message || 'Compra encontrada.');
-      // Enviamos el formData (telefono) para usarlo al momento de solicitar la devolución
-      onSaleFound(data.sale, formData.whatsapp_phone);
+      // Enviamos el formData (telefono sanitizado) para usarlo al momento de solicitar la devolución
+      onSaleFound(data.sale, cleanPhone);
     } catch (error) {
       toast.error(error.response?.data?.message || 'No pudimos encontrar tu compra. Verifica los datos.');
     } finally {

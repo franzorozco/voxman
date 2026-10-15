@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit, Truck, MoreVertical } from "lucide-react";
+import { Search, Filter, ShoppingCart, Eye, Trash2, CheckCircle, Bell, RefreshCw, Plus, Edit, Truck, MoreVertical, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getCarts, deleteCart, convertCartToSale, sendCartReminder, convertCartToOrder, restoreCart } from "../../../../api/admin/carts";
@@ -250,59 +250,77 @@ export default function Carts() {
         </div>
       </div>
 
-      <div className="metrics-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px', marginBottom: '20px' }}>
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(33, 150, 243, 0.1)', color: '#1e88e5' }}>
-            <ShoppingCart size={24} />
+      {/* KPI Cards */}
+      <div className="carts-kpi-grid">
+        <div className="carts-kpi-card kpi-active">
+          <div className="carts-kpi-top">
+            <span className="carts-kpi-value">{summary.active_proformas}</span>
           </div>
-          <div className="metric-content">
-            <div className="metric-label">Proformas Activas</div>
-            <div className="metric-value">{summary.active_proformas}</div>
-          </div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(156, 39, 176, 0.1)', color: '#8e24aa' }}>
-            <Filter size={24} />
-          </div>
-          <div className="metric-content">
-            <div className="metric-label">Valor en Proformas</div>
-            <div className="metric-value">Bs. {Number(summary.proformas_value || 0).toFixed(2)}</div>
+          <div className="carts-kpi-bottom">
+            <div className="carts-kpi-icon-mini">
+              <ShoppingCart size={14} />
+            </div>
+            <span className="carts-kpi-label">Proformas Activas</span>
           </div>
         </div>
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(76, 175, 80, 0.1)', color: '#43a047' }}>
-            <CheckCircle size={24} />
+
+        <div className="carts-kpi-card kpi-proformas">
+          <div className="carts-kpi-top">
+            <span className="carts-kpi-value">Bs. {Number(summary.proformas_value || 0).toFixed(2)}</span>
           </div>
-          <div className="metric-content">
-            <div className="metric-label">Valor Convertido</div>
-            <div className="metric-value">Bs. {Number(summary.converted_value || 0).toFixed(2)}</div>
-          </div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(244, 67, 54, 0.1)', color: '#e53935' }}>
-            <ShoppingCart size={24} />
-          </div>
-          <div className="metric-content">
-            <div className="metric-label">Monto Abandonado</div>
-            <div className="metric-value">Bs. {Number(summary.abandoned_value || 0).toFixed(2)}</div>
+          <div className="carts-kpi-bottom">
+            <div className="carts-kpi-icon-mini">
+              <DollarSign size={14} />
+            </div>
+            <span className="carts-kpi-label">Valor en Proformas</span>
           </div>
         </div>
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(255, 152, 0, 0.1)', color: '#fb8c00' }}>
-            <Filter size={24} />
+
+        <div className="carts-kpi-card kpi-converted">
+          <div className="carts-kpi-top">
+            <span className="carts-kpi-value">Bs. {Number(summary.converted_value || 0).toFixed(2)}</span>
           </div>
-          <div className="metric-content">
-            <div className="metric-label">Ticket Promedio</div>
-            <div className="metric-value">Bs. {Number(summary.average_value || 0).toFixed(2)}</div>
+          <div className="carts-kpi-bottom">
+            <div className="carts-kpi-icon-mini">
+              <CheckCircle size={14} />
+            </div>
+            <span className="carts-kpi-label">Valor Convertido</span>
           </div>
         </div>
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(76, 175, 80, 0.1)', color: '#43a047' }}>
-            <CheckCircle size={24} />
+
+        <div className="carts-kpi-card kpi-abandoned">
+          <div className="carts-kpi-top">
+            <span className="carts-kpi-value">Bs. {Number(summary.abandoned_value || 0).toFixed(2)}</span>
           </div>
-          <div className="metric-content">
-            <div className="metric-label">Tasa de Conversión</div>
-            <div className="metric-value">{summary.conversion_rate}%</div>
+          <div className="carts-kpi-bottom">
+            <div className="carts-kpi-icon-mini">
+              <AlertTriangle size={14} />
+            </div>
+            <span className="carts-kpi-label">Monto Abandonado</span>
+          </div>
+        </div>
+
+        <div className="carts-kpi-card kpi-average">
+          <div className="carts-kpi-top">
+            <span className="carts-kpi-value">Bs. {Number(summary.average_value || 0).toFixed(2)}</span>
+          </div>
+          <div className="carts-kpi-bottom">
+            <div className="carts-kpi-icon-mini">
+              <TrendingUp size={14} />
+            </div>
+            <span className="carts-kpi-label">Ticket Promedio</span>
+          </div>
+        </div>
+
+        <div className="carts-kpi-card kpi-rate">
+          <div className="carts-kpi-top">
+            <span className="carts-kpi-value">{summary.conversion_rate || 0}%</span>
+          </div>
+          <div className="carts-kpi-bottom">
+            <div className="carts-kpi-icon-mini">
+              <CheckCircle size={14} />
+            </div>
+            <span className="carts-kpi-label">Tasa Conversión</span>
           </div>
         </div>
       </div>

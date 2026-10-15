@@ -79,7 +79,7 @@ export default function Giftcards() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Â¿Seguro que deseas desactivar/eliminar esta Giftcard?")) return;
+    if (!window.confirm("¿Seguro que deseas desactivar/eliminar esta Giftcard?")) return;
     try {
       await deleteGiftcard(id);
       toast.success("Giftcard eliminada");
@@ -116,7 +116,7 @@ export default function Giftcards() {
           </div>
           <div>
             <h1 className="products-title gift-header-title">Giftcards y Cupones</h1>
-            <p className="gift-header-subtitle">GestiÃ³n de tarjetas de regalo y saldos</p>
+            <p className="gift-header-subtitle">Gestión de tarjetas de regalo y saldos</p>
           </div>
         </div>
 
@@ -195,7 +195,7 @@ export default function Giftcards() {
           <table className="gift-table">
             <thead>
               <tr>
-                <th>CÃ³digo</th>
+                <th>Código</th>
                 <th>Propietario / Comprador</th>
                 <th>Saldo Original</th>
                 <th>Saldo Actual</th>
@@ -217,7 +217,7 @@ export default function Giftcards() {
                     statusClass = 'status-inactive';
                   } else if (g.current_balance <= 0) {
                     statusText = 'Agotada';
-                    statusClass = 'status-inactive'; // PodrÃ­amos usar otra clase si tuviÃ©ramos
+                    statusClass = 'status-inactive'; // Podríamos usar otra clase si tuviéramos
                   } else if (g.expires_at && new Date(g.expires_at).setHours(23,59,59,999) < new Date().getTime()) {
                     statusText = 'Expirada';
                     statusClass = 'status-inactive';
@@ -265,12 +265,12 @@ export default function Giftcards() {
       </RowDropdown>
     <div className="gift-code-wrapper">
       <span className="gift-code-text">
-                          {visibleCodes[g.id] ? g.code : "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"}
+                          {visibleCodes[g.id] ? g.code : "••••••••"}
                         </span>
                         <button 
                           className="gift-visibility-btn" 
                           onClick={() => setVisibleCodes(prev => ({...prev, [g.id]: !prev[g.id]}))}
-                          title={visibleCodes[g.id] ? "Ocultar cÃ³digo" : "Mostrar cÃ³digo"}
+                          title={visibleCodes[g.id] ? "Ocultar código" : "Mostrar código"}
                         >
                           {visibleCodes[g.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -314,7 +314,7 @@ export default function Giftcards() {
                       <div className="gift-actions-wrapper">
                         <button 
                           className="btn-secondary gift-ticket-btn"
-                          title="Imprimir CupÃ³n"
+                          title="Imprimir Cupón"
                           onClick={() => handleOpenCoupon(g)}
                         >
                           <Ticket size={18} />
@@ -323,7 +323,7 @@ export default function Giftcards() {
                         {can('edit_giftcards') && !g.is_digitalized && (
                           <button 
                             className="btn-secondary gift-digitalize-btn"
-                            title="Digitalizar (Asignar DueÃ±o)"
+                            title="Digitalizar (Asignar Dueño)"
                             onClick={() => handleOpenDigitalize(g)}
                             disabled={!g.is_active}
                           >

@@ -1,4 +1,4 @@
-﻿/* =========================
+/* =========================
     BUNDLES CONTAINER
 ========================= */
 
@@ -1023,15 +1023,92 @@
 ========================= */
 .bundles-header-actions { display: flex; gap: 10px; }
 .bundles-create-btn { padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer; font-weight: 600; }
-.bundles-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.bundles-kpi-card { background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
-.bundles-kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-.kpi-icon-total { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-.kpi-icon-active { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.kpi-icon-stock { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.kpi-icon-revenue { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-.bundles-kpi-title { margin: 0 0 4px 0; font-size: 13px; color: var(--text-muted); }
-.bundles-kpi-value { margin: 0; font-size: 24px; font-weight: 700; color: var(--text-main); }
+.bundles-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.bundles-kpi-card {
+  background: var(--bg-card);
+  padding: 16px 16px 14px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bundles-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 3.5px;
+  border-radius: 14px 0 0 14px;
+}
+
+.bundles-kpi-card.kpi-total::before   { background: #6366f1; }
+.bundles-kpi-card.kpi-active::before  { background: #10b981; }
+.bundles-kpi-card.kpi-stock::before   { background: #f59e0b; }
+.bundles-kpi-card.kpi-revenue::before { background: #8b5cf6; }
+
+.bundles-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+.bundles-kpi-top {
+  width: 100%;
+  min-width: 0;
+}
+
+.bundles-kpi-value {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.bundles-kpi-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bundles-kpi-icon-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bundles-kpi-card.kpi-total .bundles-kpi-icon-mini   { background: rgba(99, 102, 241, 0.14); color: #6366f1; }
+.bundles-kpi-card.kpi-active .bundles-kpi-icon-mini  { background: rgba(16, 185, 129, 0.14); color: #10b981; }
+.bundles-kpi-card.kpi-stock .bundles-kpi-icon-mini   { background: rgba(245, 158, 11, 0.14); color: #f59e0b; }
+.bundles-kpi-card.kpi-revenue .bundles-kpi-icon-mini { background: rgba(139, 92, 246, 0.14); color: #8b5cf6; }
+
+.bundles-kpi-title {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.25;
+}
 .bundles-filters { margin-bottom: 20px; }
 .filters-expanded { margin-bottom: 15px; }
 .bundles-search-wrapper { flex: 1; position: relative; }
@@ -1593,7 +1670,31 @@
 /* MOBILE TWO COLUMNS KPI */
 @media (max-width: 768px) {
   .bundles-kpi-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+  .bundles-kpi-card {
+    padding: 12px 10px 10px 12px !important;
+    gap: 6px !important;
+  }
+  .bundles-kpi-value {
+    font-size: 16.5px !important;
+  }
+  .bundles-kpi-bottom {
+    gap: 6px !important;
+  }
+  .bundles-kpi-icon-mini {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 5px !important;
+  }
+  .bundles-kpi-icon-mini svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+  .bundles-kpi-title {
+    font-size: 11px !important;
   }
 }
 

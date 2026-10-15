@@ -42,6 +42,12 @@ Route::prefix('v1/shop')->group(function () {
         Route::get('/guest-status', [\App\Http\Controllers\Api\shop\ShopReturnController::class, 'guestStatus']);
     });
 
+    // ── Centro de Contacto y Soporte ─────────────────────────────────────────
+    Route::prefix('contact')->middleware(['throttle:15,1,shop_contact_'])->group(function () {
+        Route::post('/', [\App\Http\Controllers\Api\shop\ShopContactController::class, 'send']);
+        Route::post('/check-email', [\App\Http\Controllers\Api\shop\ShopContactController::class, 'checkEmail']);
+    });
+
     // Autenticación de clientes
     // Login y Register ahora usan las rutas globales /api/login y /api/register
 

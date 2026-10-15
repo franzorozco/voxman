@@ -346,37 +346,53 @@ export default function Inventory() {
         <>
           {/* KPI Dashboard */}
           {stats && (
-            <div className="inventory-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px', animation: 'fadeIn 0.4s ease' }}>
-              <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Box size={18} color="var(--color-primary)" />
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ítems en Stock</span>
+            <div className="inventory-kpi-grid">
+              <div className="inventory-kpi-card kpi-stock">
+                <div className="inventory-kpi-top">
+                  <span className="inventory-kpi-value">{stats.total_items.toLocaleString()}</span>
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.total_items.toLocaleString()}</div>
+                <div className="inventory-kpi-bottom">
+                  <div className="inventory-kpi-icon-mini">
+                    <Box size={14} />
+                  </div>
+                  <span className="inventory-kpi-label">Ítems en Stock</span>
+                </div>
               </div>
               
-              <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <TrendingUp size={18} color="var(--color-danger)" />
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Capital Invertido</span>
+              <div className="inventory-kpi-card kpi-cost">
+                <div className="inventory-kpi-top">
+                  <span className="inventory-kpi-value">Bs. {stats.total_cost_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
-                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {stats.total_cost_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                <div className="inventory-kpi-bottom">
+                  <div className="inventory-kpi-icon-mini">
+                    <TrendingUp size={14} />
+                  </div>
+                  <span className="inventory-kpi-label">Capital Invertido</span>
+                </div>
               </div>
 
-              <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <DollarSign size={18} color="var(--color-success)" />
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Valor Potencial</span>
+              <div className="inventory-kpi-card kpi-retail">
+                <div className="inventory-kpi-top">
+                  <span className="inventory-kpi-value">Bs. {stats.total_retail_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
-                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {stats.total_retail_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                <div className="inventory-kpi-bottom">
+                  <div className="inventory-kpi-icon-mini">
+                    <DollarSign size={14} />
+                  </div>
+                  <span className="inventory-kpi-label">Valor Potencial</span>
+                </div>
               </div>
 
-              <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <AlertTriangle size={18} color="var(--color-warning)" />
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bajo Stock / Agotados</span>
+              <div className="inventory-kpi-card kpi-alert">
+                <div className="inventory-kpi-top">
+                  <span className={`inventory-kpi-value ${stats.low_stock_alerts > 0 ? 'text-warning' : ''}`}>{stats.low_stock_alerts.toLocaleString()}</span>
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 700, color: stats.low_stock_alerts > 0 ? 'var(--color-warning)' : 'var(--text-main)' }}>{stats.low_stock_alerts.toLocaleString()}</div>
+                <div className="inventory-kpi-bottom">
+                  <div className="inventory-kpi-icon-mini">
+                    <AlertTriangle size={14} />
+                  </div>
+                  <span className="inventory-kpi-label">Bajo Stock / Agotados</span>
+                </div>
               </div>
             </div>
           )}

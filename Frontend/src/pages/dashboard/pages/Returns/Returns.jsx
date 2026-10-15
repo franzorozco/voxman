@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
-import { Search, Filter, RefreshCw, Eye, Undo2, DollarSign, PackageOpen, MoreVertical } from "lucide-react";
+import { Search, Filter, RefreshCw, Eye, Undo2, DollarSign, PackageOpen, MoreVertical, Package, RotateCcw } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getReturns } from "../../../../api/admin/returns";
@@ -77,32 +77,53 @@ export default function Returns() {
         </div>
       </div>
 
-      <div className="metrics-container">
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(255, 152, 0, 0.1)', color: '#ff9800' }}>
-            <PackageOpen size={24} />
+      {/* KPI Cards */}
+      <div className="returns-kpi-grid">
+        <div className="returns-kpi-card kpi-total">
+          <div className="returns-kpi-top">
+            <span className="returns-kpi-value">{returnsList ? returnsList.length : 0}</span>
           </div>
-          <div className="metric-content">
-            <div className="metric-label">Casos Pendientes</div>
-            <div className="metric-value">{summary.pending_returns}</div>
-          </div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(76, 175, 80, 0.1)', color: '#4caf50' }}>
-            <DollarSign size={24} />
-          </div>
-          <div className="metric-content">
-            <div className="metric-label">Monto Reembolsado</div>
-            <div className="metric-value">Bs. {Number(summary.total_refunded).toFixed(2)}</div>
+          <div className="returns-kpi-bottom">
+            <div className="returns-kpi-icon-mini">
+              <Package size={14} />
+            </div>
+            <span className="returns-kpi-label">Total Casos</span>
           </div>
         </div>
-        <div className="metric-card">
-          <div className="metric-icon-wrapper" style={{ background: 'rgba(33, 150, 243, 0.1)', color: '#2196f3' }}>
-            <Filter size={24} />
+
+        <div className="returns-kpi-card kpi-pending">
+          <div className="returns-kpi-top">
+            <span className="returns-kpi-value">{summary.pending_returns}</span>
           </div>
-          <div className="metric-content">
-            <div className="metric-label">Tasa de Devolución</div>
-            <div className="metric-value">{summary.return_rate}%</div>
+          <div className="returns-kpi-bottom">
+            <div className="returns-kpi-icon-mini">
+              <PackageOpen size={14} />
+            </div>
+            <span className="returns-kpi-label">Casos Pendientes</span>
+          </div>
+        </div>
+
+        <div className="returns-kpi-card kpi-refunded">
+          <div className="returns-kpi-top">
+            <span className="returns-kpi-value">Bs. {Number(summary.total_refunded || 0).toFixed(2)}</span>
+          </div>
+          <div className="returns-kpi-bottom">
+            <div className="returns-kpi-icon-mini">
+              <DollarSign size={14} />
+            </div>
+            <span className="returns-kpi-label">Monto Reembolsado</span>
+          </div>
+        </div>
+
+        <div className="returns-kpi-card kpi-rate">
+          <div className="returns-kpi-top">
+            <span className="returns-kpi-value">{summary.return_rate || 0}%</span>
+          </div>
+          <div className="returns-kpi-bottom">
+            <div className="returns-kpi-icon-mini">
+              <RotateCcw size={14} />
+            </div>
+            <span className="returns-kpi-label">Tasa Devolución</span>
           </div>
         </div>
       </div>

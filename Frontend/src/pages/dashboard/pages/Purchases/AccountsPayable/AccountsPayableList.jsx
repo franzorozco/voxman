@@ -72,33 +72,60 @@ export default function AccountsPayableList() {
         </div>
       </div>
 
-      {stats && (
-  <div className="accounts-stats-grid" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(auto-fit, minmax(220px, 1fr))", gap: "15px", marginBottom: "24px" }}>
-    <div className="account-stat-card" style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "16px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "12px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <DollarSign size={16} color="var(--color-danger)" />
-        <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>Deuda Pendiente</span>
-      </div>
-      <div style={{ fontSize: "28px", fontWeight: 700, color: "var(--text-main)" }}>Bs. {Number(stats.total_debt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-    </div>
-    
-    <div className="account-stat-card" style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "16px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "12px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <CheckCircle size={16} color="var(--color-success)" />
-        <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>Total Abonado</span>
-      </div>
-      <div style={{ fontSize: "28px", fontWeight: 700, color: "var(--text-main)" }}>Bs. {Number(stats.total_paid_historical).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-    </div>
+      {/* KPI Cards */}
+      <div className="accounts-kpi-grid">
+        <div className="accounts-kpi-card kpi-total">
+          <div className="accounts-kpi-top">
+            <span className="accounts-kpi-value">{accounts ? accounts.length : 0}</span>
+          </div>
+          <div className="accounts-kpi-bottom">
+            <div className="accounts-kpi-icon-mini">
+              <FileText size={14} />
+            </div>
+            <span className="accounts-kpi-label">Total Cuentas</span>
+          </div>
+        </div>
 
-    <div className="account-stat-card" style={{ background: "var(--bg-card)", padding: "20px", borderRadius: "16px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "12px", gridColumn: isMobile ? "1 / -1" : "auto" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <AlertTriangle size={16} color="var(--color-warning)" />
-        <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>Deudas Vencidas</span>
+        <div className="accounts-kpi-card kpi-debt">
+          <div className="accounts-kpi-top">
+            <span className="accounts-kpi-value">
+              Bs. {Number(stats?.total_debt || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </span>
+          </div>
+          <div className="accounts-kpi-bottom">
+            <div className="accounts-kpi-icon-mini">
+              <DollarSign size={14} />
+            </div>
+            <span className="accounts-kpi-label">Deuda Pendiente</span>
+          </div>
+        </div>
+
+        <div className="accounts-kpi-card kpi-paid">
+          <div className="accounts-kpi-top">
+            <span className="accounts-kpi-value">
+              Bs. {Number(stats?.total_paid_historical || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </span>
+          </div>
+          <div className="accounts-kpi-bottom">
+            <div className="accounts-kpi-icon-mini">
+              <CheckCircle size={14} />
+            </div>
+            <span className="accounts-kpi-label">Total Abonado</span>
+          </div>
+        </div>
+
+        <div className="accounts-kpi-card kpi-overdue">
+          <div className="accounts-kpi-top">
+            <span className="accounts-kpi-value">{stats?.overdue_count ?? 0}</span>
+          </div>
+          <div className="accounts-kpi-bottom">
+            <div className="accounts-kpi-icon-mini">
+              <AlertTriangle size={14} />
+            </div>
+            <span className="accounts-kpi-label">Deudas Vencidas</span>
+          </div>
+        </div>
       </div>
-      <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-main)" }}>{stats.overdue_count}</div>
-    </div>
-  </div>
-)}
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>

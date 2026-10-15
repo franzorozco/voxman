@@ -216,43 +216,51 @@ export default function Bundles() {
       </div>
 
       <div className="bundles-kpi-grid">
-        <div className="bundles-kpi-card">
-          <div className="bundles-kpi-icon kpi-icon-total">
-            <Package size={24} />
-          </div>
-          <div>
-            <p className="bundles-kpi-title">Total Conjuntos</p>
+        <div className="bundles-kpi-card kpi-total">
+          <div className="bundles-kpi-top">
             <h3 className="bundles-kpi-value">{kpiStats.total}</h3>
           </div>
+          <div className="bundles-kpi-bottom">
+            <div className="bundles-kpi-icon-mini">
+              <Package size={14} />
+            </div>
+            <p className="bundles-kpi-title">Total Conjuntos</p>
+          </div>
         </div>
 
-        <div className="bundles-kpi-card">
-          <div className="bundles-kpi-icon kpi-icon-active">
-            <Activity size={24} />
-          </div>
-          <div>
-            <p className="bundles-kpi-title">Conjuntos Activos</p>
+        <div className="bundles-kpi-card kpi-active">
+          <div className="bundles-kpi-top">
             <h3 className="bundles-kpi-value">{kpiStats.active}</h3>
           </div>
+          <div className="bundles-kpi-bottom">
+            <div className="bundles-kpi-icon-mini">
+              <Activity size={14} />
+            </div>
+            <p className="bundles-kpi-title">Conjuntos Activos</p>
+          </div>
         </div>
 
-        <div className="bundles-kpi-card">
-          <div className="bundles-kpi-icon kpi-icon-stock">
-            <Archive size={24} />
-          </div>
-          <div>
-            <p className="bundles-kpi-title">Stock Virtual Total</p>
+        <div className="bundles-kpi-card kpi-stock">
+          <div className="bundles-kpi-top">
             <h3 className="bundles-kpi-value">{kpiStats.totalVirtualStock}</h3>
           </div>
+          <div className="bundles-kpi-bottom">
+            <div className="bundles-kpi-icon-mini">
+              <Archive size={14} />
+            </div>
+            <p className="bundles-kpi-title">Stock Virtual Total</p>
+          </div>
         </div>
 
-        <div className="bundles-kpi-card">
-          <div className="bundles-kpi-icon kpi-icon-revenue">
-            <DollarSign size={24} />
-          </div>
-          <div>
-            <p className="bundles-kpi-title">Valor Potencial (Ingresos)</p>
+        <div className="bundles-kpi-card kpi-revenue">
+          <div className="bundles-kpi-top">
             <h3 className="bundles-kpi-value">Bs. {kpiStats.potentialValue.toFixed(2)}</h3>
+          </div>
+          <div className="bundles-kpi-bottom">
+            <div className="bundles-kpi-icon-mini">
+              <DollarSign size={14} />
+            </div>
+            <p className="bundles-kpi-title">Valor Potencial</p>
           </div>
         </div>
       </div>

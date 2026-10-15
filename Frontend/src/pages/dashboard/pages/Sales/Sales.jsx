@@ -131,36 +131,42 @@ export default function Sales() {
       <CanAccess permission="view_sale_profits">
         <div className="sales-kpi-container">
           <div className="sales-kpi-card kpi-revenue">
-            <div className="sales-kpi-icon-wrapper">
-              <TrendingUp size={22} />
-            </div>
-            <div className="sales-kpi-content">
-              <span className="sales-kpi-label">Ingresos Totales</span>
+            <div className="sales-kpi-top">
               <span className="sales-kpi-value">
                 Bs. {parseFloat(summary.total_revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </span>
             </div>
+            <div className="sales-kpi-bottom">
+              <div className="sales-kpi-icon-mini">
+                <TrendingUp size={14} />
+              </div>
+              <span className="sales-kpi-label">Ingresos Totales</span>
+            </div>
           </div>
 
           <div className="sales-kpi-card kpi-sales">
-            <div className="sales-kpi-icon-wrapper">
-              <ShoppingBag size={22} />
-            </div>
-            <div className="sales-kpi-content">
-              <span className="sales-kpi-label">Ventas Realizadas</span>
+            <div className="sales-kpi-top">
               <span className="sales-kpi-value">{summary.total_sales || 0}</span>
+            </div>
+            <div className="sales-kpi-bottom">
+              <div className="sales-kpi-icon-mini">
+                <ShoppingBag size={14} />
+              </div>
+              <span className="sales-kpi-label">Ventas Realizadas</span>
             </div>
           </div>
 
           <div className="sales-kpi-card kpi-ticket">
-            <div className="sales-kpi-icon-wrapper">
-              <CreditCard size={22} />
-            </div>
-            <div className="sales-kpi-content">
-              <span className="sales-kpi-label">Ticket Promedio</span>
+            <div className="sales-kpi-top">
               <span className="sales-kpi-value">
                 Bs. {parseFloat(summary.average_ticket || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </span>
+            </div>
+            <div className="sales-kpi-bottom">
+              <div className="sales-kpi-icon-mini">
+                <CreditCard size={14} />
+              </div>
+              <span className="sales-kpi-label">Ticket Promedio</span>
             </div>
           </div>
         </div>

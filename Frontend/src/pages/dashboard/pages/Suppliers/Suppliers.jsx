@@ -102,29 +102,41 @@ export default function Suppliers() {
       </div>
 
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', marginBottom: '24px' }}>
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Building2 size={16} color="var(--color-primary)" />
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Proveedores</span>
+        <div className="suppliers-kpi-grid">
+          <div className="suppliers-kpi-card kpi-total">
+            <div className="suppliers-kpi-top">
+              <span className="suppliers-kpi-value">{stats.total_suppliers}</span>
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.total_suppliers}</div>
+            <div className="suppliers-kpi-bottom">
+              <div className="suppliers-kpi-icon-mini">
+                <Building2 size={14} />
+              </div>
+              <span className="suppliers-kpi-label">Total Proveedores</span>
+            </div>
           </div>
           
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Truck size={16} color="var(--color-success)" />
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Proveedores Activos</span>
+          <div className="suppliers-kpi-card kpi-active">
+            <div className="suppliers-kpi-top">
+              <span className="suppliers-kpi-value">{stats.active_suppliers}</span>
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>{stats.active_suppliers}</div>
+            <div className="suppliers-kpi-bottom">
+              <div className="suppliers-kpi-icon-mini">
+                <Truck size={14} />
+              </div>
+              <span className="suppliers-kpi-label">Proveedores Activos</span>
+            </div>
           </div>
 
-          <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <DollarSign size={16} color="var(--color-warning)" />
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Compras de este mes</span>
+          <div className="suppliers-kpi-card kpi-purchases">
+            <div className="suppliers-kpi-top">
+              <span className="suppliers-kpi-value">Bs. {Number(stats.purchases_this_month).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(stats.purchases_this_month).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div className="suppliers-kpi-bottom">
+              <div className="suppliers-kpi-icon-mini">
+                <DollarSign size={14} />
+              </div>
+              <span className="suppliers-kpi-label">Compras este mes</span>
+            </div>
           </div>
         </div>
       )}

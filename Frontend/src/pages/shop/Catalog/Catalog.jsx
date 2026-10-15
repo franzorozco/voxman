@@ -1,5 +1,5 @@
 import { getImageUrl } from '../../../utils/imageUtils';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getProducts } from '../../../api/shop/products';
 import { getCategories } from '../../../api/shop/categories';
@@ -15,6 +15,7 @@ import useShopCartStore from '../../../store/shop/useShopCartStore';
 import { useShopSettingsStore } from '../../../store/shop/useShopSettingsStore';
 import { useShopCatalogStore } from '../../../store/shop/useShopCatalogStore';
 import ShopErrorState from '../components/ShopErrorState';
+import { toast } from 'react-hot-toast';
 import './Catalog.css';
 
 const Catalog = () => {
@@ -35,11 +36,48 @@ const Catalog = () => {
     }
   };
 
-  const addToCart = useShopCartStore(state => state.addItem);
+  const addToCart = useShopCartStore(state => state.addToCart);
   const [addedAnimationItems, setAddedAnimationItems] = useState({});
-  // Leer categoría desde URL (?category=... o ?category_id=...)
-  const urlCategoryParam = searchParams.get('category') || searchParams.get('category_id');
-  const initialCategory = urlCategoryParam && urlCategoryParam.trim() !== '' ? urlCategoryParam.trim() : null;
+  // Leer categoría directamente desde la URL (?category=... o ?category_id=...) como fuente única de verdad
+  const selectedCategory = useMemo(() => {
+    const raw = searchParams.get('category') || searchParams.get('category_id');
+    return raw && raw.trim() !== '' ? raw.trim() : null;
+  }, [searchParams]);
+
+  const [expandedProductId, setExpandedProductId] = useState(null);
+
+  // Actualizar categoría sincronizando la URL de forma unidireccional y limpia
+  const setSelectedCategory = useCallback((catOrFn) => {
+    setExpandedProductId(null);
+    setSearchParams(prev => {
+      const currentRaw = prev.get('category') || prev.get('category_id');
+      const currentCat = currentRaw && currentRaw.trim() !== '' ? currentRaw.trim() : null;
+      const targetCat = typeof catOrFn === 'function' ? catOrFn(currentCat) : catOrFn;
+      const normalizedTarget = targetCat && String(targetCat).trim() !== '' ? String(targetCat).trim() : null;
+
+      if (currentCat === normalizedTarget && !prev.has('category_id')) {
+        return prev;
+      }
+
+      const next = new URLSearchParams(prev);
+      if (normalizedTarget) {
+        next.set('category', normalizedTarget);
+      } else {
+        next.delete('category');
+      }
+      next.delete('category_id');
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  // Cerrar vista previa/expandido si cambia la categoría desde cualquier origen (URL o botones)
+  const prevCategoryRef = useRef(selectedCategory);
+  useEffect(() => {
+    if (prevCategoryRef.current !== selectedCategory) {
+      prevCategoryRef.current = selectedCategory;
+      setExpandedProductId(null);
+    }
+  }, [selectedCategory]);
 
   // ── Settings del Dashboard ──
   const { settings: shopSettings, fetchSettings: fetchShopSettings } = useShopSettingsStore();
@@ -54,55 +92,20 @@ const Catalog = () => {
   const isCacheCategoryMatch = Boolean(
     catalogState &&
     (
-      (initialCategory === null && !catalogState.selectedCategory) ||
-      (initialCategory !== null && String(catalogState.selectedCategory) === String(initialCategory))
+      (selectedCategory === null && !catalogState.selectedCategory) ||
+      (selectedCategory !== null && String(catalogState.selectedCategory) === String(selectedCategory))
     )
   );
 
   const [categories, setCategories] = useState(catalogState?.categories || []);
   const [categoriesLoaded, setCategoriesLoaded] = useState(Boolean(catalogState?.categories?.length > 0));
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [products, setProducts] = useState(isCacheCategoryMatch ? (catalogState?.products || []) : []);
 
-  // 1. Sincronizar hacia selectedCategory cuando la URL cambie (ej: links de categorías, botones externos o navegación)
-  useEffect(() => {
-    const raw = searchParams.get('category') || searchParams.get('category_id');
-    const newCategory = raw && raw.trim() !== '' ? raw.trim() : null;
-    if (newCategory !== selectedCategory) {
-      setSelectedCategory(newCategory);
-      setExpandedProductId(null);
-    }
-  }, [searchParams, selectedCategory]);
-
-  // 2. Sincronizar hacia la URL cuando el usuario interactúe con los filtros
-  useEffect(() => {
-    const currentUrlCat = searchParams.get('category') || searchParams.get('category_id') || null;
-    if (selectedCategory) {
-      if (currentUrlCat !== selectedCategory) {
-        setSearchParams(prev => {
-          const next = new URLSearchParams(prev);
-          next.set('category', selectedCategory);
-          next.delete('category_id');
-          return next;
-        }, { replace: true });
-      }
-    } else {
-      if (currentUrlCat !== null) {
-        setSearchParams(prev => {
-          const next = new URLSearchParams(prev);
-          next.delete('category');
-          next.delete('category_id');
-          return next;
-        }, { replace: true });
-      }
-    }
-  }, [selectedCategory, searchParams, setSearchParams]);
-
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!isCacheCategoryMatch || !catalogState?.products?.length);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isError, setIsError] = useState(false);
   const [viewMode, setViewMode] = useState(catalogState?.viewMode ?? null);
   const [imageMode, setImageMode] = useState(catalogState?.imageMode ?? null);
-  const [expandedProductId, setExpandedProductId] = useState(null);
   const expandRef = useRef(null);
 
   // Aplicar defaults del dashboard cuando los settings carguen
@@ -119,6 +122,7 @@ const Catalog = () => {
   const hoverTimers = useRef({});
   const [selectedQuickSize, setSelectedQuickSize] = useState({});
   const [selectedQuickColor, setSelectedQuickColor] = useState({});
+  const [isAddingQuick, setIsAddingQuick] = useState({});
 
   // Nuevos estados para filtros y paginación
   const [searchQuery, setSearchQuery] = useState(catalogState?.searchQuery ?? '');
@@ -225,6 +229,7 @@ const Catalog = () => {
       isInitialFetch.current = false;
       if (isCacheCategoryMatch && catalogState?.products?.length > 0) {
         prevFetchParams.current = paramsStr;
+        setIsLoading(false);
         return; // Saltar fetch inicial solo si la caché coincide con la categoría actual
       }
     }
@@ -236,6 +241,8 @@ const Catalog = () => {
       if (currentPage === 1) {
         setIsLoading(true);
         setIsError(false);
+      } else {
+        setIsLoadingMore(true);
       }
       
       try {
@@ -268,14 +275,28 @@ const Catalog = () => {
           return [...prev, ...newProducts];
         });
 
-        if (fetchedProducts.length < perPage) {
+        if (currentPage > 1 && fetchedProducts.length > 0) {
+          setVisibleCount(prev => prev + fetchedProducts.length);
+        }
+
+        const isLastPage = response.data?.current_page && response.data?.last_page
+          ? response.data.current_page >= response.data.last_page
+          : fetchedProducts.length < perPage;
+
+        if (isLastPage || fetchedProducts.length === 0) {
           setHasMore(false);
         }
       } catch (error) {
         console.error('Error loading catalog items', error);
-        setIsError(true);
+        if (currentPage === 1) {
+          setIsError(true);
+        }
       } finally {
-        if (currentPage === 1) setIsLoading(false);
+        if (currentPage === 1) {
+          setIsLoading(false);
+        } else {
+          setIsLoadingMore(false);
+        }
       }
     };
 
@@ -407,6 +428,7 @@ const Catalog = () => {
             : mainImg;
             
           let matchedVariant = null;
+          let colorStock = null;
           if (product.product_variants) {
             const colorVariants = product.product_variants.filter(v => 
               v.variant_attribute_values?.some(vav => vav.attribute_value_id === mainImg.attribute_value_id)
@@ -415,9 +437,18 @@ const Catalog = () => {
               matchedVariant = colorVariants.reduce((best, curr) => 
                 (curr.discounted_price < best.discounted_price) ? curr : best
               , colorVariants[0]);
+
+              colorStock = colorVariants.reduce((sum, v) => {
+                if (v.inventories && v.inventories.length > 0) {
+                  return sum + v.inventories.reduce((invSum, inv) => invSum + Number(inv.stock || 0), 0);
+                }
+                return sum + Number(v.stock || 0);
+              }, 0);
             }
           }
           
+          const finalColorStock = colorStock !== null ? colorStock : product.stock;
+
           prendas.push({
             id: `img-${mainImg.id}`,
             product_id: product.id,
@@ -433,8 +464,8 @@ const Catalog = () => {
             image2: secondImg?.url || mainImg.url,
             active_discounts: product.active_discounts,
             is_bundle: product.is_bundle,
-            stock: product.stock,
-            in_stock: product.in_stock
+            stock: finalColorStock,
+            in_stock: finalColorStock > 0
           });
         });
       } else {
@@ -449,6 +480,10 @@ const Catalog = () => {
               seenAttrs.add(attrKey);
               addedVariant = true;
               const secondImg = variant.variant_images.length > 1 ? variant.variant_images[1] : variant.variant_images[0];
+              const variantStock = (variant.inventories && variant.inventories.length > 0)
+                ? variant.inventories.reduce((invSum, inv) => invSum + Number(inv.stock || 0), 0)
+                : (variant.stock !== undefined ? Number(variant.stock) : product.stock);
+
               prendas.push({
                 id: `var-${variant.variant_images[0] ? variant.variant_images[0].id : variant.id}`,
                 product_id: product.id,
@@ -464,8 +499,8 @@ const Catalog = () => {
                 image2: secondImg?.url || variant.variant_images[0].url,
                 active_discounts: product.active_discounts,
                 is_bundle: product.is_bundle,
-                stock: product.stock,
-                in_stock: product.in_stock
+                stock: variantStock,
+                in_stock: variantStock > 0
               });
             }
           }
@@ -548,31 +583,163 @@ const Catalog = () => {
     setQuickAddProductId(null);
   };
 
-  const getAvailableSizes = (product) => {
-    if (!product.product_variants) return ['S', 'M', 'L'];
-    const sizes = new Set();
-    product.product_variants.forEach(v => {
-      v.variant_attribute_values?.forEach(vav => {
-        if (vav.attribute?.name?.toLowerCase() === 'talla' || vav.attribute?.name?.toLowerCase() === 'size') {
-          sizes.add(vav.attribute_value.value);
-        }
-      });
-    });
-    return sizes.size > 0 ? Array.from(sizes) : ['S', 'M', 'L'];
-  };
-
-  const getAvailableColors = (product) => {
-    const variants = getVariantsForProduct(product);
+  const getAvailableColors = (item) => {
+    const prod = products.find(p => p.id === (item.product_id || item.id)) || item;
+    if (!prod) return [];
+    const variants = getVariantsForProduct(prod);
     return variants.filter(v => v.color).map(v => ({ name: v.color, image: v.image, in_stock: v.in_stock }));
   };
 
-  const handleQuickAddClick = (e, productId) => {
+  const getActiveQuickColor = (item) => {
+    if (selectedQuickColor[item.id]) {
+      return selectedQuickColor[item.id];
+    }
+    if (item.color) {
+      return item.color;
+    }
+    const colors = getAvailableColors(item);
+    if (colors.length > 0) {
+      return colors[0].name;
+    }
+    return null;
+  };
+
+  const getAvailableSizes = (item) => {
+    const product = products.find(p => p.id === (item.product_id || item.id)) || item;
+    if (!product || !product.product_variants) return [];
+
+    const targetColor = getActiveQuickColor(item);
+    const availableSizes = [];
+
+    product.product_variants.forEach(v => {
+      const matchesColor = targetColor
+        ? v.variant_attribute_values?.some(a => 
+            a.attribute_value?.value?.toLowerCase() === targetColor.toLowerCase() ||
+            a.attribute_value?.name?.toLowerCase() === targetColor.toLowerCase()
+          )
+        : true;
+
+      let sizeName = v.size?.name || v.size?.value || (typeof v.size === 'string' ? v.size : null);
+      if (!sizeName && v.variant_attribute_values) {
+        const sizeAttr = v.variant_attribute_values.find(vav => 
+          vav.attribute?.name?.toLowerCase() === 'talla' || 
+          vav.attribute?.name?.toLowerCase() === 'size' ||
+          vav.attribute_value?.attribute?.name?.toLowerCase() === 'talla'
+        );
+        if (sizeAttr) sizeName = sizeAttr.attribute_value?.value;
+      }
+
+      if (matchesColor && sizeName) {
+        let stock = 0;
+        if (v.inventories && v.inventories.length > 0) {
+          stock = v.inventories.reduce((sum, inv) => sum + Number(inv.stock || 0), 0);
+        } else if (v.stock !== undefined && v.stock !== null) {
+          stock = Number(v.stock);
+        }
+
+        if (stock > 0 && !availableSizes.includes(sizeName)) {
+          availableSizes.push(sizeName);
+        }
+      }
+    });
+
+    return availableSizes;
+  };
+
+  const handleQuickAddClick = (e, itemOrId) => {
     e.preventDefault();
     e.stopPropagation();
-    if (quickAddProductId === productId) {
-      setQuickAddProductId(null); // toggle off
+    const itemId = typeof itemOrId === 'object' ? itemOrId.id : itemOrId;
+    const item = typeof itemOrId === 'object' ? itemOrId : (products.find(p => p.id === itemId) || { id: itemId });
+
+    if (quickAddProductId === itemId) {
+      setQuickAddProductId(null);
     } else {
-      setQuickAddProductId(productId); // toggle on
+      const activeColor = item.color || selectedQuickColor[itemId] || getAvailableColors(item)[0]?.name || null;
+      if (activeColor && !selectedQuickColor[itemId]) {
+        setSelectedQuickColor(prev => ({ ...prev, [itemId]: activeColor }));
+      }
+
+      const sizes = getAvailableSizes({ ...item, color: activeColor });
+      if (sizes.length > 0 && !selectedQuickSize[itemId]) {
+        setSelectedQuickSize(prev => ({ ...prev, [itemId]: sizes[0] }));
+      }
+
+      setQuickAddProductId(itemId);
+    }
+  };
+
+  const handleConfirmQuickAdd = async (e, item) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const product = products.find(p => p.id === (item.product_id || item.id)) || item;
+    if (!product) {
+      toast.error('Producto no encontrado');
+      return;
+    }
+
+    const targetColor = getActiveQuickColor(item);
+    const availableSizes = getAvailableSizes(item);
+    const targetSize = selectedQuickSize[item.id] || (availableSizes.length > 0 ? availableSizes[0] : null);
+
+    if (availableSizes.length > 0 && !targetSize) {
+      toast.error('Por favor selecciona una talla');
+      return;
+    }
+
+    let matchedVariant = null;
+    if (product.product_variants?.length > 0) {
+      matchedVariant = product.product_variants.find(v => {
+        const matchesColor = targetColor
+          ? v.variant_attribute_values?.some(a => 
+              a.attribute_value?.value?.toLowerCase() === targetColor.toLowerCase() ||
+              a.attribute_value?.name?.toLowerCase() === targetColor.toLowerCase()
+            )
+          : true;
+
+        const sizeName = v.size?.name || v.size?.value || (typeof v.size === 'string' ? v.size : null);
+        const matchesSize = targetSize ? sizeName === targetSize : true;
+        return matchesColor && matchesSize;
+      });
+
+      if (!matchedVariant && targetColor) {
+        matchedVariant = product.product_variants.find(v => 
+          v.variant_attribute_values?.some(a => 
+            a.attribute_value?.value?.toLowerCase() === targetColor.toLowerCase() ||
+            a.attribute_value?.name?.toLowerCase() === targetColor.toLowerCase()
+          )
+        );
+      }
+    }
+
+    const variantId = matchedVariant?.id || null;
+
+    try {
+      setIsAddingQuick(prev => ({ ...prev, [item.id]: true }));
+      await addToCart(product.id, variantId, 1, targetColor);
+      setQuickAddProductId(null);
+      toast.success(`${product.name} añadido al carrito`);
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      toast.error(err.response?.data?.message || 'No se pudo añadir al carrito');
+    } finally {
+      setIsAddingQuick(prev => ({ ...prev, [item.id]: false }));
+    }
+  };
+
+  const handleLoadMore = () => {
+    const loadMoreCount = parseInt(cfg('catalog_load_more_count', '12'), 10);
+    const newVisibleCount = visibleCount + loadMoreCount;
+
+    // Si aún hay elementos en processedItems que no se han mostrado, ampliar visibleCount
+    if (visibleCount < processedItems.length) {
+      setVisibleCount(newVisibleCount);
+    }
+
+    // Si ya mostramos (o estamos por mostrar) todos los elementos en memoria y el backend tiene más, solicitar siguiente página
+    if (newVisibleCount >= processedItems.length && hasMore && !isLoading && !isLoadingMore) {
+      setCurrentPage(prev => prev + 1);
     }
   };
 
@@ -606,7 +773,7 @@ const Catalog = () => {
           useWindowScroll
           data={rows}
           endReached={() => {
-            if (hasMore && !isLoading) setCurrentPage(p => p + 1);
+            if (hasMore && !isLoading && !isLoadingMore) setCurrentPage(p => p + 1);
           }}
           itemContent={(rowIdx, row) => {
             const expandedProduct = row.find(p => p.id === expandedProductId);
@@ -701,58 +868,89 @@ const Catalog = () => {
                           </div>
                           
                           {/* Sizes */}
-                          <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                            {getAvailableSizes(item).map(sz => (
-                              <button 
-                                key={sz}
-                                onClick={() => setSelectedQuickSize(prev => ({...prev, [item.id]: sz}))}
-                                style={{ 
-                                  border: selectedQuickSize[item.id] === sz ? '1px solid var(--text-main)' : '1px solid var(--border-color)', 
-                                  backgroundColor: selectedQuickSize[item.id] === sz ? 'var(--text-main)' : 'transparent',
-                                  color: selectedQuickSize[item.id] === sz ? 'white' : 'var(--text-main)',
-                                  padding: '4px 10px', 
-                                  borderRadius: '4px', 
-                                  fontSize: '12px',
-                                  fontWeight: 500,
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s'
-                                }}
-                              >
-                                {sz}
-                              </button>
-                            ))}
-                          </div>
+                          {getAvailableSizes(item).length === 0 ? (
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                              Sin tallas disponibles con stock
+                            </p>
+                          ) : (
+                            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                              {getAvailableSizes(item).map(sz => {
+                                const currentSize = selectedQuickSize[item.id] || getAvailableSizes(item)[0];
+                                const isSelected = currentSize === sz;
+                                return (
+                                  <button 
+                                    key={sz}
+                                    type="button"
+                                    onClick={() => setSelectedQuickSize(prev => ({...prev, [item.id]: sz}))}
+                                    style={{ 
+                                      border: isSelected ? '1px solid var(--text-main)' : '1px solid var(--border-color)', 
+                                      backgroundColor: isSelected ? 'var(--text-main)' : 'transparent',
+                                      color: isSelected ? 'white' : 'var(--text-main)',
+                                      padding: '4px 10px', 
+                                      borderRadius: '4px', 
+                                      fontSize: '12px',
+                                      fontWeight: 500,
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s'
+                                    }}
+                                  >
+                                    {sz}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
 
                           {/* Colors */}
                           {getAvailableColors(item).length > 0 && (
                             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-                              {getAvailableColors(item).map((c, idx) => (
-                                <div 
-                                  key={idx}
-                                  onClick={() => setSelectedQuickColor(prev => ({...prev, [item.id]: c.name}))}
-                                  title={c.name}
-                                  style={{
-                                    width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer',
-                                    border: selectedQuickColor[item.id] === c.name ? '2px solid var(--text-main)' : '1px solid var(--border-color)',
-                                    backgroundImage: `url(${getImageUrl(c.image)})`,
-                                    backgroundSize: 'cover', backgroundPosition: 'center',
-                                    flexShrink: 0
-                                  }}
-                                />
-                              ))}
+                              {getAvailableColors(item).map((c, idx) => {
+                                const activeColor = getActiveQuickColor(item);
+                                const isSelected = activeColor === c.name;
+                                return (
+                                  <div 
+                                    key={idx}
+                                    onClick={() => {
+                                      setSelectedQuickColor(prev => ({...prev, [item.id]: c.name}));
+                                      const newSizes = getAvailableSizes({ ...item, color: c.name });
+                                      if (newSizes.length > 0) {
+                                        if (!newSizes.includes(selectedQuickSize[item.id])) {
+                                          setSelectedQuickSize(prev => ({ ...prev, [item.id]: newSizes[0] }));
+                                        }
+                                      } else {
+                                        setSelectedQuickSize(prev => ({ ...prev, [item.id]: null }));
+                                      }
+                                    }}
+                                    title={c.name}
+                                    style={{
+                                      width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer',
+                                      border: isSelected ? '2px solid var(--text-main)' : '1px solid var(--border-color)',
+                                      backgroundImage: `url(${getImageUrl(c.image)})`,
+                                      backgroundSize: 'cover', backgroundPosition: 'center',
+                                      flexShrink: 0
+                                    }}
+                                  />
+                                );
+                              })}
                             </div>
                           )}
 
                           <button 
+                            type="button"
+                            disabled={isAddingQuick[item.id] || getAvailableSizes(item).length === 0}
+                            onClick={(e) => handleConfirmQuickAdd(e, item)}
                             style={{ 
                               width: '100%', padding: '10px', 
-                              backgroundColor: 'var(--text-main)', color: 'white', 
+                              backgroundColor: getAvailableSizes(item).length === 0 ? 'var(--border-color, #ccc)' : 'var(--text-main)', 
+                              color: 'white', 
                               borderRadius: '6px', fontSize: '13px', fontWeight: 600,
-                              border: 'none', cursor: 'pointer',
-                              display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px'
+                              border: 'none', 
+                              cursor: (isAddingQuick[item.id] || getAvailableSizes(item).length === 0) ? 'not-allowed' : 'pointer',
+                              display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+                              opacity: isAddingQuick[item.id] ? 0.7 : 1
                             }}
                           >
-                            <ShoppingBag size={16} /> Confirmar
+                            <ShoppingBag size={16} /> {isAddingQuick[item.id] ? 'Añadiendo...' : 'Confirmar'}
                           </button>
                         </div>
                       )}
@@ -1033,58 +1231,55 @@ const Catalog = () => {
                       </div>
                       
                       {/* Sizes */}
-                      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                        {getAvailableSizes(item).map(sz => (
-                          <button 
-                            key={sz}
-                            onClick={() => setSelectedQuickSize(prev => ({...prev, [item.id]: sz}))}
-                            style={{ 
-                              border: selectedQuickSize[item.id] === sz ? '1px solid var(--text-main)' : '1px solid var(--border-color)', 
-                              backgroundColor: selectedQuickSize[item.id] === sz ? 'var(--text-main)' : 'transparent',
-                              color: selectedQuickSize[item.id] === sz ? 'white' : 'var(--text-main)',
-                              padding: '4px 10px', 
-                              borderRadius: '4px', 
-                              fontSize: '12px',
-                              fontWeight: 500,
-                              cursor: 'pointer',
-                              transition: 'all 0.2s'
-                            }}
-                          >
-                            {sz}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Colors */}
-                      {getAvailableColors(item).length > 0 && (
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
-                          {getAvailableColors(item).map((c, idx) => (
-                            <div 
-                              key={idx}
-                              onClick={() => setSelectedQuickColor(prev => ({...prev, [item.id]: c.name}))}
-                              title={c.name}
-                              style={{
-                                width: '24px', height: '24px', borderRadius: '50%', cursor: 'pointer',
-                                border: selectedQuickColor[item.id] === c.name ? '2px solid var(--text-main)' : '1px solid var(--border-color)',
-                                backgroundImage: `url(${getImageUrl(c.image)})`,
-                                backgroundSize: 'cover', backgroundPosition: 'center',
-                                flexShrink: 0
-                              }}
-                            />
-                          ))}
+                      {getAvailableSizes(item).length === 0 ? (
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                          Sin tallas disponibles con stock
+                        </p>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                          {getAvailableSizes(item).map(sz => {
+                            const currentSize = selectedQuickSize[item.id] || getAvailableSizes(item)[0];
+                            const isSelected = currentSize === sz;
+                            return (
+                              <button 
+                                key={sz}
+                                type="button"
+                                onClick={() => setSelectedQuickSize(prev => ({...prev, [item.id]: sz}))}
+                                style={{ 
+                                  border: isSelected ? '1px solid var(--text-main)' : '1px solid var(--border-color)', 
+                                  backgroundColor: isSelected ? 'var(--text-main)' : 'transparent',
+                                  color: isSelected ? 'white' : 'var(--text-main)',
+                                  padding: '4px 10px', 
+                                  borderRadius: '4px', 
+                                  fontSize: '12px',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                {sz}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
 
                       <button 
+                        type="button"
+                        disabled={isAddingQuick[item.id] || getAvailableSizes(item).length === 0}
+                        onClick={(e) => handleConfirmQuickAdd(e, item)}
                         style={{ 
                           width: '100%', padding: '10px', 
-                          backgroundColor: 'var(--text-main)', color: 'white', 
+                          backgroundColor: getAvailableSizes(item).length === 0 ? 'var(--border-color, #ccc)' : 'var(--text-main)', 
+                          color: 'white', 
                           borderRadius: '6px', fontSize: '13px', fontWeight: 600,
-                          border: 'none', cursor: 'pointer',
-                          display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px'
+                          border: 'none', 
+                          cursor: (isAddingQuick[item.id] || getAvailableSizes(item).length === 0) ? 'not-allowed' : 'pointer',
+                          display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+                          opacity: isAddingQuick[item.id] ? 0.7 : 1
                         }}
                       >
-                        <ShoppingBag size={16} /> Confirmar
+                        <ShoppingBag size={16} /> {isAddingQuick[item.id] ? 'Añadiendo...' : 'Confirmar'}
                       </button>
                     </div>
                   )}
@@ -1116,26 +1311,6 @@ const Catalog = () => {
                         </span>
                       )}
                     </div>
-                    {/* COLOR SWATCHES */}
-                    {cfg('catalog_show_swatches', '1') !== '0' && !item.is_bundle && getAvailableColors(item).length > 0 && (
-                      <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        {getAvailableColors(item).slice(0, parseInt(cfg('catalog_max_swatches', '5'))).map((c, idx) => (
-                          <div
-                            key={idx}
-                            title={c.name}
-                            style={{
-                              width: `${cfg('catalog_swatch_size', '13')}px`, height: `${cfg('catalog_swatch_size', '13')}px`, borderRadius: '50%',
-                              border: '1px solid var(--border-color)',
-                              backgroundImage: `url(${getImageUrl(c.image)})`,
-                              backgroundSize: 'cover', backgroundPosition: 'center',
-                            }}
-                          />
-                        ))}
-                        {getAvailableColors(item).length > parseInt(cfg('catalog_max_swatches', '5')) && (
-                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{getAvailableColors(item).length - parseInt(cfg('catalog_max_swatches', '5'))}</span>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {/* BOTÓN AÑADIR RÁPIDO con animación pop */}
@@ -1513,27 +1688,34 @@ const Catalog = () => {
                 {cfg('catalog_show_load_more', '1') !== '0' && (hasMore || visibleCount < processedItems.length) && !isLoading && (
                   <div style={{ textAlign: 'center', marginTop: '40px' }}>
                     <button 
-                      onClick={() => setVisibleCount(p => p + parseInt(cfg('catalog_load_more_count', '12'), 10))}
+                      type="button"
+                      disabled={isLoadingMore}
+                      onClick={handleLoadMore}
                       style={{ 
                         padding: '12px 32px', 
                         fontSize: '14px', 
                         fontWeight: '600',
                         borderRadius: '8px', 
-                        cursor: 'pointer',
+                        cursor: isLoadingMore ? 'not-allowed' : 'pointer',
                         backgroundColor: 'var(--text-main)',
                         color: 'var(--bg-main, #fff)',
                         border: 'none',
-                        transition: 'opacity 0.2s'
+                        transition: 'opacity 0.2s',
+                        opacity: isLoadingMore ? 0.7 : 1,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
                       }}
-                      onMouseOver={(e) => e.target.style.opacity = '0.9'}
-                      onMouseOut={(e) => e.target.style.opacity = '1'}
+                      onMouseOver={(e) => { if (!isLoadingMore) e.target.style.opacity = '0.9'; }}
+                      onMouseOut={(e) => { if (!isLoadingMore) e.target.style.opacity = '1'; }}
                     >
-                      {cfg('catalog_load_more_text', 'Cargar Más')}
+                      {isLoadingMore ? 'Cargando más productos...' : cfg('catalog_load_more_text', 'Ver más')}
                     </button>
                   </div>
                 )}
 
-                {isLoading && (
+                {isLoadingMore && cfg('catalog_show_load_more', '1') === '0' && (
                   <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                     Cargando más productos...
                   </div>

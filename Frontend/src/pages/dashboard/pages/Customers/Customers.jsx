@@ -130,44 +130,52 @@ export default function Customers() {
       </div>
 
       {/* KPI Cards */}
-      <div className="customers-kpi-container">
+      <div className="customers-kpi-grid">
         <div className="customers-kpi-card kpi-total">
-          <div className="customers-kpi-icon-wrapper">
-            <Users size={22} />
-          </div>
-          <div className="customers-kpi-content">
-            <span className="customers-kpi-label">Total de Clientes</span>
+          <div className="customers-kpi-top">
             <span className="customers-kpi-value">{kpis.totalCustomers}</span>
+          </div>
+          <div className="customers-kpi-bottom">
+            <div className="customers-kpi-icon-mini">
+              <Users size={14} />
+            </div>
+            <span className="customers-kpi-label">Total Clientes</span>
           </div>
         </div>
 
         <div className="customers-kpi-card kpi-active">
-          <div className="customers-kpi-icon-wrapper">
-            <UserCheck size={22} />
-          </div>
-          <div className="customers-kpi-content">
-            <span className="customers-kpi-label">Clientes Activos</span>
+          <div className="customers-kpi-top">
             <span className="customers-kpi-value">{kpis.activeCustomers}</span>
+          </div>
+          <div className="customers-kpi-bottom">
+            <div className="customers-kpi-icon-mini">
+              <UserCheck size={14} />
+            </div>
+            <span className="customers-kpi-label">Clientes Activos</span>
           </div>
         </div>
 
         <div className="customers-kpi-card kpi-new">
-          <div className="customers-kpi-icon-wrapper">
-            <UserPlus size={22} />
-          </div>
-          <div className="customers-kpi-content">
-            <span className="customers-kpi-label">Nuevos (Este Mes)</span>
+          <div className="customers-kpi-top">
             <span className="customers-kpi-value">+{kpis.newThisMonth}</span>
+          </div>
+          <div className="customers-kpi-bottom">
+            <div className="customers-kpi-icon-mini">
+              <UserPlus size={14} />
+            </div>
+            <span className="customers-kpi-label">Nuevos (Mes)</span>
           </div>
         </div>
 
         <div className="customers-kpi-card kpi-points">
-          <div className="customers-kpi-icon-wrapper">
-            <Award size={22} />
-          </div>
-          <div className="customers-kpi-content">
-            <span className="customers-kpi-label">Puntos Distribuidos</span>
+          <div className="customers-kpi-top">
             <span className="customers-kpi-value">{kpis.totalPoints}</span>
+          </div>
+          <div className="customers-kpi-bottom">
+            <div className="customers-kpi-icon-mini">
+              <Award size={14} />
+            </div>
+            <span className="customers-kpi-label">Puntos Totales</span>
           </div>
         </div>
       </div>

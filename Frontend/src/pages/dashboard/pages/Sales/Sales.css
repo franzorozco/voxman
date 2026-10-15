@@ -166,89 +166,99 @@
 .sales-kpi-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 24px;
   width: 100%;
 }
 
 .sales-kpi-card {
   background: var(--bg-card);
-  padding: 18px 20px;
-  border-radius: 16px;
+  padding: 16px 16px 14px 18px;
+  border-radius: 14px;
   border: 1px solid var(--border-color);
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   min-width: 0;
+  position: relative;
+  overflow: hidden;
   animation: fadeInUp 0.35s ease;
 }
 
-.sales-kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-  border-color: rgba(99, 102, 241, 0.3);
+.sales-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 3.5px;
+  border-radius: 14px 0 0 14px;
 }
 
-.sales-kpi-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+.sales-kpi-card.kpi-revenue::before { background: #10b981; }
+.sales-kpi-card.kpi-sales::before   { background: #3b82f6; }
+.sales-kpi-card.kpi-ticket::before  { background: #8b5cf6; }
+
+.sales-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.sales-kpi-top {
+  width: 100%;
+  min-width: 0;
+}
+
+.sales-kpi-value {
+  color: var(--text-main);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: -0.3px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.sales-kpi-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sales-kpi-icon-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
 }
 
-.sales-kpi-card:hover .sales-kpi-icon-wrapper {
-  transform: scale(1.05);
-}
-
-/* Color schemes for each Sales KPI */
-.sales-kpi-card.kpi-revenue .sales-kpi-icon-wrapper {
-  background: rgba(16, 185, 129, 0.12);
+.sales-kpi-card.kpi-revenue .sales-kpi-icon-mini {
+  background: rgba(16, 185, 129, 0.14);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
-.sales-kpi-card.kpi-sales .sales-kpi-icon-wrapper {
-  background: rgba(59, 130, 246, 0.12);
+.sales-kpi-card.kpi-sales .sales-kpi-icon-mini {
+  background: rgba(59, 130, 246, 0.14);
   color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-.sales-kpi-card.kpi-ticket .sales-kpi-icon-wrapper {
-  background: rgba(139, 92, 246, 0.12);
+.sales-kpi-card.kpi-ticket .sales-kpi-icon-mini {
+  background: rgba(139, 92, 246, 0.14);
   color: #8b5cf6;
-  border: 1px solid rgba(139, 92, 246, 0.2);
-}
-
-.sales-kpi-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
 }
 
 .sales-kpi-label {
   color: var(--text-muted);
   font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sales-kpi-value {
-  color: var(--text-main);
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.1;
-  word-break: break-word;
+  font-weight: 500;
+  line-height: 1.25;
+  margin: 0;
 }
 
 @keyframes fadeInUp {
@@ -264,21 +274,25 @@
 
 /* MOBILE KPI & ACTIONS SETTINGS */
 @media (max-width: 768px) {
+  .sales-container {
+    padding: 14px 12px;
+  }
+
+  .sales-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
   .sales-kpi-container {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
-    margin-bottom: 20px !important;
-    overflow-x: visible !important;
-    display: grid !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
   }
 
   .sales-kpi-card {
-    padding: 14px 16px !important;
-    border-radius: 14px !important;
-    gap: 12px !important;
-    text-align: left !important;
-    align-items: center !important;
-    flex-direction: row !important;
+    padding: 12px 10px 10px 12px !important;
+    gap: 6px !important;
   }
 
   /* Ingresos Totales abarca todo el ancho superior */
@@ -286,27 +300,27 @@
     grid-column: 1 / -1 !important;
   }
 
-  .sales-kpi-icon-wrapper {
-    width: 42px !important;
-    height: 42px !important;
-    border-radius: 12px !important;
-  }
-
-  .sales-kpi-card.kpi-revenue .sales-kpi-icon-wrapper {
-    width: 44px !important;
-    height: 44px !important;
-  }
-
   .sales-kpi-value {
-    font-size: 20px !important;
+    font-size: 18px !important;
+  }
+
+  .sales-kpi-bottom {
+    gap: 6px !important;
+  }
+
+  .sales-kpi-icon-mini {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 5px !important;
+  }
+
+  .sales-kpi-icon-mini svg {
+    width: 12px !important;
+    height: 12px !important;
   }
 
   .sales-kpi-label {
     font-size: 11px !important;
-    letter-spacing: 0.2px !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
     line-height: 1.2 !important;
   }
 
@@ -315,41 +329,22 @@
     display: none !important;
   }
 
-  /* MOBILE TABLE ACTIONS DROPDOWN */
-  
   .hide-on-pc {
     display: block !important;
   }
 }
 
 @media (max-width: 480px) {
-  .sales-kpi-container {
-    gap: 10px !important;
-    margin-bottom: 16px !important;
-  }
-
-  .sales-kpi-card {
-    padding: 12px 14px !important;
-    gap: 10px !important;
-  }
-
-  .sales-kpi-icon-wrapper {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 10px !important;
+  .sales-container {
+    padding: 12px 10px;
   }
 
   .sales-kpi-value {
-    font-size: 18px !important;
+    font-size: 16px !important;
   }
 
   .sales-kpi-label {
-    font-size: 10px !important;
-    letter-spacing: 0 !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
-    line-height: 1.2 !important;
+    font-size: 10.5px !important;
   }
 }
 

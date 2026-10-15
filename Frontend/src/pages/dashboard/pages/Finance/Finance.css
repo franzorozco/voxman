@@ -1,4 +1,4 @@
-﻿/* =========================
+/* =========================
     PRODUCTS CONTAINER
 ========================= */
 
@@ -4134,12 +4134,148 @@ select option:focus {
   gap: 16px;
   margin-bottom: 24px;
 }
+
+/* KPI Cards for Finance */
+.finance-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.finance-kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.finance-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.finance-kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3.5px;
+    background: var(--color-primary);
+}
+
+.finance-kpi-card.kpi-revenue::before { background: #10b981; }
+.finance-kpi-card.kpi-expenses::before { background: #ef4444; }
+.finance-kpi-card.kpi-profit::before { background: #6366f1; }
+.finance-kpi-card.kpi-treasury::before { background: #8b5cf6; }
+
+.finance-kpi-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+}
+
+.finance-kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.15;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.finance-kpi-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.finance-kpi-icon-mini {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.finance-kpi-card.kpi-revenue .finance-kpi-icon-mini {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.finance-kpi-card.kpi-expenses .finance-kpi-icon-mini {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.finance-kpi-card.kpi-profit .finance-kpi-icon-mini {
+    background: rgba(99, 102, 241, 0.12);
+    color: #6366f1;
+}
+
+.finance-kpi-card.kpi-treasury .finance-kpi-icon-mini {
+    background: rgba(139, 92, 246, 0.12);
+    color: #8b5cf6;
+}
+
+.finance-kpi-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 @media (max-width: 768px) {
   .owner-kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-}
 
+  .finance-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 16px;
+  }
+
+  .finance-kpi-card {
+    padding: 12px 10px 10px 12px;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .finance-kpi-value {
+    font-size: 16px;
+  }
+
+  .finance-kpi-bottom {
+    gap: 6px;
+  }
+
+  .finance-kpi-icon-mini {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+  }
+
+  .finance-kpi-icon-mini svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .finance-kpi-label {
+    font-size: 11px;
+  }
+}
 
 
 

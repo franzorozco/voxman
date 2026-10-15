@@ -379,36 +379,42 @@ export default function Orders() {
 
       <div className="orders-kpi-container">
         <div className="orders-kpi-card kpi-total">
-          <div className="orders-kpi-icon-wrapper">
-            <Package size={22} />
-          </div>
-          <div className="orders-kpi-content">
-            <span className="orders-kpi-label">Total de Envíos</span>
+          <div className="orders-kpi-top">
             <span className="orders-kpi-value">{schedules.length || 0}</span>
+          </div>
+          <div className="orders-kpi-bottom">
+            <div className="orders-kpi-icon-mini">
+              <Package size={14} />
+            </div>
+            <span className="orders-kpi-label">Total de Envíos</span>
           </div>
         </div>
 
         <div className="orders-kpi-card kpi-pending">
-          <div className="orders-kpi-icon-wrapper">
-            <Clock size={22} />
-          </div>
-          <div className="orders-kpi-content">
-            <span className="orders-kpi-label">Pendientes / Agendados</span>
+          <div className="orders-kpi-top">
             <span className="orders-kpi-value">
               {schedules.filter(s => ['pending', 'assigned'].includes(s.status)).length || 0}
             </span>
           </div>
+          <div className="orders-kpi-bottom">
+            <div className="orders-kpi-icon-mini">
+              <Clock size={14} />
+            </div>
+            <span className="orders-kpi-label">Pendientes / Agendados</span>
+          </div>
         </div>
 
         <div className="orders-kpi-card kpi-completed">
-          <div className="orders-kpi-icon-wrapper">
-            <CheckCircle2 size={22} />
-          </div>
-          <div className="orders-kpi-content">
-            <span className="orders-kpi-label">Completados</span>
+          <div className="orders-kpi-top">
             <span className="orders-kpi-value">
               {schedules.filter(s => s.status === 'completed').length || 0}
             </span>
+          </div>
+          <div className="orders-kpi-bottom">
+            <div className="orders-kpi-icon-mini">
+              <CheckCircle2 size={14} />
+            </div>
+            <span className="orders-kpi-label">Completados</span>
           </div>
         </div>
       </div>

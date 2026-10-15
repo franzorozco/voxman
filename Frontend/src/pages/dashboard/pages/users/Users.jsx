@@ -1,6 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Download,
+  RefreshCw,
+  Users as UsersIcon,
+  UserCheck,
+  UserX,
+  Shield,
+  ShieldCheck,
+  Globe,
+  Store,
+  Laptop,
+  Award,
+} from "lucide-react";
 import {
   getUsers,
   createUser,
@@ -13,8 +27,8 @@ import "./Users.css";
 import UserForm from "./UserForm";
 import SoftDeleteModal from "./SoftDeleteModal";
 import CanAccess from "../../../../components/ui/CanAccess";
-
 import UsersTable from "./UsersTable";
+import { GoogleIcon } from "./userHelpers";
 
 const authUser = JSON.parse(localStorage.getItem("user"));
 
@@ -38,6 +52,8 @@ export default function Users() {
     minPoints: "",
     maxPoints: "",
     groupBy: "none",
+    verification: "all",
+    origin: "all",
   });
     const [softDeleteModal, setSoftDeleteModal] = useState({
   open: false,
@@ -213,11 +229,50 @@ const handleOverwrite = async (data) => {
   };
 
 
+  const userStats = useMemo(() => {
+    const list = Array.isArray(users) ? users : [];
+    const total = list.length;
+    const active = list.filter((u) => u.is_active).length;
+    const inactive = list.filter((u) => !u.is_active).length;
+    const verified = list.filter((u) => Boolean(u.email_verified_at || u.google_id)).length;
+    const pendingVerification = list.filter(
+      (u) => !u.email_verified_at && !u.google_id && !u.email?.includes("@guest")
+    ).length;
+    const googleUsers = list.filter((u) => Boolean(u.google_id)).length;
+    const posUsers = list.filter(
+      (u) =>
+        (u.email && u.email.includes("@guest")) ||
+        u.customer?.customer_code?.startsWith("CLI-POS") ||
+        u.registration_source === "pos" ||
+        u.source === "store" ||
+        u.source === "pos"
+    ).length;
+    const webUsers = Math.max(0, total - posUsers);
+    const customers = list.filter((u) => u.customer?.is_active).length;
+    const employees = list.filter((u) => u.employee?.is_active).length;
+
+    return {
+      total,
+      active,
+      inactive,
+      verified,
+      pendingVerification,
+      googleUsers,
+      posUsers,
+      webUsers,
+      customers,
+      employees,
+    };
+  }, [users]);
+
   return (
     <div className="users-container">
 
         <div className="users-header">
-  <h1 className="users-title">?? Usuarios</h1>
+  <h1 className="users-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <UsersIcon size={26} style={{ color: 'var(--color-primary)' }} />
+    Usuarios
+  </h1>
   
   <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
     <CanAccess permission="view_users">
@@ -264,6 +319,92 @@ const handleOverwrite = async (data) => {
     </button>
   </div>
 </div>
+
+      {/* KPI Cards Normalizados */}
+      <div className="users-kpi-grid">
+        <div className="users-kpi-card kpi-total">
+          <div className="users-kpi-top">
+            <span className="users-kpi-value">{userStats.total}</span>
+          </div>
+          <div className="users-kpi-bottom">
+            <div className="users-kpi-icon-mini">
+              <UsersIcon size={14} />
+            </div>
+            <span className="users-kpi-label">Total Usuarios</span>
+          </div>
+        </div>
+
+        <div className="users-kpi-card kpi-active">
+          <div className="users-kpi-top">
+            <span className="users-kpi-value">{userStats.active}</span>
+          </div>
+          <div className="users-kpi-bottom">
+            <div className="users-kpi-icon-mini">
+              <UserCheck size={14} />
+            </div>
+            <span className="users-kpi-label">Usuarios Activos</span>
+          </div>
+        </div>
+
+        <div className="users-kpi-card kpi-verified">
+          <div className="users-kpi-top">
+            <span className="users-kpi-value">{userStats.verified}</span>
+          </div>
+          <div className="users-kpi-bottom">
+            <div className="users-kpi-icon-mini">
+              <ShieldCheck size={14} />
+            </div>
+            <span className="users-kpi-label">Emails Verificados</span>
+          </div>
+        </div>
+
+        <div className="users-kpi-card kpi-customers">
+          <div className="users-kpi-top">
+            <span className="users-kpi-value">{userStats.customers}</span>
+          </div>
+          <div className="users-kpi-bottom">
+            <div className="users-kpi-icon-mini">
+              <Award size={14} />
+            </div>
+            <span className="users-kpi-label">Clientes Registrados</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Barra de Indicadores y Visualización Rápida (Elegante & Minimalista) */}
+      <div className="users-quick-indicators">
+        <div className="users-indicator-chip" title="Estado de verificación general">
+          <ShieldCheck size={13} className="indicator-icon-verified" />
+          <span className="indicator-label">Verificación:</span>
+          <span className="indicator-highlight">{userStats.verified} verificadas</span>
+          <span className="indicator-divider">•</span>
+          <span className="indicator-sub">{userStats.pendingVerification} pendientes (24h)</span>
+        </div>
+
+        <div className="users-indicator-chip" title="Distribución de usuarios por canal de acceso">
+          <Globe size={13} className="indicator-icon-web" />
+          <span className="indicator-label">Canales:</span>
+          <span className="indicator-highlight">{userStats.webUsers} Web</span>
+          {userStats.googleUsers > 0 && (
+            <>
+              <span className="indicator-divider">•</span>
+              <span className="indicator-sub indicator-google-chip">
+                <GoogleIcon size={12} /> {userStats.googleUsers} Google
+              </span>
+            </>
+          )}
+          <span className="indicator-divider">•</span>
+          <span className="indicator-sub">{userStats.posUsers} POS</span>
+        </div>
+
+        <div className="users-indicator-chip" title="Equipo y colaboradores internos">
+          <Laptop size={13} className="indicator-icon-staff" />
+          <span className="indicator-label">Equipo interno:</span>
+          <span className="indicator-highlight">{userStats.employees} colaboradores</span>
+          <span className="indicator-divider">•</span>
+          <span className="indicator-sub">{userStats.inactive} inactivos</span>
+        </div>
+      </div>
 
       <UsersTable
         users={users}

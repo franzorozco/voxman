@@ -60,18 +60,20 @@ const today = () => {
 
 const KpiCard = ({ icon: Icon, label, value, sub, color, loading }) => (
   <div className={`hd-kpi-card ${color || ""}`}>
-    <div className="hd-kpi-icon-box">
-      <Icon size={22} />
-    </div>
-    <div className="hd-kpi-body">
+    <div className="hd-kpi-top">
       {loading ? (
         <div className="hd-skeleton hd-skeleton-lg" />
       ) : (
         <h3 className="hd-kpi-value">{value}</h3>
       )}
-      <p className="hd-kpi-label">{label}</p>
-      {sub && <p className="hd-kpi-sub">{sub}</p>}
     </div>
+    <div className="hd-kpi-bottom">
+      <span className="hd-kpi-icon-mini">
+        <Icon size={14} />
+      </span>
+      <span className="hd-kpi-label">{label}</span>
+    </div>
+    {sub && <p className="hd-kpi-sub">{sub}</p>}
   </div>
 );
 
@@ -306,8 +308,8 @@ export default function Home() {
         {canAny(P.inventory) && <KpiCard icon={AlertTriangle} label="Alertas de stock" value={fmtNum(inventoryStats?.low_stock_alerts)} sub="Productos agotados o bajos" color={inventoryStats?.low_stock_alerts > 0 ? "kpi-orange" : "kpi-green"} loading={loadingKpis} /> }
         {canAny(P.customers) && <KpiCard icon={Users} label="Clientes totales" value={fmtNum(customerKpis?.total_customers)} sub={`${fmtNum(customerKpis?.new_this_month ?? 0)} nuevos`} color="kpi-teal" loading={loadingKpis} /> }
         {canAny(P.finance) && <KpiCard icon={CreditCard} label="Caja disponible" value={fmt(cashBalance)} sub={`Banco: ${fmt(bankBalance)}`} color="kpi-indigo" loading={loadingKpis} /> }
-        {canAny(P.sales) && <KpiCard icon={ShoppingBag} label="Ticket promedio" value={fmt(salesData?.average_ticket)} sub="Por transacciÃ³n" color="kpi-rose" loading={loadingKpis} /> }
-        {canAny(P.sales) && <KpiCard icon={BarChart2} label="Descuentos dados" value={fmt(salesData?.total_discount)} sub="Total del perÃ­odo" color="kpi-amber" loading={loadingKpis} /> }
+        {canAny(P.sales) && <KpiCard icon={ShoppingBag} label="Ticket promedio" value={fmt(salesData?.average_ticket)} sub="Por transacción" color="kpi-rose" loading={loadingKpis} /> }
+        {canAny(P.sales) && <KpiCard icon={BarChart2} label="Descuentos dados" value={fmt(salesData?.total_discount)} sub="Total del período" color="kpi-amber" loading={loadingKpis} /> }
       </div>
 
       <div className="hd-charts-section">
@@ -317,10 +319,10 @@ export default function Home() {
             {loadingTables ? (
               <div className="hd-skeleton hd-skeleton-row" style={{height: '100%'}} />
             ) : chartDataSales.length === 0 ? (
-              <p className="hd-empty">No hay suficientes datos para el grÃ¡fico.</p>
+              <p className="hd-empty">No hay suficientes datos para el gráfico.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
-                <AreaChart data={chartDataSales} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={chartDataSales} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
@@ -329,7 +331,7 @@ export default function Home() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                   <XAxis dataKey="date" tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} minTickGap={20} />
-                  <YAxis tickFormatter={(v) => `Bs ${v}`} tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} width={80} />
+                  <YAxis tickFormatter={(v) => `Bs ${v}`} tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} width={55} />
                   <RechartsTooltip 
                     formatter={(value) => [fmt(value), "Ventas"]} 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
@@ -348,10 +350,10 @@ export default function Home() {
               <div className="hd-skeleton hd-skeleton-row" style={{height: '100%'}} />
             ) : (
               <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={chartDataFunds} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <BarChart data={chartDataFunds} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                   <XAxis dataKey="name" tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} />
-                  <YAxis tickFormatter={(v) => `Bs ${v}`} tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} width={80} />
+                  <YAxis tickFormatter={(v) => `Bs ${v}`} tick={{fontSize: 12, fill: 'var(--text-muted)'}} tickLine={false} axisLine={false} width={55} />
                   <RechartsTooltip 
                     formatter={(value) => [fmt(value), "Monto"]} 
                     cursor={{fill: 'var(--bg-overlay)'}}
@@ -366,21 +368,21 @@ export default function Home() {
       </div>
 
       <div className="hd-section">
-        <h2 className="hd-section-title">MÃ³dulos del Sistema</h2>
+        <h2 className="hd-section-title">Módulos del Sistema</h2>
         <div className="hd-quick-links">
           {[
             { to: "/dashboard/sales",       icon: ShoppingBag,   label: "Ventas",        sub: "Historial y detalles",     color: "ql-green"   },
             { to: "/dashboard/inventory",   icon: Warehouse,     label: "Inventario",    sub: "Stock y movimientos",      color: "ql-blue"    },
-            { to: "/dashboard/products",    icon: Package,       label: "Productos",     sub: "CatÃ¡logo y variantes",     color: "ql-purple"  },
+            { to: "/dashboard/products",    icon: Package,       label: "Productos",     sub: "Catálogo y variantes",     color: "ql-purple"  },
             { to: "/dashboard/customers",   icon: Users,         label: "Clientes",      sub: "Base de clientes",         color: "ql-teal"    },
-            { to: "/dashboard/orders",      icon: Truck,         label: "Pedidos",       sub: "Delivery y envÃ­os",        color: "ql-orange"  },
+            { to: "/dashboard/orders",      icon: Truck,         label: "Pedidos",       sub: "Delivery y envíos",        color: "ql-orange"  },
             { to: "/dashboard/carts",       icon: ShoppingCart,  label: "Proformas",     sub: "Carritos activos",         color: "ql-indigo"  },
             { to: "/dashboard/returns",     icon: RotateCcw,     label: "Devoluciones",  sub: "Solicitudes pendientes",   color: "ql-rose"    },
             { to: "/dashboard/promotions",  icon: Tag,           label: "Promociones",   sub: "Descuentos y cupones",     color: "ql-amber"   },
             { to: "/dashboard/giftcards",   icon: Gift,          label: "Giftcards",     sub: "Tarjetas de regalo",       color: "ql-pink"    },
             { to: "/dashboard/finance",     icon: DollarSign,    label: "Finanzas",      sub: "Dashboard financiero",     color: "ql-emerald" },
             { to: "/dashboard/purchases",   icon: FileText,      label: "Compras",       sub: "Abastecimiento",           color: "ql-sky"     },
-            { to: "/dashboard/logs",        icon: Activity,      label: "AuditorÃ­a",     sub: "Registro de sistema",      color: "ql-slate"   },
+            { to: "/dashboard/logs",        icon: Activity,      label: "Auditoría",     sub: "Registro de sistema",      color: "ql-slate"   },
           ].filter((m) => canAny(LINK_PERMS[m.to])).map(({ to, icon: Icon, label, sub, color }) => (
             <Link key={to} to={to} className={`hd-ql-card ${color}`}>
               <div className="hd-ql-icon"><Icon size={22} /></div>
@@ -462,7 +464,7 @@ export default function Home() {
                           </span>
                         </td>
                         <td><StatusBadge status={o.status} /></td>
-                        <td className="hd-muted">{o.scheduled_date || "â€”"}</td>
+                        <td className="hd-muted">{o.scheduled_date || "—"}</td>
                       </tr>
                     );
                   })}
@@ -480,7 +482,7 @@ export default function Home() {
           {loadingTables ? (
             <div className="hd-table-loading">{[...Array(3)].map((_,i)=><div key={i} className="hd-skeleton hd-skeleton-row"/>)}</div>
           ) : pendingReturns.length === 0 ? (
-            <p className="hd-empty">Sin devoluciones pendientes ðŸŽ‰</p>
+            <p className="hd-empty">Sin devoluciones pendientes 🎉</p>
           ) : (
             <div className="hd-table-scroll">
               <table className="hd-table">
@@ -489,7 +491,7 @@ export default function Home() {
                   {pendingReturns.map((r) => (
                     <tr key={r.id}>
                       <td className="hd-mono">{r.id?.slice(0,8)}</td>
-                      <td>{r.reason?.slice(0,28) || "â€”"}</td>
+                      <td>{r.reason?.slice(0,28) || "—"}</td>
                       <td>{r.quantity}</td>
                       <td><StatusBadge status={r.status} /></td>
                     </tr>
@@ -504,7 +506,7 @@ export default function Home() {
 
       <p className="hd-last-refresh">
         <Clock size={13} />
-        Ãšltima actualizaciÃ³n: {lastRefresh.toLocaleTimeString("es-ES")}
+        Última actualización: {lastRefresh.toLocaleTimeString("es-ES")}
       </p>
 
     </div>

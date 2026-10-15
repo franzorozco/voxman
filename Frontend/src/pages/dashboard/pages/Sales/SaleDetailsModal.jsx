@@ -61,7 +61,7 @@ export default function SaleDetailsModal({ saleId, onClose }) {
   }, [saleId, onClose]);
 
   const handleStatusChange = async (newStatus) => {
-    if (!window.confirm(`Â¿EstÃ¡s seguro de cambiar el estado a ${newStatus}?`)) return;
+    if (!window.confirm(`¿Estás seguro de cambiar el estado a ${newStatus}?`)) return;
     
     try {
       setActionLoading(true);

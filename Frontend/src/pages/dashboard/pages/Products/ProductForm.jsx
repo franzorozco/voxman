@@ -1078,7 +1078,7 @@ const getAttributeValueName = (valueId) => {
             <div className="product-form-right">
               <div className="form-grid">
 
-                {/* TODO TU FORM ACTUAL AQUÃ  */}
+                {/* TODO TU FORM ACTUAL AQUÍ */}
                 <div className="form-group">
                   <label>Nombre</label>
                   <input name="name" value={form.name} onChange={handleChange} />
@@ -2106,7 +2106,7 @@ const getAttributeValueName = (valueId) => {
           </div>
 
           {/* =======================================
-              MODAL VER TODOS (DINÃ MICO PARA EJE N)
+              MODAL VER TODOS (DINÁMICO PARA EJE N)
           ======================================= */}
           {activeAxisModal !== null && (() => {
             const axis = simpleConfig.axes[activeAxisModal];

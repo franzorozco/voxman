@@ -19,6 +19,107 @@
     margin: 0;
 }
 
+/* KPI Cards */
+.returns-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.returns-kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.returns-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.returns-kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3.5px;
+    background: var(--color-primary);
+}
+
+.returns-kpi-card.kpi-total::before { background: #6366f1; }
+.returns-kpi-card.kpi-pending::before { background: #f59e0b; }
+.returns-kpi-card.kpi-refunded::before { background: #10b981; }
+.returns-kpi-card.kpi-rate::before { background: #3b82f6; }
+
+.returns-kpi-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+}
+
+.returns-kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.15;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.returns-kpi-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.returns-kpi-icon-mini {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.returns-kpi-card.kpi-total .returns-kpi-icon-mini {
+    background: rgba(99, 102, 241, 0.12);
+    color: #6366f1;
+}
+
+.returns-kpi-card.kpi-pending .returns-kpi-icon-mini {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.returns-kpi-card.kpi-refunded .returns-kpi-icon-mini {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.returns-kpi-card.kpi-rate .returns-kpi-icon-mini {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+.returns-kpi-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.25;
+}
+
 .metrics-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -194,10 +295,44 @@
     display: none !important;
   }
   
+  .returns-kpi-grid,
   .metrics-container {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 16px;
+  }
+
+  .returns-kpi-card {
+    padding: 12px 10px 10px 12px;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .returns-kpi-value {
+    font-size: 16px;
+  }
+
+  .returns-kpi-bottom {
+    gap: 6px;
+  }
+
+  .returns-kpi-icon-mini {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+  }
+
+  .returns-kpi-icon-mini svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .returns-kpi-label {
+    font-size: 11px;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.2;
   }
 }
 

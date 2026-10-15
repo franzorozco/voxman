@@ -89,39 +89,62 @@ export default function PurchasesList() {
         </div>
       </div>
 
-      {stats && (
-        <div className="metrics-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-          <div className="metric-card">
-            <div className="metric-icon-wrapper" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--color-danger)' }}>
-              <Clock size={24} />
-            </div>
-            <div className="metric-content">
-              <div className="metric-label">Deuda Total</div>
-              <div className="metric-value">Bs. {Number(stats.total_debt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            </div>
+      {/* KPI Cards */}
+      <div className="purchases-kpi-grid">
+        <div className="purchases-kpi-card kpi-total">
+          <div className="purchases-kpi-top">
+            <span className="purchases-kpi-value">{purchases ? purchases.length : 0}</span>
           </div>
-          
-          <div className="metric-card">
-            <div className="metric-icon-wrapper" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)' }}>
-              <CheckCircle size={24} />
+          <div className="purchases-kpi-bottom">
+            <div className="purchases-kpi-icon-mini">
+              <Package size={14} />
             </div>
-            <div className="metric-content">
-              <div className="metric-label">Total Pagado (Mes)</div>
-              <div className="metric-value">Bs. {Number(stats.monthly_payments).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            </div>
-          </div>
-
-          <div className="metric-card">
-            <div className="metric-icon-wrapper" style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)' }}>
-              <FileText size={24} />
-            </div>
-            <div className="metric-content">
-              <div className="metric-label">Mercadería Recibida</div>
-              <div className="metric-value">Bs. {Number(stats.monthly_purchases).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            </div>
+            <span className="purchases-kpi-label">Total Órdenes</span>
           </div>
         </div>
-      )}
+
+        <div className="purchases-kpi-card kpi-debt">
+          <div className="purchases-kpi-top">
+            <span className="purchases-kpi-value">
+              Bs. {Number(stats?.total_debt || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </span>
+          </div>
+          <div className="purchases-kpi-bottom">
+            <div className="purchases-kpi-icon-mini">
+              <Clock size={14} />
+            </div>
+            <span className="purchases-kpi-label">Deuda Total</span>
+          </div>
+        </div>
+
+        <div className="purchases-kpi-card kpi-paid">
+          <div className="purchases-kpi-top">
+            <span className="purchases-kpi-value">
+              Bs. {Number(stats?.monthly_payments || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </span>
+          </div>
+          <div className="purchases-kpi-bottom">
+            <div className="purchases-kpi-icon-mini">
+              <CheckCircle size={14} />
+            </div>
+            <span className="purchases-kpi-label">Total Pagado (Mes)</span>
+          </div>
+        </div>
+
+        <div className="purchases-kpi-card kpi-received">
+          <div className="purchases-kpi-top">
+            <span className="purchases-kpi-value">
+              Bs. {Number(stats?.monthly_purchases || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </span>
+          </div>
+          <div className="purchases-kpi-bottom">
+            <div className="purchases-kpi-icon-mini">
+              <FileText size={14} />
+            </div>
+            <span className="purchases-kpi-label">Mercadería (Mes)</span>
+          </div>
+        </div>
+      </div>
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>

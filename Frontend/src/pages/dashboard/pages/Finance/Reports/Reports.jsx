@@ -88,8 +88,8 @@ export default function FinanceReports() {
     const isPositive = value >= 0;
     const color = isPositive ? '#22c55e' : '#ef4444';
     return (
-      <span style={{ color, fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }}>
-        {isPositive ? '↑' : '↓'} {Math.abs(value).toFixed(1)}% vs ant.
+      <span style={{ color, fontSize: '11px', fontWeight: '600', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+        {isPositive ? '↑' : '↓'} {Math.abs(value).toFixed(1)}%
       </span>
     );
   };
@@ -147,59 +147,77 @@ export default function FinanceReports() {
         </div>
       ) : (
         <>
-          <div className="kpi-row" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', marginBottom: '24px' }}>
-  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <TrendingUp size={16} color="var(--color-success)" />
-      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ventas Brutas Totales</span>
-    </div>
-    <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(data?.summary?.total_sales || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-    {data?.summary?.growth?.sales !== undefined && data?.summary?.growth?.sales !== null && (
-      <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-        {renderGrowth(data.summary.growth.sales)}
-      </div>
-    )}
-  </div>
-  
-  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <TrendingDown size={16} color="var(--color-danger)" />
-      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Egresos y Gastos</span>
-    </div>
-    <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-main)' }}>Bs. {Number(data?.summary?.total_expenses || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-    {data?.summary?.growth?.expenses !== undefined && data?.summary?.growth?.expenses !== null && (
-      <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-        {renderGrowth(data.summary.growth.expenses)}
-      </div>
-    )}
-  </div>
+          <div className="reports-kpi-grid">
+            <div className="reports-kpi-card kpi-sales">
+              <div className="reports-kpi-top">
+                <span className="reports-kpi-value">
+                  Bs. {Number(data?.summary?.total_sales || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </span>
+                {renderGrowth(data?.summary?.growth?.sales)}
+              </div>
+              <div className="reports-kpi-bottom">
+                <div className="reports-kpi-icon-mini">
+                  <TrendingUp size={14} />
+                </div>
+                <span className="reports-kpi-label">Ventas Brutas</span>
+              </div>
+            </div>
+            
+            <div className="reports-kpi-card kpi-expenses">
+              <div className="reports-kpi-top">
+                <span className="reports-kpi-value">
+                  Bs. {Number(data?.summary?.total_expenses || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </span>
+                {renderGrowth(data?.summary?.growth?.expenses)}
+              </div>
+              <div className="reports-kpi-bottom">
+                <div className="reports-kpi-icon-mini">
+                  <TrendingDown size={14} />
+                </div>
+                <span className="reports-kpi-label">Egresos y Gastos</span>
+              </div>
+            </div>
 
-  <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', gridColumn: isMobile ? '1 / -1' : 'auto' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <DollarSign size={16} color="var(--color-primary)" />
-      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Utilidad Neta (Ingresos - Gastos)</span>
-    </div>
-    <div style={{ fontSize: '24px', fontWeight: 700, color: (data?.summary?.net_profit || 0) >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
-      Bs. {Number(data?.summary?.net_profit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-    </div>
-    {data?.summary?.growth?.profit !== undefined && data?.summary?.growth?.profit !== null && (
-      <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-        {renderGrowth(data.summary.growth.profit)}
-      </div>
-    )}
-  </div>
-</div>
+            <div className="reports-kpi-card kpi-profit">
+              <div className="reports-kpi-top">
+                <span className="reports-kpi-value" style={{ color: (data?.summary?.net_profit || 0) >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                  Bs. {Number(data?.summary?.net_profit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </span>
+                {renderGrowth(data?.summary?.growth?.profit)}
+              </div>
+              <div className="reports-kpi-bottom">
+                <div className="reports-kpi-icon-mini">
+                  <DollarSign size={14} />
+                </div>
+                <span className="reports-kpi-label">Utilidad Neta</span>
+              </div>
+            </div>
+
+            <div className="reports-kpi-card kpi-margin">
+              <div className="reports-kpi-top">
+                <span className="reports-kpi-value">
+                  {data?.summary?.total_sales > 0 ? ((data.summary.net_profit / data.summary.total_sales) * 100).toFixed(1) : '0.0'}%
+                </span>
+              </div>
+              <div className="reports-kpi-bottom">
+                <div className="reports-kpi-icon-mini">
+                  <FileText size={14} />
+                </div>
+                <span className="reports-kpi-label">Margen Neto</span>
+              </div>
+            </div>
+          </div>
 
 <div className="charts-grid">
             <div className="chart-card" style={{ marginBottom: 0 }}>
               <h3>Flujo Histórico (Ventas vs Egresos)</h3>
               <div className="chart-scroll-container">
-                <div style={{ minWidth: '600px', height: 300 }}>
+                <div style={{ minWidth: isMobile ? '100%' : '550px', height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data?.timeline || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={data?.timeline || []} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
-                    <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickMargin={10} tickFormatter={(val) => val.includes("-") ? val.split("-").reverse().join("/") : val} />
-                    <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(val) => `Bs.${val}`} />
+                    <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={11} tickMargin={8} tickFormatter={(val) => val.includes("-") ? val.split("-").reverse().slice(0, 2).join("/") : val} />
+                    <YAxis stroke="var(--text-muted)" fontSize={11} width={55} tickFormatter={(val) => `Bs.${val}`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ paddingTop: '10px' }} />
                     <Bar dataKey="sales" name="Ventas" fill="#22c55e" radius={[4, 4, 0, 0]} />

@@ -1,4 +1,4 @@
-﻿.products-container {
+.products-container {
     padding: 20px;
 }
 
@@ -17,6 +17,107 @@
     align-items: center;
     gap: 12px;
     margin: 0;
+}
+
+/* KPI Cards */
+.purchases-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.purchases-kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.purchases-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.purchases-kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3.5px;
+    background: var(--color-primary);
+}
+
+.purchases-kpi-card.kpi-total::before { background: #6366f1; }
+.purchases-kpi-card.kpi-debt::before { background: #ef4444; }
+.purchases-kpi-card.kpi-paid::before { background: #10b981; }
+.purchases-kpi-card.kpi-received::before { background: #3b82f6; }
+
+.purchases-kpi-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+}
+
+.purchases-kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.15;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.purchases-kpi-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.purchases-kpi-icon-mini {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.purchases-kpi-card.kpi-total .purchases-kpi-icon-mini {
+    background: rgba(99, 102, 241, 0.12);
+    color: #6366f1;
+}
+
+.purchases-kpi-card.kpi-debt .purchases-kpi-icon-mini {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.purchases-kpi-card.kpi-paid .purchases-kpi-icon-mini {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.purchases-kpi-card.kpi-received .purchases-kpi-icon-mini {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+.purchases-kpi-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .metrics-container {
@@ -961,3 +1062,65 @@ textarea.purchase-form-input {
     }
 }
 
+/* ==================================
+   MOBILE / RESPONSIVE (CELULAR)
+   ================================== */
+@media (max-width: 768px) {
+    .products-container {
+        padding: 12px;
+    }
+
+    .products-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .purchases-header-actions {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .purchases-header-actions > * {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .purchases-kpi-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-bottom: 16px;
+    }
+
+    .purchases-kpi-card {
+        padding: 12px 10px 10px 12px;
+        gap: 6px;
+        border-radius: 10px;
+    }
+
+    .purchases-kpi-value {
+        font-size: 16px;
+    }
+
+    .purchases-kpi-bottom {
+        gap: 6px;
+    }
+
+    .purchases-kpi-icon-mini {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+    }
+
+    .purchases-kpi-icon-mini svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .purchases-kpi-label {
+        font-size: 11px;
+    }
+}
