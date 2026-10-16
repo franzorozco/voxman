@@ -1,4 +1,4 @@
-﻿/* =========================
+/* =========================
     PRODUCTS CONTAINER
 ========================= */
 
@@ -4155,5 +4155,130 @@ select option:focus {
 
 
 .products-table:focus-within { overflow: visible !important; }
+
+/* ==========================================================================
+   PRODUCTS KPI GRID (ESTÁNDAR NORMALIZADO)
+   ========================================================================== */
+.products-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.products-kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.products-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.products-kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 4px 0 0 4px;
+}
+
+.products-kpi-card.kpi-total::before { background: #6366f1; }
+.products-kpi-card.kpi-active::before { background: #10b981; }
+.products-kpi-card.kpi-warning::before { background: #f59e0b; }
+.products-kpi-card.kpi-stock::before { background: #3b82f6; }
+
+.products-kpi-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+}
+
+.products-kpi-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.15;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.products-kpi-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.products-kpi-icon-mini {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.products-kpi-card.kpi-total .products-kpi-icon-mini { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+.products-kpi-card.kpi-active .products-kpi-icon-mini { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.products-kpi-card.kpi-warning .products-kpi-icon-mini { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+.products-kpi-card.kpi-stock .products-kpi-icon-mini { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+
+.products-kpi-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: normal;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .products-kpi-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-bottom: 16px;
+    }
+
+    .products-kpi-card {
+        padding: 12px 10px 10px 12px;
+        gap: 6px;
+        border-radius: 10px;
+    }
+
+    .products-kpi-value {
+        font-size: 16px;
+    }
+
+    .products-kpi-bottom {
+        gap: 6px;
+    }
+
+    .products-kpi-icon-mini {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+    }
+
+    .products-kpi-icon-mini svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .products-kpi-label {
+        font-size: 11px;
+    }
+}
+
 
 

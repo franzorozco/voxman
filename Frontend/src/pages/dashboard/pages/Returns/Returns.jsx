@@ -25,6 +25,23 @@ export default function Returns() {
     date_from: "",
     date_to: ""
   });
+
+  const hasActiveFilters = Boolean(
+    filters.status ||
+    filters.date_from ||
+    filters.date_to
+  );
+
+  const activeFiltersCount = [filters.status, filters.date_from, filters.date_to].filter(Boolean).length;
+
+  const handleClearFilters = () => {
+    setFilters(prev => ({
+      ...prev,
+      status: "",
+      date_from: "",
+      date_to: ""
+    }));
+  };
   
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedReturn, setSelectedReturn] = useState(null);
@@ -128,32 +145,38 @@ export default function Returns() {
         </div>
       </div>
 
-      <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner" style={{ marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div className="returns-filters-container">
+        <div className="returns-filters-container-inner">
+          <div className="returns-search-wrapper">
+            <Search size={18} className="returns-search-icon" />
             <input 
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="returns-search-input"
               placeholder="Buscar por referencia, ej. DEV-001..." 
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             />
           </div>
           <button 
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+            className={`returns-filter-toggle-btn ${showFilters ? 'active' : ''}`}
+            title="Alternar filtros"
           >
             <Filter size={18} />
             <span className="hide-on-mobile">Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="returns-filter-badge">
+                {activeFiltersCount}
+              </span>
+            )}
           </button>
         </div>
 
         {showFilters && (
-          <div className="filters-panel">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+          <div className="returns-filters-panel">
+            <div className="returns-filter-group">
+              <label className="returns-filter-label">Estado</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >
@@ -165,25 +188,38 @@ export default function Returns() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Desde Fecha</label>
+            <div className="returns-filter-group">
+              <label className="returns-filter-label">Desde Fecha</label>
               <input 
                 type="date"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                className="returns-filter-date-input"
                 value={filters.date_from}
                 onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Hasta Fecha</label>
+            <div className="returns-filter-group">
+              <label className="returns-filter-label">Hasta Fecha</label>
               <input 
                 type="date"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                className="returns-filter-date-input"
                 value={filters.date_to}
                 onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
               />
             </div>
+
+            {hasActiveFilters && (
+              <div className="returns-filter-actions">
+                <button 
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="returns-filter-clear-btn"
+                >
+                  <RefreshCw size={14} />
+                  Limpiar Filtros
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

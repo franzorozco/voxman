@@ -72,6 +72,26 @@ export default function Orders() {
     total: 0
   });
 
+  const hasActiveFilters = Boolean(
+    filters.status ||
+    filters.delivery_type ||
+    filters.driver_id ||
+    filters.date_from ||
+    filters.date_to
+  );
+
+  const activeFiltersCount = Object.values(filters).filter(Boolean).length;
+
+  const handleClearFilters = () => {
+    setFilters({
+      status: "",
+      delivery_type: "",
+      driver_id: "",
+      date_from: "",
+      date_to: ""
+    });
+  };
+
   const fetchSchedules = async () => {
     setLoading(true);
     try {
@@ -419,34 +439,40 @@ export default function Orders() {
         </div>
       </div>
 
-      <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div className="orders-filters-container">
+        <div className="orders-filters-container-inner">
+          <div className="orders-search-wrapper">
+            <Search size={18} className="orders-search-icon" />
             <input
               type="text"
               placeholder="Buscar pedido, factura o cliente..."
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="orders-search-input"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
 
           <button 
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+            className={`orders-filter-toggle-btn ${showFilters ? 'active' : ''}`}
+            title="Alternar filtros"
           >
             <Filter size={18} />
             <span className="hide-on-mobile">Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="orders-filter-badge">
+                {activeFiltersCount}
+              </span>
+            )}
           </button>
         </div>
 
         {showFilters && (
-          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+          <div className="orders-filters-panel">
+            <div className="orders-filter-group">
+              <label className="orders-filter-label">Estado</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >
@@ -459,10 +485,9 @@ export default function Orders() {
               </CustomSelect>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Tipo de Entrega</label>
+            <div className="orders-filter-group">
+              <label className="orders-filter-label">Tipo de Entrega</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.delivery_type}
                 onChange={(e) => setFilters({ ...filters, delivery_type: e.target.value })}
               >
@@ -472,10 +497,9 @@ export default function Orders() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Repartidor</label>
+            <div className="orders-filter-group">
+              <label className="orders-filter-label">Repartidor</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.driver_id}
                 onChange={(e) => setFilters({ ...filters, driver_id: e.target.value })}
               >
@@ -488,32 +512,34 @@ export default function Orders() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Desde (Fecha Entrega)</label>
+            <div className="orders-filter-group">
+              <label className="orders-filter-label">Desde (Fecha Entrega)</label>
               <input 
                 type="date"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', colorScheme: 'dark' }}
+                className="orders-filter-date-input"
                 value={filters.date_from}
                 onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Hasta (Fecha Entrega)</label>
+            <div className="orders-filter-group">
+              <label className="orders-filter-label">Hasta (Fecha Entrega)</label>
               <input 
                 type="date"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', colorScheme: 'dark' }}
+                className="orders-filter-date-input"
                 value={filters.date_to}
                 onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
               />
             </div>
             
-            {(filters.status !== "" || filters.date_from !== "" || filters.date_to !== "") && (
-              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            {hasActiveFilters && (
+              <div className="orders-filter-actions">
                 <button 
-                  onClick={() => setFilters({ status: "", date_from: "", date_to: "" })}
-                  style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'transparent', color: 'var(--color-danger)', border: '1px solid var(--color-danger)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="orders-filter-clear-btn"
                 >
+                  <RefreshCw size={14} />
                   Limpiar Filtros
                 </button>
               </div>

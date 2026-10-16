@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Search, MoreVertical, Edit, Trash2, Ticket, Eye, EyeOff, RotateCcw, RefreshCw, Filter } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Plus, Search, MoreVertical, Edit, Trash2, Ticket, Eye, EyeOff, RotateCcw, RefreshCw, Filter, CheckCircle2, Zap, Percent } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getPromotions, deletePromotion } from "../../../../api/admin/discounts";
@@ -74,6 +74,30 @@ export default function Promotions() {
     }
   };
 
+  const promotionStats = useMemo(() => {
+    const list = Array.isArray(promotions) ? promotions : [];
+    const total = list.length;
+    const now = new Date();
+    const active = list.filter((p) => {
+      if (p.is_active === false || p.active === false) return false;
+      const start = new Date(p.start_date);
+      const end = p.end_date ? new Date(p.end_date) : null;
+      if (now < start) return false;
+      if (end && now > end) return false;
+      const used = p.times_used || p.used_count || 0;
+      if (p.usage_limit && used >= p.usage_limit) return false;
+      return true;
+    }).length;
+
+    const totalUses = list.reduce((sum, p) => sum + Number(p.times_used || p.used_count || 0), 0);
+    const percentagePromos = list.filter((p) => p.type === "percentage" && Number(p.value) > 0);
+    const avgDiscount = percentagePromos.length > 0
+      ? Math.round(percentagePromos.reduce((sum, p) => sum + Number(p.value), 0) / percentagePromos.length)
+      : 0;
+
+    return { total, active, totalUses, avgDiscount };
+  }, [promotions]);
+
   const filteredPromotions = promotions.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.code && p.code.toLowerCase().includes(searchQuery.toLowerCase()));
     
@@ -131,6 +155,57 @@ export default function Promotions() {
   </button>
 </div>
 </div>
+
+      {/* KPI Cards Normalizados */}
+      <div className="promotions-kpi-grid">
+        <div className="promotions-kpi-card kpi-total">
+          <div className="promotions-kpi-top">
+            <span className="promotions-kpi-value">{promotionStats.total}</span>
+          </div>
+          <div className="promotions-kpi-bottom">
+            <div className="promotions-kpi-icon-mini">
+              <Ticket size={14} />
+            </div>
+            <span className="promotions-kpi-label">Total Promociones</span>
+          </div>
+        </div>
+
+        <div className="promotions-kpi-card kpi-active">
+          <div className="promotions-kpi-top">
+            <span className="promotions-kpi-value">{promotionStats.active}</span>
+          </div>
+          <div className="promotions-kpi-bottom">
+            <div className="promotions-kpi-icon-mini">
+              <CheckCircle2 size={14} />
+            </div>
+            <span className="promotions-kpi-label">Promociones Activas</span>
+          </div>
+        </div>
+
+        <div className="promotions-kpi-card kpi-uses">
+          <div className="promotions-kpi-top">
+            <span className="promotions-kpi-value">{promotionStats.totalUses}</span>
+          </div>
+          <div className="promotions-kpi-bottom">
+            <div className="promotions-kpi-icon-mini">
+              <Zap size={14} />
+            </div>
+            <span className="promotions-kpi-label">Canjes / Usos Totales</span>
+          </div>
+        </div>
+
+        <div className="promotions-kpi-card kpi-discount">
+          <div className="promotions-kpi-top">
+            <span className="promotions-kpi-value">{promotionStats.avgDiscount}%</span>
+          </div>
+          <div className="promotions-kpi-bottom">
+            <div className="promotions-kpi-icon-mini">
+              <Percent size={14} />
+            </div>
+            <span className="promotions-kpi-label">Descuento Promedio</span>
+          </div>
+        </div>
+      </div>
 
       <div className="filters-container" style={{ marginBottom: '20px' }}>
   <div className="filters-container-inner" style={{ marginBottom: showFilters ? '15px' : '0' }}>

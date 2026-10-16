@@ -30,4 +30,9 @@ class Branch extends BaseBranch
 	{
 		return $this->hasMany(BranchImage::class, 'branch_id')->orderBy('display_order');
 	}
+
+	public function inventories()
+	{
+		return $this->hasMany(\App\Models\Inventory\Inventory::class, 'branch_id');
+	}
 }

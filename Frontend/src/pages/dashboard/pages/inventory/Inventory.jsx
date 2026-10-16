@@ -5,7 +5,7 @@ import { getInventory, getInventoryStats } from "../../../../api/admin/inventory
 import { getBranches } from "../../../../api/admin/branches";
 import { getCategories } from "../../../../api/admin/categories";
 import { getBrands } from "../../../../api/admin/brands";
-import { Search, Filter, History, AlertTriangle, ArrowRightLeft, PenTool, ChevronDown, ChevronRight, Package, Plus, ClipboardCheck, TrendingUp, DollarSign, Box } from "lucide-react";
+import { Search, Filter, History, AlertTriangle, ArrowRightLeft, PenTool, ChevronDown, ChevronRight, Package, Plus, ClipboardCheck, TrendingUp, DollarSign, Box, RefreshCw } from "lucide-react";
 import CanAccess from "../../../../components/ui/CanAccess";
 import AdjustStockModal from "./AdjustStockModal";
 import TransferStockModal from "./TransferStockModal";
@@ -49,6 +49,29 @@ export default function Inventory() {
     max_price: "",
     page: 1
   });
+
+  const activeFiltersCount = [
+    filters.status,
+    filters.category_id,
+    filters.brand_id,
+    filters.min_price,
+    filters.max_price
+  ].filter(Boolean).length;
+
+  const hasActiveFilters = activeFiltersCount > 0 || Boolean(filters.search);
+
+  const handleClearFilters = () => {
+    setFilters(prev => ({
+      ...prev,
+      search: "",
+      status: "",
+      category_id: "",
+      brand_id: "",
+      min_price: "",
+      max_price: "",
+      page: 1
+    }));
+  };
 
   const [adjustModal, setAdjustModal] = useState({ isOpen: false, item: null });
   const [transferModal, setTransferModal] = useState({ isOpen: false, item: null });
@@ -397,42 +420,48 @@ export default function Inventory() {
             </div>
           )}
 
-          <div className="filters-container" style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0', flexWrap: 'wrap' }}>
-              <div className="search-and-camera" style={{ display: 'flex', gap: '8px', flex: 1 }}>
-                <div style={{ flex: 1, position: 'relative' }}>
-                  <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                  <input
-                    style={{ width: '100%', boxSizing: 'border-box', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
-                    placeholder="Buscar producto o SKU..."
-                    value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-                  />
-                </div>
-                <button
-                  onClick={() => openScanner(processScannedCode)}
-                  title="Escanear con Cámara"
-                  style={{ width: '42px', height: '42px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', borderRadius: '10px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s' }}
-                >
-                  <Camera size={20} />
-                </button>
+          <div className="inventory-filters-container">
+            {/* Fila 1: Buscador y Cámara */}
+            <div className="inventory-search-and-camera-row">
+              <div className="inventory-search-input-wrapper">
+                <Search size={18} className="inventory-search-icon" />
+                <input
+                  className="inventory-search-input"
+                  placeholder="Buscar producto o SKU..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+                />
               </div>
               <button
+                type="button"
+                onClick={() => openScanner(processScannedCode)}
+                title="Escanear con Cámara"
+                className="inventory-scanner-btn"
+              >
+                <Camera size={19} />
+              </button>
+            </div>
+
+            {/* Fila 2: Botón de Filtros debajo */}
+            <div className="inventory-filter-btn-row">
+              <button
+                type="button"
                 onClick={() => setShowFilters(!showFilters)}
-                className="filter-toggle-btn"
-                style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--primary-color)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+                className={`inventory-filter-toggle-btn ${showFilters || activeFiltersCount > 0 ? 'active' : ''}`}
               >
                 <Filter size={18} />
-                <span className="hide-on-mobile">Filtros</span>
+                <span>Filtros</span>
+                {activeFiltersCount > 0 && (
+                  <span className="inventory-filter-badge">{activeFiltersCount}</span>
+                )}
               </button>
             </div>
 
             {showFilters && (
-              <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px', background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado de Stock</label>
+              <div className="inventory-filters-panel">
+                <div className="inventory-filter-group">
+                  <label>Estado de Stock</label>
                   <CustomSelect
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', transition: 'border 0.2s' }}
                     value={filters.status}
                     onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
                   >
@@ -443,10 +472,9 @@ export default function Inventory() {
                   </CustomSelect>
                 </div>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Categoría</label>
+                <div className="inventory-filter-group">
+                  <label>Categoría</label>
                   <CustomSelect
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', transition: 'border 0.2s' }}
                     value={filters.category_id}
                     onChange={(e) => setFilters({ ...filters, category_id: e.target.value, page: 1 })}
                   >
@@ -457,10 +485,9 @@ export default function Inventory() {
                   </CustomSelect>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Marca</label>
+                <div className="inventory-filter-group">
+                  <label>Marca</label>
                   <CustomSelect
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none', transition: 'border 0.2s' }}
                     value={filters.brand_id}
                     onChange={(e) => setFilters({ ...filters, brand_id: e.target.value, page: 1 })}
                   >
@@ -471,40 +498,40 @@ export default function Inventory() {
                   </CustomSelect>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio Mínimo (Bs.)</label>
+                <div className="inventory-filter-group">
+                  <label>Precio Mínimo (Bs.)</label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                     placeholder="Ej. 50"
                     value={filters.min_price}
                     onChange={(e) => setFilters({ ...filters, min_price: e.target.value, page: 1 })}
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>Precio Máximo (Bs.)</label>
+                <div className="inventory-filter-group">
+                  <label>Precio Máximo (Bs.)</label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                     placeholder="Ej. 200"
                     value={filters.max_price}
                     onChange={(e) => setFilters({ ...filters, max_price: e.target.value, page: 1 })}
                   />
                 </div>
                 
-                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <div className="inventory-filter-group inventory-filter-actions">
+                  <label style={{ visibility: 'hidden' }}>Acción</label>
                   <button
-                    onClick={() => setFilters({ ...filters, status: "", category_id: "", brand_id: "", min_price: "", max_price: "", page: 1 })}
-                    style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-danger)'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                    type="button"
+                    onClick={handleClearFilters}
+                    className="inventory-filter-clear-btn"
+                    title="Restablecer filtros"
                   >
-                    Limpiar Filtros
+                    <RefreshCw size={15} />
+                    <span>Limpiar Filtros</span>
                   </button>
                 </div>
               </div>

@@ -101,11 +101,11 @@ class OrderNetworkController extends Controller
         }
 
         if ($request->filled('date_from')) {
-            $query->whereDate('delivery_date', '>=', $request->date_from);
+            $query->whereDate('scheduled_date', '>=', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('delivery_date', '<=', $request->date_to);
+            $query->whereDate('scheduled_date', '<=', $request->date_to);
         }
 
         $schedules = $query->paginate($request->get('per_page', 15));

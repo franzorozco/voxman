@@ -15,7 +15,7 @@ class BranchController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Branch::query()->with(['address', 'manager.user.profile', 'images']);
+        $query = Branch::query()->with(['address', 'manager.user.profile', 'images', 'inventories.variant']);
 
         if ($request->has('search') && $request->search != '') {
             $search = strtolower($request->search);

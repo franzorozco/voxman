@@ -268,13 +268,29 @@
   .bundles-header-actions {
     width: 100% !important;
     display: flex !important;
-    flex-direction: column !important; /* Force children to stretch if they are block */
-    align-items: stretch !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
   }
   
-  .bundles-header-actions button.bundles-create-btn {
+  .bundles-header-actions > * {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .bundles-header-actions button.bundles-create-btn,
+  .bundles-header-actions .bundles-refresh-btn,
+  .bundles-header-actions button {
     width: 100% !important;
     justify-content: center !important;
+    padding: 10px 8px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
   }
 
   .hide-on-mobile {
@@ -1788,4 +1804,250 @@
 .bundles-table:focus-within {
   overflow: visible !important;
 }
+
+/* ==========================================================================
+   BUNDLES FILTERS PANEL & RESPONSIVE UX
+   ========================================================================== */
+
+.bundles-filters-container {
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bundles-filters-container-inner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bundles-search-wrapper {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.bundles-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.bundles-search-input {
+  width: 100%;
+  padding: 11px 14px 11px 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  outline: none;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.bundles-search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-alpha);
+}
+
+.bundles-filter-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.bundles-filter-toggle-btn:hover {
+  background: var(--bg-input);
+  border-color: var(--border-color);
+}
+
+.bundles-filter-toggle-btn.active {
+  background: var(--color-primary);
+  color: var(--color-primary-text, #ffffff);
+  border-color: var(--color-primary);
+}
+
+.bundles-filter-badge {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 7px;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.bundles-filters-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  background: var(--bg-card);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  animation: fadeIn 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.bundles-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bundles-filter-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+}
+
+.bundles-price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bundles-filter-price-input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
+  outline: none;
+  font-size: 13.5px;
+  height: 42px;
+  transition: all 0.2s ease;
+}
+
+.bundles-filter-price-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-alpha);
+}
+
+.bundles-price-separator {
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.bundles-filter-actions {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bundles-filter-clear-btn {
+  width: 100%;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--color-danger, #ef4444);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 13.5px;
+  box-sizing: border-box;
+}
+
+.bundles-filter-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: var(--color-danger, #ef4444);
+}
+
+@media (max-width: 860px) {
+  .bundles-filters-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .bundles-filter-price-group {
+    grid-column: 1 / -1;
+  }
+
+  .bundles-filter-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 540px) {
+  .bundles-filters-container-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .bundles-filter-toggle-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 16px;
+  }
+
+  .bundles-filters-panel {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+
+  .bundles-filter-price-group {
+    grid-column: 1 / -1;
+  }
+
+  .bundles-filter-actions {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+  }
+
+  .bundles-filter-clear-btn {
+    width: 100%;
+  }
+}
+
 

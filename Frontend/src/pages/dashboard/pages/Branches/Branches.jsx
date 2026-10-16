@@ -2,7 +2,7 @@ import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { getBranches, deleteBranch } from "../../../../api/admin/branches";
-import { Plus, LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2, Search, Filter, RefreshCw, MoreVertical } from "lucide-react";
+import { Plus, LayoutGrid, List, MapPin, Phone, User, Edit2, Trash2, Search, Filter, RefreshCw, MoreVertical, Store, DollarSign, Boxes, Award } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import BranchFormModal from "./BranchFormModal";
@@ -20,6 +20,15 @@ export default function Branches() {
   const [filters, setFilters] = useState({
     status: "all",
   });
+
+  const activeFiltersCount = (filters.status !== "all" ? 1 : 0);
+  const hasActiveFilters = activeFiltersCount > 0 || Boolean(search);
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setFilters({ status: "all" });
+  };
+
   const [viewMode, setViewMode] = useState("grid");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -75,6 +84,49 @@ export default function Branches() {
     loadBranches();
   };
 
+  const branchStats = useMemo(() => {
+    const list = Array.isArray(branches) ? branches : [];
+    const total = list.length;
+    const active = list.filter((b) => b.is_active).length;
+
+    let maxBranch = null;
+    let maxBranchValue = 0;
+    let totalInvested = 0;
+    let totalStockUnits = 0;
+
+    list.forEach((b) => {
+      const invs = Array.isArray(b.inventories) ? b.inventories : [];
+      let branchValue = 0;
+      let branchUnits = 0;
+
+      invs.forEach((inv) => {
+        const units = Number(inv.stock || 0);
+        const cost = Number(inv.variant?.cost || inv.variant?.price || 0);
+        branchUnits += units;
+        branchValue += units * cost;
+      });
+
+      totalStockUnits += branchUnits;
+      totalInvested += branchValue;
+
+      if (branchValue >= maxBranchValue) {
+        maxBranchValue = branchValue;
+        maxBranch = b;
+      }
+    });
+
+    const topBranchName = maxBranch ? maxBranch.name : "-";
+
+    return {
+      total,
+      active,
+      topBranchName,
+      maxBranchValue,
+      totalInvested,
+      totalStockUnits,
+    };
+  }, [branches]);
+
   const filteredBranches = useMemo(() => {
     return branches.filter((b) => {
       if (filters.status === "active" && !b.is_active) return false;
@@ -123,32 +175,96 @@ export default function Branches() {
 </div>
 </div>
 
-<div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      {/* KPI Cards Normalizados */}
+      <div className="branches-kpi-grid">
+        <div className="branches-kpi-card kpi-top-branch">
+          <div className="branches-kpi-top">
+            <span className="branches-kpi-value" title={branchStats.topBranchName}>
+              {branchStats.topBranchName}
+            </span>
+          </div>
+          <div className="branches-kpi-bottom">
+            <div className="branches-kpi-icon-mini">
+              <Award size={14} />
+            </div>
+            <span className="branches-kpi-label">
+              Mayor Inversión (Bs. {branchStats.maxBranchValue.toLocaleString()})
+            </span>
+          </div>
+        </div>
+
+        <div className="branches-kpi-card kpi-invested">
+          <div className="branches-kpi-top">
+            <span className="branches-kpi-value">
+              Bs. {branchStats.totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="branches-kpi-bottom">
+            <div className="branches-kpi-icon-mini">
+              <DollarSign size={14} />
+            </div>
+            <span className="branches-kpi-label">Capital Total Invertido</span>
+          </div>
+        </div>
+
+        <div className="branches-kpi-card kpi-stock">
+          <div className="branches-kpi-top">
+            <span className="branches-kpi-value">
+              {branchStats.totalStockUnits.toLocaleString()} uds
+            </span>
+          </div>
+          <div className="branches-kpi-bottom">
+            <div className="branches-kpi-icon-mini">
+              <Boxes size={14} />
+            </div>
+            <span className="branches-kpi-label">Stock Total en Sucursales</span>
+          </div>
+        </div>
+
+        <div className="branches-kpi-card kpi-active">
+          <div className="branches-kpi-top">
+            <span className="branches-kpi-value">
+              {branchStats.active} / {branchStats.total}
+            </span>
+          </div>
+          <div className="branches-kpi-bottom">
+            <div className="branches-kpi-icon-mini">
+              <Store size={14} />
+            </div>
+            <span className="branches-kpi-label">Sucursales Operativas</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="branches-filters-container">
+        <div className={`branches-search-bar-row ${showFilters ? 'open' : ''}`}>
+          <div className="branches-search-input-wrapper">
+            <Search size={18} className="branches-search-icon" />
             <input
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="branches-search-input"
               placeholder="Buscar sucursal por nombre o teléfono..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <button
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+            className={`branches-filter-toggle-btn ${showFilters ? 'active' : ''}`}
           >
             <Filter size={18} />
-            <span className="hide-on-mobile">Filtros</span>
+            <span>Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="branches-filter-badge">{activeFiltersCount}</span>
+            )}
           </button>
         </div>
 
         {showFilters && (
-          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+          <div className="branches-filters-panel">
+            <div className="branches-filter-group">
+              <label>Estado</label>
               <CustomSelect
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) =>
                   setFilters({ ...filters, status: e.target.value })
@@ -158,6 +274,19 @@ export default function Branches() {
                 <option value="active">Activas</option>
                 <option value="inactive">Inactivas</option>
               </CustomSelect>
+            </div>
+
+            <div className="branches-filter-group branches-filter-actions">
+              <label style={{ visibility: 'hidden' }}>Acción</label>
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="branches-filter-clear-btn"
+                title="Restablecer filtros"
+              >
+                <RefreshCw size={15} />
+                <span>Limpiar Filtros</span>
+              </button>
             </div>
           </div>
         )}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Search, Edit, Trash2, Eye, MoreVertical } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Plus, Search, Edit, Trash2, Eye, MoreVertical, Users, UserCheck, DollarSign, Package } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getOwners, deleteOwner } from "../../../../api/admin/owners";
@@ -60,6 +60,16 @@ export default function Owners() {
     setIsModalOpen(true);
   };
 
+  const ownerStats = useMemo(() => {
+    const list = Array.isArray(owners) ? owners : [];
+    const total = list.length;
+    const active = list.filter(o => o.is_active).length;
+    const totalCapital = list.reduce((sum, o) => sum + Number(o.total_capital || 0), 0);
+    const totalProducts = list.reduce((sum, o) => sum + Number(o.products_count || 0), 0);
+
+    return { total, active, totalCapital, totalProducts };
+  }, [owners]);
+
   const filteredOwners = owners.filter(owner => {
     if (!search) return true;
     const s = search.toLowerCase();
@@ -84,6 +94,59 @@ export default function Owners() {
               Nuevo Socio
             </button>
           </CanAccess>
+        </div>
+      </div>
+
+      {/* KPI Cards Normalizados */}
+      <div className="owners-kpi-grid">
+        <div className="owners-kpi-card kpi-total">
+          <div className="owners-kpi-top">
+            <span className="owners-kpi-value">{ownerStats.total}</span>
+          </div>
+          <div className="owners-kpi-bottom">
+            <div className="owners-kpi-icon-mini">
+              <Users size={14} />
+            </div>
+            <span className="owners-kpi-label">Total Socios / Owners</span>
+          </div>
+        </div>
+
+        <div className="owners-kpi-card kpi-active">
+          <div className="owners-kpi-top">
+            <span className="owners-kpi-value">{ownerStats.active}</span>
+          </div>
+          <div className="owners-kpi-bottom">
+            <div className="owners-kpi-icon-mini">
+              <UserCheck size={14} />
+            </div>
+            <span className="owners-kpi-label">Socios Activos</span>
+          </div>
+        </div>
+
+        <div className="owners-kpi-card kpi-capital">
+          <div className="owners-kpi-top">
+            <span className="owners-kpi-value">
+              Bs. {ownerStats.totalCapital.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="owners-kpi-bottom">
+            <div className="owners-kpi-icon-mini">
+              <DollarSign size={14} />
+            </div>
+            <span className="owners-kpi-label">Capital Total Invertido</span>
+          </div>
+        </div>
+
+        <div className="owners-kpi-card kpi-products">
+          <div className="owners-kpi-top">
+            <span className="owners-kpi-value">{ownerStats.totalProducts}</span>
+          </div>
+          <div className="owners-kpi-bottom">
+            <div className="owners-kpi-icon-mini">
+              <Package size={14} />
+            </div>
+            <span className="owners-kpi-label">Productos Asignados</span>
+          </div>
         </div>
       </div>
 

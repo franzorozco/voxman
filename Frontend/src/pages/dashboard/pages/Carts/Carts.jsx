@@ -34,6 +34,36 @@ export default function Carts() {
     sortBy: "created_at",
     sortDir: "desc"
   });
+
+  const hasActiveFilters = Boolean(
+    filters.status ||
+    filters.source ||
+    filters.date_from ||
+    filters.date_to ||
+    filters.sortBy !== "created_at" ||
+    filters.sortDir !== "desc"
+  );
+
+  const activeFiltersCount = [
+    filters.status,
+    filters.source,
+    filters.date_from,
+    filters.date_to,
+    filters.sortBy !== "created_at" ? filters.sortBy : null,
+    filters.sortDir !== "desc" ? filters.sortDir : null
+  ].filter(Boolean).length;
+
+  const handleClearFilters = () => {
+    setFilters(prev => ({
+      ...prev,
+      status: "",
+      source: "",
+      date_from: "",
+      date_to: "",
+      sortBy: "created_at",
+      sortDir: "desc"
+    }));
+  };
   
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedCart, setSelectedCart] = useState(null);
@@ -325,32 +355,38 @@ export default function Carts() {
         </div>
       </div>
 
-      <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner" style={{ marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div className="carts-filters-container">
+        <div className="carts-filters-container-inner">
+          <div className="carts-search-wrapper">
+            <Search size={18} className="carts-search-icon" />
             <input 
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="carts-search-input"
               placeholder="Buscar por referencia, ej. PROF-001..." 
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             />
           </div>
           <button 
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+            className={`carts-filter-toggle-btn ${showFilters ? 'active' : ''}`}
+            title="Alternar filtros"
           >
             <Filter size={18} />
             <span className="hide-on-mobile">Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="carts-filter-badge">
+                {activeFiltersCount}
+              </span>
+            )}
           </button>
         </div>
 
         {showFilters && (
-          <div className="filters-panel">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+          <div className="carts-filters-panel">
+            <div className="carts-filter-group">
+              <label className="carts-filter-label">Estado</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >
@@ -362,10 +398,9 @@ export default function Carts() {
               </CustomSelect>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Origen</label>
+            <div className="carts-filter-group">
+              <label className="carts-filter-label">Origen</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.source}
                 onChange={(e) => setFilters({ ...filters, source: e.target.value })}
               >
@@ -376,29 +411,29 @@ export default function Carts() {
               </CustomSelect>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Desde Fecha</label>
+            <div className="carts-filter-group">
+              <label className="carts-filter-label">Desde Fecha</label>
               <input 
                 type="date"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                className="carts-filter-date-input"
                 value={filters.date_from}
                 onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Hasta Fecha</label>
+            <div className="carts-filter-group">
+              <label className="carts-filter-label">Hasta Fecha</label>
               <input 
                 type="date"
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
+                className="carts-filter-date-input"
                 value={filters.date_to}
                 onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ordenar por</label>
+
+            <div className="carts-filter-group">
+              <label className="carts-filter-label">Ordenar por</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sortBy}
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
               >
@@ -407,10 +442,10 @@ export default function Carts() {
                 <option value="source">Origen</option>
               </CustomSelect>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Dirección</label>
+
+            <div className="carts-filter-group">
+              <label className="carts-filter-label">Dirección</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sortDir}
                 onChange={(e) => setFilters({ ...filters, sortDir: e.target.value })}
               >
@@ -418,6 +453,19 @@ export default function Carts() {
                 <option value="asc">Ascendente</option>
               </CustomSelect>
             </div>
+
+            {hasActiveFilters && (
+              <div className="carts-filter-actions">
+                <button 
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="carts-filter-clear-btn"
+                >
+                  <RefreshCw size={14} />
+                  Limpiar Filtros
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -42,6 +42,36 @@ export default function Bundles() {
     stockStatus: ""
   });
 
+  const hasActiveFilters = Boolean(
+    filters.category ||
+    filters.status ||
+    filters.owner ||
+    filters.minPrice ||
+    filters.maxPrice ||
+    filters.stockStatus
+  );
+
+  const activeFiltersCount = [
+    filters.category,
+    filters.status,
+    filters.owner,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.stockStatus
+  ].filter(Boolean).length;
+
+  const handleClearFilters = () => {
+    setFilters(prev => ({
+      ...prev,
+      category: "",
+      status: "",
+      owner: "",
+      minPrice: "",
+      maxPrice: "",
+      stockStatus: ""
+    }));
+  };
+
   const loadBundles = async () => {
     try {
       setLoadingBundles(true);
@@ -196,21 +226,20 @@ export default function Bundles() {
     <div className="bundles-container">
       <div className="bundles-header">
         <h1 className="bundles-title"><Package size={24} className="text-primary" /> Conjuntos</h1>
-        <div className="bundles-header-actions" style={{ display: 'flex', gap: '10px' }}>
+        <div className="bundles-header-actions">
           <CanAccess permission="create_products">
-            <button className="btn-primary bundles-create-btn" onClick={handleCreate}>
+            <button className="btn-primary bundles-create-btn" onClick={handleCreate} title="Crear Conjunto">
               <Plus size={18} />
-              <span className="hide-on-mobile">Crear Conjunto</span>
+              <span className="bundles-btn-text">Crear Conjunto</span>
             </button>
           </CanAccess>
           <button 
-            className="action-btn" 
-            style={{ padding: '10px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-main)', cursor: 'pointer', fontWeight: 600 }}
+            className="action-btn bundles-refresh-btn" 
             onClick={loadBundles}
             title="Actualizar"
           >
             <RefreshCw size={18} className={loadingBundles ? "animate-spin" : ""} />
-            <span className="hide-on-mobile">Actualizar</span>
+            <span className="bundles-btn-text">Actualizar</span>
           </button>
         </div>
       </div>
@@ -265,8 +294,8 @@ export default function Bundles() {
         </div>
       </div>
 
-      <div className="filters-container bundles-filters">
-        <div className={`filters-container-inner ${showFilters ? 'filters-expanded' : ''}`}>
+      <div className="bundles-filters-container">
+        <div className="bundles-filters-container-inner">
           <div className="bundles-search-wrapper">
             <Search size={18} className="bundles-search-icon" />
             <input
@@ -277,48 +306,52 @@ export default function Bundles() {
             />
           </div>
           <button
-            className={`bundles-filter-toggle ${showFilters ? 'active' : ''}`}
+            type="button"
+            className={`bundles-filter-toggle-btn ${showFilters ? 'active' : ''}`}
             onClick={() => setShowFilters(!showFilters)}
+            title="Alternar filtros"
           >
             <Filter size={18} />
             <span className="hide-on-mobile">Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="bundles-filter-badge">
+                {activeFiltersCount}
+              </span>
+            )}
           </button>
         </div>
 
         {showFilters && (
-          <div className="filters-panel">
-            <div className="filter-group">
-              <label className="filter-label">Categoría</label>
+          <div className="bundles-filters-panel">
+            <div className="bundles-filter-group">
+              <label className="bundles-filter-label">Categoría</label>
               <CustomSelect
-                className="filter-select"
                 value={filters.category}
                 onChange={(e) => setFilters({ ...filters, category: e.target.value })}
               >
-                <option value="">Todas</option>
+                <option value="">Todas las Categorías</option>
                 {[...new Set(bundles.filter(p => p.category?.name).map(p => p.category?.name))].map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </CustomSelect>
             </div>
             
-            <div className="filter-group">
-              <label className="filter-label">Propietario</label>
+            <div className="bundles-filter-group">
+              <label className="bundles-filter-label">Propietario</label>
               <CustomSelect
-                className="filter-select"
                 value={filters.owner}
                 onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
               >
-                <option value="">Todos</option>
+                <option value="">Todos los Propietarios</option>
                 {[...new Set(bundles.filter(p => p.owner?.name).map(p => p.owner?.name))].map((o) => (
                   <option key={o} value={o}>{o}</option>
                 ))}
               </CustomSelect>
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">Estado</label>
+            <div className="bundles-filter-group">
+              <label className="bundles-filter-label">Estado</label>
               <CustomSelect
-                className="filter-select"
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >
@@ -328,10 +361,9 @@ export default function Bundles() {
               </CustomSelect>
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">Stock Virtual</label>
+            <div className="bundles-filter-group">
+              <label className="bundles-filter-label">Stock Virtual</label>
               <CustomSelect
-                className="filter-select"
                 value={filters.stockStatus}
                 onChange={(e) => setFilters({ ...filters, stockStatus: e.target.value })}
               >
@@ -341,25 +373,39 @@ export default function Bundles() {
               </CustomSelect>
             </div>
 
-            <div className="filter-group filter-group-span-2">
-              <label className="filter-label">Rango de Precio (Bs.)</label>
-              <div className="filter-range-inputs">
+            <div className="bundles-filter-group bundles-filter-price-group">
+              <label className="bundles-filter-label">Rango de Precio (Bs.)</label>
+              <div className="bundles-price-inputs">
                 <input
                   type="number"
-                  placeholder="Min"
-                  className="filter-input"
+                  placeholder="Mín"
+                  className="bundles-filter-price-input"
                   value={filters.minPrice}
                   onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
                 />
+                <span className="bundles-price-separator">-</span>
                 <input
                   type="number"
-                  placeholder="Max"
-                  className="filter-input"
+                  placeholder="Máx"
+                  className="bundles-filter-price-input"
                   value={filters.maxPrice}
                   onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
                 />
               </div>
             </div>
+
+            {hasActiveFilters && (
+              <div className="bundles-filter-actions">
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="bundles-filter-clear-btn"
+                >
+                  <RefreshCw size={14} />
+                  Limpiar Filtros
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

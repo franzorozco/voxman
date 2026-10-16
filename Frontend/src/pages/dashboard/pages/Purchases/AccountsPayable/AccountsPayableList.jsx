@@ -22,6 +22,14 @@ export default function AccountsPayableList() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+  const activeFiltersCount = [statusFilter].filter(Boolean).length;
+  const hasActiveFilters = activeFiltersCount > 0 || Boolean(search);
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+  };
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
@@ -127,35 +135,38 @@ export default function AccountsPayableList() {
         </div>
       </div>
 
-      <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <div className="accounts-filters-container">
+        <div className={`accounts-search-bar-row ${showFilters ? 'open' : ''}`}>
+          <div className="accounts-search-input-wrapper">
+            <Search size={18} className="accounts-search-icon" />
             <input 
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="accounts-search-input"
               placeholder="Buscar por Proveedor..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <button
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? '#fff' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+            className={`accounts-filter-toggle-btn ${showFilters ? 'active' : ''}`}
           >
             <Filter size={18} />
-            <span className="hide-on-mobile">Filtros</span>
+            <span>Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="accounts-filter-badge">{activeFiltersCount}</span>
+            )}
           </button>
         </div>
 
         {showFilters && (
-          <div className="filters-panel" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'flex-end', background: 'var(--bg-card)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '200px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado de Pago</label>
+          <div className="accounts-filters-panel">
+            <div className="accounts-filter-group">
+              <label>Estado de Pago</label>
               <CustomSelect 
                 className="purchase-form-select account-filter-select" 
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ width: '100%' }}
               >
                 <option value="">Todos los estados</option>
                 <option value="pending">Por Pagar</option>
@@ -163,10 +174,27 @@ export default function AccountsPayableList() {
                 <option value="paid">Pagado Completo</option>
               </CustomSelect>
             </div>
-            <button className="btn-secondary account-refresh-btn" onClick={fetchAccounts} title="Actualizar">
-              <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-              Actualizar
-            </button>
+            
+            <div className="accounts-filter-actions-row">
+              <button 
+                type="button"
+                className="accounts-filter-clear-btn" 
+                onClick={handleClearFilters} 
+                title="Limpiar Filtros"
+              >
+                <RefreshCw size={15} />
+                <span>Limpiar Filtros</span>
+              </button>
+              <button 
+                type="button"
+                className="accounts-filter-refresh-btn" 
+                onClick={fetchAccounts} 
+                title="Actualizar"
+              >
+                <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+                <span>Actualizar</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

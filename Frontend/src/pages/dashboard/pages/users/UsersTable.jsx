@@ -11,6 +11,7 @@ import {
   Globe,
   Store,
   User as UserIcon,
+  RefreshCw,
 } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
@@ -47,6 +48,37 @@ export default function UsersTable({
   const [showFilters, setShowFilters] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filters.status && filters.status !== "all") count++;
+    if (filters.verification && filters.verification !== "all") count++;
+    if (filters.origin && filters.origin !== "all") count++;
+    if (filters.type && filters.type !== "all") count++;
+    if (filters.role && filters.role !== "all") count++;
+    if (filters.sort && filters.sort !== "created_at_desc") count++;
+    if (filters.groupBy && filters.groupBy !== "none") count++;
+    if (filters.minPoints !== "" && filters.minPoints !== undefined) count++;
+    if (filters.maxPoints !== "" && filters.maxPoints !== undefined) count++;
+    return count;
+  }, [filters]);
+
+  const hasActiveFilters = activeFiltersCount > 0 || Boolean(search);
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setFilters({
+      status: "all",
+      type: "all",
+      role: "all",
+      sort: "created_at_desc",
+      minPoints: "",
+      maxPoints: "",
+      groupBy: "none",
+      verification: "all",
+      origin: "all",
+    });
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -206,92 +238,37 @@ export default function UsersTable({
   return (
     <div className="users-admin">
       {/* ================= BARRA DE BÚSQUEDA Y FILTROS ================= */}
-      <div className="filters-container" style={{ marginBottom: "20px" }}>
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            alignItems: "center",
-            marginBottom: showFilters ? "15px" : "0",
-          }}
-        >
-          <div style={{ flex: 1, position: "relative" }}>
-            <Search
-              size={18}
-              style={{
-                position: "absolute",
-                left: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "var(--text-muted)",
-              }}
-            />
+      <div className="users-filters-container">
+        <div className={`users-search-bar-row ${showFilters ? "open" : ""}`}>
+          <div className="users-search-input-wrapper">
+            <Search size={18} className="users-search-icon" />
             <input
-              style={{
-                width: "100%",
-                padding: "10px 10px 10px 36px",
-                borderRadius: "10px",
-                border: "1px solid var(--border-color)",
-                background: "var(--bg-card)",
-                color: "var(--text-main)",
-                outline: "none",
-              }}
+              className="users-search-input"
               placeholder="Buscar por nombre, email, usuario o código..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <button
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 16px",
-              borderRadius: "10px",
-              background: showFilters ? "var(--color-primary)" : "var(--bg-card)",
-              color: showFilters ? "#fff" : "var(--text-main)",
-              border: "1px solid var(--border-color)",
-              cursor: "pointer",
-              transition: "0.2s",
-              fontWeight: 500,
-            }}
+            className={`users-filter-toggle-btn ${showFilters ? "active" : ""}`}
           >
             <Filter size={18} />
-            <span className="hide-on-mobile">Filtros</span>
+            <span>Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="users-filter-badge">{activeFiltersCount}</span>
+            )}
           </button>
         </div>
 
         {/* Panel Desplegable de Filtros Profesionales */}
         {showFilters && (
-          <div
-            className="filters-panel"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-              gap: "12px",
-              background: "var(--bg-card)",
-              padding: "16px",
-              borderRadius: "12px",
-              border: "1px solid var(--border-color)",
-              animation: "fadeIn 0.2s ease",
-            }}
-          >
+          <div className="users-filters-panel">
             {/* Estado */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
-                Estado
-              </label>
+            <div className="users-filter-group">
+              <label>Estado</label>
               <CustomSelect
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-color)",
-                  background: "var(--bg-input)",
-                  color: "var(--text-main)",
-                  outline: "none",
-                }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >
@@ -302,20 +279,9 @@ export default function UsersTable({
             </div>
 
             {/* Verificación */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
-                Verificación
-              </label>
+            <div className="users-filter-group">
+              <label>Verificación</label>
               <CustomSelect
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-color)",
-                  background: "var(--bg-input)",
-                  color: "var(--text-main)",
-                  outline: "none",
-                }}
                 value={filters.verification || "all"}
                 onChange={(e) => setFilters({ ...filters, verification: e.target.value })}
               >
@@ -327,20 +293,9 @@ export default function UsersTable({
             </div>
 
             {/* Canal / Origen */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
-                Canal / Origen
-              </label>
+            <div className="users-filter-group">
+              <label>Canal / Origen</label>
               <CustomSelect
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-color)",
-                  background: "var(--bg-input)",
-                  color: "var(--text-main)",
-                  outline: "none",
-                }}
                 value={filters.origin || "all"}
                 onChange={(e) => setFilters({ ...filters, origin: e.target.value })}
               >
@@ -353,20 +308,9 @@ export default function UsersTable({
             </div>
 
             {/* Tipo de cuenta */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
-                Tipo de cuenta
-              </label>
+            <div className="users-filter-group">
+              <label>Tipo de cuenta</label>
               <CustomSelect
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-color)",
-                  background: "var(--bg-input)",
-                  color: "var(--text-main)",
-                  outline: "none",
-                }}
                 value={filters.type}
                 onChange={(e) => setFilters({ ...filters, type: e.target.value })}
               >
@@ -378,20 +322,9 @@ export default function UsersTable({
             </div>
 
             {/* Ordenar por */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
-                Ordenar por
-              </label>
+            <div className="users-filter-group">
+              <label>Ordenar por</label>
               <CustomSelect
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-color)",
-                  background: "var(--bg-input)",
-                  color: "var(--text-main)",
-                  outline: "none",
-                }}
                 value={filters.sort}
                 onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
               >
@@ -403,20 +336,9 @@ export default function UsersTable({
             </div>
 
             {/* Agrupar */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
-                Agrupar tabla por
-              </label>
+            <div className="users-filter-group">
+              <label>Agrupar tabla por</label>
               <CustomSelect
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-color)",
-                  background: "var(--bg-input)",
-                  color: "var(--text-main)",
-                  outline: "none",
-                }}
                 value={filters.groupBy}
                 onChange={(e) => setFilters({ ...filters, groupBy: e.target.value })}
               >
@@ -425,6 +347,20 @@ export default function UsersTable({
                 <option value="role">Por rol asignado</option>
                 <option value="origin">Por canal / origen</option>
               </CustomSelect>
+            </div>
+
+            {/* Limpiar Filtros */}
+            <div className="users-filter-group users-filter-actions">
+              <label style={{ visibility: "hidden" }}>Acción</label>
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="users-filter-clear-btn"
+                title="Restablecer filtros"
+              >
+                <RefreshCw size={15} />
+                <span>Limpiar Filtros</span>
+              </button>
             </div>
           </div>
         )}

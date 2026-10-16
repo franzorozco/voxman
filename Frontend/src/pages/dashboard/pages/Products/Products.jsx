@@ -18,7 +18,7 @@ import { getFits } from "../../../../api/admin/fits";
 import "./Products.css";
 import "../css/stylesCruds.css";
 import { Link } from "react-router-dom";
-import { X, Trash2, Search, Filter, Camera, Package, Plus, RefreshCw } from "lucide-react";
+import { X, Trash2, Search, Filter, Camera, Package, Plus, RefreshCw, CheckCircle2, AlertTriangle, Layers, Boxes } from "lucide-react";
 import ConfirmModal from "../../../../components/ui/ConfirmModal";
 import CanAccess from "../../../../components/ui/CanAccess";
 
@@ -392,6 +392,16 @@ export default function Products() {
 
   }, [enrichedProducts, filters]);
 
+  const productStats = useMemo(() => {
+    const list = Array.isArray(enrichedProducts) ? enrichedProducts.filter((p) => !p.is_bundle) : [];
+    const total = list.length;
+    const active = list.filter((p) => p.is_active && (p.stock || 0) > 0).length;
+    const lowOrOutOfStock = list.filter((p) => (p.stock || 0) <= 5).length;
+    const totalUnits = list.reduce((acc, p) => acc + (p.stock || 0), 0);
+
+    return { total, active, lowOrOutOfStock, totalUnits };
+  }, [enrichedProducts]);
+
   // ======================================================
   // RENDER
   // ======================================================
@@ -435,6 +445,58 @@ export default function Products() {
           </button>
         </div>
       </div>
+
+      {/* KPI Cards Normalizados */}
+      <div className="products-kpi-grid">
+        <div className="products-kpi-card kpi-total">
+          <div className="products-kpi-top">
+            <span className="products-kpi-value">{productStats.total}</span>
+          </div>
+          <div className="products-kpi-bottom">
+            <div className="products-kpi-icon-mini">
+              <Package size={14} />
+            </div>
+            <span className="products-kpi-label">Total Productos</span>
+          </div>
+        </div>
+
+        <div className="products-kpi-card kpi-active">
+          <div className="products-kpi-top">
+            <span className="products-kpi-value">{productStats.active}</span>
+          </div>
+          <div className="products-kpi-bottom">
+            <div className="products-kpi-icon-mini">
+              <CheckCircle2 size={14} />
+            </div>
+            <span className="products-kpi-label">Disponibles / Activos</span>
+          </div>
+        </div>
+
+        <div className="products-kpi-card kpi-warning">
+          <div className="products-kpi-top">
+            <span className="products-kpi-value">{productStats.lowOrOutOfStock}</span>
+          </div>
+          <div className="products-kpi-bottom">
+            <div className="products-kpi-icon-mini">
+              <AlertTriangle size={14} />
+            </div>
+            <span className="products-kpi-label">Bajo Stock / Agotados</span>
+          </div>
+        </div>
+
+        <div className="products-kpi-card kpi-stock">
+          <div className="products-kpi-top">
+            <span className="products-kpi-value">{productStats.totalUnits.toLocaleString()}</span>
+          </div>
+          <div className="products-kpi-bottom">
+            <div className="products-kpi-icon-mini">
+              <Boxes size={14} />
+            </div>
+            <span className="products-kpi-label">Unidades en Stock</span>
+          </div>
+        </div>
+      </div>
+
       <div className="filters-container" style={{ marginBottom: '20px' }}>
         <div className="filters-container-inner" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: showFilters ? '15px' : '0' }}>
           <div style={{ display: 'flex', gap: '8px', flex: 1, minWidth: 0 }}>

@@ -56,7 +56,9 @@
     color: var(--text-main);
     line-height: 1.15;
     word-break: break-word;
-    white-space: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .accounts-kpi-bottom {
@@ -104,20 +106,181 @@
     text-overflow: ellipsis;
 }
 
-.account-filter-select {
-    width: 200px;
-}
-
-.account-refresh-btn {
-    padding: 10px;
-}
-
 .row-overdue {
     background: rgba(239, 68, 68, 0.02) !important;
 }
 
 .account-action-btn {
     padding: 6px 12px;
+}
+
+/* ── ACCOUNTS PAYABLE FILTERS ── */
+.accounts-filters-container {
+    margin-bottom: 20px;
+}
+
+.accounts-search-bar-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.accounts-search-bar-row.open {
+    margin-bottom: 12px;
+}
+
+.accounts-search-input-wrapper {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+}
+
+.accounts-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.accounts-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px 10px 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-main);
+    outline: none;
+    font-size: 14px;
+    height: 42px;
+    transition: border-color 0.2s ease;
+}
+
+.accounts-search-input:focus {
+    border-color: var(--color-primary);
+}
+
+.accounts-filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 500;
+    height: 42px;
+    box-sizing: border-box;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.accounts-filter-toggle-btn.active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
+.accounts-filter-badge {
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 10px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.accounts-filter-toggle-btn.active .accounts-filter-badge {
+    background: #ffffff;
+    color: var(--color-primary);
+}
+
+.accounts-filters-panel {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    background: var(--bg-card);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+    margin-top: 10px;
+    animation: fadeIn 0.2s ease;
+}
+
+.accounts-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 220px;
+}
+
+.accounts-filter-group label {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.accounts-filter-actions-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.accounts-filter-clear-btn {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 16px;
+    border-radius: 10px;
+    background: var(--bg-input);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 500;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.accounts-filter-clear-btn:hover {
+    color: var(--color-danger);
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.accounts-filter-refresh-btn {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 16px;
+    border-radius: 10px;
+    background: var(--bg-input);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 500;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.accounts-filter-refresh-btn:hover {
+    border-color: var(--color-primary);
 }
 
 /* ==================================
@@ -154,7 +317,10 @@
     }
 
     .accounts-kpi-value {
-        font-size: 16px;
+        font-size: 16px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
 
     .accounts-kpi-bottom {
@@ -176,13 +342,28 @@
         font-size: 11px;
     }
 
-    .account-filter-select {
-        width: 100%;
-        flex: none;
+    .accounts-filters-panel {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px;
+        gap: 12px;
     }
-    
-    .account-refresh-btn {
+
+    .accounts-filter-group {
+        min-width: 0;
         width: 100%;
-        flex: none;
+    }
+
+    .accounts-filter-actions-row {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .accounts-filter-clear-btn,
+    .accounts-filter-refresh-btn {
+        width: 100%;
     }
 }
+

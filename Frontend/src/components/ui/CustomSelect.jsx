@@ -113,12 +113,14 @@ export default function CustomSelect({
     <div 
       ref={containerRef} 
       className={`custom-select-container ${safeClassName}`} 
-      style={{ position: 'relative', width: '100%', ...containerStyle }}
+      style={{ position: 'relative', width: '100%', boxSizing: 'border-box', minWidth: 0, ...containerStyle }}
     >
       <div 
         onClick={toggleDropdown}
         style={{
           width: '100%',
+          boxSizing: 'border-box',
+          minWidth: 0,
           padding: '10px 14px',
           borderRadius: '8px',
           border: `1px solid ${isOpen ? 'var(--color-primary)' : 'var(--border-color)'}`,
@@ -136,8 +138,9 @@ export default function CustomSelect({
         }}
       >
         <span style={{ 
-          whiteSpace: 'normal', 
-          wordBreak: 'break-word',
+          whiteSpace: 'nowrap', 
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
           opacity: selectedOption ? 1 : 0.6
         }}>
           {selectedOption ? selectedOption.label : placeholder}

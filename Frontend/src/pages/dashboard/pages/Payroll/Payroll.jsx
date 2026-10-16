@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Search, DollarSign, RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2, Printer, MoreVertical, Eye } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { getEmployees } from "../../../../api/admin/employees";
@@ -158,6 +158,18 @@ export default function Payroll() {
     return history.some(h => h.employee_id === empId);
   };
 
+  const payrollStats = useMemo(() => {
+    const activeEmps = Array.isArray(employees) ? employees : [];
+    const histList = Array.isArray(history) ? history : [];
+    
+    const paidCount = histList.length;
+    const pendingCount = Math.max(0, activeEmps.length - paidCount);
+    const totalPaid = histList.reduce((sum, h) => sum + Number(h.net_salary || 0), 0);
+    const totalProjected = activeEmps.reduce((sum, e) => sum + Number(e.base_salary || 0), 0);
+
+    return { paidCount, pendingCount, totalPaid, totalProjected, totalEmployees: activeEmps.length };
+  }, [employees, history]);
+
   return (
     <div className="products-container fade-in">
       <div className="products-header">
@@ -179,6 +191,63 @@ export default function Payroll() {
             onChange={(e) => setYear(e.target.value)}
             style={{ width: '100%', height: '42px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
           />
+        </div>
+      </div>
+
+      {/* KPI Cards Normalizados */}
+      <div className="payroll-kpi-grid">
+        <div className="payroll-kpi-card kpi-paid">
+          <div className="payroll-kpi-top">
+            <span className="payroll-kpi-value">
+              Bs. {payrollStats.totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="payroll-kpi-bottom">
+            <div className="payroll-kpi-icon-mini">
+              <DollarSign size={14} />
+            </div>
+            <span className="payroll-kpi-label">Total Pagado en el Mes</span>
+          </div>
+        </div>
+
+        <div className="payroll-kpi-card kpi-employees">
+          <div className="payroll-kpi-top">
+            <span className="payroll-kpi-value">
+              {payrollStats.paidCount} / {payrollStats.totalEmployees}
+            </span>
+          </div>
+          <div className="payroll-kpi-bottom">
+            <div className="payroll-kpi-icon-mini">
+              <CheckCircle size={14} />
+            </div>
+            <span className="payroll-kpi-label">Empleados Pagados</span>
+          </div>
+        </div>
+
+        <div className="payroll-kpi-card kpi-pending">
+          <div className="payroll-kpi-top">
+            <span className="payroll-kpi-value">{payrollStats.pendingCount}</span>
+          </div>
+          <div className="payroll-kpi-bottom">
+            <div className="payroll-kpi-icon-mini">
+              <Clock size={14} />
+            </div>
+            <span className="payroll-kpi-label">Pagos Pendientes</span>
+          </div>
+        </div>
+
+        <div className="payroll-kpi-card kpi-projected">
+          <div className="payroll-kpi-top">
+            <span className="payroll-kpi-value">
+              Bs. {payrollStats.totalProjected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="payroll-kpi-bottom">
+            <div className="payroll-kpi-icon-mini">
+              <FileText size={14} />
+            </div>
+            <span className="payroll-kpi-label">Presupuesto Base Mes</span>
+          </div>
         </div>
       </div>
 

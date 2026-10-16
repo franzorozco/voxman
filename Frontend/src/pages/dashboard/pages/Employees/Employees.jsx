@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Search, Edit, Trash2, Eye, ArchiveRestore, Filter, MoreVertical, RefreshCw } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Plus, Search, Edit, Trash2, Eye, ArchiveRestore, Filter, MoreVertical, RefreshCw, Users, UserCheck, DollarSign, Briefcase } from "lucide-react";
 import RowDropdown from "../../../../components/ui/RowDropdown";
 import { toast } from "react-hot-toast";
 import { getEmployees, deleteEmployee } from "../../../../api/admin/employees";
@@ -18,6 +18,17 @@ export default function Employees() {
     status: "active",
     sortBy: "created_at"
   });
+
+  const activeFiltersCount = (filters.status !== "active" ? 1 : 0) + (filters.sortBy !== "created_at" ? 1 : 0);
+  const hasActiveFilters = activeFiltersCount > 0 || Boolean(filters.search);
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: "",
+      status: "active",
+      sortBy: "created_at"
+    });
+  };
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -70,6 +81,16 @@ export default function Employees() {
     setIsDetailsOpen(true);
   };
 
+  const employeeStats = useMemo(() => {
+    const list = Array.isArray(employees) ? employees : [];
+    const total = list.length;
+    const active = list.filter(e => e.is_active).length;
+    const totalSalary = list.reduce((sum, e) => sum + Number(e.base_salary || 0), 0);
+    const uniqueRoles = new Set(list.map(e => e.role).filter(Boolean)).size;
+
+    return { total, active, totalSalary, uniqueRoles };
+  }, [employees]);
+
   return (
     <div className="products-container fade-in">
       <div className="products-header">
@@ -100,32 +121,88 @@ export default function Employees() {
 </div>
       </div>
 
-      <div className="filters-container" style={{ marginBottom: '20px' }}>
-        <div className="filters-container-inner" style={{ marginBottom: showFilters ? '15px' : '0' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      {/* KPI Cards Normalizados */}
+      <div className="employees-kpi-grid">
+        <div className="employees-kpi-card kpi-total">
+          <div className="employees-kpi-top">
+            <span className="employees-kpi-value">{employeeStats.total}</span>
+          </div>
+          <div className="employees-kpi-bottom">
+            <div className="employees-kpi-icon-mini">
+              <Users size={14} />
+            </div>
+            <span className="employees-kpi-label">Total Empleados</span>
+          </div>
+        </div>
+
+        <div className="employees-kpi-card kpi-active">
+          <div className="employees-kpi-top">
+            <span className="employees-kpi-value">{employeeStats.active}</span>
+          </div>
+          <div className="employees-kpi-bottom">
+            <div className="employees-kpi-icon-mini">
+              <UserCheck size={14} />
+            </div>
+            <span className="employees-kpi-label">Empleados Activos</span>
+          </div>
+        </div>
+
+        <div className="employees-kpi-card kpi-salary">
+          <div className="employees-kpi-top">
+            <span className="employees-kpi-value">
+              Bs. {employeeStats.totalSalary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="employees-kpi-bottom">
+            <div className="employees-kpi-icon-mini">
+              <DollarSign size={14} />
+            </div>
+            <span className="employees-kpi-label">Masa Salarial Base</span>
+          </div>
+        </div>
+
+        <div className="employees-kpi-card kpi-roles">
+          <div className="employees-kpi-top">
+            <span className="employees-kpi-value">{employeeStats.uniqueRoles}</span>
+          </div>
+          <div className="employees-kpi-bottom">
+            <div className="employees-kpi-icon-mini">
+              <Briefcase size={14} />
+            </div>
+            <span className="employees-kpi-label">Cargos / Roles</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="employees-filters-container">
+        <div className={`employees-search-bar-row ${showFilters ? 'open' : ''}`}>
+          <div className="employees-search-input-wrapper">
+            <Search size={18} className="employees-search-icon" />
             <input 
-              style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', outline: 'none' }}
+              className="employees-search-input"
               placeholder="Buscar por código, email, nombre o teléfono..." 
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             />
           </div>
           <button 
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', background: showFilters ? 'var(--color-primary)' : 'var(--bg-card)', color: showFilters ? 'var(--color-primary-text)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: 'pointer', transition: '0.2s', fontWeight: 500 }}
+            className={`employees-filter-toggle-btn ${showFilters ? 'active' : ''}`}
           >
             <Filter size={18} />
-            <span className="hide-on-mobile">Filtros</span>
+            <span>Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="employees-filter-badge">{activeFiltersCount}</span>
+            )}
           </button>
         </div>
 
         {showFilters && (
-          <div className="filters-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', animation: 'fadeIn 0.2s ease' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Estado</label>
+          <div className="employees-filters-panel">
+            <div className="employees-filter-group">
+              <label>Estado</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >
@@ -135,10 +212,9 @@ export default function Employees() {
               </CustomSelect>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ordenar Por</label>
+            <div className="employees-filter-group">
+              <label>Ordenar Por</label>
               <CustomSelect 
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 value={filters.sortBy}
                 onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
               >
@@ -146,6 +222,19 @@ export default function Employees() {
                 <option value="base_salary">Sueldo Base</option>
                 <option value="hire_date">Fecha Contratación</option>
               </CustomSelect>
+            </div>
+
+            <div className="employees-filter-group employees-filter-actions">
+              <label style={{ visibility: 'hidden' }}>Acción</label>
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="employees-filter-clear-btn"
+                title="Restablecer filtros"
+              >
+                <RefreshCw size={15} />
+                <span>Limpiar Filtros</span>
+              </button>
             </div>
           </div>
         )}
