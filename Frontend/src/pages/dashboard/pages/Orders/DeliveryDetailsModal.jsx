@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
-import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign, Store, MessageCircle } from "lucide-react";
+import { X, MapPin, Phone, User, Package, CalendarClock, Truck, Link as LinkIcon, Edit3, XCircle, Save, Ban, Clock, CheckCircle, Share2, StickyNote, Plus, AlertTriangle, UserCheck, Lock, Unlock, Printer, DollarSign, Store, MessageCircle, Loader2, RotateCcw } from "lucide-react";
 import { getDeliveryDetails, updateDeliveryStatus, updateDeliveryDetails, getDeliveryDrivers, removeDeliveryItem, restoreDeliveryItem, addDeliveryItem } from "../../../../api/admin/orderNetwork";
 import AddProductToDeliveryModal from "./components/AddProductToDeliveryModal";
 import api from "../../../../api/client";
@@ -110,7 +110,15 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   }, [fetchSettings]);
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [removingDiscount, setRemovingDiscount] = useState(false);
+  const [sharingCheckout, setSharingCheckout] = useState(false);
   const [isAdvancePayment, setIsAdvancePayment] = useState(false);
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [submittingShipped, setSubmittingShipped] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [removingItem, setRemovingItem] = useState(false);
+  const [restoringItemId, setRestoringItemId] = useState(null);
+  const [addingProduct, setAddingProduct] = useState(false);
   
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
@@ -127,9 +135,11 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
 
 
 
-  const fetchDetails = async () => {
+  const fetchDetails = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading || !details) {
+        setLoading(true);
+      }
       const res = await getDeliveryDetails(scheduleId);
       const data = res.data.schedule || res.data;
       setDetails(data);
@@ -163,48 +173,50 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
   const handleConfirmRemoveItem = async () => {
     if (!itemToRemove) return;
     try {
-      setLoading(true);
+      setRemovingItem(true);
       await removeDeliveryItem(details.id, itemToRemove);
       toast.success('Prenda quitada y stock devuelto');
-      fetchDetails();
+      await fetchDetails(false);
+      setItemToRemove(null);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al quitar la prenda');
       console.error(err);
-      setLoading(false);
     } finally {
-      setItemToRemove(null);
+      setRemovingItem(false);
     }
   };
 
   const handleAddProduct = async (variant, branchId) => {
     try {
-      setLoading(true);
+      setAddingProduct(true);
       await addDeliveryItem(details.id, variant.id, branchId);
       toast.success('Prenda agregada exitosamente');
       setShowAddProduct(false);
-      fetchDetails();
+      await fetchDetails(false);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al agregar la prenda');
       console.error(err);
-      setLoading(false);
+    } finally {
+      setAddingProduct(false);
     }
   };
 
   const handleRestoreItem = async (detailId) => {
     try {
-      setLoading(true);
+      setRestoringItemId(detailId);
       await restoreDeliveryItem(details.id, detailId);
       toast.success('Prenda reintegrada a la entrega');
-      fetchDetails();
+      await fetchDetails(false);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al reintegrar la prenda');
       console.error(err);
-      setLoading(false);
+    } finally {
+      setRestoringItemId(null);
     }
   };
 
   useEffect(() => {
-    if (scheduleId) fetchDetails();
+    if (scheduleId) fetchDetails(true);
   }, [scheduleId]);
 
   useEffect(() => {
@@ -221,36 +233,51 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         };
       });
     });
-    channel.listen('.DeliveryUpdated', (data) => {
-      if (data.type === 'recipient_info_updated' || data.type === 'recipient_edit_toggled') {
-        fetchDetails();
-      }
+    channel.listen('.DeliveryUpdated', () => {
+      fetchDetails(false);
+    });
+    channel.listen('.delivery.discount.applied', () => {
+      fetchDetails(false);
+    });
+    channel.listen('.delivery.discount.removed', () => {
+      fetchDetails(false);
+    });
+    channel.listen('.delivery.status.updated', () => {
+      fetchDetails(false);
+    });
+    channel.listen('.checkout.session.shared', () => {
+      fetchDetails(false);
     });
 
     return () => {
       channel.stopListening('.DeliveryNotesUpdated');
       channel.stopListening('.DeliveryUpdated');
+      channel.stopListening('.delivery.discount.applied');
+      channel.stopListening('.delivery.discount.removed');
+      channel.stopListening('.delivery.status.updated');
+      channel.stopListening('.checkout.session.shared');
       echo.leaveChannel(`deliveries.${scheduleId}`);
     };
   }, [scheduleId]);
 
   const handleRemoveDiscount = async () => {
-    setUpdating(true);
+    setRemovingDiscount(true);
     try {
       await api.post(`/v1/admin/order-network/${scheduleId}/remove-discount`);
       toast.success("Descuento removido exitosamente");
       setAppliedCode(null);
-      fetchDetails();
+      await fetchDetails(false);
+      if (onStatusChange) onStatusChange();
     } catch (err) {
       toast.error(err.response?.data?.error || "Error al remover descuento");
     } finally {
-      setUpdating(false);
+      setRemovingDiscount(false);
     }
   };
 
   const handleShareCheckout = async () => {
     try {
-      setUpdating(true);
+      setSharingCheckout(true);
       await api.post(`/v1/admin/order-network/${scheduleId}/share-checkout`, {
         payment_method: paymentMethod,
         monto_real: montoReal,
@@ -263,7 +290,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
     } catch (err) {
       toast.error("Error al compartir detalles");
     } finally {
-      setUpdating(false);
+      setSharingCheckout(false);
     }
   };
 
@@ -310,13 +337,33 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
       const { data } = await getDeliveryDetails(scheduleId);
       setDetails(data.schedule);
       toast.success(newStatus === 'cancelled' ? "Entrega cancelada" : "Actualización exitosa");
-      onStatusChange();
+      if (onStatusChange) onStatusChange();
     } catch (error) {
       toast.error("Error al actualizar estado");
       // Rollback on error
       setDetails(prevDetails);
+      throw error;
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    setSubmittingPayment(true);
+    try {
+      await handleUpdateStatus(paymentNextStatus, {
+        monto_real: montoReal,
+        payment_method: paymentMethod,
+        amount_cash: cashAmount,
+        amount_qr: qrAmount,
+        applied_code: appliedCode,
+        is_advance_payment: isAdvancePayment
+      });
+      setShowPaymentModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingPayment(false);
     }
   };
 
@@ -993,8 +1040,62 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                               
                               <span style={{ fontWeight: 600, textDecoration: item.deleted_at ? 'line-through' : 'none', fontSize: '14px' }}>Bs. {Number(subtotal).toFixed(2)}</span>
                               
-                              {item.deleted_at && (
-                                <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600 }}>Quitar</span>
+                              {item.deleted_at ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ fontSize: '11px', color: 'var(--color-danger)', fontWeight: 600 }}>Rechazado</span>
+                                  {!isCancelled && !isCompleted && (
+                                    <CanAccess permission="manage_order_items">
+                                      <button 
+                                        onClick={() => handleRestoreItem(item.id)}
+                                        disabled={restoringItemId === item.id || loading}
+                                        style={{
+                                          background: '#f0fdf4',
+                                          color: '#10b981',
+                                          border: '1px solid #86efac',
+                                          borderRadius: '6px',
+                                          padding: '3px 8px',
+                                          fontSize: '11px',
+                                          fontWeight: 600,
+                                          cursor: (restoringItemId === item.id || loading) ? 'not-allowed' : 'pointer',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '4px'
+                                        }}
+                                        title="Reintegrar prenda a la entrega"
+                                      >
+                                        {restoringItemId === item.id ? (
+                                          <><Loader2 size={12} className="animate-spin" /> Reintegrando...</>
+                                        ) : (
+                                          <><RotateCcw size={12} /> Reintegrar</>
+                                        )}
+                                      </button>
+                                    </CanAccess>
+                                  )}
+                                </div>
+                              ) : (
+                                !isCancelled && !isCompleted && ['pending', 'assigned', 'on_the_way', 'at_the_meeting_point'].includes(details.status) && (
+                                  <CanAccess permission="manage_order_items">
+                                    <button 
+                                      onClick={() => handleRemoveItem(item.id)}
+                                      style={{
+                                        background: 'transparent',
+                                        color: 'var(--color-danger)',
+                                        border: '1px solid var(--color-danger)',
+                                        borderRadius: '6px',
+                                        padding: '3px 8px',
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}
+                                      title="Quitar prenda de la entrega"
+                                    >
+                                      <XCircle size={12} /> Quitar
+                                    </button>
+                                  </CanAccess>
+                                )
                               )}
                             </div>
                         </div>
@@ -1055,9 +1156,13 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       <button 
                         onClick={handleSaveNotes}
                         disabled={savingNotes || isCancelled}
-                        style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: (savingNotes || isCancelled) ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', opacity: savingNotes ? 0.7 : 1 }}
                       >
-                        {savingNotes ? 'Guardando...' : 'Guardar Notas'}
+                        {savingNotes ? (
+                          <><Loader2 size={13} className="animate-spin" /> Guardando...</>
+                        ) : (
+                          'Guardar Notas'
+                        )}
                       </button>
                     </CanAccess>
                   </div>
@@ -1184,13 +1289,18 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                                 borderRadius: '6px',
                                 fontSize: '11px',
                                 fontWeight: 600,
-                                cursor: 'pointer',
+                                cursor: togglingEdit ? 'not-allowed' : 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '4px'
+                                gap: '4px',
+                                opacity: togglingEdit ? 0.7 : 1
                               }}
                             >
-                              {togglingEdit ? '...' : (details.shipment?.recipient_edit_session?.is_shared ? <><Lock size={12} /> Dejar de Compartir</> : <><Unlock size={12} /> Compartir Edición</>)}
+                              {togglingEdit ? (
+                                <><Loader2 size={12} className="animate-spin" /> Procesando...</>
+                              ) : (
+                                details.shipment?.recipient_edit_session?.is_shared ? <><Lock size={12} /> Dejar de Compartir</> : <><Unlock size={12} /> Compartir Edición</>
+                              )}
                             </button>
                           </CanAccess>
                         </div>
@@ -1310,20 +1420,26 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     <button 
                       className="action-btn btn-marcar"
                       style={{ 
-                        padding: '12px 24px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', border: 'none',
+                        padding: '12px 24px', borderRadius: '8px', fontWeight: 700, cursor: updating ? 'not-allowed' : 'pointer', border: 'none',
                         display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px',
                         background: details.status === 'pending' || details.status === 'assigned' ? '#8b5cf6' : (details.status === 'on_the_way' ? '#f97316' : 'var(--color-success)'),
                         color: '#fff',
                         boxShadow: isOnTheWay ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        opacity: updating ? 0.75 : 1
                       }}
                       onClick={handleNextStatus}
                       disabled={updating}
                     >
-                      <Truck size={20} />
-                      {updating ? 'Actualizando...' : 
-                        (isExternal && currentSteps[currentStepIndex + 1]?.key === 'shipped') ? 'Remitir a Transportadora' : 
-                        `Marcar como ${currentSteps[currentStepIndex + 1]?.label || 'Completado'}`}
+                      {updating ? (
+                        <><Loader2 size={20} className="animate-spin" /> Actualizando...</>
+                      ) : (
+                        <>
+                          <Truck size={20} />
+                          {(isExternal && currentSteps[currentStepIndex + 1]?.key === 'shipped') ? 'Remitir a Transportadora' : 
+                            `Marcar como ${currentSteps[currentStepIndex + 1]?.label || 'Completado'}`}
+                        </>
+                      )}
                     </button>
                   )}
                 </CanAccess>
@@ -1450,13 +1566,13 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div className="modal-actions-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', flexWrap: 'wrap' }}>
               <button 
                 onClick={() => setShowShippedModal(false)}
-                style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
-                disabled={updating}
+                style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: (updating || submittingShipped) ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                disabled={updating || submittingShipped}
               >
                 Cancelar
               </button>
               <button  
-                onClick={() => {
+                onClick={async () => {
                   if (!externalCompany) {
                     toast.error('La empresa de transporte es requerida');
                     return;
@@ -1469,18 +1585,29 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                     toast.error('Completa los datos de guía y costo');
                     return;
                   }
-                  setShowShippedModal(false);
-                  handleUpdateStatus('shipped', {
-                    external_company: externalCompany === 'Otro' ? customExternalCompany : externalCompany,
-                    external_guide: externalGuide,
-                    shipping_cost: shippingCost,
-                    shipping_payment_type: shippingPaymentType
-                  });
+                  setSubmittingShipped(true);
+                  try {
+                    await handleUpdateStatus('shipped', {
+                      external_company: externalCompany === 'Otro' ? customExternalCompany : externalCompany,
+                      external_guide: externalGuide,
+                      shipping_cost: shippingCost,
+                      shipping_payment_type: shippingPaymentType
+                    });
+                    setShowShippedModal(false);
+                  } catch (err) {
+                    console.error(err);
+                  } finally {
+                    setSubmittingShipped(false);
+                  }
                 }}
-                style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
-                disabled={updating}
+                style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: '#fff', cursor: (updating || submittingShipped) ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', opacity: (updating || submittingShipped) ? 0.7 : 1 }}
+                disabled={updating || submittingShipped}
               >
-                Remitir Paquete
+                {submittingShipped ? (
+                  <><Loader2 size={16} className="animate-spin" /> Remitiendo...</>
+                ) : (
+                  'Remitir Paquete'
+                )}
               </button>
             </div>
           </div>
@@ -1492,6 +1619,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
         <AddProductToDeliveryModal 
           onClose={() => setShowAddProduct(false)}
           onAddProduct={handleAddProduct}
+          isAdding={addingProduct}
         />
       )}
 
@@ -1509,15 +1637,21 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button 
                 onClick={() => setItemToRemove(null)}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: removingItem ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                disabled={removingItem}
               >
                 Cancelar
               </button>
               <button 
                 onClick={handleConfirmRemoveItem}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#f59e0b', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#f59e0b', color: '#fff', cursor: removingItem ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: removingItem ? 0.7 : 1 }}
+                disabled={removingItem}
               >
-                Sí, Quitar
+                {removingItem ? (
+                  <><Loader2 size={16} className="animate-spin" /> Quitando...</>
+                ) : (
+                  'Sí, Quitar'
+                )}
               </button>
             </div>
           </div>
@@ -1536,20 +1670,31 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button 
                 onClick={() => setShowCancelModal(false)}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
-                disabled={updating}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: (updating || cancelling) ? 'not-allowed' : 'pointer', fontWeight: 600 }}
+                disabled={updating || cancelling}
               >
                 Cerrar
               </button>
               <button 
-                onClick={() => {
-                  setShowCancelModal(false);
-                  handleUpdateStatus('cancelled');
+                onClick={async () => {
+                  setCancelling(true);
+                  try {
+                    await handleUpdateStatus('cancelled');
+                    setShowCancelModal(false);
+                  } catch (err) {
+                    console.error(err);
+                  } finally {
+                    setCancelling(false);
+                  }
                 }}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
-                disabled={updating}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', cursor: (updating || cancelling) ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: (updating || cancelling) ? 0.7 : 1 }}
+                disabled={updating || cancelling}
               >
-                Sí, Cancelar
+                {cancelling ? (
+                  <><Loader2 size={16} className="animate-spin" /> Cancelando...</>
+                ) : (
+                  'Sí, Cancelar'
+                )}
               </button>
             </div>
           </div>
@@ -1621,7 +1766,30 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
             </div>
 
             {!isAdvancePayment && (hasDiscountOrGiftcard ? (
-              <div style={{ padding: '16px', background: 'var(--color-success-alpha)', borderRadius: '8px', border: '1px solid var(--color-success)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+              <div style={{ padding: '16px', background: 'var(--color-success-alpha)', borderRadius: '8px', border: '1px solid var(--color-success)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', position: 'relative' }}>
+                {removingDiscount && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255, 255, 255, 0.88)',
+                    backdropFilter: 'blur(2px)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    zIndex: 10,
+                    color: 'var(--color-danger)',
+                    fontWeight: 700,
+                    fontSize: '14px'
+                  }}>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Quitando descuento...</span>
+                  </div>
+                )}
                 <div>
                   <span style={{ fontWeight: 600, color: 'var(--color-success)', display: 'block', marginBottom: '4px' }}>Descuento Guardado</span>
                   <div style={{ color: 'var(--color-success)', fontWeight: 800, fontSize: '16px' }}>- Bs. {Number(details.shipment.sale.dynamic_global_discount).toFixed(2)}</div>
@@ -1629,10 +1797,14 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 <CanAccess permission="manage_order_discounts">
                   <button 
                     onClick={handleRemoveDiscount} 
-                    disabled={updating} 
-                    style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-danger)', color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                    disabled={updating || removingDiscount} 
+                    style={{ padding: '8px 16px', borderRadius: '8px', background: 'var(--color-danger)', color: '#fff', border: 'none', fontWeight: 600, cursor: (updating || removingDiscount) ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', opacity: (updating || removingDiscount) ? 0.7 : 1 }}
                   >
-                    Quitar
+                    {removingDiscount ? (
+                      <><Loader2 size={14} className="animate-spin" /> Quitando...</>
+                    ) : (
+                      'Quitar'
+                    )}
                   </button>
                 </CanAccess>
               </div>
@@ -1659,7 +1831,7 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                       }}
                     >
                       {updating ? (
-                        <div className="animate-spin" style={{ width: '18px', height: '18px', border: '2px solid var(--color-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
+                        <><Loader2 size={18} className="animate-spin" /> Aplicando descuento...</>
                       ) : (
                         <><Plus size={18} /> Agregar descuento</>
                       )}
@@ -1688,7 +1860,9 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                             setShowDiscountInput(false);
                             setUpdating(true);
                             await api.post(`/v1/admin/order-network/${scheduleId}/apply-discount`, { code: res.code });
-                            fetchDetails();
+                            toast.success("Descuento aplicado correctamente");
+                            await fetchDetails(false);
+                            if (onStatusChange) onStatusChange();
                           } catch (err) {
                             setShowDiscountInput(true);
                           } finally {
@@ -1783,36 +1957,36 @@ export default function DeliveryDetailsModal({ scheduleId, onClose, onStatusChan
                 <button 
                   onClick={handleShareCheckout}
                   className="btn-share"
-                  disabled={updating}
+                  disabled={updating || sharingCheckout || submittingPayment}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <Share2 size={18} /> Compartir
+                  {sharingCheckout ? (
+                    <><Loader2 size={18} className="animate-spin" /> Compartiendo...</>
+                  ) : (
+                    <><Share2 size={18} /> Compartir</>
+                  )}
                 </button>
               </CanAccess>
               <div className="payment-modal-footer-actions">
                 <button 
                   onClick={() => setShowPaymentModal(false)}
                   className="btn-cancel-payment"
-                  disabled={updating}
+                  disabled={updating || submittingPayment}
                 >
                   Cancelar
                 </button>
                 <CanAccess permission="update_order_status">
                   <button  
-                    onClick={() => {
-                      setShowPaymentModal(false);
-                      handleUpdateStatus(paymentNextStatus, {
-                        monto_real: montoReal,
-                        payment_method: paymentMethod,
-                        amount_cash: cashAmount,
-                        amount_qr: qrAmount,
-                        applied_code: appliedCode,
-                        is_advance_payment: isAdvancePayment
-                      });
-                    }}
+                    onClick={handleConfirmPayment}
                     className="btn-confirm-payment"
-                    disabled={updating}
+                    disabled={updating || submittingPayment}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                   >
-                    <CheckCircle size={18} /> {isAdvancePayment ? (isPickup && paymentNextStatus === 'reserved' ? 'Confirmar Reserva' : 'Confirmar Adelanto') : (paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega')}
+                    {submittingPayment ? (
+                      <><Loader2 size={18} className="animate-spin" /> Procesando...</>
+                    ) : (
+                      <><CheckCircle size={18} /> {isAdvancePayment ? (isPickup && paymentNextStatus === 'reserved' ? 'Confirmar Reserva' : 'Confirmar Adelanto') : (paymentNextStatus === 'prepared' ? 'Preparar' : 'Confirmar Pago y Entrega')}</>
+                    )}
                   </button>
                 </CanAccess>
               </div>

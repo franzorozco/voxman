@@ -25,6 +25,7 @@ class DeliveryDiscountRemoved implements ShouldBroadcastNow
     {
         return [
             new Channel('deliveries.' . $this->scheduleId),
+            new Channel('deliveries.global'),
         ];
     }
 

@@ -1,6 +1,6 @@
 import { getImageUrl } from '../../../../../utils/imageUtils';
 import { useState, useEffect } from "react";
-import { X, Camera, Plus } from "lucide-react";
+import { X, Camera, Plus, Loader2 } from "lucide-react";
 import { getProducts } from "../../../../../api/admin/products";
 import useScanner from "../../../../../hooks/useScanner";
 import { useScannerStore } from "../../../../../store/scanner/useScannerStore";
@@ -8,7 +8,7 @@ import { API_BASE_URL } from "../../../../../config/api";
 import CustomSelect from "../../../../../components/ui/CustomSelect";
 import "../../Carts/Carts.css";
 
-export default function AddProductToDeliveryModal({ onClose, onAddProduct }) {
+export default function AddProductToDeliveryModal({ onClose, onAddProduct, isAdding = false }) {
   const [searchProduct, setSearchProduct] = useState("");
   const [products, setProducts] = useState([]);
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
@@ -245,10 +245,14 @@ export default function AddProductToDeliveryModal({ onClose, onAddProduct }) {
                 <button 
                   type="button" 
                   onClick={handleConfirmAdd}
-                  disabled={!selectedBranchId}
-                  style={{ padding: '10px 16px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '6px', cursor: selectedBranchId ? 'pointer' : 'not-allowed', opacity: selectedBranchId ? 1 : 0.6, fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}
+                  disabled={!selectedBranchId || isAdding}
+                  style={{ padding: '10px 16px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '6px', cursor: (selectedBranchId && !isAdding) ? 'pointer' : 'not-allowed', opacity: (selectedBranchId && !isAdding) ? 1 : 0.6, fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <Plus size={16} /> Confirmar y Agregar
+                  {isAdding ? (
+                    <><Loader2 size={16} className="animate-spin" /> Agregando...</>
+                  ) : (
+                    <><Plus size={16} /> Confirmar y Agregar</>
+                  )}
                 </button>
               </div>
             </div>

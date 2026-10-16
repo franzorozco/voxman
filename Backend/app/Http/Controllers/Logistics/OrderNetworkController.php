@@ -1786,7 +1786,7 @@ class OrderNetworkController extends Controller
         ]);
 
         try {
-            $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);
+            $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts', 'shipment.sale.payments'])->findOrFail($id);
             $sale = $schedule->shipment->sale;
 
             if (in_array($schedule->status, ['completed', 'cancelled'])) {
@@ -1799,13 +1799,48 @@ class OrderNetworkController extends Controller
             }
 
             $sale = $pricingService->applyDiscount($sale, $request->code);
+            $sale->load(['payments', 'sale_applied_discounts']);
+
+            // Si hay una sesión de checkout compartida (QR/Efectivo), actualizarla en tiempo real con el nuevo total
+            if ($schedule->checkout_session) {
+                $session = $schedule->checkout_session;
+                $paymentsTotal = $sale->payments ? $sale->payments->sum('amount') : 0;
+                $computedShippingCost = $schedule->shipment && $schedule->shipment->shipping_payment_type !== 'collect' ? (float) ($schedule->shipment->shipping_cost ?? 0) : 0;
+                $computedAgencyCost = (float) (optional($schedule->shipment)->agency_dispatch_cost ?? 0);
+                $newGrandTotal = (float) $sale->dynamic_total + $computedShippingCost + $computedAgencyCost;
+                $newRemaining = max(0, $newGrandTotal - $paymentsTotal);
+
+                $session['sale_total'] = $newGrandTotal;
+                if (empty($session['is_advance_payment'])) {
+                    $session['monto_real'] = $newRemaining;
+                    if (($session['payment_method'] ?? '') === 'qr') {
+                        $session['qr_amount'] = $newRemaining;
+                    } elseif (($session['payment_method'] ?? '') === 'efectivo') {
+                        $session['cash_amount'] = $newRemaining;
+                    } elseif (($session['payment_method'] ?? '') === 'ambos') {
+                        $cash = (float) ($session['cash_amount'] ?? 0);
+                        if ($cash >= $newRemaining) {
+                            $session['cash_amount'] = $newRemaining;
+                            $session['qr_amount'] = 0;
+                        } else {
+                            $session['qr_amount'] = max(0, $newRemaining - $cash);
+                        }
+                    }
+                }
+                $schedule->checkout_session = $session;
+                $schedule->save();
+
+                event(new \App\Events\CheckoutSessionShared($id, $session));
+            }
 
             event(new \App\Events\DeliveryDiscountApplied($id, $sale, ['code' => $request->code, 'amount' => $sale->discount_total]));
+            event(new \App\Events\DeliveryUpdated($id, 'discount_applied'));
 
             return response()->json([
                 'message' => 'Descuento aplicado correctamente',
                 'discount_amount' => $sale->discount_total,
-                'new_total' => $sale->total
+                'new_total' => $sale->total,
+                'checkout_session' => $schedule->checkout_session
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
@@ -1815,7 +1850,7 @@ class OrderNetworkController extends Controller
     public function removeDiscount($id, \App\Services\Finance\SalePricingService $pricingService)
     {
         try {
-            $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts'])->findOrFail($id);
+            $schedule = DeliverySchedule::with(['shipment.sale.sale_details', 'shipment.sale.sale_applied_discounts', 'shipment.sale.payments'])->findOrFail($id);
             $sale = $schedule->shipment->sale;
 
             $globalDiscount = $sale ? $sale->sale_applied_discounts->whereNull('sale_detail_id')->first() : null;
@@ -1827,17 +1862,52 @@ class OrderNetworkController extends Controller
             $removedDiscountId = $globalDiscount ? $globalDiscount->discount_id : null;
 
             $sale = $pricingService->removeDiscount($sale);
+            $sale->load(['payments', 'sale_applied_discounts']);
             
             if ($removedDiscountId) {
                 \App\Models\Sales\Cart::where('status', 'ordered')->where('discount_id', $removedDiscountId)
                     ->update(['discount_id' => null, 'total_discount' => 0]);
             }
 
+            // Si hay una sesión de checkout compartida, restaurar su total en tiempo real
+            if ($schedule->checkout_session) {
+                $session = $schedule->checkout_session;
+                $paymentsTotal = $sale->payments ? $sale->payments->sum('amount') : 0;
+                $computedShippingCost = $schedule->shipment && $schedule->shipment->shipping_payment_type !== 'collect' ? (float) ($schedule->shipment->shipping_cost ?? 0) : 0;
+                $computedAgencyCost = (float) (optional($schedule->shipment)->agency_dispatch_cost ?? 0);
+                $newGrandTotal = (float) $sale->dynamic_total + $computedShippingCost + $computedAgencyCost;
+                $newRemaining = max(0, $newGrandTotal - $paymentsTotal);
+
+                $session['sale_total'] = $newGrandTotal;
+                if (empty($session['is_advance_payment'])) {
+                    $session['monto_real'] = $newRemaining;
+                    if (($session['payment_method'] ?? '') === 'qr') {
+                        $session['qr_amount'] = $newRemaining;
+                    } elseif (($session['payment_method'] ?? '') === 'efectivo') {
+                        $session['cash_amount'] = $newRemaining;
+                    } elseif (($session['payment_method'] ?? '') === 'ambos') {
+                        $cash = (float) ($session['cash_amount'] ?? 0);
+                        if ($cash >= $newRemaining) {
+                            $session['cash_amount'] = $newRemaining;
+                            $session['qr_amount'] = 0;
+                        } else {
+                            $session['qr_amount'] = max(0, $newRemaining - $cash);
+                        }
+                    }
+                }
+                $schedule->checkout_session = $session;
+                $schedule->save();
+
+                event(new \App\Events\CheckoutSessionShared($id, $session));
+            }
+
             event(new \App\Events\DeliveryDiscountRemoved($id, $sale));
+            event(new \App\Events\DeliveryUpdated($id, 'discount_removed'));
 
             return response()->json([
                 'message' => 'Descuento quitado exitosamente.',
-                'new_total' => $sale->total
+                'new_total' => $sale->total,
+                'checkout_session' => $schedule->checkout_session
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);

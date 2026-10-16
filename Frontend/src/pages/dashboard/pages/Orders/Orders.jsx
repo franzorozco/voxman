@@ -92,8 +92,10 @@ export default function Orders() {
     });
   };
 
-  const fetchSchedules = async () => {
-    setLoading(true);
+  const fetchSchedules = async (showLoading = true) => {
+    if (showLoading && schedules.length === 0) {
+      setLoading(true);
+    }
     try {
       const params = { page: pagination.current_page };
       if (search) params.search = search;
@@ -122,19 +124,27 @@ export default function Orders() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchSchedules();
+      fetchSchedules(true);
     }, 300);
     return () => clearTimeout(delayDebounceFn);
   }, [search, filters, pagination.current_page]);
 
   useEffect(() => {
     const channel = echo.channel('deliveries.global');
-    channel.listen('.delivery.status.updated', (data) => {
-      fetchSchedules();
+    channel.listen('.delivery.status.updated', () => {
+      fetchSchedules(false);
+    });
+    channel.listen('.delivery.discount.applied', () => {
+      fetchSchedules(false);
+    });
+    channel.listen('.delivery.discount.removed', () => {
+      fetchSchedules(false);
     });
 
     return () => {
       channel.stopListening('.delivery.status.updated');
+      channel.stopListening('.delivery.discount.applied');
+      channel.stopListening('.delivery.discount.removed');
       echo.leaveChannel('deliveries.global');
     };
   }, [search, filters]);
@@ -814,7 +824,7 @@ export default function Orders() {
           scheduleId={statusModalSchedule.id}
           onClose={() => setStatusModalSchedule(null)}
           onStatusChange={() => {
-            fetchSchedules();
+            fetchSchedules(false);
           }}
           onEditRequest={(data) => {
             setEditData(data);

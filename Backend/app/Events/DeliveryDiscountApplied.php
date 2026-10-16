@@ -36,7 +36,8 @@ class DeliveryDiscountApplied implements ShouldBroadcastNow
     public function broadcastOn()
     {
         return [
-            new Channel('deliveries.' . $this->scheduleId)
+            new Channel('deliveries.' . $this->scheduleId),
+            new Channel('deliveries.global')
         ];
     }
     
